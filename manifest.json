@@ -3,17 +3,17 @@
   "name": "Huistaken Opvolg App",
   "icons": [
     {
-      "src": "/icon-192x192.png",
+      "src": "/opvolging_huistaken/icon-192x192.png",
       "type": "image/png",
       "sizes": "192x192"
     },
     {
-      "src": "/icon-512x512.png",
+      "src": "/opvolging_huistaken/icon-512x512.png",
       "type": "image/png",
       "sizes": "512x512"
     }
   ],
-  "start_url": "/index.html",
+  "start_url": "/opvolging_huistaken/index.html",
   "display": "standalone",
   "background_color": "#f6f6f6",
   "theme_color": "#4A90E2"
