@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Leerlingoverzicht</title>
 
-  <link rel="manifest" href="/manifest.json">
-  <link rel="apple-touch-icon" href="/icon-192x192.png">
+  <link rel="manifest" href="/opvolging_huistaken/manifest.json">
+  <link rel="apple-touch-icon" href="/opvolging_huistaken/icon-192x192.png">
   <meta name="theme-color" content="#4A90E2">
   
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -72,10 +72,23 @@
     .navigatie-container button {
       margin: 0;
     }
+
+    /* NIEUW: Container voor de actieknoppen onderaan */
+    .actie-knoppen {
+        display: flex;
+        gap: 10px; /* Ruimte tussen de knoppen */
+    }
+
+    /* NIEUW: Speciale CSS die enkel geldt bij het afdrukken */
+    @media print {
+      .no-print {
+        display: none !important; /* Verberg elementen met deze klasse */
+      }
+    }
   </style>
 </head>
 <body>
-  <div class="navigatie-container">
+  <div class="navigatie-container no-print">
     <button onclick="gaTerug()">← Terug naar overzicht</button>
   </div>
 
@@ -83,13 +96,50 @@
   <div class="grafiek-container">
     <canvas id="taart"></canvas>
     <div id="samenvatting"></div>
-    <button onclick="window.print()">Afdrukken</button>
+    <div class="actie-knoppen no-print">
+        <button id="kopieerBtn" onclick="kopieerSamenvatting()">Kopieer tekst</button>
+        <button onclick="window.print()">Afdrukken</button>
+    </div>
   </div>
 
   <script>
     function gaTerug() {
       window.location.href = 'dashboard.html';
     }
+
+    // NIEUW: Functie om de samenvatting als platte tekst naar het klembord te kopiëren
+    async function kopieerSamenvatting() {
+      const kopieerBtn = document.getElementById('kopieerBtn');
+      const origineleTekst = kopieerBtn.textContent;
+      
+      // Genereer de platte tekst voor het klembord
+      let tekstVoorKlembord = `Samenvatting voor ${naam}:\n\n`;
+      tekstVoorKlembord += `Op tijd: ${telling['op tijd']} keer\n`;
+
+      for (const [status, datumLijst] of Object.entries(statusDetails)) {
+          if (datumLijst.length > 0) {
+              const statusNaam = status.charAt(0).toUpperCase() + status.slice(1);
+              tekstVoorKlembord += `${statusNaam}: ${datumLijst.length} keer\n`;
+              datumLijst.forEach(d => {
+                  tekstVoorKlembord += `\t- ${d}\n`;
+              });
+          }
+      }
+
+      try {
+        await navigator.clipboard.writeText(tekstVoorKlembord);
+        kopieerBtn.textContent = 'Gekopieerd!';
+      } catch (err) {
+        kopieerBtn.textContent = 'Kopiëren mislukt';
+        console.error('Fout bij kopiëren: ', err);
+      }
+
+      // Zet de knoptekst na 2 seconden terug
+      setTimeout(() => {
+        kopieerBtn.textContent = origineleTekst;
+      }, 2000);
+    }
+
 
     const kleuren = {
       "op tijd": "#c8f7c5",
@@ -103,13 +153,11 @@
     const naam = query.get("naam");
     document.getElementById("titel").textContent = `Overzicht voor ${naam}`;
 
-    // AANGEPAST: Lees het nieuwe data-object uit localStorage
     const alleData = JSON.parse(localStorage.getItem("detailPaginaData")) || {};
     const leerlingData = alleData[naam] || {};
     const statussen = (leerlingData.statussen || []).filter(s => s !== 'geen');
     const datums = leerlingData.datums || [];
 
-    // --- Taartdiagram logica (aangepast om enkel te tellen) ---
     const telling = {"op tijd": 0, "te laat": 0, "onvolledig": 0, "niet gemaakt": 0, "ziek": 0};
     statussen.forEach(status => {
       if (status && telling[status] !== undefined) telling[status]++;
@@ -133,7 +181,6 @@
       options: { responsive: true, plugins: { legend: { position: "bottom" } } }
     });
 
-    // --- AANGEPAST: Samenvatting met datums ---
     const samenvattingDiv = document.getElementById("samenvatting");
     let samenvattingHTML = "<h3>Samenvatting</h3><ul>";
 
@@ -144,19 +191,18 @@
       "ziek": []
     };
     
-    // Verzamel de datums voor elke relevante status
     (leerlingData.statussen || []).forEach((status, index) => {
-        if (statusDetails[status]) { // Controleer of het een status is die we willen tonen met datum
+        if (statusDetails[status]) {
             const datumString = datums[index];
             if (datumString) {
-                // Formatteer de datum van YYYY-MM-DD naar DD/MM/YYYY
                 const [year, month, day] = datumString.split('-');
                 statusDetails[status].push(`${day}/${month}/${year}`);
+            } else {
+                 statusDetails[status].push(`(geen datum)`);
             }
         }
     });
 
-    // Bouw de HTML op
     samenvattingHTML += `<li><strong>Op tijd:</strong> ${telling['op tijd']} keer</li>`;
 
     for (const [status, datumLijst] of Object.entries(statusDetails)) {
