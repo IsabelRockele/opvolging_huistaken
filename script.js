@@ -18,13 +18,13 @@ const auth = getAuth(app);
 // Als gebruiker al is ingelogd, stuur direct door naar dashboard
 onAuthStateChanged(auth, (user) => {
   if (user) {
-    // Controleer of we niet al op de dashboard pagina zijn om een oneindige laadcyclus te voorkomen
     if (window.location.pathname.endsWith('index.html') || window.location.pathname.endsWith('/') || window.location.pathname.endsWith('/opvolging_huistaken/')) {
         window.location.href = 'dashboard.html';
     }
   }
 });
 
+// AANGEPAST: 'wwindow' gecorrigeerd naar 'window'
 window.register = function () {
   const email = document.getElementById("email").value;
   const password = document.getElementById("password").value;
@@ -33,7 +33,11 @@ window.register = function () {
       alert("Account aangemaakt! U kunt nu inloggen.");
     })
     .catch((error) => {
-      alert("Fout bij registreren: " + error.message);
+      if (error.code === 'auth/email-already-in-use') {
+        alert("Dit e-mailadres heeft al een account. Probeer alstublieft in te loggen.");
+      } else {
+        alert("Fout bij registreren: " + error.message);
+      }
     });
 };
 
@@ -42,7 +46,6 @@ window.login = function () {
   const password = document.getElementById("password").value;
   signInWithEmailAndPassword(auth, email, password)
     .then((userCredential) => {
-      // Gebruiker succesvol ingelogd, stuur door naar dashboard
       window.location.href = 'dashboard.html';
     })
     .catch((error) => {
@@ -50,14 +53,11 @@ window.login = function () {
     });
 };
 
-
-// --- NIEUW: Service Worker Registratie ---
-// Dit blok moet onderaan je bestand worden toegevoegd.
-
+// Service Worker Registratie
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    // Correct pad met repository-naam
-    navigator.serviceWorker.register('/opvolging_huistaken/sw.js')
+    // AANGEPAST: Pad relatief gemaakt voor lokale en online werking
+    navigator.serviceWorker.register('sw.js')
       .then(registration => {
         console.log('ServiceWorker registratie succesvol!');
       })
