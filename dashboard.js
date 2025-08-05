@@ -10,7 +10,7 @@ let currentUser;
 let leerkrachtData = {
     leerlingen: [],
     huistaken: {},
-    weekDatums: {} // NIEUW: Structuur om datums per week op te slaan
+    weekDatums: {} 
 };
 
 const statusOpties = ["op tijd", "te laat", "onvolledig", "niet gemaakt", "ziek"];
@@ -38,6 +38,8 @@ function setupEventListeners() {
     document.getElementById('logoutBtn').addEventListener('click', () => signOut(auth));
     document.getElementById('addLeerlingBtn').addEventListener('click', voegLeerlingToe);
     document.getElementById('rapportperiode').addEventListener('change', renderTabel);
+    // NIEUW: Koppel de nieuwe knop aan de reset-functie
+    document.getElementById('nieuwSchooljaarBtn').addEventListener('click', startNieuwSchooljaar);
 }
 
 function koppelDataEnRender() {
@@ -45,13 +47,11 @@ function koppelDataEnRender() {
     onSnapshot(docRef, (docSnap) => {
         if (docSnap.exists()) {
             leerkrachtData = docSnap.data();
-            // Zorg dat de basisstructuren altijd bestaan
             if (!leerkrachtData.leerlingen) leerkrachtData.leerlingen = [];
             if (!leerkrachtData.huistaken) leerkrachtData.huistaken = {};
             if (!leerkrachtData.weekDatums) leerkrachtData.weekDatums = {};
         }
         
-        // Initialiseer weekDatums voor elke periode als die nog niet bestaan
         for (const periode in wekenConfig) {
             if (!leerkrachtData.weekDatums[periode] || leerkrachtData.weekDatums[periode].length !== wekenConfig[periode]) {
                 leerkrachtData.weekDatums[periode] = Array(wekenConfig[periode]).fill('');
@@ -68,9 +68,8 @@ function renderTabel() {
     const container = document.getElementById("tabelContainer");
     container.innerHTML = "";
     
-    // AANGEPAST: Geef een object door met statussen EN datums
     const leerlingDataForStorage = {};
-    leerkrachtData.leerlingen.forEach(l => {
+    (leerkrachtData.leerlingen || []).forEach(l => {
         const statussen = leerkrachtData.huistaken[l.id]?.[periode] || Array(aantalWeken).fill('op tijd');
         leerlingDataForStorage[l.naam] = {
             statussen: statussen,
@@ -80,14 +79,13 @@ function renderTabel() {
     localStorage.setItem("detailPaginaData", JSON.stringify(leerlingDataForStorage));
     localStorage.setItem("huidigeRapportperiode", periode);
 
-    if (leerkrachtData.leerlingen.length === 0) {
+    if (!leerkrachtData.leerlingen || leerkrachtData.leerlingen.length === 0) {
         container.innerHTML = "<p>Voeg een leerling toe om te beginnen.</p>";
         return;
     }
 
     const tabel = document.createElement("table");
     const thead = tabel.insertRow();
-    // AANGEPAST: Voeg een datum-input toe aan elke week-header
     thead.innerHTML = "<th>Leerling</th>" + Array.from({length: aantalWeken}, (_, i) => 
         `<th>
             Week ${i+1}<br>
@@ -175,14 +173,12 @@ async function updateStatus(leerlingId, periode, weekIndex, nieuweStatus) {
     await slaDataOp();
 }
 
-// NIEUW: Functie om de datum van een week op te slaan
 window.updateWeekDatum = async function(periode, weekIndex, nieuweDatum) {
     if (!leerkrachtData.weekDatums[periode]) {
         leerkrachtData.weekDatums[periode] = Array(wekenConfig[periode]).fill('');
     }
     leerkrachtData.weekDatums[periode][weekIndex] = nieuweDatum;
     await slaDataOp();
-    // Herbouw de tabel om de data voor leerling.html te vernieuwen
     renderTabel();
 }
 
@@ -202,4 +198,22 @@ window.toggleWeek = async function(index) {
         }
     });
     await slaDataOp();
+}
+
+// NIEUW: Functie om de data van een schooljaar te wissen
+async function startNieuwSchooljaar() {
+    const bevestiging = prompt("OPGELET: U staat op het punt alle leerlingen, statussen en datums te verwijderen. Dit kan niet ongedaan worden gemaakt. Typ 'RESET' om te bevestigen.");
+    if (bevestiging === 'RESET') {
+        leerkrachtData.leerlingen = [];
+        leerkrachtData.huistaken = {};
+        leerkrachtData.weekDatums = {}; // Wis ook de datums
+        
+        // Sla de lege data op naar Firebase
+        await slaDataOp();
+
+        // De onSnapshot listener zal de lege tabel automatisch renderen
+        alert("Alle data is gewist. U kunt beginnen met een nieuw schooljaar.");
+    } else {
+        alert("Actie geannuleerd.");
+    }
 }
