@@ -4,9 +4,13 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Leerlingoverzicht</title>
+
+  <link rel="manifest" href="/manifest.json">
+  <link rel="apple-touch-icon" href="/icon-192x192.png">
+  <meta name="theme-color" content="#4A90E2">
+  
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
-    /* NIEUW: Stijl voor de terug-knop container */
     .navigatie-container {
       position: absolute;
       top: 1rem;
@@ -17,14 +21,14 @@
       font-family: Arial, sans-serif;
       margin: 0;
       padding: 1rem;
-      padding-top: 4rem; /* Extra padding bovenaan voor de knop */
+      padding-top: 4rem;
       display: flex;
       flex-direction: column;
       align-items: center;
       background: #f9f9f9;
-      height: 100vh;
+      min-height: 100vh;
       box-sizing: border-box;
-      position: relative; /* Nodig voor absolute positionering van de knop */
+      position: relative;
     }
     h1 {
       margin: 0.5rem 0;
@@ -53,12 +57,18 @@
     #samenvatting h3 {
       margin-top: 0;
     }
+    #samenvatting ul {
+        padding-left: 20px;
+    }
+    #samenvatting ul ul {
+        padding-left: 20px;
+        font-style: italic;
+    }
     button {
       margin-top: 1rem;
       padding: 0.5rem 1rem;
       cursor: pointer;
     }
-    /* Stijl voor de navigatieknoppen apart */
     .navigatie-container button {
       margin: 0;
     }
@@ -77,7 +87,6 @@
   </div>
 
   <script>
-    // NIEUW: Functie om terug te navigeren
     function gaTerug() {
       window.location.href = 'dashboard.html';
     }
@@ -94,21 +103,17 @@
     const naam = query.get("naam");
     document.getElementById("titel").textContent = `Overzicht voor ${naam}`;
 
-    const data = JSON.parse(localStorage.getItem("huistakenData")) || {};
-    const statussen = (data[naam] || []).filter(s => s !== 'geen');
+    // AANGEPAST: Lees het nieuwe data-object uit localStorage
+    const alleData = JSON.parse(localStorage.getItem("detailPaginaData")) || {};
+    const leerlingData = alleData[naam] || {};
+    const statussen = (leerlingData.statussen || []).filter(s => s !== 'geen');
+    const datums = leerlingData.datums || [];
 
-    const telling = {
-      "op tijd": 0,
-      "te laat": 0,
-      "onvolledig": 0,
-      "niet gemaakt": 0,
-      "ziek": 0
-    };
-
+    // --- Taartdiagram logica (aangepast om enkel te tellen) ---
+    const telling = {"op tijd": 0, "te laat": 0, "onvolledig": 0, "niet gemaakt": 0, "ziek": 0};
     statussen.forEach(status => {
       if (status && telling[status] !== undefined) telling[status]++;
     });
-
     const totaal = Object.values(telling).reduce((a, b) => a + b, 0);
 
     const ctx = document.getElementById("taart").getContext("2d");
@@ -125,21 +130,47 @@
           backgroundColor: Object.keys(telling).map(k => kleuren[k])
         }]
       },
-      options: {
-        responsive: true,
-        plugins: {
-          legend: {
-            position: "bottom"
-          }
-        }
-      }
+      options: { responsive: true, plugins: { legend: { position: "bottom" } } }
     });
 
+    // --- AANGEPAST: Samenvatting met datums ---
     const samenvattingDiv = document.getElementById("samenvatting");
     let samenvattingHTML = "<h3>Samenvatting</h3><ul>";
-    for (const [status, aantal] of Object.entries(telling)) {
-        samenvattingHTML += `<li><strong>${status.charAt(0).toUpperCase() + status.slice(1)}:</strong> ${aantal} keer</li>`;
+
+    const statusDetails = {
+      "te laat": [],
+      "onvolledig": [],
+      "niet gemaakt": [],
+      "ziek": []
+    };
+    
+    // Verzamel de datums voor elke relevante status
+    (leerlingData.statussen || []).forEach((status, index) => {
+        if (statusDetails[status]) { // Controleer of het een status is die we willen tonen met datum
+            const datumString = datums[index];
+            if (datumString) {
+                // Formatteer de datum van YYYY-MM-DD naar DD/MM/YYYY
+                const [year, month, day] = datumString.split('-');
+                statusDetails[status].push(`${day}/${month}/${year}`);
+            }
+        }
+    });
+
+    // Bouw de HTML op
+    samenvattingHTML += `<li><strong>Op tijd:</strong> ${telling['op tijd']} keer</li>`;
+
+    for (const [status, datumLijst] of Object.entries(statusDetails)) {
+        if (datumLijst.length > 0) {
+            const statusNaam = status.charAt(0).toUpperCase() + status.slice(1);
+            samenvattingHTML += `<li><strong>${statusNaam}:</strong> ${datumLijst.length} keer`;
+            samenvattingHTML += `<ul>`;
+            datumLijst.forEach(d => {
+                samenvattingHTML += `<li>${d}</li>`;
+            });
+            samenvattingHTML += `</ul></li>`;
+        }
     }
+
     samenvattingHTML += "</ul>";
     samenvattingDiv.innerHTML = samenvattingHTML;
 
