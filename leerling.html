@@ -36,6 +36,7 @@
     canvas {
       max-width: 400px;
       max-height: 400px;
+      background-color: #fff; /* Witte achtergrond voor de opgeslagen afbeelding */
     }
     .grafiek-container {
       display: flex;
@@ -73,16 +74,17 @@
       margin: 0;
     }
 
-    /* NIEUW: Container voor de actieknoppen onderaan */
     .actie-knoppen {
         display: flex;
-        gap: 10px; /* Ruimte tussen de knoppen */
+        gap: 10px;
     }
 
-    /* NIEUW: Speciale CSS die enkel geldt bij het afdrukken */
     @media print {
       .no-print {
-        display: none !important; /* Verberg elementen met deze klasse */
+        display: none !important;
+      }
+      canvas {
+        background-color: transparent; /* Geen achtergrond bij printen */
       }
     }
   </style>
@@ -98,6 +100,7 @@
     <div id="samenvatting"></div>
     <div class="actie-knoppen no-print">
         <button id="kopieerBtn" onclick="kopieerSamenvatting()">Kopieer tekst</button>
+        <button onclick="slaDiagramOp()">Sla diagram op</button>
         <button onclick="window.print()">Afdrukken</button>
     </div>
   </div>
@@ -107,12 +110,10 @@
       window.location.href = 'dashboard.html';
     }
 
-    // NIEUW: Functie om de samenvatting als platte tekst naar het klembord te kopiëren
     async function kopieerSamenvatting() {
       const kopieerBtn = document.getElementById('kopieerBtn');
       const origineleTekst = kopieerBtn.textContent;
       
-      // Genereer de platte tekst voor het klembord
       let tekstVoorKlembord = `Samenvatting voor ${naam}:\n\n`;
       tekstVoorKlembord += `Op tijd: ${telling['op tijd']} keer\n`;
 
@@ -134,12 +135,25 @@
         console.error('Fout bij kopiëren: ', err);
       }
 
-      // Zet de knoptekst na 2 seconden terug
       setTimeout(() => {
         kopieerBtn.textContent = origineleTekst;
       }, 2000);
     }
 
+    // NIEUW: Functie om de canvas als PNG te downloaden
+    function slaDiagramOp() {
+        const canvas = document.getElementById('taart');
+        const link = document.createElement('a');
+        
+        // Bestandsnaam voor de download
+        link.download = `diagram-${naam.replace(/ /g, '_')}.png`; 
+        
+        // Converteer de canvas naar een afbeelding data-URL
+        link.href = canvas.toDataURL('image/png');
+        
+        // Simuleer een klik op de link om de download te starten
+        link.click();
+    }
 
     const kleuren = {
       "op tijd": "#c8f7c5",
@@ -178,7 +192,21 @@
           backgroundColor: Object.keys(telling).map(k => kleuren[k])
         }]
       },
-      options: { responsive: true, plugins: { legend: { position: "bottom" } } }
+      options: { 
+          responsive: true, 
+          plugins: { 
+              legend: { position: "bottom" } 
+          },
+          // Zorgt ervoor dat de achtergrond wit is bij het opslaan
+          animation: {
+              onComplete: () => {
+                  ctx.globalCompositeOperation = 'destination-over';
+                  ctx.fillStyle = '#ffffff';
+                  ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+                  ctx.globalCompositeOperation = 'source-over';
+              }
+          }
+      }
     });
 
     const samenvattingDiv = document.getElementById("samenvatting");
