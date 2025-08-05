@@ -9,7 +9,8 @@ const db = getFirestore();
 let currentUser;
 let leerkrachtData = {
     leerlingen: [],
-    huistaken: {}
+    huistaken: {},
+    weekDatums: {} // NIEUW: Structuur om datums per week op te slaan
 };
 
 const statusOpties = ["op tijd", "te laat", "onvolledig", "niet gemaakt", "ziek"];
@@ -44,8 +45,17 @@ function koppelDataEnRender() {
     onSnapshot(docRef, (docSnap) => {
         if (docSnap.exists()) {
             leerkrachtData = docSnap.data();
+            // Zorg dat de basisstructuren altijd bestaan
             if (!leerkrachtData.leerlingen) leerkrachtData.leerlingen = [];
             if (!leerkrachtData.huistaken) leerkrachtData.huistaken = {};
+            if (!leerkrachtData.weekDatums) leerkrachtData.weekDatums = {};
+        }
+        
+        // Initialiseer weekDatums voor elke periode als die nog niet bestaan
+        for (const periode in wekenConfig) {
+            if (!leerkrachtData.weekDatums[periode] || leerkrachtData.weekDatums[periode].length !== wekenConfig[periode]) {
+                leerkrachtData.weekDatums[periode] = Array(wekenConfig[periode]).fill('');
+            }
         }
         renderTabel();
     });
@@ -54,16 +64,20 @@ function koppelDataEnRender() {
 function renderTabel() {
     const periode = document.getElementById("rapportperiode").value;
     const aantalWeken = wekenConfig[periode];
+    const datumsVoorPeriode = leerkrachtData.weekDatums[periode] || Array(aantalWeken).fill('');
     const container = document.getElementById("tabelContainer");
     container.innerHTML = "";
     
-    // Data voorbereiden voor leerling.html (localStorage)
+    // AANGEPAST: Geef een object door met statussen EN datums
     const leerlingDataForStorage = {};
     leerkrachtData.leerlingen.forEach(l => {
-        // AANGEPAST: Stuur een standaardlijst met 'op tijd' als er nog geen data is, in plaats van een lege lijst.
-        leerlingDataForStorage[l.naam] = leerkrachtData.huistaken[l.id]?.[periode] || Array(wekenConfig[periode]).fill('op tijd');
+        const statussen = leerkrachtData.huistaken[l.id]?.[periode] || Array(aantalWeken).fill('op tijd');
+        leerlingDataForStorage[l.naam] = {
+            statussen: statussen,
+            datums: datumsVoorPeriode
+        };
     });
-    localStorage.setItem("huistakenData", JSON.stringify(leerlingDataForStorage));
+    localStorage.setItem("detailPaginaData", JSON.stringify(leerlingDataForStorage));
     localStorage.setItem("huidigeRapportperiode", periode);
 
     if (leerkrachtData.leerlingen.length === 0) {
@@ -73,8 +87,14 @@ function renderTabel() {
 
     const tabel = document.createElement("table");
     const thead = tabel.insertRow();
+    // AANGEPAST: Voeg een datum-input toe aan elke week-header
     thead.innerHTML = "<th>Leerling</th>" + Array.from({length: aantalWeken}, (_, i) => 
-        `<th>Week ${i+1}<br><button onclick="window.toggleWeek(${i})">Geen taak</button></th>`).join("") + "<th>Overzicht (% op tijd)</th>";
+        `<th>
+            Week ${i+1}<br>
+            <input type="date" value="${datumsVoorPeriode[i] || ''}" onchange="window.updateWeekDatum('${periode}', ${i}, this.value)" style="width: 110px;">
+            <br>
+            <button onclick="window.toggleWeek(${i})">Geen taak</button>
+        </th>`).join("") + "<th>Overzicht (% op tijd)</th>";
 
     leerkrachtData.leerlingen.forEach(leerling => {
         const rij = tabel.insertRow();
@@ -132,7 +152,6 @@ async function voegLeerlingToe() {
     if (naam === '') { alert('Geef een naam op.'); return; }
 
     leerkrachtData.leerlingen.push({ id: `id_${Date.now()}`, naam: naam });
-    
     leerkrachtData.leerlingen.sort((a, b) => a.naam.localeCompare(b.naam));
 
     input.value = '';
@@ -154,6 +173,17 @@ async function updateStatus(leerlingId, periode, weekIndex, nieuweStatus) {
     }
     leerkrachtData.huistaken[leerlingId][periode][weekIndex] = nieuweStatus;
     await slaDataOp();
+}
+
+// NIEUW: Functie om de datum van een week op te slaan
+window.updateWeekDatum = async function(periode, weekIndex, nieuweDatum) {
+    if (!leerkrachtData.weekDatums[periode]) {
+        leerkrachtData.weekDatums[periode] = Array(wekenConfig[periode]).fill('');
+    }
+    leerkrachtData.weekDatums[periode][weekIndex] = nieuweDatum;
+    await slaDataOp();
+    // Herbouw de tabel om de data voor leerling.html te vernieuwen
+    renderTabel();
 }
 
 window.toggleWeek = async function(index) {
