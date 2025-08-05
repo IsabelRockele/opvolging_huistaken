@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard Huistaken</title>
+  <link rel="stylesheet" href="dashboard.css" />
+</head>
+<body>
+
+  <div class="header">
+    <h1>Dashboard Huistaken</h1>
+    <button id="logoutBtn">Uitloggen</button>
+  </div>
+
+  <div id="content" style="display: none;">
+    <div id="leerlingBeheer">
+      <h2>Klasbeheer</h2>
+      <input type="text" id="nieuweLeerlingNaam" placeholder="Naam nieuwe leerling" />
+      <button id="addLeerlingBtn">Leerling Toevoegen</button>
+      <ul id="leerlingenLijst"></ul>
+    </div>
+
+    <hr>
+
+    <h2>Huistakenoverzicht</h2>
+    <label for="rapportperiode">Rapportperiode:</label>
+    <select id="rapportperiode">
+      <option value="1">Rapportperiode 1 (15 weken)</option>
+      <option value="2">Rapportperiode 2 (11 weken)</option>
+      <option value="3">Rapportperiode 3 (11 weken)</option>
+    </select>
+    <div id="tabelContainer"></div>
+  </div>
+
+  <script type="module" src="script.js"></script> 
+  <script type="module" src="dashboard.js"></script>
+</body>
+</html>

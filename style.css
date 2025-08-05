@@ -1,0 +1,16 @@
+
+body {
+  font-family: Arial, sans-serif;
+  margin: 2rem;
+  background-color: #f3f3f3;
+}
+input {
+  display: block;
+  margin: 0.5rem 0;
+  padding: 0.5rem;
+  width: 250px;
+}
+button {
+  margin: 0.25rem;
+  padding: 0.5rem 1rem;
+}

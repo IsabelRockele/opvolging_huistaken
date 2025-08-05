@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Leerlingoverzicht</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    /* NIEUW: Stijl voor de terug-knop container */
+    .navigatie-container {
+      position: absolute;
+      top: 1rem;
+      left: 1rem;
+    }
+
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 1rem;
+      padding-top: 4rem; /* Extra padding bovenaan voor de knop */
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      background: #f9f9f9;
+      height: 100vh;
+      box-sizing: border-box;
+      position: relative; /* Nodig voor absolute positionering van de knop */
+    }
+    h1 {
+      margin: 0.5rem 0;
+    }
+    canvas {
+      max-width: 400px;
+      max-height: 400px;
+    }
+    .grafiek-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      flex-grow: 1;
+      justify-content: center;
+      text-align: center;
+    }
+    #samenvatting {
+      margin-top: 1.5rem;
+      padding: 1rem;
+      background-color: #fff;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      min-width: 300px;
+      text-align: left;
+    }
+    #samenvatting h3 {
+      margin-top: 0;
+    }
+    button {
+      margin-top: 1rem;
+      padding: 0.5rem 1rem;
+      cursor: pointer;
+    }
+    /* Stijl voor de navigatieknoppen apart */
+    .navigatie-container button {
+      margin: 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="navigatie-container">
+    <button onclick="gaTerug()">← Terug naar overzicht</button>
+  </div>
+
+  <h1 id="titel"></h1>
+  <div class="grafiek-container">
+    <canvas id="taart"></canvas>
+    <div id="samenvatting"></div>
+    <button onclick="window.print()">Afdrukken</button>
+  </div>
+
+  <script>
+    // NIEUW: Functie om terug te navigeren
+    function gaTerug() {
+      window.location.href = 'dashboard.html';
+    }
+
+    const kleuren = {
+      "op tijd": "#c8f7c5",
+      "te laat": "#ffe0b3",
+      "onvolledig": "#fff9c4",
+      "niet gemaakt": "#f8d7da",
+      "ziek": "#d0e7ff"
+    };
+
+    const query = new URLSearchParams(window.location.search);
+    const naam = query.get("naam");
+    document.getElementById("titel").textContent = `Overzicht voor ${naam}`;
+
+    const data = JSON.parse(localStorage.getItem("huistakenData")) || {};
+    const statussen = (data[naam] || []).filter(s => s !== 'geen');
+
+    const telling = {
+      "op tijd": 0,
+      "te laat": 0,
+      "onvolledig": 0,
+      "niet gemaakt": 0,
+      "ziek": 0
+    };
+
+    statussen.forEach(status => {
+      if (status && telling[status] !== undefined) telling[status]++;
+    });
+
+    const totaal = Object.values(telling).reduce((a, b) => a + b, 0);
+
+    const ctx = document.getElementById("taart").getContext("2d");
+    new Chart(ctx, {
+      type: "pie",
+      data: {
+        labels: Object.keys(telling).map(key => {
+          const waarde = telling[key];
+          const percentage = totaal > 0 ? Math.round((waarde / totaal) * 100) : 0;
+          return `${key} (${percentage}%)`;
+        }),
+        datasets: [{
+          data: Object.values(telling),
+          backgroundColor: Object.keys(telling).map(k => kleuren[k])
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: {
+            position: "bottom"
+          }
+        }
+      }
+    });
+
+    const samenvattingDiv = document.getElementById("samenvatting");
+    let samenvattingHTML = "<h3>Samenvatting</h3><ul>";
+    for (const [status, aantal] of Object.entries(telling)) {
+        samenvattingHTML += `<li><strong>${status.charAt(0).toUpperCase() + status.slice(1)}:</strong> ${aantal} keer</li>`;
+    }
+    samenvattingHTML += "</ul>";
+    samenvattingDiv.innerHTML = samenvattingHTML;
+
+  </script>
+</body>
+</html>
