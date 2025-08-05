@@ -19,7 +19,7 @@ const auth = getAuth(app);
 onAuthStateChanged(auth, (user) => {
   if (user) {
     // Controleer of we niet al op de dashboard pagina zijn om een oneindige laadcyclus te voorkomen
-    if (window.location.pathname.endsWith('index.html') || window.location.pathname.endsWith('/')) {
+    if (window.location.pathname.endsWith('index.html') || window.location.pathname.endsWith('/') || window.location.pathname.endsWith('/opvolging_huistaken/')) {
         window.location.href = 'dashboard.html';
     }
   }
@@ -49,4 +49,21 @@ window.login = function () {
       alert("Fout bij inloggen: " + error.message);
     });
 };
+
+
+// --- NIEUW: Service Worker Registratie ---
+// Dit blok moet onderaan je bestand worden toegevoegd.
+
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    // Correct pad met repository-naam
+    navigator.serviceWorker.register('/opvolging_huistaken/sw.js')
+      .then(registration => {
+        console.log('ServiceWorker registratie succesvol!');
+      })
+      .catch(err => {
+        console.log('ServiceWorker registratie mislukt: ', err);
+      });
+  });
+}
 
