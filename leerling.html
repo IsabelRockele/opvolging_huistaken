@@ -36,7 +36,7 @@
     canvas {
       max-width: 400px;
       max-height: 400px;
-      background-color: #fff; /* Witte achtergrond voor de opgeslagen afbeelding */
+      background-color: #fff;
     }
     .grafiek-container {
       display: flex;
@@ -84,7 +84,7 @@
         display: none !important;
       }
       canvas {
-        background-color: transparent; /* Geen achtergrond bij printen */
+        background-color: transparent;
       }
     }
   </style>
@@ -140,18 +140,14 @@
       }, 2000);
     }
 
-    // NIEUW: Functie om de canvas als PNG te downloaden
     function slaDiagramOp() {
         const canvas = document.getElementById('taart');
         const link = document.createElement('a');
         
-        // Bestandsnaam voor de download
         link.download = `diagram-${naam.replace(/ /g, '_')}.png`; 
         
-        // Converteer de canvas naar een afbeelding data-URL
         link.href = canvas.toDataURL('image/png');
         
-        // Simuleer een klik op de link om de download te starten
         link.click();
     }
 
@@ -197,7 +193,6 @@
           plugins: { 
               legend: { position: "bottom" } 
           },
-          // Zorgt ervoor dat de achtergrond wit is bij het opslaan
           animation: {
               onComplete: () => {
                   ctx.globalCompositeOperation = 'destination-over';
