@@ -158,7 +158,7 @@ async function slaDataOp() {
     await setDoc(docRef, leerkrachtData, { merge: true });
 }
 
-// AANGEPAST: Functie is nu slimmer en vraagt naar de startweek.
+// AANGEPAST: De functie haalt nu correct het getal uit de invoer.
 async function voegLeerlingToe() {
     const input = document.getElementById('nieuweLeerlingNaam');
     const naam = input.value.trim();
@@ -168,40 +168,42 @@ async function voegLeerlingToe() {
     }
 
     const startWeekInput = prompt(`Vanaf welke week start ${naam} in de klas? (bv. 5)\nLaat leeg of typ 1 als de leerling vanaf het begin aanwezig was.`);
-    // Als de gebruiker op annuleren klikt, stop de functie
     if (startWeekInput === null) {
-        return;
+        return; 
     }
     
-    const startWeek = parseInt(startWeekInput, 10);
-    const periode = document.getElementById("rapportperiode").value;
-    const aantalWeken = wekenConfig[periode];
+    // NIEUWE, SLIMMERE LOGICA OM HET GETAL TE VINDEN
+    let startWeek = 1; // Standaardwaarde is 1
+    if (startWeekInput) {
+        const gevondenGetal = startWeekInput.match(/\d+/); // Zoek naar de eerste reeks cijfers
+        if (gevondenGetal) {
+            startWeek = parseInt(gevondenGetal[0], 10);
+        }
+    }
     
     const nieuweLeerling = { id: `id_${Date.now()}`, naam: naam };
 
-    // Voeg leerling toe aan de lijst en sorteer
     leerkrachtData.leerlingen.push(nieuweLeerling);
     leerkrachtData.leerlingen.sort((a, b) => a.naam.localeCompare(b.naam));
 
-    // Maak de initiële statuslijst voor de huidige periode
-    const nieuweStatussen = Array(aantalWeken).fill('op tijd');
-    if (!isNaN(startWeek) && startWeek > 1) {
-        // Zet alle weken VOOR de startweek op 'geen'
-        for (let i = 0; i < startWeek - 1; i++) {
-            if (i < aantalWeken) { // Zorg dat we niet buiten de array gaan
-                nieuweStatussen[i] = 'geen';
+    leerkrachtData.huistaken[nieuweLeerling.id] = {};
+
+    for (const periode in wekenConfig) {
+        const aantalWeken = wekenConfig[periode];
+        const nieuweStatussen = Array(aantalWeken).fill('op tijd');
+
+        if (!isNaN(startWeek) && startWeek > 1) {
+            for (let i = 0; i < startWeek - 1; i++) {
+                if (i < aantalWeken) {
+                    nieuweStatussen[i] = 'geen';
+                }
             }
         }
+        leerkrachtData.huistaken[nieuweLeerling.id][periode] = nieuweStatussen;
     }
-
-    // Sla de statussen op in de database
-    if (!leerkrachtData.huistaken[nieuweLeerling.id]) {
-        leerkrachtData.huistaken[nieuweLeerling.id] = {};
-    }
-    leerkrachtData.huistaken[nieuweLeerling.id][periode] = nieuweStatussen;
 
     input.value = '';
-    await slaDataOp(); // Sla alles in één keer op
+    await slaDataOp();
 }
 
 
