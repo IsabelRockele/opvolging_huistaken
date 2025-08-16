@@ -1,5 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+// AANGEPAST: sendPasswordResetEmail toegevoegd
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
 // De Firebase-configuratie van uw web-app
 const firebaseConfig = {
@@ -24,7 +25,6 @@ onAuthStateChanged(auth, (user) => {
   }
 });
 
-// AANGEPAST: 'wwindow' gecorrigeerd naar 'window'
 window.register = function () {
   const email = document.getElementById("email").value;
   const password = document.getElementById("password").value;
@@ -53,10 +53,26 @@ window.login = function () {
     });
 };
 
+// NIEUW: Functie voor wachtwoord vergeten
+window.wachtwoordVergeten = function() {
+    const email = document.getElementById("email").value;
+    if (!email) {
+        alert("Vul alstublieft uw e-mailadres in het e-mailveld in en klik dan op 'Wachtwoord vergeten?'.");
+        return;
+    }
+
+    sendPasswordResetEmail(auth, email)
+        .then(() => {
+            alert("Er is een e-mail naar u verzonden om uw wachtwoord opnieuw in te stellen. Controleer uw inbox.");
+        })
+        .catch((error) => {
+            alert("Fout: " + error.message);
+        });
+}
+
 // Service Worker Registratie
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    // AANGEPAST: Pad relatief gemaakt voor lokale en online werking
     navigator.serviceWorker.register('sw.js')
       .then(registration => {
         console.log('ServiceWorker registratie succesvol!');
