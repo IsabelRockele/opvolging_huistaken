@@ -6,8 +6,8 @@
   <title>Huistaken App</title>
   <link rel="stylesheet" href="style.css" />
 
-  <link rel="manifest" href="/opvolging_huistaken/manifest.json">
-  <link rel="apple-touch-icon" href="/opvolging_huistaken/icon-192x192.png">
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icon-192x192.png">
   <meta name="theme-color" content="#4A90E2">
 
 </head>
@@ -19,6 +19,10 @@
     <input type="password" id="password" placeholder="Wachtwoord" />
     <button onclick="register()">Registreren</button>
     <button onclick="login()">Inloggen</button>
+    
+    <div class="wachtwoord-opties">
+      <a href="#" onclick="wachtwoordVergeten()">Wachtwoord vergeten?</a>
+    </div>
   </div>
 
   <script type="module" src="script.js"></script>
