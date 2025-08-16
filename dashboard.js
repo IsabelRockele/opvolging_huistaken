@@ -1,5 +1,4 @@
 // Importeer Firebase services
-// AANGEPAST: updatePassword toegevoegd
 import { getAuth, onAuthStateChanged, signOut, updatePassword } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import { getFirestore, doc, onSnapshot, setDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
@@ -14,7 +13,7 @@ let leerkrachtData = {
     weekDatums: {} 
 };
 
-const statusOpties = ["op tijd", "te laat", "onvolledig", "niet gemaakt", "ziek"];
+const statusOpties = ["op tijd", "te laat", "onvolledig", "niet gemaakt", "ziek", "geen"];
 const kleuren = {
   "op tijd": "op-tijd", "te laat": "te-laat", "onvolledig": "onvolledig",
   "niet gemaakt": "niet-gemaakt", "ziek": "ziek", "geen": ""
@@ -40,11 +39,9 @@ function setupEventListeners() {
     document.getElementById('addLeerlingBtn').addEventListener('click', voegLeerlingToe);
     document.getElementById('rapportperiode').addEventListener('change', renderTabel);
     document.getElementById('nieuwSchooljaarBtn').addEventListener('click', startNieuwSchooljaar);
-    // NIEUW: Koppel de nieuwe knop aan de wijzig-functie
     document.getElementById('wijzigWachtwoordBtn').addEventListener('click', wijzigWachtwoord);
 }
 
-// NIEUW: Functie om wachtwoord te wijzigen
 function wijzigWachtwoord() {
     const nieuwWachtwoord = prompt("Voer uw nieuwe wachtwoord in. Het moet minstens 6 tekens lang zijn.");
     
@@ -53,13 +50,11 @@ function wijzigWachtwoord() {
             alert("Uw wachtwoord is succesvol gewijzigd.");
         }).catch((error) => {
             alert("Fout bij het wijzigen van het wachtwoord: " + error.message);
-            // Mogelijke fout: gebruiker moet recent ingelogd zijn.
         });
     } else if (nieuwWachtwoord) {
         alert("Wachtwoord te kort. Het moet minstens 6 tekens bevatten.");
     }
 }
-
 
 function koppelDataEnRender() {
     const docRef = doc(db, "leerkrachten", currentUser.uid);
@@ -163,17 +158,52 @@ async function slaDataOp() {
     await setDoc(docRef, leerkrachtData, { merge: true });
 }
 
+// AANGEPAST: Functie is nu slimmer en vraagt naar de startweek.
 async function voegLeerlingToe() {
     const input = document.getElementById('nieuweLeerlingNaam');
     const naam = input.value.trim();
-    if (naam === '') { alert('Geef een naam op.'); return; }
+    if (naam === '') {
+        alert('Geef een naam op.');
+        return;
+    }
 
-    leerkrachtData.leerlingen.push({ id: `id_${Date.now()}`, naam: naam });
+    const startWeekInput = prompt(`Vanaf welke week start ${naam} in de klas? (bv. 5)\nLaat leeg of typ 1 als de leerling vanaf het begin aanwezig was.`);
+    // Als de gebruiker op annuleren klikt, stop de functie
+    if (startWeekInput === null) {
+        return;
+    }
+    
+    const startWeek = parseInt(startWeekInput, 10);
+    const periode = document.getElementById("rapportperiode").value;
+    const aantalWeken = wekenConfig[periode];
+    
+    const nieuweLeerling = { id: `id_${Date.now()}`, naam: naam };
+
+    // Voeg leerling toe aan de lijst en sorteer
+    leerkrachtData.leerlingen.push(nieuweLeerling);
     leerkrachtData.leerlingen.sort((a, b) => a.naam.localeCompare(b.naam));
 
+    // Maak de initiële statuslijst voor de huidige periode
+    const nieuweStatussen = Array(aantalWeken).fill('op tijd');
+    if (!isNaN(startWeek) && startWeek > 1) {
+        // Zet alle weken VOOR de startweek op 'geen'
+        for (let i = 0; i < startWeek - 1; i++) {
+            if (i < aantalWeken) { // Zorg dat we niet buiten de array gaan
+                nieuweStatussen[i] = 'geen';
+            }
+        }
+    }
+
+    // Sla de statussen op in de database
+    if (!leerkrachtData.huistaken[nieuweLeerling.id]) {
+        leerkrachtData.huistaken[nieuweLeerling.id] = {};
+    }
+    leerkrachtData.huistaken[nieuweLeerling.id][periode] = nieuweStatussen;
+
     input.value = '';
-    await slaDataOp();
+    await slaDataOp(); // Sla alles in één keer op
 }
+
 
 window.verwijderLeerling = async function(leerlingId) {
     if (confirm('Weet je zeker dat je deze leerling en alle bijbehorende data wilt verwijderen?')) {
