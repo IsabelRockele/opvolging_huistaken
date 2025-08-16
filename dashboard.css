@@ -32,25 +32,11 @@ td select {
   padding: 2px;
 }
 
-.op-tijd {
-  background-color: #c8f7c5;
-}
-
-.te-laat {
-  background-color: #fdd49a;
-}
-
-.onvolledig {
-  background-color: #fff7a8;
-}
-
-.niet-gemaakt {
-  background-color: #f4cccc;
-}
-
-.ziek {
-  background-color: #b5d6f6;
-}
+.op-tijd { background-color: #c8f7c5; }
+.te-laat { background-color: #fdd49a; }
+.onvolledig { background-color: #fff7a8; }
+.niet-gemaakt { background-color: #f4cccc; }
+.ziek { background-color: #b5d6f6; }
 
 button {
   font-size: 10px;
@@ -70,7 +56,13 @@ button {
   margin: 0;
 }
 
-#logoutBtn, #addLeerlingBtn, #nieuwSchooljaarBtn {
+/* NIEUW: Container voor knoppen in header */
+.header-knoppen {
+    display: flex;
+    gap: 10px; /* Ruimte tussen knoppen */
+}
+
+#logoutBtn, #addLeerlingBtn, #nieuwSchooljaarBtn, #wijzigWachtwoordBtn {
   font-size: 14px;
   padding: 8px 12px;
   border-radius: 5px;
@@ -89,9 +81,7 @@ button {
   margin-bottom: 20px;
 }
 
-.invoer-groep {
-  margin: 5px;
-}
+.invoer-groep { margin: 5px; }
 
 td:first-child {
   display: flex;
@@ -110,27 +100,14 @@ td:first-child {
   justify-content: center;
 }
 
-.verwijder-knop:hover {
-  background-color: #ffe0e0;
-}
+.verwijder-knop:hover { background-color: #ffe0e0; }
+.verwijder-knop svg { width: 16px; height: 16px; fill: #888; }
+.verwijder-knop:hover svg { fill: #d32f2f; }
 
-.verwijder-knop svg {
-  width: 16px;
-  height: 16px;
-  fill: #888;
-}
-
-.verwijder-knop:hover svg {
-  fill: #d32f2f;
-}
-
-/* NIEUW: Stijl voor de reset-knop */
 .reset-knop {
-  background-color: #f44336 !important; /* Rood */
+  background-color: #f44336 !important;
   color: white;
   border-color: #d32f2f !important;
 }
 
-.reset-knop:hover {
-    background-color: #d32f2f !important;
-}
+.reset-knop:hover { background-color: #d32f2f !important; }
