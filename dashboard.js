@@ -1,11 +1,12 @@
 // Importeer Firebase services
-import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+// AANGEPAST: updatePassword toegevoegd
+import { getAuth, onAuthStateChanged, signOut, updatePassword } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import { getFirestore, doc, onSnapshot, setDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 const auth = getAuth();
 const db = getFirestore();
 
-// Globale variabelen om de staat van de app bij te houden
+// Globale variabelen
 let currentUser;
 let leerkrachtData = {
     leerlingen: [],
@@ -38,9 +39,27 @@ function setupEventListeners() {
     document.getElementById('logoutBtn').addEventListener('click', () => signOut(auth));
     document.getElementById('addLeerlingBtn').addEventListener('click', voegLeerlingToe);
     document.getElementById('rapportperiode').addEventListener('change', renderTabel);
-    // NIEUW: Koppel de nieuwe knop aan de reset-functie
     document.getElementById('nieuwSchooljaarBtn').addEventListener('click', startNieuwSchooljaar);
+    // NIEUW: Koppel de nieuwe knop aan de wijzig-functie
+    document.getElementById('wijzigWachtwoordBtn').addEventListener('click', wijzigWachtwoord);
 }
+
+// NIEUW: Functie om wachtwoord te wijzigen
+function wijzigWachtwoord() {
+    const nieuwWachtwoord = prompt("Voer uw nieuwe wachtwoord in. Het moet minstens 6 tekens lang zijn.");
+    
+    if (nieuwWachtwoord && nieuwWachtwoord.length >= 6) {
+        updatePassword(currentUser, nieuwWachtwoord).then(() => {
+            alert("Uw wachtwoord is succesvol gewijzigd.");
+        }).catch((error) => {
+            alert("Fout bij het wijzigen van het wachtwoord: " + error.message);
+            // Mogelijke fout: gebruiker moet recent ingelogd zijn.
+        });
+    } else if (nieuwWachtwoord) {
+        alert("Wachtwoord te kort. Het moet minstens 6 tekens bevatten.");
+    }
+}
+
 
 function koppelDataEnRender() {
     const docRef = doc(db, "leerkrachten", currentUser.uid);
@@ -200,18 +219,15 @@ window.toggleWeek = async function(index) {
     await slaDataOp();
 }
 
-// NIEUW: Functie om de data van een schooljaar te wissen
 async function startNieuwSchooljaar() {
     const bevestiging = prompt("OPGELET: U staat op het punt alle leerlingen, statussen en datums te verwijderen. Dit kan niet ongedaan worden gemaakt. Typ 'RESET' om te bevestigen.");
     if (bevestiging === 'RESET') {
         leerkrachtData.leerlingen = [];
         leerkrachtData.huistaken = {};
-        leerkrachtData.weekDatums = {}; // Wis ook de datums
+        leerkrachtData.weekDatums = {};
         
-        // Sla de lege data op naar Firebase
         await slaDataOp();
 
-        // De onSnapshot listener zal de lege tabel automatisch renderen
         alert("Alle data is gewist. U kunt beginnen met een nieuw schooljaar.");
     } else {
         alert("Actie geannuleerd.");
