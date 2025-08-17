@@ -12,6 +12,7 @@ let leerkrachtData = {
     huistaken: {},
     weekDatums: {} 
 };
+let klasOverzichtChartInstance = null;
 
 const statusOpties = ["op tijd", "te laat", "onvolledig", "niet gemaakt", "ziek", "geen"];
 const kleuren = {
@@ -40,8 +41,13 @@ function setupEventListeners() {
     document.getElementById('rapportperiode').addEventListener('change', renderTabel);
     document.getElementById('nieuwSchooljaarBtn').addEventListener('click', startNieuwSchooljaar);
     document.getElementById('wijzigWachtwoordBtn').addEventListener('click', wijzigWachtwoord);
+    document.getElementById('toonOverzichtBtn').addEventListener('click', toonKlasOverzicht);
+    document.getElementById('printOverzichtBtn').addEventListener('click', () => window.print());
+    // NIEUWE EVENT LISTENER
+    document.getElementById('printAlleLeerlingenBtn').addEventListener('click', genereerBulkPdf);
 }
 
+// ... (wijzigWachtwoord, koppelDataEnRender, renderKlasOverzicht, toonKlasOverzicht blijven hetzelfde)
 function wijzigWachtwoord() {
     const nieuwWachtwoord = prompt("Voer uw nieuwe wachtwoord in. Het moet minstens 6 tekens lang zijn.");
     
@@ -75,6 +81,101 @@ function koppelDataEnRender() {
     });
 }
 
+function renderKlasOverzicht() {
+    const periode = document.getElementById("rapportperiode").value;
+    const textContainer = document.getElementById("klasOverzichtText");
+    const chartCanvas = document.getElementById("klasOverzichtChart");
+    
+    let telling = {
+        "op tijd": 0, "te laat": 0, "onvolledig": 0, "niet gemaakt": 0
+    };
+    let totaal = 0;
+    const leerlingScores = {};
+    leerkrachtData.leerlingen.forEach(l => {
+        leerlingScores[l.naam] = { "te laat": 0, "onvolledig": 0, "niet gemaakt": 0 };
+    });
+
+    if (!leerkrachtData.leerlingen || leerkrachtData.leerlingen.length === 0) {
+        chartCanvas.style.display = 'none';
+        textContainer.innerHTML = "<p>Voeg eerst leerlingen toe.</p>";
+        return;
+    }
+
+    leerkrachtData.leerlingen.forEach(leerling => {
+        const statussen = leerkrachtData.huistaken[leerling.id]?.[periode] || [];
+        statussen.forEach(status => {
+            if (status !== 'ziek' && status !== 'geen') {
+                totaal++;
+                if (telling.hasOwnProperty(status)) telling[status]++;
+            }
+            if (leerlingScores[leerling.naam]?.hasOwnProperty(status)) {
+                leerlingScores[leerling.naam][status]++;
+            }
+        });
+    });
+    
+    let overzichtHTML = `<h2>Klasoverzicht Rapportperiode ${periode}</h2>`;
+
+    if (totaal === 0) {
+        chartCanvas.style.display = 'none';
+        overzichtHTML += "<p>Nog geen data beschikbaar om een overzicht te maken.</p>";
+    } else {
+        chartCanvas.style.display = 'block';
+        if (klasOverzichtChartInstance) klasOverzichtChartInstance.destroy();
+        const ctx = chartCanvas.getContext('2d');
+        klasOverzichtChartInstance = new Chart(ctx, {
+            type: 'pie',
+            data: {
+                labels: Object.keys(telling).map(k => `${k.charAt(0).toUpperCase() + k.slice(1)} (${Math.round(telling[k]/totaal*100)}%)`),
+                datasets: [{
+                    data: Object.values(telling),
+                    backgroundColor: ["#c8f7c5", "#fdd49a", "#fff7a8", "#f4cccc"]
+                }]
+            },
+            options: {
+                responsive: true,
+                animation: false,
+                plugins: { legend: { position: 'bottom' } }
+            }
+        });
+
+        overzichtHTML += `<ul style="list-style-type: none; padding: 0; text-align: center;">`;
+        for (const [status, aantal] of Object.entries(telling)) {
+            const percentage = Math.round((aantal / totaal) * 100);
+            const statusNaam = status.charAt(0).toUpperCase() + status.slice(1);
+            overzichtHTML += `<li style="margin-bottom: 5px;"><strong>${statusNaam}:</strong> ${percentage}%</li>`;
+        }
+        overzichtHTML += "</ul>";
+    }
+
+    overzichtHTML += `<hr style="margin: 20px 0;"><h3>Aandachtspunten per categorie</h3>`;
+    const statussenOmTeChecken = ["te laat", "onvolledig", "niet gemaakt"];
+    statussenOmTeChecken.forEach(status => {
+        const statusNaam = status.charAt(0).toUpperCase() + status.slice(1);
+        overzichtHTML += `<h4>${statusNaam}</h4>`;
+        const gesorteerdeLeerlingen = Object.entries(leerlingScores)
+            .map(([naam, scores]) => ({ naam, aantal: scores[status] }))
+            .filter(l => l.aantal > 0).sort((a, b) => b.aantal - a.aantal);
+        if (gesorteerdeLeerlingen.length === 0) {
+            overzichtHTML += `<p style="font-style: italic;">Geen.</p>`;
+        } else {
+            overzichtHTML += `<ul style="list-style-type: none; padding-left: 10px;">`;
+            gesorteerdeLeerlingen.slice(0, 3).forEach(leerling => {
+                overzichtHTML += `<li>${leerling.naam} (${leerling.aantal} keer)</li>`;
+            });
+            overzichtHTML += `</ul>`;
+        }
+    });
+    textContainer.innerHTML = overzichtHTML;
+}
+
+function toonKlasOverzicht() {
+    renderKlasOverzicht();
+    const dialog = document.getElementById('klasOverzichtDialog');
+    dialog.showModal();
+}
+
+// ... (renderTabel en de rest van de functies blijven ongewijzigd)
 function renderTabel() {
     const periode = document.getElementById("rapportperiode").value;
     const aantalWeken = wekenConfig[periode];
@@ -115,7 +216,7 @@ function renderTabel() {
         naamCel.innerHTML = `
             <a href="leerling.html?naam=${encodeURIComponent(leerling.naam)}">${leerling.naam}</a>
             <button class="verwijder-knop" onclick="window.verwijderLeerling('${leerling.id}')" title="Verwijder ${leerling.naam}">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash" viewBox="0 0 16 16">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash" viewBox="  0 16 16">
                     <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5Zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5Zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6Z"/>
                     <path d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1ZM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118ZM2.5 3V2h11v1h-11Z"/>
                 </svg>
@@ -153,6 +254,92 @@ function renderTabel() {
     container.appendChild(tabel);
 }
 
+// --- NIEUWE FUNCTIE OM DE BULK PDF TE GENEREREN ---
+async function genereerBulkPdf() {
+    const btn = document.getElementById('printAlleLeerlingenBtn');
+    btn.textContent = 'PDF genereren...';
+    btn.disabled = true;
+
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF('p', 'mm', 'a4');
+    const periode = document.getElementById("rapportperiode").value;
+    const datums = leerkrachtData.weekDatums[periode] || Array(wekenConfig[periode]).fill('');
+    const renderContainer = document.getElementById('pdf-render-container');
+
+    const leerlingen = leerkrachtData.leerlingen; // Is al gesorteerd
+
+    for (let i = 0; i < leerlingen.length; i++) {
+        const leerling = leerlingen[i];
+        
+        // 1. Data verzamelen voor deze leerling
+        const statussen = (leerkrachtData.huistaken[leerling.id]?.[periode] || []).filter(s => s !== 'geen');
+        const telling = {"op tijd": 0, "te laat": 0, "onvolledig": 0, "niet gemaakt": 0, "ziek": 0};
+        statussen.forEach(s => { if(telling[s] !== undefined) telling[s]++; });
+
+        let samenvattingHTML = '<h3>Samenvatting</h3><ul>';
+        const statusDetails = {"te laat": [], "onvolledig": [], "niet gemaakt": [], "ziek": []};
+        (leerkrachtData.huistaken[leerling.id]?.[periode] || []).forEach((status, index) => {
+            if (statusDetails[status]) {
+                const datumString = datums[index];
+                if (datumString) {
+                    const [year, month, day] = datumString.split('-');
+                    statusDetails[status].push(`${day}/${month}/${year}`);
+                } else {
+                    statusDetails[status].push(`(geen datum)`);
+                }
+            }
+        });
+        samenvattingHTML += `<li><strong>Op tijd:</strong> ${telling['op tijd']} keer</li>`;
+        for (const [status, datumLijst] of Object.entries(statusDetails)) {
+            if (datumLijst.length > 0) {
+                const statusNaam = status.charAt(0).toUpperCase() + status.slice(1);
+                samenvattingHTML += `<li><strong>${statusNaam}:</strong> ${datumLijst.length} keer<ul>`;
+                datumLijst.forEach(d => { samenvattingHTML += `<li>${d}</li>`; });
+                samenvattingHTML += `</ul></li>`;
+            }
+        }
+        samenvattingHTML += "</ul>";
+        
+        // 2. HTML opbouwen in de verborgen container
+        renderContainer.innerHTML = `
+            <h1>Overzicht voor ${leerling.naam}</h1>
+            <canvas id="temp-chart"></canvas>
+            <div id="temp-summary">${samenvattingHTML}</div>
+        `;
+
+        // 3. Diagram tekenen
+        new Chart(document.getElementById('temp-chart').getContext('2d'), {
+            type: 'pie',
+            data: {
+                labels: Object.keys(telling),
+                datasets: [{
+                    data: Object.values(telling),
+                    backgroundColor: ["#c8f7c5", "#ffe0b3", "#fff9c4", "#f8d7da", "#d0e7ff"]
+                }]
+            },
+            options: { animation: false }
+        });
+        
+        // 4. Container omzetten naar afbeelding
+        const canvas = await html2canvas(renderContainer);
+        const imgData = canvas.toDataURL('image/png');
+        const imgProps = pdf.getImageProperties(imgData);
+        const pdfWidth = pdf.internal.pageSize.getWidth();
+        const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+
+        // 5. Afbeelding toevoegen aan PDF
+        if (i > 0) pdf.addPage();
+        pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+    }
+    
+    // 6. PDF opslaan en UI herstellen
+    pdf.save(`rapporten-periode-${periode}.pdf`);
+    renderContainer.innerHTML = '';
+    btn.textContent = 'PDF Alle Rapporten';
+    btn.disabled = false;
+}
+
+
 async function slaDataOp() {
     const docRef = doc(db, "leerkrachten", currentUser.uid);
     await setDoc(docRef, leerkrachtData, { merge: true });
@@ -166,11 +353,10 @@ async function voegLeerlingToe() {
         return;
     }
 
-    // VRAAG 1: De rapportperiode
     let startPeriode = 0;
     while (!startPeriode || !wekenConfig[startPeriode]) {
         const periodeInput = prompt(`In welke rapportperiode start ${naam}? (1, 2, of 3)`);
-        if (periodeInput === null) return; // Gebruiker annuleerde
+        if (periodeInput === null) return;
         
         const periodeNum = parseInt(periodeInput.match(/\d+/)?.[0], 10);
         if (wekenConfig[periodeNum]) {
@@ -180,12 +366,11 @@ async function voegLeerlingToe() {
         }
     }
 
-    // VRAAG 2: De week binnen die periode
     let startWeekInPeriode = 0;
     const maxWeken = wekenConfig[startPeriode];
     while (!startWeekInPeriode || startWeekInPeriode < 1 || startWeekInPeriode > maxWeken) {
         const weekInput = prompt(`In welke week van periode ${startPeriode} start ${naam}? (een getal tussen 1 en ${maxWeken})`);
-        if (weekInput === null) return; // Gebruiker annuleerde
+        if (weekInput === null) return;
         
         const weekNum = parseInt(weekInput.match(/\d+/)?.[0], 10);
         if (weekNum >= 1 && weekNum <= maxWeken) {
@@ -195,13 +380,11 @@ async function voegLeerlingToe() {
         }
     }
     
-    // Stap 3: Bereken de absolute startweek op basis van de antwoorden
     let startWeekAbsoluut = startWeekInPeriode;
     for (let i = 1; i < startPeriode; i++) {
         startWeekAbsoluut += wekenConfig[i];
     }
 
-    // De rest van de logica blijft hetzelfde als in de vorige oplossing
     const nieuweLeerling = { id: `id_${Date.now()}`, naam: naam };
     leerkrachtData.leerlingen.push(nieuweLeerling);
     leerkrachtData.leerlingen.sort((a, b) => a.naam.localeCompare(b.naam));
