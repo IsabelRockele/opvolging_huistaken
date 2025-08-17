@@ -111,3 +111,22 @@ td:first-child {
 }
 
 .reset-knop:hover { background-color: #d32f2f !important; }
+/* Maak de eerste kolom (header en cellen) 'sticky' */
+th:first-child,
+td:first-child {
+  position: -webkit-sticky; /* Voor Safari-compatibiliteit */
+  position: sticky;
+  left: 0;
+  z-index: 1;
+}
+
+/* Zorg ervoor dat de header een eigen achtergrondkleur behoudt */
+th:first-child {
+  background-color: #f2f2f2; /* Zelfde kleur als andere headers */
+  z-index: 2; /* Zorgt dat de header boven de cellen blijft bij verticaal scrollen */
+}
+
+/* Zorg ervoor dat de cellen een eigen achtergrondkleur behouden */
+td:first-child {
+  background-color: white; /* Zelfde kleur als andere cellen */
+}
