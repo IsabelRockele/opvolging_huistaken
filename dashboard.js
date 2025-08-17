@@ -158,7 +158,6 @@ async function slaDataOp() {
     await setDoc(docRef, leerkrachtData, { merge: true });
 }
 
-// AANGEPAST: De functie haalt nu correct het getal uit de invoer.
 async function voegLeerlingToe() {
     const input = document.getElementById('nieuweLeerlingNaam');
     const naam = input.value.trim();
@@ -167,45 +166,70 @@ async function voegLeerlingToe() {
         return;
     }
 
-    const startWeekInput = prompt(`Vanaf welke week start ${naam} in de klas? (bv. 5)\nLaat leeg of typ 1 als de leerling vanaf het begin aanwezig was.`);
-    if (startWeekInput === null) {
-        return; 
+    // VRAAG 1: De rapportperiode
+    let startPeriode = 0;
+    while (!startPeriode || !wekenConfig[startPeriode]) {
+        const periodeInput = prompt(`In welke rapportperiode start ${naam}? (1, 2, of 3)`);
+        if (periodeInput === null) return; // Gebruiker annuleerde
+        
+        const periodeNum = parseInt(periodeInput.match(/\d+/)?.[0], 10);
+        if (wekenConfig[periodeNum]) {
+            startPeriode = periodeNum;
+        } else {
+            alert("Ongeldige invoer. Voer alstublieft 1, 2, of 3 in.");
+        }
     }
-    
-    // NIEUWE, SLIMMERE LOGICA OM HET GETAL TE VINDEN
-    let startWeek = 1; // Standaardwaarde is 1
-    if (startWeekInput) {
-        const gevondenGetal = startWeekInput.match(/\d+/); // Zoek naar de eerste reeks cijfers
-        if (gevondenGetal) {
-            startWeek = parseInt(gevondenGetal[0], 10);
+
+    // VRAAG 2: De week binnen die periode
+    let startWeekInPeriode = 0;
+    const maxWeken = wekenConfig[startPeriode];
+    while (!startWeekInPeriode || startWeekInPeriode < 1 || startWeekInPeriode > maxWeken) {
+        const weekInput = prompt(`In welke week van periode ${startPeriode} start ${naam}? (een getal tussen 1 en ${maxWeken})`);
+        if (weekInput === null) return; // Gebruiker annuleerde
+        
+        const weekNum = parseInt(weekInput.match(/\d+/)?.[0], 10);
+        if (weekNum >= 1 && weekNum <= maxWeken) {
+            startWeekInPeriode = weekNum;
+        } else {
+            alert(`Ongeldige invoer. Voer een getal in tussen 1 en ${maxWeken}.`);
         }
     }
     
-    const nieuweLeerling = { id: `id_${Date.now()}`, naam: naam };
+    // Stap 3: Bereken de absolute startweek op basis van de antwoorden
+    let startWeekAbsoluut = startWeekInPeriode;
+    for (let i = 1; i < startPeriode; i++) {
+        startWeekAbsoluut += wekenConfig[i];
+    }
 
+    // De rest van de logica blijft hetzelfde als in de vorige oplossing
+    const nieuweLeerling = { id: `id_${Date.now()}`, naam: naam };
     leerkrachtData.leerlingen.push(nieuweLeerling);
     leerkrachtData.leerlingen.sort((a, b) => a.naam.localeCompare(b.naam));
-
     leerkrachtData.huistaken[nieuweLeerling.id] = {};
 
-    for (const periode in wekenConfig) {
-        const aantalWeken = wekenConfig[periode];
-        const nieuweStatussen = Array(aantalWeken).fill('op tijd');
+    let wekenVoorgaandePeriodes = 0;
+    const periodes = Object.keys(wekenConfig).sort((a, b) => a - b); 
 
-        if (!isNaN(startWeek) && startWeek > 1) {
-            for (let i = 0; i < startWeek - 1; i++) {
-                if (i < aantalWeken) {
+    for (const periode of periodes) {
+        const aantalWekenInPeriode = wekenConfig[periode];
+        const nieuweStatussen = Array(aantalWekenInPeriode).fill('op tijd');
+        const startWeekRelatief = startWeekAbsoluut - wekenVoorgaandePeriodes;
+
+        if (startWeekRelatief > 1) {
+            for (let i = 0; i < aantalWekenInPeriode; i++) {
+                if ((i + 1) < startWeekRelatief) {
                     nieuweStatussen[i] = 'geen';
                 }
             }
         }
+        
         leerkrachtData.huistaken[nieuweLeerling.id][periode] = nieuweStatussen;
+        wekenVoorgaandePeriodes += aantalWekenInPeriode;
     }
 
     input.value = '';
     await slaDataOp();
 }
-
 
 window.verwijderLeerling = async function(leerlingId) {
     if (confirm('Weet je zeker dat je deze leerling en alle bijbehorende data wilt verwijderen?')) {
