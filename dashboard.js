@@ -12,7 +12,7 @@ let leerkrachtData = {
     huistaken: {},
     weekDatums: {} 
 };
-let klasOverzichtChartInstance = null;
+let klasOverzichtChartInstance = null; // Variabele voor het diagram
 
 const statusOpties = ["op tijd", "te laat", "onvolledig", "niet gemaakt", "ziek", "geen"];
 const kleuren = {
@@ -43,11 +43,9 @@ function setupEventListeners() {
     document.getElementById('wijzigWachtwoordBtn').addEventListener('click', wijzigWachtwoord);
     document.getElementById('toonOverzichtBtn').addEventListener('click', toonKlasOverzicht);
     document.getElementById('printOverzichtBtn').addEventListener('click', () => window.print());
-    // NIEUWE EVENT LISTENER
     document.getElementById('printAlleLeerlingenBtn').addEventListener('click', genereerBulkPdf);
 }
 
-// ... (wijzigWachtwoord, koppelDataEnRender, renderKlasOverzicht, toonKlasOverzicht blijven hetzelfde)
 function wijzigWachtwoord() {
     const nieuwWachtwoord = prompt("Voer uw nieuwe wachtwoord in. Het moet minstens 6 tekens lang zijn.");
     
@@ -138,14 +136,7 @@ function renderKlasOverzicht() {
                 plugins: { legend: { position: 'bottom' } }
             }
         });
-
-        overzichtHTML += `<ul style="list-style-type: none; padding: 0; text-align: center;">`;
-        for (const [status, aantal] of Object.entries(telling)) {
-            const percentage = Math.round((aantal / totaal) * 100);
-            const statusNaam = status.charAt(0).toUpperCase() + status.slice(1);
-            overzichtHTML += `<li style="margin-bottom: 5px;"><strong>${statusNaam}:</strong> ${percentage}%</li>`;
-        }
-        overzichtHTML += "</ul>";
+        // De aparte lijst met percentages is hier weggehaald voor een rustiger beeld
     }
 
     overzichtHTML += `<hr style="margin: 20px 0;"><h3>Aandachtspunten per categorie</h3>`;
@@ -169,13 +160,15 @@ function renderKlasOverzicht() {
     textContainer.innerHTML = overzichtHTML;
 }
 
+// *** DEZE FUNCTIE IS GECORRIGEERD ***
 function toonKlasOverzicht() {
-    renderKlasOverzicht();
     const dialog = document.getElementById('klasOverzichtDialog');
+    // EERST de pop-up tonen...
     dialog.showModal();
+    // ...DAN pas de inhoud genereren.
+    renderKlasOverzicht();
 }
 
-// ... (renderTabel en de rest van de functies blijven ongewijzigd)
 function renderTabel() {
     const periode = document.getElementById("rapportperiode").value;
     const aantalWeken = wekenConfig[periode];
@@ -254,7 +247,6 @@ function renderTabel() {
     container.appendChild(tabel);
 }
 
-// --- NIEUWE FUNCTIE OM DE BULK PDF TE GENEREREN ---
 async function genereerBulkPdf() {
     const btn = document.getElementById('printAlleLeerlingenBtn');
     btn.textContent = 'PDF genereren...';
@@ -266,12 +258,11 @@ async function genereerBulkPdf() {
     const datums = leerkrachtData.weekDatums[periode] || Array(wekenConfig[periode]).fill('');
     const renderContainer = document.getElementById('pdf-render-container');
 
-    const leerlingen = leerkrachtData.leerlingen; // Is al gesorteerd
+    const leerlingen = leerkrachtData.leerlingen;
 
     for (let i = 0; i < leerlingen.length; i++) {
         const leerling = leerlingen[i];
         
-        // 1. Data verzamelen voor deze leerling
         const statussen = (leerkrachtData.huistaken[leerling.id]?.[periode] || []).filter(s => s !== 'geen');
         const telling = {"op tijd": 0, "te laat": 0, "onvolledig": 0, "niet gemaakt": 0, "ziek": 0};
         statussen.forEach(s => { if(telling[s] !== undefined) telling[s]++; });
@@ -300,14 +291,12 @@ async function genereerBulkPdf() {
         }
         samenvattingHTML += "</ul>";
         
-        // 2. HTML opbouwen in de verborgen container
         renderContainer.innerHTML = `
             <h1>Overzicht voor ${leerling.naam}</h1>
             <canvas id="temp-chart"></canvas>
             <div id="temp-summary">${samenvattingHTML}</div>
         `;
 
-        // 3. Diagram tekenen
         new Chart(document.getElementById('temp-chart').getContext('2d'), {
             type: 'pie',
             data: {
@@ -320,25 +309,21 @@ async function genereerBulkPdf() {
             options: { animation: false }
         });
         
-        // 4. Container omzetten naar afbeelding
         const canvas = await html2canvas(renderContainer);
         const imgData = canvas.toDataURL('image/png');
         const imgProps = pdf.getImageProperties(imgData);
         const pdfWidth = pdf.internal.pageSize.getWidth();
         const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
 
-        // 5. Afbeelding toevoegen aan PDF
         if (i > 0) pdf.addPage();
         pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
     }
     
-    // 6. PDF opslaan en UI herstellen
     pdf.save(`rapporten-periode-${periode}.pdf`);
     renderContainer.innerHTML = '';
     btn.textContent = 'PDF Alle Rapporten';
     btn.disabled = false;
 }
-
 
 async function slaDataOp() {
     const docRef = doc(db, "leerkrachten", currentUser.uid);
