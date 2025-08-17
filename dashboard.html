@@ -10,6 +10,10 @@
   <link rel="apple-touch-icon" href="icon-192x192.png">
   <meta name="theme-color" content="#4A90E2">
 
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
 </head>
 <body>
 
@@ -37,6 +41,8 @@
         </select>
       </div>
       <div class="invoer-groep">
+          <button id="toonOverzichtBtn">Toon Klasoverzicht</button>
+          <button id="printAlleLeerlingenBtn">PDF Alle Rapporten</button>
           <button id="nieuwSchooljaarBtn" class="reset-knop">Nieuw schooljaar</button>
       </div>
     </div>
@@ -46,6 +52,21 @@
     <h2>Huistakenoverzicht</h2>
     <div id="tabelContainer"></div>
   </div>
+
+  <dialog id="klasOverzichtDialog">
+    <div id="klasOverzichtContent">
+        <canvas id="klasOverzichtChart"></canvas>
+        <div id="klasOverzichtText"></div>
+    </div>
+    <div class="dialog-knoppen">
+      <button id="printOverzichtBtn" type="button">Afdrukken</button>
+      <form method="dialog">
+        <button>Sluiten</button>
+      </form>
+    </div>
+  </dialog>
+
+  <div id="pdf-render-container" style="position: absolute; left: -9999px; top: auto; width: 700px; background-color: white; padding: 20px;"></div>
 
   <script type="module" src="script.js"></script> 
   <script type="module" src="dashboard.js"></script>
