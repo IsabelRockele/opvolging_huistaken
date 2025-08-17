@@ -5,7 +5,8 @@ body {
   padding: 20px;
 }
 
-h1, h2 {
+h1,
+h2 {
   text-align: center;
 }
 
@@ -16,7 +17,8 @@ table {
   margin-top: 20px;
 }
 
-th, td {
+th,
+td {
   border: 1px solid #ccc;
   padding: 4px 6px;
   text-align: center;
@@ -32,11 +34,21 @@ td select {
   padding: 2px;
 }
 
-.op-tijd { background-color: #c8f7c5; }
-.te-laat { background-color: #fdd49a; }
-.onvolledig { background-color: #fff7a8; }
-.niet-gemaakt { background-color: #f4cccc; }
-.ziek { background-color: #b5d6f6; }
+.op-tijd {
+  background-color: #c8f7c5;
+}
+.te-laat {
+  background-color: #fdd49a;
+}
+.onvolledig {
+  background-color: #fff7a8;
+}
+.niet-gemaakt {
+  background-color: #f4cccc;
+}
+.ziek {
+  background-color: #b5d6f6;
+}
 
 button {
   font-size: 10px;
@@ -56,13 +68,17 @@ button {
   margin: 0;
 }
 
-/* NIEUW: Container voor knoppen in header */
 .header-knoppen {
-    display: flex;
-    gap: 10px; /* Ruimte tussen knoppen */
+  display: flex;
+  gap: 10px;
 }
 
-#logoutBtn, #addLeerlingBtn, #nieuwSchooljaarBtn, #wijzigWachtwoordBtn {
+#logoutBtn,
+#addLeerlingBtn,
+#nieuwSchooljaarBtn,
+#wijzigWachtwoordBtn,
+#toonOverzichtBtn,
+#printAlleLeerlingenBtn { /* Nieuwe knop toegevoegd aan de stijl */
   font-size: 14px;
   padding: 8px 12px;
   border-radius: 5px;
@@ -81,7 +97,12 @@ button {
   margin-bottom: 20px;
 }
 
-.invoer-groep { margin: 5px; }
+.invoer-groep {
+  margin: 5px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
 
 td:first-child {
   display: flex;
@@ -100,9 +121,17 @@ td:first-child {
   justify-content: center;
 }
 
-.verwijder-knop:hover { background-color: #ffe0e0; }
-.verwijder-knop svg { width: 16px; height: 16px; fill: #888; }
-.verwijder-knop:hover svg { fill: #d32f2f; }
+.verwijder-knop:hover {
+  background-color: #ffe0e0;
+}
+.verwijder-knop svg {
+  width: 16px;
+  height: 16px;
+  fill: #888;
+}
+.verwijder-knop:hover svg {
+  fill: #d32f2f;
+}
 
 .reset-knop {
   background-color: #f44336 !important;
@@ -110,23 +139,82 @@ td:first-child {
   border-color: #d32f2f !important;
 }
 
-.reset-knop:hover { background-color: #d32f2f !important; }
-/* Maak de eerste kolom (header en cellen) 'sticky' */
+.reset-knop:hover {
+  background-color: #d32f2f !important;
+}
+
 th:first-child,
 td:first-child {
-  position: -webkit-sticky; /* Voor Safari-compatibiliteit */
+  position: -webkit-sticky;
   position: sticky;
   left: 0;
   z-index: 1;
 }
 
-/* Zorg ervoor dat de header een eigen achtergrondkleur behoudt */
 th:first-child {
-  background-color: #f2f2f2; /* Zelfde kleur als andere headers */
-  z-index: 2; /* Zorgt dat de header boven de cellen blijft bij verticaal scrollen */
+  background-color: #f2f2f2;
+  z-index: 2;
 }
 
-/* Zorg ervoor dat de cellen een eigen achtergrondkleur behouden */
 td:first-child {
-  background-color: white; /* Zelfde kleur als andere cellen */
+  background-color: white;
+}
+
+#klasOverzichtDialog {
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  padding: 20px;
+  min-width: 350px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+
+#klasOverzichtDialog::backdrop {
+  background-color: rgba(0, 0, 0, 0.5);
+}
+
+#klasOverzichtChart {
+  max-width: 300px;
+  max-height: 300px;
+  margin: 0 auto 20px;
+  display: block;
+}
+
+.dialog-knoppen {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  margin-top: 20px;
+  border-top: 1px solid #eee;
+  padding-top: 20px;
+}
+
+.dialog-knoppen button {
+  margin: 0;
+}
+
+/* Stijlen voor de PDF-render-container (om de layout na te bootsen) */
+#pdf-render-container h1 { margin-bottom: 20px; text-align: center; }
+#pdf-render-container canvas { max-width: 400px; max-height: 400px; margin: 0 auto; display: block; }
+#pdf-render-container ul { padding-left: 20px; }
+#pdf-render-container ul ul { padding-left: 20px; font-style: italic; }
+
+@media print {
+  body > * {
+    display: none;
+  }
+  #klasOverzichtDialog {
+    display: block !important;
+  }
+  #klasOverzichtDialog {
+    position: static;
+    border: none;
+    box-shadow: none;
+    width: 100%;
+    height: 100%;
+    padding: 0;
+    margin: 0;
+  }
+  .dialog-knoppen {
+    display: none;
+  }
 }
