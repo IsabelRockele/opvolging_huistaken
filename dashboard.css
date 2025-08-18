@@ -10,11 +10,18 @@ h2 {
   text-align: center;
 }
 
+/* Wrapper voor de tabel om horizontaal scrollen mogelijk te maken */
+#tabelContainer {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch; /* Voor soepel scrollen op mobiele apparaten */
+}
+
 table {
   border-collapse: collapse;
-  width: 100%;
   background-color: white;
   margin-top: 20px;
+  /* Zorgt dat vaste breedtes gerespecteerd worden */
+  table-layout: fixed;
 }
 
 th,
@@ -23,32 +30,35 @@ td {
   padding: 4px 6px;
   text-align: center;
   font-size: 14px;
+  position: relative; 
 }
 
 th {
   background-color: #f2f2f2;
+  white-space: nowrap;
+}
+
+/* Vaste breedte ingesteld voor de data-kolommen */
+th:not(:first-child),
+td:not(:first-child) {
+  width: 120px;
 }
 
 td select {
   width: 100%;
   padding: 2px;
+  border: 1px solid #ccc; /* Voegt een rand toe voor duidelijkheid */
+  border-radius: 4px;
 }
 
-.op-tijd {
-  background-color: #c8f7c5;
-}
-.te-laat {
-  background-color: #fdd49a;
-}
-.onvolledig {
-  background-color: #fff7a8;
-}
-.niet-gemaakt {
-  background-color: #f4cccc;
-}
-.ziek {
-  background-color: #b5d6f6;
-}
+/* --- AANGEPAST: Kleuren gesynchroniseerd met taartdiagram en toegepast op de opties --- */
+.op-tijd, option.op-tijd { background-color: #c8f7c5; }
+.te-laat, option.te-laat { background-color: #ffe0b3; }
+.onvolledig, option.onvolledig { background-color: #fff9c4; }
+.niet-gemaakt, option.niet-gemaakt { background-color: #f8d7da; }
+.ziek, option.ziek { background-color: #d0e7ff; }
+
+.niet-aanwezig { background-color: #e0e0e0; color: #757575; }
 
 button {
   font-size: 10px;
@@ -63,22 +73,15 @@ button {
   align-items: center;
   margin-bottom: 20px;
 }
-
-.header h1 {
-  margin: 0;
-}
-
-.header-knoppen {
-  display: flex;
-  gap: 10px;
-}
+.header h1 { margin: 0; }
+.header-knoppen { display: flex; gap: 10px; }
 
 #logoutBtn,
 #addLeerlingBtn,
 #nieuwSchooljaarBtn,
 #wijzigWachtwoordBtn,
 #toonOverzichtBtn,
-#printAlleLeerlingenBtn { /* Nieuwe knop toegevoegd aan de stijl */
+#printAlleLeerlingenBtn {
   font-size: 14px;
   padding: 8px 12px;
   border-radius: 5px;
@@ -94,7 +97,7 @@ button {
   padding: 10px;
   background-color: #f9f9f9;
   border-radius: 8px;
-  margin-bottom: 20px;
+  margin-bottom: 10px;
 }
 
 .invoer-groep {
@@ -104,117 +107,109 @@ button {
   gap: 5px;
 }
 
-td:first-child {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.verwijder-knop {
-  background: none;
-  border: none;
-  cursor: pointer;
-  padding: 5px;
-  border-radius: 50%;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.verwijder-knop:hover {
-  background-color: #ffe0e0;
-}
-.verwijder-knop svg {
-  width: 16px;
-  height: 16px;
-  fill: #888;
-}
-.verwijder-knop:hover svg {
-  fill: #d32f2f;
-}
-
-.reset-knop {
-  background-color: #f44336 !important;
-  color: white;
-  border-color: #d32f2f !important;
-}
-
-.reset-knop:hover {
-  background-color: #d32f2f !important;
-}
-
+/* Vaste breedte en layout voor de namenkolom */
 th:first-child,
 td:first-child {
-  position: -webkit-sticky;
-  position: sticky;
-  left: 0;
-  z-index: 1;
+  position: -webkit-sticky; position: sticky; left: 0; z-index: 1;
+  width: 200px;
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-th:first-child {
-  background-color: #f2f2f2;
-  z-index: 2;
+td:first-child .leerling-cel {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
 }
 
-td:first-child {
-  background-color: white;
+td:first-child .leerling-naam {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    text-align: left;
 }
 
-#klasOverzichtDialog {
-  border: 1px solid #ccc;
-  border-radius: 8px;
-  padding: 20px;
-  min-width: 350px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+
+th:first-child { background-color: #f2f2f2; z-index: 2; }
+td:first-child { background-color: white; }
+
+.verwijder-knop {
+  background: none; border: none; cursor: pointer; padding: 5px;
+  border-radius: 50%; display: inline-flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.verwijder-knop:hover { background-color: #ffe0e0; }
+.verwijder-knop svg { width: 16px; height: 16px; fill: #888; }
+.verwijder-knop:hover svg { fill: #d32f2f; }
+
+.reset-knop {
+  background-color: #f44336 !important; color: white; border-color: #d32f2f !important;
+}
+.reset-knop:hover { background-color: #d32f2f !important; }
+
+.modus-container {
+  text-align: center; padding: 40px; background-color: white;
+  border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  margin: 40px auto; max-width: 500px;
+}
+.modus-knoppen button {
+  font-size: 18px; padding: 15px 30px; margin: 0 10px;
+  border-radius: 8px; border: 1px solid #ccc; background-color: #e7e7e7;
+}
+.wissel-knop {
+  font-size: 14px; padding: 8px 12px; border-radius: 5px;
+  border: 1px solid #4A90E2; background-color: #d9e9f9; margin-bottom: 20px;
 }
 
-#klasOverzichtDialog::backdrop {
-  background-color: rgba(0, 0, 0, 0.5);
+.kolom-toevoegen-knop { font-size: 18px; padding: 5px 10px; }
+.kolom-verwijder-knop {
+  font-size: 12px; padding: 1px 4px; color: #a00; border: none; background: none; margin-left: 5px;
 }
 
-#klasOverzichtChart {
-  max-width: 300px;
-  max-height: 300px;
-  margin: 0 auto 20px;
-  display: block;
-}
+.status-cel { display: flex; align-items: center; justify-content: center; }
+.opmerking-icoon { cursor: pointer; margin-left: 5px; font-size: 14px; }
 
+#klasOverzichtDialog, #progressDialog {
+  border: 1px solid #ccc; border-radius: 8px; padding: 20px;
+  min-width: 350px; box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+#klasOverzichtDialog::backdrop, #progressDialog::backdrop { 
+  background-color: rgba(0, 0, 0, 0.5); 
+}
+#klasOverzichtChart { 
+  max-width: 300px; max-height: 300px; margin: 0 auto 20px; display: block; 
+}
 .dialog-knoppen {
-  display: flex;
-  justify-content: center;
-  gap: 15px;
-  margin-top: 20px;
-  border-top: 1px solid #eee;
-  padding-top: 20px;
+  display: flex; justify-content: center; gap: 15px; margin-top: 20px;
+  border-top: 1px solid #eee; padding-top: 20px;
 }
+.dialog-knoppen button { margin: 0; }
 
-.dialog-knoppen button {
-  margin: 0;
+#pdf-render-container h1 { margin-bottom: 5px; text-align: center; }
+/* NIEUW: Styling voor de H2 (rapportperiode) in de PDF */
+#pdf-render-container h2 {
+  text-align: center;
+  font-size: 1.1em;
+  font-weight: normal;
+  margin-top: 0;
+  margin-bottom: 20px;
+  color: #555;
 }
-
-/* Stijlen voor de PDF-render-container (om de layout na te bootsen) */
-#pdf-render-container h1 { margin-bottom: 20px; text-align: center; }
-#pdf-render-container canvas { max-width: 400px; max-height: 400px; margin: 0 auto; display: block; }
+#pdf-render-container canvas { 
+  max-width: 400px; max-height: 400px; margin: 0 auto; display: block; 
+}
 #pdf-render-container ul { padding-left: 20px; }
 #pdf-render-container ul ul { padding-left: 20px; font-style: italic; }
 
 @media print {
-  body > * {
-    display: none;
-  }
+  body > * { display: none; }
+  #klasOverzichtDialog { display: block !important; }
   #klasOverzichtDialog {
-    display: block !important;
+    position: static; border: none; box-shadow: none;
+    width: 100%; height: 100%; padding: 0; margin: 0;
   }
-  #klasOverzichtDialog {
-    position: static;
-    border: none;
-    box-shadow: none;
-    width: 100%;
-    height: 100%;
-    padding: 0;
-    margin: 0;
-  }
-  .dialog-knoppen {
-    display: none;
-  }
+  .dialog-knoppen { display: none; }
 }
