@@ -25,6 +25,14 @@
     </div>
   </div>
 
+  <div id="modus-keuzescherm" class="modus-container">
+    <h2>Hoe wil je de huistaken opvolgen?</h2>
+    <div class="modus-knoppen">
+        <button id="kiesModusWeek">Per Week</button>
+        <button id="kiesModusDag">Per Dag</button>
+    </div>
+  </div>
+
   <div id="content" style="display: none;">
     
     <div class="beheer-container">
@@ -35,9 +43,9 @@
       <div class="invoer-groep">
         <label for="rapportperiode">Rapportperiode:</label>
         <select id="rapportperiode">
-          <option value="1">Rapportperiode 1 (15 weken)</option>
-          <option value="2">Rapportperiode 2 (11 weken)</option>
-          <option value="3">Rapportperiode 3 (11 weken)</option>
+          <option value="1">Rapportperiode 1</option>
+          <option value="2">Rapportperiode 2</option>
+          <option value="3">Rapportperiode 3</option>
         </select>
       </div>
       <div class="invoer-groep">
@@ -46,10 +54,11 @@
           <button id="nieuwSchooljaarBtn" class="reset-knop">Nieuw schooljaar</button>
       </div>
     </div>
+    <button id="wisselModusBtn" class="wissel-knop">Wissel naar andere weergave</button>
 
     <hr>
 
-    <h2>Huistakenoverzicht</h2>
+    <h2 id="weergave-titel"></h2>
     <div id="tabelContainer"></div>
   </div>
 
@@ -59,16 +68,24 @@
         <div id="klasOverzichtText"></div>
     </div>
     <div class="dialog-knoppen">
-      <button id="printOverzichtBtn" type="button">Afdrukken</button>
+      <button id="printOverzichtBtn" type="button">Afdrukken</button>      
       <form method="dialog">
         <button>Sluiten</button>
       </form>
     </div>
   </dialog>
 
+  <dialog id="progressDialog">
+    <h3>PDF genereren...</h3>
+    <div id="progressBarContainer" style="width: 300px; height: 20px; border: 1px solid #ccc; border-radius: 10px; overflow: hidden; background-color: #f3f3f3;">
+      <div id="progressBar" style="width: 0%; height: 100%; background-color: #4A90E2; transition: width 0.2s ease-in-out;"></div>
+    </div>
+    <p id="progressText" style="text-align: center; margin-top: 5px; font-family: Arial, sans-serif;">Bezig met voorbereiden...</p>
+  </dialog>
+
   <div id="pdf-render-container" style="position: absolute; left: -9999px; top: auto; width: 700px; background-color: white; padding: 20px;"></div>
 
   <script type="module" src="script.js"></script> 
-  <script type="module" src="dashboard.js"></script>
+  <script type="module" src="dashboard.js?v=2"></script>
 </body>
 </html>
