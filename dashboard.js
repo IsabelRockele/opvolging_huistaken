@@ -31,11 +31,28 @@ const chartKleuren = {
 };
 const dagNamen = ['zo', 'ma', 'di', 'wo', 'do', 'vr', 'za'];
 
+// --- HELPERS VOOR DOCREF & BASISDOC ---
+const getDocRef = () => doc(db, "leerkrachten", currentUser.uid);
+
+async function ensureLeerkrachtDocExists() {
+    // Basismodel zodat alle functies veilig kunnen schrijven
+    await setDoc(getDocRef(), {
+        leerlingen: [],
+        weekKolommen: { 1: [], 2: [], 3: [] },
+        dagKolommen: { 1: [], 2: [], 3: [] },
+        weekDatums: {},
+        huistakenWeek: {},
+        huistakenDag: {}
+    }, { merge: true });
+}
+
 // --- INIT & AUTH ---
 document.addEventListener('DOMContentLoaded', () => {
-    onAuthStateChanged(auth, user => {
+    onAuthStateChanged(auth, async (user) => {
         if (user) {
             currentUser = user;
+            // Zorg dat het Firestore-doc zeker bestaat vóór we listeners/rendering starten
+            await ensureLeerkrachtDocExists();
             setupEventListeners();
             koppelDataEnRender();
         } else {
@@ -60,7 +77,7 @@ function setupEventListeners() {
 
 // --- DATA & RENDERING ---
 function koppelDataEnRender() {
-    const docRef = doc(db, "leerkrachten", currentUser.uid);
+    const docRef = getDocRef();
     onSnapshot(docRef, (docSnap) => {
         const data = docSnap.exists() ? docSnap.data() : {};
         leerkrachtData = {
@@ -233,8 +250,6 @@ function createStatusCelHTML(leerlingId, periode, identifier, data, modus) {
 }
 
 // --- DATA MANIPULATIE ---
-const getDocRef = () => doc(db, "leerkrachten", currentUser.uid);
-
 async function sendUpdate(payload) {
     await setDoc(getDocRef(), payload, { merge: true });
 }
@@ -323,25 +338,33 @@ window.updateDagDatum = async (periode, oudeDatum, nieuweDatum) => {
 };
 
 window.voegLeerlingToe = async () => {
-    const input = document.getElementById('nieuweLeerlingNaam');
-    const naam = input.value.trim();
-    if (!naam) return alert('Geef een naam op.');
+    try {
+        const input = document.getElementById('nieuweLeerlingNaam');
+        const naam = (input.value || '').trim();
+        if (!naam) { alert('Geef een naam op.'); return; }
 
-    const nieuweLeerling = { id: `id_${Date.now()}`, naam };
+        const nieuweLeerling = { id: `id_${Date.now()}`, naam };
 
-    if (huidigeModus === 'week') {
-        const startWeek = parseInt(prompt(`In welke week start ${naam}? (Laat leeg of typ 1 indien vanaf begin)`), 10) || 1;
-        nieuweLeerling.startWeek = startWeek;
-    } else { // huidigeModus === 'dag'
-        const vandaag = new Date().toISOString().split('T')[0];
-        const startDatum = prompt(`Op welke datum start ${naam}? (Formaat: JJJJ-MM-DD)`, vandaag);
-        if (startDatum) {
-            nieuweLeerling.startDatum = startDatum;
+        if (huidigeModus === 'week') {
+            const startWeek = parseInt(
+                prompt(`In welke week start ${naam}? (Laat leeg of typ 1 indien vanaf begin)`),
+                10
+            );
+            if (!isNaN(startWeek) && startWeek > 0) nieuweLeerling.startWeek = startWeek;
+        } else { // huidigeModus === 'dag'
+            const vandaag = new Date().toISOString().split('T')[0];
+            const startDatum = prompt(`Op welke datum start ${naam}? (Formaat: JJJJ-MM-DD)`, vandaag);
+            if (startDatum) nieuweLeerling.startDatum = startDatum;
         }
+
+        // setDoc + merge, zodat dit óók werkt als het doc nog niet bestond
+        await setDoc(getDocRef(), { leerlingen: arrayUnion(nieuweLeerling) }, { merge: true });
+
+        input.value = '';
+    } catch (err) {
+        console.error(err);
+        alert('Toevoegen mislukt. Controleer je internetverbinding en probeer opnieuw. (Details in console)');
     }
-    
-    await updateDoc(getDocRef(), { leerlingen: arrayUnion(nieuweLeerling) });
-    input.value = '';
 };
 
 window.verwijderLeerling = async (leerlingId) => {
@@ -467,10 +490,11 @@ function berekenLeerlingData(leerling, periode) {
     const statusDetails = {"te laat": [], "onvolledig": [], "niet gemaakt": [], "ziek": []};
 
     if (huidigeModus === 'week') {
-        const weekKolommen = leerkrachtData.weekKolommen[periode] || [];
+        const weekKolommen = leerkrachtData.weekKolommen[periode] || {};
+        const weekLijst = Array.isArray(weekKolommen) ? weekKolommen : (leerkrachtData.weekKolommen[periode] || []);
         const weekData = leerkrachtData.huistakenWeek[leerling.id]?.[periode] || {};
         const weekDatums = leerkrachtData.weekDatums[periode] || {};
-        weekKolommen.forEach(weekNum => {
+        (weekLijst || []).forEach(weekNum => {
             if (leerling.startWeek && weekNum < leerling.startWeek) return;
             const data = weekData[weekNum] || { status: 'op tijd', opmerking: '' };
             if(telling[data.status] !== undefined) telling[data.status]++;
