@@ -463,22 +463,21 @@ function wijzigWachtwoord() {
 function toonKlasOverzicht() {
   const periode = document.getElementById("rapportperiode").value;
 
-  const tellingTotaal = {};
-  statusOpties.forEach(optie => tellingTotaal[optie] = 0);
-
+  // Telling per categorie
+  const tellingTotaal = { "op tijd": 0, "te laat": 0, "onvolledig": 0, "niet gemaakt": 0, "ziek": 0 };
+  // Voor top-3 per categorie
   const tellingPerStudent = { "te laat": {}, "onvolledig": {}, "niet gemaakt": {}, "ziek": {} };
 
   for (const leerling of leerkrachtData.leerlingen) {
     const dataBron = huidigeModus === 'week' ? leerkrachtData.huistakenWeek : leerkrachtData.huistakenDag;
-    const kolommen = huidigeModus === 'week' ? getWeekKolommenArray(periode) : getDagKolommenArray(periode);
+    const kolommen   = huidigeModus === 'week' ? getWeekKolommenArray(periode) : getDagKolommenArray(periode);
     const leerlingData = dataBron[leerling.id]?.[periode] || {};
 
     kolommen.forEach(kolom => {
       if (huidigeModus === 'week' && leerling.startWeek && kolom < leerling.startWeek) return;
-      if (huidigeModus === 'dag' && leerling.startDatum && kolom < leerling.startDatum) return;
+      if (huidigeModus === 'dag'  && leerling.startDatum && kolom < leerling.startDatum) return;
 
       const data = leerlingData[kolom] || { status: 'op tijd', opmerking: '' };
-
       if (tellingTotaal[data.status] !== undefined) tellingTotaal[data.status]++;
       if (tellingPerStudent[data.status]) {
         tellingPerStudent[data.status][leerling.naam] = (tellingPerStudent[data.status][leerling.naam] || 0) + 1;
@@ -486,45 +485,85 @@ function toonKlasOverzicht() {
     });
   }
 
-  const dialog = document.getElementById('klasOverzichtDialog');
+  const dialog      = document.getElementById('klasOverzichtDialog');
   const chartCanvas = document.getElementById('klasOverzichtChart');
-  const detailsDiv = document.getElementById('klasOverzichtText');
+  const detailsDiv  = document.getElementById('klasOverzichtText');
 
-  if (klasOverzichtChartInstance) klasOverzichtChartInstance.destroy();
+  // Vernietig vorige grafiek indien aanwezig
+  if (klasOverzichtChartInstance) {
+    klasOverzichtChartInstance.destroy();
+    klasOverzichtChartInstance = null;
+  }
 
+  // Tekstuele samenvatting + top 3’s
   let detailsHTML = "<h3>Top 3 per categorie</h3>";
   for (const [status, studenten] of Object.entries(tellingPerStudent)) {
-    const gesorteerdeLijst = Object.entries(studenten)
+    const gesorteerd = Object.entries(studenten)
       .map(([naam, aantal]) => ({ naam, aantal }))
       .sort((a, b) => b.aantal - a.aantal);
-    if (gesorteerdeLijst.length > 0) {
-      const top3 = gesorteerdeLijst.slice(0, 3);
-      const statusNaam = status.charAt(0).toUpperCase() + status.slice(1);
-      detailsHTML += `<h4>${statusNaam}</h4><ol>`;
-      top3.forEach(item => { detailsHTML += `<li>${item.naam} (${item.aantal} keer)</li>`; });
+    if (gesorteerd.length > 0) {
+      const top3 = gesorteerd.slice(0, 3);
+      const statusTitel = status.charAt(0).toUpperCase() + status.slice(1);
+      detailsHTML += `<h4>${statusTitel}</h4><ol>`;
+      top3.forEach(item => { detailsHTML += `<li>${item.naam} (${item.aantal}×)</li>`; });
       detailsHTML += `</ol>`;
     }
   }
+
+  // NIEUW: Top 3 totaal (te laat + onvolledig + niet gemaakt)
+  const probleemStatussen = ["te laat", "onvolledig", "niet gemaakt"];
+  const totaalPerLeerling = {};
+  probleemStatussen.forEach(st => {
+    for (const [naam, aantal] of Object.entries(tellingPerStudent[st])) {
+      totaalPerLeerling[naam] = (totaalPerLeerling[naam] || 0) + aantal;
+    }
+  });
+  const topTotaal = Object.entries(totaalPerLeerling)
+    .map(([naam, aantal]) => ({ naam, aantal }))
+    .sort((a, b) => b.aantal - a.aantal)
+    .slice(0, 3);
+  if (topTotaal.length > 0) {
+    detailsHTML += `<h3>Top 3 totaal (te laat + onvolledig + niet gemaakt)</h3><ol>`;
+    topTotaal.forEach(item => { detailsHTML += `<li>${item.naam} (${item.aantal}×)</li>`; });
+    detailsHTML += `</ol>`;
+  }
+
+  // NIEUW: compacte samenvatting met percentages
+  const totaal = Object.values(tellingTotaal).reduce((a, b) => a + b, 0);
+  const samenvattingLijst = ["op tijd","te laat","onvolledig","niet gemaakt","ziek"]
+    .filter(key => tellingTotaal[key] > 0);
+  if (samenvattingLijst.length > 0) {
+    detailsHTML += "<h3>Samenvatting</h3><ul>";
+    samenvattingLijst.forEach(key => {
+      const pct = totaal > 0 ? Math.round((tellingTotaal[key] / totaal) * 100) : 0;
+      detailsHTML += `<li><strong>${key}</strong>: ${tellingTotaal[key]} (${pct}%)</li>`;
+    });
+    detailsHTML += "</ul>";
+  } else {
+    detailsHTML += `<p>Er zijn nog geen registraties voor de gekozen weergave en periode.</p>`;
+  }
   detailsDiv.innerHTML = detailsHTML;
 
-  const totaal = Object.values(tellingTotaal).reduce((a, b) => a + b, 0);
+  // Grafiek (filter '0' en verberg 'geen' indien ooit aanwezig)
+  const chartKeys = ["op tijd","te laat","onvolledig","niet gemaakt","ziek"]
+    .filter(k => tellingTotaal[k] > 0);
+  const chartData = chartKeys.map(k => tellingTotaal[k]);
+  const chartLabels = chartKeys.map(k => {
+    const pct = totaal > 0 ? Math.round((tellingTotaal[k] / totaal) * 100) : 0;
+    return `${k} (${pct}%)`;
+  });
+  const chartColors = chartKeys.map(k => chartKleuren[k]);
+
   klasOverzichtChartInstance = new Chart(chartCanvas.getContext('2d'), {
     type: 'pie',
-    data: {
-      labels: Object.keys(tellingTotaal).map(key => {
-        const waarde = tellingTotaal[key];
-        if (waarde === 0) return '';
-        const percentage = totaal > 0 ? Math.round((waarde / totaal) * 100) : 0;
-        return `${key} (${percentage}%)`;
-      }).filter(label => label !== ''),
-      datasets: [{
-        data: Object.values(tellingTotaal).filter(value => value > 0),
-        backgroundColor: Object.keys(tellingTotaal).filter(k => tellingTotaal[k] > 0).map(k => chartKleuren[k])
-      }]
-    },
+    data: { labels: chartLabels, datasets: [{ data: chartData, backgroundColor: chartColors }] },
     options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
   });
+
+  // BELANGRIJK: toon de dialoog
+  dialog.showModal();
 }
+
 
 function berekenLeerlingData(leerling, periode) {
   const telling = {};
