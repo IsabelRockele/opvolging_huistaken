@@ -219,7 +219,11 @@ function renderTabelWeek() {
       <thead><tr><th>Leerling</th>${headHTML}<th><button class="kolom-toevoegen-knop" onclick="window.voegWeekKolomToe('${periode}')">+</button></th></tr></thead>
       <tbody>${bodyHTML}</tbody>
     </table>`;
+    ensureFixedBottomScroller(); 
+    if (window.__fixedScrollUpdate) window.__fixedScrollUpdate();
+    setupBottomHScroll();
 }
+
 
 function renderTabelDag() {
   const periode = document.getElementById("rapportperiode").value;
@@ -269,6 +273,9 @@ function renderTabelDag() {
       </thead>
       <tbody>${bodyHTML}</tbody>
     </table>`;
+    ensureFixedBottomScroller(); 
+    if (window.__fixedScrollUpdate) window.__fixedScrollUpdate();
+    setupBottomHScroll();
 }
 
 // --- HULP FUNCTIES ---
@@ -680,4 +687,106 @@ async function genereerBulkPdf() {
   progressDialog.close();
   pdf.save(`Rapporten Periode ${periode}.pdf`);
   container.innerHTML = '';
+}
+function setupBottomHScroll(){
+  const container = document.getElementById('tabelContainer');
+  if (!container) return;
+
+  // 1) Zorg voor een wrapper rond de table
+  let content = container.querySelector('.grid-content');
+  let table   = container.querySelector('table');
+  if (!content){
+    if (!table) return; // nog niets gerenderd
+    container.innerHTML = `<div class="grid-content"></div>`;
+    content = container.querySelector('.grid-content');
+    content.appendChild(table);
+  }else{
+    table = content.querySelector('table');
+    if (!table) return;
+  }
+
+  // 2) Maak of hergebruik de sticky onderbalk
+  let bar = container.querySelector('.fake-hscroll');
+  if (!bar){
+    bar = document.createElement('div');
+    bar.className = 'fake-hscroll';
+    bar.innerHTML = `<div class="hscroll-inner"></div>`;
+    container.appendChild(bar);
+  }
+  const inner = bar.querySelector('.hscroll-inner');
+
+  // 3) Breedte + sync
+  const syncWidths = () => {
+    inner.style.width = table.scrollWidth + 'px';
+    bar.scrollLeft = container.scrollLeft;
+  };
+
+  let lock = false;
+  bar.addEventListener('scroll', () => {
+    if (lock) return; lock = true;
+    container.scrollLeft = bar.scrollLeft;
+    lock = false;
+  });
+  container.addEventListener('scroll', () => {
+    if (lock) return; lock = true;
+    bar.scrollLeft = container.scrollLeft;
+    lock = false;
+  });
+
+  // 4) Reageren op maatwijzigingen
+  if (!table.__roAttached){
+    new ResizeObserver(syncWidths).observe(table);
+    table.__roAttached = true;
+  }
+  window.addEventListener('resize', syncWidths);
+
+  // 5) Init + extra ticks
+  syncWidths();
+  setTimeout(syncWidths, 50);
+  setTimeout(syncWidths, 300);
+}
+
+// --- ALTIJD ZICHTBARE HORIZONTALE SCROLLER (vast op body) ---
+function ensureFixedBottomScroller() {
+  const container = document.getElementById('tabelContainer');
+  if (!container) return;
+
+  // balk aanmaken of hergebruiken
+  let bar = document.getElementById('fixedBottomScroll');
+  if (!bar) {
+    bar = document.createElement('div');
+    bar.id = 'fixedBottomScroll';
+    bar.style.cssText = [
+      'position:fixed','left:0','bottom:0','width:100%','height:20px',
+      'overflow-x:auto','overflow-y:hidden',
+      'background:rgba(255,255,255,0.96)','border-top:1px solid #ccc',
+      'box-shadow:0 -2px 6px rgba(0,0,0,.06)','z-index:2147483647'
+    ].join(';');
+    const inner = document.createElement('div');
+    inner.className = 'hscroll-inner';
+    bar.appendChild(inner);
+    document.body.appendChild(bar);
+  }
+  const inner = bar.querySelector('.hscroll-inner');
+
+  // meten + sync
+  function sync() {
+    const tbl = container.querySelector('table');
+    const total = (tbl ? tbl.scrollWidth : container.scrollWidth) || 0;
+    inner.style.width = total + 'px';
+    bar.scrollLeft = container.scrollLeft;
+  }
+
+  // 2-weg synchronisatie
+  let lock = false;
+  bar.onscroll = () => { if (lock) return; lock = true; container.scrollLeft = bar.scrollLeft; lock = false; };
+  container.addEventListener('scroll', () => { if (lock) return; lock = true; bar.scrollLeft = container.scrollLeft; lock = false; });
+
+  // updates bij render/resize
+  new MutationObserver(sync).observe(container, { childList:true, subtree:true });
+  new ResizeObserver(sync).observe(container);
+  window.addEventListener('resize', sync);
+
+  // eerste metingen + late ticks
+  sync(); setTimeout(sync, 50); setTimeout(sync, 300);
 }
