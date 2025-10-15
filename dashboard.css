@@ -213,3 +213,67 @@ td:first-child { background-color: white; }
   }
   .dialog-knoppen { display: none; }
 }
+
+/* helpt in sommige browsers met stacking-context */
+/* Scrollbox voor het rooster: horizontaal én verticaal scrollen binnen deze container */
+#tabelContainer {
+  overflow: auto;                    /* zowel X als Y */
+  max-height: calc(100vh - 260px);   /* hoogte binnen het venster; pas desnoods aan */
+  -webkit-overflow-scrolling: touch; /* soepel scrollen op iOS */
+  position: relative;                /* helpt voor sticky posities */
+}
+
+/* De roostercontainer wordt de scrollbox (heeft u al) */
+#tabelContainer {
+  overflow: auto;              /* zowel X als Y */
+  position: relative;          /* nodig voor sticky stacking */
+  max-height: calc(100vh - 260px); /* pas gerust aan aan uw layout */
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Binnencontent: geef onderaan ruimte zodat de sticky balk niets bedekt */
+.grid-content {
+  display: block;              /* table krijgt zo geen padding-issues */
+  padding-bottom: 22px;        /* zelfde of iets meer dan de balkhoogte */
+}
+
+/* De eigen horizontale “nep”-balk die onderaan in beeld blijft */
+.fake-hscroll {
+  position: sticky;
+  bottom: 0;                   /* blijft onderaan de zichtbare container */
+  height: 18px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  background: rgba(255,255,255,0.96);
+  border-top: 1px solid #ccc;
+  box-shadow: 0 -1px 4px rgba(0,0,0,0.06);
+  z-index: 5;                  /* boven de tabelrijen, maar onder header */
+}
+
+/* cosmetisch: scrollbar-dikte (Chrome/Edge) */
+.fake-hscroll::-webkit-scrollbar { height: 16px; }
+#tabelContainer{
+  overflow: auto;
+  position: relative;
+  max-height: calc(100vh - 260px);
+  -webkit-overflow-scrolling: touch;
+}
+.grid-content{ display:block; padding-bottom:22px; }
+.fake-hscroll{
+  position: sticky; bottom: 0;
+  height: 18px;
+  overflow-x: auto; overflow-y: hidden;
+  background: rgba(255,255,255,.96);
+  border-top: 1px solid #ccc;
+  box-shadow: 0 -1px 4px rgba(0,0,0,.06);
+  z-index: 5;
+}
+.fake-hscroll::-webkit-scrollbar{ height:16px; }
+
+/* optioneel: native horizontale balk van de container verbergen */
+#tabelContainer::-webkit-scrollbar:horizontal{ height:0 !important; }
+/* verberg alleen de horizontale native scrollbar van #tabelContainer */
+#tabelContainer::-webkit-scrollbar:horizontal { height: 0 !important; }
+
+/* klein beetje ruimte zodat de vaste body-balk niets bedekt */
+body { padding-bottom: 24px; }
