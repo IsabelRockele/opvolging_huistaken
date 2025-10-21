@@ -313,31 +313,51 @@ async function sendUpdate(payload) {
 window.updateStatus = async (params, nieuweStatus) => {
   const { leerlingId, periode, identifier, modus } = params;
   const dataKey = modus === 'week' ? 'huistakenWeek' : 'huistakenDag';
-  const cellDataPayload = { status: nieuweStatus };
-  const isCommentStatus = ['te laat', 'onvolledig', 'niet gemaakt'].includes(nieuweStatus);
-  if (isCommentStatus) {
-    const currentOpmerking = leerkrachtData[dataKey]?.[leerlingId]?.[periode]?.[identifier]?.opmerking || '';
-    cellDataPayload.opmerking = currentOpmerking;
-  } else {
-    cellDataPayload.opmerking = '';
+
+  // Huidige opmerking ophalen (indien aanwezig)
+  const currentCell = leerkrachtData[dataKey]?.[leerlingId]?.[periode]?.[identifier] || {};
+  const currentOpmerking = currentCell.opmerking || '';
+
+  // Als status 'op tijd' is en er geen opmerking is: veld verwijderen om ruimte te besparen
+  if (nieuweStatus === 'op tijd' && !currentOpmerking) {
+    const payload = { [dataKey]: { [leerlingId]: { [periode]: { [identifier]: deleteField() } } } };
+    await sendUpdate(payload);
+    return;
   }
+
+  // Voor alle andere statussen: opslaan (met opmerking indien nodig)
+  const isCommentStatus = ['te laat', 'onvolledig', 'niet gemaakt'].includes(nieuweStatus);
+  const cellDataPayload = { status: nieuweStatus, opmerking: isCommentStatus ? currentOpmerking : '' };
+
   const finalPayload = {
     [dataKey]: { [leerlingId]: { [periode]: { [identifier]: cellDataPayload } } }
   };
   await sendUpdate(finalPayload);
 };
 
+
 window.bewerkOpmerking = async (params) => {
   const { leerlingId, periode, identifier, modus } = params;
   const dataKey = modus === 'week' ? 'huistakenWeek' : 'huistakenDag';
-  const currentOpmerking = leerkrachtData[dataKey]?.[leerlingId]?.[periode]?.[identifier]?.opmerking || '';
+  const currentCell = leerkrachtData[dataKey]?.[leerlingId]?.[periode]?.[identifier] || {};
+  const huidigeStatus = currentCell.status || 'op tijd';
+  const currentOpmerking = currentCell.opmerking || '';
+
   const nieuweOpmerking = prompt("Voer hier de opmerking in:", currentOpmerking);
-  if (nieuweOpmerking !== null) {
-    const payload = {
-      [dataKey]: { [leerlingId]: { [periode]: { [identifier]: { opmerking: nieuweOpmerking } } } }
-    };
+  if (nieuweOpmerking === null) return;
+
+  // Opmerking leeg + status 'op tijd'  => hele cel schrappen
+  if (!nieuweOpmerking && huidigeStatus === 'op tijd') {
+    const payload = { [dataKey]: { [leerlingId]: { [periode]: { [identifier]: deleteField() } } } };
     await sendUpdate(payload);
+    return;
   }
+
+  // Anders: enkel de opmerking bijwerken
+  const payload = {
+    [dataKey]: { [leerlingId]: { [periode]: { [identifier]: { opmerking: nieuweOpmerking } } } }
+  };
+  await sendUpdate(payload);
 };
 
 window.voegWeekKolomToe = async (periode) => {
@@ -790,3 +810,196 @@ function ensureFixedBottomScroller() {
   // eerste metingen + late ticks
   sync(); setTimeout(sync, 50); setTimeout(sync, 300);
 }
+// --- FAB (zwevende +) na elke render opnieuw plaatsen en koppelen ---
+function ensureFab() {
+  const c = document.getElementById('tabelContainer');
+  if (!c) return;
+  let fab = document.getElementById('fabDagToevoegen');
+  if (!fab) {
+    fab = document.createElement('button');
+    fab.id = 'fabDagToevoegen';
+    fab.className = 'fab';
+    fab.title = 'Dag toevoegen';
+    fab.setAttribute('aria-label', 'Dag toevoegen');
+    fab.textContent = '+';
+    c.appendChild(fab);
+  }
+  fab.onclick = () => {
+    // na toevoegen willen we naar de nieuwste (rechter) kolom kunnen kijken
+    window.__scrollToEndOnce = true;
+    if (typeof openDagToevoegen === 'function') {
+      openDagToevoegen();
+    } else if (typeof voegDagKolomToe === 'function') {
+      voegDagKolomToe();
+    } else {
+      alert('Functie om dag toe te voegen niet gevonden.');
+    }
+  };
+}
+
+function scrollToEndIfNeeded(){
+  if (!window.__scrollToEndOnce) return;
+  const c = document.getElementById('tabelContainer');
+  if (c) c.scrollLeft = c.scrollWidth;
+  window.__scrollToEndOnce = false;
+}
+
+// Hook: roep na elke (her)render aan
+const _origRenderDagTabel  = typeof renderDagTabel  === 'function' ? renderDagTabel  : null;
+const _origRenderWeekTabel = typeof renderWeekTabel === 'function' ? renderWeekTabel : null;
+
+if (_origRenderDagTabel) {
+  window.renderDagTabel = function(...args){
+    const res = _origRenderDagTabel.apply(this, args);
+    ensureFab();        // FAB terugzetten
+    scrollToEndIfNeeded();
+    return res;
+  };
+}
+if (_origRenderWeekTabel) {
+  window.renderWeekTabel = function(...args){
+    const res = _origRenderWeekTabel.apply(this, args);
+    ensureFab();
+    scrollToEndIfNeeded();
+    return res;
+  };
+}
+
+// Eerste binding (voor het geval er al content staat)
+document.addEventListener('DOMContentLoaded', ensureFab);
+// --- Knoppen naast de titel: click-gedrag + zichtbaar per modus ---
+function __bindTitelKnoppen(){
+  const btnDag  = document.getElementById('btnDagToevoegen');
+  const btnWeek = document.getElementById('btnWeekToevoegen');
+
+  if (btnDag) {
+    btnDag.onclick = () => {
+      window.__scrollToEndOnce = true;
+      if (typeof openDagToevoegen === 'function')      openDagToevoegen(document.getElementById("rapportperiode").value);
+      else if (typeof voegDagKolomToe === 'function')  voegDagKolomToe(new Date().toISOString().split('T')[0], document.getElementById("rapportperiode").value);
+      else alert('Dag toevoegen: functie niet gevonden.');
+    };
+  }
+  if (btnWeek) {
+    btnWeek.onclick = () => {
+      window.__scrollToEndOnce = true;
+      if (typeof openWeekToevoegen === 'function')      openWeekToevoegen(document.getElementById("rapportperiode").value);
+      else if (typeof voegWeekKolomToe === 'function')  voegWeekKolomToe(document.getElementById("rapportperiode").value);
+      else alert('Week toevoegen: functie niet gevonden.');
+    };
+  }
+}
+
+function __scrollToEndIfNeeded(){
+  if (!window.__scrollToEndOnce) return;
+  const c = document.getElementById('tabelContainer');
+  if (c) c.scrollLeft = c.scrollWidth;
+  window.__scrollToEndOnce = false;
+}
+
+function __updateTitelActiesVisibility(){
+  const modus = window.huidigeModus || 'dag';
+  const btnDag  = document.getElementById('btnDagToevoegen');
+  const btnWeek = document.getElementById('btnWeekToevoegen');
+  if (btnDag)  btnDag.style.display  = (modus === 'dag')  ? 'inline-block' : 'none';
+  if (btnWeek) btnWeek.style.display = (modus === 'week') ? 'inline-block' : 'none';
+}
+
+// Hooks na render: knoppen binden, zichtbaar maken en evt. autoscroll
+const __origRenderDagTabel  = (typeof renderTabelDag  === 'function') ? renderTabelDag  : null;
+const __origRenderWeekTabel = (typeof renderTabelWeek === 'function') ? renderTabelWeek : null;
+
+if (__origRenderDagTabel) {
+  window.renderTabelDag = function(...args){
+    const r = __origRenderDagTabel.apply(this, args);
+    __bindTitelKnoppen(); __updateTitelActiesVisibility(); __scrollToEndIfNeeded();
+    return r;
+  };
+}
+if (__origRenderWeekTabel) {
+  window.renderTabelWeek = function(...args){
+    const r = __origRenderWeekTabel.apply(this, args);
+    __bindTitelKnoppen(); __updateTitelActiesVisibility(); __scrollToEndIfNeeded();
+    return r;
+  };
+}
+
+// Bij moduswissel & bij eerste load
+document.getElementById('wisselModusBtn')?.addEventListener('click', () => {
+  setTimeout(() => { __bindTitelKnoppen(); __updateTitelActiesVisibility(); }, 0);
+});
+document.addEventListener('DOMContentLoaded', () => {
+  __bindTitelKnoppen();
+  __updateTitelActiesVisibility();
+});
+// --- Titelknoppen: binden, modus detecteren op basis van titel, en zichtbaar maken ---
+(function(){
+  function bindTitelKnoppen(){
+    const btnDag  = document.getElementById('btnDagToevoegen');
+    const btnWeek = document.getElementById('btnWeekToevoegen');
+
+    if (btnDag && !btnDag.__bound) {
+      btnDag.__bound = true;
+      btnDag.addEventListener('click', () => {
+        window.__scrollToEndOnce = true;
+        if (typeof openDagToevoegen === 'function')      openDagToevoegen(document.getElementById("rapportperiode").value);
+        else if (typeof voegDagKolomToe === 'function')  voegDagKolomToe(new Date().toISOString().split('T')[0], document.getElementById("rapportperiode").value);
+        else alert('Dag toevoegen: functie niet gevonden.');
+      });
+    }
+    if (btnWeek && !btnWeek.__bound) {
+      btnWeek.__bound = true;
+      btnWeek.addEventListener('click', () => {
+        window.__scrollToEndOnce = true;
+        if (typeof openWeekToevoegen === 'function')      openWeekToevoegen(document.getElementById("rapportperiode").value);
+        else if (typeof voegWeekKolomToe === 'function')  voegWeekKolomToe(document.getElementById("rapportperiode").value);
+        else alert('Week toevoegen: functie niet gevonden.');
+      });
+    }
+  }
+
+  function detectModusViaTitel(){
+    const h2 = document.getElementById('weergave-titel');
+    const txt = (h2?.textContent || '').toLowerCase();
+    // Voorbeelden die uw app toont: "Huistakenoverzicht per week" / "… per dag"
+    if (txt.includes('per week')) return 'week';
+    if (txt.includes('per dag'))  return 'dag';
+    // fallback: kijk naar selectie-knop (indien aanwezig)
+    return (window.huidigeModus || 'dag');
+  }
+
+  function updateKnoppenVisibility(){
+    const modus = detectModusViaTitel();
+    const btnDag  = document.getElementById('btnDagToevoegen');
+    const btnWeek = document.getElementById('btnWeekToevoegen');
+    if (btnDag)  btnDag.style.display  = (modus === 'dag')  ? 'inline-block' : 'none';
+    if (btnWeek) btnWeek.style.display = (modus === 'week') ? 'inline-block' : 'none';
+  }
+
+  function scrollToEndIfNeeded(){
+    if (!window.__scrollToEndOnce) return;
+    const c = document.getElementById('tabelContainer');
+    if (c) c.scrollLeft = c.scrollWidth;
+    window.__scrollToEndOnce = false;
+  }
+
+  // Veranderingen in titel/tabel detecteren en knoppen bijwerken
+  const titel = document.getElementById('weergave-titel');
+  const container = document.getElementById('tabelContainer');
+  const obs = new MutationObserver(() => {
+    bindTitelKnoppen();
+    updateKnoppenVisibility();
+    scrollToEndIfNeeded();
+  });
+  if (titel)     obs.observe(titel,     { childList: true, characterData: true, subtree: true });
+  if (container) obs.observe(container, { childList: true, subtree: true });
+
+  // Bij moduswisselknop en bij de eerste load ook bijwerken
+  document.getElementById('wisselModusBtn')?.addEventListener('click', () => {
+    setTimeout(() => { bindTitelKnoppen(); updateKnoppenVisibility(); }, 0);
+  });
+  document.addEventListener('DOMContentLoaded', () => {
+    bindTitelKnoppen();
+    updateKnoppenVisibility();
+  });
+})();
