@@ -19,3 +19,80 @@ button {
   margin-top: 1rem;
   font-size: 0.9em;
 }
+/* Publieke links naar klasagenda */
+.publieke-links { 
+  margin-top: 2rem; background:#fff; border:1px solid #e5e7eb; 
+  border-radius: 12px; padding: 1rem 1.25rem;
+}
+.publieke-links h2 { margin: 0 0 .25rem 0; font-size: 1.2rem; }
+.publieke-links .uitleg { margin: 0 0 1rem 0; color:#6b7280; font-size: .95rem; }
+.link-tegels { display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
+.tegel {
+  display:flex; gap:10px; align-items:center; text-decoration:none;
+  border:1px solid #e5e7eb; border-radius:12px; padding:.8rem 1rem; background:#fafafa;
+  color:#111;
+}
+.tegel:hover { background:#f3f4f6; border-color:#d1d5db; }
+.tegel-icoon { font-size: 1.6rem; width: 2rem; text-align: center; }
+.tegel-tekst span { display:block; color:#6b7280; font-size:.9rem; }
+/* Blok voor klasagenda op inlogpagina */
+.publieke-links {
+  margin: 40px auto 0 auto;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 1.2rem 1.5rem;
+  max-width: 480px;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+}
+
+.publieke-links h2 {
+  margin-top: 0;
+  font-size: 1.25rem;
+  text-align: center;
+}
+
+.publieke-links .uitleg {
+  color: #6b7280;
+  font-size: 0.95rem;
+  text-align: center;
+  margin-bottom: 1rem;
+}
+
+.link-tegels {
+  display: flex;
+  justify-content: center;
+}
+
+.tegel {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 0.8rem 1.2rem;
+  background: #f9fafb;
+  color: #111;
+  box-shadow: 0 3px 8px rgba(0,0,0,0.05);
+  transition: all 0.2s ease;
+}
+.tegel:hover {
+  background: #0a66c2;
+  color: #fff;
+  border-color: #0a66c2;
+}
+.tegel-icoon {
+  font-size: 1.5rem;
+}
+.tegel-tekst strong {
+  font-size: 1rem;
+}
+.tegel-tekst span {
+  display: block;
+  font-size: 0.9rem;
+  color: #6b7280;
+}
+.tegel:hover .tegel-tekst span {
+  color: #e5e7eb;
+}
