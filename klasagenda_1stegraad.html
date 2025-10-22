@@ -12,7 +12,11 @@
     --ink:#111; --line:#111; --muted:#6b7280;
   }
   html,body{height:100%}
-  body{margin:0;background:#f3f5f7;color:var(--ink);font-family:Arial,Helvetica,sans-serif;font-size:12pt;line-height:1.28}
+  body{margin:0;background:#f3f5f7;color:var(--ink);font-family:Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.28}
+  :root {
+  --plan-fs: 11pt;
+  --bring-fs: 11pt;
+}
   *{box-sizing:border-box}
 
   /* Toolbar (niet in print) */
@@ -223,7 +227,7 @@
     <div class="group">
       <button id="btnAddBullet">+ bolletje</button>
       <label>Plan-tekst:
-        <select id="planFS"><option>10pt</option><option>11pt</option><option selected>12pt</option><option>14pt</option></select>
+        <select id="planFS"><option>10pt</option><option selected>11pt</option><option>12pt</option><option>14pt</option></select>
       </label>
       <label>Bolletje:
         <select id="bulletSize"><option value="12">klein</option><option value="14" selected>middel</option><option value="16">groot</option></select>
