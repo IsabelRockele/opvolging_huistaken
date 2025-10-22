@@ -1,0 +1,1075 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Klasagenda L3–L4 – A4 liggend (Arial)</title>
+<style>
+  :root{
+    --page-w: 297mm; --page-h: 210mm;
+    --m-top: 8mm; --m-side: 8mm;
+    --gap: 3.2mm;
+    --ink:#111; --line:#111; --muted:#6b7280;
+  }
+  html,body{height:100%}
+  body{margin:0;background:#f3f5f7;color:var(--ink);font-family:Arial,Helvetica,sans-serif;font-size:12pt;line-height:1.28}
+  *{box-sizing:border-box}
+
+  /* Toolbar (niet in print) */
+  .toolbar{position:sticky;top:0;z-index:50;display:flex;flex-wrap:wrap;gap:.6rem 1rem;align-items:center;padding:.6rem .8rem;background:#fff;border-bottom:1px solid #e5e7eb}
+  .toolbar .group{display:flex;gap:.6rem;align-items:center;flex-wrap:wrap}
+  .toolbar select{font:inherit;padding:.3rem .45rem}
+  .toolbar button{appearance:none;border:1px solid #d0d7de;background:#fff;padding:.45rem .7rem;border-radius:.5rem;cursor:pointer;font-weight:700}
+  .toolbar button.primary{background:#0a66c2;border-color:#0a66c2;color:#fff}
+  .sep{width:1px;height:28px;background:#e5e7eb;margin:0 .25rem}
+
+  /* Meldingsbalk overflow */
+  .alert{display:none;align-items:center;gap:.6rem;background:#ffecec;border:1px solid #f2b8b5;color:#7a1f1a;padding:.45rem .7rem;border-radius:.5rem;}
+  .alert.show{display:flex}
+
+  /* Pagina */
+  .page{width:var(--page-w);min-height:var(--page-h);margin:0 auto;background:#fff;padding:var(--m-top) var(--m-side) var(--m-side) var(--m-side)}
+  header.page-head{display:grid;grid-template-columns:1fr auto;gap:var(--gap);align-items:center;margin-bottom:var(--gap)}
+  .title{font-size:18pt;font-weight:800}
+  .pill{display:inline-block;border:2px solid var(--line);padding:1px 9px;border-radius:10px;line-height:1}
+  .right-head{display:flex;align-items:center;gap:6px}
+  .monthBox{border:2px solid var(--line);border-radius:10px;padding:2px 8px;font-weight:700;background:#fff;min-width:52mm;text-transform:lowercase}
+  .classIcon{
+    width:22mm;height:12mm;display:flex;align-items:flex-end;justify-content:center;overflow:visible;
+  }
+  .classIcon img{
+    max-width:none;max-height:none;height:18mm;transform:translateY(1.2mm);object-fit:contain;
+  }
+
+  /* Grids */
+  .week-top{display:grid;grid-template-columns:repeat(5,1fr);gap:var(--gap)}
+  .bottom-row{display:grid;grid-template-columns:1.5fr 3.5fr;gap:var(--gap);margin-top:3mm}
+  .weekendCol{display:grid;grid-template-rows:auto auto;gap:var(--gap)}
+
+  /* Dagkaarten */
+  .day{position:relative;border:2.6px solid var(--line);border-radius:7px;background:#fff;display:flex;flex-direction:column;--bullet:14px;--plan-fs:11pt;--task-gap:6pt; z-index:1;}
+  .day header{
+    display:flex;justify-content:space-between;align-items:center;
+    padding:2.6mm;border-bottom:2.6px solid var(--line);background:#f0f0f0;border-top-left-radius:7px;border-top-right-radius:7px;
+  }
+  .day header.stacked{flex-direction:column;justify-content:center;gap:1.2mm}
+  .dn{font-weight:800;letter-spacing:.02em;font-size:11.5pt}
+  .hdrLeft{display:flex;align-items:center;gap:3mm}
+  .hdrEnv{width:6.5mm;height:4.6mm}
+  .hdrEnv svg{width:100%;height:100%}
+  .hdrEnv *{fill:none;stroke:#111;stroke-width:1.2}
+  .dateWrap{display:flex;align-items:center;gap:4px;position:relative}
+  .dDate{font-variant-numeric:tabular-nums;white-space:nowrap;font-size:10pt;cursor:pointer}
+  .datePicker{position:absolute;opacity:0;width:1px;height:1px;pointer-events:none}
+
+  .body{display:flex;flex-direction:column;padding:2mm;gap:1mm;flex:1;overflow:visible;position: relative;}
+  .cell h3{margin:0 0 .3mm;font-size:10.2pt}
+
+  /* Agenda-gebied (voorheen plan) */
+  .planBox{
+    border:2.6px solid var(--line);border-radius:4px;padding:1.6mm;display:flex;flex-direction:column;flex:0;min-height:0;font-size:var(--plan-fs);overflow:visible;
+  }
+  .tasklist{list-style:none;margin:0;padding:0;display:block}
+  .tasklist li{display:flex;align-items:flex-start;gap:.32rem;margin-bottom:var(--task-gap); position:relative;}
+  .tasklist li:last-child{margin-bottom:0}
+  .bullet{display:inline-block;width:var(--bullet);height:var(--bullet);border:2px solid #0a3a52;border-radius:50%}
+  .tasktext[contenteditable]{flex:1;min-height:1.05em;outline:none}
+  .tasklist .liDel{
+    position:absolute; right:-2px; top:-4px; border:1px solid #d0d7de; background:#fff;
+    border-radius:10px; width:18px; height:18px; line-height:16px; text-align:center; cursor:pointer; font-weight:700; padding:0;
+  }
+  .tasklist .liDel:hover{ background:#f5f7fa }
+
+  .planText[contenteditable]{outline:none;min-height:0;white-space:pre-wrap}
+  .planBox.has-tasks .planText{display:none}
+  .planBox.has-tasks{padding-bottom:1mm}
+
+  /* Weekend */
+  .day.small .tasklist{ display:block; }
+  .planBox.has-tasks .wkCE{ display:none; }
+  .wkTA{
+    width:100%; border:none; outline:none; resize:none; background:transparent;
+    font-family:Arial,Helvetica,sans-serif; font-size:11pt; line-height:1.28;
+    height:calc(2 * 1.28em);
+    overflow:hidden; padding:0; margin:0;
+  }
+  .wkTA.maxed{ height:calc(3 * 1.28em); }
+  .wkCE[contenteditable]{
+    display:block; min-height:3.2em; padding:.4rem .5rem; border:1px solid var(--line);
+    border-radius:6px; background:#fff; outline:none; white-space:pre-wrap;
+  }
+
+  /* Ik denk aan */
+  .bringBox{border:2.6px solid var(--line);border-radius:4px;padding:1.6mm;min-height:10mm;position:relative;font-size: var(--bring-fs, 11pt);}
+  .bringText[contenteditable]{min-height:8mm;outline:none}
+  .picto-inline img{height:16px;vertical-align:text-bottom}
+
+  /* Mededelingen */
+  .panel{position:relative;border:2.6px solid var(--line);border-radius:7px;background:#fff;display:flex;flex-direction:column;height:1px; z-index:0;}
+  .panel header{padding:2.6mm;border-bottom:2.6px solid var(--line);font-weight:700}
+  .panelBody{padding:2mm;flex:1;min-height:40px;overflow:auto;outline:none}
+  .sign{position:absolute;right:6mm;bottom:6mm;border:2.6px solid var(--line);border-radius:7px;padding:2mm 5mm;min-width:70mm;height:22mm;font-size:10pt;color:var(--muted);background:#fff;display:flex;align-items:flex-start}
+
+  /* Vrije pictogrammen */
+  .picto-free{position:absolute; left:10px; top:10px; cursor:grab; user-select:none; z-index:5; touch-action:none; outline:2px solid transparent;}
+  .picto-free.dragging{ cursor:grabbing; }
+  .picto-free.selected{ outline:2px solid #0a66c2; }
+  .picto-free img{display:block;max-width:100%;max-height:100%;pointer-events:none}
+  .picto-free .handle{position:absolute; right:-6px; bottom:-6px; width:12px; height:12px; border:2px solid #0a66c2; background:#e7f1fb; border-radius:3px; cursor:nwse-resize; touch-action:none;}
+
+  /* Pictopaneel (niet in print) */
+  .dock{position:fixed;right:16px;top:76px;z-index:60;width:260px;background:#fff;border:1px solid #e5e7eb;border-radius:10px;box-shadow:0 6px 24px rgba(0,0,0,.08);padding:.7rem}
+  .dock h4{margin:.1rem 0 .4rem;font-size:1rem}
+  .picto-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem}
+  .picto{border:1px solid #e5e7eb;border-radius:8px;background:#fafbfc;display:flex;align-items:center;justify-content:center;padding:.35rem;cursor:pointer}
+  .picto:hover{background:#f0f4f8}
+  .picto img{width:42px;height:42px;object-fit:contain}
+  .dock small{color:#6b7280;display:block;margin-top:.35rem}
+  .dock[hidden]{ display:none !important; }
+  .dock .uploadRow{ margin-top:.5rem; display:flex; gap:.5rem; align-items:center; }
+
+  /* PRINT */
+  @media print{
+    @page{ size: A4 landscape; margin: 0 }
+    .toolbar, .dock{ display: none !important; }
+    body{ background:#fff; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+    [contenteditable], input, textarea { caret-color: transparent !important; }
+    .day, .day *:focus { outline: none !important; }
+    .page{
+      width: var(--page-w);
+      height: var(--page-h);
+      margin: 0;
+      padding: var(--m-top) var(--m-side) var(--m-side) var(--m-side);
+      zoom: 0.96;
+      transform: none !important;
+      break-after: avoid;
+      page-break-after: avoid;
+      overflow: hidden;
+    }
+    .week-top > .day, .bottom-row > *{ break-inside: avoid; page-break-inside: avoid; }
+    .tasklist .liDel, .picto-free .handle, .picto-free.selected{ display:none !important; outline:none !important; }
+  }
+</style>
+</head>
+<body>
+  <div class="toolbar" role="region" aria-label="Bediening">
+    <div class="group">
+      <label for="tpl">Sjabloon</label>
+      <select id="tpl">
+        <option value="L3" selected>Agenda L3</option>
+        <option value="L4">Agenda L4</option>
+      </select>
+      <label><input id="zwemweek" type="checkbox"> Zwemweek</label>
+      <div id="overflowAlert" class="alert" role="status" aria-live="polite">⚠️ Let op: er staat te veel tekst. Dit past mogelijks niet op één blad bij printen.</div>
+    </div>
+    <div class="group">
+      <button id="btnAddBullet">+ bolletje</button>
+      <label>Agenda-tekst:
+        <select id="planFS"><option>10pt</option><option selected>11pt</option><option>12pt</option><option>14pt</option></select>
+      </label>
+      <label>Bolletje:
+        <select id="bulletSize"><option value="12">klein</option><option value="14" selected>middel</option><option value="16">groot</option></select>
+      </label>
+      <label>Tussenruimte:
+        <select id="taskGap"><option value="4">4pt</option><option value="5">5pt</option><option value="6" selected>6pt</option></select>
+      </label>
+      <button id="applyAllFS">FS → ma–vr</button>
+      <button id="applyAllGap">Gap → ma–vr</button>
+      <span class="sep"></span>
+      <button id="btnBold" title="Vet (Ctrl+B)">B</button>
+      <button id="btnItalic" title="Schuin (Ctrl+I)"><i>I</i></button>
+      <button id="btnUnderline" title="Onderlijn (Ctrl+U)"><u>U</u></button>
+      <button id="btnHighlight" title="Markeren (fluo)">Fluo</button>
+      <label>Tekstkleur:
+        <select id="textColor">
+          <option value="#111">zwart</option>
+          <option value="#0b4dad">donkerblauw</option>
+          <option value="#117a2c">groen</option>
+          <option value="#c22727">rood</option>
+        </select>
+        <button type="button" id="btnApplyColor" title="Kleur toepassen">Pas toe</button>
+      </label>
+
+      <span class="sep"></span>
+      <button id="btnUndo" title="Laatste actie ongedaan maken">Ongedaan maken</button>
+      <button id="btnDelPicto" title="Geselecteerd pictogram verwijderen">Verwijder picto</button>
+      <!-- Knop "Kopieer maandag" is bewust verwijderd voor 2de graad -->
+      <button id="btnExport">Export</button>
+      <input id="fileImport" type="file" accept="application/json" hidden>
+      <button id="btnImport">Import</button>
+      <button id="btnPrint" class="primary">PDF / Print</button>
+      <button id="btnToggleDock">Pictogrammen</button>
+    </div>
+  </div>
+
+  <main class="page" id="page">
+    <header class="page-head">
+      <div class="title"><span class="pill" id="titlePill" contenteditable>agenda L3</span></div>
+      <div class="right-head">
+        <div class="monthBox" id="monthBox" contenteditable>september 2025</div>
+        <div class="classIcon" id="classIconSlot"></div>
+      </div>
+    </header>
+
+    <!-- Ma–Vr -->
+    <section class="week-top" id="weekTop"></section>
+
+    <!-- Za–Zo + Mededelingen -->
+    <section class="bottom-row">
+      <div class="weekendCol" id="weekendCol"></div>
+
+      <section class="panel" id="notesPanel">
+        <header>Mededelingen <span style="font-weight:400;color:#6b7280">(berichten aan leerkrachten via smartschool)</span></header>
+        <div class="panelBody" id="notesBody" contenteditable></div>
+        <div class="sign">handtekening ouders</div>
+      </section>
+    </section>
+  </main>
+
+  <!-- PICTOGRAMMEN -->
+  <aside class="dock" aria-label="Pictogrammen">
+    <h4>Pictogrammen</h4>
+    <div class="picto-grid" id="pictoGrid"></div>
+    <div class="uploadRow">
+      <button id="btnUploadPicto" title="Eigen pictogram toevoegen">Eigen pictogram…</button>
+      <input id="fileUploadPicto" type="file" accept="image/*" hidden>
+    </div>
+    <small>Klik om een vrij pictogram te plaatsen. <strong>Ctrl-klik</strong> (Mac: Cmd-klik) = als inline pictogram in de tekst.</small>
+  </aside>
+
+<script>
+(function(){
+  const $  = (s,r=document)=>r.querySelector(s);
+  const $$ = (s,r=document)=>Array.from(r.querySelectorAll(s));
+
+  const ENVELOPE_SVG =
+   '<svg viewBox="0 0 48 36" xmlns="http://www.w3.org/2000/svg"><rect x="1.5" y="1.5" width="45" height="33" rx="2.5"/><polyline points="2,2 24,18 46,2"/><polyline points="2,34 20,20"/><polyline points="46,34 28,20"/></svg>';
+
+  const tplSel=$('#tpl'), swimChk=$('#zwemweek');
+  const btnAddBullet=$('#btnAddBullet');
+  const planFS=$('#planFS'), bulletSize=$('#bulletSize'), taskGap=$('#taskGap');
+  const applyAllFS=$('#applyAllFS'), applyAllGap=$('#applyAllGap');
+  const btnBold=$('#btnBold'), btnItalic=$('#btnItalic'), btnUnderline=$('#btnUnderline'), btnHighlight=$('#btnHighlight');
+  const textColor = $('#textColor'); let lastTextRange = null; const btnApplyColor = $('#btnApplyColor');
+  const btnExport=$('#btnExport'), btnImport=$('#btnImport'), fileImport=$('#fileImport'), btnPrint=$('#btnPrint');
+  const monthBox=$('#monthBox'), classIconSlot=$('#classIconSlot');
+  const btnUndo=$('#btnUndo'), btnDelPicto=$('#btnDelPicto');
+  const btnToggleDock = $('#btnToggleDock');
+  const dock = document.querySelector('.dock');
+  const btnUploadPicto = $('#btnUploadPicto');
+  const fileUploadPicto = $('#fileUploadPicto');
+  const overflowAlert = $('#overflowAlert');
+
+  const notesPanel=$('#notesPanel'), notesBody=$('#notesBody');
+
+  let activeDay=null;
+  let activeHost=null;
+  let selectedPicto=null;
+  let undoStack=[]; let isApplying=false;
+  let lastFocusedHost = null;
+
+  function setActiveDay(n){
+    $$('.day').forEach(d=>d.style.outline='none');
+    if(n){ n.style.outline='2px solid rgba(10,102,194,.25)'; }
+    activeDay=n;
+    if(n) setActiveHost(n.querySelector('.body'));
+  }
+  function setActiveHost(el){ activeHost=el; }
+
+  function clearPictoSelection(){
+    if(selectedPicto){ selectedPicto.classList.remove('selected'); selectedPicto=null; }
+  }
+  document.addEventListener('pointerdown', (e)=>{
+    if (e.target.closest('.toolbar')) return;
+    if (!e.target.closest('.picto-free')) clearPictoSelection();
+  });
+
+  /* Undo */
+  function snapshot(){
+    const data=captureAll();
+    data.meta.panelPictos=capturePanelPictos();
+    return data;
+  }
+  function pushSnapshot(){
+    if(!isApplying) undoStack.push(snapshot());
+    scheduleLayoutSync();
+  }
+  function doUndo(){
+    if(undoStack.length<2) return;
+    undoStack.pop();
+    const prev=undoStack[undoStack.length-1];
+    isApplying=true;
+    applyAll(prev);
+    applyPanelPictos(prev.meta && prev.meta.panelPictos ? prev.meta.panelPictos : []);
+    isApplying=false;
+    scheduleLayoutSync();
+  }
+  btnUndo.addEventListener('click', doUndo);
+
+  function weekdayHeaderHtml(name){
+    return `<header class="stacked">
+      <div class="hdrLeft">
+        <span class="hdrEnv">${ENVELOPE_SVG}</span>
+        <div class="dn">${name}</div>
+      </div>
+      <div class="dateWrap"><span class="dDate">01 / 09</span><input class="datePicker" type="date"></div>
+    </header>`;
+  }
+
+  function buildWeekday(i,name){
+    const art=document.createElement('article'); art.className='day'; art.dataset.dayIndex=i;
+    const planHeading='<h3>Agenda:</h3>';
+    art.innerHTML = weekdayHeaderHtml(name)+
+    `<div class="body">
+       <div class="cell">
+         ${planHeading}
+         <div class="planBox" data-key="d${i}.plan">
+           <ul class="tasklist" data-role="tasks"></ul>
+           <div class="planText" contenteditable></div>
+         </div>
+       </div>
+       <div class="cell">
+         <h3>Ik denk aan:</h3>
+         <div class="bringBox" data-key="d${i}.bring"><div class="bringText" contenteditable></div></div>
+       </div>
+     </div>`;
+
+    const bringBox  = art.querySelector('.bringBox');
+    const bringText = art.querySelector('.bringText');
+    const planBox   = art.querySelector('.planBox');
+    bringText.addEventListener('focusin', () => { lastFocusedHost = bringBox; setActiveHost(bringBox); });
+    planBox.addEventListener('focusin', () => { lastFocusedHost = art.querySelector('.body'); setActiveHost(lastFocusedHost); });
+
+    wireDate(art,i);
+    art.addEventListener('pointerdown',()=> { setActiveDay(art); setActiveHost(art.querySelector('.body')); });
+    return art;
+  }
+
+  function buildWeekend(i,name){
+    const art=document.createElement('article'); art.className='day small'; art.dataset.dayIndex=i;
+    art.innerHTML=
+    `<header>
+       <div class="dn">${name}</div>
+       <div class="dateWrap"><span class="dDate">01 / 09</span><input class="datePicker" type="date"></div>
+     </header>
+     <div class="body">
+       <div class="cell">
+         <h3>Agenda:</h3>
+         <div class="planBox" data-key="d${i}.plan">
+           <textarea class="wkTA" rows="2" maxlength="300" aria-label="Weekendnotities"></textarea>
+         </div>
+       </div>
+     </div>`;
+    const ta=art.querySelector('.wkTA');
+    ta.addEventListener('input', limitWeekendTextarea);
+    ta.addEventListener('keydown', e=>{
+      const lines=ta.value.split('\n').length;
+      if(e.key==='Enter' && lines>=3){ e.preventDefault(); }
+    });
+    ta.addEventListener('focusin', () => { lastFocusedHost = art.querySelector('.body'); setActiveHost(lastFocusedHost); });
+    art.addEventListener('pointerdown',()=> { setActiveDay(art); setActiveHost(art.querySelector('.body')); });
+    wireDate(art,i);
+    return art;
+  }
+
+  function limitWeekendTextarea(e){
+    const ta=e.target;
+    const lines=ta.value.split('\n').length;
+    if(lines>=3) ta.classList.add('maxed'); else ta.classList.remove('maxed');
+    scheduleLayoutSync();
+  }
+
+  function wireDate(card,idx){
+    const dp=card.querySelector('.datePicker'); const lab=card.querySelector('.dDate');
+    lab.addEventListener('click',()=> dp.showPicker && dp.showPicker());
+    dp.addEventListener('change',()=>{
+      const d=new Date(dp.value); if(isNaN(d)) return;
+      const dd=String(d.getDate()).padStart(2,'0');
+      const mm=String(d.getMonth()+1).padStart(2,'0');
+      lab.textContent=`${dd} / ${mm}`;
+      if(idx===0){
+        for(let k=1;k<=6;k++){
+          const other=document.querySelector(`.day[data-day-index="${k}"] .datePicker`);
+          const nd=new Date(d); nd.setDate(d.getDate()+k);
+          other.valueAsDate=nd; other.dispatchEvent(new Event('change'));
+        }
+      }
+      updateMonthBox();
+    });
+  }
+
+  const weekTop=$('#weekTop'), weekendCol=$('#weekendCol');
+  const days=['MAANDAG','DINSDAG','WOENSDAG','DONDERDAG','VRIJDAG','ZATERDAG','ZONDAG'];
+  for(let i=0;i<5;i++) weekTop.appendChild(buildWeekday(i,days[i]));
+  weekendCol.appendChild(buildWeekend(5,days[5]));
+  weekendCol.appendChild(buildWeekend(6,days[6]));
+  setActiveDay(weekTop.firstElementChild);
+
+  /* Plan-stijl en bullets */
+  function applyFsToDay(day,val){ day.style.setProperty('--plan-fs',val); day.style.setProperty('--bring-fs',val); }
+  function applyBulletToDay(day,px){ day.style.setProperty('--bullet',px+'px'); }
+  function applyGapToDay(day,pt){ day.style.setProperty('--task-gap',pt+'pt'); }
+
+  planFS.addEventListener('change',()=>{ if(activeDay){ applyFsToDay(activeDay, planFS.value); pushSnapshot(); }});
+  bulletSize.addEventListener('change',()=>{ if(activeDay){ applyBulletToDay(activeDay,bulletSize.value); pushSnapshot(); }});
+  taskGap.addEventListener('change',()=>{ if(activeDay){ applyGapToDay(activeDay,taskGap.value); pushSnapshot(); }});
+
+  function updatePlanBoxClass(day){
+    const box = day.querySelector('.planBox');
+    const has = box.querySelectorAll('.tasklist li').length>0;
+    box.classList.toggle('has-tasks', has);
+  }
+
+  function upgradeWeekendToEditable(){
+    ['5','6'].forEach(i=>{
+      const planBox = document.querySelector(`[data-key="d${i}.plan"]`);
+      if (!planBox) return;
+      const ta = planBox.querySelector('.wkTA');
+      if (ta){
+        const div = document.createElement('div');
+        div.className = 'wkCE';
+        div.setAttribute('contenteditable','true');
+        div.innerText = ta.value || '';
+        ta.replaceWith(div);
+      }
+    });
+  }
+
+  applyAllFS.addEventListener('click',()=>{ if(!activeDay) return;
+    const val=getComputedStyle(activeDay).getPropertyValue('--plan-fs').trim()||planFS.value;
+    for(let i=1;i<5;i++){
+      const d=document.querySelector(`.day[data-day-index="${i}"]`);
+      applyFsToDay(d,val);
+    }
+    pushSnapshot();
+  });
+  applyAllGap.addEventListener('click',()=>{ if(!activeDay) return;
+    const val=(getComputedStyle(activeDay).getPropertyValue('--task-gap').trim()||taskGap.value+'pt').replace('pt','');
+    for(let i=1;i<5;i++) applyGapToDay(document.querySelector(`.day[data-day-index="${i}"]`),val);
+    pushSnapshot();
+  });
+
+  /* Tekst opmaak */
+  function exec(cmd,val=null){ document.execCommand(cmd,false,val); }
+  $('#btnBold').addEventListener('click',()=> exec('bold'));
+  $('#btnItalic').addEventListener('click',()=> exec('italic'));
+  $('#btnUnderline').addEventListener('click',()=> exec('underline'));
+  $('#btnHighlight').addEventListener('click',()=>{
+    const sel=window.getSelection(); if(!sel||sel.isCollapsed) return;
+    const r=sel.getRangeAt(0); const m=document.createElement('mark'); m.style.background='#fff89a'; r.surroundContents(m);
+  });
+
+  function inEditable(node){ if (!node) return null; const el = (node.nodeType === 1 ? node : node.parentElement); return el ? el.closest('[contenteditable]') : null; }
+  document.addEventListener('selectionchange', ()=>{
+    const sel = window.getSelection(); if (!sel || !sel.rangeCount) return;
+    const ed = inEditable(sel.anchorNode); if (ed) lastTextRange = sel.getRangeAt(0).cloneRange();
+  });
+  textColor.addEventListener('mousedown', ()=>{
+    const sel = window.getSelection(); if (!sel || !sel.rangeCount) return;
+    const ed = inEditable(sel.anchorNode); if (ed) lastTextRange = sel.getRangeAt(0).cloneRange();
+  });
+  function applyTextColor(){
+    const sel = window.getSelection(); if (!sel || sel.rangeCount === 0) return;
+    const host = inEditable(sel.anchorNode); if (!host) return;
+    host.focus(); try { document.execCommand('styleWithCSS', false, true); } catch(_){}
+    document.execCommand('foreColor', false, textColor.value); pushSnapshot();
+  }
+  textColor.addEventListener('change', applyTextColor);
+  btnApplyColor.addEventListener('click', applyTextColor);
+
+  /* Bolletje */
+  btnAddBullet.addEventListener('click',()=>{
+    if(!activeDay) return;
+    let list = activeDay.querySelector('[data-role=tasks]');
+    if(!list){
+      const box = activeDay.querySelector('.planBox');
+      list = document.createElement('ul'); list.className='tasklist'; list.setAttribute('data-role','tasks'); box.prepend(list);
+    }
+    const li=document.createElement('li');
+    li.innerHTML = '<span class="bullet"></span><div class="tasktext" contenteditable></div><button class="liDel" title="Verwijder">×</button>';
+    list.appendChild(li);
+    const t=li.querySelector('.tasktext'); t.focus();
+    const sel=window.getSelection(), rg=document.createRange(); rg.selectNodeContents(t); rg.collapse(false); sel.removeAllRanges(); sel.addRange(rg);
+    updatePlanBoxClass(activeDay);
+    ensureTaskDeleteButtons(activeDay);
+    pushSnapshot();
+  });
+
+  function ensureTaskDeleteButtons(root=document){
+    root.querySelectorAll('.tasklist li').forEach(li=>{
+      if(!li.querySelector('.liDel')){
+        const btn = document.createElement('button');
+        btn.className = 'liDel'; btn.title = 'Verwijder'; btn.textContent = '×';
+        li.appendChild(btn);
+      }
+    });
+  }
+
+  /* Zwemweek: alleen de zin in Ik denk aan */
+  function toggleSwimWeek(on){
+    const day = document.querySelector('.day[data-day-index="3"]'); // donderdag
+    if(!day) return;
+    const bringText = day.querySelector('.bringText');
+    const line = 'zwemzak en badmuts';
+    const tmp = bringText.cloneNode(true);
+    tmp.querySelectorAll('br').forEach(br => br.replaceWith('\n'));
+    const raw = tmp.textContent.split('\n').map(s=>s.trim());
+    let lines = raw.filter(s=>s.length);
+    if (on) { if (!lines.includes(line)) lines.push(line); }
+    else    { lines = lines.filter(t => t !== line); }
+    bringText.innerHTML = lines.map(t => `<span style="font-size:11pt">${t}</span>`).join('<br>');
+    pushSnapshot();
+  }
+  swimChk.addEventListener('change', ()=> toggleSwimWeek(swimChk.checked));
+
+  /* PICTOGRAMMEN */
+  const PICTO_FILES=[
+    'geen_school.png','zwemmen.png','wieltjesdag.png','uitstap.png','kijkdag.png','belangrijk.png','fruit.png','soep.png','zebra.png','cactus.png','lama.png'
+  ];
+  const pictoGrid=$('#pictoGrid');
+  PICTO_FILES.forEach(name=>{
+    const cell=document.createElement('div'); cell.className='picto'; cell.title=name.replace('.png','');
+    cell.innerHTML=`<img src="pictogrammen/${name}" alt="${name}">`;
+    cell.addEventListener('mousedown',e=>e.preventDefault()); // behoud caret/focus
+    cell.addEventListener('click',(ev)=> handlePictoInsert(`pictogrammen/${name}`, ev));
+    pictoGrid.appendChild(cell);
+  });
+
+  function handlePictoInsert(src, ev){
+    const sel=window.getSelection();
+    const ae=document.activeElement;
+    const wantInline = (ev && (ev.ctrlKey || ev.metaKey));
+
+    if (wantInline && ae && ae.isContentEditable && sel && sel.rangeCount){
+      const span=document.createElement('span'); span.className='picto-inline';
+      span.innerHTML=`<img src="${src}" alt="picto" style="height:16px;vertical-align:text-bottom">`;
+      const r=sel.getRangeAt(0); r.deleteContents(); r.insertNode(span);
+      r.setStartAfter(span); r.setEndAfter(span); sel.removeAllRanges(); sel.addRange(r);
+      pushSnapshot();
+      return;
+    }
+
+    const pic = makeFreePicto(src);
+
+    let host = null;
+    if (lastFocusedHost && lastFocusedHost.isConnected) host = lastFocusedHost;
+    else if (activeHost && activeHost.isConnected) host = activeHost;
+    else if (activeDay) host = activeDay.querySelector('.body') || activeDay;
+    else { alert('Klik eerst in een vak (bv. Ik denk aan, Agenda of Mededelingen).'); return; }
+
+    let hostType = 'body';
+    if (host.classList && host.classList.contains('bringBox')) hostType = 'bring';
+    else if (host.classList && host.classList.contains('body')) hostType = 'body';
+    pic.dataset.host = hostType;
+
+    host.appendChild(pic);
+    pic.style.left = '8px'; pic.style.top  = '8px';
+    pushSnapshot();
+  }
+
+  function makeFreePicto(src){
+    const wrap=document.createElement('div');
+    wrap.className='picto-free';
+    wrap.style.width='32mm';
+    wrap.style.height='auto';
+    wrap.style.left='0px';
+    wrap.style.top='0px';
+    wrap.style.position='absolute';
+    wrap.style.zIndex='5';
+    wrap.innerHTML=`<img src="${src}" alt="picto"><div class="handle" title="Schaal"></div>`;
+    enableDragResize(wrap);
+    wrap.addEventListener('pointerdown', (e)=>{ e.stopPropagation(); clearPictoSelection(); selectedPicto=wrap; wrap.classList.add('selected'); });
+    return wrap;
+  }
+
+  /* Drag+resize voor vrije pictogrammen */
+  function enableDragResize(node){
+    const handle = node.querySelector('.handle');
+
+    // --- DRAG ---
+    let dragging = false, pointerId=null;
+    let startX=0, startY=0, hostAtStart=null;
+    let offsetX=0, offsetY=0;
+    let lastRAF = 0, nextLeft=0, nextTop=0, needsPaint=false;
+    let origZ = '';
+
+    function onPointerDownDrag(e){
+      if(e.target === handle) return;
+      e.preventDefault();
+      pointerId = e.pointerId;
+      node.setPointerCapture(pointerId);
+      dragging = true;
+      node.classList.add('dragging');
+
+      hostAtStart = node.parentElement;
+      origZ = node.style.zIndex || '5';
+
+      const rect = node.getBoundingClientRect();
+      startX = e.clientX; startY = e.clientY;
+      offsetX = startX - rect.left; offsetY = startY - rect.top;
+
+      document.body.appendChild(node);
+      node.style.position = 'fixed';
+      node.style.left = rect.left + 'px';
+      node.style.top  = rect.top  + 'px';
+      node.style.zIndex = '10000';
+
+      nextLeft = rect.left; nextTop  = rect.top;
+      needsPaint = false;
+    }
+
+    function onPointerMoveDrag(e){
+      if(!dragging || e.pointerId !== pointerId) return;
+      nextLeft = Math.max(0, Math.min(e.clientX - offsetX, window.innerWidth  - node.offsetWidth));
+      nextTop  = Math.max(0, Math.min(e.clientY - offsetY, window.innerHeight - node.offsetHeight));
+      if (!needsPaint){
+        needsPaint = true;
+        lastRAF = requestAnimationFrame(()=>{ node.style.left = nextLeft + 'px'; node.style.top  = nextTop  + 'px'; needsPaint = false; });
+      }
+    }
+
+    function onPointerUpDrag(e){
+      if(!dragging || e.pointerId !== pointerId) return;
+      try { node.releasePointerCapture(pointerId); } catch(_) {}
+      dragging = false; pointerId = null;
+      node.classList.remove('dragging');
+      if (lastRAF) cancelAnimationFrame(lastRAF);
+
+      const oldPE = node.style.pointerEvents;
+      node.style.pointerEvents = 'none';
+      const dropEl = document.elementFromPoint(e.clientX, e.clientY);
+      node.style.pointerEvents = oldPE;
+
+      let host = dropEl ? dropEl.closest('.bringBox, .panel, .day .body, .day') : null;
+      if(!host) host = hostAtStart || document.querySelector('.page');
+
+      const nodeRect = node.getBoundingClientRect();
+      const hostRect = host.getBoundingClientRect();
+
+      let leftInHost = nodeRect.left - hostRect.left;
+      let topInHost  = nodeRect.top  - hostRect.top;
+
+      leftInHost = Math.max(0, Math.min(leftInHost, hostRect.width  - node.offsetWidth));
+      topInHost  = Math.max(0, Math.min(topInHost,  hostRect.height - node.offsetHeight));
+
+      host.appendChild(node);
+      node.style.position = 'absolute';
+      node.style.left = leftInHost + 'px';
+      node.style.top  = topInHost  + 'px';
+      node.style.zIndex = origZ || '5';
+
+      if (host.classList && host.classList.contains('bringBox')) node.dataset.host = 'bring';
+      else if (host.closest && host.closest('.day')) node.dataset.host = 'body';
+
+      pushSnapshot();
+    }
+
+    function onPointerCancelDrag(){ if (!dragging) return; dragging = false; pointerId = null; node.classList.remove('dragging'); node.style.zIndex = origZ || '5'; }
+
+    node.addEventListener('pointerdown', onPointerDownDrag);
+    node.addEventListener('pointermove', onPointerMoveDrag);
+    node.addEventListener('pointerup',   onPointerUpDrag);
+    node.addEventListener('pointercancel', onPointerCancelDrag);
+    window.addEventListener('pointerup', (ev)=>{ if (dragging) onPointerUpDrag(ev); });
+
+    // --- RESIZE ---
+    let resizing=false, baseW=0, baseX=0, resizePointerId=null;
+    function onPointerDownResize(e){
+      e.preventDefault(); e.stopPropagation();
+      resizePointerId = e.pointerId;
+      handle.setPointerCapture(resizePointerId);
+      resizing=true; baseW = node.offsetWidth; baseX = e.clientX;
+    }
+    function onPointerMoveResize(e){
+      if(!resizing || e.pointerId !== resizePointerId) return;
+      const dw = e.clientX - baseX;
+      const nw = Math.max(16, baseW + dw);
+      node.style.width = nw + 'px';
+    }
+    function onPointerUpResize(e){
+      if(!resizing || e.pointerId !== resizePointerId) return;
+      try { handle.releasePointerCapture(resizePointerId); } catch(_) {}
+      resizing=false; resizePointerId=null;
+      pushSnapshot();
+    }
+    handle.addEventListener('pointerdown', onPointerDownResize);
+    handle.addEventListener('pointermove', onPointerMoveResize);
+    handle.addEventListener('pointerup',   onPointerUpResize);
+    handle.addEventListener('pointercancel', ()=>{ resizing=false; resizePointerId=null; });
+  }
+
+  /* Verwijder geselecteerd pictogram */
+  btnDelPicto.addEventListener('click', (e)=>{
+    e.preventDefault();
+    const node = selectedPicto || document.querySelector('.picto-free.selected');
+    if (!node) { alert('Selecteer eerst een pictogram.'); return; }
+    node.remove();
+    selectedPicto = null;
+    pushSnapshot();
+  });
+
+  /* Export / Import (incl. pictos en bring-fs) */
+  function captureDay(d){
+    const idx = d.dataset.dayIndex;
+    const planBoxEl = d.querySelector(`[data-key="d${idx}.plan"]`);
+    const ta = planBoxEl ? planBoxEl.querySelector('.wkTA') : null;
+    const ce = planBoxEl ? planBoxEl.querySelector('.wkCE[contenteditable]') : null;
+
+    const pics = [...d.querySelectorAll('.picto-free')].map(p => {
+      const img = p.querySelector('img');
+      let host = p.dataset.host || null;
+      if (!host) { if (p.closest('.bringBox')) host = 'bring'; else host = 'body'; }
+      return { src: img.getAttribute('src'), left: p.style.left || '0px', top:  p.style.top  || '0px', width: p.style.width || '', host };
+    });
+
+    return {
+      date: d.querySelector('.datePicker').value || null,
+      plan: planBoxEl ? planBoxEl.innerHTML : '',
+      bring: d.querySelector(`[data-key="d${idx}.bring"]`)?.innerHTML || '',
+      vars: {
+        planFS:  d.style.getPropertyValue('--plan-fs')  || null,
+        bullet:  d.style.getPropertyValue('--bullet')   || null,
+        gap:     d.style.getPropertyValue('--task-gap') || null,
+        bringFS: d.style.getPropertyValue('--bring-fs') || null
+      },
+      pictos: pics,
+      weekendText: ta ? ta.value : null,
+      weekendHtml: ce ? ce.innerHTML : null
+    };
+  }
+
+  function _isEmptyWeekendHtml(html){
+    const tmp = document.createElement('div');
+    tmp.innerHTML = html || '';
+    const hasTasks = !!tmp.querySelector('.tasklist li');
+    const text = tmp.textContent.replace(/\u00a0/g,' ').trim();
+    return { isEmpty: (!hasTasks && text === ''), hasTasks, tmp };
+  }
+
+  function applyDay(d,data){
+    const idx=d.dataset.dayIndex;
+    if(data.date){ const dp=d.querySelector('.datePicker'); dp.value=data.date; dp.dispatchEvent(new Event('change')); }
+    const planBoxEl = d.querySelector(`[data-key="d${idx}.plan"]`);
+    const ta = planBoxEl ? planBoxEl.querySelector('.wkTA') : null;
+    const ce = planBoxEl ? planBoxEl.querySelector('.wkCE[contenteditable]') : null;
+
+    if (ce) {
+      const hasWeekendHtml = Object.prototype.hasOwnProperty.call(data, 'weekendHtml');
+      const hasWeekendText = Object.prototype.hasOwnProperty.call(data, 'weekendText');
+      const hasPlan        = (typeof data.plan === 'string' && data.plan.trim() !== '');
+
+      let done = false;
+      if (hasWeekendHtml) {
+        const chk = _isEmptyWeekendHtml(data.weekendHtml);
+        if (!chk.isEmpty) {
+          if (chk.hasTasks) {
+            const box = ce.closest('.planBox');
+            const ul  = chk.tmp.querySelector('.tasklist');
+            box.innerHTML = '';
+            box.appendChild(ul.cloneNode(true));
+            box.classList.add('has-tasks');
+            ensureTaskDeleteButtons(box);
+          } else {
+            ce.innerHTML = data.weekendHtml || '';
+          }
+          done = true;
+        }
+      }
+      if (!done && hasWeekendText && (data.weekendText || '').trim() !== '') {
+        ce.textContent = data.weekendText.trim();
+        done = true;
+      }
+      if (!done && hasPlan) {
+        const tmp = document.createElement('div'); tmp.innerHTML = data.plan;
+        const ul = tmp.querySelector('.tasklist');
+        if (ul) {
+          const box = ce.closest('.planBox');
+          box.innerHTML = '';
+          box.appendChild(ul.cloneNode(true));
+          box.classList.add('has-tasks');
+          ensureTaskDeleteButtons(box);
+        } else {
+          ce.textContent = tmp.textContent.replace(/\u00a0/g,' ').trim();
+        }
+      }
+      if (!done && !hasWeekendText && !hasPlan) { ce.innerHTML = ''; }
+    } else if (ta) {
+      if (Object.prototype.hasOwnProperty.call(data, 'weekendText')) {
+        ta.value = data.weekendText || '';
+        limitWeekendTextarea({ target: ta });
+      }
+    } else {
+      planBoxEl.innerHTML = data.plan || '';
+      ensureTaskDeleteButtons(d);
+    }
+
+    const br=d.querySelector(`[data-key="d${idx}.bring"]`);
+    if (br && data.bring !== undefined) { br.innerHTML = data.bring; }
+    if(data.vars){
+      if(data.vars.planFS)  d.style.setProperty('--plan-fs',data.vars.planFS);
+      if(data.vars.bullet)  d.style.setProperty('--bullet',data.vars.bullet);
+      if(data.vars.gap)     d.style.setProperty('--task-gap',data.vars.gap);
+      if(data.vars.bringFS) d.style.setProperty('--bring-fs',data.vars.bringFS);
+    }
+    d.querySelectorAll('.picto-free').forEach(n=>n.remove());
+
+    if (data.pictos) {
+      const bringHtml = (data.bring || '') + '';
+      function legacyGuessHostFor(src){ return bringHtml.includes(src) ? 'bring' : 'body'; }
+      data.pictos.forEach(p => {
+        const node = makeFreePicto(p.src);
+        node.style.left  = p.left  || '10px';
+        node.style.top   = p.top   || '10px';
+        if (p.width) node.style.width = p.width;
+        let desiredHost = p.host;
+        if (!desiredHost) desiredHost = legacyGuessHostFor(p.src);
+        let hostEl = d.querySelector('.body') || d;
+        if (desiredHost === 'bring') {
+          hostEl = d.querySelector(`[data-key="d${idx}.bring"]`) || hostEl;
+          node.dataset.host = 'bring';
+        } else {
+          node.dataset.host = 'body';
+        }
+        hostEl.appendChild(node);
+      });
+    }
+  }
+
+  function capturePanelPictos(){
+    const pics=[...notesPanel.querySelectorAll('.picto-free')].map(p=>{
+      const img=p.querySelector('img');
+      return {src:img.getAttribute('src'), left:p.style.left||'0px', top:p.style.top||'0px', width:p.style.width||''};
+    });
+    return pics;
+  }
+  function applyPanelPictos(list){
+    notesPanel.querySelectorAll('.picto-free').forEach(n=>n.remove());
+    (list||[]).forEach(p=>{
+      const node=makeFreePicto(p.src);
+      node.style.left=p.left||'10px'; node.style.top=p.top||'10px'; if(p.width) node.style.width=p.width;
+      notesPanel.appendChild(node);
+    });
+  }
+
+  function captureAll(){
+    const meta={
+      template:tplSel.value,
+      title:$('#titlePill').textContent,
+      monthBox:monthBox.textContent,
+      swim:swimChk.checked,
+      classIcon:($('#classIconSlot img')?$('#classIconSlot img').src:null),
+      notes:$('#notesBody').innerHTML
+    };
+    const days={}; $$('.day').forEach(n=> days[n.dataset.dayIndex]=captureDay(n));
+    return {meta,days};
+  }
+  function applyAll(obj){
+    if(obj.meta){
+      tplSel.value=obj.meta.template||'L3';
+      $('#titlePill').textContent=obj.meta.title||('agenda '+tplSel.value.toLowerCase());
+      if(obj.meta.monthBox) monthBox.textContent=obj.meta.monthBox;
+      swimChk.checked=!!obj.meta.swim;
+      if(obj.meta.classIcon){ classIconSlot.innerHTML='<img alt="klaspictogram" src="'+obj.meta.classIcon+'">'; } else { classIconSlot.innerHTML=''; }
+      if(obj.meta.notes){ $('#notesBody').innerHTML=obj.meta.notes; }
+      applyTemplate();
+    }
+
+    upgradeWeekendToEditable();
+
+    if(obj.days){ $$('.day').forEach(n=>{ const i=n.dataset.dayIndex; if(obj.days[i]) applyDay(n,obj.days[i]); }); }
+    scheduleLayoutSync();
+  }
+
+  $('#btnExport').addEventListener('click',()=>{
+    const data=captureAll();
+    data.meta.panelPictos=capturePanelPictos();
+    const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+    const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='agenda_2degraad_week.json'; a.click(); URL.revokeObjectURL(a.href);
+  });
+  $('#btnImport').addEventListener('click',()=> fileImport.click());
+  fileImport.addEventListener('change',(e)=>{
+    const f=e.target.files && e.target.files[0]; if(!f) return;
+    const r=new FileReader();
+    r.onload=()=>{ try{ const obj=JSON.parse(r.result); isApplying=true; applyAll(obj); applyPanelPictos(obj.meta && obj.meta.panelPictos? obj.meta.panelPictos: []); isApplying=false; pushSnapshot(); }catch(err){ alert('Kon bestand niet lezen: '+err.message); } };
+    r.readAsText(f,'utf-8'); e.target.value='';
+  });
+  btnPrint.addEventListener('click',()=> window.print());
+
+  /* PRINT: syncs */
+  window.addEventListener('beforeprint', ()=>{
+    const a = document.activeElement;
+    if (a && typeof a.blur === 'function') a.blur();
+    $$('.day').forEach(d => d.style.outline = 'none');
+    equalizePlanHeights();
+    syncNotesToWeekend();
+  });
+
+  // Dock
+  btnToggleDock.addEventListener('click', ()=>{ dock.hidden = !dock.hidden; });
+  btnUploadPicto.addEventListener('click', ()=>{ fileUploadPicto.click(); });
+  fileUploadPicto.addEventListener('change', (e)=>{
+    const f = e.target.files && e.target.files[0];
+    if(!f) return;
+    if(!/^image\//i.test(f.type)){
+      alert('Kies een afbeelding (bij voorkeur PNG met transparante achtergrond).');
+      e.target.value=''; return;
+    }
+    const r = new FileReader();
+    r.onload = ()=>{ handlePictoInsert(r.result, null); e.target.value=''; };
+    r.readAsDataURL(f);
+  });
+
+  /* L3/L4 + pictogrammen automatisch */
+  function applyTemplate(){
+    const tpl=tplSel.value;
+    const cur=classIconSlot.querySelector('img');
+    if(tpl==='L3'){
+      if(!cur || !/cactus\.png$/i.test(cur.src)){
+        classIconSlot.innerHTML = '<img src="pictogrammen/cactus.png" alt="klaspictogram cactus">';
+      }
+      $('#titlePill').textContent = 'agenda L3';
+    }else if(tpl==='L4'){
+      if(!cur || !/lama\.png$/i.test(cur.src)){
+        classIconSlot.innerHTML = '<img src="pictogrammen/lama.png" alt="klaspictogram lama">';
+      }
+      $('#titlePill').textContent = 'agenda L4';
+    }
+  }
+  tplSel.addEventListener('change', ()=>{ applyTemplate(); pushSnapshot(); });
+
+  /* Maandlabel */
+  function updateMonthBox(){
+    const first=$$('.datePicker').map(p=>p.value).find(Boolean);
+    if(!first) return; const d=new Date(first);
+    monthBox.textContent=d.toLocaleDateString('nl-BE',{month:'long',year:'numeric'});
+  }
+
+  /* Mededelingenhoogte = hoogte ZA+ZO */
+  function syncNotesToWeekend(){
+    const wc   = document.getElementById('weekendCol');
+    const note = document.getElementById('notesPanel');
+    const body = document.getElementById('notesBody');
+    if(!wc||!note) return;
+    note.style.height = wc.offsetHeight + 'px';
+    const headH = note.querySelector('header').offsetHeight;
+    const signH = note.querySelector('.sign').offsetHeight + 12;
+    const pad   = 12;
+    body.style.height = Math.max(40, note.clientHeight - headH - signH - pad) + 'px';
+  }
+
+  /* === Equalizers === */
+  function equalizePlanHeights(){
+    const boxes = Array.from(document.querySelectorAll('.week-top .day:not(.small) .planBox'));
+    if (!boxes.length) return;
+    boxes.forEach(b => b.style.height = 'auto');
+    const maxH = Math.max(...boxes.map(b => b.getBoundingClientRect().height));
+    boxes.forEach(b => b.style.height = maxH + 'px');
+  }
+
+  /* Layout-sync: equalizers + mededelingen + overflowcheck */
+  function scheduleLayoutSync(){ requestAnimationFrame(()=>{ equalizePlanHeights(); syncNotesToWeekend(); checkOverflow(); }); }
+  window.addEventListener('resize', scheduleLayoutSync);
+  new ResizeObserver(scheduleLayoutSync).observe($('#weekendCol'));
+
+  document.addEventListener('input', (e)=>{
+    if (e.target && e.target.closest && e.target.closest('.planBox, .bringBox, .panelBody')) {
+      scheduleLayoutSync();
+    }
+  });
+
+  /* Overflow-check: toon melding indien content > paginahoogte */
+  function checkOverflow(){
+    const page = $('#page');
+    const over = page.scrollHeight - 1 > page.clientHeight; // -1 om miniatuur afronding op te vangen
+    overflowAlert.classList.toggle('show', over);
+    overflowAlert.setAttribute('aria-hidden', over ? 'false' : 'true');
+  }
+
+  /* Mededelingen actief maken */
+  if (notesPanel){
+    notesPanel.addEventListener('pointerdown', ()=> { lastFocusedHost = notesPanel; setActiveHost(notesPanel); });
+    notesBody.addEventListener('focusin', (e)=>{ e.stopPropagation(); lastFocusedHost = notesPanel; setActiveHost(notesPanel); });
+    notesBody.addEventListener('pointerdown', (e)=>{ e.stopPropagation(); lastFocusedHost = notesPanel; setActiveHost(notesPanel); });
+  }
+
+  /* Init */
+  (function init(){
+    const today=new Date();
+    const wd=(today.getDay()+6)%7; // maandag=0
+    const mon=new Date(today); mon.setDate(today.getDate()-wd);
+    $$('.day').forEach(d=>{
+      const idx=parseInt(d.dataset.dayIndex,10);
+      const ref=new Date(mon); ref.setDate(mon.getDate()+idx);
+      const dp=d.querySelector('.datePicker'); dp.valueAsDate=ref; dp.dispatchEvent(new Event('change'));
+    });
+    applyTemplate();
+    upgradeWeekendToEditable();
+    dock.hidden = true;
+    $$('.day').forEach(updatePlanBoxClass);
+    ensureTaskDeleteButtons(document);
+
+    /* Standaard: 11pt voor agenda én ‘ik denk aan’ */
+    $$('.day').forEach(d=>{ applyFsToDay(d,'11pt'); });
+
+    scheduleLayoutSync();
+    pushSnapshot();
+  })();
+
+  /* Takenlijst UX */
+  document.addEventListener('keydown', (e)=>{
+    const t = e.target;
+    if (!t || !t.classList || !t.classList.contains('tasktext')) return;
+
+    if (e.key === 'Enter'){
+      e.preventDefault();
+      try { document.execCommand('insertLineBreak'); }
+      catch(_){ document.execCommand('insertHTML', false, '<br>'); }
+      pushSnapshot(); return;
+    }
+    if (e.key === 'Backspace'){
+      const sel = window.getSelection();
+      const atStart = sel && sel.anchorOffset === 0 && sel.isCollapsed;
+      const isEmpty = (t.innerText || '').trim() === '';
+      if (atStart && isEmpty){
+        const li  = t.closest('li');
+        const day = t.closest('.day');
+        e.preventDefault();
+        li?.remove();
+        if (day) updatePlanBoxClass(day);
+        pushSnapshot();
+      }
+    }
+  });
+
+  document.addEventListener('blur', (e)=>{
+    const t = e.target;
+    if (!t || !t.classList || !t.classList.contains('tasktext')) return;
+    if ((t.innerText || '').trim() === ''){
+      const li  = t.closest('li');
+      const day = t.closest('.day');
+      li?.remove();
+      if (day) updatePlanBoxClass(day);
+      pushSnapshot();
+    }
+  }, true);
+
+  document.addEventListener('keydown', (e)=>{
+    if (e.key === 'Delete') {
+      const node = selectedPicto || document.querySelector('.picto-free.selected');
+      if (node) { node.remove(); selectedPicto=null; pushSnapshot(); }
+    }
+  });
+
+  document.addEventListener('click', (e)=>{
+    if(!e.target.classList.contains('liDel')) return;
+    const li   = e.target.closest('li');
+    li?.remove();
+    const dd = e.target.closest('.day');
+    if (dd) updatePlanBoxClass(dd);
+    pushSnapshot();
+  });
+
+})();
+</script>
+</body>
+</html>
