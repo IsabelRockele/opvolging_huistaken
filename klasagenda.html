@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Klasagenda – kies je graad</title>
+<style>
+  :root{
+    --ink:#111; --muted:#6b7280; --line:#e5e7eb; --brand:#0a66c2;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0;
+    font-family:Arial,Helvetica,sans-serif;
+    color:var(--ink);
+    background:#f3f5f7;
+    display:flex;
+    min-height:100vh;
+    align-items:center;
+    justify-content:center;
+  }
+  .wrap{width:clamp(320px, 92vw, 1100px); margin:auto}
+  header{text-align:center;margin-bottom:1.4rem}
+  h1{margin:.2rem 0;font-size:clamp(22px,3.2vw,34px)}
+  p.lead{margin:.2rem 0 1rem;color:var(--muted)}
+  .grid{
+    display:grid;
+    grid-template-columns:repeat(3,minmax(220px,1fr));
+    gap:clamp(12px,2vw,22px);
+  }
+  .card{
+    background:#fff;
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:20px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    text-align:center;
+    box-shadow:0 8px 24px rgba(0,0,0,.06);
+  }
+  .card h2{margin:.5rem 0 .25rem;font-size:1.2rem}
+  .card p{margin:0;color:var(--muted);font-size:.95rem}
+  .illu{
+    display:flex;
+    justify-content:center;
+    align-items:end;
+    gap:10px;
+    margin-bottom:4px;
+  }
+  .illu img{max-height:80px;object-fit:contain}
+  .actions{margin-top:16px}
+  .btn{
+    appearance:none;
+    border:1px solid var(--brand);
+    color:#fff;
+    background:var(--brand);
+    padding:.6rem .9rem;
+    border-radius:10px;
+    font-weight:700;
+    cursor:pointer;
+    text-decoration:none;
+    display:inline-block;
+  }
+  .btn.secondary{
+    border-color:#c9ced6;
+    background:#fff;
+    color:#111;
+  }
+  .back-btn{
+  display:inline-block;
+  margin-bottom:8px;
+  text-decoration:none;
+  font-weight:700;
+  color:var(--brand);
+  background:#fff;
+  border:1px solid var(--brand);
+  border-radius:8px;
+  padding:6px 10px;
+  transition:background .2s,color .2s;
+}
+.back-btn:hover{
+  background:var(--brand);
+  color:#fff;
+}
+
+  @media (max-width:800px){.grid{grid-template-columns:1fr}}
+  
+</style>
+</head>
+<body>
+  <main class="wrap">
+    <header>
+      <a href="index.html" class="back-btn" title="Terug naar startpagina">← Terug</a>
+      <h1>Klasagenda – kies je graad</h1>
+      <p class="lead">Start hier en ga door naar de juiste agenda-lay-out.</p>
+    </header>
+
+    <section class="grid" aria-label="Keuzes per graad">
+
+      <!-- Eerste graad -->
+      <article class="card" aria-labelledby="h-l1">
+        <div class="illu" aria-hidden="true">
+          <img src="pictogrammen/bijtje.png" alt="" />
+          <img src="pictogrammen/zebra.png" alt="" />
+        </div>
+        <h2 id="h-l1">Eerste graad (L1–L2)</h2>
+        <p>Agenda met standaard <em>bijtje</em> voor L1 en <em>zebra</em> voor L2.</p>
+        <div class="actions">
+          <a class="btn" href="./klasagenda_1stegraad.html">Openen</a>
+        </div>
+      </article>
+
+      <!-- Tweede graad -->
+      <article class="card" aria-labelledby="h-l2">
+        <div class="illu" aria-hidden="true">
+          <img src="pictogrammen/cactus.png" alt="" />
+          <img src="pictogrammen/lama.png" alt="" />
+        </div>
+        <h2 id="h-l2">Tweede graad (L3–L4)</h2>
+        <p>Agenda met standaard <em>cactus</em> voor L3 en <em>lama</em> voor L4.</p>
+        <div class="actions">
+          <a class="btn" href="./klasagenda_2degraad.html">Openen</a>
+        </div>
+      </article>
+
+      <!-- Derde graad -->
+      <article class="card" aria-labelledby="h-l3">
+        <div class="illu" aria-hidden="true">
+          <img src="pictogrammen/zebra.png" alt="" style="opacity:.25;filter:grayscale(1);" />
+        </div>
+        <h2 id="h-l3">Derde graad (L5–L6)</h2>
+        <p>Komt er zo aan. Je kunt deze kaart straks laten linken naar jouw L5–L6-agenda.</p>
+        <div class="actions">
+          <a class="btn secondary" href="#" onclick="alert('Derde graad volgt binnenkort.');return false;">Binnenkort</a>
+        </div>
+      </article>
+
+    </section>
+  </main>
+</body>
+</html>
+
