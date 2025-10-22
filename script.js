@@ -16,14 +16,29 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 
-// Als gebruiker al is ingelogd, stuur direct door naar dashboard
+// Als gebruiker al is ingelogd, blijf op de startpagina (index) zodat de klasagenda zichtbaar blijft.
+// Op andere pagina's doen we niets speciaals.
 onAuthStateChanged(auth, (user) => {
-  if (user) {
-    if (window.location.pathname.endsWith('index.html') || window.location.pathname.endsWith('/') || window.location.pathname.endsWith('/opvolging_huistaken/')) {
-        window.location.href = 'dashboard.html';
+  if (!user) return;
+
+  const isIndex =
+    location.pathname.endsWith('index.html') ||
+    location.pathname === '/' ||
+    location.pathname.endsWith('/opvolging_huistaken/');
+
+  if (isIndex) {
+    // Optioneel: een kleine hint/link plaatsen onder het loginblok
+    const authBox = document.getElementById('auth');
+    if (authBox && !document.getElementById('naarDashboardLink')) {
+      const p = document.createElement('p');
+      p.id = 'naarDashboardLink';
+      p.style.marginTop = '8px';
+      p.innerHTML = 'U bent ingelogd. <a href="dashboard.html">Ga naar de huiswerkapp</a>.';
+      authBox.insertAdjacentElement('afterend', p);
     }
   }
 });
+
 
 window.register = function () {
   const email = document.getElementById("email").value;
