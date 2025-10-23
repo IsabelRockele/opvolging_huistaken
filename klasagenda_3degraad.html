@@ -577,21 +577,38 @@ const btnClearLines= $('#btnClearLines');
 
   function buildWeekend(i,name){
     const art=document.createElement('article'); art.className='day small'; art.dataset.dayIndex=i;
-    art.innerHTML=
-    `<header>
-       <div class="dn">${name}</div>
-       <div class="dateWrap"><span class="dDate">01 / 09</span><input class="datePicker" type="date"></div>
-     </header>
-     <div class="body">
-       <div class="cell">
-         <h3>Agenda:</h3>
-         <div class="planBox" data-key="d${i}.plan">
-           <textarea class="wkTA" rows="2" maxlength="300" aria-label="Weekendnotities"></textarea>
-         </div>
-       </div>
-     </div>`;
+      art.innerHTML = `
+    <header>
+      <div class="dn">${name}</div>
+      <div class="dateWrap"><span class="dDate">01 / 09</span><input class="datePicker" type="date"></div>
+    </header>
+    <div class="body">
+      <div class="cell">
+        <h3>Agenda:</h3>
+        <div class="planBox" data-key="d${i}.plan">
+          <textarea class="wkTA" rows="2" maxlength="300" aria-label="Weekendnotities"></textarea>
+        </div>
+      </div>
+
+      <div class="cell">
+        <h3>Ik plan:</h3>
+        <div class="planLines" data-key="d${i}.planlines">
+          <div class="linePad" contenteditable></div>
+        </div>
+      </div>
+    </div>`;
+
     const ta=art.querySelector('.wkTA');
     ta.addEventListener('input', limitWeekendTextarea);
+    const planLinesHost = art.querySelector('.planLines');
+const linePad = art.querySelector('.linePad');
+if (linePad) {
+  linePad.addEventListener('focusin', () => {
+    lastFocusedHost = planLinesHost;
+    setActiveHost(planLinesHost);
+  });
+}
+
     ta.addEventListener('keydown', e=>{
       const lines=ta.value.split('\n').length;
       if(e.key==='Enter' && lines>=3){ e.preventDefault(); }
