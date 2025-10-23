@@ -128,6 +128,11 @@
   .tasklist li{display:flex;align-items:flex-start;gap:.32rem;margin-bottom:var(--task-gap); position:relative;}
   .tasklist li:last-child{margin-bottom:0}
   .bullet{display:inline-block;width:var(--bullet);height:var(--bullet);border:2px solid #0a3a52;border-radius:50%}
+  /* Per regel in Agenda het bolletje kunnen uitzetten */
+.tasklist li.no-bullet .bullet{ display:none; }
+/* optioneel: mini-insprong bewaren wanneer het bolletje uit staat */
+.tasklist li.no-bullet .tasktext{ margin-left: calc((var(--bullet, 14px)) * 0.2); }
+
   .tasktext[contenteditable]{flex:1;min-height:1.05em;outline:none}
   .tasklist .liDel{
     position:absolute; right:-2px; top:-4px; border:1px solid #d0d7de; background:#fff;
@@ -153,7 +158,7 @@
       transparent 0 calc(var(--line-step) - 1px),
       #cfd5db calc(var(--line-step) - 1px) var(--line-step)
     );
-  height: calc(var(--line-step) * 5 + 5mm);
+  height: calc(var(--line-step) * 3 + 5mm);
   position:relative;
   overflow:hidden;
 }
@@ -275,7 +280,14 @@
   .dock small{color:#6b7280;display:block;margin-top:.35rem}
   .dock[hidden]{ display:none !important; }
   .dock .uploadRow{ margin-top:.5rem; display:flex; gap:.5rem; align-items:center; }
-
+.miniToggle{
+  font: inherit; font-size: 9pt;
+  padding: 2px 6px;
+  margin-left: 6px;
+  border: 1px solid #d0d7de; border-radius: 6px;
+  background: #fff; cursor: pointer;
+}
+.miniToggle.on{ background: #eaf3ff; border-color:#0a66c2; }
   /* PRINT */
   @media print{
     @page{ size: A4 landscape; margin: 0 }
@@ -304,12 +316,20 @@
   .planBox, .bringBox, .planLines { overflow: visible !important; position: relative; }
 
   /* UI van schrijflijnen verbergen en geen kolombreedtes reserveren */
-  .lineRow { grid-template-columns: 1fr !important; }
-  .lineRow .rowDot, .lineRow .rowDel { display: none !important; }
+  /* Verberg enkel het verwijderknopje, niet de bolletjes */
+  .lineRow .rowDel { display: none !important; }
 
   /* (bestond al) caret en handles weg in print */
   .picto-free .handle, .picto-free.selected { display: none !important; }
+  /* Laat "Ik plan" in print meeschalen, lijnen niet afknippen */
+.planLines{
+  height: auto !important;
+  min-height: calc(var(--line-step) * 3 + 5mm);  /* 3 lijnen in PDF */
+  overflow: visible !important;
 }
+
+.miniToggle{ display:none !important; } }
+
 </style>
 </head>
 <body>
@@ -337,33 +357,35 @@
       <button id="applyAllFS">FS → ma–vr</button>
       <button id="applyAllGap">Gap → ma–vr</button>
 
-<!-- ✨ Nieuw blok: schrijflijnen-instellingen -->
+<!-- ✨ Nieuw blok: schrijflijnen-instellingen (tijdelijk verborgen voor eenvoud) -->
 <span class="sep"></span>
-<label>Schrijflijnen:
-  <input type="checkbox" id="linesToggle">
-</label>
-<label>Regelafstand:
-  <select id="lineStep">
-    <option value="22">22 px</option>
-    <option value="24">24 px</option>
-    <option value="26" selected>26 px</option>
-    <option value="28">28 px</option>
-    <option value="30">30 px</option>
-    <option value="32">32 px</option>
-    <option value="34">34 px</option>
-  </select>
-</label>
-<label><input type="checkbox" id="lineDots"> Bolletjes links</label>
-<label>Aantal lijnen:
-  <input type="number" id="lineCount" min="1" max="20" value="3" style="width:50px;">
-</label>
+<span id="grpLines" hidden>
+  <label>Schrijflijnen:
+    <input type="checkbox" id="linesToggle">
+  </label>
+  <label>Regelafstand:
+    <select id="lineStep">
+      <option value="22">22 px</option>
+      <option value="24">24 px</option>
+      <option value="26" selected>26 px</option>
+      <option value="28">28 px</option>
+      <option value="30">30 px</option>
+      <option value="32">32 px</option>
+      <option value="34">34 px</option>
+    </select>
+  </label>
+  <label><input type="checkbox" id="lineDots"> Bolletjes links</label>
+  <label>Aantal lijnen:
+    <input type="number" id="lineCount" min="1" max="20" value="3" style="width:50px;">
+  </label>
 
-<button id="applyLinesHere">Pas toe op huidig vak</button>
-<button id="applyLinesAll">Pas toe ma–vr (zelfde vak)</button>
-<button id="btnAddLine">+ Schrijflijn</button>
-<button id="btnClearLines">Lijnen uit</button>
-
+  <button id="applyLinesHere">Pas toe op huidig vak</button>
+  <button id="applyLinesAll">Pas toe ma–vr (zelfde vak)</button>
+  <button id="btnAddLine">+ Schrijflijn</button>
+  <button id="btnClearLines">Lijnen uit</button>
+</span>
 <span class="sep"></span>
+
 
       <span class="sep"></span>
       <button id="btnBold" title="Vet (Ctrl+B)">B</button>
@@ -530,7 +552,8 @@ const btnClearLines= $('#btnClearLines');
   day.innerHTML = weekdayHeaderHtml(name)+
 `<div class="body">
    <div class="cell">
-     <h3>Agenda:</h3>
+     <h3>Agenda: <button class="miniToggle" data-role="toggle-lines" title="Wissel tussen bolletjes en schrijflijnen">lijnen</button></h3>
+
      <div class="planBox" data-key="d${i}.plan">
        <ul class="tasklist" data-role="tasks"></ul>
        <div class="planText" contenteditable></div>
@@ -557,7 +580,7 @@ const btnClearLines= $('#btnClearLines');
   const planCard = document.createElement('section');
   planCard.className = 'dayPlan';
   planCard.innerHTML =
-`<header>Ik plan</header>
+`<header>Ik plan <button class="miniToggle" data-role="plan-add-dot" title="Bolletje aan voor de huidige lijn">+ bolletje</button></header>
  <div class="body">
    <div class="planLines" data-key="d${i}.planlines">
      <div class="linePad" contenteditable></div>
@@ -566,6 +589,7 @@ const btnClearLines= $('#btnClearLines');
 
   const linePad = planCard.querySelector('.linePad');
   const planLinesHost = planCard.querySelector('.planLines');
+  bootstrapPlanLines(planLinesHost, 3);
   linePad.addEventListener('focusin', () => { lastFocusedHost = planLinesHost; setActiveHost(planLinesHost); });
 
   // samenvoegen in wrapper
@@ -575,21 +599,20 @@ const btnClearLines= $('#btnClearLines');
 }
 
 
-  function buildWeekend(i,name){
-    const art=document.createElement('article'); art.className='day small'; art.dataset.dayIndex=i;
-      art.innerHTML = `
+function buildWeekend(i, name){
+  const art = document.createElement('article');
+  art.className = 'day small';
+  art.dataset.dayIndex = i;
+
+  art.innerHTML = `
     <header>
       <div class="dn">${name}</div>
-      <div class="dateWrap"><span class="dDate">01 / 09</span><input class="datePicker" type="date"></div>
+      <div class="dateWrap">
+        <span class="dDate">01 / 09</span>
+        <input class="datePicker" type="date">
+      </div>
     </header>
     <div class="body">
-      <div class="cell">
-        <h3>Agenda:</h3>
-        <div class="planBox" data-key="d${i}.plan">
-          <textarea class="wkTA" rows="2" maxlength="300" aria-label="Weekendnotities"></textarea>
-        </div>
-      </div>
-
       <div class="cell">
         <h3>Ik plan:</h3>
         <div class="planLines" data-key="d${i}.planlines">
@@ -598,26 +621,24 @@ const btnClearLines= $('#btnClearLines');
       </div>
     </div>`;
 
-    const ta=art.querySelector('.wkTA');
-    ta.addEventListener('input', limitWeekendTextarea);
-    const planLinesHost = art.querySelector('.planLines');
-const linePad = art.querySelector('.linePad');
-if (linePad) {
+  // focus/host voor “Ik plan”
+  const planLinesHost = art.querySelector('.planLines');
+  bootstrapPlanLines(planLinesHost, 3);
+  const linePad = art.querySelector('.linePad');
   linePad.addEventListener('focusin', () => {
     lastFocusedHost = planLinesHost;
     setActiveHost(planLinesHost);
   });
+
+  art.addEventListener('pointerdown', () => {
+    setActiveDay(art);
+    setActiveHost(art.querySelector('.body'));
+  });
+
+  wireDate(art, i);
+  return art;
 }
 
-    ta.addEventListener('keydown', e=>{
-      const lines=ta.value.split('\n').length;
-      if(e.key==='Enter' && lines>=3){ e.preventDefault(); }
-    });
-    ta.addEventListener('focusin', () => { lastFocusedHost = art.querySelector('.body'); setActiveHost(lastFocusedHost); });
-    art.addEventListener('pointerdown',()=> { setActiveDay(art); setActiveHost(art.querySelector('.body')); });
-    wireDate(art,i);
-    return art;
-  }
 
   function limitWeekendTextarea(e){
     const ta=e.target;
@@ -662,11 +683,12 @@ if (linePad) {
   bulletSize.addEventListener('change',()=>{ if(activeDay){ applyBulletToDay(activeDay,bulletSize.value); pushSnapshot(); }});
   taskGap.addEventListener('change',()=>{ if(activeDay){ applyGapToDay(activeDay,taskGap.value); pushSnapshot(); }});
 
-  function updatePlanBoxClass(day){
-    const box = day.querySelector('.planBox');
-    const has = box.querySelectorAll('.tasklist li').length>0;
-    box.classList.toggle('has-tasks', has);
-  }
+function updatePlanBoxClass(day){
+  const box = day.querySelector('.planBox');
+  if (!box) return;                           // ← guard voor weekend
+  const has = box.querySelectorAll('.tasklist li').length > 0;
+  box.classList.toggle('has-tasks', has);
+}
 
   applyAllFS.addEventListener('click',()=>{ if(!activeDay) return;
     const val=getComputedStyle(activeDay).getPropertyValue('--plan-fs').trim()||planFS.value;
@@ -930,6 +952,19 @@ if (startHtml) txt.innerHTML = startHtml;
   return row;
 }
 
+// Zet .planLines om naar een lineList met 'count' rijen (met per-lijn dot).
+function bootstrapPlanLines(pl, count = 3){
+  if (!pl || pl.querySelector('.lineList')) return;
+  const list = document.createElement('div');
+  list.className = 'lineList';
+  for (let i = 0; i < count; i++){
+    const row = document.createElement('div');
+    row.className = 'lineRow';
+    row.innerHTML = `<div class="rowDot"></div><div class="rowText" contenteditable></div><div class="rowDel">×</div>`;
+    list.appendChild(row);
+  }
+  pl.appendChild(list);
+}
 
 // Huidige rij onder de cursor vinden (binnen .lineList)
 function getActiveLineRow(){
@@ -1456,6 +1491,54 @@ document.addEventListener('click', (e) => {
     sel.removeAllRanges();
     sel.addRange(rg);
   }
+  // Toggle "Agenda" tussen bolletjes (taken) en schrijflijnen, zonder toolbar-gedoe
+document.addEventListener('click', (e)=>{
+  const btn = e.target.closest('.miniToggle[data-role="toggle-lines"]');
+  if (!btn) return;
+
+  const day = btn.closest('.day');
+  const box = day?.querySelector('.planBox');
+  if (!box) return;
+
+  const isLined = !!box.querySelector('.lineList');
+
+  if (isLined){
+    // TERUG naar bolletjes/tekst
+    setLined(box, false, 0, false);   // gebruikt je bestaande setLined() om lijnen uit te zetten
+    btn.classList.remove('on');
+    btn.textContent = 'lijnen';
+  } else {
+    // NAAR SCHRIJFLIJNEN (3 lijnen, met dot per lijn)
+    // 1) als er al taken (bolletjes) zijn, neem de teksten over als startregels
+    const taskItems = [...box.querySelectorAll('.tasklist .tasktext')].map(n=>n.innerHTML.trim());
+    if (taskItems.length){
+      // verwijder takenlijst visueel
+      const ul = box.querySelector('.tasklist');
+      if (ul) ul.remove();
+      box.classList.remove('has-tasks');
+    }
+
+    // 2) zet schrijflijnen aan (met dots), minimum 3 lijnen
+    const initCount = Math.max(3, taskItems.length);
+    setLined(box, true, 26, true, initCount);   // (box, on, stepPx, withDots, initCount)
+
+    // 3) als we taken hadden, vul die netjes in de lijnen
+    if (taskItems.length){
+      const list = box.querySelector('.lineList');
+      if (list){
+        list.innerHTML = '';
+        taskItems.forEach(html => addOneLineRow(list, html, true));
+      }
+    }
+
+    btn.classList.add('on');
+    btn.textContent = 'bolletjes';
+  }
+
+  pushSnapshot();
+  scheduleLayoutSync();
+});
+
 });
 
   /* Overflow-check: toon melding indien content > paginahoogte (pagina 1) */
@@ -1556,6 +1639,240 @@ document.addEventListener('click', (e)=>{
   const row = e.target.closest('.lineRow'); if (!row) return;
   row.classList.toggle('no-dot'); // verbergt/toont dot via CSS
   pushSnapshot(); scheduleLayoutSync();
+});
+
+// Toggle "Agenda" tussen bolletjes (taken) en schrijflijnen
+document.addEventListener('click', (e)=>{
+  const btn = e.target.closest('.miniToggle[data-role="toggle-lines"]');
+  if (!btn) return;
+
+  const day = btn.closest('.day');
+  const box = day?.querySelector('.planBox');
+  if (!box) return;
+
+  const isLined = !!box.querySelector('.lineList');
+
+  if (isLined){
+    // terug naar bolletjes/tekst
+    setLined(box, false, 0, false);
+    btn.classList.remove('on');
+    btn.textContent = 'lijnen';
+  } else {
+    // naar schrijflijnen (min. 3 lijnen), eventuele taken meenemen
+    const taskItems = [...box.querySelectorAll('.tasklist .tasktext')].map(n => n.innerHTML.trim());
+
+    if (taskItems.length){
+      const ul = box.querySelector('.tasklist');
+      if (ul) ul.remove();
+      box.classList.remove('has-tasks');
+    }
+
+    const initCount = Math.max(3, taskItems.length);
+    setLined(box, true, 26, true, initCount);
+
+    if (taskItems.length){
+      const list = box.querySelector('.lineList');
+      if (list){
+        list.innerHTML = '';
+        taskItems.forEach(html => addOneLineRow(list, html, true));
+      }
+    }
+
+    btn.classList.add('on');
+    btn.textContent = 'bolletjes';
+  }
+
+  pushSnapshot();
+  scheduleLayoutSync();
+});
+// --- Globale klik-handler voor schrijflijnen (dot aan/uit + verwijder) ---
+document.addEventListener('click', (e) => {
+  // Verwijderknop rechts
+  const delBtn = e.target.closest('.rowDel');
+  if (delBtn) {
+    const row = delBtn.closest('.lineRow');
+    if (row) row.remove();
+    pushSnapshot();
+    scheduleLayoutSync();
+    return;
+  }
+
+  // Dot links aan/uit
+  const dot = e.target.closest('.rowDot');
+  if (dot) {
+    const row = dot.closest('.lineRow');
+    if (row) row.classList.toggle('no-dot');
+    pushSnapshot();
+    return;
+  }
+});
+// --- Toggle "Agenda" tussen bolletjes en schrijflijnen ---
+document.addEventListener('click', (e) => {
+  const btn = e.target.closest('.miniToggle[data-role="toggle-lines"]');
+  if (!btn) return;
+
+  const day = btn.closest('.day');
+  const box = day?.querySelector('.planBox');
+  if (!box) return;
+
+  const isLined = !!box.querySelector('.lineList');
+
+  if (isLined) {
+    setLined(box, false, 0, false);
+    btn.classList.remove('on');
+    btn.textContent = 'lijnen';
+  } else {
+    const taskItems = [...box.querySelectorAll('.tasklist .tasktext')].map(n => n.innerHTML.trim());
+    if (taskItems.length) {
+      const ul = box.querySelector('.tasklist');
+      if (ul) ul.remove();
+      box.classList.remove('has-tasks');
+    }
+
+    const initCount = Math.max(3, taskItems.length);
+    setLined(box, true, 26, true, initCount);
+
+    if (taskItems.length) {
+      const list = box.querySelector('.lineList');
+      if (list) {
+        list.innerHTML = '';
+        taskItems.forEach(html => addOneLineRow(list, html, true));
+      }
+    }
+    btn.classList.add('on');
+    btn.textContent = 'bolletjes';
+  }
+
+  pushSnapshot();
+  scheduleLayoutSync();
+});
+// --- A. Per-lijn acties (dot aan/uit + rij verwijderen) ---
+document.addEventListener('click', (e) => {
+  // Verwijderknop rechts
+  const delBtn = e.target.closest('.rowDel');
+  if (delBtn) {
+    const row = delBtn.closest('.lineRow');
+    if (row) row.remove();
+    pushSnapshot();
+    scheduleLayoutSync();
+    return;
+  }
+// --- Agenda: per regel het bolletje (van .tasklist) aan/uit ---
+document.addEventListener('click', (e) => {
+  const bullet = e.target.closest('.tasklist .bullet');
+  if (!bullet) return; // niet op een agenda-bolletje geklikt
+
+  const li = bullet.closest('li');
+  if (!li) return;
+
+  li.classList.toggle('no-bullet');  // verberg/tonen via CSS
+  pushSnapshot();
+});
+
+  // Dot links aan/uit
+  const dot = e.target.closest('.rowDot');
+  if (dot) {
+    const row = dot.closest('.lineRow');
+    if (row) row.classList.toggle('no-dot');
+    pushSnapshot();
+    return;
+  }
+});
+// --- C. "+ bolletje" naast Ik plan: zet bolletje AAN op een bestaande lijn ---
+document.addEventListener('click', (e) => {
+  const btn = e.target.closest('.miniToggle[data-role="plan-add-dot"]');
+  if (!btn) return;
+
+  // Vind de IK-PLAN kaart waarin de knop staat
+  const planCard = btn.closest('.dayPlan');
+  if (!planCard) return;
+
+  const host = planCard.querySelector('.planLines');
+  if (!host) return;
+
+  const list = host.querySelector('.lineList');
+  if (!list) {
+    // Geen lijnen? Dan doen we NIETS (geen nieuwe lijnen aanmaken).
+    alert('Klik eerst in een schrijflijn van "Ik plan".');
+    return;
+  }
+
+  // Bepaal de actieve lijn (caret), anders de eerste
+  let row = null;
+  const sel = window.getSelection();
+  if (sel && sel.rangeCount) {
+    const el = sel.anchorNode && (sel.anchorNode.nodeType === 1 ? sel.anchorNode : sel.anchorNode.parentElement);
+    row = el ? el.closest('.lineRow') : null;
+  }
+  if (!row) row = list.querySelector('.lineRow');
+
+  if (!row) {
+    alert('Er zijn geen schrijflijnen aanwezig in "Ik plan".');
+    return;
+  }
+
+  // Zet het bolletje AAN (we maken GEEN nieuwe rij)
+  row.classList.remove('no-dot');
+
+  // Caret netjes aan het einde van de tekst
+  const txt = row.querySelector('.rowText');
+  if (txt) {
+    txt.focus();
+    const r = document.createRange();
+    r.selectNodeContents(txt);
+    r.collapse(false);
+    const s = window.getSelection();
+    s.removeAllRanges();
+    s.addRange(r);
+  }
+
+  pushSnapshot();
+  scheduleLayoutSync();
+});
+
+
+// --- B. Toggle "Agenda" tussen bolletjes en schrijflijnen ---
+document.addEventListener('click', (e) => {
+  const btn = e.target.closest('.miniToggle[data-role="toggle-lines"]');
+  if (!btn) return;
+
+  const day = btn.closest('.day');
+  const box = day?.querySelector('.planBox');
+  if (!box) return;
+
+  const isLined = !!box.querySelector('.lineList');
+
+  if (isLined) {
+    // Terug naar bolletjes/tekst
+    setLined(box, false, 0, false);
+    btn.classList.remove('on');
+    btn.textContent = 'lijnen';
+  } else {
+    // Naar schrijflijnen (min. 3), eventueel bestaande taken meenemen
+    const taskItems = [...box.querySelectorAll('.tasklist .tasktext')].map(n => n.innerHTML.trim());
+
+    if (taskItems.length) {
+      const ul = box.querySelector('.tasklist');
+      if (ul) ul.remove();
+      box.classList.remove('has-tasks');
+    }
+
+    const initCount = Math.max(3, taskItems.length);
+    setLined(box, true, 26, true, initCount);
+
+    if (taskItems.length) {
+      const list = box.querySelector('.lineList');
+      if (list) {
+        list.innerHTML = '';
+        taskItems.forEach(html => addOneLineRow(list, html, true));
+      }
+    }
+    btn.classList.add('on');
+    btn.textContent = 'bolletjes';
+  }
+
+  pushSnapshot();
+  scheduleLayoutSync();
 });
 
 
