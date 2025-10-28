@@ -49,6 +49,65 @@
     padding:2.6mm;border-bottom:2.6px solid var(--line);background:#f0f0f0;border-top-left-radius:7px;border-top-right-radius:7px;
   }
   .day header.stacked{flex-direction:column;justify-content:center;gap:1.2mm}
+  /* Schrijflijnen voor Agenda en Ik denk aan */
+.planBox.lined, .bringBox.lined{
+  position: relative;
+  --line-step-cur: 26px; /* default; wordt door JS overschreven */
+  /* geen achtergrond meer: lijnen worden rij-per-rij opgebouwd in HTML */
+}
+
+
+/* Gutter met bolletjes links in het vak (optioneel) */
+.lineDots{
+  position:absolute;
+  left: 2.8mm;     /* afstand van linkerrand kader */
+  top: 2.2mm;      /* lijnstart ~ gelijk met vak-padding */
+  right: auto;
+  bottom: 2.2mm;
+  width: var(--bullet, 14px);
+  pointer-events:none; /* nooit selecteerbaar */
+}
+.lineDots .dot{
+  position:absolute;
+  width: var(--bullet, 14px);
+  height: var(--bullet, 14px);
+  border: 2px solid #0a3a52;
+  border-radius: 50%;
+  transform: translateY(-50%); /* center op de lijn */
+  background: #fff; /* optisch mooier op geprinte lijnen */
+}
+
+  /* KLASAGENDA – aparte kaders voor “Ik plan” onder elke dag */
+.dayWrap{
+  display:grid;
+  grid-template-rows:auto auto;
+  gap: var(--gap);
+}
+.dayPlan{
+  position:relative;
+  border:2.6px solid var(--line);
+  border-radius:7px;
+  background:#fff;
+  display:flex;
+  flex-direction:column;
+}
+.dayPlan header{
+  padding:2.6mm;
+  border-bottom:2.6px solid var(--line);
+  background:#f0f0f0;
+  border-top-left-radius:7px;
+  border-top-right-radius:7px;
+  font-weight:800;
+}
+.dayPlan .body{
+  display:flex;
+  flex-direction:column;
+  padding:2mm;
+  gap:1mm;
+  overflow:visible;
+  position:relative;
+}
+
   .dn{font-weight:800;letter-spacing:.02em;font-size:11.5pt}
   .hdrLeft{display:flex;align-items:center;gap:3mm}
   .hdrEnv{width:6.5mm;height:4.6mm}
@@ -83,19 +142,22 @@
 .planLines{
   --line-step: 28px; /* regelafstand (groter = meer ruimte tussen lijnen) */
   border:2.6px solid var(--line);
-  border-radius:4px;
-  padding:2mm 2mm 2mm 2mm; /* top/bottom padding bovenop de 5 lijnen */
+  border-radius:6px;             /* iets ronder */
+  background:#fff;
+  padding:3mm 2mm 2mm 2mm;       /* iets meer witruimte bovenaan */
+  margin-top:1.5mm;              /* lichte afstand boven het kader */
+  box-shadow:0 0 0 1px #fff inset;
   background:
     repeating-linear-gradient(
       to bottom,
       transparent 0 calc(var(--line-step) - 1px),
       #cfd5db calc(var(--line-step) - 1px) var(--line-step)
     );
-  /* hoogte = 5 stappen + verticale padding */
-  height: calc(var(--line-step) * 5 + 4mm);
+  height: calc(var(--line-step) * 5 + 5mm);
   position:relative;
-  overflow:hidden; /* niet voorbij 5 lijnen laten tekenen */
+  overflow:hidden;
 }
+
 .planLines .linePad{
   position:relative;
   /* laat tekst precies op de lijnen vallen */
@@ -120,7 +182,59 @@
   font-size: var(--bring-fs, 11pt);
   background:#fff;
 }
-.bringText[contenteditable]{ min-height:8mm; outline:none; white-space:pre-wrap; }
+/* ÉÉN-VOOR-EEN SCHRIJFLIJNEN (Agenda & Ik denk aan) – definitief */
+.lineList{
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+/* raster: dot | tekst | X */
+.lineRow{
+  position: relative;
+  display: grid;
+  grid-template-columns: auto 1fr auto; /* dot | tekst | X */
+  align-items: center;
+  min-height: var(--line-step-cur, 26px);
+}
+.lineRow::after{
+  content:"";
+  position:absolute; left:0; right:0; bottom:0;
+  border-bottom: 1px solid #cfd5db;
+  pointer-events:none;
+}
+
+/* Dot links – per lijn aan/uit */
+.rowDot{
+  width: var(--bullet, 14px);
+  height: var(--bullet, 14px);
+  border: 2px solid #0a3a52;
+  border-radius: 50%;
+  margin: 0 6px 0 2px;
+  cursor: pointer;
+}
+.lineRow.no-dot .rowDot{ display:none; } /* per-lijn dot uit */
+
+/* Tekstveld van de lijn */
+.lineRow .rowText[contenteditable]{
+  outline:none;
+  min-height: 1.05em;
+  white-space: pre-wrap;
+  font-size: var(--plan-fs);
+}
+
+/* Verwijderknop rechts */
+.rowDel{
+  border:1px solid #d0d7de;
+  background:#fff;
+  border-radius:10px;
+  width:18px; height:18px;
+  line-height:16px; text-align:center;
+  cursor:pointer; font-weight:700; padding:0; margin-left:6px;
+}
+.rowDel:hover{ background:#f5f7fa; }
+
 
 
   /* Weekend */
@@ -182,8 +296,20 @@
     }
     .page-weekend{ page-break-before: always; } /* Tweede pagina */
     .week-top > .day, .bottom-row > *{ break-inside: avoid; page-break-inside: avoid; }
-    .tasklist .liDel, .picto-free .handle, .picto-free.selected{ display:none !important; outline:none !important; }
-  }
+    .tasklist .liDel, .picto-free .handle { display: none !important; }
+.picto-free.selected { outline: none !important; } /* toon pictogram, verberg enkel de outline */
+
+
+  /* Zorg dat pictogrammen in vakken niet worden afgeknipt */
+  .planBox, .bringBox, .planLines { overflow: visible !important; position: relative; }
+
+  /* UI van schrijflijnen verbergen en geen kolombreedtes reserveren */
+  .lineRow { grid-template-columns: 1fr !important; }
+  .lineRow .rowDot, .lineRow .rowDel { display: none !important; }
+
+  /* (bestond al) caret en handles weg in print */
+  .picto-free .handle, .picto-free.selected { display: none !important; }
+}
 </style>
 </head>
 <body>
@@ -210,6 +336,35 @@
       </label>
       <button id="applyAllFS">FS → ma–vr</button>
       <button id="applyAllGap">Gap → ma–vr</button>
+
+<!-- ✨ Nieuw blok: schrijflijnen-instellingen -->
+<span class="sep"></span>
+<label>Schrijflijnen:
+  <input type="checkbox" id="linesToggle">
+</label>
+<label>Regelafstand:
+  <select id="lineStep">
+    <option value="22">22 px</option>
+    <option value="24">24 px</option>
+    <option value="26" selected>26 px</option>
+    <option value="28">28 px</option>
+    <option value="30">30 px</option>
+    <option value="32">32 px</option>
+    <option value="34">34 px</option>
+  </select>
+</label>
+<label><input type="checkbox" id="lineDots"> Bolletjes links</label>
+<label>Aantal lijnen:
+  <input type="number" id="lineCount" min="1" max="20" value="3" style="width:50px;">
+</label>
+
+<button id="applyLinesHere">Pas toe op huidig vak</button>
+<button id="applyLinesAll">Pas toe ma–vr (zelfde vak)</button>
+<button id="btnAddLine">+ Schrijflijn</button>
+<button id="btnClearLines">Lijnen uit</button>
+
+<span class="sep"></span>
+
       <span class="sep"></span>
       <button id="btnBold" title="Vet (Ctrl+B)">B</button>
       <button id="btnItalic" title="Schuin (Ctrl+I)"><i>I</i></button>
@@ -224,6 +379,7 @@
         </select>
         <button type="button" id="btnApplyColor" title="Kleur toepassen">Pas toe</button>
       </label>
+      
 
       <span class="sep"></span>
       <button id="btnUndo" title="Laatste actie ongedaan maken">Ongedaan maken</button>
@@ -283,6 +439,15 @@
 
   const tplSel=$('#tpl'), swimChk=$('#zwemweek');
   const btnAddBullet=$('#btnAddBullet');
+    const linesToggle = $('#linesToggle');
+  const lineStepSel = $('#lineStep');
+  const lineDotsChk = $('#lineDots');
+  const applyLinesHere = $('#applyLinesHere');
+  const applyLinesAll  = $('#applyLinesAll');
+  const lineCountInp = $('#lineCount');
+  const btnAddLine   = $('#btnAddLine');
+const btnClearLines= $('#btnClearLines');
+
   const planFS=$('#planFS'), bulletSize=$('#bulletSize'), taskGap=$('#taskGap');
   const applyAllFS=$('#applyAllFS'), applyAllGap=$('#applyAllGap');
   const btnBold=$('#btnBold'), btnItalic=$('#btnItalic'), btnUnderline=$('#btnUnderline'), btnHighlight=$('#btnHighlight');
@@ -352,9 +517,17 @@
     </header>`;
   }
 
-  function buildWeekday(i,name){
-    const art=document.createElement('article'); art.className='day'; art.dataset.dayIndex=i;
-  art.innerHTML = weekdayHeaderHtml(name)+
+ function buildWeekday(i, name){
+  // wrapper met 2 kaarten
+  const wrap = document.createElement('div');
+  wrap.className = 'dayWrap';
+
+  // --- BOVENSTE KAART: Agenda + Ik denk aan
+  const day = document.createElement('article');
+  day.className = 'day';
+  day.dataset.dayIndex = i;
+
+  day.innerHTML = weekdayHeaderHtml(name)+
 `<div class="body">
    <div class="cell">
      <h3>Agenda:</h3>
@@ -370,53 +543,72 @@
        <div class="bringText" contenteditable></div>
      </div>
    </div>
+ </div>`;
 
-   <div class="cell">
-     <h3>Ik plan:</h3>
-     <div class="planLines" data-key="d${i}.planlines">
-       <div class="linePad" contenteditable></div>
-     </div>
+  const planBox = day.querySelector('.planBox');
+  const bringBox = day.querySelector('.bringBox');
+  const bringText = day.querySelector('.bringText');
+  bringText.addEventListener('focusin', () => { lastFocusedHost = bringBox; setActiveHost(bringBox); });
+  planBox.addEventListener('focusin', () => { lastFocusedHost = day.querySelector('.body'); setActiveHost(lastFocusedHost); });
+  wireDate(day, i);
+  day.addEventListener('pointerdown', ()=> { setActiveDay(day); setActiveHost(day.querySelector('.body')); });
+
+  // --- ONDERSTE KAART: apart “Ik plan”
+  const planCard = document.createElement('section');
+  planCard.className = 'dayPlan';
+  planCard.innerHTML =
+`<header>Ik plan</header>
+ <div class="body">
+   <div class="planLines" data-key="d${i}.planlines">
+     <div class="linePad" contenteditable></div>
    </div>
  </div>`;
 
+  const linePad = planCard.querySelector('.linePad');
+  const planLinesHost = planCard.querySelector('.planLines');
+  linePad.addEventListener('focusin', () => { lastFocusedHost = planLinesHost; setActiveHost(planLinesHost); });
 
-    const planBox   = art.querySelector('.planBox');
-    const linePad   = art.querySelector('.linePad');
-    const bringBox  = art.querySelector('.bringBox');
-const bringText = art.querySelector('.bringText');
+  // samenvoegen in wrapper
+  wrap.appendChild(day);
+  wrap.appendChild(planCard);
+  return wrap;
+}
 
-bringText.addEventListener('focusin', () => {
-  lastFocusedHost = bringBox;
-  setActiveHost(bringBox);
-});
-
-
-    // Focusrouting voor picto-plaatsing
-    planBox.addEventListener('focusin', () => { lastFocusedHost = art.querySelector('.body'); setActiveHost(lastFocusedHost); });
-    linePad.addEventListener('focusin', () => { lastFocusedHost = art.querySelector('.planLines'); setActiveHost(lastFocusedHost); });
-
-    wireDate(art,i);
-    art.addEventListener('pointerdown',()=> { setActiveDay(art); setActiveHost(art.querySelector('.body')); });
-    return art;
-  }
 
   function buildWeekend(i,name){
     const art=document.createElement('article'); art.className='day small'; art.dataset.dayIndex=i;
-    art.innerHTML=
-    `<header>
-       <div class="dn">${name}</div>
-       <div class="dateWrap"><span class="dDate">01 / 09</span><input class="datePicker" type="date"></div>
-     </header>
-     <div class="body">
-       <div class="cell">
-         <h3>Agenda:</h3>
-         <div class="planBox" data-key="d${i}.plan">
-           <textarea class="wkTA" rows="2" maxlength="300" aria-label="Weekendnotities"></textarea>
-         </div>
-       </div>
-     </div>`;
+      art.innerHTML = `
+    <header>
+      <div class="dn">${name}</div>
+      <div class="dateWrap"><span class="dDate">01 / 09</span><input class="datePicker" type="date"></div>
+    </header>
+    <div class="body">
+      <div class="cell">
+        <h3>Agenda:</h3>
+        <div class="planBox" data-key="d${i}.plan">
+          <textarea class="wkTA" rows="2" maxlength="300" aria-label="Weekendnotities"></textarea>
+        </div>
+      </div>
+
+      <div class="cell">
+        <h3>Ik plan:</h3>
+        <div class="planLines" data-key="d${i}.planlines">
+          <div class="linePad" contenteditable></div>
+        </div>
+      </div>
+    </div>`;
+
     const ta=art.querySelector('.wkTA');
     ta.addEventListener('input', limitWeekendTextarea);
+    const planLinesHost = art.querySelector('.planLines');
+const linePad = art.querySelector('.linePad');
+if (linePad) {
+  linePad.addEventListener('focusin', () => {
+    lastFocusedHost = planLinesHost;
+    setActiveHost(planLinesHost);
+  });
+}
+
     ta.addEventListener('keydown', e=>{
       const lines=ta.value.split('\n').length;
       if(e.key==='Enter' && lines>=3){ e.preventDefault(); }
@@ -458,7 +650,8 @@ bringText.addEventListener('focusin', () => {
   for(let i=0;i<5;i++) weekTop.appendChild(buildWeekday(i,days[i]));
   weekendCol.appendChild(buildWeekend(5,days[5]));
   weekendCol.appendChild(buildWeekend(6,days[6]));
-  setActiveDay(weekTop.firstElementChild);
+  setActiveDay(weekTop.querySelector('.day'));
+
 
   /* Plan-stijl en bullets */
   function applyFsToDay(day,val){ day.style.setProperty('--plan-fs',val); }
@@ -488,6 +681,61 @@ bringText.addEventListener('focusin', () => {
     for(let i=1;i<5;i++) applyGapToDay(document.querySelector(`.day[data-day-index="${i}"]`),val);
     pushSnapshot();
   });
+  applyLinesHere.addEventListener('click', ()=>{
+  const host = getActiveTextBox();
+  if (!host){ alert('Klik eerst in “Agenda” of “Ik denk aan”.'); return; }
+setLined(
+  host,
+  linesToggle.checked,
+  parseInt(lineStepSel.value,10),
+  lineDotsChk.checked,
+  parseInt(lineCountInp.value,10)  // ← aantal startlijnen volgens toolbar
+);
+
+});
+
+applyLinesAll.addEventListener('click', ()=>{
+  const host = getActiveTextBox();
+  if (!host){ alert('Klik eerst in “Agenda” of “Ik denk aan”.'); return; }
+  // Zelfde vak (Agenda vs Ik denk aan) in alle weekdagen toepassen
+  const isAgenda = !!host.closest('.planBox');
+  for (let i=0;i<5;i++){
+    const d = document.querySelector(`.day[data-day-index="${i}"]`);
+    if (!d) continue;
+    const target = isAgenda ? d.querySelector('.planBox') : d.querySelector('.bringBox');
+    setLined(
+  target,
+  linesToggle.checked,
+  parseInt(lineStepSel.value,10),
+  lineDotsChk.checked,
+  parseInt(lineCountInp.value,10)  // ← idem
+);
+  }
+});
+// + Schrijflijn (voegt één regel toe op cursorpositie)
+btnAddLine.addEventListener('click', ()=>{
+  const host = getActiveTextBox();
+  if (!host){ alert('Klik eerst in “Agenda” of “Ik denk aan”.'); return; }
+  setLined(
+  host,
+  true,
+  parseInt(lineStepSel.value,10),
+  lineDotsChk.checked,
+  0 // ← geen startlijnen maken; we voegen er zo meteen zelf 1 toe
+);
+  const list = host.querySelector('.lineList');
+  const cur  = getActiveLineRow();
+  addOneLineRow(list || host, '', lineDotsChk.checked, cur);
+  pushSnapshot(); scheduleLayoutSync();
+});
+
+// Lijnen uit (terug naar platte tekst)
+btnClearLines.addEventListener('click', ()=>{
+  const host = getActiveTextBox();
+  if (!host){ alert('Klik eerst in “Agenda” of “Ik denk aan”.'); return; }
+  setLined(host, false, 0, false);
+});
+
 
   /* Tekst opmaak */
   function exec(cmd,val=null){ document.execCommand(cmd,false,val); }
@@ -545,6 +793,189 @@ bringText.addEventListener('focusin', () => {
     });
   }
 
+  function getActiveTextBox(){
+    // We willen per vak werken: planBox (Agenda) of bringBox (Ik denk aan)
+    if (lastFocusedHost && lastFocusedHost.isConnected){
+      const pb = lastFocusedHost.closest('.planBox');
+      if (pb) return pb;
+      const bb = lastFocusedHost.closest('.bringBox');
+      if (bb) return bb;
+    }
+    // fallback: als er niets actief is, neem in de actieve dag de Agenda
+    if (activeDay) return activeDay.querySelector('.planBox');
+    return null;
+  }
+
+// 5e param (initCount) is optioneel: hoeveel startlijnen maken?
+// - bij "Pas toe …" geven we lineCount door (bv. 3)
+// - bij "+ Schrijflijn" geven we 0 (geen startlijnen), we voegen er daarna zelf 1 toe
+function setLined(box, on, stepPx, withDots, initCount){
+  if (!box) return;
+
+  if (!on){
+    // Lijnen UIT: rijen weg, tekst behouden
+    const list = box.querySelector('.lineList');
+    if (list){
+      const tekst = Array.from(list.querySelectorAll('.rowText'))
+        .map(n => n.innerHTML).join('<br>');
+      list.remove();
+      const ce = box.querySelector('.planText, .bringText');
+      if (ce) ce.innerHTML = tekst;
+      else {
+        const div = document.createElement('div');
+        div.className = 'planText'; div.setAttribute('contenteditable','');
+        div.innerHTML = tekst; box.appendChild(div);
+      }
+    }
+    box.classList.remove('lined');
+    box.style.removeProperty('--line-step-cur');
+    const oldDots = box.querySelector('.lineDots'); if (oldDots) oldDots.remove();
+    box.style.setProperty('background', 'none', 'important');
+box.style.backgroundImage = 'none';
+
+    pushSnapshot(); scheduleLayoutSync();
+    return;
+  }
+
+  // Lijnen AAN: rijenstructuur opbouwen of updaten
+  box.classList.add('lined');
+  box.style.setProperty('--line-step-cur', (stepPx|0) + 'px');
+
+  let list = box.querySelector('.lineList');
+  if (!list){
+    list = document.createElement('div');
+    list.className = 'lineList';
+    // bestaande platte tekst splitsen op <br> naar rijen
+    const ce   = box.querySelector('.planText, .bringText');
+    const html = ce ? ce.innerHTML : '';
+    if (ce) ce.remove();
+   let htmlLines = html ? html.split(/<br\s*\/?>/i) : [];
+let aantal = (typeof initCount === 'number')
+  ? initCount
+  : parseInt(lineCountInp?.value || 1, 10);
+
+// Als er geen bestaande tekst is:
+if (htmlLines.length === 0) {
+  for (let k = 0; k < Math.max(0, aantal); k++) {
+    addOneLineRow(list, '', withDots);
+  }
+} else {
+  // Zet bestaande regels over naar rijen
+  htmlLines.forEach(seg => addOneLineRow(list, seg, withDots));
+  // Eventueel aanvullen tot 'aantal'
+  for (let extra = htmlLines.length; extra < Math.max(0, aantal); extra++) {
+    addOneLineRow(list, '', withDots);
+  }
+}
+
+    box.appendChild(list);
+  }
+
+  // regelafstand + dots updaten
+  // bestaande rijen updaten (hoogte ja, dot-keuze NIET globalen!)
+Array.from(list.querySelectorAll('.lineRow')).forEach(row=>{
+  row.style.minHeight = (stepPx|0) + 'px';
+  // Dot blijft per lijn zoals gebruiker hem zet:
+  // als de lijn 'no-dot' heeft, verbergen; anders tonen.
+  const d = row.querySelector('.rowDot');
+  if (!d) return;
+  d.style.display = row.classList.contains('no-dot') ? 'none' : 'block';
+});
+
+
+  // geen background meer gebruiken
+  // geen background meer gebruiken
+box.style.setProperty('background', 'none', 'important');
+box.style.backgroundImage = 'none';
+  pushSnapshot(); scheduleLayoutSync();
+}
+
+// Maak één nieuwe rij (optioneel met starttekst) in een lineList
+function addOneLineRow(listOrBox, startHtml='', withDot=false, afterNode=null){
+  const list = listOrBox.classList.contains('lineList')
+    ? listOrBox
+    : (listOrBox.querySelector('.lineList') || (()=>{
+         const n=document.createElement('div'); n.className='lineList';
+         const ce = listOrBox.querySelector('.planText, .bringText');
+         const html = ce ? ce.innerHTML : ''; if (ce) ce.remove();
+         listOrBox.appendChild(n);
+         if (html && !startHtml){ startHtml = html; }
+         return n;
+       })());
+
+  const row = document.createElement('div');
+  row.className = 'lineRow';
+  if (!withDot) row.classList.add('no-dot'); // per-lijn dot uit
+  row.innerHTML = `
+    <span class="rowDot" aria-label="dot" title="Dot aan/uit"></span>
+    <div class="rowText" contenteditable></div>
+    <button class="rowDel" title="Verwijder">×</button>
+  `;
+
+  const txt = row.querySelector('.rowText');
+txt.setAttribute('contenteditable', 'true');
+if (startHtml) txt.innerHTML = startHtml;
+
+
+  if (afterNode && afterNode.parentElement === list) afterNode.insertAdjacentElement('afterend', row);
+  else list.appendChild(row);
+
+  // caret naar einde van de nieuwe rij
+  setTimeout(()=>{
+    txt.focus();
+    const sel=window.getSelection(), rg=document.createRange();
+    rg.selectNodeContents(txt); rg.collapse(false); sel.removeAllRanges(); sel.addRange(rg);
+  },0);
+
+  return row;
+}
+
+
+// Huidige rij onder de cursor vinden (binnen .lineList)
+function getActiveLineRow(){
+  const sel = window.getSelection(); if (!sel || !sel.rangeCount) return null;
+  const n = sel.anchorNode; if (!n) return null;
+  const el = (n.nodeType === 1 ? n : n.parentElement);
+  return el ? el.closest('.lineRow') : null;
+}
+
+
+
+  function applyDots(box, enable, step){
+    // verwijder bestaande
+    const old = box.querySelector('.lineDots');
+    if (old) old.remove();
+    if (!enable) return;
+
+    const dots = document.createElement('div');
+    dots.className = 'lineDots';
+    box.appendChild(dots);
+
+    // hoogte van het bruikbare gebied (vakminus top/bottom padding)
+    const cs = getComputedStyle(box);
+    const padTop    = parseFloat(cs.paddingTop) || 0;
+    const padBottom = parseFloat(cs.paddingBottom) || 0;
+    const usableH = box.clientHeight - padTop - padBottom;
+
+    // aantal lijnen
+    const n = Math.max(1, Math.floor(usableH / step));
+
+    for (let i=0;i<n;i++){
+      const y = padTop + i * step; // top-positie per lijn (vóór transform)
+      const d = document.createElement('div');
+      d.className = 'dot';
+      d.style.top = y + 'px';
+      dots.appendChild(d);
+    }
+  }
+
+  // heropbouwen van dots bij resize of inhoudswijziging
+ function refreshDotsAll(){
+  // Niet langer nodig: lijnen en bolletjes worden rij-per-rij opgebouwd.
+  // Deze functie blijft bestaan omdat scheduleLayoutSync() ze aanroept.
+}
+
+
   /* Zwemweek: alleen de zin in Agenda -> Ik plan niet aanpassen */
   function toggleSwimWeek(on){
     const day = document.querySelector('.day[data-day-index="3"]'); // donderdag
@@ -601,9 +1032,11 @@ bringText.addEventListener('focusin', () => {
     else { alert('Klik eerst in een vak (bv. Agenda, Ik plan of Mededelingen).'); return; }
 
     let hostType = 'body';
-    if (host.classList && host.classList.contains('planLines')) hostType = 'planlines';
-    else if (host.classList && host.classList.contains('body')) hostType = 'body';
-    pic.dataset.host = hostType;
+if (host.classList && host.classList.contains('planLines')) hostType = 'planlines';
+else if (host.classList && host.classList.contains('bringBox')) hostType = 'bring'; // nieuw: “Ik denk aan”
+else if (host.classList && host.classList.contains('body')) hostType = 'body';
+pic.dataset.host = hostType;
+
 
     host.appendChild(pic);
     pic.style.left = '8px'; pic.style.top  = '8px';
@@ -836,9 +1269,10 @@ bringText.addEventListener('focusin', () => {
         node.style.top   = p.top   || '10px';
         if (p.width) node.style.width = p.width;
         let hostEl = d.querySelector('.body') || d;
-        if (p.host === 'planlines') hostEl = d.querySelector(`[data-key="d${idx}.planlines"]`) || hostEl;
-        node.dataset.host = p.host || 'body';
-        hostEl.appendChild(node);
+if (p.host === 'planlines') hostEl = d.querySelector(`[data-key="d${idx}.planlines"]`) || hostEl;
+if (p.host === 'bring')     hostEl = d.querySelector('.bringBox') || hostEl; // nieuw: “Ik denk aan”
+node.dataset.host = p.host || 'body';
+hostEl.appendChild(node);
       });
     }
   }
@@ -908,6 +1342,7 @@ bringText.addEventListener('focusin', () => {
     $$('.day').forEach(d => d.style.outline = 'none');
     equalizePlanHeights();
     syncNotesToWeekend();
+    document.querySelectorAll('.picto-free.selected').forEach(n => n.classList.remove('selected'));
   });
 
   // Dock
@@ -973,7 +1408,15 @@ bringText.addEventListener('focusin', () => {
   }
 
   /* Layout-sync: equalizers + mededelingen + overflowcheck */
-  function scheduleLayoutSync(){ requestAnimationFrame(()=>{ equalizePlanHeights(); syncNotesToWeekend(); checkOverflow(); }); }
+  function scheduleLayoutSync(){
+  requestAnimationFrame(()=>{
+    equalizePlanHeights();
+    syncNotesToWeekend();
+    refreshDotsAll();   // bolletjes opnieuw tekenen bij lay-outwijzigingen
+    checkOverflow();
+  });
+}
+
   window.addEventListener('resize', scheduleLayoutSync);
   new ResizeObserver(scheduleLayoutSync).observe($('#weekendCol'));
 
@@ -982,6 +1425,38 @@ bringText.addEventListener('focusin', () => {
       scheduleLayoutSync();
     }
   });
+document.addEventListener('click', (e) => {
+  const row = e.target.closest('.lineRow');
+  if (!row) return;
+
+  // 1) rij verwijderen
+  if (e.target.classList.contains('rowDel')) {
+    row.remove();
+    pushSnapshot(); 
+    scheduleLayoutSync();
+    return;
+  }
+
+  // 2) dot links per lijn aan/uit
+  if (e.target.classList.contains('rowDot')) {
+    row.classList.toggle('no-dot');
+    pushSnapshot();
+    return;
+  }
+
+  // 3) focus altijd naar de tekst van deze lijn
+  const txt = row.querySelector('.rowText');
+  if (txt && e.target !== txt) {
+    txt.focus();
+    // caret aan het einde plaatsen
+    const sel = window.getSelection();
+    const rg  = document.createRange();
+    rg.selectNodeContents(txt);
+    rg.collapse(false);
+    sel.removeAllRanges();
+    sel.addRange(rg);
+  }
+});
 
   /* Overflow-check: toon melding indien content > paginahoogte (pagina 1) */
   function checkOverflow(){
@@ -1065,14 +1540,24 @@ bringText.addEventListener('focusin', () => {
     }
   });
 
-  document.addEventListener('click', (e)=>{
-    if(!e.target.classList.contains('liDel')) return;
-    const li   = e.target.closest('li');
-    li?.remove();
-    const dd = e.target.closest('.day');
-    if (dd) updatePlanBoxClass(dd);
-    pushSnapshot();
-  });
+// Verwijder één schrijflijn (X)
+document.addEventListener('click', (e)=>{
+  if (!e.target.classList || !e.target.classList.contains('rowDel')) return;
+  const row = e.target.closest('.lineRow'); if (!row) return;
+  const list = row.closest('.lineList');
+  row.remove();
+  pushSnapshot(); scheduleLayoutSync();
+});
+
+
+// Dot per lijn aan/uit door op de dot te klikken
+document.addEventListener('click', (e)=>{
+  if (!e.target.classList || !e.target.classList.contains('rowDot')) return;
+  const row = e.target.closest('.lineRow'); if (!row) return;
+  row.classList.toggle('no-dot'); // verbergt/toont dot via CSS
+  pushSnapshot(); scheduleLayoutSync();
+});
+
 
 })();
 </script>
