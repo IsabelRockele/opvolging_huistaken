@@ -620,30 +620,104 @@
     pushSnapshot();
   }
   swimChk.addEventListener('change', ()=> toggleSwimWeek(swimChk.checked));
+// Hulpfunctie: vervang bolletjes op vrijdag door 1.,2.,3.,...
+function renumberFridayList(dayEl){
+  if(!dayEl) return;
+  const list = dayEl.querySelector('[data-role="tasks"]');
+  if(!list) return;
+
+  // Neem alle <li>’s en nummer ze
+  const items = Array.from(list.querySelectorAll('li'));
+  items.forEach((li, idx)=>{
+    // maak of vervang de "bullet"-span
+    let numSpan = li.querySelector('.bullet');
+    if(!numSpan){
+      numSpan = document.createElement('span');
+      li.prepend(numSpan);
+    }
+    numSpan.className = 'bullet';
+    // i.p.v. een cirkel tekenen met border, tonen we gewoon nummer + punt
+    numSpan.style.border = 'none';
+    numSpan.style.width = 'auto';
+    numSpan.style.height = 'auto';
+    numSpan.style.borderRadius = '0';
+    numSpan.style.fontWeight = '700';
+    numSpan.style.minWidth = '1.2em';
+    numSpan.style.display = 'inline-block';
+    numSpan.textContent = (idx+1) + '.';
+  });
+
+  // Zorg dat de planBox class heeft-tasks behoudt
+  const planBox = dayEl.querySelector('.planBox');
+  if (planBox) {
+    const has = items.length > 0;
+    planBox.classList.toggle('has-tasks', has);
+  }
+}
+
+// Hulpfunctie: zorg dat elke taakregel bewerkbaar blijft
+function ensureTaskEditable(dayEl){
+  if(!dayEl) return;
+  const tasks = dayEl.querySelectorAll('.tasktext');
+  tasks.forEach(t=>{
+    t.setAttribute('contenteditable','true');
+  });
+}
 
   /* Kopieer maandag → andere werkdagen, incl. breng-grootte */
- btnCopyMon.addEventListener('click',()=>{
-  const mon=document.querySelector('.day[data-day-index="0"]');
-  const planHtml=mon.querySelector('[data-key="d0.plan"]').innerHTML;
-  const cs=getComputedStyle(mon);
+btnCopyMon.addEventListener('click',()=>{
+  const mon = document.querySelector('.day[data-day-index="0"]');
+  const planHtml = mon.querySelector('[data-key="d0.plan"]').innerHTML;
+  const cs = getComputedStyle(mon);
 
-  for(let i=1;i<5;i++){
-    const d=document.querySelector(`.day[data-day-index="${i}"]`);
-
-    // Alleen IK PLAN kopiëren
+  // Dinsdag (1), woensdag (2), donderdag (3):
+  for(let i=1;i<4;i++){
+    const d = document.querySelector(`.day[data-day-index="${i}"]`);
     const planBox = d.querySelector(`[data-key="d${i}.plan"]`);
     planBox.innerHTML = planHtml;
 
-    // Plan-stijl meenemen (optioneel laten staan)
-    d.style.setProperty('--plan-fs', cs.getPropertyValue('--plan-fs'));
+    // stijl meenemen
+    d.style.setProperty('--plan-fs',  cs.getPropertyValue('--plan-fs'));
     d.style.setProperty('--task-gap', cs.getPropertyValue('--task-gap'));
     d.style.setProperty('--bullet',   cs.getPropertyValue('--bullet'));
 
     updatePlanBoxClass(d);
     ensureTaskDeleteButtons(d);
+    ensureTaskEditable(d);
   }
+
+  // Vrijdag (4): kopieer eerst hetzelfde...
+  const fri = document.querySelector('.day[data-day-index="4"]');
+  const friPlanBox = fri.querySelector('[data-key="d4.plan"]');
+  friPlanBox.innerHTML = planHtml;
+
+  // stijl ook meenemen
+  fri.style.setProperty('--plan-fs',  cs.getPropertyValue('--plan-fs'));
+  fri.style.setProperty('--task-gap', cs.getPropertyValue('--task-gap'));
+  fri.style.setProperty('--bullet',   cs.getPropertyValue('--bullet'));
+
+  updatePlanBoxClass(fri);
+  ensureTaskDeleteButtons(fri);
+  ensureTaskEditable(fri);
+
+  // ...en dan de bolletjes vervangen door nummers 1.,2.,3.,...
+  renumberFridayList(fri);
+
+  // Cursor klaarzetten in de eerste taak van vrijdag (zodat u meteen kunt typen)
+  const firstTask = fri.querySelector('.tasktext');
+  if (firstTask){
+    firstTask.focus();
+    const sel = window.getSelection();
+    const rg  = document.createRange();
+    rg.selectNodeContents(firstTask);
+    rg.collapse(false);
+    sel.removeAllRanges();
+    sel.addRange(rg);
+  }
+
   pushSnapshot();
 });
+
 
   /* PICTOGRAMMEN */
   const PICTO_FILES=[
