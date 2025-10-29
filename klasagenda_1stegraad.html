@@ -212,6 +212,20 @@
     .picto-free .handle{ display:none !important; }
     .picto-free.selected{ outline:none !important; }
   }
+  .colleagueBtn {
+  background-color:#ffd966 !important;
+  border:2px solid #ccac00 !important;
+  border-radius:.5rem !important;
+  font-weight:700 !important;
+  padding:.45rem .7rem !important;
+  cursor:pointer !important;
+  color:#000 !important;
+}
+.colleagueBtn:hover{
+  filter:brightness(0.95);
+}
+
+
 </style>
 </head>
 <body>
@@ -256,13 +270,42 @@
       <button id="btnUndo" title="Laatste actie ongedaan maken">Ongedaan maken</button>
       <button id="btnDelPicto" title="Geselecteerd pictogram verwijderen">Verwijder picto</button>
       <button id="btnCopyMon">Kopieer maandag</button>
-      <button id="btnExport">Export</button>
+            <button id="btnExport">Export</button>
       <input id="fileImport" type="file" accept="application/json" hidden>
       <button id="btnImport">Import</button>
       <button id="btnPrint" class="primary">PDF / Print</button>
       <button id="btnToggleDock">Pictogrammen</button>
+
+      <span class="sep"></span>
+
+      <label>Graad:
+        <select id="graadSelect">
+          <option value="1" selected>1ste graad</option>
+          <option value="2">2de graad</option>
+          <option value="3">3de graad</option>
+        </select>
+      </label>
+
+      <label>Klas:
+        <input id="klasInput" size="4" value="L1A">
+      </label>
+
+ <label>Week:
+  <input id="weekInput" size="10" placeholder="vb. nov-2025 W1">
+</label>
+</label>
+
+
+     <button id="btnSaveFS" title="Bewaar naar Firestore">Bewaar</button>
+<button id="btnLoadFS" title="Laad uit Firestore (mijn week)" >Laad</button>
+<button id="btnFindFS" title="Zoek en laad een bewaarde week">Zoek week…</button>
+<button id="btnRestoreLocal" title="Zet mijn vorige agenda terug" disabled>Terug naar mijn agenda</button>
+<button id="btnSaveCopyFS" title="Bewaar als nieuwe week (kopie)">Bewaar als kopie…</button>
+<button id="btnOpenColleague" class="colleagueBtn" title="Bekijk agenda van collega">Agenda collega</button>
+
     </div>
   </div>
+
 
   <main class="page" id="page">
     <header class="page-head">
@@ -287,6 +330,123 @@
       </section>
     </section>
   </main>
+<main class="page" id="pageColleague"
+      style="display:none;
+             background:#fff9c4;           /* zacht geel */
+             border:2px solid #d4af37;      /* goudrandje */
+             border-radius:8px;
+             padding:16px;">
+
+  <header class="page-head">
+    <div class="title">
+      <span class="pill" id="colleagueHeaderTitle">agenda (collega)</span>
+    </div>
+    <div class="right-head">
+      <div class="monthBox" id="colleagueMonthBox">-</div>
+      <div class="classIcon"><!-- leeg bij collega --></div>
+    </div>
+  </header>
+<div style="display:flex; flex-wrap:wrap; gap:.5rem; margin:0 0 8px 0; font-size:10pt;">
+  <label style="font-weight:600;">
+    Van:
+    <select id="copyFromSelect" style="font-size:10pt;">
+      <option value="">(kies)</option>
+      <option value="0">maandag</option>
+      <option value="1">dinsdag</option>
+      <option value="2">woensdag</option>
+      <option value="3">donderdag</option>
+      <option value="4">vrijdag</option>
+      <option value="5">zaterdag</option>
+      <option value="6">zondag</option>
+      <option value="notes">mededelingen</option>
+    </select>
+  </label>
+
+  <label style="font-weight:600;">
+    Onderdeel:
+    <select id="copyPartSelect" style="font-size:10pt;">
+      <option value="">(kies)</option>
+      <option value="all">hele dag (plan + denk aan + pictogrammen)</option>
+      <option value="plan">enkel "Ik plan"</option>
+      <option value="bring">enkel "Ik denk aan"</option>
+      <option value="notes">mededelingen</option>
+    </select>
+  </label>
+
+  <label style="font-weight:600;">
+    Naar:
+    <select id="pasteToSelect" style="font-size:10pt;">
+      <option value="">(kies)</option>
+      <option value="0">maandag</option>
+      <option value="1">dinsdag</option>
+      <option value="2">woensdag</option>
+      <option value="3">donderdag</option>
+      <option value="4">vrijdag</option>
+      <option value="5">zaterdag</option>
+      <option value="6">zondag</option>
+      <option value="notes">mededelingen</option>
+    </select>
+  </label>
+
+  <button id="btnTakeOver"
+          style="font-weight:700; border:1px solid #0a66c2; border-radius:6px; background:#e7f1fb; padding:.4rem .6rem; cursor:pointer;">
+    Neem over
+  </button>
+</div>
+
+    <!-- KOPIE VAN DE AGENDASTRUCTUUR, SPECIAAL VOOR COLLEGA -->
+  <section class="week-top" id="weekTopColleague"></section>
+
+ <section class="bottom-row"
+         style="display:flex;
+                flex-wrap:nowrap;
+                align-items:flex-start;
+                gap:1rem;
+                margin-top:1rem;
+                border-top:2px solid #000;
+                padding-top:0.5rem;">
+
+  <div class="weekendCol" id="weekendColColleague"
+       style="flex:0 0 auto; min-width:260px;">
+  </div>
+
+  <section class="panel" id="notesPanelColleague"
+           style="flex:1 1 auto;
+                  background:#fffde7;
+                  border:2.6px solid var(--line);
+                  border-radius:7px;
+                  display:flex;
+                  flex-direction:column;">
+    <header style="padding:2.6mm;
+                   border-bottom:2.6px solid var(--line);
+                   font-weight:700;">
+      Mededelingen <span style="font-weight:400;color:#6b7280">(collega)</span>
+    </header>
+
+    <div class="panelBody" id="notesBodyColleague"
+         style="padding:2mm; flex:1; min-height:40px; overflow:auto; outline:none;">
+    </div>
+
+    <div class="sign"
+         style="border:2.6px solid var(--line);
+                border-radius:7px;
+                padding:2mm 5mm;
+                min-width:70mm;
+                height:22mm;
+                font-size:10pt;
+                color:var(--muted);
+                background:#fff;
+                display:flex;
+                align-items:flex-start;
+                margin:6mm;
+                position:static;">
+      handtekening ouders
+    </div>
+  </section>
+</section>
+
+</main>
+
 
   <!-- PICTOGRAMMEN -->
   <aside class="dock" aria-label="Pictogrammen">
@@ -298,11 +458,151 @@
     </div>
     <small>Klik om een vrij pictogram te plaatsen. <strong>Ctrl-klik</strong> (Mac: Cmd-klik) = als inline pictogram in de tekst.</small>
   </aside>
+    <!-- POPUP voor Agenda collega -->
+  <div id="colleagueOverlay" style="
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,0.4);
+    display:none;
+    align-items:center;
+    justify-content:center;
+    z-index:5000;
+  ">
+    <div style="
+      background:white;
+      border-radius:12px;
+      padding:1rem 1.5rem;
+      min-width:260px;
+      max-width:320px;
+      box-shadow:0 1rem 2rem rgba(0,0,0,0.3);
+      font-size:0.9rem;
+    ">
+      <div style="font-weight:600; font-size:1rem; margin-bottom:.75rem;">
+        Agenda collega bekijken
+      </div>
+
+      <div style="display:flex; flex-direction:column; gap:.5rem;">
+        <label>
+          Graad:
+          <select id="colleagueGraad">
+            <option value="1">1ste graad</option>
+            <option value="2">2de graad</option>
+            <option value="3">3de graad</option>
+          </select>
+        </label>
+
+        <label>
+          Klas:
+          <input id="colleagueKlas" placeholder="bv. L2A" style="width:6rem;">
+        </label>
+
+        <label>
+          Maand-jaar:
+          <select id="colleagueMaand">
+            <option value="">(kies maand)</option>
+          </select>
+        </label>
+
+        <label>
+          Week:
+          <select id="colleagueWeek" disabled>
+            <option value="">(kies week)</option>
+          </select>
+        </label>
+      </div>
+
+      <div style="display:flex; gap:.5rem; justify-content:flex-end; margin-top:1rem;">
+        <button id="btnCancelColleague">Annuleer</button>
+        <button id="btnLoadColleague" style="font-weight:600;">Toon</button>
+      </div>
+    </div>
+  </div>
+
+<!-- 2) Zoek-overlay (APART blok, dus buiten de collega-overlay) -->
+<div id="findOverlay" style="
+  position:fixed; inset:0; background:rgba(0,0,0,.4);
+  display:none; align-items:center; justify-content:center; z-index:5000;">
+  <div style="background:#fff; border-radius:12px; padding:1rem 1.5rem; min-width:320px; max-width:520px; box-shadow:0 1rem 2rem rgba(0,0,0,.3);">
+    <div style="font-weight:600; font-size:1rem; margin-bottom:.75rem;">Bewaarde weken zoeken</div>
+
+    <div style="display:flex; gap:.5rem; flex-wrap:wrap; margin-bottom:.5rem;">
+      <label>Graad:
+        <select id="findGraad" style="min-width:6rem">
+          <option value="1">1ste graad</option>
+          <option value="2">2de graad</option>
+          <option value="3">3de graad</option>
+        </select>
+      </label>
+      <label>Klas:
+        <input id="findKlas" placeholder="bv. L2A" style="width:6rem;">
+      </label>
+      <label>Tpl:
+        <select id="findTpl" style="min-width:5rem">
+          <option value="">(alle)</option>
+          <option value="L1">L1</option>
+          <option value="L2">L2</option>
+        </select>
+      </label>
+      <button id="btnRunFind">Zoeken</button>
+    </div>
+
+    <div id="findList" style="max-height:320px; overflow:auto; border:1px solid #e5e7eb; border-radius:8px;">
+      <!-- resultaten -->
+    </div>
+
+    <div style="display:flex; gap:.5rem; justify-content:flex-end; margin-top:1rem;">
+      <button id="btnCloseFind">Sluiten</button>
+    </div>
+  </div>
+</div>
+
+<!-- Firebase (compat) toevoegen -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
+<script>
+// VERVANG deze config door de config van uw Firebase-project voor de agenda.
+// Deze vindt u in Firebase console > Project settings > Your apps > Web app.
+const firebaseConfig = {
+  apiKey: "AIzaSyA7KxXMvZ4dzBQDut3CMyWUblLte2tFzoQ",
+  authDomain: "huiswerkapp-a311e.firebaseapp.com",
+  projectId: "huiswerkapp-a311e",
+  storageBucket: "huiswerkapp-a311e.appspot.com",
+  messagingSenderId: "797169941164",
+  appId: "1:797169941164:web:511d9618079f1378d0fd09"
+};
+
+
+// Firebase initialiseren
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+// Bepaalt automatisch het schooljaar als tekst "2025-2026"
+function currentSchoolYear(){
+  const now = new Date();
+  const jaar = now.getFullYear();
+  const maand = now.getMonth() + 1; // 1..12
+  if (maand >= 9) {
+    // september-december
+    return jaar + "-" + (jaar+1);
+  } else {
+    // januari-augustus
+    return (jaar-1) + "-" + jaar;
+  }
+}
+</script>
 
 <script>
 (function(){
   const $  = (s,r=document)=>r.querySelector(s);
   const $$ = (s,r=document)=>Array.from(r.querySelectorAll(s));
+  // Hulpfunctie om actuele sjabloon (L1 of L2) veilig te bepalen
+  function getTplNow(){
+    const el = document.getElementById('tplSel')
+            || document.getElementById('tpl')
+            || (typeof tplSel !== 'undefined' ? tplSel : null);
+    return el && el.value ? el.value.trim() : 'L1'; // veilige default
+  }
 
   const ENVELOPE_SVG =
    '<svg viewBox="0 0 48 36" xmlns="http://www.w3.org/2000/svg"><rect x="1.5" y="1.5" width="45" height="33" rx="2.5"/><polyline points="2,2 24,18 46,2"/><polyline points="2,34 20,20"/><polyline points="46,34 28,20"/></svg>';
@@ -320,17 +620,35 @@
   const monthBox=$('#monthBox'), classIconSlot=$('#classIconSlot');
   const btnUndo=$('#btnUndo'), btnDelPicto=$('#btnDelPicto');
   const btnToggleDock = $('#btnToggleDock');
+  // Zoek week… UI
+const btnFindFS    = document.getElementById('btnFindFS');
+const findOverlay  = document.getElementById('findOverlay');
+const findGraad    = document.getElementById('findGraad');
+const findKlas     = document.getElementById('findKlas');
+const findTpl      = document.getElementById('findTpl');
+const btnRunFind   = document.getElementById('btnRunFind');
+const btnCloseFind = document.getElementById('btnCloseFind');
+const findList     = document.getElementById('findList');
+
   const dock = document.querySelector('.dock');
   const btnUploadPicto = $('#btnUploadPicto');
   const fileUploadPicto = $('#fileUploadPicto');
 
   const notesPanel=$('#notesPanel'), notesBody=$('#notesBody');
+  // <-- NIEUW: aparte opslag per sjabloon
+  let localStateByTemplate = {
+    L1: null,
+    L2: null
+  };
+let currentTplOnScreen = tplSel.value;
 
   let activeDay=null;
   let activeHost=null;
   let selectedPicto=null;
   let undoStack=[]; let isApplying=false;
   let lastFocusedHost = null;
+  // Onthoudt de laatst gekozen collega-parameters zolang de pagina open blijft
+  let lastColleagueSelection = null;
 
   function setActiveDay(n){
     $$('.day').forEach(d=>d.style.outline='none');
@@ -369,6 +687,78 @@
     scheduleLayoutSync();
   }
   btnUndo.addEventListener('click', doUndo);
+// --- BEWAARDE WEKEN ZOEKEN ---
+// Event-handlers voor de “Zoek week…”-knop
+btnFindFS?.addEventListener('click', () => {
+  const gSel = document.getElementById('graadSelect');
+  const kInp = document.getElementById('klasInput');
+  findGraad.value = (gSel?.value || '1');
+  findKlas.value  = (kInp?.value || '').trim();
+  findTpl.value   = getTplNow() || '';
+  findOverlay.style.display = 'flex';
+  runFindQuery();
+});
+btnCloseFind?.addEventListener('click', () => { findOverlay.style.display = 'none'; });
+btnRunFind?.addEventListener('click', runFindQuery);
+
+async function runFindQuery(){
+  findList.innerHTML = '<div style="padding:.75rem;">Laden…</div>';
+  const g = findGraad.value.trim();
+  const k = findKlas.value.trim();
+  const t = findTpl.value.trim();
+
+  try{
+    let q = db.collection(`agenda_graad${g}`).where('klas','==', k);
+    if (t) q = q.where('tpl','==', t);
+    const snap = await q.orderBy('updatedAt','desc').limit(50).get();
+
+    let results = snap.docs.map(d => ({ id:d.id, data:d.data() }));
+    if (results.length === 0) {
+      const all = await db.collection(`agenda_graad${g}`).limit(200).get();
+      results = all.docs
+        .filter(d => d.id.includes(k) && (!t || d.id.includes(t)))
+        .map(d => ({ id:d.id, data:d.data() }));
+    }
+
+    if (results.length === 0){
+      findList.innerHTML = '<div style="padding:.75rem;">Geen resultaten gevonden.</div>';
+      return;
+    }
+
+    const ul = document.createElement('ul');
+    ul.style.listStyle='none'; ul.style.margin='0'; ul.style.padding='0';
+
+    results.forEach(({id, data})=>{
+      const li = document.createElement('li');
+      li.style.borderBottom='1px solid #eee';
+      li.style.padding='.5rem .75rem';
+      li.style.cursor='pointer';
+
+      const week  = data.week  || (data.data?.meta?.week     || '');
+      const maand = data.maand || (data.data?.meta?.monthBox || '');
+      const tpl   = data.tpl   || (data.data?.meta?.template || '');
+      const line1 = week ? `${week}` : id;
+      const line2 = [maand, tpl].filter(Boolean).join(' • ');
+
+      li.innerHTML = `<div style="font-weight:600">${line1}</div>
+                      <div style="font-size:.9rem; color:#666">${line2}</div>`;
+
+      li.addEventListener('click', ()=>{
+        const weekInp = document.getElementById('weekInput');
+        if (weekInp && week) weekInp.value = week;
+        findOverlay.style.display = 'none';
+        document.getElementById('btnLoadFS')?.click();
+      });
+
+      ul.appendChild(li);
+    });
+
+    findList.innerHTML = '';
+    findList.appendChild(ul);
+  } catch(err){
+    findList.innerHTML = `<div style="padding:.75rem; color:#b91c1c">Zoeken mislukt: ${err.message}</div>`;
+  }
+}
 
   function weekdayHeaderHtml(name){
     return `<header class="stacked">
@@ -468,6 +858,23 @@
   weekendCol.appendChild(buildWeekend(5,days[5]));
   weekendCol.appendChild(buildWeekend(6,days[6]));
   setActiveDay(weekTop.firstElementChild);
+  // --- zelfde opbouw voor collega-pagina ---
+  const weekTopColleague    = document.getElementById('weekTopColleague');
+  const weekendColColleague = document.getElementById('weekendColColleague');
+
+  if (weekTopColleague && weekendColColleague) {
+    for (let i=0;i<5;i++){
+      // let op: we hergebruiken buildWeekday, maar we moeten een kopie maken
+      // die NIET dezelfde eventhandlers activeDay beïnvloedt.
+      const dayEl = buildWeekday(i, days[i]);
+      weekTopColleague.appendChild(dayEl);
+    }
+
+    const satEl = buildWeekend(5, days[5]);
+    const sunEl = buildWeekend(6, days[6]);
+    weekendColColleague.appendChild(satEl);
+    weekendColColleague.appendChild(sunEl);
+  }
 
   /* Plan-stijl en bullets */
   function applyFsToDay(day,val){ day.style.setProperty('--plan-fs',val); }
@@ -936,44 +1343,159 @@ btnCopyMon.addEventListener('click',()=>{
   });
 
   /* Export / Import (incl. pictos en bring-fs) */
-  function captureDay(d){
-    const idx = d.dataset.dayIndex;
+function captureDay(dayEl) {
+  const idx = dayEl.dataset.dayIndex;
 
-    const planBoxEl = d.querySelector(`[data-key="d${idx}.plan"]`);
-    const ta = planBoxEl ? planBoxEl.querySelector('.wkTA') : null;
-    const ce = planBoxEl ? planBoxEl.querySelector('.wkCE[contenteditable]') : null;
+  // ---- 1. DATUM OPNIEUW AFLEIDEN ----
+  // In de dag staat bv. <span class="dDate">03 / 11</span>
+  // Bovenaan de pagina staat bv. "november 2025"
+  // We herleiden dat naar een echte ISO-datum YYYY-MM-DD
 
-    const pics = [...d.querySelectorAll('.picto-free')].map(p => {
-      const img = p.querySelector('img');
-      let host = p.dataset.host || null;
-      if (!host) {
-        if (p.closest('.bringBox')) host = 'bring';
-        else host = 'body';
+  let isoDate = "";
+  const dDateEl = dayEl.querySelector('.dDate');
+  if (dDateEl) {
+    const text = dDateEl.textContent.trim(); // vb "03 / 11"
+    // haal dag en maand eruit
+    // verwacht formaat "DD / MM"
+    const m = text.match(/(\d{1,2})\s*\/\s*(\d{1,2})/);
+    if (m) {
+      const DD = m[1].padStart(2,'0');
+      const MM = m[2].padStart(2,'0');
+
+      // maand+jaar halen we uit de grote maandbox bovenaan
+      // bv. <div id="monthBox">november 2025</div>
+      const monthBoxEl = document.getElementById('monthBox');
+      if (monthBoxEl) {
+        const monthBoxTxt = monthBoxEl.textContent.trim(); // bv "november 2025"
+        // we splitsen dat
+        // "november 2025" -> maandNaam="november", jaar="2025"
+        const parts = monthBoxTxt.split(/\s+/);
+        if (parts.length >= 2) {
+          const maandNaam = parts[0].toLowerCase();
+          const jaar = parts[1];
+
+          // maandnaam omzetten naar maandnummer als het niet overeenkomt met MM,
+          // maar als dDateEl al de juiste maand geeft (MM) gebruiken we die.
+          // We vertrouwen in eerste instantie op MM/jaar ipv maandNaam.
+          // Dus isoDate = `${jaar}-${MM}-${DD}`
+
+          isoDate = `${jaar}-${MM}-${DD}`;
+        }
       }
-      return {
-        src: img.getAttribute('src'),
-        left: p.style.left || '0px',
-        top:  p.style.top  || '0px',
-        width: p.style.width || '',
-        host
-      };
-    });
-
-    return {
-      date: d.querySelector('.datePicker').value || null,
-      plan: planBoxEl ? planBoxEl.innerHTML : '',
-      bring: d.querySelector(`[data-key="d${idx}.bring"]`)?.innerHTML || '',
-      vars: {
-        planFS:  d.style.getPropertyValue('--plan-fs')  || null,
-        bullet:  d.style.getPropertyValue('--bullet')   || null,
-        gap:     d.style.getPropertyValue('--task-gap') || null,
-        bringFS: d.style.getPropertyValue('--bring-fs') || null
-      },
-      pictos: pics,
-      weekendText: ta ? ta.value : null,
-      weekendHtml: ce ? ce.innerHTML : null
-    };
+    }
   }
+
+  // ---- 2. PLAN (Ik plan / Ik geef af voor vrijdag) ----
+  const planBox = dayEl.querySelector(`[data-key="d${idx}.plan"]`);
+  let planHtml = "";
+  if (planBox) {
+    const list = planBox.querySelector('.tasklist[data-role="tasks"]');
+    if (list) {
+      const liPieces = [];
+      list.querySelectorAll('li').forEach(li => {
+        const taskTextDiv = li.querySelector('.tasktext');
+        const taskTextNow = taskTextDiv ? taskTextDiv.textContent.trim() : "";
+
+        if (taskTextNow !== "") {
+          liPieces.push(
+            `<li>` +
+              `<span class="bullet"></span>` +
+              `<div class="tasktext" contenteditable="true">` +
+                escapeHtml(taskTextNow) +
+              `</div>` +
+              `<button class="liDel" title="Verwijder">×</button>` +
+            `</li>`
+          );
+        }
+      });
+      if (liPieces.length > 0) {
+        planHtml = `<ul class="tasklist" data-role="tasks">` + liPieces.join("") + `</ul>`;
+      } else {
+        planHtml = "";
+      }
+    } else {
+      planHtml = planBox.innerHTML;
+    }
+  }
+
+  // ---- 3. GEEF AF (voor vrijdagkolom rechts) ----
+  const geefafBox = dayEl.querySelector(`[data-key="d${idx}.geefaf"]`);
+  let geefafHtml = "";
+  if (geefafBox) {
+    const ol = geefafBox.querySelector('ol');
+    if (ol) {
+      const liPieces = [];
+      ol.querySelectorAll('li').forEach(li => {
+        const txt = li.textContent.trim();
+        if (txt !== "") {
+          liPieces.push(`<li>${escapeHtml(txt)}</li>`);
+        }
+      });
+      if (liPieces.length > 0) {
+        geefafHtml = `<ol>` + liPieces.join("") + `</ol>`;
+      }
+    } else {
+      geefafHtml = geefafBox.innerHTML;
+    }
+  }
+
+  // ---- 4. BRING ("Ik denk aan:") ----
+  const bringBox = dayEl.querySelector(`[data-key="d${idx}.bring"]`);
+  let bringHtml = "";
+  if (bringBox) {
+    bringHtml = bringBox.innerHTML;
+  }
+
+  // ---- 5. VRIJE PICTOGRAMMEN ----
+  const pictos = [];
+  dayEl.querySelectorAll('.picto-free').forEach(p => {
+    const img = p.querySelector('img');
+    if (!img) return;
+    let host = 'body';
+    if (bringBox && bringBox.contains(p)) {
+      host = 'bring';
+    }
+    pictos.push({
+      src:   img.getAttribute('src'),
+      left:  p.style.left  || "",
+      top:   p.style.top   || "",
+      width: p.style.width || "",
+      host:  host
+    });
+  });
+
+  // ---- 6. STIJL-variabelen ----
+  const styles = getComputedStyle(dayEl);
+  const vars = {
+    planFS:  styles.getPropertyValue('--plan-fs').trim()   || null,
+    bullet:  styles.getPropertyValue('--bullet').trim()    || null,
+    gap:     styles.getPropertyValue('--task-gap').trim()  || null,
+    bringFS: styles.getPropertyValue('--bring-fs').trim()  || null
+  };
+
+  return {
+    date:   isoDate,     // <- dit gaat nu mee met de nieuwe datum
+    plan:   planHtml,
+    geefaf: geefafHtml,
+    bring:  bringHtml,
+    pictos: pictos,
+    vars:   vars,
+    weekendText: null,
+    weekendHtml: null
+  };
+}
+
+// Helper blijft hetzelfde:
+function escapeHtml(str){
+  return str
+    .replace(/&/g,"&amp;")
+    .replace(/</g,"&lt;")
+    .replace(/>/g,"&gt;")
+    .replace(/"/g,"&quot;");
+}
+
+
+
 
 function _isEmptyWeekendHtml(html){
   const tmp = document.createElement('div');
@@ -1116,22 +1638,39 @@ if (ce) {
     const days={}; $$('.day').forEach(n=> days[n.dataset.dayIndex]=captureDay(n));
     return {meta,days};
   }
-  function applyAll(obj){
-    if(obj.meta){
-      tplSel.value=obj.meta.template||'L2';
-      $('#titlePill').textContent=obj.meta.title||('agenda '+tplSel.value);
-      if(obj.meta.monthBox) monthBox.textContent=obj.meta.monthBox;
-      swimChk.checked=!!obj.meta.swim;
-      if(obj.meta.classIcon){ classIconSlot.innerHTML='<img alt="klaspictogram" src="'+obj.meta.classIcon+'">'; } else { classIconSlot.innerHTML=''; }
-      if(obj.meta.notes){ $('#notesBody').innerHTML=obj.meta.notes; }
-      applyTemplate();
-    }
 
-upgradeWeekendToEditable();
+function applyAll(obj){
+  if (obj.meta){
+    // BELANGRIJK:
+    // NIET meer tplSel.value aanpassen
+    // NIET meer titlePill invullen op basis van obj.meta.title
+    // NIET meer classIconSlot hier zetten
+    // NIET meer applyTemplate() hier oproepen
 
-    if(obj.days){ $$('.day').forEach(n=>{ const i=n.dataset.dayIndex; if(obj.days[i]) applyDay(n,obj.days[i]); }); }
-    scheduleLayoutSync();
+    // Wel veilig: inhoud die echt bij de week hoort
+   // maandlabel altijd expliciet zetten (ook leeg maken indien nodig)
+monthBox.textContent = (obj.meta.monthBox ?? '');
+
+// zwemweek blijft zoals het was
+swimChk.checked = !!obj.meta.swim;
+
+// MEDEDLINGEN: altijd expliciet overschrijven (leeg = leeg)
+$('#notesBody').innerHTML = (obj.meta.notes ?? '');
   }
+
+  // weekendvelden editable houden
+  upgradeWeekendToEditable();
+
+  // Dagen invullen
+  if (obj.days){
+    $$('.day').forEach(n=>{
+      const i = n.dataset.dayIndex;
+      if (obj.days[i]) applyDay(n, obj.days[i]);
+    });
+  }
+
+  scheduleLayoutSync();
+}
 
   btnExport.addEventListener('click',()=>{
     const data=captureAll();
@@ -1172,11 +1711,85 @@ upgradeWeekendToEditable();
     r.onload = ()=>{ handlePictoInsert(r.result, null); e.target.value=''; };
     r.readAsDataURL(f);
   });
+  // === NIEUW: agenda per sjabloon (L1 / L2) gescheiden houden ===
+
+  function saveLocalStateForCurrentTemplate() {
+    // Neem een volledige momentopname van de WITTE pagina
+    const snap = captureAll();
+    snap.meta.panelPictos = capturePanelPictos();
+
+    localStateByTemplate[currentTplOnScreen] = snap;
+
+  }
+
+  function restoreLocalStateForTemplate(tplKey) {
+    const saved = localStateByTemplate[tplKey];
+
+    if (saved) {
+      // We hebben al eens iets bewerkt voor dit sjabloon → toon dat terug
+      isApplying = true;
+      applyAll(saved);
+      applyPanelPictos(
+        saved.meta && saved.meta.panelPictos
+          ? saved.meta.panelPictos
+          : []
+      );
+      isApplying = false;
+      pushSnapshot();
+      return;
+    }
+
+    // Eerste keer dat we dit sjabloon openen → start leeg
+    // 1. wis alle dagen (plan, denk aan, pictogrammen)
+    document.querySelectorAll('#page .day').forEach(dayEl => {
+      const idx = dayEl.dataset.dayIndex;
+
+      // wis plan
+      const planBox = dayEl.querySelector('[data-key="d'+idx+'.plan"]');
+      if (planBox) {
+        // voor weekdagen zit daar <ul class="tasklist"> en <div class="planText">
+        planBox.innerHTML =
+          '<ul class="tasklist" data-role="tasks"></ul>' +
+          '<div class="planText" contenteditable></div>';
+      }
+
+      // wis denk aan
+      const bringBox = dayEl.querySelector('[data-key="d'+idx+'.bring"]');
+      if (bringBox) {
+        bringBox.innerHTML = '<div class="bringText" contenteditable></div>';
+      }
+
+      // pictogrammen weg
+      dayEl.querySelectorAll('.picto-free').forEach(n => n.remove());
+
+      // planBox styling resetten
+      const wrapper = dayEl.querySelector('.planBox');
+      if (wrapper) {
+        wrapper.classList.remove('has-tasks');
+      }
+    });
+
+    // 2. Mededelingen leegmaken
+    const nb = document.getElementById('notesBody');
+    if (nb) {
+      nb.innerHTML = '';
+    }
+    // pictogrammen uit mededelingenpaneel verwijderen
+    notesPanel.querySelectorAll('.picto-free').forEach(n => n.remove());
+
+
+    // 4. Zwemweek-vinkje uit (standaard leeg)
+    swimChk.checked = false;
+
+    // 5. Snapshot pushen zodat undo-stack klopt
+    pushSnapshot();
+  }
 
   /* L1/L2 + zebra automatisch bij L2 */
-  function applyTemplate(){
+ function applyTemplate(){
   const tpl = tplSel.value;
   const cur = classIconSlot.querySelector('img');
+  const klasInput = document.getElementById('klasInput');
 
   if (tpl === 'L2') {
     // Tweede leerjaar → zebra
@@ -1184,15 +1797,148 @@ upgradeWeekendToEditable();
       classIconSlot.innerHTML = '<img src="pictogrammen/zebra.png" alt="klaspictogram zebra">';
     }
     $('#titlePill').textContent = 'agenda L2';
+
+    // Nieuw: vul standaard klas in voor L2
+    if (klasInput) {
+      klasInput.value = 'L2A';
+    }
+
+    // en zet ook de graad-select automatisch op 1ste graad indien gewenst?
+    // (indien L2 zit ook in 1ste graad bij u, laten we dit voorlopig met rust)
+
   } else if (tpl === 'L1') {
     // Eerste leerjaar → bijtje
     if (!cur || !/bijtje\.png$/i.test(cur.src)) {
       classIconSlot.innerHTML = '<img src="pictogrammen/bijtje.png" alt="klaspictogram bijtje">';
     }
     $('#titlePill').textContent = 'agenda L1';
+
+    // Nieuw: vul standaard klas in voor L1
+    if (klasInput) {
+      klasInput.value = 'L1A';
+    }
   }
 }
-  tplSel.addEventListener('change', ()=>{ applyTemplate(); pushSnapshot(); });
+function applyAllToColleague(full) {
+  // 1. Kopieer de volledige dag-layout van mijn eigen pagina naar de collega-pagina,
+  //    zodat de collega exact dezelfde DOM-structuur krijgt als mijn agenda
+  //    (inclusief .planBox, .bringBox, weekend + groot mededelingenpaneel).
+  const srcWeekTop    = document.getElementById('weekTop');        // bovenste rij MA-VR
+  const srcWeekendCol = document.getElementById('weekendCol');     // ZA/ZO links onderaan
+  const srcNotesPanel = document.getElementById('notesPanel');     // groot paneel rechts onderaan
+
+  const dstWeekTop    = document.getElementById('weekTopColleague');
+  const dstWeekendCol = document.getElementById('weekendColColleague');
+  const dstNotesWrap  = document.getElementById('notesPanelColleague');
+
+  if (dstWeekTop && srcWeekTop) {
+    dstWeekTop.innerHTML = srcWeekTop.innerHTML;
+  }
+  if (dstWeekendCol && srcWeekendCol) {
+    dstWeekendCol.innerHTML = srcWeekendCol.innerHTML;
+  }
+  if (dstNotesWrap && srcNotesPanel) {
+    // We willen de volledige structuur van het mededelingenpaneel + handtekening
+    dstNotesWrap.innerHTML = srcNotesPanel.innerHTML;
+  }
+
+  // 2. Zet de titel (agenda L2A — nov-2025 W1) en maandbox bovenaan
+  const titleSpan = document.getElementById('colleagueHeaderTitle');
+  const monthEl   = document.getElementById('colleagueMonthBox');
+  if (full.meta) {
+    if (titleSpan) {
+      // Toon zoals op uw screenshot geel: "agenda L2A — nov-2025 W1"
+      const titel = full.meta.title || "";
+      const maand = full.meta.monthBox || "";
+      titleSpan.textContent = maand ? (titel + " — " + maand) : titel;
+    }
+    if (monthEl) {
+      monthEl.textContent = full.meta.monthBox || '';
+    }
+  }
+
+  // 3. Vul alle dagkaarten in de GEKLOONDE collega-layout met de Firestore-data
+  const colPage  = document.getElementById('pageColleague');
+  const dayCards = colPage ? colPage.querySelectorAll('.day') : [];
+
+  dayCards.forEach(card => {
+    const idx = card.dataset.dayIndex; // "0".."6"
+    const src = (full.days && full.days[idx]) ? full.days[idx] : null;
+
+    if (!src) {
+      // wis deze dag als er geen data voor is
+      const planBox  = card.querySelector('.planBox');
+      const bringBox = card.querySelector('.bringBox');
+      if (planBox)  { planBox.innerHTML  = ''; }
+      if (bringBox) { bringBox.innerHTML = ''; }
+      card.querySelectorAll('.picto-free').forEach(n=>n.remove());
+      return;
+    }
+
+    // gebruik uw bestaande logica om de inhoud te zetten
+    applyDay(card, src);                 // vult planBox, bringBox, pictogrammen...
+    ensureTaskDeleteButtons(card);       // herstelt verwijderknopjes op taken
+    ensureTaskEditable(card);            // contenteditable terugzetten
+    updatePlanBoxClass(card);            // layoutafwerking (bvb. lijntjes-hoogte)
+
+    if (idx === "4") {
+      // vrijdag: nummering "Ik geef af:"
+      renumberFridayList(card);
+    }
+  });
+
+  // 4. Vul mededelingen van de collega in (notitiespaneel rechts onderaan)
+const notesPanelCol = document.getElementById('notesPanelColleague');
+if (notesPanelCol) {
+  // probeer eerst de .panelBody binnen dit paneel
+  let notesBodyCol = notesPanelCol.querySelector('.panelBody');
+
+  // fallback: moest er toch nog een ander id zijn
+  if (!notesBodyCol) {
+    notesBodyCol = notesPanelCol.querySelector('#notesBodyColleague, #notesBody, .panelBody');
+  }
+
+  if (notesBodyCol) {
+    notesBodyCol.innerHTML = (full.meta && full.meta.notes) ? full.meta.notes : '';
+  }
+}
+
+
+  // 5. Geef de collega-pagina de gele achtergrond en laat alleen die pagina zichtbaar
+  const pc = document.getElementById('pageColleague');
+  if (pc) {
+    pc.style.background = '#fff9c4';         // zacht geel
+    pc.style.border     = '2px solid #d4af37';
+    pc.style.borderRadius = '8px';
+    pc.style.padding = '16px';
+  }
+
+  document.getElementById('page').style.display = 'none';
+  document.getElementById('pageColleague').style.display = '';
+
+  // 6. Layout her-uitlijnen (hoogtes gelijk, mededelingenpaneel goed onderaan)
+  scheduleLayoutSync();
+}
+
+  tplSel.addEventListener('change', () => {
+  // 1) bewaar wat NU op scherm staat onder het sjabloon dat NU zichtbaar is
+  saveLocalStateForCurrentTemplate();
+
+  // 2) bepaal de nieuwe keuze en markeer die meteen als actief sjabloon
+  const newTpl = tplSel.value;   // "L1" of "L2"
+  currentTplOnScreen = newTpl;   // <-- VERPLAATST NAAR HIER
+
+  // 3) kop aanpassen (titel, pictogram, klasveld) met uw eigen applyTemplate()
+  applyTemplate();
+
+  // 4) inhoud (taken, mededelingen, pictogrammen) van dit sjabloon tonen
+  restoreLocalStateForTemplate(newTpl);
+
+  // 5) layout rechttrekken
+  scheduleLayoutSync();
+});
+
+
 
   /* Maandlabel */
   function updateMonthBox(){
@@ -1213,6 +1959,31 @@ upgradeWeekendToEditable();
     const pad   = 12;
     body.style.height = Math.max(40, note.clientHeight - headH - signH - pad) + 'px';
   }
+function syncNotesToWeekendColleague(){
+  // zelfde logica, maar op de gele pagina
+  const wc   = document.getElementById('weekendColColleague');
+  const note = document.getElementById('notesPanelColleague');
+  if(!wc || !note) return;
+
+  // zoek de body waar de tekst in staat
+  // (kan .panelBody zijn na het klonen)
+  const body = note.querySelector('.panelBody');
+
+  // hoogte van het hele paneel afstemmen op hoogte weekend
+  note.style.height = wc.offsetHeight + 'px';
+
+  // dan de interne bodyhoogte berekenen zoals bij uw eigen versie
+  const headH = note.querySelector('header')?.offsetHeight || 0;
+  const signH = note.querySelector('.sign')?.offsetHeight   || 0;
+  const pad   = 12;
+
+  if (body) {
+    body.style.height = Math.max(
+      40,
+      note.clientHeight - headH - (signH + 12) - pad
+    ) + 'px';
+  }
+}
 
   /* === NIEUW: Equalizers voor gelijke hoogtes === */
   function equalizePlanHeights(){
@@ -1232,12 +2003,18 @@ upgradeWeekendToEditable();
 
   /* Layout-sync: equalizers + mededelingen */
   function scheduleLayoutSync(){
-    requestAnimationFrame(()=>{
-      equalizePlanHeights();
-      // equalizeBringHeights();    // haal uit commentaar indien gewenst
-      syncNotesToWeekend();
-    });
-  }
+  requestAnimationFrame(()=>{
+    equalizePlanHeights();
+    // equalizeBringHeights();
+
+    // Mijn eigen agenda uitlijnen
+    syncNotesToWeekend();
+
+    // Collega-agenda uitlijnen
+    syncNotesToWeekendColleague();
+  });
+}
+
   window.addEventListener('resize', scheduleLayoutSync);
   new ResizeObserver(scheduleLayoutSync).observe($('#weekendCol'));
 
@@ -1266,6 +2043,10 @@ upgradeWeekendToEditable();
       const dp=d.querySelector('.datePicker'); dp.valueAsDate=ref; dp.dispatchEvent(new Event('change'));
     });
     applyTemplate();
+    // ✅ TOEVOEGEN (zorgt dat de juiste inhoud meteen aan L1/L2 hangt)
+  currentTplOnScreen = tplSel.value;                 // "L1" of "L2"
+  restoreLocalStateForTemplate(currentTplOnScreen);  // toon/initialiseer juiste staat
+
     upgradeWeekendToEditable();
     dock.hidden = true;
     $$('.day').forEach(updatePlanBoxClass);
@@ -1328,6 +2109,1236 @@ upgradeWeekendToEditable();
     if (dd) updatePlanBoxClass(dd);
     pushSnapshot();
   });
+  // ---------- FIRESTORE KOPPELING VOOR 1STE / 2DE / 3DE GRAAD ----------
+
+  // Bouwt de payload op basis van de huidige agenda op het scherm.
+  function buildAgendaPayload() {
+    const data = captureAll(); // uw bestaande functie
+    // We voegen schooljaar en timestamp toe voor archivering.
+    return {
+      schooljaar: currentSchoolYear(),
+      klas: document.getElementById('klasInput').value.trim(),
+      week: document.getElementById('weekInput').value.trim(),
+      data: data,
+      timestamp: Date.now()
+    };
+  }
+
+  async function saveAgendaToFirestore() {
+    const graad = document.getElementById('graadSelect').value;   // "1", "2", "3"
+    const klas  = document.getElementById('klasInput').value.trim();
+    const week  = document.getElementById('weekInput').value.trim();
+
+    if (!graad || !klas || !week) {
+      alert("Gelieve graad, klas en week in te vullen.");
+      return;
+    }
+
+    const payload = buildAgendaPayload();
+    const collName = "agenda_graad" + graad;     // bv. agenda_graad1
+    const docId    = klas + "_" + week;          // bv. L1A_2025-W43
+
+    try {
+      await db.collection(collName).doc(docId).set(payload);
+      alert("Agenda bewaard voor " + klas + " (" + week + ").");
+    } catch (err) {
+      console.error(err);
+      alert("Bewaren mislukt: " + err.message);
+    }
+  }
+// Hier houden we tijdelijk de versie bij die op het scherm stond
+// vóórdat we iets anders laden.
+let lastLocalAgendaBackup = null;
+
+// Hulpfunctie: zet de huidige agenda (wat je nu ziet) in de buffer.
+// We roepen dit op vóór we een andere agenda inladen.
+function backupCurrentAgenda() {
+  // captureAll() kennen we al: dat leest alles van het scherm
+  const current = captureAll();
+  // we bewaren ook de losse pictogrammen in het mededelingenpaneel
+  current.meta = current.meta || {};
+  current.meta.panelPictos = capturePanelPictos();
+  lastLocalAgendaBackup = current;
+
+  // activeer de knop "Terug naar mijn agenda"
+  const restoreBtn = document.getElementById('btnRestoreLocal');
+  if (restoreBtn) {
+    restoreBtn.disabled = false;
+  }
+}
+
+// Hulpfunctie: zet de buffer terug op het scherm als die bestaat
+function restoreBackupAgenda() {
+  if (!lastLocalAgendaBackup) {
+    alert("Er is nog geen vorige agenda om naar terug te keren.");
+    return;
+  }
+
+  // 0. Toon opnieuw uw eigen agenda en verberg de collega-agenda
+  const mainOwn   = document.getElementById('page');
+  const mainColl  = document.getElementById('pageColleague');
+  if (mainOwn)  { mainOwn.style.display  = 'block'; }
+  if (mainColl) { mainColl.style.display = 'none'; }
+if (mainOwn) {
+  mainOwn.style.background = '#fff'; // terug normaal wit voor uw eigen agenda
+}
+
+  // 1. Opschonen: niets van de collega mag blijven hangen
+  //    a) mededelingenvak leegmaken
+  const notesBodyEl = document.getElementById('notesBody');
+  if (notesBodyEl) {
+    notesBodyEl.innerHTML = '';
+  }
+
+  //    b) losse pictogrammen in het mededelingenpaneel verwijderen
+  const notesPanelEl = document.getElementById('notesPanel');
+  if (notesPanelEl) {
+    notesPanelEl.querySelectorAll('.picto-free').forEach(p => p.remove());
+  }
+
+  //    c) losse pictogrammen uit de dagen verwijderen
+  document.querySelectorAll('.day .picto-free').forEach(p => p.remove());
+
+  // 2. Titel / maand / klasicoon herstellen zoals vóór het wisselen
+  const titleEl     = document.querySelector('#titlePill');
+  const monthBoxEl  = document.querySelector('#monthBox');
+  const iconSlotEl  = document.querySelector('#classIconSlot');
+
+  if (titleEl) {
+    titleEl.textContent =
+      (lastLocalAgendaBackup.meta && lastLocalAgendaBackup.meta.title)
+        ? lastLocalAgendaBackup.meta.title
+        : 'agenda L2';
+  }
+
+  if (monthBoxEl) {
+    monthBoxEl.textContent =
+      (lastLocalAgendaBackup.meta && lastLocalAgendaBackup.meta.monthBox)
+        ? lastLocalAgendaBackup.meta.monthBox
+        : '';
+  }
+
+  if (iconSlotEl) {
+    if (lastLocalAgendaBackup.meta && lastLocalAgendaBackup.meta.classIcon) {
+      iconSlotEl.innerHTML =
+        `<img src="${lastLocalAgendaBackup.meta.classIcon}" alt="klaspictogram">`;
+    } else {
+      iconSlotEl.innerHTML = '';
+    }
+  }
+
+  // 3. Uw volledige eigen agenda terugzetten (dagen, bullets, "Ik denk aan", mededelingen, pictogrammen, enz.)
+  //    Dit vult ook opnieuw uw echte mededelingen en bijhorende pictogrammen in.
+  isApplying = true;
+  applyAll(lastLocalAgendaBackup);
+  applyPanelPictos(
+    lastLocalAgendaBackup.meta && lastLocalAgendaBackup.meta.panelPictos
+      ? lastLocalAgendaBackup.meta.panelPictos
+      : []
+  );
+  isApplying = false;
+
+  // 4. Lay-out herafstemmen
+  scheduleLayoutSync();
+}
+
+
+// Kleine melding rechtsboven tonen (of gewoon als alert fallback)
+function showToast(msg, type) {
+  // Probeer een nette melding te tonen
+  try {
+    // Bestaat er al een toast-element?
+    let box = document.getElementById('zisaToastBox');
+    if (!box) {
+      box = document.createElement('div');
+      box.id = 'zisaToastBox';
+      box.style.position = 'fixed';
+      box.style.top = '1rem';
+      box.style.right = '1rem';
+      box.style.zIndex = '99999';
+      document.body.appendChild(box);
+    }
+
+    const note = document.createElement('div');
+    note.textContent = msg;
+    note.style.background = (type === 'success') ? '#4caf50' : '#d32f2f';
+    note.style.color = '#fff';
+    note.style.padding = '.6rem .8rem';
+    note.style.marginBottom = '.5rem';
+    note.style.borderRadius = '6px';
+    note.style.fontSize = '0.9rem';
+    note.style.boxShadow = '0 6px 20px rgba(0,0,0,.2)';
+    note.style.fontWeight = '600';
+    box.appendChild(note);
+
+    // verdwijnt vanzelf na 3 seconden
+    setTimeout(() => {
+      note.remove();
+      // als box leeg is, mag box weg
+      if (!box.hasChildNodes()) {
+        box.remove();
+      }
+    }, 3000);
+  } catch(e) {
+    // Als er iets misloopt met de mooie melding: val terug op gewone alert
+    alert(msg);
+  }
+}
+
+
+// -----------------------------
+// Eigen agenda laden (definitieve versie)
+// -----------------------------
+async function loadAgendaFromFirestore() {
+  try {
+    // Waardes uit de velden bovenaan in uw toolbar
+    const graadSel = document.getElementById('graadSelect');
+    const klasInp  = document.getElementById('klasInput');
+    const weekInp  = document.getElementById('weekInput');
+
+    const graadVal = graadSel.value.trim();   // bv "1"
+    const klasVal  = klasInp.value.trim();    // bv "L2A"
+    const weekVal  = weekInp.value.trim();    // bv "nov-2025 W1"
+
+    if (!graadVal || !klasVal || !weekVal) {
+      alert("Gelieve graad, klas en week te kiezen.");
+      return;
+    }
+
+    // Collectie en document-id bepalen
+const tplNow = getTplNow();
+const colName = `agenda_graad${graadVal}`;
+
+// 1️⃣ Eerst proberen met nieuwe naam (met L1/L2)
+let docId = `${klasVal}_${weekVal}_${tplNow}`;
+let snap  = await db.collection(colName).doc(docId).get({ source: 'server' });
+
+// 2️⃣ Bestaat die nog niet? Dan proberen met oude naam (zonder L1/L2)
+if (!snap.exists) {
+  const legacyId = `${klasVal}_${weekVal}`;
+  const legacySnap = await db.collection(colName).doc(legacyId).get({ source: 'server' });
+  if (!legacySnap.exists) {
+    alert("Geen agenda gevonden voor deze klas/week.");
+    return;
+  }
+  snap  = legacySnap;
+  docId = legacyId;
+}
+
+    const payload = snap.data();
+
+  
+// --- Uniform lezen van Firestore-document ---
+// Ondersteunt nieuw (data), oud (gegevens/inhoud) én platte structuur (dagen op root)
+let inhoud = null;
+if (payload && typeof payload === "object") {
+  inhoud = payload.data || payload.gegevens || payload.inhoud || payload;
+}
+
+// Extra fallback: sommige documenten hebben 'dagen' en 'meta' rechtstreeks op root
+if ((!inhoud || typeof inhoud !== "object") && payload && payload.dagen) {
+  inhoud = { meta: payload.meta || {}, dagen: payload.dagen };
+}
+
+// Nog steeds niets bruikbaars? Dan stoppen we veilig
+if (!inhoud || typeof inhoud !== "object") {
+  alert("Onbekende datastructuur in Firestore-document.");
+  return;
+}
+
+    // 1️⃣ Voor de veiligheid: eerst huidige agenda opslaan zodat "terugzetten" werkt
+    backupCurrentAgenda();
+
+    // 2️⃣ De opgeslagen inhoud rechtstreeks inladen
+    //    - teksten, taken, mededelingen, daginhoud, zwemvinkje...
+    applyAll(inhoud);
+
+    //    - losse pictogrammen van de pictopaneel/dagen opnieuw plaatsen als die er zijn
+    if (inhoud && inhoud.meta && inhoud.meta.panelPictos) {
+      applyPanelPictos(inhoud.meta.panelPictos);
+    }
+
+    // 3️⃣ Layout opnieuw laten schalen zodat 'has-tasks', hoogtes, etc. kloppen
+    scheduleLayoutSync();
+
+    // 4️⃣ Succesboodschap
+    showToast("Agenda succesvol geladen.", "success");
+
+   // 5️⃣ >>> NIEUW: buffer van het ACTIEVE sjabloon updaten <<<
+currentTplOnScreen = tplSel.value;              // L1 of L2, expliciet vastzetten
+const snapNow = captureAll();
+snapNow.meta.panelPictos = capturePanelPictos();
+localStateByTemplate[currentTplOnScreen] = snapNow;
+
+  } catch (err) {
+    console.error(err);
+    alert("Fout bij het laden van de agenda: " + err.message);
+  }
+}
+
+// ---------- MAAND- EN WEEKSELECTIE (per maand gegroepeerd) ----------
+let weeksByMonth = {};
+
+async function fetchWeeksForClass() {
+  const graad = document.getElementById('graadSelect').value;
+  const klas  = document.getElementById('klasInput').value.trim();
+  const maandSelect = document.getElementById('maandSelect');
+  const weekSelect  = document.getElementById('weekSelect');
+
+  if (!graad || !klas) {
+    alert("Eerst graad en klas invullen.");
+    return;
+  }
+
+  maandSelect.innerHTML = '<option value="">(kies maand)</option>';
+  weekSelect.innerHTML  = '<option value="">(kies week)</option>';
+  weekSelect.disabled   = true;
+  weeksByMonth = {};
+
+  const collName = "agenda_graad" + graad;
+  try {
+    const qSnap = await db.collection(collName)
+                          .where('klas', '==', klas)
+                          .get();
+
+    qSnap.forEach(doc => {
+      const d = doc.data();
+      if (!d || !d.week) return;
+      const fullWeek = d.week;                     // bv. "nov-2025 W2"
+      const parts = fullWeek.split(' ');
+      if (parts.length < 2) return;
+      const maandKey = parts[0];                   // bv. "nov-2025"
+      if (!weeksByMonth[maandKey]) weeksByMonth[maandKey] = [];
+      if (!weeksByMonth[maandKey].includes(fullWeek))
+        weeksByMonth[maandKey].push(fullWeek);
+    });
+
+    for (const m in weeksByMonth) weeksByMonth[m].sort();
+    const maanden = Object.keys(weeksByMonth).sort();
+    if (maanden.length === 0) {
+      maandSelect.innerHTML = '<option value="">(geen opgeslagen weken)</option>';
+      return;
+    }
+    maanden.forEach(m => {
+      const opt = document.createElement('option');
+      opt.value = m;
+      opt.textContent = m;
+      maandSelect.appendChild(opt);
+    });
+  } catch (err) {
+    console.error(err);
+    alert("Kon weken niet ophalen: " + err.message);
+  }
+}
+
+function updateWeeksForChosenMonth() {
+  const maandSelect = document.getElementById('maandSelect');
+  const weekSelect  = document.getElementById('weekSelect');
+  const maandKey = maandSelect.value;
+
+  weekSelect.innerHTML = '<option value="">(kies week)</option>';
+  if (!maandKey || !weeksByMonth[maandKey]) {
+    weekSelect.disabled = true;
+    return;
+  }
+  weeksByMonth[maandKey].forEach(w => {
+    const opt = document.createElement('option');
+    opt.value = w;
+    opt.textContent = w;
+    weekSelect.appendChild(opt);
+  });
+  weekSelect.disabled = false;
+}
+
+async function loadChosenWeek() {
+  const weekSelect = document.getElementById('weekSelect');
+  const chosenWeek = weekSelect.value;
+  if (!chosenWeek) {
+    alert("Eerst een week kiezen.");
+    return;
+  }
+  document.getElementById('weekInput').value = chosenWeek;
+  await loadAgendaFromFirestore();
+}
+
+// Events koppelen
+// Events koppelen (alleen als de elementen bestaan)
+const btnFetchWeeks = document.getElementById('btnFetchWeeks');
+if (btnFetchWeeks) {
+  btnFetchWeeks.addEventListener('click', fetchWeeksForClass);
+}
+
+const maandSelectMain = document.getElementById('maandSelect');
+if (maandSelectMain) {
+  maandSelectMain.addEventListener('change', updateWeeksForChosenMonth);
+}
+
+const btnLoadChosenWeek = document.getElementById('btnLoadChosenWeek');
+if (btnLoadChosenWeek) {
+  btnLoadChosenWeek.addEventListener('click', loadChosenWeek);
+}
+
+const btnRestoreLocal = document.getElementById('btnRestoreLocal');
+if (btnRestoreLocal) {
+  btnRestoreLocal.addEventListener('click', () => {
+    // 1. Zet mijn vorige agenda-inhoud terug
+    if (typeof restoreBackupAgenda === 'function') {
+      restoreBackupAgenda();
+    }
+
+    // 2. Wissel visueel terug: toon mijn page, verberg collega
+    const myPage = document.getElementById('page');
+    const colPage = document.getElementById('pageColleague');
+    if (myPage)  myPage.style.display = '';
+    if (colPage) colPage.style.display = 'none';
+
+    // 3. (optioneel) zet de knop weer uit tot volgende keer
+    btnRestoreLocal.disabled = true;
+  });
+}
+
+// -----------------------------
+// Popup vooraf invullen vanuit toolbar
+// -----------------------------
+function vulPopupMetToolbar() {
+  // 1. Lees huidige waarden uit de werkbalk bovenaan
+  const mainGraadEl = document.getElementById('graadSelect');
+  const mainKlasEl  = document.getElementById('klasInput');
+  const mainWeekEl  = document.getElementById('weekInput');
+
+  const mainGraad = mainGraadEl ? mainGraadEl.value : "";
+  const mainKlas  = mainKlasEl  ? mainKlasEl.value.trim() : "";
+  const mainWeek  = mainWeekEl  ? mainWeekEl.value.trim() : "";
+
+  // Verwacht formaat mainWeek zoals "nov-2025 W1"
+  // => maandKey = "nov-2025"
+  let maandKey = "";
+  if (mainWeek.includes(" ")) {
+    maandKey = mainWeek.split(" ")[0];
+  }
+
+  // 2. Pak de velden in de popup
+  const colleagueGraadSel = document.getElementById('colleagueGraad');
+  const colleagueKlasInp  = document.getElementById('colleagueKlas');
+  const colleagueMaandSel = document.getElementById('colleagueMaand');
+  const colleagueWeekSel  = document.getElementById('colleagueWeek');
+
+  // 3. Graad & klas invullen
+  if (colleagueGraadSel && mainGraad) {
+    colleagueGraadSel.value = mainGraad;
+  }
+  if (colleagueKlasInp && mainKlas) {
+    colleagueKlasInp.value = mainKlas;
+  }
+
+  // 4. Maand-jaar dropdown opbouwen
+  if (colleagueMaandSel) {
+    // eerst volledig leegmaken
+    colleagueMaandSel.innerHTML = "";
+
+    // standaardoptie
+    const optDefault = document.createElement('option');
+    optDefault.value = "";
+    optDefault.textContent = "(kies maand)";
+    colleagueMaandSel.appendChild(optDefault);
+
+    // echte maand toevoegen als we ze kunnen afleiden
+    if (maandKey) {
+      const optReal = document.createElement('option');
+      optReal.value = maandKey;      // bv. "nov-2025"
+      optReal.textContent = maandKey;
+      colleagueMaandSel.appendChild(optReal);
+
+      // selecteer ze meteen
+      colleagueMaandSel.value = maandKey;
+    } else {
+      // geen geldige week -> blijft "(kies maand)"
+      colleagueMaandSel.value = "";
+    }
+  }
+
+  // 5. Week dropdown opbouwen
+  if (colleagueWeekSel) {
+    colleagueWeekSel.innerHTML = "";
+
+    const optDefaultW = document.createElement('option');
+    optDefaultW.value = "";
+    optDefaultW.textContent = "(kies week)";
+    colleagueWeekSel.appendChild(optDefaultW);
+
+    if (mainWeek) {
+      const optW = document.createElement('option');
+      optW.value = mainWeek;         // bv. "nov-2025 W1"
+      optW.textContent = mainWeek;
+      colleagueWeekSel.appendChild(optW);
+
+      colleagueWeekSel.disabled = false;
+      colleagueWeekSel.value = mainWeek;
+    } else {
+      colleagueWeekSel.disabled = true;
+      colleagueWeekSel.value = "";
+    }
+  }
+}
+
+
+// -----------------------------
+// Agenda collega: knoppen koppelen
+// -----------------------------
+const btnOpenColleague = document.getElementById('btnOpenColleague');
+const btnCancelColleague = document.getElementById('btnCancelColleague');
+const btnLoadColleague = document.getElementById('btnLoadColleague');
+const colleagueOverlay = document.getElementById('colleagueOverlay');
+
+if (btnOpenColleague && colleagueOverlay) {
+  btnOpenColleague.addEventListener('click', () => {
+    // 0. Zorg dat weekInput effectief een waarde heeft,
+    //    anders blijft de popup leeg.
+    const weekField = document.getElementById('weekInput');
+    if (weekField && !weekField.value.trim()) {
+      // Zet hier de week die u wil bekijken / die u bewaard hebt.
+      // U kunt dit gerust aanpassen naar bv. "nov-2025 W1" of "dec-2025 W2".
+      weekField.value = "nov-2025 W1";
+    }
+
+    // 1. Popup tonen
+    colleagueOverlay.style.display = 'flex';
+
+    // 2. Lees huidige waarden uit de bovenbalk (nu mét ingevulde week)
+    const mainGraad = document.getElementById('graadSelect')?.value || "";
+    const mainKlas  = document.getElementById('klasInput')?.value.trim() || "";
+    const mainWeek  = document.getElementById('weekInput')?.value.trim() || "";
+
+    // 3. Bepaal maandKey uit bv. "nov-2025 W1"
+    let maandKey = "";
+    if (mainWeek.includes(" ")) {
+      maandKey = mainWeek.split(" ")[0]; // "nov-2025"
+    } else if (mainWeek) {
+      maandKey = mainWeek;
+    }
+
+    // 4. Pak de velden in de popup
+    const colleagueGraadSel   = document.getElementById('colleagueGraad');
+    const colleagueKlasInp    = document.getElementById('colleagueKlas');
+    const colleagueMaandSel   = document.getElementById('colleagueMaand');
+    const colleagueWeekSel    = document.getElementById('colleagueWeek');
+
+    // 5. Vul graad en klas alvast in
+    if (colleagueGraadSel && mainGraad) {
+      colleagueGraadSel.value = mainGraad;
+    }
+    if (colleagueKlasInp && mainKlas) {
+      colleagueKlasInp.value = mainKlas;
+    }
+
+    // 6. Vul Maand-jaar dropdown
+    if (colleagueMaandSel) {
+      colleagueMaandSel.innerHTML = "";
+      const defaultOpt = document.createElement('option');
+      defaultOpt.value = "";
+      defaultOpt.textContent = "(kies maand)";
+      colleagueMaandSel.appendChild(defaultOpt);
+
+      if (maandKey) {
+        const opt = document.createElement('option');
+        opt.value = maandKey;
+        opt.textContent = maandKey;
+        colleagueMaandSel.appendChild(opt);
+
+        colleagueMaandSel.value = maandKey;
+      } else {
+        colleagueMaandSel.value = "";
+      }
+    }
+
+    // 7. Vul Week dropdown
+    if (colleagueWeekSel) {
+      colleagueWeekSel.innerHTML = "";
+      const defaultWeek = document.createElement('option');
+      defaultWeek.value = "";
+      defaultWeek.textContent = "(kies week)";
+      colleagueWeekSel.appendChild(defaultWeek);
+
+      if (mainWeek) {
+        const optW = document.createElement('option');
+        optW.value = mainWeek;
+        optW.textContent = mainWeek;
+        colleagueWeekSel.appendChild(optW);
+
+        colleagueWeekSel.disabled = false;
+        colleagueWeekSel.value = mainWeek;
+      } else {
+        colleagueWeekSel.disabled = true;
+        colleagueWeekSel.value = "";
+      }
+    }
+     // Als ik net een collega gekozen heb, vul dat opnieuw in.
+ if (lastColleagueSelection) {
+   const colleagueGraadSel = document.getElementById('colleagueGraad');
+   const colleagueKlasInp  = document.getElementById('colleagueKlas');
+   const colleagueWeekSel  = document.getElementById('colleagueWeek');
+
+   if (colleagueGraadSel && lastColleagueSelection.graad) {
+     colleagueGraadSel.value = lastColleagueSelection.graad;
+   }
+   if (colleagueKlasInp && lastColleagueSelection.klas) {
+     colleagueKlasInp.value = lastColleagueSelection.klas;
+   }
+   if (colleagueWeekSel && lastColleagueSelection.week) {
+     // week dropdown wordt later toch opgebouwd
+     colleagueWeekSel.innerHTML = "";
+     const optW = document.createElement('option');
+     optW.value = lastColleagueSelection.week;
+     optW.textContent = lastColleagueSelection.week;
+     colleagueWeekSel.appendChild(optW);
+     colleagueWeekSel.disabled = false;
+     colleagueWeekSel.value = lastColleagueSelection.week;
+   }
+ }
+  });
+}
+
+if (btnCancelColleague && colleagueOverlay) {
+  btnCancelColleague.addEventListener('click', () => {
+    colleagueOverlay.style.display = 'none';
+  });
+}
+
+if (btnLoadColleague) {
+  btnLoadColleague.addEventListener('click', async () => {
+    // 1. Bewaar mijn huidige agenda zodat ik terug kan
+    if (typeof backupCurrentAgenda === 'function') {
+      backupCurrentAgenda();
+          // Onthoud wat ik net gekozen heb
+    lastColleagueSelection = {
+      graad: document.getElementById('colleagueGraad')?.value || "",
+      klas:  document.getElementById('colleagueKlas')?.value.trim() || "",
+      maand: document.getElementById('colleagueMaand')?.value || "",
+      week:  document.getElementById('colleagueWeek')?.value || ""
+    };
+    }
+
+    // Onthoud wie ik gekozen heb, zodat de popup het straks opnieuw invult
+    lastColleagueSelection = {
+      graad: document.getElementById('colleagueGraad')?.value || "",
+      klas:  document.getElementById('colleagueKlas')?.value.trim() || "",
+      week:  document.getElementById('colleagueWeek')?.value.trim() || ""
+    };
+
+    // 2. Laad de collega-agenda in mijn vaste layout (met maandag-dinsdag-…)
+    await loadColleagueFromPopup();
+
+    // 3. Sluit de popup
+    colleagueOverlay.style.display = 'none';
+
+    // 4. Toon altijd gewoon mijn pagina, verberg de gele pagina
+    const myPage  = document.getElementById('page');
+    const colPage = document.getElementById('pageColleague');
+    if (myPage)  myPage.style.display = '';
+    if (colPage) colPage.style.display = 'none';
+
+    // 5. Knop 'Terug naar mijn agenda' actief laten (dat doet loadColleagueFromPopup bij u al)
+  });
+}
+
+
+
+// Koppeling tussen maand en week in de popup
+const colleagueMaand = document.getElementById('colleagueMaand');
+if (colleagueMaand) {
+  colleagueMaand.addEventListener('change', updateWeeksForChosenPopupMonth);
+}
+
+// ----------------------
+// COLLEGA-AGENDA LOGICA
+// ----------------------
+
+// tijdelijke opslag: per maand -> lijst van weken
+let popupWeeksByMonth = {};
+
+// Toon mijn eigen agenda-blad en verberg collega-blad
+function showMyAgenda(){
+  const mine = document.getElementById('page');
+  const col  = document.getElementById('pageColleague');
+  if (mine) mine.style.display = '';
+  if (col)  col.style.display  = 'none';
+}
+
+
+// Haal voor de opgegeven graad+klas alle weken op uit Firestore,
+// groepeer per maand ("nov-2025", "dec-2025", ...), vul de maand-select.
+async function fetchMonthsForPopup(){
+  const graadSel = document.getElementById('colleagueGraad');
+  const klasInp  = document.getElementById('colleagueKlas');
+  const maandSel = document.getElementById('colleagueMaand');
+  const weekSel  = document.getElementById('colleagueWeek');
+
+  if (!graadSel || !klasInp || !maandSel || !weekSel) return;
+
+  const graad = graadSel.value;
+  const klas  = klasInp.value.trim();
+
+  // reset dropdowns
+  maandSel.innerHTML = '<option value="">(kies maand)</option>';
+  weekSel.innerHTML  = '<option value="">(kies week)</option>';
+  weekSel.disabled   = true;
+  popupWeeksByMonth  = {};
+
+  if (!graad || !klas) {
+    return;
+  }
+
+  const collName = "agenda_graad" + graad;
+
+  try {
+    const qSnap = await db.collection(collName)
+                          .where('klas', '==', klas)
+                          .get();
+
+    qSnap.forEach(doc => {
+      const d = doc.data();
+      if (!d || !d.week) return;
+      // d.week bv. "nov-2025 W2"
+      const fullWeek = d.week;
+      const parts = fullWeek.split(' ');
+      if (parts.length < 2) return;
+      const maandKey = parts[0]; // "nov-2025"
+
+      if (!popupWeeksByMonth[maandKey]) {
+        popupWeeksByMonth[maandKey] = [];
+      }
+      if (!popupWeeksByMonth[maandKey].includes(fullWeek)) {
+        popupWeeksByMonth[maandKey].push(fullWeek);
+      }
+    });
+
+    // sorteer de weken en bouw maand-select
+    for (const m in popupWeeksByMonth) {
+      popupWeeksByMonth[m].sort();
+    }
+
+    const maanden = Object.keys(popupWeeksByMonth).sort();
+    if (maanden.length === 0){
+      maandSel.innerHTML = '<option value="">(geen opgeslagen weken)</option>';
+      return;
+    }
+
+    maanden.forEach(m => {
+      const opt = document.createElement('option');
+      opt.value = m;
+      opt.textContent = m;
+      maandSel.appendChild(opt);
+    });
+
+  } catch(err){
+    console.error(err);
+    alert("Kon de weken voor deze klas niet ophalen: " + err.message);
+  }
+}
+
+// Wanneer in de popup een maand gekozen wordt, vul de week-select
+function updateWeeksForChosenPopupMonth(){
+  const maandSel = document.getElementById('colleagueMaand');
+  const weekSel  = document.getElementById('colleagueWeek');
+  if (!maandSel || !weekSel) return;
+
+  const maandKey = maandSel.value;
+  weekSel.innerHTML = '<option value="">(kies week)</option>';
+
+  if (!maandKey || !popupWeeksByMonth[maandKey]) {
+    weekSel.disabled = true;
+    return;
+  }
+
+  popupWeeksByMonth[maandKey].forEach(w => {
+    const opt = document.createElement('option');
+    opt.value = w;
+    opt.textContent = w;
+    weekSel.appendChild(opt);
+  });
+  weekSel.disabled = false;
+}
+
+function normalizeFirestoreAgenda(bron, klasVal, weekVal, maandVal) {
+    // 0) Veiligheidsnet
+  const root = (bron && typeof bron === "object") ? bron : {};
+
+  // 1) Datalaag: eerst root.data, dan root.gegevens, anders root
+  const data =
+    (root.data && typeof root.data === "object")         ? root.data :
+    (root.gegevens && typeof root.gegevens === "object") ? root.gegevens :
+    root;
+
+  // 2) Meta
+  const metaSrc  = data.meta || root.meta || {};
+  const title    = (metaSrc.title || root.titel || `agenda ${klasVal || ""}`).trim();
+  const monthBox = metaSrc.monthBox || maandVal || weekVal || root.week || "";
+  const notes    = metaSrc.notes || data.mededelingen || root.mededelingen || "";
+
+  // 3) Dagen
+  const daysSrc =
+    (data.dagen && typeof data.dagen === "object") ? data.dagen :
+    (data.days  && typeof data.days  === "object") ? data.days  :
+    data;
+
+  const days = {};
+  Object.keys(daysSrc || {}).forEach(key => {
+    const d = daysSrc[key] || {};
+    days[key] = {
+      plan:   d.plan || d.planning || "",
+      bring:  d.brengen || d.bring || d.ikDenkAan || "",
+      geefaf: d.geefaf || d.ikGeefAf || "",
+      date:   d.datum || d.date || "",
+      pictos: d.pictogrammen || d.pictos || d.pictosVrij || {}
+    };
+  });
+
+  return { meta: { title, monthBox, notes }, days };
+}
+
+
+
+// Deze functie leest de gekozen collega-agenda uit Firestore,
+// bouwt er een leesbare versie van,
+// stopt die in #pageColleague,
+// en schakelt naar het collega-blad.
+// -----------------------------
+// Collega-agenda laden vanuit popup
+// -----------------------------
+// -----------------------------
+// Collega-agenda laden (herstelde versie)
+// -----------------------------
+async function loadColleagueFromPopup() {
+  // 1. Waardes uit de popup halen
+  const graadVal = document.getElementById('colleagueGraad').value.trim();   // "1", "2", "3"
+  const klasVal  = document.getElementById('colleagueKlas').value.trim();    // bv "L2A"
+  const maandVal = document.getElementById('colleagueMaand').value.trim();   // bv "nov-2025"
+  const weekVal  = document.getElementById('colleagueWeek').value.trim();    // bv "nov-2025 W1"
+
+  if (!graadVal || !klasVal || !weekVal) {
+    alert("Gelieve graad, klas en week te kiezen.");
+    return;
+  }
+
+  try {
+  // 2. De juiste collectie en het juiste document bepalen (auto-detect L1/L2 + legacy)
+const collName = "agenda_graad" + graadVal;
+
+// We proberen in deze volgorde: _L1 → _L2 → legacy (zonder suffix)
+const idL1    = `${klasVal}_${weekVal}_L1`;
+const idL2    = `${klasVal}_${weekVal}_L2`;
+const idLegacy= `${klasVal}_${weekVal}`;
+
+const tried = [];
+async function getDoc(id){
+  tried.push(id);
+  return await db.collection(collName).doc(id).get({ source: 'server' });
+}
+
+let snap  = await getDoc(idL1);
+let docId = idL1;
+
+if (!snap.exists) {
+  snap  = await getDoc(idL2);
+  docId = idL2;
+}
+if (!snap.exists) {
+  snap  = await getDoc(idLegacy);
+  docId = idLegacy;
+}
+
+if (!snap.exists) {
+  alert(`Geen collega-agenda gevonden voor ${klasVal} — ${weekVal}.\nGeprobeerd: ${tried.join(', ')}`);
+  return;
+}
+
+
+// 1. Haal ruwe Firestore-data op
+// ---- UNIFORM LEZEN VAN DOCUMENT ----
+const payload = snap.data() || {};
+
+// Ondersteun nieuw (data), oud (gegevens/inhoud) en “platte” saves (root)
+// → val anders veilig terug op een leeg object.
+let inhoud = null;
+if (payload && typeof payload === "object") {
+  inhoud = payload.data || payload.gegevens || payload.inhoud || payload;
+}
+
+// Als het nog steeds niets bruikbaars lijkt, probeer platte 'dagen'
+if ((!inhoud || typeof inhoud !== "object") && payload && payload.dagen) {
+  inhoud = { meta: payload.meta || {}, dagen: payload.dagen };
+}
+
+if (!inhoud || typeof inhoud !== "object") {
+  alert("Onbekende datastructuur in Firestore-document.");
+  return;
+}
+
+
+// 5. Normaliseer naar ons interne formaat — LET OP: geef 'inhoud' mee
+const full = normalizeFirestoreAgenda(
+  inhoud,      // <<< niet 'payload', maar 'inhoud'
+  klasVal,
+  weekVal,
+  maandVal
+);
+
+
+
+// 6. Laat ook zien wat normalizeFirestoreAgenda teruggeeft
+console.log("DEBUG collega full =", full);
+
+// 7. Zet dit weg voor de rest van de code
+lastColleagueData = full;
+
+
+    // Vul de collega-layout op de gele pagina
+    applyAllToColleague(full);
+
+    // Koptekst en maandvak bovenaan collega-scherm ook invullen op basis van full/meta
+    const titleSpan = document.getElementById('colleagueHeaderTitle');
+    if (titleSpan) {
+      titleSpan.textContent = `${full.meta.title} — ${weekVal}`;
+    }
+    const monthBoxEl = document.getElementById('colleagueMonthBox');
+    if (monthBoxEl) {
+      monthBoxEl.textContent = full.meta.monthBox || maandVal || weekVal || '';
+    }
+
+
+    // 6. Popup sluiten en wisselen naar collega-weergave
+    document.getElementById('colleagueOverlay').style.display = 'none';
+    document.getElementById('page').style.display = 'none';
+    document.getElementById('pageColleague').style.display = '';
+
+    // 7. "Terug naar mijn agenda" actief zetten
+    document.getElementById('btnRestoreLocal').disabled = false;
+
+ } catch (err) {
+  console.error("Fout bij laden collega:", err);
+  alert("Fout bij laden collega: " + err.message);
+}
+}
+
+
+// -----------------------------
+// Overlay openen/sluiten
+// -----------------------------
+document.getElementById('btnOpenColleague').addEventListener('click', () => {
+  // open de keuze-popup
+  document.getElementById('colleagueOverlay').style.display = 'flex';
+});
+
+document.getElementById('btnCancelColleague').addEventListener('click', () => {
+  document.getElementById('colleagueOverlay').style.display = 'none';
+});
+
+document.getElementById('btnLoadColleague').addEventListener('click', async () => {
+  // laad collega-gegevens en toon pageColleague
+  await loadColleagueFromPopup();
+});
+
+// -----------------------------
+// Terug naar mijn eigen agenda
+// -----------------------------
+document.getElementById('btnRestoreLocal').addEventListener('click', () => {
+  const myPage  = document.getElementById('page');
+  const colPage = document.getElementById('pageColleague');
+
+  // verberg collega, toon mij
+  if (colPage) colPage.style.display = 'none';
+  if (myPage)  myPage.style.display  = '';
+
+  // géén auto-kopie nemen, dus ook geen overschrijven
+  // gewoon visueel terug naar mijn agenda
+
+  // optioneel: knop weer disablen
+  const restoreBtn = document.getElementById('btnRestoreLocal');
+  if (restoreBtn) {
+    restoreBtn.disabled = true;
+  }
+});
+
+// -----------------------------
+// Overnemen van collegaonderdelen
+// -----------------------------
+function takeOverFromColleague() {
+  if (!lastColleagueData) {
+    alert("Er is nog geen collega-agenda geladen.");
+    return;
+  }
+
+  const from = document.getElementById('copyFromSelect').value;    // "0","1","2","3","4","5","6","notes"
+  const part = document.getElementById('copyPartSelect').value;    // "all","plan","bring","notes"
+  const to   = document.getElementById('pasteToSelect').value;     // "0","1","2","3","4","5","6","notes"
+
+  if (!from || !part || !to) {
+    alert("Gelieve Van, Onderdeel en Naar te kiezen.");
+    return;
+  }
+
+  // Hulpfunctie: toon terug mijn agenda (witte) en verberg collega (gele)
+  function showMyAgendaNow() {
+    const myPage  = document.getElementById('page');
+    const colPage = document.getElementById('pageColleague');
+    if (colPage) colPage.style.display = 'none';
+    if (myPage)  myPage.style.display  = '';
+    const restoreBtn = document.getElementById('btnRestoreLocal');
+    if (restoreBtn) restoreBtn.disabled = true;
+  }
+
+  // -----------------
+  // 1. Mededelingen
+  // -----------------
+  if (part === 'notes') {
+    // Alleen geldig als van "notes" naar "notes"
+    if (from !== 'notes' || to !== 'notes') {
+      alert('Mededelingen kan enkel van "mededelingen" naar "mededelingen".');
+      return;
+    }
+
+    const myNotesBody = document.getElementById('notesBody'); // witte agenda
+    if (myNotesBody) {
+      myNotesBody.innerHTML = lastColleagueData.meta?.notes || '';
+    }
+
+    pushSnapshot();
+    scheduleLayoutSync();
+    showMyAgendaNow();
+    alert("Mededelingen overgenomen.");
+    return;
+  }
+
+  // Vanaf hier werken we met dagen ("0" t.e.m. "6").
+  // Als iemand toch 'notes' kiest in Van/Naar terwijl part niet 'notes' is: fout.
+  if (from === 'notes' || to === 'notes') {
+    alert("Voor 'Ik plan' of 'Ik denk aan' moet u een dag (maandag, dinsdag, ...) kiezen.");
+    return;
+  }
+
+  // Haal bron-dagdata van collega op
+  const srcDayData = lastColleagueData.days && lastColleagueData.days[from];
+  if (!srcDayData) {
+    alert("Kon de gekozen dag bij de collega niet vinden.");
+    return;
+  }
+
+  // Zoek mijn DOEL-dag in mijn EIGEN agenda (witte pagina), niet in de gele
+  const myDayEl = document.querySelector(
+    '#page .day[data-day-index="' + to + '"]'
+  );
+  if (!myDayEl) {
+    alert("Kon mijn doeldag niet vinden in mijn agenda.");
+    return;
+  }
+
+  // Helper om het plan-gedeelte ('Ik plan', of bij vrijdag 'Ik geef af') van één dag te zetten
+  function pastePlanOnly(targetDayEl, srcDayObj, targetIndex) {
+    const planBoxEl = targetDayEl.querySelector('[data-key="d' + targetIndex + '.plan"]');
+    if (!planBoxEl) return;
+
+    // We zetten alleen de HTML die hoort bij plan.
+    // srcDayObj.plan is al de HTML van de planBox van de collega.
+    planBoxEl.innerHTML = srcDayObj.plan || '';
+
+    // daarna de verwijder-knopjes en editbaarheid herstellen
+    ensureTaskDeleteButtons(targetDayEl);
+    ensureTaskEditable(targetDayEl);
+
+    // class 'has-tasks' juist zetten
+    const list = planBoxEl.querySelector('.tasklist');
+    const planWrapper = planBoxEl.closest('.planBox');
+    if (planWrapper) {
+      const has = list && list.querySelector('li');
+      planWrapper.classList.toggle('has-tasks', !!has);
+    }
+  }
+
+  // Helper om alleen "Ik denk aan" te zetten
+  function pasteBringOnly(targetDayEl, srcDayObj, targetIndex) {
+    const bringEl = targetDayEl.querySelector('[data-key="d' + targetIndex + '.bring"]');
+    if (!bringEl) return;
+    bringEl.innerHTML = srcDayObj.bring || '';
+  }
+
+  // Helper om pictogrammen van die ene dag te kopiëren
+  function pastePictosForDay(targetDayEl, srcDayObj, targetIndex) {
+    // Verwijder bestaande vrije pictogrammen enkel in deze dag
+    targetDayEl.querySelectorAll('.picto-free').forEach(n => n.remove());
+
+    if (srcDayObj.pictos && srcDayObj.pictos.length > 0) {
+      srcDayObj.pictos.forEach(p => {
+        const node = makeFreePicto(p.src);
+        node.style.left  = p.left  || '10px';
+        node.style.top   = p.top   || '10px';
+        if (p.width) node.style.width = p.width;
+
+        // host bepalen ('bring' of 'body')
+        let hostEl = targetDayEl.querySelector('.body') || targetDayEl;
+        if (p.host === 'bring') {
+          const candidate = targetDayEl.querySelector('[data-key="d' + targetIndex + '.bring"]');
+          if (candidate) hostEl = candidate;
+          node.dataset.host = 'bring';
+        } else {
+          node.dataset.host = 'body';
+        }
+
+        hostEl.appendChild(node);
+      });
+    }
+
+    // stijlvariabelen (planFS, gap, bullet, bringFS) van collega meenemen voor die dag
+    if (srcDayObj.vars) {
+      if (srcDayObj.vars.planFS)  targetDayEl.style.setProperty('--plan-fs',  srcDayObj.vars.planFS);
+      if (srcDayObj.vars.gap)     targetDayEl.style.setProperty('--task-gap', srcDayObj.vars.gap);
+      if (srcDayObj.vars.bullet)  targetDayEl.style.setProperty('--bullet',   srcDayObj.vars.bullet);
+      if (srcDayObj.vars.bringFS) targetDayEl.style.setProperty('--bring-fs', srcDayObj.vars.bringFS);
+    }
+  }
+
+  // -----------------
+  // 2. Onderdeel verwerken
+  // -----------------
+  if (part === 'plan') {
+    // Enkel "Ik plan" van die ene dag
+    pastePlanOnly(myDayEl, srcDayData, to);
+
+  } else if (part === 'bring') {
+    // Enkel "Ik denk aan"
+    pasteBringOnly(myDayEl, srcDayData, to);
+
+  } else if (part === 'all') {
+    // Hele dag (plan + denk aan + pictogrammen) van die dag,
+    // MAAR NOG STEEDS ALLEEN die ene geselecteerde dag.
+    pastePlanOnly(myDayEl, srcDayData, to);
+    pasteBringOnly(myDayEl, srcDayData, to);
+    pastePictosForDay(myDayEl, srcDayData, to);
+
+  } else {
+    alert("Onbekend onderdeel. (plan / bring / all / notes)");
+    return;
+  }
+
+  // -----------------
+  // 3. Afronden
+  // -----------------
+  pushSnapshot();
+  scheduleLayoutSync();
+  showMyAgendaNow();
+  alert("Overgenomen uit collega.");
+}
+
+
+// Koppeling met de knop "Neem over"
+const btnTakeOver = document.getElementById('btnTakeOver');
+if (btnTakeOver) {
+  btnTakeOver.addEventListener('click', takeOverFromColleague);
+}
+
+  // ---------------------------------------------------------------------
+// --- Firestore opslaan & laden ---
+
+async function saveToFirestore(overrideWeekName){
+  // 1) Toolbar-velden veilig ophalen
+  const graadSel = document.getElementById('graadSelect');
+  const klasInp  = document.getElementById('klasInput');
+  const weekInp  = document.getElementById('weekInput');
+
+  if (!graadSel || !klasInp || !weekInp) {
+    console.error('Toolbar veld ontbreekt:', { graadSel, klasInp, weekInp });
+    alert('Kan niet bewaren: niet alle invulvelden (graad/klas/week) zijn gevonden.');
+    return;
+  }
+
+  // 2) Waarden
+  const graadVal = (graadSel.value || '').trim();   // "1"
+  const klasVal  = (klasInp.value  || '').trim();   // bv. "L2A"
+  const weekVal  = ((overrideWeekName ?? weekInp.value) || '').trim(); // bv. "nov-2025 W1"
+  if (!graadVal || !klasVal || !weekVal) {
+    alert('Vul graad, klas en week in voor je bewaart.');
+    return;
+  }
+
+  // 3) Documentnaam met L1/L2
+  const collName = 'agenda_graad' + graadVal;
+  const tplNow   = getTplNow();                     // << gebruik de helper
+  const docId    = `${klasVal}_${weekVal}_${tplNow}`;
+
+  // 4) Inhoud verzamelen en panel-pictogrammen meeschrijven
+  const data = captureAll();
+  data.meta.panelPictos = capturePanelPictos();
+  data.meta.updatedAt = new Date().toISOString();
+
+  console.log('Payload dat we gaan opslaan:', data, '→', collName, '/', docId);
+
+ // 5) Wegschrijven
+await db.collection(collName).doc(docId).set(
+  {
+    data, // <-- uw volledige agenda (zoals voordien)
+    // 🔎 extra velden voor zoeken en overzicht:
+    graad: String(graadVal),
+    klas: klasVal,
+    tpl: tplNow,
+    week: weekVal,
+    maand: monthBox.textContent.trim(),
+    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+  },
+  { merge: true }
+);
+
+alert(`Agenda bewaard: ${docId}`);
+
+}
+
+
+// 1. Pak de knoppen
+const btnSaveFS     = document.getElementById('btnSaveFS');
+const btnSaveCopyFS = document.getElementById('btnSaveCopyFS');
+
+// 2. Haal eventuele oude click-handlers weg (voor het geval ze al eerder gekoppeld werden)
+//    We doen dit door cloneNode-truc: we vervangen de knoppen door een kloon zonder listeners.
+if (btnSaveFS) {
+  const nieuwBtnSave = btnSaveFS.cloneNode(true);
+  btnSaveFS.parentNode.replaceChild(nieuwBtnSave, btnSaveFS);
+
+  // en herhaal voor kopie-knop alleen als ze bestaat
+}
+if (btnSaveCopyFS) {
+  const nieuwBtnCopy = btnSaveCopyFS.cloneNode(true);
+  btnSaveCopyFS.parentNode.replaceChild(nieuwBtnCopy, btnSaveCopyFS);
+}
+
+// 3. Zoek de knoppen opnieuw na het klonen
+const freshBtnSave  = document.getElementById('btnSaveFS');
+const freshBtnCopy  = document.getElementById('btnSaveCopyFS');
+
+// 4. Koppel onze NIEUWE handlers
+if (freshBtnSave) {
+  freshBtnSave.onclick = async () => {
+    console.log("DEBUG: klik op Bewaar met NIEUWE saveToFirestore");
+    await saveToFirestore(null);
+  };
+}
+
+if (freshBtnCopy) {
+  freshBtnCopy.onclick = async () => {
+    console.log("DEBUG: klik op Bewaar als kopie... met NIEUWE saveToFirestore");
+    const huidige = document.getElementById('weekInput').value.trim();
+    const nieuw = window.prompt(
+      "Bewaar kopie als welke weeknaam?\n(bv. nov-2025 W2)",
+      huidige ? huidige : "nov-2025 W2"
+    );
+    if(!nieuw) return;
+    await saveToFirestore(nieuw);
+  };
+}
+const freshBtnLoad = document.getElementById('btnLoadFS');
+if (freshBtnLoad) {
+  freshBtnLoad.onclick = async () => {
+    console.log("DEBUG: klik op Laad (van Firestore)");
+    await loadAgendaFromFirestore();
+  };
+}
 
 })();
 </script>
