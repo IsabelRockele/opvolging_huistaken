@@ -701,6 +701,12 @@ btnFindFS?.addEventListener('click', () => {
 btnCloseFind?.addEventListener('click', () => { findOverlay.style.display = 'none'; });
 btnRunFind?.addEventListener('click', runFindQuery);
 
+// Hulpfunctie om week uit docId te halen (vb. L2A_nov-2025 W1_L2 → nov-2025 W1)
+function __weekFromDocId(id){
+  const m = String(id).match(/^[^_]+_(.+)_(?:L1|L2)$/);
+  return m ? m[1] : "";
+}
+
 async function runFindQuery(){
   findList.innerHTML = '<div style="padding:.75rem;">Laden…</div>';
   const g = findGraad.value.trim();
@@ -744,11 +750,19 @@ async function runFindQuery(){
                       <div style="font-size:.9rem; color:#666">${line2}</div>`;
 
       li.addEventListener('click', ()=>{
-        const weekInp = document.getElementById('weekInput');
-        if (weekInp && week) weekInp.value = week;
-        findOverlay.style.display = 'none';
-        document.getElementById('btnLoadFS')?.click();
-      });
+  const weekInp = document.getElementById('weekInput');
+  const parsedWeek = week || __weekFromDocId(id);
+  if (weekInp && parsedWeek) weekInp.value = parsedWeek;
+
+  // Zekerheid: zet graad/klas ook mee uit de zoekfilters
+  const gSel = document.getElementById('graadSelect');
+  const kInp = document.getElementById('klasInput');
+  if (gSel) gSel.value = findGraad.value;
+  if (kInp && findKlas.value) kInp.value = findKlas.value.trim();
+
+  findOverlay.style.display = 'none';
+  document.getElementById('btnLoadFS')?.click();
+});
 
       ul.appendChild(li);
     });
