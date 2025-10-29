@@ -543,6 +543,27 @@
           <option value="L2">L2</option>
         </select>
       </label>
+      <label>Jaar:
+  <input id="findYear" placeholder="2025" style="width:5.5rem;">
+</label>
+<label>Maand:
+  <select id="findMonth" style="min-width:5rem">
+    <option value="">(alle)</option>
+    <option value="01">januari</option>
+    <option value="02">februari</option>
+    <option value="03">maart</option>
+    <option value="04">april</option>
+    <option value="05">mei</option>
+    <option value="06">juni</option>
+    <option value="07">juli</option>
+    <option value="08">augustus</option>
+    <option value="09">september</option>
+    <option value="10">oktober</option>
+    <option value="11">november</option>
+    <option value="12">december</option>
+  </select>
+</label>
+
       <button id="btnRunFind">Zoeken</button>
     </div>
 
@@ -629,6 +650,9 @@ const findTpl      = document.getElementById('findTpl');
 const btnRunFind   = document.getElementById('btnRunFind');
 const btnCloseFind = document.getElementById('btnCloseFind');
 const findList     = document.getElementById('findList');
+// Nieuw voor maand-filter
+const findYear  = document.getElementById('findYear');
+const findMonth = document.getElementById('findMonth');
 
   const dock = document.querySelector('.dock');
   const btnUploadPicto = $('#btnUploadPicto');
@@ -695,16 +719,40 @@ btnFindFS?.addEventListener('click', () => {
   findGraad.value = (gSel?.value || '1');
   findKlas.value  = (kInp?.value || '').trim();
   findTpl.value   = getTplNow() || '';
+  // Default JAAR/MAAND uit de huidige maandtitel bovenaan de agenda
+const currentMonthLabel = document.getElementById('monthBox')?.textContent || "";
+const mk = __toMonthKey(currentMonthLabel); // maakt bv. "november 2025" → "2025-11"
+if (mk) {
+  findYear.value  = mk.slice(0, 4); // "2025"
+  findMonth.value = mk.slice(5, 7); // "11"
+} else {
+  findYear.value  = "";
+  findMonth.value = "";
+}
+
   findOverlay.style.display = 'flex';
   runFindQuery();
 });
 btnCloseFind?.addEventListener('click', () => { findOverlay.style.display = 'none'; });
 btnRunFind?.addEventListener('click', runFindQuery);
 
-// Hulpfunctie om week uit docId te halen (vb. L2A_nov-2025 W1_L2 → nov-2025 W1)
+// week uit docId, vb. L2A_nov-2025 W1_L2 → "nov-2025 W1"
 function __weekFromDocId(id){
   const m = String(id).match(/^[^_]+_(.+)_(?:L1|L2)$/);
   return m ? m[1] : "";
+}
+
+// maandKey uit docId, vb. L2A_nov-2025 W1_L2 → "2025-11"
+function __monthKeyFromDocId(id){
+  const week = __weekFromDocId(id);            // "nov-2025 W1"
+  const m = String(week).match(/^([a-z]{3})-(\d{4})/i);
+  if(!m) return "";
+  const abbr = m[1].toLowerCase();
+  const jaar = m[2];
+  const map = {jan:'01', feb:'02', maa:'03', mrt:'03', apr:'04', mei:'05',
+               jun:'06', jul:'07', aug:'08', sep:'09', okt:'10', nov:'11', dec:'12'};
+  const mm = map[abbr];
+  return mm ? `${jaar}-${mm}` : "";
 }
 
 async function runFindQuery(){
@@ -712,24 +760,57 @@ async function runFindQuery(){
   const g = findGraad.value.trim();
   const k = findKlas.value.trim();
   const t = findTpl.value.trim();
+const y = findYear.value.trim();
+const m = findMonth.value.trim();
+const key = (y && m) ? `${y}-${m}` : "";   // bv. "2025-11"
 
   try{
     let q = db.collection(`agenda_graad${g}`).where('klas','==', k);
     if (t) q = q.where('tpl','==', t);
+    if (key) q = q.where('maandKey','==', key);
+
     const snap = await q.orderBy('updatedAt','desc').limit(50).get();
 
     let results = snap.docs.map(d => ({ id:d.id, data:d.data() }));
-    if (results.length === 0) {
-      const all = await db.collection(`agenda_graad${g}`).limit(200).get();
-      results = all.docs
-        .filter(d => d.id.includes(k) && (!t || d.id.includes(t)))
-        .map(d => ({ id:d.id, data:d.data() }));
-    }
+if (results.length === 0) {
+  const all = await db.collection(`agenda_graad${g}`).limit(200).get();
+  results = all.docs
+    .filter(d => {
+      const id  = d.id;
+      const dat = d.data();
 
-    if (results.length === 0){
-      findList.innerHTML = '<div style="padding:.75rem;">Geen resultaten gevonden.</div>';
-      return;
-    }
+      // KLAS: veld of afgeleid uit ID (prefix vóór 1e underscore)
+      const klasFromDoc = dat.klas || id.split('_')[0];       // bv. "L2A"
+      if (klasFromDoc !== k) return false;
+
+      // TPL (L1/L2): veld of afgeleid uit ID (suffix na laatste underscore)
+      const tplFromDoc = dat.tpl || (id.match(/_(L1|L2)$/) || [,''])[1];
+      if (t && tplFromDoc !== t) return false;
+
+      // MAAND: veld 'maandKey' of titel of uit ID (bv. 'nov-2025' → '2025-11')
+      if (key) {
+        const mk = dat.maandKey
+                || __toMonthKey(dat.maand || dat.data?.meta?.monthBox || "")
+                || __monthKeyFromDocId(id);
+        if (mk !== key) return false;
+      }
+
+      return true;
+    })
+    .map(d => ({ id:d.id, data:d.data() }))
+    .sort((a,b)=>{
+      const ta = a.data.updatedAt?.toMillis?.() || 0;
+      const tb = b.data.updatedAt?.toMillis?.() || 0;
+      return tb - ta;
+    });
+}
+
+
+if (results.length === 0){
+  findList.innerHTML = '<div style="padding:.75rem;">Geen resultaten gevonden.</div>';
+  return;
+}
+
 
     const ul = document.createElement('ul');
     ul.style.listStyle='none'; ul.style.margin='0'; ul.style.padding='0';
@@ -741,13 +822,17 @@ async function runFindQuery(){
       li.style.cursor='pointer';
 
       const week  = data.week  || (data.data?.meta?.week     || '');
-      const maand = data.maand || (data.data?.meta?.monthBox || '');
-      const tpl   = data.tpl   || (data.data?.meta?.template || '');
-      const line1 = week ? `${week}` : id;
-      const line2 = [maand, tpl].filter(Boolean).join(' • ');
+const maand = data.maand || (data.data?.meta?.monthBox || '');
+const tpl   = data.tpl   || (data.data?.meta?.template || '');
+const line1 = week ? `${week}` : id;
+const line2 = [maand, tpl].filter(Boolean).join(' • ');
 
-      li.innerHTML = `<div style="font-weight:600">${line1}</div>
-                      <div style="font-size:.9rem; color:#666">${line2}</div>`;
+// Toon ook het docId (grijs) en zet het als tooltip
+li.title = id;
+li.innerHTML = `<div style="font-weight:600">${line1}</div>
+                <div style="font-size:.9rem; color:#666">${line2}</div>
+                <div style="font-size:.85rem; color:#999">${id}</div>`;
+
 
       li.addEventListener('click', ()=>{
   const weekInp = document.getElementById('weekInput');
@@ -3251,6 +3336,20 @@ if (btnTakeOver) {
 
   // ---------------------------------------------------------------------
 // --- Firestore opslaan & laden ---
+// Hulpfunctie: maakt van "november 2025" → "2025-11"
+function __toMonthKey(label){
+  if(!label) return "";
+  const txt = String(label).toLowerCase();
+  const maanden = {
+    'januari':1,'februari':2,'maart':3,'april':4,'mei':5,'juni':6,
+    'juli':7,'augustus':8,'september':9,'oktober':10,'november':11,'december':12
+  };
+  const jaar = (txt.match(/\b(20\\d{2})\b/)||[])[1] || "";
+  const maandNaam = Object.keys(maanden).find(n=>txt.includes(n)) || "";
+  if(!jaar || !maandNaam) return "";
+  const mm = String(maanden[maandNaam]).padStart(2,'0');
+  return `${jaar}-${mm}`;
+}
 
 async function saveToFirestore(overrideWeekName){
   // 1) Toolbar-velden veilig ophalen
@@ -3295,6 +3394,7 @@ await db.collection(collName).doc(docId).set(
     tpl: tplNow,
     week: weekVal,
     maand: monthBox.textContent.trim(),
+    maandKey: __toMonthKey(monthBox.textContent),
     updatedAt: firebase.firestore.FieldValue.serverTimestamp()
   },
   { merge: true }
