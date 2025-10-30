@@ -302,7 +302,6 @@
 <button id="btnRestoreLocal" title="Zet mijn vorige agenda terug" disabled>Terug naar mijn agenda</button>
 <button id="btnSaveCopyFS" title="Bewaar als nieuwe week (kopie)">Bewaar als kopie…</button>
 <button id="btnOpenColleague" class="colleagueBtn" title="Bekijk agenda van collega">Agenda collega</button>
-
     </div>
   </div>
 
@@ -2684,53 +2683,122 @@ function vulPopupMetToolbar() {
 // -----------------------------
 // Agenda collega: knoppen koppelen
 // -----------------------------
-const btnOpenColleague = document.getElementById('btnOpenColleague');
+const btnOpenColleague   = document.getElementById('btnOpenColleague');
 const btnCancelColleague = document.getElementById('btnCancelColleague');
-const btnLoadColleague = document.getElementById('btnLoadColleague');
-const colleagueOverlay = document.getElementById('colleagueOverlay');
+const btnLoadColleague   = document.getElementById('btnLoadColleague');
+const colleagueOverlay   = document.getElementById('colleagueOverlay');
 
 if (btnOpenColleague && colleagueOverlay) {
   btnOpenColleague.addEventListener('click', () => {
+        // ALS we in deze sessie al een collega kozen -> direct tonen, geen popup
+    if (
+      lastColleagueSelection &&
+      lastColleagueSelection.graad &&
+      lastColleagueSelection.klas &&
+      lastColleagueSelection.week
+    ) {
+      showLastColleagueDirect();
+      return;
+    }
+
     // 0. Zorg dat weekInput effectief een waarde heeft,
     //    anders blijft de popup leeg.
     const weekField = document.getElementById('weekInput');
     if (weekField && !weekField.value.trim()) {
-      // Zet hier de week die u wil bekijken / die u bewaard hebt.
-      // U kunt dit gerust aanpassen naar bv. "nov-2025 W1" of "dec-2025 W2".
       weekField.value = "nov-2025 W1";
     }
 
     // 1. Popup tonen
     colleagueOverlay.style.display = 'flex';
 
-    // 2. Lees huidige waarden uit de bovenbalk (nu mét ingevulde week)
+    // 2. Als we eerder al een collega kozen: gewoon TERUG invullen en klaar
+    if (lastColleagueSelection) {
+      const cG = document.getElementById('colleagueGraad');
+      const cK = document.getElementById('colleagueKlas');
+      const cM = document.getElementById('colleagueMaand');
+      const cW = document.getElementById('colleagueWeek');
+
+      if (cG) cG.value = lastColleagueSelection.graad || "";
+      if (cK) cK.value = lastColleagueSelection.klas  || "";
+
+      // maand en weken terugzetten
+      if (cM) {
+        cM.innerHTML = "";
+        const opt = document.createElement('option');
+        opt.value = "";
+        opt.textContent = "(kies maand)";
+        cM.appendChild(opt);
+
+        if (lastColleagueSelection.maand) {
+          const optM = document.createElement('option');
+          optM.value = lastColleagueSelection.maand;
+          optM.textContent = lastColleagueSelection.maand;
+          cM.appendChild(optM);
+          cM.value = lastColleagueSelection.maand;
+        }
+      }
+
+      if (cW) {
+        cW.innerHTML = "";
+        const optW0 = document.createElement('option');
+        optW0.value = "";
+        optW0.textContent = "(kies week)";
+        cW.appendChild(optW0);
+
+        if (lastColleagueSelection.week) {
+          const optW = document.createElement('option');
+          optW.value = lastColleagueSelection.week;
+          optW.textContent = lastColleagueSelection.week;
+          cW.appendChild(optW);
+          cW.disabled = false;
+          cW.value = lastColleagueSelection.week;
+        } else {
+          cW.disabled = true;
+        }
+      }
+
+      // toch nog even alle echte weken ophalen voor deze collega
+      fetchMonthsForPopup();
+      return;
+    }
+
+    // 3. Lees huidige waarden uit de bovenbalk
     const mainGraad = document.getElementById('graadSelect')?.value || "";
-    const mainKlas  = document.getElementById('klasInput')?.value.trim() || "";
+    const mainKlas  = document.getElementById('klasInput')?.value.trim().toUpperCase() || "";
     const mainWeek  = document.getElementById('weekInput')?.value.trim() || "";
 
-    // 3. Bepaal maandKey uit bv. "nov-2025 W1"
+    // 3b. Maak er de "collega-klas" van
+    let guessedColleagueClass = mainKlas;
+    if (mainKlas === "L1A") {
+      guessedColleagueClass = "L2A";
+    } else if (mainKlas === "L2A") {
+      guessedColleagueClass = "L1A";
+    }
+    // (andere klassen laten we staan)
+
+    // 4. Bepaal maandKey uit bv. "nov-2025 W1"
     let maandKey = "";
     if (mainWeek.includes(" ")) {
-      maandKey = mainWeek.split(" ")[0]; // "nov-2025"
+      maandKey = mainWeek.split(" ")[0];
     } else if (mainWeek) {
       maandKey = mainWeek;
     }
 
-    // 4. Pak de velden in de popup
-    const colleagueGraadSel   = document.getElementById('colleagueGraad');
-    const colleagueKlasInp    = document.getElementById('colleagueKlas');
-    const colleagueMaandSel   = document.getElementById('colleagueMaand');
-    const colleagueWeekSel    = document.getElementById('colleagueWeek');
+    // 5. Pak de velden in de popup
+    const colleagueGraadSel = document.getElementById('colleagueGraad');
+    const colleagueKlasInp  = document.getElementById('colleagueKlas');
+    const colleagueMaandSel = document.getElementById('colleagueMaand');
+    const colleagueWeekSel  = document.getElementById('colleagueWeek');
 
-    // 5. Vul graad en klas alvast in
+    // 6. Vul graad en (GEGOKTE) collega-klas alvast in
     if (colleagueGraadSel && mainGraad) {
       colleagueGraadSel.value = mainGraad;
     }
-    if (colleagueKlasInp && mainKlas) {
-      colleagueKlasInp.value = mainKlas;
+    if (colleagueKlasInp && guessedColleagueClass) {
+      colleagueKlasInp.value = guessedColleagueClass;
     }
 
-    // 6. Vul Maand-jaar dropdown
+    // 7. Maand voorlopig zetten
     if (colleagueMaandSel) {
       colleagueMaandSel.innerHTML = "";
       const defaultOpt = document.createElement('option');
@@ -2743,14 +2811,13 @@ if (btnOpenColleague && colleagueOverlay) {
         opt.value = maandKey;
         opt.textContent = maandKey;
         colleagueMaandSel.appendChild(opt);
-
         colleagueMaandSel.value = maandKey;
       } else {
         colleagueMaandSel.value = "";
       }
     }
 
-    // 7. Vul Week dropdown
+    // 8. Week voorlopig zetten
     if (colleagueWeekSel) {
       colleagueWeekSel.innerHTML = "";
       const defaultWeek = document.createElement('option');
@@ -2763,7 +2830,6 @@ if (btnOpenColleague && colleagueOverlay) {
         optW.value = mainWeek;
         optW.textContent = mainWeek;
         colleagueWeekSel.appendChild(optW);
-
         colleagueWeekSel.disabled = false;
         colleagueWeekSel.value = mainWeek;
       } else {
@@ -2771,44 +2837,21 @@ if (btnOpenColleague && colleagueOverlay) {
         colleagueWeekSel.value = "";
       }
     }
-     // Als ik net een collega gekozen heb, vul dat opnieuw in.
- if (lastColleagueSelection) {
-   const colleagueGraadSel = document.getElementById('colleagueGraad');
-   const colleagueKlasInp  = document.getElementById('colleagueKlas');
-   const colleagueWeekSel  = document.getElementById('colleagueWeek');
 
-   if (colleagueGraadSel && lastColleagueSelection.graad) {
-     colleagueGraadSel.value = lastColleagueSelection.graad;
-   }
-   if (colleagueKlasInp && lastColleagueSelection.klas) {
-     colleagueKlasInp.value = lastColleagueSelection.klas;
-   }
-   if (colleagueWeekSel && lastColleagueSelection.week) {
-     // week dropdown wordt later toch opgebouwd
-     colleagueWeekSel.innerHTML = "";
-     const optW = document.createElement('option');
-     optW.value = lastColleagueSelection.week;
-     optW.textContent = lastColleagueSelection.week;
-     colleagueWeekSel.appendChild(optW);
-     colleagueWeekSel.disabled = false;
-     colleagueWeekSel.value = lastColleagueSelection.week;
-   }
- }
-     // 9. >>> hier nieuw: echt uit Firestore halen <<<
+    // 9. Nu écht uit Firestore halen (met die gegokte collega-klas)
     fetchMonthsForPopup();
-
   });
 }
 
 // --- Wanneer gebruiker graad of klas in popup verandert, herlaad de weken ---
-const popupKlasInp = document.getElementById('colleagueKlas');
+const popupKlasInp  = document.getElementById('colleagueKlas');
+const popupGraadSel = document.getElementById('colleagueGraad');
+
 if (popupKlasInp) {
   popupKlasInp.addEventListener('input', () => {
     fetchMonthsForPopup();
   });
 }
-
-const popupGraadSel = document.getElementById('colleagueGraad');
 if (popupGraadSel) {
   popupGraadSel.addEventListener('change', () => {
     fetchMonthsForPopup();
@@ -2826,38 +2869,63 @@ if (btnLoadColleague) {
     // 1. Bewaar mijn huidige agenda zodat ik terug kan
     if (typeof backupCurrentAgenda === 'function') {
       backupCurrentAgenda();
-          // Onthoud wat ik net gekozen heb
-    lastColleagueSelection = {
-      graad: document.getElementById('colleagueGraad')?.value || "",
-      klas:  document.getElementById('colleagueKlas')?.value.trim() || "",
-      maand: document.getElementById('colleagueMaand')?.value || "",
-      week:  document.getElementById('colleagueWeek')?.value || ""
-    };
     }
 
-    // Onthoud wie ik gekozen heb, zodat de popup het straks opnieuw invult
-    lastColleagueSelection = {
-      graad: document.getElementById('colleagueGraad')?.value || "",
-      klas:  document.getElementById('colleagueKlas')?.value.trim() || "",
-      week:  document.getElementById('colleagueWeek')?.value.trim() || ""
-    };
+    // popup-velden
+    const cg = document.getElementById('colleagueGraad');
+    const ck = document.getElementById('colleagueKlas');
+    const cm = document.getElementById('colleagueMaand');
+    const cw = document.getElementById('colleagueWeek');
 
-    // 2. Laad de collega-agenda in mijn vaste layout (met maandag-dinsdag-…)
+    const gekozenGraad = cg?.value || "";
+    const gekozenKlas  = (ck?.value || "").trim();
+    const gekozenWeek  = (cw?.value || "").trim();          // bv. "nov-2025 W1"
+    let   gekozenMaand = (cm?.value || "").trim();          // bv. "nov-2025"
+
+    // 👉 1. als de maand leeg is, leid ze af uit de week
+    if (!gekozenMaand && gekozenWeek.includes(" ")) {
+      gekozenMaand = gekozenWeek.split(" ")[0];             // "nov-2025"
+    }
+
+    // 👉 2. als zelfs de week leeg is (kan bij zeldzame gevallen),
+    // pak dan de week uit de bovenbalk
+    if (!gekozenWeek) {
+      const mainWeek = document.getElementById('weekInput')?.value.trim() || "";
+      if (mainWeek) {
+        lastColleagueSelection = {
+          graad: gekozenGraad,
+          klas:  gekozenKlas,
+          maand: mainWeek.includes(" ") ? mainWeek.split(" ")[0] : mainWeek,
+          week:  mainWeek
+        };
+      } else {
+        // helemaal niets beschikbaar
+        lastColleagueSelection = {
+          graad: gekozenGraad,
+          klas:  gekozenKlas,
+          maand: "",
+          week:  ""
+        };
+      }
+    } else {
+      // normaal geval: we hadden een week, en nu ook een (afgeleide) maand
+      lastColleagueSelection = {
+        graad: gekozenGraad,
+        klas:  gekozenKlas,
+        maand: gekozenMaand,
+        week:  gekozenWeek
+      };
+    }
+
+    console.log("DEBUG bewaard colleague =", lastColleagueSelection);
+
+    // 3. Laad de collega-agenda (dit toont de gele pagina)
     await loadColleagueFromPopup();
 
-    // 3. Sluit de popup
+    // 4. Sluit de popup
     colleagueOverlay.style.display = 'none';
-
-    // 4. Toon altijd gewoon mijn pagina, verberg de gele pagina
-    const myPage  = document.getElementById('page');
-    const colPage = document.getElementById('pageColleague');
-    if (myPage)  myPage.style.display = '';
-    if (colPage) colPage.style.display = 'none';
-
-    // 5. Knop 'Terug naar mijn agenda' actief laten (dat doet loadColleagueFromPopup bij u al)
   });
 }
-
 
 
 // Koppeling tussen maand en week in de popup
@@ -3170,18 +3238,66 @@ lastColleagueData = full;
 }
 }
 
+// Toon opnieuw de laatst gekozen collega-agenda, zonder de popup te tonen
+async function showLastColleagueDirect() {
+  if (
+    !lastColleagueSelection ||
+    !lastColleagueSelection.graad ||
+    !lastColleagueSelection.klas ||
+    !lastColleagueSelection.week
+  ) {
+    // er is nog niets gekozen in deze sessie
+    return;
+  }
+
+  // velden in de popup even vullen (zodat loadColleagueFromPopup weet wat hij moet halen)
+  const cG = document.getElementById('colleagueGraad');
+  const cK = document.getElementById('colleagueKlas');
+  const cM = document.getElementById('colleagueMaand');
+  const cW = document.getElementById('colleagueWeek');
+
+  if (cG) cG.value = lastColleagueSelection.graad;
+  if (cK) cK.value = lastColleagueSelection.klas;
+  if (cM) {
+    cM.innerHTML = "";
+    const opt = document.createElement('option');
+    opt.value = lastColleagueSelection.maand || "";
+    opt.textContent = lastColleagueSelection.maand || "(kies maand)";
+    cM.appendChild(opt);
+    cM.value = lastColleagueSelection.maand || "";
+  }
+  if (cW) {
+    cW.innerHTML = "";
+    const optW = document.createElement('option');
+    optW.value = lastColleagueSelection.week;
+    optW.textContent = lastColleagueSelection.week;
+    cW.appendChild(optW);
+    cW.disabled = false;
+    cW.value = lastColleagueSelection.week;
+  }
+
+  // popup zeker dicht
+  const overlay = document.getElementById('colleagueOverlay');
+  if (overlay) overlay.style.display = 'none';
+
+  // en dan gewoon opnieuw laden
+  await loadColleagueFromPopup();
+}
+
 
 // -----------------------------
 // Overlay openen/sluiten
 // -----------------------------
-document.getElementById('btnCancelColleague').addEventListener('click', () => {
-  document.getElementById('colleagueOverlay').style.display = 'none';
-});
+const btnCancelColleague2 = document.getElementById('btnCancelColleague');
+if (btnCancelColleague2) {
+  btnCancelColleague2.addEventListener('click', () => {
+    document.getElementById('colleagueOverlay').style.display = 'none';
+  });
+}
 
-document.getElementById('btnLoadColleague').addEventListener('click', async () => {
-  // laad collega-gegevens en toon pageColleague
-  await loadColleagueFromPopup();
-});
+// ⚠️ GEEN tweede listener meer op btnLoadColleague,
+// die heb je hierboven al gekoppeld (met bewaren!)
+
 
 // -----------------------------
 // Terug naar mijn eigen agenda
@@ -3497,6 +3613,25 @@ if (freshBtnLoad) {
     await loadAgendaFromFirestore();
   };
 }
+// -----------------------------
+// Vraag of de laatste collega-agenda opnieuw moet worden getoond
+// -----------------------------
+(async () => {
+  if (
+    lastColleagueSelection &&
+    lastColleagueSelection.graad &&
+    lastColleagueSelection.klas &&
+    lastColleagueSelection.week
+  ) {
+    const wilOpnieuw = confirm(
+      `Wilt u opnieuw de collega-agenda tonen van ${lastColleagueSelection.klas} (${lastColleagueSelection.week})?`
+    );
+    if (wilOpnieuw) {
+      document.getElementById('colleagueOverlay').style.display = 'none';
+      await loadColleagueFromPopup();
+    }
+  }
+})();
 
 })();
 </script>
