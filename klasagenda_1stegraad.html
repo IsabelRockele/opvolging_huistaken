@@ -2794,6 +2794,24 @@ if (btnOpenColleague && colleagueOverlay) {
      colleagueWeekSel.value = lastColleagueSelection.week;
    }
  }
+     // 9. >>> hier nieuw: echt uit Firestore halen <<<
+    fetchMonthsForPopup();
+
+  });
+}
+
+// --- Wanneer gebruiker graad of klas in popup verandert, herlaad de weken ---
+const popupKlasInp = document.getElementById('colleagueKlas');
+if (popupKlasInp) {
+  popupKlasInp.addEventListener('input', () => {
+    fetchMonthsForPopup();
+  });
+}
+
+const popupGraadSel = document.getElementById('colleagueGraad');
+if (popupGraadSel) {
+  popupGraadSel.addEventListener('change', () => {
+    fetchMonthsForPopup();
   });
 }
 
@@ -2874,34 +2892,67 @@ async function fetchMonthsForPopup(){
 
   if (!graadSel || !klasInp || !maandSel || !weekSel) return;
 
-  const graad = graadSel.value;
-  const klas  = klasInp.value.trim();
+  // 1. waarden ophalen
+  let graad = graadSel.value;
+  let klas  = klasInp.value;
 
-  // reset dropdowns
+  // alles netjes maken
+  graad = (graad || "").trim();
+  klas  = (klas  || "").trim().toUpperCase();    // <-- belangrijk
+
+  // graad normaliseren
+  if (graad.startsWith('1')) graad = '1';
+  else if (graad.startsWith('2')) graad = '2';
+  else if (graad.startsWith('3')) graad = '3';
+
+  // ui leegmaken
   maandSel.innerHTML = '<option value="">(kies maand)</option>';
   weekSel.innerHTML  = '<option value="">(kies week)</option>';
   weekSel.disabled   = true;
   popupWeeksByMonth  = {};
 
-  if (!graad || !klas) {
-    return;
-  }
+  if (!graad || !klas) return;
 
-  const collName = "agenda_graad" + graad;
+  const collName = 'agenda_graad' + graad;
+  console.log('[COL-POPUP] haal op uit collectie:', collName, 'voor klas:', klas);
 
   try {
-    const qSnap = await db.collection(collName)
-                          .where('klas', '==', klas)
-                          .get();
+    const qSnap = await db.collection(collName).get();
+    console.log('[COL-POPUP] aantal docs in collectie:', qSnap.size);
 
     qSnap.forEach(doc => {
-      const d = doc.data();
-      if (!d || !d.week) return;
-      // d.week bv. "nov-2025 W2"
-      const fullWeek = d.week;
-      const parts = fullWeek.split(' ');
-      if (parts.length < 2) return;
-      const maandKey = parts[0]; // "nov-2025"
+      const docId = (doc.id || "").trim();         // bv. "L2A_nov-2025 W1_L2"
+      const upperId = docId.toUpperCase();
+
+      // alleen docs voor deze klas
+      const neededPrefix = klas + '_';              // bv. "L2A_"
+      if (!upperId.startsWith(neededPrefix)) {
+        console.log('[COL-POPUP] overslaan (andere klas):', docId);
+        return;
+      }
+
+      const data = doc.data() || {};
+
+      // week bepalen
+      let fullWeek = data.week;
+      if (!fullWeek) {
+        const rest = docId.substring(neededPrefix.length); // "nov-2025 W1_L2"
+        const parts = rest.split('_');                     // ["nov-2025 W1", "L2"]
+        fullWeek = parts[0];
+      }
+
+      if (!fullWeek) {
+        console.log('[COL-POPUP] doc zonder week, overslaan:', docId);
+        return;
+      }
+
+      const wkParts = fullWeek.split(' ');
+      if (wkParts.length < 2) {
+        console.log('[COL-POPUP] vreemd weekformaat:', fullWeek);
+        return;
+      }
+
+      const maandKey = wkParts[0]; // "nov-2025"
 
       if (!popupWeeksByMonth[maandKey]) {
         popupWeeksByMonth[maandKey] = [];
@@ -2909,15 +2960,14 @@ async function fetchMonthsForPopup(){
       if (!popupWeeksByMonth[maandKey].includes(fullWeek)) {
         popupWeeksByMonth[maandKey].push(fullWeek);
       }
+
+      console.log('[COL-POPUP] toegevoegd:', maandKey, fullWeek);
     });
 
-    // sorteer de weken en bouw maand-select
-    for (const m in popupWeeksByMonth) {
-      popupWeeksByMonth[m].sort();
-    }
-
     const maanden = Object.keys(popupWeeksByMonth).sort();
-    if (maanden.length === 0){
+    console.log('[COL-POPUP] gevonden maanden (na filter):', maanden);
+
+    if (maanden.length === 0) {
       maandSel.innerHTML = '<option value="">(geen opgeslagen weken)</option>';
       return;
     }
@@ -2929,11 +2979,12 @@ async function fetchMonthsForPopup(){
       maandSel.appendChild(opt);
     });
 
-  } catch(err){
-    console.error(err);
-    alert("Kon de weken voor deze klas niet ophalen: " + err.message);
+  } catch (err) {
+    console.error('[COL-POPUP] fout bij ophalen:', err);
+    alert('Kon de weken voor deze klas niet ophalen: ' + err.message);
   }
 }
+
 
 // Wanneer in de popup een maand gekozen wordt, vul de week-select
 function updateWeeksForChosenPopupMonth(){
@@ -3123,11 +3174,6 @@ lastColleagueData = full;
 // -----------------------------
 // Overlay openen/sluiten
 // -----------------------------
-document.getElementById('btnOpenColleague').addEventListener('click', () => {
-  // open de keuze-popup
-  document.getElementById('colleagueOverlay').style.display = 'flex';
-});
-
 document.getElementById('btnCancelColleague').addEventListener('click', () => {
   document.getElementById('colleagueOverlay').style.display = 'none';
 });
@@ -3384,24 +3430,22 @@ async function saveToFirestore(overrideWeekName){
 
   console.log('Payload dat we gaan opslaan:', data, '→', collName, '/', docId);
 
- // 5) Wegschrijven
-await db.collection(collName).doc(docId).set(
-  {
-    data, // <-- uw volledige agenda (zoals voordien)
-    // 🔎 extra velden voor zoeken en overzicht:
-    graad: String(graadVal),
-    klas: klasVal,
-    tpl: tplNow,
-    week: weekVal,
-    maand: monthBox.textContent.trim(),
-    maandKey: __toMonthKey(monthBox.textContent),
+  // 5) Wegschrijven
+  await db.collection(collName).doc(docId).set({
+    // altijd mee bewaren:
+    graad: graadVal,        // "1", "2" of "3"
+    klas:  klasVal,         // "L2A" → hier zoekt de collega-popup op
+    week:  weekVal,         // "nov-2025 W2"
+    tpl:   tplNow,          // "L1" of "L2"
+
+    // jouw echte agenda-data
+    data: data,
+
+    // voor sortering
     updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-  },
-  { merge: true }
-);
+  }, { merge: true });
 
-alert(`Agenda bewaard: ${docId}`);
-
+  alert(`Agenda bewaard: ${docId}`);
 }
 
 
