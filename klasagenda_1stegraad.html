@@ -2387,92 +2387,62 @@ function showToast(msg, type) {
 // -----------------------------
 // Eigen agenda laden (definitieve versie)
 // -----------------------------
+// --- Firestore: laden (altijd eerst L1/L2, dan pas oude naam) ---
 async function loadAgendaFromFirestore() {
-  try {
-    // Waardes uit de velden bovenaan in uw toolbar
-    const graadSel = document.getElementById('graadSelect');
-    const klasInp  = document.getElementById('klasInput');
-    const weekInp  = document.getElementById('weekInput');
+  const graadSel = document.getElementById('graadSelect');
+  const klasInp  = document.getElementById('klasInput');
+  const weekInp  = document.getElementById('weekInput');
 
-    const graadVal = graadSel.value.trim();   // bv "1"
-    const klasVal  = klasInp.value.trim();    // bv "L2A"
-    const weekVal  = weekInp.value.trim();    // bv "nov-2025 W1"
+  const graadVal = graadSel.value.trim();
+  const klasVal  = klasInp.value.trim();
+  const weekVal  = weekInp.value.trim();
+  const tplNow   = getTplNow();   // "L1" of "L2" – wat jij bovenaan kiest
 
-    if (!graadVal || !klasVal || !weekVal) {
-      alert("Gelieve graad, klas en week te kiezen.");
-      return;
-    }
-
-    // Collectie en document-id bepalen
-const tplNow = getTplNow();
-const colName = `agenda_graad${graadVal}`;
-
-// 1️⃣ Eerst proberen met nieuwe naam (met L1/L2)
-let docId = `${klasVal}_${weekVal}_${tplNow}`;
-let snap  = await db.collection(colName).doc(docId).get({ source: 'server' });
-
-// 2️⃣ Bestaat die nog niet? Dan proberen met oude naam (zonder L1/L2)
-if (!snap.exists) {
-  const legacyId = `${klasVal}_${weekVal}`;
-  const legacySnap = await db.collection(colName).doc(legacyId).get({ source: 'server' });
-  if (!legacySnap.exists) {
-    alert("Geen agenda gevonden voor deze klas/week.");
+  if (!graadVal || !klasVal || !weekVal) {
+    alert("Graad, klas én week invullen a.u.b.");
     return;
   }
-  snap  = legacySnap;
-  docId = legacyId;
-}
 
-    const payload = snap.data();
+  const colName   = `agenda_graad${graadVal}`;
+  const idWithTpl = `${klasVal}_${weekVal}_${tplNow}`;  // bv. L2A_nov-2025 W2_L2
+  const idLegacy  = `${klasVal}_${weekVal}`;            // bv. L2A_nov-2025 W2
 
-  
-// --- Uniform lezen van Firestore-document ---
-// Ondersteunt nieuw (data), oud (gegevens/inhoud) én platte structuur (dagen op root)
-let inhoud = null;
-if (payload && typeof payload === "object") {
-  inhoud = payload.data || payload.gegevens || payload.inhoud || payload;
-}
+  // 1. eerst proberen met de juiste tpl (dit is de versie die jij net bewaard hebt)
+  let snap = await db.collection(colName).doc(idWithTpl).get({ source: 'server' });
+  let usedId = idWithTpl;
 
-// Extra fallback: sommige documenten hebben 'dagen' en 'meta' rechtstreeks op root
-if ((!inhoud || typeof inhoud !== "object") && payload && payload.dagen) {
-  inhoud = { meta: payload.meta || {}, dagen: payload.dagen };
-}
-
-// Nog steeds niets bruikbaars? Dan stoppen we veilig
-if (!inhoud || typeof inhoud !== "object") {
-  alert("Onbekende datastructuur in Firestore-document.");
-  return;
-}
-
-    // 1️⃣ Voor de veiligheid: eerst huidige agenda opslaan zodat "terugzetten" werkt
-    backupCurrentAgenda();
-
-    // 2️⃣ De opgeslagen inhoud rechtstreeks inladen
-    //    - teksten, taken, mededelingen, daginhoud, zwemvinkje...
-    applyAll(inhoud);
-
-    //    - losse pictogrammen van de pictopaneel/dagen opnieuw plaatsen als die er zijn
-    if (inhoud && inhoud.meta && inhoud.meta.panelPictos) {
-      applyPanelPictos(inhoud.meta.panelPictos);
+  // 2. als die niet bestaat: dan pas de oude naam
+  if (!snap.exists) {
+    const legacySnap = await db.collection(colName).doc(idLegacy).get({ source: 'server' });
+    if (!legacySnap.exists) {
+      alert("Geen agenda gevonden voor deze klas/week.");
+      return;
     }
-
-    // 3️⃣ Layout opnieuw laten schalen zodat 'has-tasks', hoogtes, etc. kloppen
-    scheduleLayoutSync();
-
-    // 4️⃣ Succesboodschap
-    showToast("Agenda succesvol geladen.", "success");
-
-   // 5️⃣ >>> NIEUW: buffer van het ACTIEVE sjabloon updaten <<<
-currentTplOnScreen = tplSel.value;              // L1 of L2, expliciet vastzetten
-const snapNow = captureAll();
-snapNow.meta.panelPictos = capturePanelPictos();
-localStateByTemplate[currentTplOnScreen] = snapNow;
-
-  } catch (err) {
-    console.error(err);
-    alert("Fout bij het laden van de agenda: " + err.message);
+    snap   = legacySnap;
+    usedId = idLegacy;
   }
+
+  console.log("Agenda geladen uit:", usedId);
+
+  const payload = snap.data() || {};
+  const inhoud  = payload.data || payload.gegevens || payload.inhoud || payload;
+  if (!inhoud || typeof inhoud !== "object") {
+    alert("Onbekende datastructuur in Firestore-document.");
+    return;
+  }
+
+  applyAll(inhoud);
+if (payload.meta && payload.meta.panelPictos) {
+  applyPanelPictos(payload.meta.panelPictos);
 }
+
+if (typeof localStateByTemplate !== "undefined") {
+  localStateByTemplate[tplNow] = inhoud;
+  currentTplOnScreen = tplNow;
+}
+
+}
+
 
 // ---------- MAAND- EN WEEKSELECTIE (per maand gegroepeerd) ----------
 let weeksByMonth = {};
@@ -3536,35 +3506,74 @@ async function saveToFirestore(overrideWeekName){
 
   // 3) Documentnaam met L1/L2
   const collName = 'agenda_graad' + graadVal;
-  const tplNow   = getTplNow();                     // << gebruik de helper
+  const tplNow   = getTplNow();
   const docId    = `${klasVal}_${weekVal}_${tplNow}`;
 
-  // 4) Inhoud verzamelen en panel-pictogrammen meeschrijven
+  // 4) Basisdata ophalen (doet ook mededelingen)
   const data = captureAll();
   data.meta.panelPictos = capturePanelPictos();
-  data.meta.updatedAt = new Date().toISOString();
+  data.meta.updatedAt   = new Date().toISOString();
 
+  // 5) *** HIER FORCEREN WE DE 7 DAGEN UIT HET ECHTE SCHERM ***
+  data.dagen = data.dagen || {};
+  const dayEls = document.querySelectorAll('#page .day[data-day-index]');
+  dayEls.forEach(dayEl => {
+    const idx = dayEl.getAttribute('data-day-index'); // "0"..."6"
+    if (!idx) return;
+
+    // waar staat jouw html?
+    const planEl  = dayEl.querySelector(`[data-key="d${idx}.plan"]`);
+    const bringEl = dayEl.querySelector(`[data-key="d${idx}.bring"]`);
+
+    const planHTML  = planEl  ? planEl.innerHTML  : "";
+    const bringHTML = bringEl ? bringEl.innerHTML : "";
+
+    // schrijf het hard in de dataset
+    data.dagen[idx] = data.dagen[idx] || {};
+    data.dagen[idx].plan  = planHTML;
+    data.dagen[idx].bring = bringHTML;
+
+    // vrije pictogrammen op die dag
+    const pictos = [];
+    dayEl.querySelectorAll('.picto-free').forEach(p => {
+      pictos.push({
+        src:  p.getAttribute('src') || p.dataset.src || "",
+        left: p.style.left  || "",
+        top:  p.style.top   || "",
+        width:p.style.width || "",
+        host: p.dataset.host || "body"
+      });
+    });
+    data.dagen[idx].pictos = pictos;
+  });
+  // ******* TOT HIER ONS EXTRA BLOK ********
+
+  // 6) NU PAS loggen en wegschrijven
   console.log('Payload dat we gaan opslaan:', data, '→', collName, '/', docId);
 
-  // 5) Wegschrijven
   await db.collection(collName).doc(docId).set({
-    // altijd mee bewaren:
-    graad: graadVal,        // "1", "2" of "3"
-    klas:  klasVal,         // "L2A" → hier zoekt de collega-popup op
-    week:  weekVal,         // "nov-2025 W2"
-    tpl:   tplNow,          // "L1" of "L2"
+    graad: graadVal,
+    klas:  klasVal,
+    week:  weekVal,
+    tpl:   tplNow,
 
-    // jouw echte agenda-data
-    data: data,
+    // oude én nieuwe structuur vullen
+    data:     data,
+    gegevens: data,
 
-    // voor sortering
     updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-  }, { merge: true });
+  });
+
+  // lokale temp bijwerken (jouw app gebruikt dat ook)
+  if (typeof localStateByTemplate !== "undefined") {
+    localStateByTemplate[tplNow] = data;
+    currentTplOnScreen = tplNow;
+  }
 
   alert(`Agenda bewaard: ${docId}`);
 }
 
-
+  
 // 1. Pak de knoppen
 const btnSaveFS     = document.getElementById('btnSaveFS');
 const btnSaveCopyFS = document.getElementById('btnSaveCopyFS');
@@ -3586,6 +3595,79 @@ if (btnSaveCopyFS) {
 const freshBtnSave  = document.getElementById('btnSaveFS');
 const freshBtnCopy  = document.getElementById('btnSaveCopyFS');
 
+// --- Firestore: mijn agenda laden (definitieve versie) ---
+async function loadFromFirestore() {
+  const graadSel = document.getElementById('graadSelect');
+  const klasInp  = document.getElementById('klasInput');
+  const weekInp  = document.getElementById('weekInput');
+
+  const graadVal = graadSel.value.trim();   // 1, 2, 3
+  const klasVal  = klasInp.value.trim();    // bv. L2A
+  const weekVal  = weekInp.value.trim();    // bv. nov-2025 W2
+  const tplNow   = getTplNow();             // L1 of L2
+
+  if (!graadVal || !klasVal || !weekVal) {
+    alert("Graad, klas én week invullen a.u.b.");
+    return;
+  }
+
+  const colName   = `agenda_graad${graadVal}`;
+  const idWithTpl = `${klasVal}_${weekVal}_${tplNow}`;  // bv. L2A_nov-2025 W2_L2
+  const idLegacy  = `${klasVal}_${weekVal}`;            // bv. L2A_nov-2025 W2
+
+  // 1️⃣ EERST: exact met tpl (dit is uw NIEUWE document)
+  let snap = await db.collection(colName).doc(idWithTpl).get({ source: 'server' });
+  let usedId = idWithTpl;
+
+  // 2️⃣ Als dat niet bestaat: pas dan de oude naam proberen
+  if (!snap.exists) {
+    const snapLegacy = await db.collection(colName).doc(idLegacy).get({ source: 'server' });
+    if (!snapLegacy.exists) {
+      alert("Geen agenda gevonden voor deze klas/week.");
+      return;
+    }
+    snap   = snapLegacy;
+    usedId = idLegacy;
+  }
+
+  console.log("Agenda geladen uit:", usedId);
+
+   const payload = snap.data() || {};
+  let inhoud    = payload.data || payload.gegevens || payload.inhoud || payload;
+  if (!inhoud || typeof inhoud !== "object") {
+    alert("Onbekende datastructuur in Firestore-document.");
+    return;
+  }
+
+  // 👇 NIEUW: maak er hetzelfde model van als bij de collega-agenda
+  const maandKey = weekVal.includes(" ") ? weekVal.split(" ")[0] : weekVal;
+  const norm = normalizeFirestoreAgenda(inhoud, klasVal, weekVal, maandKey);
+
+  // op het scherm
+  applyAll(norm);
+
+  // pictogrammen meenemen – eerst wat in norm zit, anders wat in payload zat
+  if (norm.meta && norm.meta.panelPictos) {
+    applyPanelPictos(norm.meta.panelPictos);
+  } else if (payload.meta && payload.meta.panelPictos) {
+    applyPanelPictos(payload.meta.panelPictos);
+  }
+
+  // lokale state bijwerken (uw app gebruikt dit ook)
+  if (typeof localStateByTemplate !== "undefined") {
+    localStateByTemplate[tplNow] = norm;
+    currentTplOnScreen = tplNow;
+  }
+}
+
+const freshBtnLoad = document.getElementById('btnLoadFS');
+if (freshBtnLoad) {
+  freshBtnLoad.onclick = async () => {
+    await loadFromFirestore();
+  };
+}
+
+
 // 4. Koppel onze NIEUWE handlers
 if (freshBtnSave) {
   freshBtnSave.onclick = async () => {
@@ -3606,14 +3688,7 @@ if (freshBtnCopy) {
     await saveToFirestore(nieuw);
   };
 }
-const freshBtnLoad = document.getElementById('btnLoadFS');
-if (freshBtnLoad) {
-  freshBtnLoad.onclick = async () => {
-    console.log("DEBUG: klik op Laad (van Firestore)");
-    await loadAgendaFromFirestore();
-  };
-}
-// -----------------------------
+
 // Vraag of de laatste collega-agenda opnieuw moet worden getoond
 // -----------------------------
 (async () => {
@@ -3631,9 +3706,9 @@ if (freshBtnLoad) {
       await loadColleagueFromPopup();
     }
   }
+  })();
 })();
 
-})();
 </script>
 </body>
 </html>
