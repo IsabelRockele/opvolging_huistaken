@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Gedragsopvolging</title>
+
+  <!-- Stijlen -->
+  <link rel="stylesheet" href="gedragsopvolging.css" />
+
+  <!-- Manifest & iconen zoals in de andere pagina's -->
+  <link rel="manifest" href="manifest.json" />
+  <link rel="apple-touch-icon" href="icon-192x192.png" />
+  <meta name="theme-color" content="#4A90E2" />
+
+  <!-- jsPDF & html2canvas voor PDF -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+</head>
+<body>
+  <header class="topbar">
+    <h1>Gedragsopvolging</h1>
+    <div class="topbar-buttons">
+      <button id="btnTerugDashboard" type="button">Terug naar huistaken</button>
+      <button id="btnLogout" type="button">Uitloggen</button>
+    </div>
+  </header>
+
+  <main class="main-layout">
+    <!-- Linkerkolom: invoer van nieuwe registratie -->
+    <section class="pane pane-form">
+      <h2>Nieuwe registratie</h2>
+
+      <div class="field">
+        <label for="leerlingSelect">Leerling</label>
+        <select id="leerlingSelect">
+          <option value="">Kies een leerling…</option>
+        </select>
+        <p class="hint">
+          De leerlingen komen uit je huistaken-dashboard. Voeg nieuwe leerlingen daar toe.
+        </p>
+      </div>
+
+      <div class="field-group">
+        <div class="field">
+          <label for="datumInput">Datum</label>
+          <input type="date" id="datumInput" />
+        </div>
+
+        <div class="field">
+          <label for="typeSelect">Type afspraak niet gevolgd</label>
+          <select id="typeSelect">
+            <!-- opties worden uit JS gevuld -->
+          </select>
+        </div>
+      </div>
+
+      <div class="field-group">
+        <div class="field">
+          <label for="speeltijdenInput">Speeltijden (bijsturen kan)</label>
+          <input type="number" id="speeltijdenInput" min="1" step="1" />
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="redenInput">Korte omschrijving voor ouders</label>
+        <textarea id="redenInput" rows="3" placeholder="Bv. meermaals blijven duwen tijdens voetbal…"></textarea>
+      </div>
+
+      <button id="btnOpslaan" class="btn-primary" type="button">
+        Registratie toevoegen
+      </button>
+    </section>
+
+    <!-- Rechterkolom: overzicht per leerling -->
+    <section class="pane pane-overzicht">
+      <div class="pane-header">
+        <div>
+          <h2 id="overzichtTitel">Overzicht</h2>
+          <p id="totaalInfo" class="subtext"></p>
+        </div>
+        <div class="pane-actions">
+          <button id="btnPdfLeerling" type="button">PDF voor ouders</button>
+        </div>
+      </div>
+
+      <div id="geenLeerlingMelding" class="info-box" style="display:none;">
+        Kies eerst een leerling links om het overzicht te bekijken.
+      </div>
+
+      <div id="geenRegistratiesMelding" class="info-box" style="display:none;">
+        Er zijn nog geen registraties voor deze leerling.
+      </div>
+
+      <div id="tabelContainer" class="table-wrapper">
+        <table id="sanctiesTabel">
+          <thead>
+            <tr>
+              <th>Datum</th>
+              <th>Type</th>
+              <th>Reden</th>
+              <th>Speeltijden</th>
+              <th>Reeds uitgezeten</th>
+              <th>Acties</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- rijen worden via JS gevuld -->
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <!-- Verborgen container voor PDF-opmaak -->
+  <div id="pdfContainer" style="position:absolute; left:-9999px; top:0; width: 700px; background:#fff; padding:20px;"></div>
+
+  <!-- Firebase-init + service worker (zoals index/dashboard) -->
+ <script type="module" src="script.js?v=6"></script>
+  <!-- Specifieke logica voor gedragsopvolging -->
+  <script type="module" src="gedragsopvolging.js"></script>
+</body>
+</html>
