@@ -309,3 +309,28 @@ td.reden {
   background-color: #a61f1f;
 }
 
+.pdf-klas-container {
+  margin-top: 20px;
+  padding: 15px;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  background: #f9fafb;
+}
+
+.pdf-klas-container h3 {
+  margin-top: 0;
+}
+
+.pdf-klas-container input {
+  margin-right: 10px;
+}
+
+.pdf-klas-container button {
+  margin-top: 10px;
+  padding: 6px 12px;
+  border-radius: 4px;
+  background: #3b82f6;
+  color: white;
+  border: none;
+  cursor: pointer;
+}
