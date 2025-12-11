@@ -310,24 +310,35 @@ const entries = Object.entries(lijst).map(([id, obj]) => ({
               : ""
           }
         </td>
-        <td>
-          <div class="actieknoppen">
-  <button type="button" onclick="window.pasSpeeltijdAan('${s.id}', 1)">+1</button>
-  <button type="button" onclick="window.pasSpeeltijdAan('${s.id}', -1)">-1</button>
+   <td>
+  <div class="actieknoppen">
 
-  <button type="button" onclick="window.wijzigDatum('${s.id}', '${s.datum}')">
-    Wijzig datum
-  </button>
+    <button type="button" class="btn-binnen"
+      onclick="window.pasSpeeltijdAan('${s.id}', 1)">
+      Binnengezeten
+    </button>
 
-  <button type="button" onclick="window.wijzigReden('${s.id}', \`${s.reden || ""}\`)">
-    Wijzig reden
-  </button>
+    <button type="button" class="btn-ongedaan"
+      onclick="window.pasSpeeltijdAan('${s.id}', -1)">
+      Ongedaan maken
+    </button>
 
-  <button type="button" class="actie-verwijder"
-    onclick="window.verwijderRegistratie('${s.id}')">Verwijder</button>
-</div>
+    <button type="button" onclick="window.wijzigDatum('${s.id}', '${s.datum}')">
+      Wijzig datum
+    </button>
 
-        </td>
+    <button type="button" onclick="window.wijzigReden('${s.id}', \`${s.reden || ""}\`)">
+      Wijzig reden
+    </button>
+
+    <button type="button" class="actie-verwijder"
+      onclick="window.verwijderRegistratie('${s.id}')">
+      Verwijder
+    </button>
+
+  </div>
+</td>
+
       </tr>
     `;
     })
