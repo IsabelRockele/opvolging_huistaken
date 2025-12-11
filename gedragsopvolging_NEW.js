@@ -546,3 +546,106 @@ window.wijzigReden = async function (sanctieId, huidigeReden) {
     alert("Reden kon niet gewijzigd worden.");
   }
 };
+window.genereerPDFKlas = async function () {
+
+  const van = document.getElementById("filterVan").value;
+  const tot = document.getElementById("filterTot").value;
+
+  if (!van || !tot) {
+    alert("Gelieve een begin- én einddatum te kiezen.");
+    return;
+  }
+
+  const vanDate = new Date(van);
+  const totDate = new Date(tot);
+
+  const { jsPDF } = window.jspdf;
+  const pdf = new jsPDF("landscape", "mm", "a4");  // <-- LANDSCAPE!
+
+  // ----------- TITEL -----------
+  pdf.setFontSize(16);
+  pdf.text("Klasoverzicht – Klas- en schoolafspraken", 14, 15);
+
+  pdf.setFontSize(11);
+  pdf.text(`Periode: ${van} t.e.m. ${tot}`, 14, 25);
+
+  let y = 40;
+
+  // ----------- KOPTEKSTEN -----------
+  pdf.setFontSize(11);
+  pdf.setFont(undefined, "bold");
+  pdf.text("Leerling", 14, y);
+  pdf.text("Speeltijden", 70, y);
+  pdf.text("Uitgezeten", 100, y);
+  pdf.text("Resterend", 130, y);
+  pdf.text("Sanctietypes", 160, y); // nieuwe brede kolom
+
+  y += 4;
+
+  // Lijn onder koptekst
+  pdf.setLineWidth(0.3);
+  pdf.line(14, y, 280, y);
+
+  pdf.setFont(undefined, "normal");
+  y += 6;
+
+  const lijst = [...leerlingen].sort((a, b) =>
+    a.naam.localeCompare(b.naam, "nl", { sensitivity: "base" })
+  );
+
+  lijst.forEach((ll) => {
+    const sanctiesLl = sancties[ll.id] || {};
+
+    let totaalSpeelt = 0;
+    let totaalUitgez = 0;
+
+    const typeTeller = {}; // hier tellen we types
+
+    for (const sid in sanctiesLl) {
+      const s = sanctiesLl[sid];
+      if (!s.datum) continue;
+
+      const d = new Date(s.datum);
+      if (d < vanDate || d > totDate) continue;
+
+      // totalen
+      totaalSpeelt += Number(s.speeltijden || 0);
+      totaalUitgez += Number(s.uitgezeten || 0);
+
+      // type bundelen
+      if (!typeTeller[s.type]) typeTeller[s.type] = 0;
+      typeTeller[s.type]++;
+    }
+
+    if (Object.keys(typeTeller).length === 0) return;
+
+    const resterend = totaalSpeelt - totaalUitgez;
+
+    // type-string maken: "Niet luisteren (2x), Vechten (1x)"
+    const typeTekst = Object.entries(typeTeller)
+      .map(([type, aantal]) => `${type} (${aantal}×)`)
+      .join(", ");
+
+    pdf.text(ll.naam, 14, y);
+    pdf.text(String(totaalSpeelt), 70, y);
+    pdf.text(String(totaalUitgez), 100, y);
+    pdf.text(String(resterend), 130, y);
+
+    // lange tekst voor types
+    pdf.text(typeTekst, 160, y, { maxWidth: 115 });
+
+    y += 4;
+
+    pdf.setLineWidth(0.1);
+    pdf.line(14, y, 280, y); // lijn over hele landscape breedte
+
+    y += 5;
+
+    if (y > 190) { // landscape pagina eind
+      pdf.addPage();
+      y = 20;
+    }
+  });
+
+  pdf.save("Klasoverzicht.pdf");
+};
