@@ -109,6 +109,28 @@
           </tbody>
         </table>
       </div>
+      <!-- =============================
+     PDF voor volledige klas
+     ============================= -->
+<div class="pdf-klas-container" style="margin-top:20px;">
+  <h3>Klasoverzicht – PDF</h3>
+
+  <label style="margin-right:10px;">
+    Van:
+    <input type="date" id="filterVan">
+  </label>
+
+  <label style="margin-right:10px;">
+    Tot:
+    <input type="date" id="filterTot">
+  </label>
+
+  <button type="button" onclick="window.genereerPDFKlas()" 
+          style="padding:6px 12px; border-radius:6px; background:#3b82f6; color:white; border:none; cursor:pointer;">
+    PDF volledige klas
+  </button>
+</div>
+
     </section>
   </main>
 
