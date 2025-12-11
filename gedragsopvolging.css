@@ -1,0 +1,262 @@
+/* Basis */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background-color: #f6f6f6;
+  color: #111827;
+}
+
+/* Topbalk */
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 20px;
+  background-color: #4A90E2;
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+}
+
+.topbar h1 {
+  margin: 0;
+  font-size: 1.4rem;
+}
+
+.topbar-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.topbar-buttons button {
+  border: none;
+  border-radius: 6px;
+  padding: 6px 12px;
+  background: #fff;
+  color: #1f2933;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+.topbar-buttons button:hover {
+  background: #e5efff;
+}
+
+/* Layout hoofdinhoud */
+.main-layout {
+  display: grid;
+  grid-template-columns: minmax(260px, 320px) minmax(0, 1fr);
+  gap: 16px;
+  padding: 16px;
+}
+
+.pane {
+  background: #fff;
+  border-radius: 10px;
+  padding: 16px 18px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+}
+
+.pane h2 {
+  margin-top: 0;
+  margin-bottom: 8px;
+  font-size: 1.15rem;
+}
+
+/* Formuliergedeelte */
+.field {
+  margin-bottom: 10px;
+}
+
+.field-group {
+  display: flex;
+  gap: 10px;
+}
+
+.field label {
+  display: block;
+  font-size: 0.9rem;
+  margin-bottom: 2px;
+  color: #374151;
+}
+
+.field input[type="text"],
+.field input[type="number"],
+.field input[type="date"],
+.field select,
+.field textarea {
+  width: 100%;
+  padding: 6px 8px;
+  border-radius: 6px;
+  border: 1px solid #d1d5db;
+  font-size: 0.9rem;
+}
+
+.field textarea {
+  resize: vertical;
+}
+
+.hint {
+  margin: 4px 0 0 0;
+  font-size: 0.8rem;
+  color: #6b7280;
+}
+
+.btn-primary {
+  margin-top: 6px;
+  padding: 8px 14px;
+  border-radius: 6px;
+  border: none;
+  background: #2563eb;
+  color: #fff;
+  cursor: pointer;
+  font-size: 0.95rem;
+}
+.btn-primary:hover {
+  background: #1d4ed8;
+}
+
+/* Overzichtsgedeelte */
+.pane-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.pane-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.pane-actions button {
+  border-radius: 6px;
+  border: 1px solid #d1d5db;
+  background: #f9fafb;
+  padding: 6px 10px;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+.pane-actions button:hover {
+  background: #e5efff;
+}
+
+.subtext {
+  margin: 2px 0 0 0;
+  font-size: 0.85rem;
+  color: #6b7280;
+}
+
+/* Infoboxen */
+.info-box {
+  padding: 10px 12px;
+  background: #eff6ff;
+  border-radius: 8px;
+  border: 1px solid #bfdbfe;
+  font-size: 0.9rem;
+  color: #1d4ed8;
+}
+
+/* Tabel */
+.table-wrapper {
+  margin-top: 8px;
+  max-height: calc(100vh - 210px);
+  overflow: auto;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #fff;
+  font-size: 0.9rem;
+}
+
+thead {
+  position: sticky;
+  top: 0;
+  background: #f3f4f6;
+  z-index: 1;
+}
+
+th,
+td {
+  border-bottom: 1px solid #e5e7eb;
+  padding: 6px 8px;
+  text-align: left;
+  vertical-align: top;
+}
+
+th {
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+td.datum {
+  white-space: nowrap;
+}
+
+td.reden {
+  max-width: 280px;
+}
+
+.badge-speeltijd {
+  display: inline-block;
+  padding: 2px 6px;
+  border-radius: 999px;
+  background: #fee2e2;
+  color: #991b1b;
+  font-size: 0.8rem;
+}
+
+.badge-uitgezeten {
+  display: inline-block;
+  padding: 2px 6px;
+  border-radius: 999px;
+  background: #dcfce7;
+  color: #166534;
+  font-size: 0.8rem;
+}
+
+/* Actieknoppen in tabel */
+.actieknoppen {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.actieknoppen button {
+  border-radius: 4px;
+  border: 1px solid #d1d5db;
+  background: #f9fafb;
+  padding: 2px 6px;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+.actieknoppen button:hover {
+  background: #e5efff;
+}
+
+.actie-verwijder {
+  border-color: #fecaca;
+  color: #b91c1c;
+}
+.actie-verwijder:hover {
+  background: #fee2e2;
+}
+
+/* Responsief */
+@media (max-width: 900px) {
+  .main-layout {
+    grid-template-columns: 1fr;
+  }
+  .pane-overzicht {
+    order: 2;
+  }
+}
