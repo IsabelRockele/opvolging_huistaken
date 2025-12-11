@@ -1,11 +1,17 @@
-
 // gedragsopvolging.js
 // Module voor registreren en opvolgen van afspraken / sancties
+
+// 🔹 1. Firebase APART initialiseren (veilig, enkel voor deze pagina)
+import {
+  initializeApp,
+  getApps,
+  getApp,
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 
 import {
   getAuth,
   onAuthStateChanged,
-  signOut
+  signOut,
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
 import {
@@ -14,40 +20,60 @@ import {
   onSnapshot,
   setDoc,
   updateDoc,
-  deleteField
+  deleteField,
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-// We gaan uit van het default Firebase-app, geïnitialiseerd in script.js
-// (zoals ook gebruikt in dashboard.js) :contentReference[oaicite:2]{index=2}
-const auth = getAuth();
-const db   = getFirestore();
+// ⚠️ Dit is dezelfde config als in script.js (huiswerkapp-a311e)
+const firebaseConfig = {
+  apiKey: "AIzaSyA7KxXMvZ4dzBQDut3CMyWUblLte2tFzoQ",
+  authDomain: "huiswerkapp-a311e.firebaseapp.com",
+  projectId: "huiswerkapp-a311e",
+  storageBucket: "huiswerkapp-a311e.appspot.com",
+  messagingSenderId: "797169941164",
+  appId: "1:797169941164:web:511d9618079f1378d0fd09",
+};
 
+// ➜ voorkom fout "app already exists" als script.js al initialiseert
+let app;
+if (!getApps().length) {
+  app = initializeApp(firebaseConfig);
+} else {
+  app = getApp();
+}
+
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+// 🔹 2. Lokale state
 let currentUser = null;
 let leerlingen = [];
-let sancties   = {}; // structuur: { [leerlingId]: { [sanctieId]: {...} } }
+let sancties = {}; // structuur: { [leerlingId]: { [sanctieId]: {...} } }
 let geselecteerdeLeerlingId = null;
 
 // Mapping van types naar standaard aantal speeltijden
 const TYPE_CONFIG = {
-  "Vechten": 4,
-  "Schelden": 2,
+  Vechten: 4,
+  Schelden: 2,
   "Vechten + schelden": 6,
   "Niet luisteren": 2,
   "Ongepast gedrag": 2,
-  "Ongepast gedrag naar juf/meester": 4
+  "Ongepast gedrag naar juf/meester": 4,
 };
 const TYPE_OPTIES = Object.keys(TYPE_CONFIG);
 
 // Convenience
 function getLeerkrachtDocRef() {
+  if (!currentUser) {
+    throw new Error("Geen ingelogde leerkracht.");
+  }
   return doc(db, "leerkrachten", currentUser.uid);
 }
 
 // --- INIT ---
 document.addEventListener("DOMContentLoaded", () => {
-  // Auth bewaken
   onAuthStateChanged(auth, (user) => {
     if (!user) {
+      // niet ingelogd → terug naar start
       window.location.href = "index.html";
       return;
     }
@@ -94,7 +120,6 @@ function setupUI() {
     const veld = document.getElementById("speeltijdenInput");
     veld.value = TYPE_CONFIG[type] ?? 1;
   });
-  // Initieel meteen zetten
   typeSelect.dispatchEvent(new Event("change"));
 
   // Leerlingselectie
@@ -105,6 +130,7 @@ function setupUI() {
 
   // Registratie opslaan
   btnOpslaan.addEventListener("click", voegRegistratieToe);
+console.log("DEBUG: Klik-event is gekoppeld aan voegRegistratieToe()");
 
   // PDF voor ouders
   btnPdfLeerling.addEventListener("click", genereerPdfVoorLeerling);
@@ -116,12 +142,10 @@ function koppelData() {
   onSnapshot(ref, (snap) => {
     const data = snap.exists() ? snap.data() : {};
     leerlingen = data.leerlingen || [];
-    sancties   = data.sancties   || {};
+    sancties = data.sancties || {};
 
-    // Leerling-dropdown bijwerken
     vulLeerlingSelect();
 
-    // Indien nog geen leerling gekozen, kies automatisch de eerste
     if (!geselecteerdeLeerlingId && leerlingen.length > 0) {
       geselecteerdeLeerlingId = leerlingen[0].id;
       const select = document.getElementById("leerlingSelect");
@@ -140,7 +164,7 @@ function vulLeerlingSelect() {
   select.innerHTML = '<option value="">Kies een leerling…</option>';
 
   const gesorteerd = [...leerlingen].sort((a, b) =>
-    a.naam.localeCompare(b.naam, "nl", { sensitivity: "base" })
+    a.naam.localeCompare(b.naam, "nl", { sensitivity: "base" }),
   );
 
   gesorteerd.forEach((ll) => {
@@ -157,6 +181,10 @@ function vulLeerlingSelect() {
 
 // --- REGISTRATIE TOEVOEGEN ---
 async function voegRegistratieToe() {
+    console.log("DEBUG: functie voegRegistratieToe() START");
+
+console.log("DEBUG: geselecteerde leerling = ", geselecteerdeLeerlingId);
+
   if (!geselecteerdeLeerlingId) {
     alert("Kies eerst een leerling.");
     return;
@@ -189,13 +217,16 @@ async function voegRegistratieToe() {
       type,
       reden,
       speeltijden,
-      uitgezeten: 0
-    }
+      uitgezeten: 0,
+    },
   };
+console.log("DEBUG: payload = ", payload);
+console.log("DEBUG: docRef = ", getLeerkrachtDocRef());
 
   try {
     await setDoc(getLeerkrachtDocRef(), payload, { merge: true });
-    // Reden leegmaken, datum laten staan (en type / speeltijden blijven)
+    console.log("DEBUG: setDoc uitgevoerd zonder fout");
+
     redenInput.value = "";
   } catch (err) {
     console.error(err);
@@ -209,18 +240,21 @@ function renderOverzicht() {
   const totaalInfo = document.getElementById("totaalInfo");
   const tbody = document.querySelector("#sanctiesTabel tbody");
   const meldingGeenLeerling = document.getElementById("geenLeerlingMelding");
-  const meldingGeenRegistraties = document.getElementById("geenRegistratiesMelding");
+  const meldingGeenRegistraties = document.getElementById(
+    "geenRegistratiesMelding",
+  );
 
   if (!geselecteerdeLeerlingId) {
     titel.textContent = "Overzicht";
     totaalInfo.textContent = "";
     if (tbody) tbody.innerHTML = "";
     if (meldingGeenLeerling) meldingGeenLeerling.style.display = "block";
-    if (meldingGeenRegistraties) meldingGeenRegistraties.style.display = "none";
+    if (meldingGeenRegistraties)
+      meldingGeenRegistraties.style.display = "none";
     return;
   }
 
-  const leerling = leerlingen.find(l => l.id === geselecteerdeLeerlingId);
+  const leerling = leerlingen.find((l) => l.id === geselecteerdeLeerlingId);
   const naam = leerling ? leerling.naam : "Onbekende leerling";
 
   titel.textContent = `Overzicht voor ${naam}`;
@@ -228,7 +262,6 @@ function renderOverzicht() {
   const lijst = sancties[geselecteerdeLeerlingId] || {};
   const entries = Object.entries(lijst).map(([id, obj]) => ({ id, ...obj }));
 
-  // sorteren op datum (oud -> nieuw) en vervolgens op id
   entries.sort((a, b) => {
     if (a.datum === b.datum) {
       return a.id.localeCompare(b.id);
@@ -239,31 +272,35 @@ function renderOverzicht() {
   if (entries.length === 0) {
     if (tbody) tbody.innerHTML = "";
     if (meldingGeenLeerling) meldingGeenLeerling.style.display = "none";
-    if (meldingGeenRegistraties) meldingGeenRegistraties.style.display = "block";
-    totaalInfo.textContent = "Nog geen registraties voor deze leerling.";
+    if (meldingGeenRegistraties)
+      meldingGeenRegistraties.style.display = "block";
+    totaalInfo.textContent =
+      "Nog geen registraties voor deze leerling.";
     return;
   } else {
     if (meldingGeenLeerling) meldingGeenLeerling.style.display = "none";
-    if (meldingGeenRegistraties) meldingGeenRegistraties.style.display = "none";
+    if (meldingGeenRegistraties)
+      meldingGeenRegistraties.style.display = "none";
   }
 
   let totaalSpeeltijden = 0;
   let totaalUitgezeten = 0;
 
-  const rowsHtml = entries.map((s) => {
-    const d = s.datum || "";
-    const [y, m, day] = d.split("-");
-    const datumMooi = (day && m) ? `${day}/${m}` : d;
+  const rowsHtml = entries
+    .map((s) => {
+      const d = s.datum || "";
+      const [y, m, day] = d.split("-");
+      const datumMooi = day && m ? `${day}/${m}` : d;
 
-    const speelt = Number(s.speeltijden || 0);
-    const uit = Number(s.uitgezeten || 0);
+      const speelt = Number(s.speeltijden || 0);
+      const uit = Number(s.uitgezeten || 0);
 
-    totaalSpeeltijden += speelt;
-    totaalUitgezeten += uit;
+      totaalSpeeltijden += speelt;
+      totaalUitgezeten += uit;
 
-    const restant = Math.max(speelt - uit, 0);
+      const restant = Math.max(speelt - uit, 0);
 
-    return `
+      return `
       <tr data-id="${s.id}">
         <td class="datum">${datumMooi}</td>
         <td>${escapeHtml(s.type || "")}</td>
@@ -273,7 +310,11 @@ function renderOverzicht() {
         </td>
         <td>
           <span class="badge-uitgezeten">${uit} uitgezeten</span>
-          ${restant > 0 ? `<div style="font-size:0.8rem; color:#6b7280;">(${restant} resterend)</div>` : ""}
+          ${
+            restant > 0
+              ? `<div style="font-size:0.8rem; color:#6b7280;">(${restant} resterend)</div>`
+              : ""
+          }
         </td>
         <td>
           <div class="actieknoppen">
@@ -284,15 +325,15 @@ function renderOverzicht() {
         </td>
       </tr>
     `;
-  }).join("");
+    })
+    .join("");
 
   if (tbody) {
     tbody.innerHTML = rowsHtml;
   }
 
   const restantTotaal = Math.max(totaalSpeeltijden - totaalUitgezeten, 0);
-  totaalInfo.textContent =
-    `Totaal: ${totaalSpeeltijden} speeltijden (${totaalUitgezeten} reeds uitgezeten, ${restantTotaal} resterend).`;
+  totaalInfo.textContent = `Totaal: ${totaalSpeeltijden} speeltijden (${totaalUitgezeten} reeds uitgezeten, ${restantTotaal} resterend).`;
 }
 
 // Kleine helper om HTML te escapen
@@ -302,7 +343,6 @@ function escapeHtml(str) {
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;");
 }
-
 // --- Speeltijd-uitgezeten bijwerken ---
 window.pasSpeeltijdAan = async function (sanctieId, delta) {
   if (!geselecteerdeLeerlingId) return;
@@ -319,7 +359,8 @@ window.pasSpeeltijdAan = async function (sanctieId, delta) {
 
   try {
     await updateDoc(getLeerkrachtDocRef(), {
-      [`sancties.${geselecteerdeLeerlingId}.${sanctieId}.uitgezeten`]: nieuw
+      [`sancties.${geselecteerdeLeerlingId}.${sanctieId}.uitgezeten`]:
+        nieuw,
     });
   } catch (err) {
     console.error(err);
@@ -331,13 +372,14 @@ window.pasSpeeltijdAan = async function (sanctieId, delta) {
 window.verwijderRegistratie = async function (sanctieId) {
   if (!geselecteerdeLeerlingId) return;
 
-  const leerling = leerlingen.find(l => l.id === geselecteerdeLeerlingId);
+  const leerling = leerlingen.find((l) => l.id === geselecteerdeLeerlingId);
   const naam = leerling ? leerling.naam : "deze leerling";
-  if (!confirm(`Wil je deze registratie voor ${naam} echt verwijderen?`)) return;
+  if (!confirm(`Wil je deze registratie voor ${naam} echt verwijderen?`))
+    return;
 
   try {
     await updateDoc(getLeerkrachtDocRef(), {
-      [`sancties.${geselecteerdeLeerlingId}.${sanctieId}`]: deleteField()
+      [`sancties.${geselecteerdeLeerlingId}.${sanctieId}`]: deleteField(),
     });
   } catch (err) {
     console.error(err);
@@ -352,14 +394,17 @@ async function genereerPdfVoorLeerling() {
     return;
   }
 
-  const leerling = leerlingen.find(l => l.id === geselecteerdeLeerlingId);
+  const leerling = leerlingen.find((l) => l.id === geselecteerdeLeerlingId);
   if (!leerling) {
     alert("Leerling niet gevonden.");
     return;
   }
 
   const lijst = sancties[geselecteerdeLeerlingId] || {};
-  const entries = Object.entries(lijst).map(([id, obj]) => ({ id, ...obj }));
+  const entries = Object.entries(lijst).map(([id, obj]) => ({
+    id,
+    ...obj,
+  }));
   if (entries.length === 0) {
     alert("Er zijn nog geen registraties voor deze leerling.");
     return;
@@ -371,14 +416,13 @@ async function genereerPdfVoorLeerling() {
   });
 
   let totaalSpeeltijden = 0;
-  entries.forEach(e => {
+  entries.forEach((e) => {
     totaalSpeeltijden += Number(e.speeltijden || 0);
   });
 
   const container = document.getElementById("pdfContainer");
   if (!container) return;
 
-  // HTML opbouwen
   let html = `
     <h1>Gedragsopvolging – ${escapeHtml(leerling.naam)}</h1>
     <p>Overzicht van de registraties rond klasafspraken.</p>
@@ -398,7 +442,7 @@ async function genereerPdfVoorLeerling() {
   entries.forEach((e) => {
     const d = e.datum || "";
     const [y, m, day] = d.split("-");
-    const datumMooi = (day && m) ? `${day}/${m}/${y}` : d;
+    const datumMooi = day && m ? `${day}/${m}/${y}` : d;
     html += `
       <tr>
         <td style="border:1px solid #ccc; padding:4px;">${datumMooi}</td>
@@ -431,7 +475,7 @@ async function genereerPdfVoorLeerling() {
   const imgProps = pdf.getImageProperties(imgData);
   const ratio = imgProps.width / imgProps.height;
 
-  let renderWidth = pdfWidth - 20; // marges
+  let renderWidth = pdfWidth - 20;
   let renderHeight = renderWidth / ratio;
   if (renderHeight > pdfHeight - 20) {
     renderHeight = pdfHeight - 20;
@@ -444,7 +488,7 @@ async function genereerPdfVoorLeerling() {
     (pdfWidth - renderWidth) / 2,
     10,
     renderWidth,
-    renderHeight
+    renderHeight,
   );
 
   pdf.save(`Gedragsopvolging_${leerling.naam}.pdf`);
