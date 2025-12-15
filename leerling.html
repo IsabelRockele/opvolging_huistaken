@@ -10,6 +10,7 @@
   <meta name="theme-color" content="#4A90E2">
   
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
   <style>
     /* CSS is ongewijzigd, maar hier voor de volledigheid */
     .navigatie-container { position: absolute; top: 1rem; left: 1rem; }
@@ -38,6 +39,33 @@
       .no-print { display: none !important; }
       canvas { background-color: transparent; }
     }
+
+/* Schoollogo = enkel zichtbaar bij afdruk */
+.pdf-logo-container {
+  display: none;
+}
+
+/* Alleen bij print tonen als voettekst */
+@media print {
+  .pdf-logo-container {
+    display: block;
+    position: fixed;
+    bottom: 20px;
+    left: 0;
+    width: 100%;
+    text-align: center;
+    pointer-events: none;
+  }
+
+  .pdf-logo-container img {
+    width: 60px;
+    height: auto;
+    opacity: 0.8;
+  }
+}
+
+
+
   </style>
 </head>
 <body>
@@ -49,6 +77,10 @@
   <div class="grafiek-container">
     <canvas id="taart"></canvas>
     <div id="samenvatting"></div>
+    <div class="pdf-logo-container">
+  <img src="afbeeldingen/schoollogo.png" alt="Schoollogo">
+</div>
+
     <div class="actie-knoppen no-print">
         <button id="kopieerBtn">Kopieer tekst</button>
         <button onclick="slaDiagramOp()">Sla diagram op</button>
@@ -66,7 +98,11 @@
 
     const query = new URLSearchParams(window.location.search);
     const naam = query.get("naam");
-    document.getElementById("titel").textContent = `Overzicht voor ${naam}`;
+    document.getElementById("titel").innerHTML = `
+  Overzicht opvolging huistaken<br>
+  <span style="font-size: 0.8em; font-weight: normal;">${naam}</span>
+`;
+
 
     const allData = JSON.parse(localStorage.getItem("detailPaginaData")) || {};
     const leerling = allData.leerlingen?.find(l => l.naam === naam);
