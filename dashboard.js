@@ -663,14 +663,19 @@ async function genereerBulkPdf() {
     }
     samenvattingHTML += "</ul>";
 
-    container.innerHTML = `
+  container.innerHTML = `
   <h1>Overzicht opvolging huistaken</h1>
   <h2>${leerling.naam}</h2>
   <h3>Rapportperiode ${periode}</h3>
-  <canvas id="pdf-chart-${leerling.id}" width="400" height="400"></canvas>
-  <div id="pdf-samenvatting">${samenvattingHTML}</div>
-`;
 
+  <canvas id="pdf-chart-${leerling.id}" width="400" height="400"></canvas>
+
+  <div id="pdf-samenvatting">${samenvattingHTML}</div>
+
+  <div class="pdf-logo-container">
+    <img src="afbeeldingen/schoollogo.png" alt="Schoollogo">
+  </div>
+`;
 
     // Chart per leerling
     const totaal = Object.values(telling).reduce((a, b) => a + b, 0);
@@ -695,10 +700,14 @@ async function genereerBulkPdf() {
     const canvas = await html2canvas(container, { scale: 2 });
     const imgData = canvas.toDataURL('image/png');
     const imgProps = pdf.getImageProperties(imgData);
-    const pdfWidth = pdf.internal.pageSize.getWidth();
-    const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
-    if (i > 0) pdf.addPage();
-    pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+   const pageWidth  = pdf.internal.pageSize.getWidth();
+const pageHeight = pdf.internal.pageSize.getHeight();
+
+if (i > 0) pdf.addPage();
+
+/* Forceer afbeelding exact in één A4 */
+pdf.addImage(imgData, 'PNG', 0, 0, pageWidth, pageHeight);
+
 
     // voortgang
     const progress = Math.round(((i + 1) / gesorteerdeLeerlingen.length) * 100);
