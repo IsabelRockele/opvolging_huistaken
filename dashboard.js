@@ -664,11 +664,13 @@ async function genereerBulkPdf() {
     samenvattingHTML += "</ul>";
 
     container.innerHTML = `
-      <h1>Overzicht voor ${leerling.naam}</h1>
-      <h2>Rapportperiode ${periode}</h2>
-      <canvas id="pdf-chart-${leerling.id}" width="400" height="400"></canvas>
-      <div id="pdf-samenvatting">${samenvattingHTML}</div>
-    `;
+  <h1>Overzicht opvolging huistaken</h1>
+  <h2>${leerling.naam}</h2>
+  <h3>Rapportperiode ${periode}</h3>
+  <canvas id="pdf-chart-${leerling.id}" width="400" height="400"></canvas>
+  <div id="pdf-samenvatting">${samenvattingHTML}</div>
+`;
+
 
     // Chart per leerling
     const totaal = Object.values(telling).reduce((a, b) => a + b, 0);
