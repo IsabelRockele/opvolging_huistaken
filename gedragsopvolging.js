@@ -558,6 +558,12 @@ window.wijzigReden = async function (sanctieId, huidigeReden) {
   }
 };
 window.genereerPDFKlas = async function () {
+    // 🔒 Overzicht speeltijden sluiten vóór PDF
+  const overzicht = document.getElementById("speeltijdenOverzicht");
+  if (overzicht) {
+    overzicht.style.display = "none";
+  }
+
 
   const van = document.getElementById("filterVan").value;
   const tot = document.getElementById("filterTot").value;
