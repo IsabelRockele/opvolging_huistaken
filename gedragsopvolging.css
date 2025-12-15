@@ -231,7 +231,8 @@ td.reden {
   flex-wrap: wrap;
 }
 
-.actieknoppen button {
+/* Algemene stilering voor normale actieknoppen */
+.actieknoppen button:not(.btn-binnen):not(.btn-ongedaan) {
   border-radius: 4px;
   border: 1px solid #d1d5db;
   background: #f9fafb;
@@ -239,6 +240,26 @@ td.reden {
   font-size: 0.8rem;
   cursor: pointer;
 }
+
+/* Jouw echte custom knoppen */
+.btn-binnen {
+  background-color: #2b8a3e !important;
+  color: white !important;
+  border: none !important;
+  padding: 6px 12px !important;
+  border-radius: 4px !important;
+  font-weight: 600 !important;
+}
+
+.btn-ongedaan {
+  background-color: #c62828 !important;
+  color: white !important;
+  border: none !important;
+  padding: 6px 12px !important;
+  border-radius: 4px !important;
+  font-weight: 600 !important;
+}
+
 .actieknoppen button:hover {
   background: #e5efff;
 }
@@ -259,4 +280,57 @@ td.reden {
   .pane-overzicht {
     order: 2;
   }
+}
+.btn-binnen {
+  background-color: #2b8a3e;  /* donkergroen */
+  color: #ffffff;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.btn-binnen:hover {
+  background-color: #256f34;
+}
+
+.btn-ongedaan {
+  background-color: #c62828; /* donkerrood */
+  color: #ffffff;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.btn-ongedaan:hover {
+  background-color: #a61f1f;
+}
+
+.pdf-klas-container {
+  margin-top: 20px;
+  padding: 15px;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  background: #f9fafb;
+}
+
+.pdf-klas-container h3 {
+  margin-top: 0;
+}
+
+.pdf-klas-container input {
+  margin-right: 10px;
+}
+
+.pdf-klas-container button {
+  margin-top: 10px;
+  padding: 6px 12px;
+  border-radius: 4px;
+  background: #3b82f6;
+  color: white;
+  border: none;
+  cursor: pointer;
 }
