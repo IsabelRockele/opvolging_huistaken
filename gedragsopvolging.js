@@ -90,6 +90,7 @@ function setupUI() {
   const datumInput = document.getElementById("datumInput");
   const btnOpslaan = document.getElementById("btnOpslaan");
   const btnPdfLeerling = document.getElementById("btnPdfLeerling");
+  const btnOverzichtSpeeltijden = document.getElementById("btnOverzichtSpeeltijden");
   const leerlingSelect = document.getElementById("leerlingSelect");
 
   // Terug naar dashboard
@@ -134,6 +135,7 @@ console.log("DEBUG: Klik-event is gekoppeld aan voegRegistratieToe()");
 
   // PDF voor ouders
   btnPdfLeerling.addEventListener("click", genereerPdfVoorLeerling);
+  btnOverzichtSpeeltijden.addEventListener("click", toonOverzichtSpeeltijden);
 }
 
 // --- DATA KOPPELEN ---
@@ -495,3 +497,71 @@ async function genereerPdfVoorLeerling() {
 
   container.innerHTML = "";
 }
+function toonOverzichtSpeeltijden() {
+  const box = document.getElementById("speeltijdenOverzicht");
+  if (!box) return;
+
+  let html = "<strong>Leerlingen die nog speeltijden moeten binnenzitten:</strong><ul>";
+  let gevonden = false;
+
+  leerlingen.forEach((leerling) => {
+    const lijst = sancties[leerling.id] || {};
+    let totaal = 0;
+    let uitgezeten = 0;
+
+    Object.values(lijst).forEach((s) => {
+      totaal += Number(s.speeltijden || 0);
+      uitgezeten += Number(s.uitgezeten || 0);
+    });
+
+    const restant = totaal - uitgezeten;
+
+    if (restant > 0) {
+      gevonden = true;
+      html += `
+  <li style="margin-bottom:6px; display:flex; justify-content:space-between; align-items:center;">
+    <span
+      style="cursor:pointer;"
+      onclick="document.getElementById('leerlingSelect').value='${leerling.id}';
+               document.getElementById('leerlingSelect').dispatchEvent(new Event('change'));">
+      ${leerling.naam} – ${restant} speeltijd${restant === 1 ? "" : "en"}
+    </span>
+    <button
+      style="font-size:0.75rem;"
+      onclick="markeerSpeeltijdUitgezeten('${leerling.id}')">
+      +1 uitgezeten
+    </button>
+  </li>`;
+    }
+  });
+
+  html += "</ul>";
+
+  if (!gevonden) {
+    html = "<strong>Alle speeltijden zijn uitgezeten 👍</strong>";
+  }
+
+  box.innerHTML = html;
+  box.style.display = "block";
+}
+window.markeerSpeeltijdUitgezeten = async function (leerlingId) {
+  const lijst = sancties[leerlingId];
+  if (!lijst) return;
+
+  // zoek oudste sanctie die nog niet volledig uitgezeten is
+  const entries = Object.entries(lijst)
+    .map(([id, s]) => ({ id, ...s }))
+    .sort((a, b) => a.datum.localeCompare(b.datum));
+
+  const sanctie = entries.find(
+    (s) => Number(s.uitgezeten || 0) < Number(s.speeltijden || 0)
+  );
+
+  if (!sanctie) return;
+
+  const nieuwAantal = Number(sanctie.uitgezeten || 0) + 1;
+
+  await updateDoc(getLeerkrachtDocRef(), {
+    [`sancties.${leerlingId}.${sanctie.id}.uitgezeten`]: nieuwAantal,
+  });
+};
