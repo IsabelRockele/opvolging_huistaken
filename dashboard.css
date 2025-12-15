@@ -323,14 +323,39 @@ body { padding-bottom: 24px; }
 #pdf-render-container {
   position: absolute;
   left: -9999px;
-  top: auto;
+  top: 0;
+
   width: 700px;
+  min-height: 1120px;      /* ≈ A4 hoogte bij html2canvas */
   background-color: white;
-  /* meer marge links: top, right, bottom, left */
-  padding: 20px 30px 20px 60px;
+
+  /* marges */
+  padding: 20px 30px 90px 60px;
+  box-sizing: border-box;
 }
+
 /* PDF: extra marge links/rechts — overschrijft inline style */
 #pdf-render-container{
   padding-left: 60px !important;   /* ≈ 22 mm linkermarge */
   padding-right: 30px !important;  /* wat extra ademruimte rechts */
 }
+/* ================================
+   Schoollogo als VOETTEKST in PDF
+   (html2canvas + jsPDF)
+   ================================ */
+
+#pdf-render-container .pdf-logo-container {
+  position: absolute;
+  bottom: 18px;          /* echte onderkant van A4 */
+  left: 0;
+  width: 100%;
+  text-align: center;
+  pointer-events: none;  /* nooit klik-issues */
+}
+
+#pdf-render-container .pdf-logo-container img {
+  width: 55px;           /* rustig, niet dominant */
+  height: auto;
+  opacity: 0.8;
+}
+
