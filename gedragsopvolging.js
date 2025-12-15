@@ -91,6 +91,17 @@ function setupUI() {
   const btnOpslaan = document.getElementById("btnOpslaan");
   const btnPdfLeerling = document.getElementById("btnPdfLeerling");
   const leerlingSelect = document.getElementById("leerlingSelect");
+const btnOverzicht = document.getElementById("btnOverzichtSpeeltijden");
+const overzichtContainer = document.getElementById("speeltijdenOverzicht");
+
+
+btnOverzicht.addEventListener("click", () => {
+  overzichtContainer.style.display =
+    overzichtContainer.style.display === "none" ? "block" : "none";
+
+  renderOverzichtSpeeltijden();
+});
+
 
   // Terug naar dashboard
   btnTerug.addEventListener("click", () => {
@@ -649,3 +660,70 @@ window.genereerPDFKlas = async function () {
 
   pdf.save("Klasoverzicht.pdf");
 };
+window.markeerSpeeltijdUitgezeten = async function (leerlingId) {
+  const lijst = sancties[leerlingId];
+  if (!lijst) return;
+
+  // zoek oudste sanctie met resterende speeltijd
+  const entries = Object.entries(lijst)
+    .map(([id, s]) => ({ id, ...s }))
+    .sort((a, b) => a.datum.localeCompare(b.datum));
+
+  const sanctie = entries.find(
+    s => Number(s.uitgezeten || 0) < Number(s.speeltijden || 0)
+  );
+
+  if (!sanctie) return;
+
+  await updateDoc(getLeerkrachtDocRef(), {
+    [`sancties.${leerlingId}.${sanctie.id}.uitgezeten`]:
+      Number(sanctie.uitgezeten || 0) + 1,
+  });
+
+  // 🔴 DIT MOET JE TOEVOEGEN
+  renderOverzichtSpeeltijden();
+};
+
+
+function renderOverzichtSpeeltijden() {
+  const container = document.getElementById("speeltijdenOverzicht");
+  if (!container) return;
+
+  let html = "<h3>Openstaande speeltijden</h3>";
+
+  let heeftIets = false;
+
+  leerlingen.forEach(leerling => {
+    const lijst = sancties[leerling.id];
+    if (!lijst) return;
+
+    let totaal = 0;
+    let uitgezeten = 0;
+
+    Object.values(lijst).forEach(s => {
+      totaal += Number(s.speeltijden || 0);
+      uitgezeten += Number(s.uitgezeten || 0);
+    });
+
+    const resterend = Math.max(totaal - uitgezeten, 0);
+    if (resterend <= 0) return;
+
+    heeftIets = true;
+
+    html += `
+      <div class="overzicht-leerling">
+        <strong>${leerling.naam}</strong>
+        <span>— nog ${resterend} speeltijd(en)</span>
+        <button onclick="markeerSpeeltijdUitgezeten('${leerling.id}')">
+          +1 binnengezeten
+        </button>
+      </div>
+    `;
+  });
+
+  if (!heeftIets) {
+    html += "<p>Geen openstaande speeltijden 🎉</p>";
+  }
+
+  container.innerHTML = html;
+}
