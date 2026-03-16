@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Klasagenda – Archief</title>
+<style>
+  :root{--brand:#0a66c2;--green:#16a34a;--ink:#111;--muted:#6b7280;--line:#e5e7eb;--bg:#f3f5f7}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:Arial,Helvetica,sans-serif;color:var(--ink);background:var(--bg);min-height:100vh}
+  .topbar{background:#fff;border-bottom:1px solid var(--line);padding:.7rem 1.2rem;display:flex;align-items:center;gap:1rem;flex-wrap:wrap}
+  .topbar h1{margin:0;font-size:1.3rem;flex:1}
+  .topbar a{color:var(--brand);text-decoration:none;font-weight:700;font-size:.95rem}
+  .topbar a:hover{text-decoration:underline}
+  .wrap{max-width:1000px;margin:0 auto;padding:1.4rem 1rem}
+  .tabs{display:flex;gap:.5rem;margin-bottom:1.2rem;flex-wrap:wrap}
+  .tab{padding:.5rem 1.2rem;border:2px solid var(--line);border-radius:20px;background:#fff;cursor:pointer;font-weight:700;font-size:.95rem;transition:all .15s;font-family:inherit}
+  .tab.active{background:var(--brand);border-color:var(--brand);color:#fff}
+  .tab:hover:not(.active){background:#f0f4f8}
+  .maand-blok{background:#fff;border:1px solid var(--line);border-radius:10px;margin-bottom:.7rem;overflow:hidden}
+  .maand-header{padding:.75rem 1.1rem;font-weight:700;font-size:1rem;cursor:pointer;display:flex;justify-content:space-between;align-items:center;user-select:none}
+  .maand-header:hover{background:#f9fafb}
+  .chevron{transition:transform .2s;display:inline-block}
+  .maand-blok.open .chevron{transform:rotate(180deg)}
+  .maand-body{display:none;padding:.4rem .8rem .8rem}
+  .maand-blok.open .maand-body{display:block}
+  .week-blok{margin:.4rem 0;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+  .week-header{padding:.45rem .9rem;background:#f9fafb;font-weight:700;cursor:pointer;display:flex;justify-content:space-between;align-items:center;font-size:.95rem;user-select:none}
+  .week-header:hover{background:#f0f4f8}
+  .week-body{display:none;padding:.5rem .8rem}
+  .week-blok.open .week-body{display:block}
+  .agenda-kaart{border:1px solid var(--line);border-radius:8px;padding:.6rem 1rem;margin:.35rem 0;display:flex;align-items:center;justify-content:space-between;gap:.8rem;flex-wrap:wrap;background:#fafbfc}
+  .agenda-info strong{font-size:.98rem}
+  .agenda-info span{color:var(--muted);font-size:.83rem;display:block;margin-top:.1rem}
+  .agenda-acties{display:flex;gap:.5rem;flex-shrink:0}
+  .btn{appearance:none;border:1.5px solid var(--brand);color:var(--brand);background:#fff;padding:.38rem .85rem;border-radius:8px;font-weight:700;cursor:pointer;font-size:.88rem;transition:all .15s;font-family:inherit}
+  .btn:hover{background:var(--brand);color:#fff}
+  .btn.groen{border-color:var(--green);color:var(--green)}
+  .btn.groen:hover{background:var(--green);color:#fff}
+  .modal-ov{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9000;display:flex;align-items:center;justify-content:center;padding:1rem}
+  .modal-box{background:#fff;border-radius:14px;padding:24px 28px;width:100%;max-width:480px;box-shadow:0 8px 40px rgba(0,0,0,.18);max-height:90vh;overflow-y:auto}
+  .modal-box h2{margin:0 0 .9rem;font-size:1.1rem}
+  .dag-lijst{display:grid;gap:.45rem}
+  .dag-item{border:1.5px solid var(--line);border-radius:8px;padding:.6rem .9rem;display:flex;justify-content:space-between;align-items:center;gap:.5rem}
+  .dag-item.heeft-inhoud{cursor:pointer}
+  .dag-item.heeft-inhoud:hover{border-color:var(--green);background:#f0fdf4}
+  .dag-item.leeg-dag{opacity:.5}
+  .dag-naam{font-weight:700;font-size:.95rem}
+  .dag-datum{font-size:.8rem;color:var(--muted);font-weight:400}
+  .dag-preview{font-size:.8rem;color:var(--muted);margin-top:.15rem;max-width:240px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .modal-footer{margin-top:1rem;display:flex;justify-content:flex-end}
+  .laden{text-align:center;padding:2.5rem;color:var(--muted);font-size:1.05rem}
+  .leeg{text-align:center;padding:1.5rem;color:var(--muted);font-style:italic;font-size:.95rem}
+  .tip{background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:.7rem 1rem;margin-bottom:1.1rem;font-size:.92rem;color:#1e40af;line-height:1.5}
+  .toast{position:fixed;bottom:24px;right:24px;background:#111;color:#fff;padding:.7rem 1.3rem;border-radius:10px;font-size:.95rem;z-index:9999;opacity:0;transition:opacity .3s;pointer-events:none;max-width:340px;line-height:1.5}
+  .toast.show{opacity:1}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <h1>📚 Klasagenda – Archief</h1>
+  <a href="klasagendav2.html">← Terug naar keuze</a>
+</div>
+
+<div class="wrap">
+  <div class="tip">
+    💡 <strong>Hoe werkt het?</strong> Klik op <em>Dag kopiëren</em> bij een agenda → kies de dag → open je eigen agenda in een nieuw tabblad → klik daar op <strong>"Plak gekopieerde dag"</strong>.
+  </div>
+
+  <div class="tabs" id="graadTabs">
+    <button class="tab active" data-graad="1stegraad">Eerste graad (L1–L2)</button>
+    <button class="tab" data-graad="2degraad">Tweede graad (L3–L4)</button>
+  </div>
+
+  <div id="archiefInhoud">
+    <div class="laden">⏳ Archief laden…</div>
+  </div>
+</div>
+
+<div class="modal-ov" id="dagModal" style="display:none">
+  <div class="modal-box">
+    <h2 id="dagModalTitel">Kies een dag</h2>
+    <div class="dag-lijst" id="dagLijst"></div>
+    <div class="modal-footer">
+      <button class="btn" id="dagModalSluit">Sluiten</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const DB_URL = 'https://zisa-klasagenda-default-rtdb.europe-west1.firebasedatabase.app';
+const DAGNAMES = ['Maandag','Dinsdag','Woensdag','Donderdag','Vrijdag','Zaterdag','Zondag'];
+const MAANDVOLGORDE = ['september','oktober','november','december','januari','februari','maart','april','mei','juni','juli','augustus'];
+
+let actieveGraad = '1stegraad';
+
+async function dbGet(path){
+  const r = await fetch(`${DB_URL}/${path}.json`);
+  if (!r.ok) throw new Error('Firebase fout: ' + r.status);
+  return r.json();
+}
+
+function toonToast(tekst, ms=4500){
+  const t = document.getElementById('toast');
+  t.textContent = tekst;
+  t.classList.add('show');
+  setTimeout(()=> t.classList.remove('show'), ms);
+}
+
+function dagPreviewTekst(dagData){
+  if (!dagData) return '';
+  const tmp = document.createElement('div');
+  tmp.innerHTML = dagData.plan || dagData.weekendHtml || '';
+  const tekst = tmp.textContent.replace(/\s+/g,' ').trim();
+  return tekst.slice(0,55) + (tekst.length>55?'…':'');
+}
+
+function dagDatumLabel(dagData){
+  if (!dagData || !dagData.date) return '';
+  try { return new Date(dagData.date).toLocaleDateString('nl-BE',{day:'numeric',month:'short'}); }
+  catch(e){ return ''; }
+}
+
+function dagHeeftInhoud(dagData){
+  if (!dagData) return false;
+  const tmp = document.createElement('div');
+  tmp.innerHTML = dagData.plan || dagData.weekendHtml || '';
+  return tmp.textContent.trim().length > 0;
+}
+
+function kopieerDag(dagData, dagNaam, agendaNaam){
+  try {
+    localStorage.setItem('archiefDagBuffer', JSON.stringify({
+      dagData, dagNaam, agendaNaam, gekopieerd: new Date().toISOString()
+    }));
+    toonToast('✅ ' + dagNaam + ' van ' + agendaNaam + ' gekopieerd!\nOpen je eigen agenda en klik "Plak gekopieerde dag".');
+    sluitDagModal();
+  } catch(e){
+    alert('Kon dag niet kopiëren: ' + e.message);
+  }
+}
+
+function toonDagModal(agendaNaam, agendaObj){
+  document.getElementById('dagModalTitel').textContent = 'Dag kopiëren uit agenda van ' + agendaNaam;
+  const lijst = document.getElementById('dagLijst');
+  lijst.innerHTML = '';
+  const days = agendaObj.days || {};
+  const indices = Object.keys(days).sort((a,b)=>parseInt(a)-parseInt(b));
+  if (indices.length === 0){
+    lijst.innerHTML = '<div style="color:var(--muted);font-style:italic;padding:.5rem">Geen dagen gevonden.</div>';
+  } else {
+    indices.forEach(idx => {
+      const d = days[idx];
+      const naam = DAGNAMES[parseInt(idx)] || ('Dag '+idx);
+      const heeftInhoud = dagHeeftInhoud(d);
+      const item = document.createElement('div');
+      item.className = 'dag-item ' + (heeftInhoud ? 'heeft-inhoud' : 'leeg-dag');
+      item.innerHTML =
+        '<div>' +
+          '<div class="dag-naam">' + naam + ' <span class="dag-datum">' + dagDatumLabel(d) + '</span></div>' +
+          '<div class="dag-preview">' + (dagPreviewTekst(d) || '(leeg)') + '</div>' +
+        '</div>' +
+        (heeftInhoud
+          ? '<button class="btn groen" style="font-size:.82rem;padding:.3rem .7rem;white-space:nowrap">📋 Kopieer</button>'
+          : '<span style="font-size:.8rem;color:var(--muted)">leeg</span>');
+      if (heeftInhoud){
+        item.querySelector('button').addEventListener('click', ()=> kopieerDag(d, naam, agendaNaam));
+      }
+      lijst.appendChild(item);
+    });
+  }
+  document.getElementById('dagModal').style.display = 'flex';
+}
+
+function sluitDagModal(){
+  document.getElementById('dagModal').style.display = 'none';
+}
+document.getElementById('dagModalSluit').addEventListener('click', sluitDagModal);
+document.getElementById('dagModal').addEventListener('click', e=>{
+  if (e.target === document.getElementById('dagModal')) sluitDagModal();
+});
+
+function sorteerMaanden(lijst){
+  return [...lijst].sort((a,b)=>{
+    const ia = MAANDVOLGORDE.indexOf(a.toLowerCase());
+    const ib = MAANDVOLGORDE.indexOf(b.toLowerCase());
+    return (ia===-1?99:ia)-(ib===-1?99:ib);
+  });
+}
+
+function renderArchief(data){
+  const el = document.getElementById('archiefInhoud');
+  if (!data || Object.keys(data).length===0){
+    el.innerHTML = '<div class="leeg">Nog geen agenda\'s bewaard voor deze graad.</div>';
+    return;
+  }
+  let html = '';
+  Object.keys(data).sort((a,b)=>b-a).forEach(jaar => {
+    sorteerMaanden(Object.keys(data[jaar])).forEach(maand => {
+      const maandLabel = maand.charAt(0).toUpperCase()+maand.slice(1);
+      const weken = Object.keys(data[jaar][maand]).sort((a,b)=>
+        parseInt(a.replace('week',''))-parseInt(b.replace('week','')));
+      html += '<div class="maand-blok"><div class="maand-header"><span>📅 '+maandLabel+' '+jaar+'</span><span class="chevron">▼</span></div><div class="maand-body">';
+      weken.forEach(weekLabel => {
+        const weekNr = weekLabel.replace('week','');
+        const agendas = data[jaar][maand][weekLabel];
+        const n = Object.keys(agendas).length;
+        html += '<div class="week-blok"><div class="week-header"><span>Week '+weekNr+'</span><span style="font-weight:400;color:var(--muted);font-size:.88rem">'+n+' agenda'+(n!==1?'s':'')+'</span></div><div class="week-body">';
+        Object.entries(agendas).forEach(([sleutel, obj]) => {
+          const naam = obj.meta?.archiefNaam || sleutel;
+          const klas = obj.meta?.archiefKlas ? ' ('+obj.meta.archiefKlas+')' : '';
+          const opg  = obj.meta?.opgeslagen
+            ? ' · bewaard op '+new Date(obj.meta.opgeslagen).toLocaleDateString('nl-BE',{day:'numeric',month:'long',hour:'2-digit',minute:'2-digit'})
+            : '';
+          const aantalDagen = Object.values(obj.days||{}).filter(dagHeeftInhoud).length;
+          html += '<div class="agenda-kaart" data-jaar="'+jaar+'" data-maand="'+maand+'" data-week="'+weekLabel+'" data-sleutel="'+sleutel+'">'
+            +'<div class="agenda-info"><strong>📖 '+naam+klas+'</strong><span>'+aantalDagen+' dag'+(aantalDagen!==1?'en':'')+' met inhoud'+opg+'</span></div>'
+            +'<div class="agenda-acties"><button class="btn groen btn-dag-kiezen">Dag kopiëren</button></div>'
+            +'</div>';
+        });
+        html += '</div></div>';
+      });
+      html += '</div></div>';
+    });
+  });
+  el.innerHTML = html;
+
+  el.querySelectorAll('.maand-header').forEach(h=>
+    h.addEventListener('click', ()=> h.closest('.maand-blok').classList.toggle('open')));
+  el.querySelectorAll('.week-header').forEach(h=>
+    h.addEventListener('click', ()=> h.closest('.week-blok').classList.toggle('open')));
+
+  el.querySelectorAll('.btn-dag-kiezen').forEach(btn=>{
+    btn.addEventListener('click', async ()=>{
+      const k = btn.closest('.agenda-kaart');
+      const origTekst = btn.textContent;
+      btn.textContent = '⏳…'; btn.disabled = true;
+      try {
+        const obj = await dbGet('archief/'+actieveGraad+'/'+k.dataset.jaar+'/'+k.dataset.maand+'/'+k.dataset.week+'/'+k.dataset.sleutel);
+        toonDagModal(obj.meta?.archiefNaam || k.dataset.sleutel, obj);
+      } catch(e){
+        alert('Kon agenda niet laden: ' + e.message);
+      }
+      btn.textContent = origTekst; btn.disabled = false;
+    });
+  });
+
+  // Eerste maand + week automatisch open
+  const eersteBlok = el.querySelector('.maand-blok');
+  if (eersteBlok){
+    eersteBlok.classList.add('open');
+    const eersteWeek = eersteBlok.querySelector('.week-blok');
+    if (eersteWeek) eersteWeek.classList.add('open');
+  }
+}
+
+async function laadArchief(graad){
+  const el = document.getElementById('archiefInhoud');
+  el.innerHTML = '<div class="laden">⏳ Archief laden…</div>';
+  try {
+    const data = await dbGet('archief/'+graad);
+    renderArchief(data);
+  } catch(e){
+    el.innerHTML = '<div class="leeg" style="color:#b91c1c">❌ Kon archief niet laden: '+e.message+'</div>';
+  }
+}
+
+document.getElementById('graadTabs').addEventListener('click', e=>{
+  const tab = e.target.closest('.tab');
+  if (!tab) return;
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  tab.classList.add('active');
+  actieveGraad = tab.dataset.graad;
+  laadArchief(actieveGraad);
+});
+
+laadArchief(actieveGraad);
+</script>
+</body>
+</html>
