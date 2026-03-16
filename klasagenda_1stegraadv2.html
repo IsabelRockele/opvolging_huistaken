@@ -233,6 +233,7 @@
     background:#fff;
     outline:none;
     white-space:pre-wrap;
+    overflow:visible;
   }
 
   /* PRINT */
@@ -263,7 +264,6 @@
     .day .body{ overflow: hidden; }
     .planBox{ overflow: hidden; }
     .bringBox{ overflow: hidden; }
-    /* Picto's niet buiten hun vak laten uitsteken */
     .picto-free{ max-width: 100%; }
 
     .week-top > .day,
@@ -431,7 +431,12 @@
     upgradeWeekendToEditable();
     $$('.day').forEach(updatePlanBoxClass);
     ensureTaskDeleteButtons(document);
+    _maxNotesH = 0;
     scheduleLayoutSync();
+    requestAnimationFrame(()=> requestAnimationFrame(()=>{
+      const wc = document.getElementById('weekendCol');
+      if (wc && wc.offsetHeight > 50) _maxNotesH = wc.offsetHeight;
+    }));
     pushSnapshot();
   }
 
@@ -1544,16 +1549,33 @@ upgradeWeekendToEditable();
   }
 
   /* Mededelingenhoogte = hoogte ZA+ZO */
+  let _syncingNotes = false;
+  // Vaste maximale hoogte voor mededelingen — berekend bij eerste aanroep
+  let _maxNotesH = 0;
   function syncNotesToWeekend(){
+    if (_syncingNotes) return;
     const wc   = document.getElementById('weekendCol');
     const note = document.getElementById('notesPanel');
     const body = document.getElementById('notesBody');
     if(!wc||!note) return;
-    note.style.height = wc.offsetHeight + 'px';
+    _syncingNotes = true;
+
+    // Reset mededelingen hoogte zodat weekendCol zijn eigen hoogte bepaalt
+    note.style.height = '1px';
+    const wcH = wc.offsetHeight;
+
+    // Sla de eerste geldige hoogte op als maximum (lege agenda = correcte hoogte)
+    if (_maxNotesH === 0 && wcH > 50) _maxNotesH = wcH;
+
+    // Gebruik de weekendkolom hoogte maar nooit groter dan het eerste maximum
+    const doelH = _maxNotesH > 0 ? Math.min(wcH, _maxNotesH) : wcH;
+    note.style.height = doelH + 'px';
+
     const headH = note.querySelector('header').offsetHeight;
     const signH = note.querySelector('.sign').offsetHeight + 12;
     const pad   = 12;
     body.style.height = Math.max(40, note.clientHeight - headH - signH - pad) + 'px';
+    _syncingNotes = false;
   }
 
   /* === NIEUW: Equalizers voor gelijke hoogtes === */
@@ -1574,11 +1596,18 @@ upgradeWeekendToEditable();
 
   /* Layout-sync: equalizers + mededelingen */
   function checkOverflow(){
-    // Max hoogte per dagvak voor A4 liggend (bij zoom 0.96)
-    // Weekvak = (210mm - 8mm top - 8mm bottom - ~40mm voor bottom-row) / 1 = ~130mm ≈ 491px bij 96dpi
-    const MAX_DAY_H = 490;
+    // Meet de eigen inhoudshoogte van elk dagvak
+    // Drempel: ~320px op scherm = ruim voldoende voor print
+    const MAX_DAY_H = 320;
     $$('.week-top .day').forEach(d => {
-      d.classList.toggle('overflowing', d.scrollHeight > MAX_DAY_H);
+      const planBox = d.querySelector('.planBox');
+      const bringBox = d.querySelector('.bringBox');
+      const planH = planBox ? planBox.scrollHeight : 0;
+      const bringH = bringBox ? bringBox.scrollHeight : 0;
+      const headerH = d.querySelector('header') ? d.querySelector('header').offsetHeight : 0;
+      const bodyPad = 16;
+      const totaal = headerH + planH + bringH + bodyPad + 20;
+      d.classList.toggle('overflowing', totaal > MAX_DAY_H);
     });
   }
 
@@ -1590,11 +1619,11 @@ upgradeWeekendToEditable();
     });
   }
   window.addEventListener('resize', scheduleLayoutSync);
-  new ResizeObserver(scheduleLayoutSync).observe($('#weekendCol'));
+  new ResizeObserver(scheduleLayoutSync).observe($('#weekTop'));
 
-  /* Bij elke input in plan/bring: meteen her-equalizen */
+  /* Bij elke input in plan/bring: meteen her-equalizen + overflow check */
   document.addEventListener('input', (e)=>{
-    if (e.target && e.target.closest && e.target.closest('.planBox, .bringBox')) {
+    if (e.target && e.target.closest && e.target.closest('.planBox, .bringBox, .day')) {
       scheduleLayoutSync();
     }
   });
@@ -1625,11 +1654,19 @@ upgradeWeekendToEditable();
     ensureTaskDeleteButtons(document);
     scheduleLayoutSync();
     pushSnapshot();
-    // Sla lege beginstaat op voor beide tabs
-    // L2 is actief → sla op als L2
-    tabState['L2'] = captureAllVoorTab();
-    // L1 staat initialiseren als lege staat met bijtje
-    tabState['L1'] = null; // wordt aangemaakt bij eerste klik op L1
+    // Meet correcte hoogte na eerste render
+    requestAnimationFrame(()=> requestAnimationFrame(()=>{
+      const wc = document.getElementById('weekendCol');
+      if (wc && wc.offsetHeight > 50) _maxNotesH = wc.offsetHeight;
+      // Sla lege beginstaat op voor beide tabs
+      tabState['L2'] = captureAllVoorTab();
+      tabState['L1'] = null;
+    }));
+    // Pin de maximale hoogte van mededelingen na volledig renderen
+    setTimeout(()=>{
+      const wc = document.getElementById('weekendCol');
+      if (wc && wc.offsetHeight > 50) _maxNotesH = wc.offsetHeight;
+    }, 300);
   })();
 
   /* Takenlijst UX */
@@ -1692,6 +1729,7 @@ upgradeWeekendToEditable();
     makeFreePicto,
     applyPanelPictos,
     scheduleLayoutSync,
+    equalizePlanHeights,
     pushSnapshot,
     updatePlanBoxClass,
     ensureTaskDeleteButtons,
@@ -2027,10 +2065,13 @@ upgradeWeekendToEditable();
           // ── Hele week overnemen ──
           if (type === 'heleweeek'){
             if (!confirm(`Hele week van ${naam} overnemen?\n\nDit overschrijft alle dagen én mededelingen in jouw huidige agenda.`)) return;
-            // Mededelingen
+            // Mededelingen — eerst leegmaken dan vullen
             const notesBody = document.getElementById('notesBody');
-            if (notesBody) notesBody.innerHTML = obj.meta?.notes || '';
-            // Alle dagen
+            if (notesBody){
+              notesBody.innerHTML = '';
+              notesBody.innerHTML = obj.meta?.notes || '';
+            }            // Alle dagen — eerst upgradeWeekendToEditable zodat ce bestaat
+            window._klasagenda.upgradeWeekendToEditable();
             const mijnDagen = [...document.querySelectorAll('.day')];
             const bronDagen = obj.days || {};
             Object.entries(bronDagen).forEach(([idx, dag])=>{
@@ -2070,10 +2111,15 @@ upgradeWeekendToEditable();
                 if (dag.vars.bringFS) doelDag.style.setProperty('--bring-fs',dag.vars.bringFS);
               }
             });
-            // Paneel-picto's
-            if (obj.meta?.panelPictos) window._klasagenda.applyPanelPictos(obj.meta.panelPictos);
+            // Paneel-picto's: NIET applyPanelPictos aanroepen want die zitten al in notes HTML
             window._klasagenda.pushSnapshot();
-            window._klasagenda.scheduleLayoutSync();
+            // Reset _maxNotesH en meet opnieuw — anders groeien weekend + mededelingen
+            _maxNotesH = 0;
+            window._klasagenda.equalizePlanHeights();
+            requestAnimationFrame(()=> requestAnimationFrame(()=>{
+              const wc = document.getElementById('weekendCol');
+              if (wc && wc.offsetHeight > 50) _maxNotesH = wc.offsetHeight;
+            }));
             toonArchiefToast(`✅ Hele week van ${naam} overgenomen — inclusief picto's!`);
             return;
           }
@@ -2259,6 +2305,10 @@ upgradeWeekendToEditable();
 
         <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:.8rem 1rem;margin-top:1rem;font-size:.88rem;color:#1e40af">
           💡 <strong>Tip:</strong> Bewaar je agenda <strong>elke week</strong> in het archief — zo bouw je een volledig overzicht op per maand. Collega's kunnen dan snel jouw agenda raadplegen en de onderdelen overnemen die voor hen ook gelden.
+        </div>
+
+        <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:.8rem 1rem;margin-top:.6rem;font-size:.88rem;color:#991b1b">
+          ⚠️ <strong>Te vol voor print?</strong> Als een dagvak een <strong>rode rand</strong> krijgt, past de inhoud niet meer op één A4. Oplossing: klik in dat vak → selecteer alle tekst (Ctrl+A) → klik <strong>A−</strong> in de mini-toolbar om de tekst te verkleinen. Voor picto's: rechtermuisklik → <strong>Kleiner</strong>.
         </div>
 
       </div>
