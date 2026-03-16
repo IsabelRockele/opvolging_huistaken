@@ -15,6 +15,18 @@
   body{margin:0;background:#f3f5f7;color:var(--ink);font-family:Arial,Helvetica,sans-serif;font-size:12pt;line-height:1.28}
   *{box-sizing:border-box}
 
+  /* Waarschuwing: dagvak te vol voor print */
+  .day.overflowing{ box-shadow: 0 0 0 2.5px #ef4444 !important; }
+  .day.overflowing::after{
+    content: '⚠️ te vol voor print';
+    position: absolute;
+    bottom: 2px; right: 4px;
+    font-size: 8pt;
+    color: #ef4444;
+    pointer-events: none;
+    z-index: 10;
+  }
+
   /* Klas-tabs */
   .klas-tabs{display:flex;gap:0;background:#e5e7eb;padding:0;border-bottom:2px solid #d0d7de;position:sticky;top:0;z-index:51}
   .klas-tab{padding:.5rem 1.6rem;font-weight:700;font-size:1rem;cursor:pointer;border:none;background:transparent;border-bottom:3px solid transparent;margin-bottom:-2px;transition:all .15s;font-family:inherit;color:#6b7280}
@@ -235,15 +247,24 @@
 
     .page{
       width: var(--page-w);
-      height: var(--page-h);      /* exacte hoogte om extra blad te vermijden */
+      height: var(--page-h);
       margin: 0;
       padding: var(--m-top) var(--m-side) var(--m-side) var(--m-side);
-      zoom: 0.96;                 /* desnoods 0.95 als het nét niet past */
+      zoom: 0.96;
       transform: none !important;
       break-after: avoid;
       page-break-after: avoid;
       overflow: hidden;
     }
+
+    /* Dagvakken strikt begrenzen — nooit groter dan beschikbare ruimte */
+    .week-top{ overflow: hidden; }
+    .week-top > .day{ overflow: hidden; max-height: 130mm; }
+    .day .body{ overflow: hidden; }
+    .planBox{ overflow: hidden; }
+    .bringBox{ overflow: hidden; }
+    /* Picto's niet buiten hun vak laten uitsteken */
+    .picto-free{ max-width: 100%; }
 
     .week-top > .day,
     .bottom-row > *{
@@ -254,14 +275,18 @@
     .panelBody:empty::before{ display:none; }
     .picto-free .handle{ display:none !important; }
     .picto-free.selected{ outline:none !important; }
+    .tasklist .liDel{ display:none !important; }
   }
 </style>
 </head>
 <body>
   <!-- Klas-tabs -->
-  <div class="klas-tabs" id="klasTabs">
-    <button class="klas-tab" data-klas="L1">🐝 L1</button>
-    <button class="klas-tab active" data-klas="L2">🦓 L2</button>
+  <div class="klas-tabs" id="klasTabs" style="display:flex;align-items:center;justify-content:space-between">
+    <div style="display:flex">
+      <button class="klas-tab" data-klas="L1">🐝 L1</button>
+      <button class="klas-tab active" data-klas="L2">🦓 L2</button>
+    </div>
+    <a href="./klasagendav2.html" style="margin-right:.6rem;appearance:none;border:1px solid #d0d7de;background:#fff;padding:.35rem .75rem;border-radius:8px;font-weight:700;cursor:pointer;text-decoration:none;color:#111;font-family:Arial,sans-serif;font-size:.88rem;white-space:nowrap">← Keuze graad</a>
   </div>
 
   <div class="toolbar" role="region" aria-label="Bediening">
@@ -295,6 +320,7 @@
       <span class="sep"></span>
       <button id="btnPrint" class="primary">PDF / Print</button>
       <button id="btnToggleDock">Pictogrammen</button>
+      <button id="btnHelp" title="Uitleg & handleiding" style="background:#f59e0b;border:1px solid #f59e0b;color:#fff;appearance:none;padding:.45rem .7rem;border-radius:.5rem;cursor:pointer;font-weight:700">❓ Uitleg</button>
     </div>
   </div>
 
@@ -1547,11 +1573,20 @@ upgradeWeekendToEditable();
   }
 
   /* Layout-sync: equalizers + mededelingen */
+  function checkOverflow(){
+    // Max hoogte per dagvak voor A4 liggend (bij zoom 0.96)
+    // Weekvak = (210mm - 8mm top - 8mm bottom - ~40mm voor bottom-row) / 1 = ~130mm ≈ 491px bij 96dpi
+    const MAX_DAY_H = 490;
+    $$('.week-top .day').forEach(d => {
+      d.classList.toggle('overflowing', d.scrollHeight > MAX_DAY_H);
+    });
+  }
+
   function scheduleLayoutSync(){
     requestAnimationFrame(()=>{
       equalizePlanHeights();
-      // equalizeBringHeights();    // haal uit commentaar indien gewenst
       syncNotesToWeekend();
+      checkOverflow();
     });
   }
   window.addEventListener('resize', scheduleLayoutSync);
@@ -1651,6 +1686,18 @@ upgradeWeekendToEditable();
     if (dd) updatePlanBoxClass(dd);
     pushSnapshot();
   });
+
+  // Maak functies globaal toegankelijk voor de archief-IIFE
+  window._klasagenda = {
+    makeFreePicto,
+    applyPanelPictos,
+    scheduleLayoutSync,
+    pushSnapshot,
+    updatePlanBoxClass,
+    ensureTaskDeleteButtons,
+    upgradeWeekendToEditable,
+    applyDay
+  };
 
 })();
 
@@ -2004,7 +2051,7 @@ upgradeWeekendToEditable();
               doelDag.querySelectorAll('.picto-free').forEach(p=>p.remove());
               if (dag.pictos){
                 dag.pictos.forEach(p=>{
-                  const node = makeFreePicto(p.src);
+                  const node = window._klasagenda.makeFreePicto(p.src);
                   node.style.left = p.left || '4px';
                   node.style.top  = p.top  || '4px';
                   if (p.width) node.style.width = p.width;
@@ -2024,9 +2071,9 @@ upgradeWeekendToEditable();
               }
             });
             // Paneel-picto's
-            if (obj.meta?.panelPictos) applyPanelPictos(obj.meta.panelPictos);
-            pushSnapshot();
-            scheduleLayoutSync();
+            if (obj.meta?.panelPictos) window._klasagenda.applyPanelPictos(obj.meta.panelPictos);
+            window._klasagenda.pushSnapshot();
+            window._klasagenda.scheduleLayoutSync();
             toonArchiefToast(`✅ Hele week van ${naam} overgenomen — inclusief picto's!`);
             return;
           }
@@ -2067,7 +2114,7 @@ upgradeWeekendToEditable();
           if (type === 'alles' && dag.pictos){
             doelDag.querySelectorAll('.picto-free').forEach(p=>p.remove());
             dag.pictos.forEach(p=>{
-              const node = makeFreePicto(p.src);
+              const node = window._klasagenda.makeFreePicto(p.src);
               node.style.left = p.left || '4px';
               node.style.top  = p.top  || '4px';
               if (p.width) node.style.width = p.width;
@@ -2078,7 +2125,7 @@ upgradeWeekendToEditable();
               hostEl.appendChild(node);
             });
           }
-          pushSnapshot();
+          window._klasagenda.pushSnapshot();
           toonArchiefToast('✅ '+DAGNAMES2[parseInt(dayIdx)]+' van '+naam+' ingeplakt in '+DAGNAMES2[doelIdx]+'!');
         } catch(e){
           alert('Fout: '+e.message);
@@ -2141,6 +2188,86 @@ upgradeWeekendToEditable();
     t.style.opacity = '1';
     setTimeout(()=>t.style.opacity='0', 4000);
   }
+
+  /* ══════════════════════════════════════════
+     UITLEG-MODAL
+     ══════════════════════════════════════════ */
+  const helpModal = document.createElement('div');
+  helpModal.style.cssText = 'display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9500;align-items:center;justify-content:center;padding:1rem';
+  helpModal.innerHTML = `
+    <div style="background:#fff;border-radius:16px;width:100%;max-width:640px;max-height:90vh;overflow-y:auto;box-shadow:0 8px 40px rgba(0,0,0,.2);font-family:Arial,sans-serif">
+      <div style="padding:18px 22px;border-bottom:1px solid #e5e7eb;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;background:#fff;z-index:1">
+        <strong style="font-size:1.1rem">❓ Handleiding klasagenda</strong>
+        <button id="helpModalSluit" style="border:none;background:none;font-size:1.4rem;cursor:pointer;color:#6b7280;line-height:1">✕</button>
+      </div>
+      <div style="padding:20px 22px;line-height:1.65;font-size:.93rem;color:#374151">
+
+        <h3 style="margin:.5rem 0 .4rem;color:#0a66c2;font-size:1rem">🖊 Typen in de agenda</h3>
+        <p style="margin:0 0 .6rem">Klik gewoon in een dagvak om te beginnen typen. Zodra je klikt verschijnt er een <strong>donker balkje</strong> (mini-toolbar) boven de dag met alle opmaakopties.</p>
+
+        <h3 style="margin:1rem 0 .4rem;color:#0a66c2;font-size:1rem">🎨 Mini-toolbar (verschijnt boven dag)</h3>
+        <ul style="margin:.2rem 0 .6rem;padding-left:1.2rem">
+          <li><strong>B / I / U</strong> — vet, schuin, onderlijnd (ook via Ctrl+B/I/U)</li>
+          <li><strong>🖊</strong> — tekst markeren in geel</li>
+          <li><strong>A− / A+</strong> — geselecteerde tekst kleiner of groter maken</li>
+          <li><strong>Dropdown (8pt–24pt)</strong> — lettergrootte van geselecteerde tekst kiezen</li>
+          <li><strong>● +</strong> — bolletje toevoegen om aan te vinken</li>
+          <li><strong>Dropdown klein/middel/groot</strong> — grootte van alle bolletjes in die dag</li>
+          <li><strong>🖼</strong> — pictogram invoegen (grid verschijnt, klik een picto)</li>
+          <li><strong>↩</strong> — laatste actie ongedaan maken</li>
+        </ul>
+
+        <h3 style="margin:1rem 0 .4rem;color:#0a66c2;font-size:1rem">🖼 Pictogrammen</h3>
+        <ul style="margin:.2rem 0 .6rem;padding-left:1.2rem">
+          <li>Klik in een dagvak → klik 🖼 in de mini-toolbar → kies een picto</li>
+          <li>Het picto verschijnt <strong>links in het vak</strong> — je kan ernaast typen</li>
+          <li><strong>Versleep</strong> een picto door erop te klikken en te slepen</li>
+          <li><strong>Groter/kleiner</strong> maken via het blauwe hoekje rechtsonder</li>
+          <li><strong>Rechtermuisklik</strong> op een picto → menu: verwijder / kleiner / groter</li>
+          <li>Via knop <em>Pictogrammen</em> in de toolbar open je het volledige picto-paneel</li>
+        </ul>
+
+        <h3 style="margin:1rem 0 .4rem;color:#0a66c2;font-size:1rem">🐝🦓 Tabs L1 / L2</h3>
+        <p style="margin:0 0 .6rem">Bovenaan staan twee tabs: <strong>L1</strong> en <strong>L2</strong>. Elke leerkracht klikt op haar eigen klas. De agenda's staan volledig los van elkaar — wat je in L1 typt, ziet L2 niet en omgekeerd. Wisselen van tab bewaart automatisch de huidige inhoud.</p>
+
+        <h3 style="margin:1rem 0 .4rem;color:#16a34a;font-size:1rem">📚 Bewaar in archief</h3>
+        <p style="margin:0 0 .3rem">Sla je ingevulde agenda op in het gedeeld archief zodat collega's die kunnen raadplegen.</p>
+        <ul style="margin:.2rem 0 .6rem;padding-left:1.2rem">
+          <li>Klik <strong>📚 Bewaar in archief</strong> → vul je naam, klas en weeknummer in</li>
+          <li><strong>Bewaar per week</strong>: sla elke week apart op (december week 1, december week 2, …)</li>
+          <li>Zo kan je later altijd een specifieke week terugvinden</li>
+          <li>Heb je een week al bewaard en wil je die bijwerken? Bewaar gewoon opnieuw met dezelfde naam/klas/week — die overschrijft de vorige versie</li>
+        </ul>
+
+        <h3 style="margin:1rem 0 .4rem;color:#7c3aed;font-size:1rem">🗂️ Archief raadplegen</h3>
+        <p style="margin:0 0 .3rem">Bekijk agenda's van andere leerkrachten en neem wat je nodig hebt over.</p>
+        <ul style="margin:.2rem 0 .6rem;padding-left:1.2rem">
+          <li>Klik <strong>🗂️ Archief raadplegen</strong> → kies graad, klas, jaar, maand en week → <em>Zoeken</em></li>
+          <li><strong>↙ Hele week overnemen</strong> — kopieert alle dagen + mededelingen + picto's in één klik</li>
+          <li><strong>↙ Plan overnemen</strong> — kopieert enkel het plan van die dag</li>
+          <li><strong>↙ Ik denk aan overnemen</strong> — kopieert enkel de "ik denk aan" van die dag</li>
+          <li><strong>↙ Hele dag overnemen</strong> — plan + ik denk aan van die dag samen</li>
+          <li><strong>↙ Plak mededelingen</strong> — kopieert de mededelingen</li>
+          <li>Je kan altijd een vorig schooljaar opzoeken via de jaar-selector</li>
+        </ul>
+
+        <h3 style="margin:1rem 0 .4rem;color:#0a66c2;font-size:1rem">💾 Export / Import</h3>
+        <p style="margin:0 0 .6rem"><strong>Export</strong> slaat je agenda op als bestand op je computer (.json). <strong>Import</strong> laadt zo'n bestand terug in. Handig als backup of om te delen via e-mail.</p>
+
+        <h3 style="margin:1rem 0 .4rem;color:#0a66c2;font-size:1rem">🖨️ Afdrukken</h3>
+        <p style="margin:0 0 .6rem">Klik <strong>PDF / Print</strong> om de agenda af te drukken op A4 liggend. De toolbar en tabs verdwijnen automatisch in de afdruk.</p>
+
+        <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:.8rem 1rem;margin-top:1rem;font-size:.88rem;color:#1e40af">
+          💡 <strong>Tip:</strong> Bewaar je agenda <strong>elke week</strong> in het archief — zo bouw je een volledig overzicht op per maand. Collega's kunnen dan snel jouw agenda raadplegen en de onderdelen overnemen die voor hen ook gelden.
+        </div>
+
+      </div>
+    </div>
+  `;
+  document.body.appendChild(helpModal);
+  document.getElementById('helpModalSluit').onclick = ()=>{ helpModal.style.display='none'; };
+  helpModal.addEventListener('click', e=>{ if(e.target===helpModal) helpModal.style.display='none'; });
+  document.getElementById('btnHelp').addEventListener('click', ()=>{ helpModal.style.display='flex'; });
 
   btnBewaar && btnBewaar.addEventListener('click', async () => {
     const input = await toonModal();
