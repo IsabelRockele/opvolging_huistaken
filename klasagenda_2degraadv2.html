@@ -93,8 +93,9 @@
 }
   /* Grids */
   .week-top{display:grid;grid-template-columns:repeat(5,1fr);gap:var(--gap)}
-  .bottom-row{display:grid;grid-template-columns:1.5fr 3.5fr;gap:var(--gap);margin-top:3mm}
-  .weekendCol{display:grid;grid-template-rows:auto auto;gap:var(--gap)}
+  .bottom-row{display:grid;grid-template-columns:1.5fr 3.5fr;gap:var(--gap);margin-top:3mm;align-items:stretch}
+  .weekendCol{display:grid;grid-template-rows:1fr 1fr;gap:var(--gap);overflow:hidden}
+  .day.small{min-height:0;overflow:hidden}
 
   /* Dagkaarten */
   .day{position:relative;border:2.6px solid var(--line);border-radius:7px;background:#fff;display:flex;flex-direction:column;--bullet:14px;--plan-fs:12pt;--task-gap:6pt; z-index:1;}
@@ -221,6 +222,7 @@
     background:#fff;
     outline:none;
     white-space:pre-wrap;
+    overflow:visible;
   }
 
   /* PRINT */
@@ -431,7 +433,12 @@
     upgradeWeekendToEditable();
     $$('.day').forEach(updatePlanBoxClass);
     ensureTaskDeleteButtons(document);
+    _maxNotesH = 0;
     scheduleLayoutSync();
+    requestAnimationFrame(()=> requestAnimationFrame(()=>{
+      const wc = document.getElementById('weekendCol');
+      if (wc && wc.offsetHeight > 50) _maxNotesH = wc.offsetHeight;
+    }));
     pushSnapshot();
   }
 
@@ -1544,16 +1551,25 @@ upgradeWeekendToEditable();
   }
 
   /* Mededelingenhoogte = hoogte ZA+ZO */
+  let _syncingNotes = false;
+  let _maxNotesH = 0;
   function syncNotesToWeekend(){
+    if (_syncingNotes) return;
     const wc   = document.getElementById('weekendCol');
     const note = document.getElementById('notesPanel');
     const body = document.getElementById('notesBody');
     if(!wc||!note) return;
-    note.style.height = wc.offsetHeight + 'px';
+    _syncingNotes = true;
+    note.style.height = '1px';
+    const wcH = wc.offsetHeight;
+    if (_maxNotesH === 0 && wcH > 50) _maxNotesH = wcH;
+    const doelH = _maxNotesH > 0 ? Math.min(wcH, _maxNotesH) : wcH;
+    note.style.height = doelH + 'px';
     const headH = note.querySelector('header').offsetHeight;
     const signH = note.querySelector('.sign').offsetHeight + 12;
     const pad   = 12;
     body.style.height = Math.max(40, note.clientHeight - headH - signH - pad) + 'px';
+    _syncingNotes = false;
   }
 
   /* === NIEUW: Equalizers voor gelijke hoogtes === */
@@ -1573,9 +1589,16 @@ upgradeWeekendToEditable();
   }
 
   function checkOverflow(){
-    const MAX_DAY_H = 490;
+    const MAX_DAY_H = 320;
     Array.from(document.querySelectorAll('.week-top .day')).forEach(d => {
-      d.classList.toggle('overflowing', d.scrollHeight > MAX_DAY_H);
+      const planBox = d.querySelector('.planBox');
+      const bringBox = d.querySelector('.bringBox');
+      const planH = planBox ? planBox.scrollHeight : 0;
+      const bringH = bringBox ? bringBox.scrollHeight : 0;
+      const headerH = d.querySelector('header') ? d.querySelector('header').offsetHeight : 0;
+      const bodyPad = 16;
+      const totaal = headerH + planH + bringH + bodyPad + 20;
+      d.classList.toggle('overflowing', totaal > MAX_DAY_H);
     });
   }
 
@@ -1588,7 +1611,7 @@ upgradeWeekendToEditable();
     });
   }
   window.addEventListener('resize', scheduleLayoutSync);
-  new ResizeObserver(scheduleLayoutSync).observe($('#weekendCol'));
+  new ResizeObserver(scheduleLayoutSync).observe($('#weekTop'));
 
   /* Bij elke input in plan/bring: meteen her-equalizen */
   document.addEventListener('input', (e)=>{
@@ -1626,14 +1649,18 @@ upgradeWeekendToEditable();
     // Sla lege beginstaat op voor beide tabs
     // L2 is actief → sla op als L2
     tabState['L4'] = captureAllVoorTab();
-    // L1 staat initialiseren als lege staat met bijtje
-    tabState['L3'] = null; // wordt aangemaakt bij eerste klik op L1
+    tabState['L3'] = null;
+    setTimeout(()=>{
+      const wc = document.getElementById('weekendCol');
+      if (wc && wc.offsetHeight > 50) _maxNotesH = wc.offsetHeight;
+    }, 300);
 
   // Maak functies globaal toegankelijk voor de archief-IIFE
   window._klasagenda = {
     makeFreePicto,
     applyPanelPictos,
     scheduleLayoutSync,
+    equalizePlanHeights,
     pushSnapshot,
     updatePlanBoxClass,
     ensureTaskDeleteButtons,
@@ -2069,10 +2096,14 @@ upgradeWeekendToEditable();
                 if (dag.vars.bringFS) doelDag.style.setProperty('--bring-fs',dag.vars.bringFS);
               }
             });
-            // Paneel-picto's
-            if (obj.meta?.panelPictos) window._klasagenda.applyPanelPictos(obj.meta.panelPictos);
+            // Paneel-picto's: NIET applyPanelPictos aanroepen want die zitten al in notes HTML
             window._klasagenda.pushSnapshot();
-            window._klasagenda.scheduleLayoutSync();
+            _maxNotesH = 0;
+            window._klasagenda.equalizePlanHeights();
+            requestAnimationFrame(()=> requestAnimationFrame(()=>{
+              const wc = document.getElementById('weekendCol');
+              if (wc && wc.offsetHeight > 50) _maxNotesH = wc.offsetHeight;
+            }));
             toonArchiefToast(`✅ Hele week van ${naam} overgenomen — inclusief picto's!`);
             return;
           }
@@ -2258,6 +2289,10 @@ upgradeWeekendToEditable();
 
         <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:.8rem 1rem;margin-top:1rem;font-size:.88rem;color:#1e40af">
           💡 <strong>Tip:</strong> Bewaar je agenda <strong>elke week</strong> in het archief — zo bouw je een volledig overzicht op per maand. Collega's kunnen dan snel jouw agenda raadplegen en de onderdelen overnemen die voor hen ook gelden.
+        </div>
+
+        <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:.8rem 1rem;margin-top:.6rem;font-size:.88rem;color:#991b1b">
+          ⚠️ <strong>Te vol voor print?</strong> Als een dagvak een <strong>rode rand</strong> krijgt, past de inhoud niet meer op één A4. Oplossing: klik in dat vak → selecteer alle tekst (Ctrl+A) → klik <strong>A−</strong> in de mini-toolbar om de tekst te verkleinen. Voor picto's: rechtermuisklik → <strong>Kleiner</strong>.
         </div>
 
       </div>
