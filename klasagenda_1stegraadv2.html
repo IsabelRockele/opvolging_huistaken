@@ -1008,28 +1008,27 @@
       return;
     }
 
-    // Label
     let hostType = 'body';
     if (host.classList && host.classList.contains('bringBox')) {
       hostType = 'bring';
-    } else if (host.classList && host.classList.contains('body')) {
-      hostType = 'body';
     }
     pic.dataset.host = hostType;
 
     host.appendChild(pic);
-    pic.style.left = '8px';
-    pic.style.top  = '8px';
+
+    // Slim plaatsen: links in het vak, kleine marge bovenaan
+    pic.style.left = '4px';
+    pic.style.top  = '4px';
     pushSnapshot();
   }
 
   function makeFreePicto(src){
     const wrap=document.createElement('div');
     wrap.className='picto-free';
-    wrap.style.width='32mm';
+    wrap.style.width='20mm';   // kleinere standaardgrootte zodat tekst ernaast past
     wrap.style.height='auto';
-    wrap.style.left='0px';
-    wrap.style.top='0px';
+    wrap.style.left='4px';
+    wrap.style.top='4px';
     wrap.style.position='absolute';
     wrap.style.zIndex='5';
     wrap.innerHTML=`<img src="${src}" alt="picto"><div class="handle" title="Schaal"></div>`;
@@ -1040,7 +1039,73 @@
       selectedPicto=wrap;
       wrap.classList.add('selected');
     });
+    // Rechtermuisklik → contextmenu
+    wrap.addEventListener('contextmenu', (e)=>{
+      e.preventDefault();
+      e.stopPropagation();
+      toonPictoContextMenu(e.clientX, e.clientY, wrap);
+    });
     return wrap;
+  }
+
+  /* Picto contextmenu */
+  function toonPictoContextMenu(x, y, pictoEl){
+    document.getElementById('pictoContextMenu')?.remove();
+    const menu = document.createElement('div');
+    menu.id = 'pictoContextMenu';
+    menu.style.cssText = `position:fixed;left:${x}px;top:${y}px;background:#fff;border:1px solid #e5e7eb;border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,.15);z-index:99999;min-width:140px;overflow:hidden;font-family:Arial,sans-serif;font-size:13px`;
+    menu.innerHTML = `
+      <div id="pcm-delete" style="padding:8px 14px;cursor:pointer;display:flex;align-items:center;gap:8px;color:#b91c1c">
+        <span>🗑</span> Verwijder picto
+      </div>
+      <div id="pcm-smaller" style="padding:8px 14px;cursor:pointer;display:flex;align-items:center;gap:8px;border-top:1px solid #f3f4f6">
+        <span>🔽</span> Kleiner
+      </div>
+      <div id="pcm-bigger" style="padding:8px 14px;cursor:pointer;display:flex;align-items:center;gap:8px">
+        <span>🔼</span> Groter
+      </div>
+    `;
+    document.body.appendChild(menu);
+
+    menu.querySelectorAll('div').forEach(item=>{
+      item.addEventListener('mouseenter', ()=> item.style.background='#f0f4f8');
+      item.addEventListener('mouseleave', ()=> item.style.background='');
+      // Voorkom dat klik op menu-item de "klik buiten" handler triggert
+      item.addEventListener('pointerdown', e=> e.stopPropagation());
+    });
+
+    menu.querySelector('#pcm-delete').addEventListener('click', (e)=>{
+      e.stopPropagation();
+      pictoEl.remove();
+      selectedPicto = null;
+      menu.remove();
+      pushSnapshot();
+    });
+    menu.querySelector('#pcm-smaller').addEventListener('click', (e)=>{
+      e.stopPropagation();
+      const huidig = parseFloat(pictoEl.style.width) || 20;
+      pictoEl.style.width = Math.max(8, huidig - 4) + 'mm';
+      menu.remove();
+      pushSnapshot();
+    });
+    menu.querySelector('#pcm-bigger').addEventListener('click', (e)=>{
+      e.stopPropagation();
+      const huidig = parseFloat(pictoEl.style.width) || 20;
+      pictoEl.style.width = Math.min(60, huidig + 4) + 'mm';
+      menu.remove();
+      pushSnapshot();
+    });
+
+    // Klik buiten menu → sluit
+    const sluitMenu = (e)=>{
+      if (!menu.contains(e.target)){
+        menu.remove();
+        document.removeEventListener('pointerdown', sluitMenu, true);
+      }
+    };
+    setTimeout(()=>{
+      document.addEventListener('pointerdown', sluitMenu, true);
+    }, 50);
   }
 
   /* Drag+resize voor vrije pictogrammen */
