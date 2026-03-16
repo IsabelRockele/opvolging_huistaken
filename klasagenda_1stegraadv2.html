@@ -317,7 +317,7 @@
 
   /* ── Tab-systeem: L1 / L2 ── */
   let aktieveKlas = 'L2';
-  const tabState = { L1: null, L2: null }; // opgeslagen staat per klas
+  const tabState = { L1: null, L2: null };
 
   function getKlasIcon(klas){
     return klas === 'L1' ? 'pictogrammen/bijtje.png' : 'pictogrammen/zebra.png';
@@ -325,21 +325,22 @@
 
   function wisselKlas(nieuweKlas){
     if (nieuweKlas === aktieveKlas) return;
-    // Huidige staat opslaan
+    // Altijd huidige staat opslaan vóór wisselen
     tabState[aktieveKlas] = captureAllVoorTab();
     // Tab UI bijwerken
     $$('.klas-tab').forEach(t => t.classList.toggle('active', t.dataset.klas === nieuweKlas));
     aktieveKlas = nieuweKlas;
     tplSel.value = nieuweKlas;
-    // Nieuwe staat laden of leeg starten
+    // Nieuwe staat laden of lege agenda tonen
     if (tabState[nieuweKlas]){
       isApplying = true;
       applyAll(tabState[nieuweKlas]);
       applyPanelPictos(tabState[nieuweKlas].meta?.panelPictos || []);
       isApplying = false;
     } else {
-      // Lege agenda voor deze klas
       resetAgenda(nieuweKlas);
+      // Meteen opslaan als lege staat zodat volgende wissel niet opnieuw reset
+      tabState[nieuweKlas] = captureAllVoorTab();
     }
     pushSnapshot();
   }
@@ -1266,6 +1267,11 @@ upgradeWeekendToEditable();
     ensureTaskDeleteButtons(document);
     scheduleLayoutSync();
     pushSnapshot();
+    // Sla lege beginstaat op voor beide tabs
+    // L2 is actief → sla op als L2
+    tabState['L2'] = captureAllVoorTab();
+    // L1 staat initialiseren als lege staat met bijtje
+    tabState['L1'] = null; // wordt aangemaakt bij eerste klik op L1
   })();
 
   /* Takenlijst UX */
@@ -1437,7 +1443,7 @@ upgradeWeekendToEditable();
 
       <!-- Stap 1: filter -->
       <div id="archiefStap1" style="padding:16px 20px">
-        <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:.6rem;margin-bottom:1rem">
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr 1fr;gap:.6rem;margin-bottom:1rem">
           <div>
             <label style="display:block;font-weight:700;font-size:.85rem;margin-bottom:.3rem">Graad</label>
             <select id="arfGraad" style="width:100%;padding:.4rem .5rem;border:1.5px solid #d1d5db;border-radius:7px;font-size:.9rem">
@@ -1453,6 +1459,11 @@ upgradeWeekendToEditable();
               <option value="L2">L2</option>
               <option value="L3">L3</option>
               <option value="L4">L4</option>
+            </select>
+          </div>
+          <div>
+            <label style="display:block;font-weight:700;font-size:.85rem;margin-bottom:.3rem">Jaar</label>
+            <select id="arfJaar" style="width:100%;padding:.4rem .5rem;border:1.5px solid #d1d5db;border-radius:7px;font-size:.9rem">
             </select>
           </div>
           <div>
@@ -1486,8 +1497,18 @@ upgradeWeekendToEditable();
   archiefModal.addEventListener('click', e=>{ if(e.target===archiefModal) archiefModal.style.display='none'; });
 
   document.getElementById('btnArchief').addEventListener('click', ()=>{
-    // Vul maand voor op basis van huidige agenda
     const mi = getMaandInfo();
+    const huidigJaar = new Date().getFullYear();
+    // Jaar-opties vullen: huidig jaar + 4 jaar terug
+    const arfJaar = document.getElementById('arfJaar');
+    arfJaar.innerHTML = '';
+    for (let j = huidigJaar; j >= huidigJaar - 4; j--){
+      const opt = document.createElement('option');
+      opt.value = j;
+      opt.textContent = j;
+      if (mi && j === mi.jaar) opt.selected = true;
+      arfJaar.appendChild(opt);
+    }
     if (mi){
       document.getElementById('arfMaand').value = mi.maand;
       document.getElementById('arfWeek').value = 'week'+mi.weekInMaand;
@@ -1499,33 +1520,28 @@ upgradeWeekendToEditable();
   document.getElementById('arfZoek').addEventListener('click', async ()=>{
     const graad = document.getElementById('arfGraad').value;
     const klas  = document.getElementById('arfKlas').value;
+    const jaar  = document.getElementById('arfJaar').value;
     const maand = document.getElementById('arfMaand').value;
     const week  = document.getElementById('arfWeek').value;
     const res   = document.getElementById('arfResultaten');
     if (!maand || !week){ res.innerHTML='<p style="color:#b91c1c;font-size:.9rem">⚠️ Kies eerst maand en week.</p>'; return; }
     res.innerHTML = '<p style="color:#6b7280;font-size:.9rem">⏳ Laden…</p>';
     try {
-      const jaar = new Date().getFullYear();
-      let agendas = null;
-      for (const j of [jaar, jaar-1]){
-        const data = await archiefGet(`archief/${graad}/${j}/${maand}/${week}`);
-        if (data){ agendas = { jaar: j, data }; break; }
-      }
-      if (!agendas || !agendas.data){
+      const data = await archiefGet(`archief/${graad}/${jaar}/${maand}/${week}`);
+      if (!data){
         res.innerHTML='<p style="color:#6b7280;font-style:italic;font-size:.9rem">Geen agenda\'s gevonden voor deze periode.</p>'; return;
       }
-      // Filter op klas indien gekozen
-      let gefilterd = agendas.data;
+      let gefilterd = data;
       if (klas){
         gefilterd = {};
-        Object.entries(agendas.data).forEach(([k,v])=>{
+        Object.entries(data).forEach(([k,v])=>{
           if ((v.meta?.archiefKlas||'') === klas) gefilterd[k] = v;
         });
       }
       if (Object.keys(gefilterd).length === 0){
         res.innerHTML=`<p style="color:#6b7280;font-style:italic;font-size:.9rem">Geen agenda's gevonden voor klas ${klas} in deze periode.</p>`; return;
       }
-      renderArchiefResultaten(res, gefilterd, graad, agendas.jaar, maand, week);
+      renderArchiefResultaten(res, gefilterd, graad, jaar, maand, week);
     } catch(e){
       res.innerHTML=`<p style="color:#b91c1c;font-size:.9rem">❌ Fout: ${e.message}</p>`;
     }
