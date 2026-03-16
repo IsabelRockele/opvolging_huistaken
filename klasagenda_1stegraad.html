@@ -932,36 +932,23 @@ li.innerHTML = `<div style="font-weight:600">${line1}</div>
   }
 
   function wireDate(card,idx){
-  const dp = card.querySelector('.datePicker');
-  const lab = card.querySelector('.dDate');
-  // als je op het label klikt → datum openen
-  lab.addEventListener('click', ()=> dp.showPicker && dp.showPicker());
-
-  dp.addEventListener('change', () => {
-    const d = new Date(dp.value);
-    if (isNaN(d)) return;
-
-    const dd = String(d.getDate()).padStart(2,'0');
-    const mm = String(d.getMonth()+1).padStart(2,'0');
-    lab.textContent = `${dd} / ${mm}`;
-
-    // ★ BELANGRIJK: alleen als dit maandag is → rest van de week laten meelopen
-    if (idx === 0) {
-      for (let k = 1; k <= 6; k++) {
-        const other = document.querySelector(`.day[data-day-index="${k}"] .datePicker`);
-        if (!other) continue;
-        const nd = new Date(d);
-        nd.setDate(d.getDate() + k);
-        other.valueAsDate = nd;
-        // deze dispatch zorgt dat ook hun label (dDate) mee verandert
-        other.dispatchEvent(new Event('change'));
+    const dp=card.querySelector('.datePicker'); const lab=card.querySelector('.dDate');
+    lab.addEventListener('click',()=> dp.showPicker && dp.showPicker());
+    dp.addEventListener('change',()=>{
+      const d=new Date(dp.value); if(isNaN(d)) return;
+      const dd=String(d.getDate()).padStart(2,'0');
+      const mm=String(d.getMonth()+1).padStart(2,'0');
+      lab.textContent=`${dd} / ${mm}`;
+      if(idx===0){
+        for(let k=1;k<=6;k++){
+          const other=document.querySelector(`.day[data-day-index="${k}"] .datePicker`);
+          const nd=new Date(d); nd.setDate(d.getDate()+k);
+          other.valueAsDate=nd; other.dispatchEvent(new Event('change'));
+        }
       }
-    }
-
-    updateMonthBox();
-  });
-}
-
+      updateMonthBox();
+    });
+  }
 
   const weekTop=$('#weekTop'), weekendCol=$('#weekendCol');
   const days=['MAANDAG','DINSDAG','WOENSDAG','DONDERDAG','VRIJDAG','ZATERDAG','ZONDAG'];
@@ -1617,101 +1604,109 @@ function _isEmptyWeekendHtml(html){
   return { isEmpty: (!hasTasks && text === ''), hasTasks, tmp };
 }
 
-  function applyDay(d, data) {
-  const idx = d.dataset.dayIndex;
+  function applyDay(d,data){
+    const idx=d.dataset.dayIndex;
+    if(data.date){ const dp=d.querySelector('.datePicker'); dp.value=data.date; dp.dispatchEvent(new Event('change')); }
+    const planBoxEl = d.querySelector(`[data-key="d${idx}.plan"]`);
+    const ta = planBoxEl ? planBoxEl.querySelector('.wkTA') : null;
+    const ce = planBoxEl ? planBoxEl.querySelector('.wkCE[contenteditable]') : null;
 
-  // 1. DATUM – ZONDER nieuwe change-triggers
-  if (data.date) {
-  const dp  = d.querySelector('.datePicker');
-  const lab = d.querySelector('.dDate');
-  if (dp) {
-    dp.disabled = false;          // <-- altijd bewerkbaar houden
-    dp.readOnly = false;          // <-- veiligheid
-    dp.value = data.date;         // laad de datum
-  }
-  if (lab) {
-    const dt = new Date(data.date);
-    if (!isNaN(dt)) {
-      const dd = String(dt.getDate()).padStart(2,'0');
-      const mm = String(dt.getMonth()+1).padStart(2,'0');
-      lab.textContent = `${dd} / ${mm}`;
-    }
-  }
-}
+if (ce) {
+  const hasWeekendHtml = Object.prototype.hasOwnProperty.call(data, 'weekendHtml');
+  const hasWeekendText = Object.prototype.hasOwnProperty.call(data, 'weekendText');
+  const hasPlan        = (typeof data.plan === 'string' && data.plan.trim() !== '');
 
+  let done = false;
 
-  // 2. IK PLAN (WERKDAGEN EN WEEKEND)
-  const planBox = d.querySelector(`[data-key="d${idx}.plan"]`);
-  if (planBox) {
-    // 2a. nieuwe vorm: data.plan (HTML) → rechtstreeks zetten
-    if (typeof data.plan === 'string' && data.plan.trim() !== '') {
-      planBox.innerHTML = data.plan;
-    }
-    // 2b. oudere weekend-vorm: weekendHtml / weekendText
-    else if (typeof data.weekendHtml === 'string' && data.weekendHtml.trim() !== '') {
-      planBox.innerHTML = data.weekendHtml;
-    }
-    else if (typeof data.weekendText === 'string' && data.weekendText.trim() !== '') {
-      // zet in contenteditable weekendveld
-      const wk = planBox.querySelector('.wkCE') || planBox.querySelector('.wkTA');
-      if (wk) wk.textContent = data.weekendText;
-      else planBox.textContent = data.weekendText;
-    }
-
-    // 2c. na het zetten: bolletjes terug klikbaar/bewerkbaar maken
-    ensureTaskDeleteButtons(d);
-    ensureTaskEditable(d);
-    // als het vrijdag is: opnieuw nummeren
-    if (idx === "4" || idx === 4) {
-      renumberFridayList(d);
-    }
-  }
-
-  // 3. IK DENK AAN
-  const bringBox = d.querySelector(`[data-key="d${idx}.bring"]`);
-  if (bringBox) {
-    if (typeof data.bring === 'string' && data.bring.trim() !== '') {
-      bringBox.innerHTML = data.bring;
-    } else if (typeof data.bringHtml === 'string' && data.bringHtml.trim() !== '') {
-      bringBox.innerHTML = data.bringHtml;
-    }
-  }
-
-  // 4. STIJL (plan-tekst, bullet, gap, bring-grootte)
-  if (data.vars) {
-    if (data.vars.planFS)  d.style.setProperty('--plan-fs',  data.vars.planFS);
-    if (data.vars.bullet)  d.style.setProperty('--bullet',   data.vars.bullet);
-    if (data.vars.gap)     d.style.setProperty('--task-gap', data.vars.gap);
-    if (data.vars.bringFS) d.style.setProperty('--bring-fs', data.vars.bringFS);
-  }
-
-  // 5. VRIJE PICTOGRAMMEN VAN DIE DAG
-  const dayBody = d.querySelector('.body') || d;
-  // oude eruit
-  dayBody.querySelectorAll('.picto-free').forEach(p => p.remove());
-  if (bringBox) {
-    bringBox.querySelectorAll('.picto-free').forEach(p => p.remove());
-  }
-
-  if (Array.isArray(data.pictos)) {
-    data.pictos.forEach(p => {
-      const host = (p.host === 'bring') ? bringBox : dayBody;
-      if (!host) return;
-      const wrap = document.createElement('div');
-      wrap.className = 'picto-free';
-      wrap.style.position = 'absolute';
-      wrap.style.left  = p.left  || '8px';
-      wrap.style.top   = p.top   || '8px';
-      wrap.style.width = p.width || '32mm';
-      wrap.style.zIndex = '5';
-      wrap.innerHTML = `<img src="${p.src}" alt="picto"><div class="handle" title="Schaal"></div>`;
-      host.appendChild(wrap);
-      if (typeof enableDragResize === 'function') {
-        enableDragResize(wrap);
+  // 1) Probeer weekendHtml, maar alleen als het niet “leeg” is
+  if (hasWeekendHtml) {
+    const chk = _isEmptyWeekendHtml(data.weekendHtml);
+    if (!chk.isEmpty) {
+      if (chk.hasTasks) {
+        // weekendHtml bevatte (oude) <ul class="tasklist"> → zet die over
+        const box = ce.closest('.planBox');
+        const ul  = chk.tmp.querySelector('.tasklist');
+        box.innerHTML = '';
+        box.appendChild(ul.cloneNode(true));
+        box.classList.add('has-tasks');
+        ensureTaskDeleteButtons(box);
+      } else {
+        ce.innerHTML = data.weekendHtml || '';
       }
-    });
+      done = true;
+    }
   }
-}
+
+  // 2) Anders weekendText (platte tekst)
+  if (!done && hasWeekendText && (data.weekendText || '').trim() !== '') {
+    ce.textContent = data.weekendText.trim();
+    done = true;
+  }
+
+  // 3) Anders fallback: haal bruikbare inhoud uit plan (oud export-formaat)
+  if (!done && hasPlan) {
+    const tmp = document.createElement('div');
+    tmp.innerHTML = data.plan;
+    const ul = tmp.querySelector('.tasklist');
+    if (ul) {
+      const box = ce.closest('.planBox');
+      box.innerHTML = '';
+      box.appendChild(ul.cloneNode(true));
+      box.classList.add('has-tasks');
+      ensureTaskDeleteButtons(box);
+    } else {
+      ce.textContent = tmp.textContent.replace(/\u00a0/g,' ').trim();
+    }
+  }
+
+  // Als nog steeds niets gezet is: leeg
+  if (!done && !hasWeekendText && !hasPlan) {
+    ce.innerHTML = '';
+  }
+
+    } else if (ta) {
+      if (Object.prototype.hasOwnProperty.call(data, 'weekendText')) {
+        ta.value = data.weekendText || '';
+        limitWeekendTextarea({ target: ta });
+      }
+    } else {
+      planBoxEl.innerHTML = data.plan || '';
+      ensureTaskDeleteButtons(d);
+    }
+
+    const br=d.querySelector(`[data-key="d${idx}.bring"]`);
+    if (br && data.bring !== undefined) { br.innerHTML = data.bring; }
+    if(data.vars){
+      if(data.vars.planFS)  d.style.setProperty('--plan-fs',data.vars.planFS);
+      if(data.vars.bullet)  d.style.setProperty('--bullet',data.vars.bullet);
+      if(data.vars.gap)     d.style.setProperty('--task-gap',data.vars.gap);
+      if(data.vars.bringFS) d.style.setProperty('--bring-fs',data.vars.bringFS);
+    }
+    d.querySelectorAll('.picto-free').forEach(n=>n.remove());
+
+    if (data.pictos) {
+      const bringHtml = (data.bring || '') + '';
+      function legacyGuessHostFor(src){
+        return bringHtml.includes(src) ? 'bring' : 'body';
+      }
+      data.pictos.forEach(p => {
+        const node = makeFreePicto(p.src);
+        node.style.left  = p.left  || '10px';
+        node.style.top   = p.top   || '10px';
+        if (p.width) node.style.width = p.width;
+        let desiredHost = p.host;
+        if (!desiredHost) desiredHost = legacyGuessHostFor(p.src);
+        let hostEl = d.querySelector('.body') || d;
+        if (desiredHost === 'bring') {
+          hostEl = d.querySelector(`[data-key="d${idx}.bring"]`) || hostEl;
+          node.dataset.host = 'bring';
+        } else {
+          node.dataset.host = 'body';
+        }
+        hostEl.appendChild(node);
+      });
+    }
+  }
 
   function capturePanelPictos(){
     const pics=[...notesPanel.querySelectorAll('.picto-free')].map(p=>{
@@ -2212,7 +2207,43 @@ function syncNotesToWeekendColleague(){
     if (dd) updatePlanBoxClass(dd);
     pushSnapshot();
   });
-  
+  // ---------- FIRESTORE KOPPELING VOOR 1STE / 2DE / 3DE GRAAD ----------
+
+  // Bouwt de payload op basis van de huidige agenda op het scherm.
+  function buildAgendaPayload() {
+    const data = captureAll(); // uw bestaande functie
+    // We voegen schooljaar en timestamp toe voor archivering.
+    return {
+      schooljaar: currentSchoolYear(),
+      klas: document.getElementById('klasInput').value.trim(),
+      week: document.getElementById('weekInput').value.trim(),
+      data: data,
+      timestamp: Date.now()
+    };
+  }
+
+  async function saveAgendaToFirestore() {
+    const graad = document.getElementById('graadSelect').value;   // "1", "2", "3"
+    const klas  = document.getElementById('klasInput').value.trim();
+    const week  = document.getElementById('weekInput').value.trim();
+
+    if (!graad || !klas || !week) {
+      alert("Gelieve graad, klas en week in te vullen.");
+      return;
+    }
+
+    const payload = buildAgendaPayload();
+    const collName = "agenda_graad" + graad;     // bv. agenda_graad1
+    const docId    = klas + "_" + week;          // bv. L1A_2025-W43
+
+    try {
+      await db.collection(collName).doc(docId).set(payload);
+      alert("Agenda bewaard voor " + klas + " (" + week + ").");
+    } catch (err) {
+      console.error(err);
+      alert("Bewaren mislukt: " + err.message);
+    }
+  }
 // Hier houden we tijdelijk de versie bij die op het scherm stond
 // vóórdat we iets anders laden.
 let lastLocalAgendaBackup = null;
@@ -2352,46 +2383,6 @@ function showToast(msg, type) {
   }
 }
 
-// -----------------------------
-// HULPFUNCTIE: zet verkeerde (oktober-)datums recht naar de gevraagde maand
-// -----------------------------
-function fixDatesToWeekMonth(normObj, weekVal) {
-  if (!normObj || !normObj.days) return normObj;
-
-  // haal maand-sleutel uit bv. "nov-2025 W1"
-  let targetMonth = null;
-  let targetYear  = null;
-  const m = weekVal.match(/^([a-z]{3})-(\d{4})/i);
-  if (m) {
-    const abbr = m[1].toLowerCase();
-    const year = m[2];
-    const map  = {
-      jan:1, feb:2, maa:3, mrt:3, apr:4, mei:5, jun:6,
-      jul:7, aug:8, sep:9, okt:10, nov:11, dec:12
-    };
-    targetMonth = map[abbr] || null;
-    targetYear  = parseInt(year, 10);
-  }
-
-  if (!targetMonth || !targetYear) return normObj;
-
-  Object.keys(normObj.days).forEach(idx => {
-    const day = normObj.days[idx];
-    if (!day || !day.date) return;
-
-    const d = new Date(day.date);
-    if (isNaN(d)) return;
-
-    // als maand niet klopt → overschrijven
-    if ((d.getMonth() + 1) !== targetMonth || d.getFullYear() !== targetYear) {
-      const dayNr = d.getDate();
-      const fixed = new Date(targetYear, targetMonth - 1, dayNr);
-      day.date = fixed.toISOString().slice(0, 10);
-    }
-  });
-
-  return normObj;
-}
 
 // -----------------------------
 // Eigen agenda laden (definitieve versie)
@@ -2402,10 +2393,10 @@ async function loadAgendaFromFirestore() {
   const klasInp  = document.getElementById('klasInput');
   const weekInp  = document.getElementById('weekInput');
 
-  const graadVal = (graadSel.value || '').trim();
-  const klasVal  = (klasInp.value  || '').trim();
-  const weekVal  = (weekInp.value  || '').trim();
-  const tplNow   = getTplNow();   // "L1" of "L2"
+  const graadVal = graadSel.value.trim();
+  const klasVal  = klasInp.value.trim();
+  const weekVal  = weekInp.value.trim();
+  const tplNow   = getTplNow();   // "L1" of "L2" – wat jij bovenaan kiest
 
   if (!graadVal || !klasVal || !weekVal) {
     alert("Graad, klas én week invullen a.u.b.");
@@ -2413,14 +2404,14 @@ async function loadAgendaFromFirestore() {
   }
 
   const colName   = `agenda_graad${graadVal}`;
-  const idWithTpl = `${klasVal}_${weekVal}_${tplNow}`;
-  const idLegacy  = `${klasVal}_${weekVal}`;
+  const idWithTpl = `${klasVal}_${weekVal}_${tplNow}`;  // bv. L2A_nov-2025 W2_L2
+  const idLegacy  = `${klasVal}_${weekVal}`;            // bv. L2A_nov-2025 W2
 
-  // 1) eerst nieuwe naam proberen
+  // 1. eerst proberen met de juiste tpl (dit is de versie die jij net bewaard hebt)
   let snap = await db.collection(colName).doc(idWithTpl).get({ source: 'server' });
   let usedId = idWithTpl;
 
-  // 2) anders oude naam
+  // 2. als die niet bestaat: dan pas de oude naam
   if (!snap.exists) {
     const legacySnap = await db.collection(colName).doc(idLegacy).get({ source: 'server' });
     if (!legacySnap.exists) {
@@ -2434,33 +2425,23 @@ async function loadAgendaFromFirestore() {
   console.log("Agenda geladen uit:", usedId);
 
   const payload = snap.data() || {};
-  let inhoud    = payload.data || payload.gegevens || payload.inhoud || payload;
+  const inhoud  = payload.data || payload.gegevens || payload.inhoud || payload;
   if (!inhoud || typeof inhoud !== "object") {
     alert("Onbekende datastructuur in Firestore-document.");
     return;
   }
 
-  // ★ Belangrijk: zelfde normalisatie als bij collega-agenda
-  const maandKey = weekVal.includes(" ") ? weekVal.split(" ")[0] : weekVal;
-  const norm = normalizeFirestoreAgenda(inhoud, klasVal, weekVal, maandKey);
-
-  // 1. agenda op scherm
-  applyAll(norm);
-
-  // 2. panel-pictos ook tonen (eerst wat in norm zit)
-  if (norm.meta && norm.meta.panelPictos) {
-    applyPanelPictos(norm.meta.panelPictos);
-  } else if (payload.meta && payload.meta.panelPictos) {
-    applyPanelPictos(payload.meta.panelPictos);
-  }
-
-  // 3. lokale buffer updaten
-  if (typeof localStateByTemplate !== "undefined") {
-    localStateByTemplate[tplNow] = norm;
-    currentTplOnScreen = tplNow;
-  }
+  applyAll(inhoud);
+if (payload.meta && payload.meta.panelPictos) {
+  applyPanelPictos(payload.meta.panelPictos);
 }
 
+if (typeof localStateByTemplate !== "undefined") {
+  localStateByTemplate[tplNow] = inhoud;
+  currentTplOnScreen = tplNow;
+}
+
+}
 
 
 // ---------- MAAND- EN WEEKSELECTIE (per maand gegroepeerd) ----------
@@ -3096,11 +3077,7 @@ function normalizeFirestoreAgenda(bron, klasVal, weekVal, maandVal) {
       bring:  d.brengen || d.bring || d.ikDenkAan || "",
       geefaf: d.geefaf || d.ikGeefAf || "",
       date:   d.datum || d.date || "",
-            pictos: Array.isArray(d.pictogrammen) ? d.pictogrammen
-            : Array.isArray(d.pictos)       ? d.pictos
-            : Array.isArray(d.pictosVrij)   ? d.pictosVrij
-            : []
-
+      pictos: d.pictogrammen || d.pictos || d.pictosVrij || {}
     };
   });
 
@@ -3527,63 +3504,49 @@ async function saveToFirestore(overrideWeekName){
     return;
   }
 
-  // ★ 2bis) Maandbox laten overeenkomen met weeknaam
-  // bv. "nov-2025 W2" → "november 2025"
-  const monthBoxEl = document.getElementById('monthBox');
-  if (monthBoxEl) {
-    const m = weekVal.match(/^([a-z]{3})-(\d{4})/i);
-    if (m) {
-      const abbr = m[1].toLowerCase();
-      const jaar = m[2];
-      const map  = {
-        jan:'januari', feb:'februari', maa:'maart', mrt:'maart',
-        apr:'april', mei:'mei', jun:'juni', jul:'juli', aug:'augustus',
-        sep:'september', okt:'oktober', nov:'november', dec:'december'
-      };
-      const vol = map[abbr] || abbr;
-      monthBoxEl.textContent = `${vol} ${jaar}`;
-    }
-  }
-
   // 3) Documentnaam met L1/L2
   const collName = 'agenda_graad' + graadVal;
   const tplNow   = getTplNow();
   const docId    = `${klasVal}_${weekVal}_${tplNow}`;
 
-  // 4) Basisdata ophalen (doet ook mededelingen en dagen)
+  // 4) Basisdata ophalen (doet ook mededelingen)
   const data = captureAll();
-
-  // ZEKER maken dat er een meta-object is
-if (!data.meta) data.meta = {};
-
-// Alle datePickers ook als ISO opslaan
-data.meta.datesIso = {};
-document.querySelectorAll('.day').forEach(dayEl => {
-  const idx = dayEl.dataset.dayIndex;
-  const dp  = dayEl.querySelector('.datePicker');
-  if (idx !== undefined && dp && dp.value) {
-    data.meta.datesIso[idx] = dp.value;   // bv. "2025-11-10"
-  }
-});
-
-// ★ NIEUW: schrijf die ISO ook terug in de dag zelf
-if (data.days && data.meta.datesIso) {
-  Object.entries(data.meta.datesIso).forEach(([idx, iso]) => {
-    if (data.days[idx]) {
-      data.days[idx].date = iso;   // ← DIT is wat in Firestore terecht moet komen
-    }
-  });
-}
-
-
-  // 4b) Zorg dat pictogrammen uit de notities én uit elke dag meegaan
   data.meta.panelPictos = capturePanelPictos();
-  Object.values(data.days).forEach(day => {
-    if (day && !day.pictos) day.pictos = [];
-  });
+  data.meta.updatedAt   = new Date().toISOString();
 
-  // 4c) Tijdstempel toevoegen
-  data.meta.updatedAt = new Date().toISOString();
+  // 5) *** HIER FORCEREN WE DE 7 DAGEN UIT HET ECHTE SCHERM ***
+  data.dagen = data.dagen || {};
+  const dayEls = document.querySelectorAll('#page .day[data-day-index]');
+  dayEls.forEach(dayEl => {
+    const idx = dayEl.getAttribute('data-day-index'); // "0"..."6"
+    if (!idx) return;
+
+    // waar staat jouw html?
+    const planEl  = dayEl.querySelector(`[data-key="d${idx}.plan"]`);
+    const bringEl = dayEl.querySelector(`[data-key="d${idx}.bring"]`);
+
+    const planHTML  = planEl  ? planEl.innerHTML  : "";
+    const bringHTML = bringEl ? bringEl.innerHTML : "";
+
+    // schrijf het hard in de dataset
+    data.dagen[idx] = data.dagen[idx] || {};
+    data.dagen[idx].plan  = planHTML;
+    data.dagen[idx].bring = bringHTML;
+
+    // vrije pictogrammen op die dag
+    const pictos = [];
+    dayEl.querySelectorAll('.picto-free').forEach(p => {
+      pictos.push({
+        src:  p.getAttribute('src') || p.dataset.src || "",
+        left: p.style.left  || "",
+        top:  p.style.top   || "",
+        width:p.style.width || "",
+        host: p.dataset.host || "body"
+      });
+    });
+    data.dagen[idx].pictos = pictos;
+  });
+  // ******* TOT HIER ONS EXTRA BLOK ********
 
   // 6) NU PAS loggen en wegschrijven
   console.log('Payload dat we gaan opslaan:', data, '→', collName, '/', docId);
@@ -3601,7 +3564,7 @@ if (data.days && data.meta.datesIso) {
     updatedAt: firebase.firestore.FieldValue.serverTimestamp()
   });
 
-  // lokale temp bijwerken
+  // lokale temp bijwerken (jouw app gebruikt dat ook)
   if (typeof localStateByTemplate !== "undefined") {
     localStateByTemplate[tplNow] = data;
     currentTplOnScreen = tplNow;
@@ -3609,8 +3572,6 @@ if (data.days && data.meta.datesIso) {
 
   alert(`Agenda bewaard: ${docId}`);
 }
-// ★ deze regel erbij!
-window.saveToFirestore = saveToFirestore;
 
   
 // 1. Pak de knoppen
@@ -3682,67 +3643,17 @@ async function loadFromFirestore() {
   const maandKey = weekVal.includes(" ") ? weekVal.split(" ")[0] : weekVal;
   const norm = normalizeFirestoreAgenda(inhoud, klasVal, weekVal, maandKey);
 
-    // 1) op het scherm zetten
+  // op het scherm
   applyAll(norm);
-  
-// ★ ISO-datums uit meta terugzetten in de DOM (dit was uw W2-probleem)
-if (norm.meta && norm.meta.datesIso) {
-  Object.entries(norm.meta.datesIso).forEach(([idx, iso]) => {
-    const dayEl = document.querySelector(`.day[data-day-index="${idx}"]`);
-    if (!dayEl) return;
-    const dp  = dayEl.querySelector('.datePicker');
-    const lab = dayEl.querySelector('.dDate');
-    if (dp) {
-      dp.disabled = false;
-      dp.readOnly = false;
-      dp.value = iso;
 
-      const d = new Date(iso);
-      if (!isNaN(d) && lab) {
-        const dd = String(d.getDate()).padStart(2,'0');
-        const mm = String(d.getMonth()+1).padStart(2,'0');
-        lab.textContent = `${dd} / ${mm}`;
-      }
-    }
-  });
-}
-
-  // 2) datumvelden NA het laden altijd weer openzetten + onleesbare datums herstellen
-  document.querySelectorAll('.day').forEach(dayEl => {
-    const dp  = dayEl.querySelector('.datePicker');
-    const lab = dayEl.querySelector('.dDate');
-    if (!dp) return;
-
-    // altijd bewerkbaar maken
-    dp.disabled = false;
-    dp.readOnly = false;
-
-    // als de day-data wél een ISO had, zet die er in
-    const idx = dayEl.dataset.dayIndex;
-    const dayData = norm.days && norm.days[idx] ? norm.days[idx] : null;
-    if (dayData && dayData.date) {
-      // verwacht ISO
-      dp.value = dayData.date;                  // bv. "2025-11-10"
-      const d = new Date(dayData.date);
-      if (!isNaN(d) && lab) {
-        const dd = String(d.getDate()).padStart(2,'0');
-        const mm = String(d.getMonth()+1).padStart(2,'0');
-        lab.textContent = `${dd} / ${mm}`;
-      }
-    } else {
-      // oude vorm: alleen label "27 / 10" → dan tonen we alleen het label, picker blijft open
-      dp.value = ""; // leeg laten zodat u kunt kiezen
-    }
-  });
-
-  // 3) panel-pictogrammen meenemen – eerst wat in norm zit, anders wat in payload zat
+  // pictogrammen meenemen – eerst wat in norm zit, anders wat in payload zat
   if (norm.meta && norm.meta.panelPictos) {
     applyPanelPictos(norm.meta.panelPictos);
   } else if (payload.meta && payload.meta.panelPictos) {
     applyPanelPictos(payload.meta.panelPictos);
   }
 
-  // 4) lokale state bijwerken (uw app gebruikt dit ook)
+  // lokale state bijwerken (uw app gebruikt dit ook)
   if (typeof localStateByTemplate !== "undefined") {
     localStateByTemplate[tplNow] = norm;
     currentTplOnScreen = tplNow;
@@ -3799,43 +3710,5 @@ if (freshBtnCopy) {
 })();
 
 </script>
-<script>
-// -----------------------------
-// FORCEER: koppel Bewaar-knop aan de NIEUWE saveToFirestore
-// -----------------------------
-window.addEventListener('DOMContentLoaded', () => {
-  const btnSave   = document.getElementById('btnSaveFS');
-  const btnSaveCp = document.getElementById('btnSaveCopyFS');
-
-  if (btnSave) {
-    const clone = btnSave.cloneNode(true);
-    btnSave.parentNode.replaceChild(clone, btnSave);
-  }
-  if (btnSaveCp) {
-    const clone2 = btnSaveCp.cloneNode(true);
-    btnSaveCp.parentNode.replaceChild(clone2, btnSaveCp);
-  }
-
-  const freshSave = document.getElementById('btnSaveFS');
-  const freshCopy = document.getElementById('btnSaveCopyFS');
-
-  if (freshSave) {
-    freshSave.addEventListener('click', async () => {
-      console.log('[FORCE] nieuwe saveToFirestore');
-      await saveToFirestore(null);
-    });
-  }
-  if (freshCopy) {
-    freshCopy.addEventListener('click', async () => {
-      console.log('[FORCE] kopie met nieuwe saveToFirestore');
-      const huidige = document.getElementById('weekInput').value.trim();
-      const nieuw = window.prompt("Bewaar kopie als welke weeknaam?\n(bv. nov-2025 W2)", huidige || "nov-2025 W2");
-      if (!nieuw) return;
-      await saveToFirestore(nieuw);
-    });
-  }
-});
-</script>
-
 </body>
 </html>
