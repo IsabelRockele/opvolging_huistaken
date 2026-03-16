@@ -15,8 +15,14 @@
   body{margin:0;background:#f3f5f7;color:var(--ink);font-family:Arial,Helvetica,sans-serif;font-size:12pt;line-height:1.28}
   *{box-sizing:border-box}
 
+  /* Klas-tabs */
+  .klas-tabs{display:flex;gap:0;background:#e5e7eb;padding:0;border-bottom:2px solid #d0d7de;position:sticky;top:0;z-index:51}
+  .klas-tab{padding:.5rem 1.6rem;font-weight:700;font-size:1rem;cursor:pointer;border:none;background:transparent;border-bottom:3px solid transparent;margin-bottom:-2px;transition:all .15s;font-family:inherit;color:#6b7280}
+  .klas-tab.active{background:#fff;color:#0a66c2;border-bottom:3px solid #0a66c2}
+  .klas-tab:hover:not(.active){background:#f0f4f8;color:#111}
+
   /* Toolbar (niet in print) */
-  .toolbar{position:sticky;top:0;z-index:50;display:flex;flex-wrap:wrap;gap:.6rem 1rem;align-items:center;padding:.6rem .8rem;background:#fff;border-bottom:1px solid #e5e7eb}
+  .toolbar{position:sticky;top:42px;z-index:50;display:flex;flex-wrap:wrap;gap:.6rem 1rem;align-items:center;padding:.6rem .8rem;background:#fff;border-bottom:1px solid #e5e7eb}
   .toolbar .group{display:flex;gap:.6rem;align-items:center;flex-wrap:wrap}
   .toolbar select{font:inherit;padding:.3rem .45rem}
   .toolbar button{appearance:none;border:1px solid #d0d7de;background:#fff;padding:.45rem .7rem;border-radius:.5rem;cursor:pointer;font-weight:700}
@@ -211,13 +217,14 @@
 </style>
 </head>
 <body>
+  <!-- Klas-tabs -->
+  <div class="klas-tabs" id="klasTabs">
+    <button class="klas-tab" data-klas="L1">🐝 L1</button>
+    <button class="klas-tab active" data-klas="L2">🦓 L2</button>
+  </div>
+
   <div class="toolbar" role="region" aria-label="Bediening">
     <div class="group">
-      <label for="tpl">Sjabloon</label>
-      <select id="tpl">
-        <option value="L1">Agenda L1</option>
-        <option value="L2" selected>Agenda L2</option>
-      </select>
       <label><input id="zwemweek" type="checkbox"> Zwemweek</label>
     </div>
     <div class="group">
@@ -305,7 +312,63 @@
   const ENVELOPE_SVG =
    '<svg viewBox="0 0 48 36" xmlns="http://www.w3.org/2000/svg"><rect x="1.5" y="1.5" width="45" height="33" rx="2.5"/><polyline points="2,2 24,18 46,2"/><polyline points="2,34 20,20"/><polyline points="46,34 28,20"/></svg>';
 
-  const tplSel=$('#tpl'), swimChk=$('#zwemweek');
+  const tplSel = { value: 'L2' }; // vervangen door tab-systeem
+  const swimChk=$('#zwemweek');
+
+  /* ── Tab-systeem: L1 / L2 ── */
+  let aktieveKlas = 'L2';
+  const tabState = { L1: null, L2: null }; // opgeslagen staat per klas
+
+  function getKlasIcon(klas){
+    return klas === 'L1' ? 'pictogrammen/bijtje.png' : 'pictogrammen/zebra.png';
+  }
+
+  function wisselKlas(nieuweKlas){
+    if (nieuweKlas === aktieveKlas) return;
+    // Huidige staat opslaan
+    tabState[aktieveKlas] = captureAllVoorTab();
+    // Tab UI bijwerken
+    $$('.klas-tab').forEach(t => t.classList.toggle('active', t.dataset.klas === nieuweKlas));
+    aktieveKlas = nieuweKlas;
+    tplSel.value = nieuweKlas;
+    // Nieuwe staat laden of leeg starten
+    if (tabState[nieuweKlas]){
+      isApplying = true;
+      applyAll(tabState[nieuweKlas]);
+      applyPanelPictos(tabState[nieuweKlas].meta?.panelPictos || []);
+      isApplying = false;
+    } else {
+      // Lege agenda voor deze klas
+      resetAgenda(nieuweKlas);
+    }
+    pushSnapshot();
+  }
+
+  function resetAgenda(klas){
+    // Leeg alle dagen
+    $$('.day').forEach(d => {
+      const idx = d.dataset.dayIndex;
+      const planBoxEl = d.querySelector(`[data-key="d${idx}.plan"]`);
+      const ce = planBoxEl?.querySelector('.wkCE[contenteditable]');
+      const ta = planBoxEl?.querySelector('.wkTA');
+      if (ce) ce.innerHTML = '';
+      else if (ta) ta.value = '';
+      else if (planBoxEl) planBoxEl.innerHTML = '';
+      const br = d.querySelector(`[data-key="d${idx}.bring"]`);
+      if (br) br.innerHTML = '';
+      d.querySelectorAll('.picto-free').forEach(p => p.remove());
+    });
+    $('#notesBody').innerHTML = '';
+    $('#titlePill').textContent = 'agenda ' + klas;
+    // Klaslogo
+    classIconSlot.innerHTML = `<img src="${getKlasIcon(klas)}" alt="klaspictogram ${klas}">`;
+    scheduleLayoutSync();
+  }
+
+  document.getElementById('klasTabs').addEventListener('click', e => {
+    const tab = e.target.closest('.klas-tab');
+    if (tab) wisselKlas(tab.dataset.klas);
+  });
   const btnAddBullet=$('#btnAddBullet');
   const planFS=$('#planFS'), bulletSize=$('#bulletSize'), taskGap=$('#taskGap');
   const applyAllFS=$('#applyAllFS'), applyAllGap=$('#applyAllGap');
@@ -1030,7 +1093,7 @@ if (ce) {
 
   function captureAll(){
     const meta={
-      template:tplSel.value,
+      template:aktieveKlas,
       title:$('#titlePill').textContent,
       monthBox:monthBox.textContent,
       swim:swimChk.checked,
@@ -1040,13 +1103,21 @@ if (ce) {
     const days={}; $$('.day').forEach(n=> days[n.dataset.dayIndex]=captureDay(n));
     return {meta,days};
   }
+
+  function captureAllVoorTab(){
+    const data = captureAll();
+    data.meta.panelPictos = capturePanelPictos();
+    return data;
+  }
+
   function applyAll(obj){
     if(obj.meta){
-      tplSel.value=obj.meta.template||'L2';
-      $('#titlePill').textContent=obj.meta.title||('agenda '+tplSel.value);
+      if(obj.meta.template) tplSel.value = obj.meta.template;
+      $('#titlePill').textContent=obj.meta.title||('agenda '+aktieveKlas);
       if(obj.meta.monthBox) monthBox.textContent=obj.meta.monthBox;
       swimChk.checked=!!obj.meta.swim;
-      if(obj.meta.classIcon){ classIconSlot.innerHTML='<img alt="klaspictogram" src="'+obj.meta.classIcon+'">'; } else { classIconSlot.innerHTML=''; }
+      if(obj.meta.classIcon){ classIconSlot.innerHTML='<img alt="klaspictogram" src="'+obj.meta.classIcon+'">'; }
+      else { classIconSlot.innerHTML=`<img src="${getKlasIcon(aktieveKlas)}" alt="klaspictogram ${aktieveKlas}">`; }
       if(obj.meta.notes){ $('#notesBody').innerHTML=obj.meta.notes; }
       applyTemplate();
     }
@@ -1097,26 +1168,23 @@ upgradeWeekendToEditable();
     r.readAsDataURL(f);
   });
 
-  /* L1/L2 + zebra automatisch bij L2 */
+  /* L1/L2 + logo automatisch */
   function applyTemplate(){
-  const tpl = tplSel.value;
-  const cur = classIconSlot.querySelector('img');
-
-  if (tpl === 'L2') {
-    // Tweede leerjaar → zebra
-    if (!cur || !/zebra\.png$/i.test(cur.src)) {
-      classIconSlot.innerHTML = '<img src="pictogrammen/zebra.png" alt="klaspictogram zebra">';
+    const tpl = aktieveKlas;
+    const cur = classIconSlot.querySelector('img');
+    if (tpl === 'L2') {
+      if (!cur || !/zebra\.png$/i.test(cur.src)) {
+        classIconSlot.innerHTML = '<img src="pictogrammen/zebra.png" alt="klaspictogram zebra">';
+      }
+      if ($('#titlePill').textContent.trim() === 'agenda L1') $('#titlePill').textContent = 'agenda L2';
+    } else if (tpl === 'L1') {
+      if (!cur || !/bijtje\.png$/i.test(cur.src)) {
+        classIconSlot.innerHTML = '<img src="pictogrammen/bijtje.png" alt="klaspictogram bijtje">';
+      }
+      if ($('#titlePill').textContent.trim() === 'agenda L2') $('#titlePill').textContent = 'agenda L1';
     }
-    $('#titlePill').textContent = 'agenda L2';
-  } else if (tpl === 'L1') {
-    // Eerste leerjaar → bijtje
-    if (!cur || !/bijtje\.png$/i.test(cur.src)) {
-      classIconSlot.innerHTML = '<img src="pictogrammen/bijtje.png" alt="klaspictogram bijtje">';
-    }
-    $('#titlePill').textContent = 'agenda L1';
   }
-}
-  tplSel.addEventListener('change', ()=>{ applyTemplate(); pushSnapshot(); });
+  // tplSel.addEventListener weggehaald — tabs nemen dit over
 
   /* Maandlabel */
   function updateMonthBox(){
@@ -1181,8 +1249,10 @@ upgradeWeekendToEditable();
 
   /* Init */
   (function init(){
+    aktieveKlas = 'L2';
+    tplSel.value = 'L2';
     const today=new Date();
-    const wd=(today.getDay()+6)%7; // maandag=0
+    const wd=(today.getDay()+6)%7;
     const mon=new Date(today); mon.setDate(today.getDate()-wd);
     $$('.day').forEach(d=>{
       const idx=parseInt(d.dataset.dayIndex,10);
@@ -1303,8 +1373,8 @@ upgradeWeekendToEditable();
         <input id="archiefNaam" type="text" placeholder="bv. Juf Zisa" style="width:100%;padding:.5rem .7rem;border:1.5px solid #d1d5db;border-radius:8px;font-size:12pt;box-sizing:border-box">
         <label style="display:block;margin:.8rem 0 .3rem;font-weight:700">Klas:</label>
         <select id="archiefKlas" style="width:100%;padding:.5rem .7rem;border:1.5px solid #d1d5db;border-radius:8px;font-size:12pt;box-sizing:border-box">
-          <option value="L1">L1</option>
-          <option value="L2" selected>L2</option>
+          <option value="L1" ${aktieveKlas==='L1'?'selected':''}>L1</option>
+          <option value="L2" ${aktieveKlas==='L2'?'selected':''}>L2</option>
         </select>
         <label style="display:block;margin:.8rem 0 .3rem;font-weight:700">Week van de maand:</label>
         <select id="archiefWeek" style="width:100%;padding:.5rem .7rem;border:1.5px solid #d1d5db;border-radius:8px;font-size:12pt;box-sizing:border-box">
@@ -1466,21 +1536,22 @@ upgradeWeekendToEditable();
     Object.entries(data).forEach(([sleutel, obj])=>{
       const naam = obj.meta?.archiefNaam || sleutel;
       const klas = obj.meta?.archiefKlas || '';
-      html += `<div style="border:1.5px solid #e5e7eb;border-radius:9px;margin-bottom:.6rem;overflow:hidden">
-        <div style="background:#f9fafb;padding:.5rem .8rem;font-weight:700;font-size:.92rem;display:flex;justify-content:space-between;align-items:center">
-          <span>📖 ${naam} ${klas?'('+klas+')':''}</span>
+      html += `<div style="border:1.5px solid #e5e7eb;border-radius:9px;margin-bottom:.8rem;overflow:hidden">
+        <div style="background:#f0f4f8;padding:.5rem .8rem;font-weight:700;font-size:.92rem">
+          📖 ${naam} ${klas?'('+klas+')':''}
         </div>
-        <div style="padding:.5rem .8rem">`;
+        <div style="padding:.6rem .8rem">`;
 
-      // Mededelingen apart bovenaan
+      // Mededelingen
       const notes = obj.meta?.notes || '';
-      if (notes.replace(/<[^>]*>/g,'').trim()){
-        html += `<div style="border:1px solid #e5e7eb;border-radius:7px;padding:.4rem .7rem;margin-bottom:.4rem;background:#fffbeb">
+      const notesTekst = notes.replace(/<[^>]*>/g,'').trim();
+      if (notesTekst){
+        html += `<div style="border:1.5px solid #fcd34d;border-radius:7px;padding:.5rem .7rem;margin-bottom:.5rem;background:#fffbeb">
           <div style="font-size:.8rem;font-weight:700;color:#92400e;margin-bottom:.3rem">📋 Mededelingen</div>
-          <div style="font-size:.82rem;color:#374151;max-height:60px;overflow:hidden">${notes}</div>
+          <div style="font-size:.85rem;color:#374151;line-height:1.4">${notes}</div>
           <button class="arf-plak-btn" data-type="notes" data-sleutel="${sleutel}" data-graad="${graad}" data-jaar="${jaar}" data-maand="${maand}" data-week="${week}"
-            style="margin-top:.4rem;font-size:.78rem;padding:.25rem .6rem;border:1px solid #d97706;color:#d97706;background:#fff;border-radius:6px;cursor:pointer;font-weight:700">
-            Plak mededelingen in mijn agenda
+            style="margin-top:.5rem;font-size:.8rem;padding:.3rem .7rem;border:1.5px solid #d97706;color:#d97706;background:#fff;border-radius:6px;cursor:pointer;font-weight:700">
+            ↙ Plak in mijn agenda
           </button>
         </div>`;
       }
@@ -1489,20 +1560,57 @@ upgradeWeekendToEditable();
       const days = obj.days || {};
       Object.entries(days).sort((a,b)=>parseInt(a)-parseInt(b)).forEach(([idx, dag])=>{
         const dagNaam = DAGNAMES2[parseInt(idx)] || ('Dag '+idx);
-        const heeftPlan = dagHeeftInhoudArchief(dag, 'plan');
+        const heeftPlan  = dagHeeftInhoudArchief(dag, 'plan');
         const heeftBring = dagHeeftInhoudArchief(dag, 'bring');
         if (!heeftPlan && !heeftBring) return;
-        html += `<div style="border:1px solid #e5e7eb;border-radius:7px;padding:.4rem .7rem;margin-bottom:.35rem">
-          <div style="font-weight:700;font-size:.88rem;margin-bottom:.3rem">${dagNaam} <span style="color:#6b7280;font-size:.8rem">${dag.date?new Date(dag.date).toLocaleDateString('nl-BE',{day:'numeric',month:'short'}):''}</span></div>
-          <div style="display:flex;gap:.35rem;flex-wrap:wrap">
-            ${heeftPlan?`<button class="arf-plak-btn" data-type="plan" data-dayidx="${idx}" data-sleutel="${sleutel}" data-graad="${graad}" data-jaar="${jaar}" data-maand="${maand}" data-week="${week}"
-              style="font-size:.78rem;padding:.25rem .6rem;border:1px solid #0a66c2;color:#0a66c2;background:#fff;border-radius:6px;cursor:pointer;font-weight:700">Plan</button>`:''}
-            ${heeftBring?`<button class="arf-plak-btn" data-type="bring" data-dayidx="${idx}" data-sleutel="${sleutel}" data-graad="${graad}" data-jaar="${jaar}" data-maand="${maand}" data-week="${week}"
-              style="font-size:.78rem;padding:.25rem .6rem;border:1px solid #16a34a;color:#16a34a;background:#fff;border-radius:6px;cursor:pointer;font-weight:700">Ik denk aan</button>`:''}
-            ${heeftPlan&&heeftBring?`<button class="arf-plak-btn" data-type="alles" data-dayidx="${idx}" data-sleutel="${sleutel}" data-graad="${graad}" data-jaar="${jaar}" data-maand="${maand}" data-week="${week}"
-              style="font-size:.78rem;padding:.25rem .6rem;border:1px solid #7c3aed;color:#7c3aed;background:#fff;border-radius:6px;cursor:pointer;font-weight:700">Hele dag</button>`:''}
+
+        // Echte tekst ophalen
+        const planTekst = (()=>{
+          const tmp = document.createElement('div');
+          tmp.innerHTML = dag.plan || dag.weekendHtml || '';
+          // Bullets als lijst tonen
+          const items = tmp.querySelectorAll('li .tasktext, li');
+          if (items.length) return [...items].map(li=>('• '+li.textContent.trim())).filter(s=>s!=='• ').join('<br>');
+          return tmp.textContent.trim();
+        })();
+        const bringTekst = (()=>{
+          const tmp = document.createElement('div');
+          tmp.innerHTML = dag.bring || '';
+          return tmp.textContent.trim();
+        })();
+
+        const datum = dag.date ? new Date(dag.date).toLocaleDateString('nl-BE',{day:'numeric',month:'short'}) : '';
+
+        html += `<div style="border:1px solid #e5e7eb;border-radius:7px;margin-bottom:.4rem;overflow:hidden">
+          <div style="background:#f9fafb;padding:.35rem .7rem;font-weight:700;font-size:.88rem;display:flex;justify-content:space-between;align-items:center">
+            <span>${dagNaam} <span style="color:#6b7280;font-weight:400;font-size:.8rem">${datum}</span></span>
           </div>
-        </div>`;
+          <div style="padding:.4rem .7rem">`;
+
+        if (heeftPlan && planTekst){
+          html += `<div style="margin-bottom:.3rem">
+            <span style="font-size:.78rem;font-weight:700;color:#0a66c2;text-transform:uppercase;letter-spacing:.03em">Plan</span>
+            <div style="font-size:.85rem;color:#374151;line-height:1.4;margin-top:.15rem">${planTekst}</div>
+            <button class="arf-plak-btn" data-type="plan" data-dayidx="${idx}" data-sleutel="${sleutel}" data-graad="${graad}" data-jaar="${jaar}" data-maand="${maand}" data-week="${week}"
+              style="margin-top:.3rem;font-size:.78rem;padding:.25rem .6rem;border:1.5px solid #0a66c2;color:#0a66c2;background:#fff;border-radius:6px;cursor:pointer;font-weight:700">↙ Plan overnemen</button>
+          </div>`;
+        }
+        if (heeftBring && bringTekst){
+          html += `<div style="${heeftPlan?'border-top:1px solid #f0f0f0;padding-top:.3rem;margin-top:.2rem':''}">
+            <span style="font-size:.78rem;font-weight:700;color:#16a34a;text-transform:uppercase;letter-spacing:.03em">Ik denk aan</span>
+            <div style="font-size:.85rem;color:#374151;line-height:1.4;margin-top:.15rem">${bringTekst}</div>
+            <button class="arf-plak-btn" data-type="bring" data-dayidx="${idx}" data-sleutel="${sleutel}" data-graad="${graad}" data-jaar="${jaar}" data-maand="${maand}" data-week="${week}"
+              style="margin-top:.3rem;font-size:.78rem;padding:.25rem .6rem;border:1.5px solid #16a34a;color:#16a34a;background:#fff;border-radius:6px;cursor:pointer;font-weight:700">↙ Ik denk aan overnemen</button>
+          </div>`;
+        }
+        if (heeftPlan && heeftBring){
+          html += `<div style="margin-top:.4rem;padding-top:.3rem;border-top:1px solid #f0f0f0">
+            <button class="arf-plak-btn" data-type="alles" data-dayidx="${idx}" data-sleutel="${sleutel}" data-graad="${graad}" data-jaar="${jaar}" data-maand="${maand}" data-week="${week}"
+              style="font-size:.78rem;padding:.3rem .8rem;border:1.5px solid #7c3aed;color:#7c3aed;background:#fff;border-radius:6px;cursor:pointer;font-weight:700">↙ Hele dag overnemen</button>
+          </div>`;
+        }
+
+        html += `</div></div>`;
       });
 
       html += `</div></div>`;
