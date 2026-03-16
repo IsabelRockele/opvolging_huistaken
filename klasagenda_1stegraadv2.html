@@ -181,7 +181,8 @@
   /* Mededelingen */
   .panel{position:relative;border:2.6px solid var(--line);border-radius:7px;background:#fff;display:flex;flex-direction:column;height:1px; z-index:0;}
   .panel header{padding:2.6mm;border-bottom:2.6px solid var(--line);font-weight:700}
-  .panelBody{padding:2mm;flex:1;min-height:40px;overflow:auto;outline:none}
+  .panelBody{padding:2mm;flex:1;min-height:60px;overflow:auto;outline:none}
+  .panelBody:empty::before{content:'Klik hier om mededelingen te typen…';color:#adb5bd;pointer-events:none;font-style:italic}
   .sign{position:absolute;right:6mm;bottom:6mm;border:2.6px solid var(--line);border-radius:7px;padding:2mm 5mm;min-width:70mm;height:22mm;font-size:10pt;color:var(--muted);background:#fff;display:flex;align-items:flex-start}
 
   /* Vrije pictogrammen */
@@ -250,7 +251,7 @@
       page-break-inside: avoid;
     }
 
-    .tasklist .liDel{ display:none !important; }
+    .panelBody:empty::before{ display:none; }
     .picto-free .handle{ display:none !important; }
     .picto-free.selected{ outline:none !important; }
   }
@@ -546,20 +547,26 @@
     });
   }
 
-  function toonMiniBar(dagEl){
-    miniBarTarget = dagEl;
-    const rect = dagEl.getBoundingClientRect();
+  let miniBarInPanel = false; // true als mini-toolbar bij mededelingen hoort
+
+  function toonMiniBar(el){
+    miniBarTarget = el;
+    miniBarInPanel = el.id === 'notesPanel';
+    const rect = el.getBoundingClientRect();
     const barH = 42;
     let top = rect.top - barH - 8 + window.scrollY;
     if (top < 8 + window.scrollY) top = rect.bottom + 6 + window.scrollY;
     let left = rect.left + window.scrollX;
-    const barW = 420;
+    const barW = 440;
     if (left + barW > window.innerWidth - 8) left = window.innerWidth - barW - 8;
     miniBar.style.top  = top + 'px';
     miniBar.style.left = left + 'px';
     miniBar.classList.add('visible');
     vulMtPictoGrid();
-    updateMtBulletSize(dagEl);
+    if (!miniBarInPanel) updateMtBulletSize(el);
+    // Bolletje-knop en bolletjesgrootte verbergen bij mededelingen
+    document.getElementById('mt-bullet').style.display    = miniBarInPanel ? 'none' : '';
+    document.getElementById('mt-bulletsize').style.display = miniBarInPanel ? 'none' : '';
   }
 
   function verbergMiniBar(){
@@ -568,18 +575,22 @@
     miniBarTarget = null;
   }
 
-  // Toon bij klikken/focus in een dag — via event delegation want dagen zijn dynamisch gebouwd
+  // Toon bij klikken/focus in een dag of mededelingen — via event delegation
   document.addEventListener('focusin', e => {
-    const dag = e.target.closest('.day');
+    const dag   = e.target.closest('.day');
+    const panel = e.target.closest('#notesPanel');
     const inMini = e.target.closest('#miniToolbar');
-    if (dag) { toonMiniBar(dag); return; }
+    if (dag)   { toonMiniBar(dag);   return; }
+    if (panel) { toonMiniBar(panel); return; }
     if (!inMini) verbergMiniBar();
   });
   document.addEventListener('pointerdown', e => {
-    const dag = e.target.closest('.day');
-    const inMini = e.target.closest('#miniToolbar');
+    const dag   = e.target.closest('.day');
+    const panel = e.target.closest('#notesPanel');
+    const inMini    = e.target.closest('#miniToolbar');
     const inToolbar = e.target.closest('.toolbar');
-    if (dag) { toonMiniBar(dag); return; }
+    if (dag)   { toonMiniBar(dag);   return; }
+    if (panel) { toonMiniBar(panel); return; }
     if (!inMini && !inToolbar) verbergMiniBar();
   }, true);
   miniBar.addEventListener('pointerdown', e => e.stopPropagation());
