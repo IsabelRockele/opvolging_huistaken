@@ -21,6 +21,46 @@
   .klas-tab.active{background:#fff;color:#0a66c2;border-bottom:3px solid #0a66c2}
   .klas-tab:hover:not(.active){background:#f0f4f8;color:#111}
 
+  /* Zwevende mini-toolbar */
+  .mini-toolbar{
+    position:fixed;
+    z-index:200;
+    background:#1e293b;
+    border-radius:10px;
+    padding:5px 8px;
+    display:none;
+    align-items:center;
+    gap:3px;
+    box-shadow:0 4px 20px rgba(0,0,0,.28);
+    pointer-events:auto;
+    user-select:none;
+  }
+  .mini-toolbar.visible{ display:flex; }
+  .mt-btn{
+    appearance:none;border:none;background:transparent;color:#e2e8f0;
+    padding:4px 7px;border-radius:6px;cursor:pointer;font-size:13px;
+    font-family:Arial,sans-serif;font-weight:700;line-height:1.2;
+    transition:background .12s;white-space:nowrap;
+  }
+  .mt-btn:hover{ background:rgba(255,255,255,.15); }
+  .mt-btn.active-fmt{ background:rgba(99,179,237,.35);color:#fff; }
+  .mt-sep{ width:1px;height:20px;background:rgba(255,255,255,.18);margin:0 2px; }
+  .mt-picto-grid{
+    display:grid;grid-template-columns:repeat(4,1fr);gap:3px;
+    padding:6px;background:#1e293b;border-radius:8px;
+    position:absolute;top:calc(100% + 6px);left:0;
+    box-shadow:0 4px 20px rgba(0,0,0,.28);
+    display:none;
+  }
+  .mt-picto-grid.open{ display:grid; }
+  .mt-picto-item{
+    width:38px;height:38px;border-radius:6px;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;
+    background:rgba(255,255,255,.08);
+  }
+  .mt-picto-item:hover{ background:rgba(255,255,255,.22); }
+  .mt-picto-item img{ width:28px;height:28px;object-fit:contain; }
+
   /* Toolbar (niet in print) */
   .toolbar{position:sticky;top:42px;z-index:50;display:flex;flex-wrap:wrap;gap:.6rem 1rem;align-items:center;padding:.6rem .8rem;background:#fff;border-bottom:1px solid #e5e7eb}
   .toolbar .group{display:flex;gap:.6rem;align-items:center;flex-wrap:wrap}
@@ -186,7 +226,7 @@
   @media print{
     @page{ size: A4 landscape; margin: 0 }
 
-    .toolbar, .dock{ display: none !important; }
+    .toolbar, .dock, .mini-toolbar, .klas-tabs{ display: none !important; }
     body{ background:#fff; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
 
     [contenteditable], input, textarea { caret-color: transparent !important; }
@@ -226,25 +266,12 @@
   <div class="toolbar" role="region" aria-label="Bediening">
     <div class="group">
       <label><input id="zwemweek" type="checkbox"> Zwemweek</label>
-    </div>
-    <div class="group">
-      <button id="btnAddBullet">+ bolletje</button>
-      <label>Plan-tekst:
+      <span class="sep"></span>
+      <label title="Tekstgrootte actieve dag">
         <select id="planFS"><option>10pt</option><option>11pt</option><option selected>12pt</option><option>14pt</option></select>
       </label>
-      <label>Bolletje:
-        <select id="bulletSize"><option value="12">klein</option><option value="14" selected>middel</option><option value="16">groot</option></select>
-      </label>
-      <label>Tussenruimte:
-        <select id="taskGap"><option value="4">4pt</option><option value="5">5pt</option><option value="6" selected>6pt</option></select>
-      </label>
-      <button id="applyAllFS">FS → ma–vr</button>
-      <button id="applyAllGap">Gap → ma–vr</button>
+      <button id="applyAllFS" title="Pas tekstgrootte toe op alle weekdagen">→ alle dagen</button>
       <span class="sep"></span>
-      <button id="btnBold" title="Vet (Ctrl+B)">B</button>
-      <button id="btnItalic" title="Schuin (Ctrl+I)"><i>I</i></button>
-      <button id="btnUnderline" title="Onderlijn (Ctrl+U)"><u>U</u></button>
-      <button id="btnHighlight" title="Markeren (fluo)">Fluo</button>
       <label>Tekstkleur:
         <select id="textColor">
           <option value="#111">zwart</option>
@@ -252,22 +279,34 @@
           <option value="#117a2c">groen</option>
           <option value="#c22727">rood</option>
         </select>
-        <button type="button" id="btnApplyColor" title="Kleur toepassen">Pas toe</button>
+        <button type="button" id="btnApplyColor">Pas toe</button>
       </label>
-
       <span class="sep"></span>
-      <button id="btnUndo" title="Laatste actie ongedaan maken">Ongedaan maken</button>
-      <button id="btnDelPicto" title="Geselecteerd pictogram verwijderen">Verwijder picto</button>
       <button id="btnCopyMon">Kopieer maandag</button>
+      <button id="btnDelPicto" title="Geselecteerd pictogram verwijderen">Verwijder picto</button>
+      <span class="sep"></span>
       <button id="btnExport">Export</button>
       <input id="fileImport" type="file" accept="application/json" hidden>
       <button id="btnImport">Import</button>
+      <span class="sep"></span>
       <button id="btnBewaar" class="primary" style="background:#16a34a;border-color:#16a34a">📚 Bewaar in archief</button>
       <button id="btnArchief" style="background:#7c3aed;border:1px solid #7c3aed;color:#fff;appearance:none;padding:.45rem .7rem;border-radius:.5rem;cursor:pointer;font-weight:700">🗂️ Archief raadplegen</button>
+      <span class="sep"></span>
       <button id="btnPrint" class="primary">PDF / Print</button>
       <button id="btnToggleDock">Pictogrammen</button>
     </div>
   </div>
+
+  <!-- Verborgen knoppen die nog steeds gebruikt worden door JS maar niet getoond -->
+  <button id="btnAddBullet" hidden></button>
+  <button id="btnBold" hidden></button>
+  <button id="btnItalic" hidden></button>
+  <button id="btnUnderline" hidden></button>
+  <button id="btnHighlight" hidden></button>
+  <button id="btnUndo" hidden></button>
+  <select id="bulletSize" hidden><option value="12">klein</option><option value="14" selected>middel</option><option value="16">groot</option></select>
+  <select id="taskGap" hidden><option value="4">4pt</option><option value="5">5pt</option><option value="6" selected>6pt</option></select>
+  <button id="applyAllGap" hidden></button>
 
   <main class="page" id="page">
     <header class="page-head">
@@ -325,43 +364,76 @@
 
   function wisselKlas(nieuweKlas){
     if (nieuweKlas === aktieveKlas) return;
-    // Altijd huidige staat opslaan vóór wisselen
+
+    // 1) Huidige staat opslaan onder de huidige klas
     tabState[aktieveKlas] = captureAllVoorTab();
-    // Tab UI bijwerken
+
+    // 2) Tab UI bijwerken
     $$('.klas-tab').forEach(t => t.classList.toggle('active', t.dataset.klas === nieuweKlas));
     aktieveKlas = nieuweKlas;
     tplSel.value = nieuweKlas;
-    // Nieuwe staat laden of lege agenda tonen
+
+    // 3) DOM volledig leegmaken vóór laden
+    resetAgenda(nieuweKlas);
+
+    // 4) Nieuwe staat inladen als die bestaat
     if (tabState[nieuweKlas]){
       isApplying = true;
-      applyAll(tabState[nieuweKlas]);
-      applyPanelPictos(tabState[nieuweKlas].meta?.panelPictos || []);
+      // Pas dagen toe
+      const obj = tabState[nieuweKlas];
+      if (obj.meta?.monthBox) monthBox.textContent = obj.meta.monthBox;
+      if (obj.meta?.swim !== undefined) swimChk.checked = !!obj.meta.swim;
+      if (obj.meta?.notes) $('#notesBody').innerHTML = obj.meta.notes;
+      if (obj.days){
+        $$('.day').forEach(n => {
+          const i = n.dataset.dayIndex;
+          if (obj.days[i]) applyDay(n, obj.days[i]);
+        });
+      }
+      applyPanelPictos(obj.meta?.panelPictos || []);
       isApplying = false;
     } else {
-      resetAgenda(nieuweKlas);
-      // Meteen opslaan als lege staat zodat volgende wissel niet opnieuw reset
+      // Eerste keer deze klas — sla lege staat op
       tabState[nieuweKlas] = captureAllVoorTab();
     }
+
+    // 5) Logo altijd correct zetten na alles
+    classIconSlot.innerHTML = `<img src="${getKlasIcon(nieuweKlas)}" alt="klaspictogram ${nieuweKlas}">`;
+    $('#titlePill').textContent = 'agenda ' + nieuweKlas;
+
+    upgradeWeekendToEditable();
+    $$('.day').forEach(updatePlanBoxClass);
+    ensureTaskDeleteButtons(document);
+    scheduleLayoutSync();
     pushSnapshot();
   }
 
   function resetAgenda(klas){
-    // Leeg alle dagen
     $$('.day').forEach(d => {
       const idx = d.dataset.dayIndex;
+      // Leeg planBox volledig
       const planBoxEl = d.querySelector(`[data-key="d${idx}.plan"]`);
-      const ce = planBoxEl?.querySelector('.wkCE[contenteditable]');
-      const ta = planBoxEl?.querySelector('.wkTA');
-      if (ce) ce.innerHTML = '';
-      else if (ta) ta.value = '';
-      else if (planBoxEl) planBoxEl.innerHTML = '';
+      if (planBoxEl){
+        // Verwijder alle takenlijst-items
+        planBoxEl.querySelectorAll('.tasklist li').forEach(li => li.remove());
+        // Leeg alle contenteditable vlakken
+        planBoxEl.querySelectorAll('[contenteditable]').forEach(el => { el.innerHTML = ''; });
+        // Leeg textarea's
+        planBoxEl.querySelectorAll('textarea').forEach(el => { el.value = ''; });
+        planBoxEl.classList.remove('has-tasks');
+      }
+      // Leeg bring (Ik denk aan)
       const br = d.querySelector(`[data-key="d${idx}.bring"]`);
-      if (br) br.innerHTML = '';
+      if (br) br.querySelectorAll('[contenteditable]').forEach(el => { el.innerHTML = ''; });
+      // Verwijder vrije picto's
       d.querySelectorAll('.picto-free').forEach(p => p.remove());
     });
-    $('#notesBody').innerHTML = '';
-    $('#titlePill').textContent = 'agenda ' + klas;
-    // Klaslogo
+    // Leeg mededelingen
+    const nb = document.getElementById('notesBody');
+    if (nb) nb.innerHTML = '';
+    // Titel + logo
+    const tp = document.getElementById('titlePill');
+    if (tp) tp.textContent = 'agenda ' + klas;
     classIconSlot.innerHTML = `<img src="${getKlasIcon(klas)}" alt="klaspictogram ${klas}">`;
     scheduleLayoutSync();
   }
@@ -408,6 +480,181 @@
   document.addEventListener('pointerdown', (e)=>{
     if (e.target.closest('.toolbar')) return;
     if (!e.target.closest('.picto-free')) clearPictoSelection();
+  });
+
+  /* ══════════════════════════════════════════
+     ZWEVENDE MINI-TOOLBAR
+     ══════════════════════════════════════════ */
+  const miniBar = document.createElement('div');
+  miniBar.className = 'mini-toolbar';
+  miniBar.id = 'miniToolbar';
+  miniBar.innerHTML = `
+    <button class="mt-btn" id="mt-bold" title="Vet (Ctrl+B)"><b>B</b></button>
+    <button class="mt-btn" id="mt-italic" title="Schuin (Ctrl+I)"><i>I</i></button>
+    <button class="mt-btn" id="mt-underline" title="Onderlijn (Ctrl+U)"><u>U</u></button>
+    <button class="mt-btn" id="mt-fluo" title="Markeren">🖊</button>
+    <div class="mt-sep"></div>
+    <button class="mt-btn" id="mt-smaller" title="Geselecteerde tekst kleiner">A−</button>
+    <select id="mt-fontsize" title="Tekengrootte geselecteerde tekst" style="background:#2d3f55;color:#e2e8f0;border:1px solid rgba(255,255,255,.2);border-radius:5px;padding:2px 4px;font-size:12px;cursor:pointer">
+      <option value="1">8pt</option>
+      <option value="2">10pt</option>
+      <option value="3" selected>12pt</option>
+      <option value="4">14pt</option>
+      <option value="5">18pt</option>
+      <option value="6">24pt</option>
+    </select>
+    <button class="mt-btn" id="mt-bigger" title="Geselecteerde tekst groter">A+</button>
+    <div class="mt-sep"></div>
+    <button class="mt-btn" id="mt-bullet" title="Bolletje toevoegen">● +</button>
+    <select id="mt-bulletsize" title="Bolletjesgrootte van deze dag" style="background:#2d3f55;color:#e2e8f0;border:1px solid rgba(255,255,255,.2);border-radius:5px;padding:2px 4px;font-size:12px;cursor:pointer">
+      <option value="12">klein</option>
+      <option value="14" selected>middel</option>
+      <option value="16">groot</option>
+    </select>
+    <div class="mt-sep"></div>
+    <button class="mt-btn" id="mt-picto-btn" title="Pictogram toevoegen">🖼</button>
+    <div class="mt-sep"></div>
+    <button class="mt-btn" id="mt-undo" title="Ongedaan maken">↩</button>
+  `;
+  document.body.appendChild(miniBar);
+
+  // Picto-grid in mini-toolbar (zelfde picto's als dock)
+  const mtPictoGrid = document.createElement('div');
+  mtPictoGrid.className = 'mt-picto-grid';
+  mtPictoGrid.id = 'mtPictoGrid';
+  miniBar.appendChild(mtPictoGrid);
+
+  let miniBarTarget = null; // de dag waar mini-toolbar bij hoort
+  let miniBarHideTimer = null;
+
+  function vulMtPictoGrid(){
+    if (mtPictoGrid.children.length > 0) return; // al gevuld
+    const imgs = [...document.querySelectorAll('#pictoGrid .picto img')];
+    imgs.forEach(img => {
+      const item = document.createElement('div');
+      item.className = 'mt-picto-item';
+      const i = document.createElement('img');
+      i.src = img.src; i.alt = img.alt;
+      item.appendChild(i);
+      item.addEventListener('pointerdown', e => {
+        e.preventDefault(); e.stopPropagation();
+        handlePictoInsert(img.src, null);
+        mtPictoGrid.classList.remove('open');
+        pushSnapshot();
+      });
+      mtPictoGrid.appendChild(item);
+    });
+  }
+
+  function toonMiniBar(dagEl){
+    miniBarTarget = dagEl;
+    const rect = dagEl.getBoundingClientRect();
+    const barH = 42;
+    let top = rect.top - barH - 8 + window.scrollY;
+    if (top < 8 + window.scrollY) top = rect.bottom + 6 + window.scrollY;
+    let left = rect.left + window.scrollX;
+    const barW = 420;
+    if (left + barW > window.innerWidth - 8) left = window.innerWidth - barW - 8;
+    miniBar.style.top  = top + 'px';
+    miniBar.style.left = left + 'px';
+    miniBar.classList.add('visible');
+    vulMtPictoGrid();
+    updateMtBulletSize(dagEl);
+  }
+
+  function verbergMiniBar(){
+    miniBar.classList.remove('visible');
+    mtPictoGrid.classList.remove('open');
+    miniBarTarget = null;
+  }
+
+  // Toon bij klikken/focus in een dag — via event delegation want dagen zijn dynamisch gebouwd
+  document.addEventListener('focusin', e => {
+    const dag = e.target.closest('.day');
+    const inMini = e.target.closest('#miniToolbar');
+    if (dag) { toonMiniBar(dag); return; }
+    if (!inMini) verbergMiniBar();
+  });
+  document.addEventListener('pointerdown', e => {
+    const dag = e.target.closest('.day');
+    const inMini = e.target.closest('#miniToolbar');
+    const inToolbar = e.target.closest('.toolbar');
+    if (dag) { toonMiniBar(dag); return; }
+    if (!inMini && !inToolbar) verbergMiniBar();
+  }, true);
+  miniBar.addEventListener('pointerdown', e => e.stopPropagation());
+
+  // Knoppen
+  function mtExec(cmd){ document.execCommand(cmd); }
+
+  document.getElementById('mt-bold').addEventListener('click', ()=>{ mtExec('bold'); pushSnapshot(); });
+  document.getElementById('mt-italic').addEventListener('click', ()=>{ mtExec('italic'); pushSnapshot(); });
+  document.getElementById('mt-underline').addEventListener('click', ()=>{ mtExec('underline'); pushSnapshot(); });
+  document.getElementById('mt-fluo').addEventListener('click', ()=>{
+    document.execCommand('hiliteColor', false, '#ffff66');
+    pushSnapshot();
+  });
+  document.getElementById('mt-undo').addEventListener('click', ()=>{ doUndo(); });
+
+  document.getElementById('mt-bullet').addEventListener('click', ()=>{
+    if (!activeDay) return;
+    // Zelfde logica als btnAddBullet
+    document.getElementById('btnAddBullet').click();
+  });
+
+  // Tekstgrootte op selectie (zoals Word) via fontSize command
+  // fontSize 1-6 → 8,10,12,14,18,24pt
+  const MT_SIZES = [null,'8pt','10pt','12pt','14pt','18pt','24pt'];
+
+  document.getElementById('mt-smaller').addEventListener('click', ()=>{
+    const sel = document.getElementById('mt-fontsize');
+    const huidig = parseInt(sel.value);
+    if (huidig > 1){
+      sel.value = huidig - 1;
+      document.execCommand('fontSize', false, huidig - 1);
+      pushSnapshot();
+    }
+  });
+  document.getElementById('mt-bigger').addEventListener('click', ()=>{
+    const sel = document.getElementById('mt-fontsize');
+    const huidig = parseInt(sel.value);
+    if (huidig < 6){
+      sel.value = huidig + 1;
+      document.execCommand('fontSize', false, huidig + 1);
+      pushSnapshot();
+    }
+  });
+  document.getElementById('mt-fontsize').addEventListener('change', e=>{
+    document.execCommand('fontSize', false, e.target.value);
+    pushSnapshot();
+  });
+
+  // Bolletjesgrootte per dag
+  document.getElementById('mt-bulletsize').addEventListener('change', e=>{
+    if (!activeDay) return;
+    activeDay.style.setProperty('--bullet', e.target.value + 'px');
+    pushSnapshot();
+  });
+
+  // Bolletjesgrootte updaten als je van dag wisselt
+  function updateMtBulletSize(dag){
+    if (!dag) return;
+    const bs = document.getElementById('mt-bulletsize');
+    const val = getComputedStyle(dag).getPropertyValue('--bullet').trim().replace('px','') || '14';
+    bs.value = val;
+  }
+
+  document.getElementById('mt-picto-btn').addEventListener('click', e => {
+    e.stopPropagation();
+    mtPictoGrid.classList.toggle('open');
+  });
+
+  // Herpositioneer bij scrollen/resize
+  window.addEventListener('scroll', ()=>{
+    if (miniBarTarget && miniBar.classList.contains('visible')) toonMiniBar(miniBarTarget);
+  }, { passive: true });
+  window.addEventListener('resize', ()=>{
+    if (miniBarTarget && miniBar.classList.contains('visible')) toonMiniBar(miniBarTarget);
   });
 
   /* Undo */
@@ -1111,7 +1358,7 @@ if (ce) {
     return data;
   }
 
-  function applyAll(obj){
+  function applyAll(obj, vanTabWissel=false){
     if(obj.meta){
       if(obj.meta.template) tplSel.value = obj.meta.template;
       $('#titlePill').textContent=obj.meta.title||('agenda '+aktieveKlas);
@@ -1119,8 +1366,8 @@ if (ce) {
       swimChk.checked=!!obj.meta.swim;
       if(obj.meta.classIcon){ classIconSlot.innerHTML='<img alt="klaspictogram" src="'+obj.meta.classIcon+'">'; }
       else { classIconSlot.innerHTML=`<img src="${getKlasIcon(aktieveKlas)}" alt="klaspictogram ${aktieveKlas}">`; }
-      if(obj.meta.notes){ $('#notesBody').innerHTML=obj.meta.notes; }
-      applyTemplate();
+      if(obj.meta.notes !== undefined){ $('#notesBody').innerHTML=obj.meta.notes||''; }
+      if(!vanTabWissel) applyTemplate();
     }
 
 upgradeWeekendToEditable();
