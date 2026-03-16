@@ -1454,6 +1454,233 @@
     Object.entries(data).forEach(([sleutel, obj])=>{
       const naam = obj.meta?.archiefNaam || sleutel;
       const klas = obj.meta?.archiefKlas || '';
+      html += `<div style="border:1.5px solid #e5e7eb;border-radius:9px;margin-bottom:.8rem;overflow:hidden">
+        <div style="background:#f0f4f8;padding:.5rem .8rem;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.4rem">
+          <span style="font-weight:700;font-size:.92rem">📖 ${naam} ${klas?'('+klas+')':''}</span>
+          <button class="arf-plak-btn" data-type="heleweeek" data-sleutel="${sleutel}" data-graad="${graad}" data-jaar="${jaar}" data-maand="${maand}" data-week="${week}"
+            style="font-size:.8rem;padding:.3rem .8rem;border:1.5px solid #0a66c2;color:#fff;background:#0a66c2;border-radius:6px;cursor:pointer;font-weight:700;white-space:nowrap">
+            ↙ Hele week overnemen
+          </button>
+        </div>
+        <div style="padding:.6rem .8rem">`;
+
+      // Mededelingen
+      const notes = obj.meta?.notes || '';
+      const notesTekst = notes.replace(/<[^>]*>/g,'').trim();
+      if (notesTekst){
+        html += `<div style="border:1.5px solid #fcd34d;border-radius:7px;padding:.5rem .7rem;margin-bottom:.5rem;background:#fffbeb">
+          <div style="font-size:.8rem;font-weight:700;color:#92400e;margin-bottom:.3rem">📋 Mededelingen</div>
+          <div style="font-size:.85rem;color:#374151;line-height:1.4">${notes}</div>
+          <button class="arf-plak-btn" data-type="notes" data-sleutel="${sleutel}" data-graad="${graad}" data-jaar="${jaar}" data-maand="${maand}" data-week="${week}"
+            style="margin-top:.5rem;font-size:.8rem;padding:.3rem .7rem;border:1.5px solid #d97706;color:#d97706;background:#fff;border-radius:6px;cursor:pointer;font-weight:700">
+            ↙ Plak in mijn agenda
+          </button>
+        </div>`;
+      }
+
+      // Dagen
+      const days = obj.days || {};
+      Object.entries(days).sort((a,b)=>parseInt(a)-parseInt(b)).forEach(([idx, dag])=>{
+        const dagNaam = DAGNAMES2[parseInt(idx)] || ('Dag '+idx);
+        const heeftPlan  = dagHeeftInhoudArchief(dag, 'plan');
+        const heeftBring = dagHeeftInhoudArchief(dag, 'bring');
+        if (!heeftPlan && !heeftBring) return;
+
+        // Echte tekst ophalen
+        const planTekst = (()=>{
+          const tmp = document.createElement('div');
+          tmp.innerHTML = dag.plan || dag.weekendHtml || '';
+          // Bullets als lijst tonen
+          const items = tmp.querySelectorAll('li .tasktext, li');
+          if (items.length) return [...items].map(li=>('• '+li.textContent.trim())).filter(s=>s!=='• ').join('<br>');
+          return tmp.textContent.trim();
+        })();
+        const bringTekst = (()=>{
+          const tmp = document.createElement('div');
+          tmp.innerHTML = dag.bring || '';
+          return tmp.textContent.trim();
+        })();
+
+        const datum = dag.date ? new Date(dag.date).toLocaleDateString('nl-BE',{day:'numeric',month:'short'}) : '';
+
+        html += `<div style="border:1px solid #e5e7eb;border-radius:7px;margin-bottom:.4rem;overflow:hidden">
+          <div style="background:#f9fafb;padding:.35rem .7rem;font-weight:700;font-size:.88rem;display:flex;justify-content:space-between;align-items:center">
+            <span>${dagNaam} <span style="color:#6b7280;font-weight:400;font-size:.8rem">${datum}</span></span>
+          </div>
+          <div style="padding:.4rem .7rem">`;
+
+        if (heeftPlan && planTekst){
+          html += `<div style="margin-bottom:.3rem">
+            <span style="font-size:.78rem;font-weight:700;color:#0a66c2;text-transform:uppercase;letter-spacing:.03em">Plan</span>
+            <div style="font-size:.85rem;color:#374151;line-height:1.4;margin-top:.15rem">${planTekst}</div>
+            <button class="arf-plak-btn" data-type="plan" data-dayidx="${idx}" data-sleutel="${sleutel}" data-graad="${graad}" data-jaar="${jaar}" data-maand="${maand}" data-week="${week}"
+              style="margin-top:.3rem;font-size:.78rem;padding:.25rem .6rem;border:1.5px solid #0a66c2;color:#0a66c2;background:#fff;border-radius:6px;cursor:pointer;font-weight:700">↙ Plan overnemen</button>
+          </div>`;
+        }
+        if (heeftBring && bringTekst){
+          html += `<div style="${heeftPlan?'border-top:1px solid #f0f0f0;padding-top:.3rem;margin-top:.2rem':''}">
+            <span style="font-size:.78rem;font-weight:700;color:#16a34a;text-transform:uppercase;letter-spacing:.03em">Ik denk aan</span>
+            <div style="font-size:.85rem;color:#374151;line-height:1.4;margin-top:.15rem">${bringTekst}</div>
+            <button class="arf-plak-btn" data-type="bring" data-dayidx="${idx}" data-sleutel="${sleutel}" data-graad="${graad}" data-jaar="${jaar}" data-maand="${maand}" data-week="${week}"
+              style="margin-top:.3rem;font-size:.78rem;padding:.25rem .6rem;border:1.5px solid #16a34a;color:#16a34a;background:#fff;border-radius:6px;cursor:pointer;font-weight:700">↙ Ik denk aan overnemen</button>
+          </div>`;
+        }
+        if (heeftPlan && heeftBring){
+          html += `<div style="margin-top:.4rem;padding-top:.3rem;border-top:1px solid #f0f0f0">
+            <button class="arf-plak-btn" data-type="alles" data-dayidx="${idx}" data-sleutel="${sleutel}" data-graad="${graad}" data-jaar="${jaar}" data-maand="${maand}" data-week="${week}"
+              style="font-size:.78rem;padding:.3rem .8rem;border:1.5px solid #7c3aed;color:#7c3aed;background:#fff;border-radius:6px;cursor:pointer;font-weight:700">↙ Hele dag overnemen</button>
+          </div>`;
+        }
+
+        html += `</div></div>`;
+      });
+
+      html += `</div></div>`;
+    });
+    container.innerHTML = html;
+
+    // Plak-knoppen
+    container.querySelectorAll('.arf-plak-btn').forEach(btn=>{
+      btn.addEventListener('click', async ()=>{
+        const type    = btn.dataset.type;
+        const dayIdx  = btn.dataset.dayidx;
+        const sleutel = btn.dataset.sleutel;
+        const graad   = btn.dataset.graad;
+        const jaar    = btn.dataset.jaar;
+        const maand   = btn.dataset.maand;
+        const week    = btn.dataset.week;
+
+        const origTekst = btn.textContent;
+        btn.textContent = '⏳…'; btn.disabled = true;
+        try {
+          const obj = await archiefGet(`archief/${graad}/${jaar}/${maand}/${week}/${sleutel}`);
+          const naam = obj.meta?.archiefNaam || sleutel;
+
+          // ── Hele week overnemen ──
+          if (type === 'heleweeek'){
+            if (!confirm(`Hele week van ${naam} overnemen?\n\nDit overschrijft alle dagen én mededelingen in jouw huidige agenda.`)) return;
+            // Mededelingen
+            const notesBody = document.getElementById('notesBody');
+            if (notesBody) notesBody.innerHTML = obj.meta?.notes || '';
+            // Alle dagen
+            const mijnDagen = [...document.querySelectorAll('.day')];
+            const bronDagen = obj.days || {};
+            Object.entries(bronDagen).forEach(([idx, dag])=>{
+              const doelDag = mijnDagen.find(d => parseInt(d.dataset.dayIndex) === parseInt(idx));
+              if (!doelDag) return;
+              const idx2 = doelDag.dataset.dayIndex;
+              // Plan
+              const planBoxEl = doelDag.querySelector(`[data-key="d${idx2}.plan"]`);
+              const ta = planBoxEl?.querySelector('.wkTA');
+              const ce = planBoxEl?.querySelector('.wkCE[contenteditable]');
+              if (ce) ce.innerHTML = dag.weekendHtml || dag.plan || '';
+              else if (ta) ta.value = dag.weekendText || '';
+              else if (planBoxEl) planBoxEl.innerHTML = dag.plan || '';
+              // Ik denk aan
+              const br = doelDag.querySelector(`[data-key="d${idx2}.bring"]`);
+              if (br) br.innerHTML = dag.bring || '';
+              // Picto's verwijderen en nieuwe plaatsen
+              doelDag.querySelectorAll('.picto-free').forEach(p=>p.remove());
+              if (dag.pictos){
+                dag.pictos.forEach(p=>{
+                  const node = makeFreePicto(p.src);
+                  node.style.left = p.left || '4px';
+                  node.style.top  = p.top  || '4px';
+                  if (p.width) node.style.width = p.width;
+                  const hostEl = p.host === 'bring'
+                    ? (doelDag.querySelector(`[data-key="d${idx2}.bring"]`) || doelDag)
+                    : (doelDag.querySelector('.body') || doelDag);
+                  node.dataset.host = p.host || 'body';
+                  hostEl.appendChild(node);
+                });
+              }
+              // CSS vars
+              if (dag.vars){
+                if (dag.vars.planFS)  doelDag.style.setProperty('--plan-fs', dag.vars.planFS);
+                if (dag.vars.bullet)  doelDag.style.setProperty('--bullet',  dag.vars.bullet);
+                if (dag.vars.gap)     doelDag.style.setProperty('--task-gap',dag.vars.gap);
+                if (dag.vars.bringFS) doelDag.style.setProperty('--bring-fs',dag.vars.bringFS);
+              }
+            });
+            // Paneel-picto's
+            if (obj.meta?.panelPictos) applyPanelPictos(obj.meta.panelPictos);
+            pushSnapshot();
+            scheduleLayoutSync();
+            toonArchiefToast(`✅ Hele week van ${naam} overgenomen — inclusief picto's!`);
+            return;
+          }
+
+          // ── Mededelingen ──
+          if (type === 'notes'){
+            const notesBody = document.getElementById('notesBody');
+            if (notesBody){
+              notesBody.innerHTML = obj.meta?.notes || '';
+              toonArchiefToast('✅ Mededelingen van '+naam+' zijn ingeplakt!');
+            }
+            return;
+          }
+
+          // ── Dag-onderdeel ──
+          const dag = obj.days?.[dayIdx];
+          if (!dag){ alert('Dag niet gevonden.'); return; }
+          const doelIdx = await kiesDagModal(naam, DAGNAMES2[parseInt(dayIdx)]);
+          if (doelIdx === null) return;
+
+          const doelDag = [...document.querySelectorAll('.day')].find(d=>parseInt(d.dataset.dayIndex)===doelIdx);
+          if (!doelDag){ alert('Doeldag niet gevonden.'); return; }
+
+          const idx2 = doelDag.dataset.dayIndex;
+
+          if (type === 'plan' || type === 'alles'){
+            const planBoxEl = doelDag.querySelector(`[data-key="d${idx2}.plan"]`);
+            const ta = planBoxEl?.querySelector('.wkTA');
+            const ce = planBoxEl?.querySelector('.wkCE[contenteditable]');
+            if (ce) ce.innerHTML = dag.weekendHtml || dag.plan || '';
+            else if (ta) ta.value = dag.weekendText || '';
+            else if (planBoxEl) planBoxEl.innerHTML = dag.plan || '';
+          }
+          if (type === 'bring' || type === 'alles'){
+            const br = doelDag.querySelector(`[data-key="d${idx2}.bring"]`);
+            if (br) br.innerHTML = dag.bring || '';
+          }
+          if (type === 'alles' && dag.pictos){
+            doelDag.querySelectorAll('.picto-free').forEach(p=>p.remove());
+            dag.pictos.forEach(p=>{
+              const node = makeFreePicto(p.src);
+              node.style.left = p.left || '4px';
+              node.style.top  = p.top  || '4px';
+              if (p.width) node.style.width = p.width;
+              const hostEl = p.host === 'bring'
+                ? (doelDag.querySelector(`[data-key="d${idx2}.bring"]`) || doelDag)
+                : (doelDag.querySelector('.body') || doelDag);
+              node.dataset.host = p.host || 'body';
+              hostEl.appendChild(node);
+            });
+          }
+          pushSnapshot();
+          toonArchiefToast('✅ '+DAGNAMES2[parseInt(dayIdx)]+' van '+naam+' ingeplakt in '+DAGNAMES2[doelIdx]+'!');
+        } catch(e){
+          alert('Fout: '+e.message);
+        }
+        btn.textContent = origTekst;
+        btn.disabled = false;
+      });
+    });
+  }
+
+  function dagHeeftInhoudArchief(dag, type){
+    if (!dag) return false;
+    const html = type==='bring' ? (dag.bring||'') : (dag.plan||dag.weekendHtml||'');
+    const tmp = document.createElement('div');
+    tmp.innerHTML = html;
+    return tmp.textContent.trim().length > 0;
+  }
+
+  function renderArchiefResultaten(container, data, graad, jaar, maand, week){
+    let html = `<p style="font-size:.85rem;color:#6b7280;margin:0 0 .6rem">${Object.keys(data).length} agenda('s) gevonden voor ${maand} — ${week.replace('week','week ')}</p>`;
+    Object.entries(data).forEach(([sleutel, obj])=>{
+      const naam = obj.meta?.archiefNaam || sleutel;
+      const klas = obj.meta?.archiefKlas || '';
       html += `<div style="border:1.5px solid #e5e7eb;border-radius:9px;margin-bottom:.6rem;overflow:hidden">
         <div style="background:#f9fafb;padding:.5rem .8rem;font-weight:700;font-size:.92rem">${naam} ${klas?'('+klas+')':''}</div>
         <div style="padding:.5rem .8rem">`;
@@ -1599,7 +1826,8 @@
   let miniBarHideTimer = null;
 
   function vulMtPictoGrid(){
-    if (mtPictoGrid.children.length > 0) return; // al gevuld
+    // Altijd opnieuw vullen zodat picto's zeker geladen zijn
+    mtPictoGrid.innerHTML = '';
     const imgs = [...document.querySelectorAll('#pictoGrid .picto img')];
     imgs.forEach(img => {
       const item = document.createElement('div');
