@@ -16,7 +16,7 @@
   *{box-sizing:border-box}
 
   /* Toolbar (niet in print) */
-  .toolbar{position:sticky;top:0;z-index:50;display:flex;flex-wrap:wrap;gap:.6rem 1rem;align-items:center;padding:.6rem .8rem;background:#fff;border-bottom:1px solid #e5e7eb}
+  .toolbar{position:sticky;top:42px;z-index:50;display:flex;flex-wrap:wrap;gap:.6rem 1rem;align-items:center;padding:.6rem .8rem;background:#fff;border-bottom:1px solid #e5e7eb}
   .toolbar .group{display:flex;gap:.6rem;align-items:center;flex-wrap:wrap}
   .toolbar select{font:inherit;padding:.3rem .45rem}
   .toolbar button{appearance:none;border:1px solid #d0d7de;background:#fff;padding:.45rem .7rem;border-radius:.5rem;cursor:pointer;font-weight:700}
@@ -128,10 +128,31 @@
   .dock[hidden]{ display:none !important; }
   .dock .uploadRow{ margin-top:.5rem; display:flex; gap:.5rem; align-items:center; }
 
+  /* Klas-tabs */
+  .klas-tabs{display:flex;gap:0;background:#e5e7eb;padding:0;border-bottom:2px solid #d0d7de;position:sticky;top:0;z-index:51}
+  .klas-tab{padding:.5rem 1.6rem;font-weight:700;font-size:1rem;cursor:pointer;border:none;background:transparent;border-bottom:3px solid transparent;margin-bottom:-2px;transition:all .15s;font-family:inherit;color:#6b7280}
+  .klas-tab.active{background:#fff;color:#0a66c2;border-bottom:3px solid #0a66c2}
+  .klas-tab:hover:not(.active){background:#f0f4f8;color:#111}
+
+  /* Zwevende mini-toolbar */
+  .mini-toolbar{position:fixed;z-index:200;background:#1e293b;border-radius:10px;padding:5px 8px;display:none;align-items:center;gap:3px;box-shadow:0 4px 20px rgba(0,0,0,.28);pointer-events:auto;user-select:none}
+  .mini-toolbar.visible{display:flex}
+  .mt-btn{appearance:none;border:none;background:transparent;color:#e2e8f0;padding:4px 7px;border-radius:6px;cursor:pointer;font-size:13px;font-family:Arial,sans-serif;font-weight:700;line-height:1.2;transition:background .12s;white-space:nowrap}
+  .mt-btn:hover{background:rgba(255,255,255,.15)}
+  .mt-sep{width:1px;height:20px;background:rgba(255,255,255,.18);margin:0 2px}
+  .mt-picto-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:3px;padding:6px;background:#1e293b;border-radius:8px;position:absolute;top:calc(100% + 6px);left:0;box-shadow:0 4px 20px rgba(0,0,0,.28);display:none}
+  .mt-picto-grid.open{display:grid}
+  .mt-picto-item{width:38px;height:38px;border-radius:6px;cursor:pointer;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.08)}
+  .mt-picto-item:hover{background:rgba(255,255,255,.22)}
+  .mt-picto-item img{width:28px;height:28px;object-fit:contain}
+
+  .panelBody:empty::before{content:'Klik hier om mededelingen te typen…';color:#adb5bd;pointer-events:none;font-style:italic}
+
   /* PRINT */
   @media print{
     @page{ size: A4 landscape; margin: 0 }
-    .toolbar, .dock{ display: none !important; }
+    .toolbar, .dock, .mini-toolbar, .klas-tabs{ display: none !important; }
+    .panelBody:empty::before{ display:none; }
     body{ background:#fff; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
     [contenteditable], input, textarea { caret-color: transparent !important; }
     .day, .day *:focus { outline: none !important; }
@@ -152,34 +173,22 @@
 </style>
 </head>
 <body>
+  <!-- Klas-tabs -->
+  <div class="klas-tabs" id="klasTabs">
+    <button class="klas-tab" data-klas="L3">🌵 L3</button>
+    <button class="klas-tab active" data-klas="L4">🦙 L4</button>
+  </div>
+
   <div class="toolbar" role="region" aria-label="Bediening">
     <div class="group">
-      <label for="tpl">Sjabloon</label>
-      <select id="tpl">
-        <option value="L3" selected>Agenda L3</option>
-        <option value="L4">Agenda L4</option>
-      </select>
       <label><input id="zwemweek" type="checkbox"> Zwemweek</label>
       <div id="overflowAlert" class="alert" role="status" aria-live="polite">⚠️ Let op: er staat te veel tekst. Dit past mogelijks niet op één blad bij printen.</div>
-    </div>
-    <div class="group">
-      <button id="btnAddBullet">+ bolletje</button>
-      <label>Agenda-tekst:
+      <span class="sep"></span>
+      <label title="Tekstgrootte actieve dag">
         <select id="planFS"><option>10pt</option><option selected>11pt</option><option>12pt</option><option>14pt</option></select>
       </label>
-      <label>Bolletje:
-        <select id="bulletSize"><option value="12">klein</option><option value="14" selected>middel</option><option value="16">groot</option></select>
-      </label>
-      <label>Tussenruimte:
-        <select id="taskGap"><option value="4">4pt</option><option value="5">5pt</option><option value="6" selected>6pt</option></select>
-      </label>
-      <button id="applyAllFS">FS → ma–vr</button>
-      <button id="applyAllGap">Gap → ma–vr</button>
+      <button id="applyAllFS" title="Pas tekstgrootte toe op alle weekdagen">→ alle dagen</button>
       <span class="sep"></span>
-      <button id="btnBold" title="Vet (Ctrl+B)">B</button>
-      <button id="btnItalic" title="Schuin (Ctrl+I)"><i>I</i></button>
-      <button id="btnUnderline" title="Onderlijn (Ctrl+U)"><u>U</u></button>
-      <button id="btnHighlight" title="Markeren (fluo)">Fluo</button>
       <label>Tekstkleur:
         <select id="textColor">
           <option value="#111">zwart</option>
@@ -187,22 +196,33 @@
           <option value="#117a2c">groen</option>
           <option value="#c22727">rood</option>
         </select>
-        <button type="button" id="btnApplyColor" title="Kleur toepassen">Pas toe</button>
+        <button type="button" id="btnApplyColor">Pas toe</button>
       </label>
-
       <span class="sep"></span>
-      <button id="btnUndo" title="Laatste actie ongedaan maken">Ongedaan maken</button>
       <button id="btnDelPicto" title="Geselecteerd pictogram verwijderen">Verwijder picto</button>
-      <!-- Knop "Kopieer maandag" is bewust verwijderd voor 2de graad -->
       <button id="btnExport">Export</button>
       <input id="fileImport" type="file" accept="application/json" hidden>
       <button id="btnImport">Import</button>
+      <span class="sep"></span>
       <button id="btnBewaar" class="primary" style="background:#16a34a;border-color:#16a34a">📚 Bewaar in archief</button>
       <button id="btnArchief" style="background:#7c3aed;border:1px solid #7c3aed;color:#fff;appearance:none;padding:.45rem .7rem;border-radius:.5rem;cursor:pointer;font-weight:700">🗂️ Archief raadplegen</button>
+      <span class="sep"></span>
       <button id="btnPrint" class="primary">PDF / Print</button>
       <button id="btnToggleDock">Pictogrammen</button>
     </div>
   </div>
+
+  <!-- Verborgen knoppen gebruikt door JS -->
+  <button id="btnAddBullet" hidden></button>
+  <button id="btnBold" hidden></button>
+  <button id="btnItalic" hidden></button>
+  <button id="btnUnderline" hidden></button>
+  <button id="btnHighlight" hidden></button>
+  <button id="btnUndo" hidden></button>
+  <button id="btnCopyMon" hidden></button>
+  <select id="bulletSize" hidden><option value="12">klein</option><option value="14" selected>middel</option><option value="16">groot</option></select>
+  <select id="taskGap" hidden><option value="4">4pt</option><option value="5">5pt</option><option value="6" selected>6pt</option></select>
+  <button id="applyAllGap" hidden></button>
 
   <main class="page" id="page">
     <header class="page-head">
@@ -247,7 +267,72 @@
   const ENVELOPE_SVG =
    '<svg viewBox="0 0 48 36" xmlns="http://www.w3.org/2000/svg"><rect x="1.5" y="1.5" width="45" height="33" rx="2.5"/><polyline points="2,2 24,18 46,2"/><polyline points="2,34 20,20"/><polyline points="46,34 28,20"/></svg>';
 
-  const tplSel=$('#tpl'), swimChk=$('#zwemweek');
+  const tplSel = { value: 'L4' }; // vervangen door tab-systeem
+  const swimChk=$('#zwemweek');
+
+  /* ── Tab-systeem: L3 / L4 ── */
+  let aktieveKlas = 'L4';
+  const tabState = { L3: null, L4: null };
+
+  function getKlasIcon(klas){
+    return klas === 'L3' ? 'pictogrammen/cactus.png' : 'pictogrammen/lama.png';
+  }
+
+  function wisselKlas(nieuweKlas){
+    if (nieuweKlas === aktieveKlas) return;
+    tabState[aktieveKlas] = captureAllVoorTab();
+    $$('.klas-tab').forEach(t => t.classList.toggle('active', t.dataset.klas === nieuweKlas));
+    aktieveKlas = nieuweKlas;
+    tplSel.value = nieuweKlas;
+    resetAgenda(nieuweKlas);
+    if (tabState[nieuweKlas]){
+      isApplying = true;
+      const obj = tabState[nieuweKlas];
+      if (obj.meta?.monthBox) monthBox.textContent = obj.meta.monthBox;
+      if (obj.meta?.swim !== undefined) swimChk.checked = !!obj.meta.swim;
+      if (obj.meta?.notes) $('#notesBody').innerHTML = obj.meta.notes;
+      if (obj.days){ $$('.day').forEach(n => { const i=n.dataset.dayIndex; if(obj.days[i]) applyDay(n,obj.days[i]); }); }
+      applyPanelPictos(obj.meta?.panelPictos || []);
+      isApplying = false;
+    } else {
+      tabState[nieuweKlas] = captureAllVoorTab();
+    }
+    classIconSlot.innerHTML = `<img src="${getKlasIcon(nieuweKlas)}" alt="klaspictogram ${nieuweKlas}">`;
+    $('#titlePill').textContent = 'agenda ' + nieuweKlas;
+    upgradeWeekendToEditable();
+    $$('.day').forEach(updatePlanBoxClass);
+    ensureTaskDeleteButtons(document);
+    scheduleLayoutSync();
+    pushSnapshot();
+  }
+
+  function resetAgenda(klas){
+    $$('.day').forEach(d => {
+      const idx = d.dataset.dayIndex;
+      const planBoxEl = d.querySelector(`[data-key="d${idx}.plan"]`);
+      if (planBoxEl){
+        planBoxEl.querySelectorAll('.tasklist li').forEach(li => li.remove());
+        planBoxEl.querySelectorAll('[contenteditable]').forEach(el => { el.innerHTML = ''; });
+        planBoxEl.querySelectorAll('textarea').forEach(el => { el.value = ''; });
+        planBoxEl.classList.remove('has-tasks');
+      }
+      const br = d.querySelector(`[data-key="d${idx}.bring"]`);
+      if (br) br.querySelectorAll('[contenteditable]').forEach(el => { el.innerHTML = ''; });
+      d.querySelectorAll('.picto-free').forEach(p => p.remove());
+    });
+    const nb = document.getElementById('notesBody');
+    if (nb) nb.innerHTML = '';
+    const tp = document.getElementById('titlePill');
+    if (tp) tp.textContent = 'agenda ' + klas;
+    classIconSlot.innerHTML = `<img src="${getKlasIcon(klas)}" alt="klaspictogram ${klas}">`;
+    scheduleLayoutSync();
+  }
+
+  document.getElementById('klasTabs').addEventListener('click', e => {
+    const tab = e.target.closest('.klas-tab');
+    if (tab) wisselKlas(tab.dataset.klas);
+  });
+
   const btnAddBullet=$('#btnAddBullet');
   const planFS=$('#planFS'), bulletSize=$('#bulletSize'), taskGap=$('#taskGap');
   const applyAllFS=$('#applyAllFS'), applyAllGap=$('#applyAllGap');
@@ -542,6 +627,7 @@
     const ae=document.activeElement;
     const wantInline = (ev && (ev.ctrlKey || ev.metaKey));
 
+    /* Inline in tekst */
     if (wantInline && ae && ae.isContentEditable && sel && sel.rangeCount){
       const span=document.createElement('span'); span.className='picto-inline';
       span.innerHTML=`<img src="${src}" alt="picto" style="height:16px;vertical-align:text-bottom">`;
@@ -551,37 +637,119 @@
       return;
     }
 
+    /* Vrij pictogram */
     const pic = makeFreePicto(src);
 
     let host = null;
-    if (lastFocusedHost && lastFocusedHost.isConnected) host = lastFocusedHost;
-    else if (activeHost && activeHost.isConnected) host = activeHost;
-    else if (activeDay) host = activeDay.querySelector('.body') || activeDay;
-    else { alert('Klik eerst in een vak (bv. Ik denk aan, Agenda of Mededelingen).'); return; }
+    if (lastFocusedHost && lastFocusedHost.isConnected) {
+      host = lastFocusedHost;
+    } else if (activeHost && activeHost.isConnected) {
+      host = activeHost;
+    } else if (activeDay) {
+      host = activeDay.querySelector('.body') || activeDay;
+    } else {
+      alert('Klik eerst in een vak (bv. Ik denk aan, Ik plan of Mededelingen).');
+      return;
+    }
 
     let hostType = 'body';
-    if (host.classList && host.classList.contains('bringBox')) hostType = 'bring';
-    else if (host.classList && host.classList.contains('body')) hostType = 'body';
+    if (host.classList && host.classList.contains('bringBox')) {
+      hostType = 'bring';
+    }
     pic.dataset.host = hostType;
 
     host.appendChild(pic);
-    pic.style.left = '8px'; pic.style.top  = '8px';
+
+    // Slim plaatsen: links in het vak, kleine marge bovenaan
+    pic.style.left = '4px';
+    pic.style.top  = '4px';
     pushSnapshot();
   }
 
   function makeFreePicto(src){
     const wrap=document.createElement('div');
     wrap.className='picto-free';
-    wrap.style.width='32mm';
+    wrap.style.width='20mm';   // kleinere standaardgrootte zodat tekst ernaast past
     wrap.style.height='auto';
-    wrap.style.left='0px';
-    wrap.style.top='0px';
+    wrap.style.left='4px';
+    wrap.style.top='4px';
     wrap.style.position='absolute';
     wrap.style.zIndex='5';
     wrap.innerHTML=`<img src="${src}" alt="picto"><div class="handle" title="Schaal"></div>`;
     enableDragResize(wrap);
-    wrap.addEventListener('pointerdown', (e)=>{ e.stopPropagation(); clearPictoSelection(); selectedPicto=wrap; wrap.classList.add('selected'); });
+    wrap.addEventListener('pointerdown', (e)=>{
+      e.stopPropagation();
+      clearPictoSelection();
+      selectedPicto=wrap;
+      wrap.classList.add('selected');
+    });
+    // Rechtermuisklik → contextmenu
+    wrap.addEventListener('contextmenu', (e)=>{
+      e.preventDefault();
+      e.stopPropagation();
+      toonPictoContextMenu(e.clientX, e.clientY, wrap);
+    });
     return wrap;
+  }
+
+  /* Picto contextmenu */
+  function toonPictoContextMenu(x, y, pictoEl){
+    document.getElementById('pictoContextMenu')?.remove();
+    const menu = document.createElement('div');
+    menu.id = 'pictoContextMenu';
+    menu.style.cssText = `position:fixed;left:${x}px;top:${y}px;background:#fff;border:1px solid #e5e7eb;border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,.15);z-index:99999;min-width:140px;overflow:hidden;font-family:Arial,sans-serif;font-size:13px`;
+    menu.innerHTML = `
+      <div id="pcm-delete" style="padding:8px 14px;cursor:pointer;display:flex;align-items:center;gap:8px;color:#b91c1c">
+        <span>🗑</span> Verwijder picto
+      </div>
+      <div id="pcm-smaller" style="padding:8px 14px;cursor:pointer;display:flex;align-items:center;gap:8px;border-top:1px solid #f3f4f6">
+        <span>🔽</span> Kleiner
+      </div>
+      <div id="pcm-bigger" style="padding:8px 14px;cursor:pointer;display:flex;align-items:center;gap:8px">
+        <span>🔼</span> Groter
+      </div>
+    `;
+    document.body.appendChild(menu);
+
+    menu.querySelectorAll('div').forEach(item=>{
+      item.addEventListener('mouseenter', ()=> item.style.background='#f0f4f8');
+      item.addEventListener('mouseleave', ()=> item.style.background='');
+      // Voorkom dat klik op menu-item de "klik buiten" handler triggert
+      item.addEventListener('pointerdown', e=> e.stopPropagation());
+    });
+
+    menu.querySelector('#pcm-delete').addEventListener('click', (e)=>{
+      e.stopPropagation();
+      pictoEl.remove();
+      selectedPicto = null;
+      menu.remove();
+      pushSnapshot();
+    });
+    menu.querySelector('#pcm-smaller').addEventListener('click', (e)=>{
+      e.stopPropagation();
+      const huidig = parseFloat(pictoEl.style.width) || 20;
+      pictoEl.style.width = Math.max(8, huidig - 4) + 'mm';
+      menu.remove();
+      pushSnapshot();
+    });
+    menu.querySelector('#pcm-bigger').addEventListener('click', (e)=>{
+      e.stopPropagation();
+      const huidig = parseFloat(pictoEl.style.width) || 20;
+      pictoEl.style.width = Math.min(60, huidig + 4) + 'mm';
+      menu.remove();
+      pushSnapshot();
+    });
+
+    // Klik buiten menu → sluit
+    const sluitMenu = (e)=>{
+      if (!menu.contains(e.target)){
+        menu.remove();
+        document.removeEventListener('pointerdown', sluitMenu, true);
+      }
+    };
+    setTimeout(()=>{
+      document.addEventListener('pointerdown', sluitMenu, true);
+    }, 50);
   }
 
   /* Drag+resize voor vrije pictogrammen */
@@ -855,7 +1023,7 @@
 
   function captureAll(){
     const meta={
-      template:tplSel.value,
+      template:aktieveKlas,
       title:$('#titlePill').textContent,
       monthBox:monthBox.textContent,
       swim:swimChk.checked,
@@ -865,19 +1033,25 @@
     const days={}; $$('.day').forEach(n=> days[n.dataset.dayIndex]=captureDay(n));
     return {meta,days};
   }
+
+  function captureAllVoorTab(){
+    const data = captureAll();
+    data.meta.panelPictos = capturePanelPictos();
+    return data;
+  }
+
   function applyAll(obj){
     if(obj.meta){
-      tplSel.value=obj.meta.template||'L3';
-      $('#titlePill').textContent=obj.meta.title||('agenda '+tplSel.value.toLowerCase());
+      if(obj.meta.template) tplSel.value = obj.meta.template;
+      $('#titlePill').textContent=obj.meta.title||('agenda '+aktieveKlas);
       if(obj.meta.monthBox) monthBox.textContent=obj.meta.monthBox;
       swimChk.checked=!!obj.meta.swim;
-      if(obj.meta.classIcon){ classIconSlot.innerHTML='<img alt="klaspictogram" src="'+obj.meta.classIcon+'">'; } else { classIconSlot.innerHTML=''; }
+      if(obj.meta.classIcon){ classIconSlot.innerHTML='<img alt="klaspictogram" src="'+obj.meta.classIcon+'">'; }
+      else { classIconSlot.innerHTML=`<img src="${getKlasIcon(aktieveKlas)}" alt="klaspictogram ${aktieveKlas}">`; }
       if(obj.meta.notes){ $('#notesBody').innerHTML=obj.meta.notes; }
       applyTemplate();
     }
-
     upgradeWeekendToEditable();
-
     if(obj.days){ $$('.day').forEach(n=>{ const i=n.dataset.dayIndex; if(obj.days[i]) applyDay(n,obj.days[i]); }); }
     scheduleLayoutSync();
   }
@@ -921,23 +1095,23 @@
     r.readAsDataURL(f);
   });
 
-  /* L3/L4 + pictogrammen automatisch */
+  /* L3/L4 + logo automatisch */
   function applyTemplate(){
-    const tpl=tplSel.value;
-    const cur=classIconSlot.querySelector('img');
+    const tpl = aktieveKlas;
+    const cur = classIconSlot.querySelector('img');
     if(tpl==='L3'){
       if(!cur || !/cactus\.png$/i.test(cur.src)){
         classIconSlot.innerHTML = '<img src="pictogrammen/cactus.png" alt="klaspictogram cactus">';
       }
-      $('#titlePill').textContent = 'agenda L3';
+      if ($('#titlePill').textContent.trim() === 'agenda L4') $('#titlePill').textContent = 'agenda L3';
     }else if(tpl==='L4'){
       if(!cur || !/lama\.png$/i.test(cur.src)){
         classIconSlot.innerHTML = '<img src="pictogrammen/lama.png" alt="klaspictogram lama">';
       }
-      $('#titlePill').textContent = 'agenda L4';
+      if ($('#titlePill').textContent.trim() === 'agenda L3') $('#titlePill').textContent = 'agenda L4';
     }
   }
-  tplSel.addEventListener('change', ()=>{ applyTemplate(); pushSnapshot(); });
+  // tplSel.addEventListener weggehaald — tabs nemen dit over
 
   /* Maandlabel */
   function updateMonthBox(){
@@ -996,8 +1170,10 @@
 
   /* Init */
   (function init(){
+    aktieveKlas = 'L4';
+    tplSel.value = 'L4';
     const today=new Date();
-    const wd=(today.getDay()+6)%7; // maandag=0
+    const wd=(today.getDay()+6)%7;
     const mon=new Date(today); mon.setDate(today.getDate()-wd);
     $$('.day').forEach(d=>{
       const idx=parseInt(d.dataset.dayIndex,10);
@@ -1009,12 +1185,11 @@
     dock.hidden = true;
     $$('.day').forEach(updatePlanBoxClass);
     ensureTaskDeleteButtons(document);
-
-    /* Standaard: 11pt voor agenda én ‘ik denk aan’ */
     $$('.day').forEach(d=>{ applyFsToDay(d,'11pt'); });
-
     scheduleLayoutSync();
     pushSnapshot();
+    tabState['L4'] = captureAllVoorTab();
+    tabState['L3'] = null;
   })();
 
   /* Takenlijst UX */
@@ -1378,6 +1553,1266 @@
     });
   }
 
+  /* ══════════════════════════════════════════
+     ZWEVENDE MINI-TOOLBAR
+     ══════════════════════════════════════════ */
+  const miniBar = document.createElement('div');
+  miniBar.className = 'mini-toolbar';
+  miniBar.id = 'miniToolbar';
+  miniBar.innerHTML = `
+    <button class="mt-btn" id="mt-bold" title="Vet (Ctrl+B)"><b>B</b></button>
+    <button class="mt-btn" id="mt-italic" title="Schuin (Ctrl+I)"><i>I</i></button>
+    <button class="mt-btn" id="mt-underline" title="Onderlijn (Ctrl+U)"><u>U</u></button>
+    <button class="mt-btn" id="mt-fluo" title="Markeren">🖊</button>
+    <div class="mt-sep"></div>
+    <button class="mt-btn" id="mt-smaller" title="Geselecteerde tekst kleiner">A−</button>
+    <select id="mt-fontsize" title="Tekengrootte geselecteerde tekst" style="background:#2d3f55;color:#e2e8f0;border:1px solid rgba(255,255,255,.2);border-radius:5px;padding:2px 4px;font-size:12px;cursor:pointer">
+      <option value="1">8pt</option>
+      <option value="2">10pt</option>
+      <option value="3" selected>12pt</option>
+      <option value="4">14pt</option>
+      <option value="5">18pt</option>
+      <option value="6">24pt</option>
+    </select>
+    <button class="mt-btn" id="mt-bigger" title="Geselecteerde tekst groter">A+</button>
+    <div class="mt-sep"></div>
+    <button class="mt-btn" id="mt-bullet" title="Bolletje toevoegen">● +</button>
+    <select id="mt-bulletsize" title="Bolletjesgrootte van deze dag" style="background:#2d3f55;color:#e2e8f0;border:1px solid rgba(255,255,255,.2);border-radius:5px;padding:2px 4px;font-size:12px;cursor:pointer">
+      <option value="12">klein</option>
+      <option value="14" selected>middel</option>
+      <option value="16">groot</option>
+    </select>
+    <div class="mt-sep"></div>
+    <button class="mt-btn" id="mt-picto-btn" title="Pictogram toevoegen">🖼</button>
+    <div class="mt-sep"></div>
+    <button class="mt-btn" id="mt-undo" title="Ongedaan maken">↩</button>
+  `;
+  document.body.appendChild(miniBar);
+
+  // Picto-grid in mini-toolbar (zelfde picto's als dock)
+  const mtPictoGrid = document.createElement('div');
+  mtPictoGrid.className = 'mt-picto-grid';
+  mtPictoGrid.id = 'mtPictoGrid';
+  miniBar.appendChild(mtPictoGrid);
+
+  let miniBarTarget = null; // de dag waar mini-toolbar bij hoort
+  let miniBarHideTimer = null;
+
+  function vulMtPictoGrid(){
+    if (mtPictoGrid.children.length > 0) return; // al gevuld
+    const imgs = [...document.querySelectorAll('#pictoGrid .picto img')];
+    imgs.forEach(img => {
+      const item = document.createElement('div');
+      item.className = 'mt-picto-item';
+      const i = document.createElement('img');
+      i.src = img.src; i.alt = img.alt;
+      item.appendChild(i);
+      item.addEventListener('pointerdown', e => {
+        e.preventDefault(); e.stopPropagation();
+        handlePictoInsert(img.src, null);
+        mtPictoGrid.classList.remove('open');
+        pushSnapshot();
+      });
+      mtPictoGrid.appendChild(item);
+    });
+  }
+
+  let miniBarInPanel = false; // true als mini-toolbar bij mededelingen hoort
+
+  function toonMiniBar(el){
+    miniBarTarget = el;
+    miniBarInPanel = el.id === 'notesPanel';
+    const rect = el.getBoundingClientRect();
+    const barH = 42;
+    let top = rect.top - barH - 8 + window.scrollY;
+    if (top < 8 + window.scrollY) top = rect.bottom + 6 + window.scrollY;
+    let left = rect.left + window.scrollX;
+    const barW = 440;
+    if (left + barW > window.innerWidth - 8) left = window.innerWidth - barW - 8;
+    miniBar.style.top  = top + 'px';
+    miniBar.style.left = left + 'px';
+    miniBar.classList.add('visible');
+    vulMtPictoGrid();
+    if (!miniBarInPanel) updateMtBulletSize(el);
+    // Bolletje-knop en bolletjesgrootte verbergen bij mededelingen
+    document.getElementById('mt-bullet').style.display    = miniBarInPanel ? 'none' : '';
+    document.getElementById('mt-bulletsize').style.display = miniBarInPanel ? 'none' : '';
+  }
+
+  function verbergMiniBar(){
+    miniBar.classList.remove('visible');
+    mtPictoGrid.classList.remove('open');
+    miniBarTarget = null;
+  }
+
+  // Toon bij klikken/focus in een dag of mededelingen — via event delegation
+  document.addEventListener('focusin', e => {
+    const dag   = e.target.closest('.day');
+    const panel = e.target.closest('#notesPanel');
+    const inMini = e.target.closest('#miniToolbar');
+    if (dag)   { toonMiniBar(dag);   return; }
+    if (panel) { toonMiniBar(panel); return; }
+    if (!inMini) verbergMiniBar();
+  });
+  document.addEventListener('pointerdown', e => {
+    const dag   = e.target.closest('.day');
+    const panel = e.target.closest('#notesPanel');
+    const inMini    = e.target.closest('#miniToolbar');
+    const inToolbar = e.target.closest('.toolbar');
+    if (dag)   { toonMiniBar(dag);   return; }
+    if (panel) { toonMiniBar(panel); return; }
+    if (!inMini && !inToolbar) verbergMiniBar();
+  }, true);
+  miniBar.addEventListener('pointerdown', e => e.stopPropagation());
+
+  // Knoppen
+  function mtExec(cmd){ document.execCommand(cmd); }
+
+  document.getElementById('mt-bold').addEventListener('click', ()=>{ mtExec('bold'); pushSnapshot(); });
+  document.getElementById('mt-italic').addEventListener('click', ()=>{ mtExec('italic'); pushSnapshot(); });
+  document.getElementById('mt-underline').addEventListener('click', ()=>{ mtExec('underline'); pushSnapshot(); });
+  document.getElementById('mt-fluo').addEventListener('click', ()=>{
+    document.execCommand('hiliteColor', false, '#ffff66');
+    pushSnapshot();
+  });
+  document.getElementById('mt-undo').addEventListener('click', ()=>{ doUndo(); });
+
+  document.getElementById('mt-bullet').addEventListener('click', ()=>{
+    if (!activeDay) return;
+    // Zelfde logica als btnAddBullet
+    document.getElementById('btnAddBullet').click();
+  });
+
+  // Tekstgrootte op selectie (zoals Word) via fontSize command
+  // fontSize 1-6 → 8,10,12,14,18,24pt
+  const MT_SIZES = [null,'8pt','10pt','12pt','14pt','18pt','24pt'];
+
+  document.getElementById('mt-smaller').addEventListener('click', ()=>{
+    const sel = document.getElementById('mt-fontsize');
+    const huidig = parseInt(sel.value);
+    if (huidig > 1){
+      sel.value = huidig - 1;
+      document.execCommand('fontSize', false, huidig - 1);
+      pushSnapshot();
+    }
+  });
+  document.getElementById('mt-bigger').addEventListener('click', ()=>{
+    const sel = document.getElementById('mt-fontsize');
+    const huidig = parseInt(sel.value);
+    if (huidig < 6){
+      sel.value = huidig + 1;
+      document.execCommand('fontSize', false, huidig + 1);
+      pushSnapshot();
+    }
+  });
+  document.getElementById('mt-fontsize').addEventListener('change', e=>{
+    document.execCommand('fontSize', false, e.target.value);
+    pushSnapshot();
+  });
+
+  // Bolletjesgrootte per dag
+  document.getElementById('mt-bulletsize').addEventListener('change', e=>{
+    if (!activeDay) return;
+    activeDay.style.setProperty('--bullet', e.target.value + 'px');
+    pushSnapshot();
+  });
+
+  // Bolletjesgrootte updaten als je van dag wisselt
+  function updateMtBulletSize(dag){
+    if (!dag) return;
+    const bs = document.getElementById('mt-bulletsize');
+    const val = getComputedStyle(dag).getPropertyValue('--bullet').trim().replace('px','') || '14';
+    bs.value = val;
+  }
+
+  document.getElementById('mt-picto-btn').addEventListener('click', e => {
+    e.stopPropagation();
+    mtPictoGrid.classList.toggle('open');
+  });
+
+  // Herpositioneer bij scrollen/resize
+  window.addEventListener('scroll', ()=>{
+    if (miniBarTarget && miniBar.classList.contains('visible')) toonMiniBar(miniBarTarget);
+  }, { passive: true });
+  window.addEventListener('resize', ()=>{
+    if (miniBarTarget && miniBar.classList.contains('visible')) toonMiniBar(miniBarTarget);
+  });
+
+  /* Undo */
+  function snapshot(){
+    const data=captureAll();
+    data.meta.panelPictos=capturePanelPictos();
+    return data;
+  }
+  function pushSnapshot(){
+    if(!isApplying) undoStack.push(snapshot());
+    scheduleLayoutSync();                // ← direct her-equalizen na elke wijziging
+  }
+  function doUndo(){
+    if(undoStack.length<2) return;
+    undoStack.pop();
+    const prev=undoStack[undoStack.length-1];
+    isApplying=true;
+    applyAll(prev);
+    applyPanelPictos(prev.meta && prev.meta.panelPictos ? prev.meta.panelPictos : []);
+    isApplying=false;
+    scheduleLayoutSync();
+  }
+  btnUndo.addEventListener('click', doUndo);
+
+  function weekdayHeaderHtml(name){
+    return `<header class="stacked">
+      <div class="hdrLeft">
+        <span class="hdrEnv">${ENVELOPE_SVG}</span>
+        <div class="dn">${name}</div>
+      </div>
+      <div class="dateWrap"><span class="dDate">01 / 09</span><input class="datePicker" type="date"></div>
+    </header>`;
+  }
+
+  function buildWeekday(i,name){
+    const art=document.createElement('article'); art.className='day'; art.dataset.dayIndex=i;
+    const planHeading=(i===4)?'<h3 contenteditable>Ik geef af:</h3>':'<h3>Ik plan:</h3>';
+    art.innerHTML = weekdayHeaderHtml(name)+
+    `<div class="body">
+       <div class="cell">
+         ${planHeading}
+         <div class="planBox" data-key="d${i}.plan">
+           <ul class="tasklist" data-role="tasks"></ul>
+           <div class="planText" contenteditable></div>
+         </div>
+       </div>
+       <div class="cell">
+         <h3>Ik denk aan:</h3>
+         <div class="bringBox" data-key="d${i}.bring"><div class="bringText" contenteditable></div></div>
+       </div>
+     </div>`;
+
+    const bringBox  = art.querySelector('.bringBox');
+    const bringText = art.querySelector('.bringText');
+    const planBox   = art.querySelector('.planBox');
+    bringText.addEventListener('focusin', () => { lastFocusedHost = bringBox; setActiveHost(bringBox); });
+    planBox.addEventListener('focusin', () => { lastFocusedHost = art.querySelector('.body'); setActiveHost(lastFocusedHost); });
+
+    wireDate(art,i);
+    art.addEventListener('pointerdown',()=> { setActiveDay(art); setActiveHost(art.querySelector('.body')); });
+    return art;
+  }
+
+  function buildWeekend(i,name){
+    const art=document.createElement('article'); art.className='day small'; art.dataset.dayIndex=i;
+    art.innerHTML=
+    `<header>
+       <div class="dn">${name}</div>
+       <div class="dateWrap"><span class="dDate">01 / 09</span><input class="datePicker" type="date"></div>
+     </header>
+     <div class="body">
+       <div class="cell">
+         <h3>Ik plan:</h3>
+         <div class="planBox" data-key="d${i}.plan">
+           <textarea class="wkTA" rows="2" maxlength="300" aria-label="Weekendnotities"></textarea>
+         </div>
+       </div>
+     </div>`;
+    const ta=art.querySelector('.wkTA');
+    ta.addEventListener('input', limitWeekendTextarea);
+    ta.addEventListener('keydown', e=>{
+      const lines=ta.value.split('\n').length;
+      if(e.key==='Enter' && lines>=3){ e.preventDefault(); }
+    });
+    ta.addEventListener('focusin', () => { lastFocusedHost = art.querySelector('.body'); setActiveHost(lastFocusedHost); });
+    art.addEventListener('pointerdown',()=> { setActiveDay(art); setActiveHost(art.querySelector('.body')); });
+    wireDate(art,i);
+    return art;
+  }
+
+  function limitWeekendTextarea(e){
+    const ta=e.target;
+    const lines=ta.value.split('\n').length;
+    if(lines>=3) ta.classList.add('maxed'); else ta.classList.remove('maxed');
+    scheduleLayoutSync();
+  }
+
+  function wireDate(card,idx){
+    const dp=card.querySelector('.datePicker'); const lab=card.querySelector('.dDate');
+    lab.addEventListener('click',()=> dp.showPicker && dp.showPicker());
+    dp.addEventListener('change',()=>{
+      const d=new Date(dp.value); if(isNaN(d)) return;
+      const dd=String(d.getDate()).padStart(2,'0');
+      const mm=String(d.getMonth()+1).padStart(2,'0');
+      lab.textContent=`${dd} / ${mm}`;
+      if(idx===0){
+        for(let k=1;k<=6;k++){
+          const other=document.querySelector(`.day[data-day-index="${k}"] .datePicker`);
+          const nd=new Date(d); nd.setDate(d.getDate()+k);
+          other.valueAsDate=nd; other.dispatchEvent(new Event('change'));
+        }
+      }
+      updateMonthBox();
+    });
+  }
+
+  const weekTop=$('#weekTop'), weekendCol=$('#weekendCol');
+  const days=['MAANDAG','DINSDAG','WOENSDAG','DONDERDAG','VRIJDAG','ZATERDAG','ZONDAG'];
+  for(let i=0;i<5;i++) weekTop.appendChild(buildWeekday(i,days[i]));
+  weekendCol.appendChild(buildWeekend(5,days[5]));
+  weekendCol.appendChild(buildWeekend(6,days[6]));
+  setActiveDay(weekTop.firstElementChild);
+
+  /* Plan-stijl en bullets */
+  function applyFsToDay(day,val){ day.style.setProperty('--plan-fs',val); }
+  function applyBulletToDay(day,px){ day.style.setProperty('--bullet',px+'px'); }
+  function applyGapToDay(day,pt){ day.style.setProperty('--task-gap',pt+'pt'); }
+
+  planFS.addEventListener('change',()=>{
+    if(activeDay){
+      applyFsToDay(activeDay, planFS.value);
+      /* laat “Ik denk aan” dezelfde grootte volgen */
+      activeDay.style.setProperty('--bring-fs', planFS.value);
+      pushSnapshot();
+    }
+  });
+  bulletSize.addEventListener('change',()=>{ if(activeDay){ applyBulletToDay(activeDay,bulletSize.value); pushSnapshot(); }});
+  taskGap.addEventListener('change',()=>{ if(activeDay){ applyGapToDay(activeDay,taskGap.value); pushSnapshot(); }});
+
+  function updatePlanBoxClass(day){
+    const box = day.querySelector('.planBox');
+    const has = box.querySelectorAll('.tasklist li').length>0;
+    box.classList.toggle('has-tasks', has);
+  }
+
+  function upgradeWeekendToEditable(){
+    ['5','6'].forEach(i=>{
+      const planBox = document.querySelector(`[data-key="d${i}.plan"]`);
+      if (!planBox) return;
+      const ta = planBox.querySelector('.wkTA');
+      if (ta){
+        const div = document.createElement('div');
+        div.className = 'wkCE';
+        div.setAttribute('contenteditable','true');
+        div.innerText = ta.value || '';
+        ta.replaceWith(div);
+      }
+    });
+  }
+
+  applyAllFS.addEventListener('click',()=>{
+    if(!activeDay) return;
+    const val=getComputedStyle(activeDay).getPropertyValue('--plan-fs').trim()||planFS.value;
+    for(let i=1;i<5;i++){
+      const d=document.querySelector(`.day[data-day-index="${i}"]`);
+      applyFsToDay(d,val);
+      d.style.setProperty('--bring-fs', val);
+    }
+    pushSnapshot();
+  });
+  applyAllGap.addEventListener('click',()=>{
+    if(!activeDay) return;
+    const val=(getComputedStyle(activeDay).getPropertyValue('--task-gap').trim()||taskGap.value+'pt').replace('pt','');
+    for(let i=1;i<5;i++) applyGapToDay(document.querySelector(`.day[data-day-index="${i}"]`),val);
+    pushSnapshot();
+  });
+
+  /* Tekst opmaak */
+  function exec(cmd,val=null){ document.execCommand(cmd,false,val); }
+  btnBold.addEventListener('click',()=> exec('bold'));
+  btnItalic.addEventListener('click',()=> exec('italic'));
+  btnUnderline.addEventListener('click',()=> exec('underline'));
+  btnHighlight.addEventListener('click',()=>{
+    const sel=window.getSelection(); if(!sel||sel.isCollapsed) return;
+    const r=sel.getRangeAt(0); const m=document.createElement('mark'); m.style.background='#fff89a'; r.surroundContents(m);
+  });
+
+  // Alleen selectie bewaren als die in een contenteditable vak zit
+  function inEditable(node){
+    if (!node) return null;
+    const el = (node.nodeType === 1 ? node : node.parentElement);
+    return el ? el.closest('[contenteditable]') : null;
+  }
+  document.addEventListener('selectionchange', ()=>{
+    const sel = window.getSelection();
+    if (!sel || !sel.rangeCount) return;
+    const ed = inEditable(sel.anchorNode);
+    if (ed) lastTextRange = sel.getRangeAt(0).cloneRange();
+  });
+
+  // Als je de keuzelijst opent, bewaar nog eens expliciet de huidige selectie
+  textColor.addEventListener('mousedown', ()=>{
+    const sel = window.getSelection();
+    if (!sel || !sel.rangeCount) return;
+    const ed = inEditable(sel.anchorNode);
+    if (ed) lastTextRange = sel.getRangeAt(0).cloneRange();
+  });
+
+  function applyTextColor(){
+    const sel = window.getSelection();
+    if (!sel || sel.rangeCount === 0) return;
+    const host = inEditable(sel.anchorNode);
+    if (!host) return;
+    host.focus();
+    try { document.execCommand('styleWithCSS', false, true); } catch(_){}
+    document.execCommand('foreColor', false, textColor.value);
+    pushSnapshot();
+  }
+
+  // 1) Als de waarde verandert
+  textColor.addEventListener('change', applyTextColor);
+  btnApplyColor.addEventListener('click', applyTextColor);
+
+  /* Bolletje */
+  btnAddBullet.addEventListener('click',()=>{
+    if(!activeDay) return;
+    let list = activeDay.querySelector('[data-role=tasks]');
+    if(!list){
+      const box = activeDay.querySelector('.planBox');
+      list = document.createElement('ul');
+      list.className='tasklist'; list.setAttribute('data-role','tasks');
+      box.prepend(list);
+    }
+    const li=document.createElement('li');
+    li.innerHTML = '<span class="bullet"></span><div class="tasktext" contenteditable></div><button class="liDel" title="Verwijder">×</button>';
+    list.appendChild(li);
+    const t=li.querySelector('.tasktext'); t.focus();
+    const sel=window.getSelection(), rg=document.createRange(); rg.selectNodeContents(t); rg.collapse(false); sel.removeAllRanges(); sel.addRange(rg);
+    updatePlanBoxClass(activeDay);
+    ensureTaskDeleteButtons(activeDay);
+    pushSnapshot();
+  });
+
+  function ensureTaskDeleteButtons(root=document){
+    root.querySelectorAll('.tasklist li').forEach(li=>{
+      if(!li.querySelector('.liDel')){
+        const btn = document.createElement('button');
+        btn.className = 'liDel';
+        btn.title = 'Verwijder';
+        btn.textContent = '×';
+        li.appendChild(btn);
+      }
+    });
+  }
+
+  /* Zwemweek: alleen de zin in Ik denk aan */
+  function toggleSwimWeek(on){
+    const day = document.querySelector('.day[data-day-index="3"]'); // donderdag
+    if(!day) return;
+    const bringText = day.querySelector('.bringText');
+    const line = 'zwemzak en badmuts';
+
+    const tmp = bringText.cloneNode(true);
+    tmp.querySelectorAll('br').forEach(br => br.replaceWith('\n'));
+    const raw = tmp.textContent.split('\n').map(s=>s.trim());
+    let lines = raw.filter(s=>s.length);
+
+    if (on) { if (!lines.includes(line)) lines.push(line); }
+    else    { lines = lines.filter(t => t !== line); }
+
+    bringText.innerHTML = lines.map(t => `<span style="font-size:11pt">${t}</span>`).join('<br>');
+    pushSnapshot();
+  }
+  swimChk.addEventListener('change', ()=> toggleSwimWeek(swimChk.checked));
+
+  /* Kopieer maandag → andere werkdagen, incl. breng-grootte */
+ btnCopyMon.addEventListener('click',()=>{
+  const mon=document.querySelector('.day[data-day-index="0"]');
+  const planHtml=mon.querySelector('[data-key="d0.plan"]').innerHTML;
+  const cs=getComputedStyle(mon);
+
+  for(let i=1;i<5;i++){
+    const d=document.querySelector(`.day[data-day-index="${i}"]`);
+
+    // Alleen IK PLAN kopiëren
+    const planBox = d.querySelector(`[data-key="d${i}.plan"]`);
+    planBox.innerHTML = planHtml;
+
+    // Plan-stijl meenemen (optioneel laten staan)
+    d.style.setProperty('--plan-fs', cs.getPropertyValue('--plan-fs'));
+    d.style.setProperty('--task-gap', cs.getPropertyValue('--task-gap'));
+    d.style.setProperty('--bullet',   cs.getPropertyValue('--bullet'));
+
+    updatePlanBoxClass(d);
+    ensureTaskDeleteButtons(d);
+  }
+  pushSnapshot();
+});
+
+  /* PICTOGRAMMEN */
+  const PICTO_FILES=[
+    'geen_school.png','zwemmen.png','wieltjesdag.png','uitstap.png','kijkdag.png','belangrijk.png','fruit.png','soep.png','zebra.png','bijtje.png'
+  ];
+  const pictoGrid=$('#pictoGrid');
+  PICTO_FILES.forEach(name=>{
+    const cell=document.createElement('div'); cell.className='picto'; cell.title=name.replace('.png','');
+    cell.innerHTML=`<img src="pictogrammen/${name}" alt="${name}">`;
+    cell.addEventListener('mousedown',e=>e.preventDefault()); // behoud caret/focus
+    cell.addEventListener('click',(ev)=> handlePictoInsert(`pictogrammen/${name}`, ev));
+    pictoGrid.appendChild(cell);
+  });
+
+  function handlePictoInsert(src, ev){
+    const sel=window.getSelection();
+    const ae=document.activeElement;
+    const wantInline = (ev && (ev.ctrlKey || ev.metaKey));
+
+    /* Inline in tekst */
+    if (wantInline && ae && ae.isContentEditable && sel && sel.rangeCount){
+      const span=document.createElement('span'); span.className='picto-inline';
+      span.innerHTML=`<img src="${src}" alt="picto" style="height:16px;vertical-align:text-bottom">`;
+      const r=sel.getRangeAt(0); r.deleteContents(); r.insertNode(span);
+      r.setStartAfter(span); r.setEndAfter(span); sel.removeAllRanges(); sel.addRange(r);
+      pushSnapshot();
+      return;
+    }
+
+    /* Vrij pictogram */
+    const pic = makeFreePicto(src);
+
+    let host = null;
+    if (lastFocusedHost && lastFocusedHost.isConnected) {
+      host = lastFocusedHost;
+    } else if (activeHost && activeHost.isConnected) {
+      host = activeHost;
+    } else if (activeDay) {
+      host = activeDay.querySelector('.body') || activeDay;
+    } else {
+      alert('Klik eerst in een vak (bv. Ik denk aan, Ik plan of Mededelingen).');
+      return;
+    }
+
+    let hostType = 'body';
+    if (host.classList && host.classList.contains('bringBox')) {
+      hostType = 'bring';
+    }
+    pic.dataset.host = hostType;
+
+    host.appendChild(pic);
+
+    // Slim plaatsen: links in het vak, kleine marge bovenaan
+    pic.style.left = '4px';
+    pic.style.top  = '4px';
+    pushSnapshot();
+  }
+
+  function makeFreePicto(src){
+    const wrap=document.createElement('div');
+    wrap.className='picto-free';
+    wrap.style.width='20mm';   // kleinere standaardgrootte zodat tekst ernaast past
+    wrap.style.height='auto';
+    wrap.style.left='4px';
+    wrap.style.top='4px';
+    wrap.style.position='absolute';
+    wrap.style.zIndex='5';
+    wrap.innerHTML=`<img src="${src}" alt="picto"><div class="handle" title="Schaal"></div>`;
+    enableDragResize(wrap);
+    wrap.addEventListener('pointerdown', (e)=>{
+      e.stopPropagation();
+      clearPictoSelection();
+      selectedPicto=wrap;
+      wrap.classList.add('selected');
+    });
+    // Rechtermuisklik → contextmenu
+    wrap.addEventListener('contextmenu', (e)=>{
+      e.preventDefault();
+      e.stopPropagation();
+      toonPictoContextMenu(e.clientX, e.clientY, wrap);
+    });
+    return wrap;
+  }
+
+  /* Picto contextmenu */
+  function toonPictoContextMenu(x, y, pictoEl){
+    document.getElementById('pictoContextMenu')?.remove();
+    const menu = document.createElement('div');
+    menu.id = 'pictoContextMenu';
+    menu.style.cssText = `position:fixed;left:${x}px;top:${y}px;background:#fff;border:1px solid #e5e7eb;border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,.15);z-index:99999;min-width:140px;overflow:hidden;font-family:Arial,sans-serif;font-size:13px`;
+    menu.innerHTML = `
+      <div id="pcm-delete" style="padding:8px 14px;cursor:pointer;display:flex;align-items:center;gap:8px;color:#b91c1c">
+        <span>🗑</span> Verwijder picto
+      </div>
+      <div id="pcm-smaller" style="padding:8px 14px;cursor:pointer;display:flex;align-items:center;gap:8px;border-top:1px solid #f3f4f6">
+        <span>🔽</span> Kleiner
+      </div>
+      <div id="pcm-bigger" style="padding:8px 14px;cursor:pointer;display:flex;align-items:center;gap:8px">
+        <span>🔼</span> Groter
+      </div>
+    `;
+    document.body.appendChild(menu);
+
+    menu.querySelectorAll('div').forEach(item=>{
+      item.addEventListener('mouseenter', ()=> item.style.background='#f0f4f8');
+      item.addEventListener('mouseleave', ()=> item.style.background='');
+      // Voorkom dat klik op menu-item de "klik buiten" handler triggert
+      item.addEventListener('pointerdown', e=> e.stopPropagation());
+    });
+
+    menu.querySelector('#pcm-delete').addEventListener('click', (e)=>{
+      e.stopPropagation();
+      pictoEl.remove();
+      selectedPicto = null;
+      menu.remove();
+      pushSnapshot();
+    });
+    menu.querySelector('#pcm-smaller').addEventListener('click', (e)=>{
+      e.stopPropagation();
+      const huidig = parseFloat(pictoEl.style.width) || 20;
+      pictoEl.style.width = Math.max(8, huidig - 4) + 'mm';
+      menu.remove();
+      pushSnapshot();
+    });
+    menu.querySelector('#pcm-bigger').addEventListener('click', (e)=>{
+      e.stopPropagation();
+      const huidig = parseFloat(pictoEl.style.width) || 20;
+      pictoEl.style.width = Math.min(60, huidig + 4) + 'mm';
+      menu.remove();
+      pushSnapshot();
+    });
+
+    // Klik buiten menu → sluit
+    const sluitMenu = (e)=>{
+      if (!menu.contains(e.target)){
+        menu.remove();
+        document.removeEventListener('pointerdown', sluitMenu, true);
+      }
+    };
+    setTimeout(()=>{
+      document.addEventListener('pointerdown', sluitMenu, true);
+    }, 50);
+  }
+
+  /* Drag+resize voor vrije pictogrammen */
+  function enableDragResize(node){
+    const handle = node.querySelector('.handle');
+
+    // --- DRAG ---
+    let dragging = false, pointerId=null;
+    let startX=0, startY=0, hostAtStart=null;
+    let offsetX=0, offsetY=0;
+    let lastRAF = 0, nextLeft=0, nextTop=0, needsPaint=false;
+    let origZ = '';
+
+    function onPointerDownDrag(e){
+      if(e.target === handle) return;
+      e.preventDefault();
+      pointerId = e.pointerId;
+      node.setPointerCapture(pointerId);
+      dragging = true;
+      node.classList.add('dragging');
+
+      hostAtStart = node.parentElement;
+      origZ = node.style.zIndex || '5';
+
+      const rect = node.getBoundingClientRect();
+      startX = e.clientX; startY = e.clientY;
+      offsetX = startX - rect.left; offsetY = startY - rect.top;
+
+      document.body.appendChild(node);
+      node.style.position = 'fixed';
+      node.style.left = rect.left + 'px';
+      node.style.top  = rect.top  + 'px';
+      node.style.zIndex = '10000';
+
+      nextLeft = rect.left; nextTop  = rect.top;
+      needsPaint = false;
+    }
+
+    function onPointerMoveDrag(e){
+      if(!dragging || e.pointerId !== pointerId) return;
+      nextLeft = Math.max(0, Math.min(e.clientX - offsetX, window.innerWidth  - node.offsetWidth));
+      nextTop  = Math.max(0, Math.min(e.clientY - offsetY, window.innerHeight - node.offsetHeight));
+      if (!needsPaint){
+        needsPaint = true;
+        lastRAF = requestAnimationFrame(()=>{
+          node.style.left = nextLeft + 'px';
+          node.style.top  = nextTop  + 'px';
+          needsPaint = false;
+        });
+      }
+    }
+
+    function onPointerUpDrag(e){
+      if(!dragging || e.pointerId !== pointerId) return;
+      try { node.releasePointerCapture(pointerId); } catch(_) {}
+      dragging = false; pointerId = null;
+      node.classList.remove('dragging');
+      if (lastRAF) cancelAnimationFrame(lastRAF);
+
+      const oldPE = node.style.pointerEvents;
+      node.style.pointerEvents = 'none';
+      const dropEl = document.elementFromPoint(e.clientX, e.clientY);
+      node.style.pointerEvents = oldPE;
+
+      let host = dropEl ? dropEl.closest('.bringBox, .panel, .day .body, .day') : null;
+      if(!host) host = hostAtStart || document.querySelector('.page');
+
+      const nodeRect = node.getBoundingClientRect();
+      const hostRect = host.getBoundingClientRect();
+
+      let leftInHost = nodeRect.left - hostRect.left;
+      let topInHost  = nodeRect.top  - hostRect.top;
+
+      leftInHost = Math.max(0, Math.min(leftInHost, hostRect.width  - node.offsetWidth));
+      topInHost  = Math.max(0, Math.min(topInHost,  hostRect.height - node.offsetHeight));
+
+      host.appendChild(node);
+      node.style.position = 'absolute';
+      node.style.left = leftInHost + 'px';
+      node.style.top  = topInHost  + 'px';
+      node.style.zIndex = origZ || '5';
+
+      if (host.classList && host.classList.contains('bringBox')) {
+        node.dataset.host = 'bring';
+      } else if (host.closest && host.closest('.day')) {
+        node.dataset.host = 'body';
+      }
+
+      pushSnapshot();
+    }
+
+    function onPointerCancelDrag(){
+      if (!dragging) return;
+      dragging = false; pointerId = null;
+      node.classList.remove('dragging');
+      node.style.zIndex = origZ || '5';
+    }
+
+    node.addEventListener('pointerdown', onPointerDownDrag);
+    node.addEventListener('pointermove', onPointerMoveDrag);
+    node.addEventListener('pointerup',   onPointerUpDrag);
+    node.addEventListener('pointercancel', onPointerCancelDrag);
+    window.addEventListener('pointerup', (ev)=>{ if (dragging) onPointerUpDrag(ev); });
+
+    // --- RESIZE ---
+    let resizing=false, baseW=0, baseX=0, resizePointerId=null;
+    function onPointerDownResize(e){
+      e.preventDefault(); e.stopPropagation();
+      resizePointerId = e.pointerId;
+      handle.setPointerCapture(resizePointerId);
+      resizing=true; baseW = node.offsetWidth; baseX = e.clientX;
+    }
+    function onPointerMoveResize(e){
+      if(!resizing || e.pointerId !== resizePointerId) return;
+      const dw = e.clientX - baseX;
+      const nw = Math.max(16, baseW + dw);
+      node.style.width = nw + 'px';
+    }
+    function onPointerUpResize(e){
+      if(!resizing || e.pointerId !== resizePointerId) return;
+      try { handle.releasePointerCapture(resizePointerId); } catch(_) {}
+      resizing=false; resizePointerId=null;
+      pushSnapshot();
+    }
+    handle.addEventListener('pointerdown', onPointerDownResize);
+    handle.addEventListener('pointermove', onPointerMoveResize);
+    handle.addEventListener('pointerup',   onPointerUpResize);
+    handle.addEventListener('pointercancel', ()=>{ resizing=false; resizePointerId=null; });
+  }
+
+  /* Verwijder geselecteerd pictogram */
+  btnDelPicto.addEventListener('click', (e)=>{
+    e.preventDefault();
+    const node = selectedPicto || document.querySelector('.picto-free.selected');
+    if (!node) { alert('Selecteer eerst een pictogram.'); return; }
+    node.remove();
+    selectedPicto = null;
+    pushSnapshot();
+  });
+
+  /* Export / Import (incl. pictos en bring-fs) */
+  function captureDay(d){
+    const idx = d.dataset.dayIndex;
+
+    const planBoxEl = d.querySelector(`[data-key="d${idx}.plan"]`);
+    const ta = planBoxEl ? planBoxEl.querySelector('.wkTA') : null;
+    const ce = planBoxEl ? planBoxEl.querySelector('.wkCE[contenteditable]') : null;
+
+    const pics = [...d.querySelectorAll('.picto-free')].map(p => {
+      const img = p.querySelector('img');
+      let host = p.dataset.host || null;
+      if (!host) {
+        if (p.closest('.bringBox')) host = 'bring';
+        else host = 'body';
+      }
+      return {
+        src: img.getAttribute('src'),
+        left: p.style.left || '0px',
+        top:  p.style.top  || '0px',
+        width: p.style.width || '',
+        host
+      };
+    });
+
+    return {
+      date: d.querySelector('.datePicker').value || null,
+      plan: planBoxEl ? planBoxEl.innerHTML : '',
+      bring: d.querySelector(`[data-key="d${idx}.bring"]`)?.innerHTML || '',
+      vars: {
+        planFS:  d.style.getPropertyValue('--plan-fs')  || null,
+        bullet:  d.style.getPropertyValue('--bullet')   || null,
+        gap:     d.style.getPropertyValue('--task-gap') || null,
+        bringFS: d.style.getPropertyValue('--bring-fs') || null
+      },
+      pictos: pics,
+      weekendText: ta ? ta.value : null,
+      weekendHtml: ce ? ce.innerHTML : null
+    };
+  }
+
+function _isEmptyWeekendHtml(html){
+  const tmp = document.createElement('div');
+  tmp.innerHTML = html || '';
+  // “Leeg” = geen zichtbare tekst én geen takenlijst
+  const hasTasks = !!tmp.querySelector('.tasklist li');
+  const text = tmp.textContent.replace(/\u00a0/g,' ').trim();
+  return { isEmpty: (!hasTasks && text === ''), hasTasks, tmp };
+}
+
+  function applyDay(d,data){
+    const idx=d.dataset.dayIndex;
+    if(data.date){ const dp=d.querySelector('.datePicker'); dp.value=data.date; dp.dispatchEvent(new Event('change')); }
+    const planBoxEl = d.querySelector(`[data-key="d${idx}.plan"]`);
+    const ta = planBoxEl ? planBoxEl.querySelector('.wkTA') : null;
+    const ce = planBoxEl ? planBoxEl.querySelector('.wkCE[contenteditable]') : null;
+
+if (ce) {
+  const hasWeekendHtml = Object.prototype.hasOwnProperty.call(data, 'weekendHtml');
+  const hasWeekendText = Object.prototype.hasOwnProperty.call(data, 'weekendText');
+  const hasPlan        = (typeof data.plan === 'string' && data.plan.trim() !== '');
+
+  let done = false;
+
+  // 1) Probeer weekendHtml, maar alleen als het niet “leeg” is
+  if (hasWeekendHtml) {
+    const chk = _isEmptyWeekendHtml(data.weekendHtml);
+    if (!chk.isEmpty) {
+      if (chk.hasTasks) {
+        // weekendHtml bevatte (oude) <ul class="tasklist"> → zet die over
+        const box = ce.closest('.planBox');
+        const ul  = chk.tmp.querySelector('.tasklist');
+        box.innerHTML = '';
+        box.appendChild(ul.cloneNode(true));
+        box.classList.add('has-tasks');
+        ensureTaskDeleteButtons(box);
+      } else {
+        ce.innerHTML = data.weekendHtml || '';
+      }
+      done = true;
+    }
+  }
+
+  // 2) Anders weekendText (platte tekst)
+  if (!done && hasWeekendText && (data.weekendText || '').trim() !== '') {
+    ce.textContent = data.weekendText.trim();
+    done = true;
+  }
+
+  // 3) Anders fallback: haal bruikbare inhoud uit plan (oud export-formaat)
+  if (!done && hasPlan) {
+    const tmp = document.createElement('div');
+    tmp.innerHTML = data.plan;
+    const ul = tmp.querySelector('.tasklist');
+    if (ul) {
+      const box = ce.closest('.planBox');
+      box.innerHTML = '';
+      box.appendChild(ul.cloneNode(true));
+      box.classList.add('has-tasks');
+      ensureTaskDeleteButtons(box);
+    } else {
+      ce.textContent = tmp.textContent.replace(/\u00a0/g,' ').trim();
+    }
+  }
+
+  // Als nog steeds niets gezet is: leeg
+  if (!done && !hasWeekendText && !hasPlan) {
+    ce.innerHTML = '';
+  }
+
+    } else if (ta) {
+      if (Object.prototype.hasOwnProperty.call(data, 'weekendText')) {
+        ta.value = data.weekendText || '';
+        limitWeekendTextarea({ target: ta });
+      }
+    } else {
+      planBoxEl.innerHTML = data.plan || '';
+      ensureTaskDeleteButtons(d);
+    }
+
+    const br=d.querySelector(`[data-key="d${idx}.bring"]`);
+    if (br && data.bring !== undefined) { br.innerHTML = data.bring; }
+    if(data.vars){
+      if(data.vars.planFS)  d.style.setProperty('--plan-fs',data.vars.planFS);
+      if(data.vars.bullet)  d.style.setProperty('--bullet',data.vars.bullet);
+      if(data.vars.gap)     d.style.setProperty('--task-gap',data.vars.gap);
+      if(data.vars.bringFS) d.style.setProperty('--bring-fs',data.vars.bringFS);
+    }
+    d.querySelectorAll('.picto-free').forEach(n=>n.remove());
+
+    if (data.pictos) {
+      const bringHtml = (data.bring || '') + '';
+      function legacyGuessHostFor(src){
+        return bringHtml.includes(src) ? 'bring' : 'body';
+      }
+      data.pictos.forEach(p => {
+        const node = makeFreePicto(p.src);
+        node.style.left  = p.left  || '10px';
+        node.style.top   = p.top   || '10px';
+        if (p.width) node.style.width = p.width;
+        let desiredHost = p.host;
+        if (!desiredHost) desiredHost = legacyGuessHostFor(p.src);
+        let hostEl = d.querySelector('.body') || d;
+        if (desiredHost === 'bring') {
+          hostEl = d.querySelector(`[data-key="d${idx}.bring"]`) || hostEl;
+          node.dataset.host = 'bring';
+        } else {
+          node.dataset.host = 'body';
+        }
+        hostEl.appendChild(node);
+      });
+    }
+  }
+
+  function capturePanelPictos(){
+    const pics=[...notesPanel.querySelectorAll('.picto-free')].map(p=>{
+      const img=p.querySelector('img');
+      return {src:img.getAttribute('src'), left:p.style.left||'0px', top:p.style.top||'0px', width:p.style.width||''};
+    });
+    return pics;
+  }
+  function applyPanelPictos(list){
+    notesPanel.querySelectorAll('.picto-free').forEach(n=>n.remove());
+    (list||[]).forEach(p=>{
+      const node=makeFreePicto(p.src);
+      node.style.left=p.left||'10px'; node.style.top=p.top||'10px'; if(p.width) node.style.width=p.width;
+      notesPanel.appendChild(node);
+    });
+  }
+
+  function captureAll(){
+    const meta={
+      template:aktieveKlas,
+      title:$('#titlePill').textContent,
+      monthBox:monthBox.textContent,
+      swim:swimChk.checked,
+      classIcon:($('#classIconSlot img')?$('#classIconSlot img').src:null),
+      notes:$('#notesBody').innerHTML
+    };
+    const days={}; $$('.day').forEach(n=> days[n.dataset.dayIndex]=captureDay(n));
+    return {meta,days};
+  }
+
+  function captureAllVoorTab(){
+    const data = captureAll();
+    data.meta.panelPictos = capturePanelPictos();
+    return data;
+  }
+
+  function applyAll(obj, vanTabWissel=false){
+    if(obj.meta){
+      if(obj.meta.template) tplSel.value = obj.meta.template;
+      $('#titlePill').textContent=obj.meta.title||('agenda '+aktieveKlas);
+      if(obj.meta.monthBox) monthBox.textContent=obj.meta.monthBox;
+      swimChk.checked=!!obj.meta.swim;
+      if(obj.meta.classIcon){ classIconSlot.innerHTML='<img alt="klaspictogram" src="'+obj.meta.classIcon+'">'; }
+      else { classIconSlot.innerHTML=`<img src="${getKlasIcon(aktieveKlas)}" alt="klaspictogram ${aktieveKlas}">`; }
+      if(obj.meta.notes !== undefined){ $('#notesBody').innerHTML=obj.meta.notes||''; }
+      if(!vanTabWissel) applyTemplate();
+    }
+
+upgradeWeekendToEditable();
+
+    if(obj.days){ $$('.day').forEach(n=>{ const i=n.dataset.dayIndex; if(obj.days[i]) applyDay(n,obj.days[i]); }); }
+    scheduleLayoutSync();
+  }
+
+  btnExport.addEventListener('click',()=>{
+    const data=captureAll();
+    data.meta.panelPictos=capturePanelPictos();
+    const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+    const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='agenda_week.json'; a.click(); URL.revokeObjectURL(a.href);
+  });
+  btnImport.addEventListener('click',()=> fileImport.click());
+  fileImport.addEventListener('change',(e)=>{
+    const f=e.target.files && e.target.files[0]; if(!f) return;
+    const r=new FileReader();
+    r.onload=()=>{ try{ const obj=JSON.parse(r.result); isApplying=true; applyAll(obj); applyPanelPictos(obj.meta && obj.meta.panelPictos? obj.meta.panelPictos: []); isApplying=false; pushSnapshot(); }catch(err){ alert('Kon bestand niet lezen: '+err.message); } };
+    r.readAsText(f,'utf-8'); e.target.value='';
+  });
+  btnPrint.addEventListener('click',()=> window.print());
+
+  /* PRINT: geen schaal via JS, enkel sync & blur */
+  window.addEventListener('beforeprint', ()=>{
+    const a = document.activeElement;
+    if (a && typeof a.blur === 'function') a.blur();
+    $$('.day').forEach(d => d.style.outline = 'none');
+    equalizePlanHeights();
+    // equalizeBringHeights(); // indien ook Ik denk aan gelijk
+    syncNotesToWeekend();
+  });
+
+  // Dock
+  btnToggleDock.addEventListener('click', ()=>{ dock.hidden = !dock.hidden; });
+  btnUploadPicto.addEventListener('click', ()=>{ fileUploadPicto.click(); });
+  fileUploadPicto.addEventListener('change', (e)=>{
+    const f = e.target.files && e.target.files[0];
+    if(!f) return;
+    if(!/^image\//i.test(f.type)){
+      alert('Kies een afbeelding (bij voorkeur PNG met transparante achtergrond).');
+      e.target.value=''; return;
+    }
+    const r = new FileReader();
+    r.onload = ()=>{ handlePictoInsert(r.result, null); e.target.value=''; };
+    r.readAsDataURL(f);
+  });
+
+  /* L1/L2 + logo automatisch */
+  function applyTemplate(){
+    const tpl = aktieveKlas;
+    const cur = classIconSlot.querySelector('img');
+    if (tpl === 'L2') {
+      if (!cur || !/zebra\.png$/i.test(cur.src)) {
+        classIconSlot.innerHTML = '<img src="pictogrammen/zebra.png" alt="klaspictogram zebra">';
+      }
+      if ($('#titlePill').textContent.trim() === 'agenda L1') $('#titlePill').textContent = 'agenda L2';
+    } else if (tpl === 'L1') {
+      if (!cur || !/bijtje\.png$/i.test(cur.src)) {
+        classIconSlot.innerHTML = '<img src="pictogrammen/bijtje.png" alt="klaspictogram bijtje">';
+      }
+      if ($('#titlePill').textContent.trim() === 'agenda L2') $('#titlePill').textContent = 'agenda L1';
+    }
+  }
+  // tplSel.addEventListener weggehaald — tabs nemen dit over
+
+  /* Maandlabel */
+  function updateMonthBox(){
+    const first=$$('.datePicker').map(p=>p.value).find(Boolean);
+    if(!first) return; const d=new Date(first);
+    monthBox.textContent=d.toLocaleDateString('nl-BE',{month:'long',year:'numeric'});
+  }
+
+  /* Mededelingenhoogte = hoogte ZA+ZO */
+  function syncNotesToWeekend(){
+    const wc   = document.getElementById('weekendCol');
+    const note = document.getElementById('notesPanel');
+    const body = document.getElementById('notesBody');
+    if(!wc||!note) return;
+    note.style.height = wc.offsetHeight + 'px';
+    const headH = note.querySelector('header').offsetHeight;
+    const signH = note.querySelector('.sign').offsetHeight + 12;
+    const pad   = 12;
+    body.style.height = Math.max(40, note.clientHeight - headH - signH - pad) + 'px';
+  }
+
+  /* === NIEUW: Equalizers voor gelijke hoogtes === */
+  function equalizePlanHeights(){
+    const boxes = Array.from(document.querySelectorAll('.week-top .day:not(.small) .planBox'));
+    if (!boxes.length) return;
+    boxes.forEach(b => b.style.height = 'auto');
+    const maxH = Math.max(...boxes.map(b => b.getBoundingClientRect().height));
+    boxes.forEach(b => b.style.height = maxH + 'px');
+  }
+  function equalizeBringHeights(){
+    const boxes = Array.from(document.querySelectorAll('.week-top .day:not(.small) .bringBox'));
+    if (!boxes.length) return;
+    boxes.forEach(b => b.style.height = 'auto');
+    const maxH = Math.max(...boxes.map(b => b.getBoundingClientRect().height));
+    boxes.forEach(b => b.style.height = maxH + 'px');
+  }
+
+  /* Layout-sync: equalizers + mededelingen */
+  function scheduleLayoutSync(){
+    requestAnimationFrame(()=>{
+      equalizePlanHeights();
+      // equalizeBringHeights();    // haal uit commentaar indien gewenst
+      syncNotesToWeekend();
+    });
+  }
+  window.addEventListener('resize', scheduleLayoutSync);
+  new ResizeObserver(scheduleLayoutSync).observe($('#weekendCol'));
+
+  /* Bij elke input in plan/bring: meteen her-equalizen */
+  document.addEventListener('input', (e)=>{
+    if (e.target && e.target.closest && e.target.closest('.planBox, .bringBox')) {
+      scheduleLayoutSync();
+    }
+  });
+
+  /* Mededelingen actief maken */
+  if (notesPanel){
+    notesPanel.addEventListener('pointerdown', ()=> { lastFocusedHost = notesPanel; setActiveHost(notesPanel); });
+    notesBody.addEventListener('focusin', (e)=>{ e.stopPropagation(); lastFocusedHost = notesPanel; setActiveHost(notesPanel); });
+    notesBody.addEventListener('pointerdown', (e)=>{ e.stopPropagation(); lastFocusedHost = notesPanel; setActiveHost(notesPanel); });
+  }
+
+  /* Init */
+  (function init(){
+    aktieveKlas = 'L2';
+    tplSel.value = 'L2';
+    const today=new Date();
+    const wd=(today.getDay()+6)%7;
+    const mon=new Date(today); mon.setDate(today.getDate()-wd);
+    $$('.day').forEach(d=>{
+      const idx=parseInt(d.dataset.dayIndex,10);
+      const ref=new Date(mon); ref.setDate(mon.getDate()+idx);
+      const dp=d.querySelector('.datePicker'); dp.valueAsDate=ref; dp.dispatchEvent(new Event('change'));
+    });
+    applyTemplate();
+    upgradeWeekendToEditable();
+    dock.hidden = true;
+    $$('.day').forEach(updatePlanBoxClass);
+    ensureTaskDeleteButtons(document);
+    scheduleLayoutSync();
+    pushSnapshot();
+    // Sla lege beginstaat op voor beide tabs
+    // L2 is actief → sla op als L2
+    tabState['L2'] = captureAllVoorTab();
+    // L1 staat initialiseren als lege staat met bijtje
+    tabState['L1'] = null; // wordt aangemaakt bij eerste klik op L1
+  })();
+
+  /* Takenlijst UX */
+  document.addEventListener('keydown', (e)=>{
+    const t = e.target;
+    if (!t || !t.classList || !t.classList.contains('tasktext')) return;
+
+    if (e.key === 'Enter'){
+      e.preventDefault();
+      try { document.execCommand('insertLineBreak'); }
+      catch(_){ document.execCommand('insertHTML', false, '<br>'); }
+      pushSnapshot(); return;
+    }
+    if (e.key === 'Backspace'){
+      const sel = window.getSelection();
+      const atStart = sel && sel.anchorOffset === 0 && sel.isCollapsed;
+      const isEmpty = (t.innerText || '').trim() === '';
+      if (atStart && isEmpty){
+        const li  = t.closest('li');
+        const day = t.closest('.day');
+        e.preventDefault();
+        li?.remove();
+        if (day) updatePlanBoxClass(day);
+        pushSnapshot();
+      }
+    }
+  });
+
+  document.addEventListener('blur', (e)=>{
+    const t = e.target;
+    if (!t || !t.classList || !t.classList.contains('tasktext')) return;
+    if ((t.innerText || '').trim() === ''){
+      const li  = t.closest('li');
+      const day = t.closest('.day');
+      li?.remove();
+      if (day) updatePlanBoxClass(day);
+      pushSnapshot();
+    }
+  }, true);
+
+  document.addEventListener('keydown', (e)=>{
+    if (e.key === 'Delete') {
+      const node = selectedPicto || document.querySelector('.picto-free.selected');
+      if (node) { node.remove(); selectedPicto=null; pushSnapshot(); }
+    }
+  });
+
+  document.addEventListener('click', (e)=>{
+    if(!e.target.classList.contains('liDel')) return;
+    const li   = e.target.closest('li');
+    const day  = e.target.closest('day');
+    li?.remove();
+    const dd = e.target.closest('.day');
+    if (dd) updatePlanBoxClass(dd);
+    pushSnapshot();
+  });
+
+})();
+
+/* ====================================================
+   ARCHIEF – Firebase Realtime Database
+   ==================================================== */
+(function(){
+  const DB_URL = 'https://zisa-klasagenda-default-rtdb.europe-west1.firebasedatabase.app';
+  const GRAAD  = '1stegraad';
+
+  const btnBewaar = document.getElementById('btnBewaar');
+
+  async function dbSet(path, data){
+    const r = await fetch(`${DB_URL}/${path}.json`, {
+      method: 'PUT',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify(data)
+    });
+    if (!r.ok) throw new Error('Firebase fout: ' + r.status);
+    return r.json();
+  }
+
+  function getMaandInfo(){
+    const dp = document.querySelector('.datePicker');
+    if (!dp || !dp.value) return null;
+    const d = new Date(dp.value);
+    const maand = d.toLocaleDateString('nl-BE',{month:'long'});
+    const jaar = d.getFullYear();
+    const weekInMaand = Math.ceil(d.getDate() / 7);
+    return { jaar, maand, weekInMaand };
+  }
+
+  function toonModal(){
+    return new Promise(resolve => {
+      // Overlay
+      const ov = document.createElement('div');
+      ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9000;display:flex;align-items:center;justify-content:center';
+
+      const box = document.createElement('div');
+      box.style.cssText = 'background:#fff;border-radius:14px;padding:28px 32px;min-width:340px;max-width:420px;box-shadow:0 8px 40px rgba(0,0,0,.18);font-family:Arial,sans-serif';
+
+      const wl = getMaandInfo();
+      const weekInfo = wl ? `<p style="margin:.3rem 0;color:#374151;font-size:13pt">📅 ${wl.maand} ${wl.jaar}</p>` : '';
+
+      box.innerHTML = `
+        <h2 style="margin:0 0 .6rem;font-size:15pt">📚 Bewaar in archief</h2>
+        ${weekInfo}
+        <label style="display:block;margin:.8rem 0 .3rem;font-weight:700">Jouw naam (verschijnt in het archief):</label>
+        <input id="archiefNaam" type="text" placeholder="bv. Juf Zisa" style="width:100%;padding:.5rem .7rem;border:1.5px solid #d1d5db;border-radius:8px;font-size:12pt;box-sizing:border-box">
+        <label style="display:block;margin:.8rem 0 .3rem;font-weight:700">Klas:</label>
+        <select id="archiefKlas" style="width:100%;padding:.5rem .7rem;border:1.5px solid #d1d5db;border-radius:8px;font-size:12pt;box-sizing:border-box">
+          <option value="L1" ${aktieveKlas==='L1'?'selected':''}>L1</option>
+          <option value="L2" ${aktieveKlas==='L2'?'selected':''}>L2</option>
+        </select>
+        <label style="display:block;margin:.8rem 0 .3rem;font-weight:700">Week van de maand:</label>
+        <select id="archiefWeek" style="width:100%;padding:.5rem .7rem;border:1.5px solid #d1d5db;border-radius:8px;font-size:12pt;box-sizing:border-box">
+          <option value="1" ${wl&&wl.weekInMaand===1?'selected':''}>Week 1</option>
+          <option value="2" ${wl&&wl.weekInMaand===2?'selected':''}>Week 2</option>
+          <option value="3" ${wl&&wl.weekInMaand===3?'selected':''}>Week 3</option>
+          <option value="4" ${wl&&wl.weekInMaand===4?'selected':''}>Week 4</option>
+          <option value="5" ${wl&&wl.weekInMaand===5?'selected':''}>Week 5</option>
+        </select>
+        <div style="display:flex;gap:.7rem;margin-top:1.2rem;justify-content:flex-end">
+          <button id="archiefAnnul" style="padding:.5rem 1.1rem;border:1px solid #d1d5db;background:#f9fafb;border-radius:8px;cursor:pointer;font-size:11pt">Annuleer</button>
+          <button id="archiefOk" style="padding:.5rem 1.4rem;border:none;background:#16a34a;color:#fff;border-radius:8px;cursor:pointer;font-weight:700;font-size:11pt">Bewaren</button>
+        </div>
+        <p id="archiefMsg" style="margin:.7rem 0 0;font-size:10pt;color:#6b7280"></p>
+      `;
+
+      ov.appendChild(box);
+      document.body.appendChild(ov);
+
+      document.getElementById('archiefAnnul').onclick = () => { document.body.removeChild(ov); resolve(null); };
+      document.getElementById('archiefOk').onclick = async () => {
+        const naam = document.getElementById('archiefNaam').value.trim();
+        const klas = document.getElementById('archiefKlas').value;
+        const week = document.getElementById('archiefWeek').value;
+        const msg  = document.getElementById('archiefMsg');
+        if (!naam){ msg.textContent = '⚠️ Vul eerst je naam in.'; msg.style.color='#b91c1c'; return; }
+        const mi = getMaandInfo();
+        if (!mi){ msg.textContent = '⚠️ Stel eerst de datum in op de agenda.'; msg.style.color='#b91c1c'; return; }
+        msg.textContent = '⏳ Bezig met bewaren…'; msg.style.color='#374151';
+        document.getElementById('archiefOk').disabled = true;
+        resolve({ naam, klas, maand: mi.maand, jaar: mi.jaar, week });
+        document.body.removeChild(ov);
+      };
+    });
+  }
+
+  /* ══════════════════════════════════════════
+     ARCHIEF RAADPLEGEN – inline modal
+     ══════════════════════════════════════════ */
   function toonArchiefToast(tekst){
     let t=document.getElementById('archiefToast');
     if (!t){ t=document.createElement('div'); t.id='archiefToast';
