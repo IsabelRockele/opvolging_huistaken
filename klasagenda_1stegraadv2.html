@@ -189,7 +189,7 @@
     font-size: var(--bring-fs, 12pt);
   }
   .bringText[contenteditable]{min-height:8mm;outline:none}
-  .picto-inline img{height:16px;vertical-align:text-bottom}
+  .picto-inline img{vertical-align:middle}
 
   /* Mededelingen */
   .panel{position:relative;border:2.6px solid var(--line);border-radius:7px;background:#fff;display:flex;flex-direction:column;height:1px; z-index:0;}
@@ -370,12 +370,18 @@
   <!-- PICTOGRAMMEN -->
   <aside class="dock" aria-label="Pictogrammen">
     <h4>Pictogrammen</h4>
+    <div style="display:flex;gap:.3rem;margin-bottom:.4rem">
+      <button id="btnPictoModeVrij" title="Vrij zwevend plaatsen — sleep naar gewenste plek"
+        style="flex:1;padding:.25rem .3rem;font-size:.75rem;font-weight:700;border-radius:6px;cursor:pointer;border:2px solid #0a66c2;background:#0a66c2;color:#fff">🖼 Vrij</button>
+      <button id="btnPictoModeInline" title="Inline in de tekst — cursor staat er direct naast"
+        style="flex:1;padding:.25rem .3rem;font-size:.75rem;font-weight:700;border-radius:6px;cursor:pointer;border:2px solid #d0d7de;background:#fff;color:#111">📌 Inline</button>
+    </div>
     <div class="picto-grid" id="pictoGrid"></div>
     <div class="uploadRow">
       <button id="btnUploadPicto" title="Eigen pictogram toevoegen">Eigen pictogram…</button>
       <input id="fileUploadPicto" type="file" accept="image/*" hidden>
     </div>
-    <small>Klik om een vrij pictogram te plaatsen. <strong>Ctrl-klik</strong> (Mac: Cmd-klik) = als inline pictogram in de tekst.</small>
+    <small id="pictoModeHint">Vrij: sleep het picto naar de juiste plek.</small>
   </aside>
 
 <script>
@@ -579,6 +585,8 @@ requestAnimationFrame(() => {
     </select>
     <div class="mt-sep"></div>
     <button class="mt-btn" id="mt-picto-btn" title="Pictogram toevoegen">🖼</button>
+    <button class="mt-btn" id="mt-picto-mode-vrij" title="Vrij zwevend (sleep naar plek)" style="font-size:10px;padding:2px 5px;background:#0a66c2;color:#fff;border-color:#0a66c2">Vrij</button>
+    <button class="mt-btn" id="mt-picto-mode-inline" title="Inline in tekst (cursor staat ernaast)" style="font-size:10px;padding:2px 5px">Inline</button>
     <div class="mt-sep"></div>
     <button class="mt-btn" id="mt-undo" title="Ongedaan maken">↩</button>
   `;
@@ -665,8 +673,8 @@ requestAnimationFrame(() => {
   let _savedRange = null;
   function saveSelection(){
     const sel = window.getSelection();
-    if (sel && sel.rangeCount > 0 && !sel.isCollapsed){
-      _savedRange = sel.getRangeAt(0).cloneRange();
+    if (sel && sel.rangeCount > 0){
+      _savedRange = sel.getRangeAt(0).cloneRange(); // ook collapsed cursor opslaan
     }
   }
   function restoreSelection(){
@@ -844,6 +852,31 @@ requestAnimationFrame(() => {
   document.getElementById('mt-picto-btn').addEventListener('click', e => {
     e.stopPropagation();
     mtPictoGrid.classList.toggle('open');
+  });
+
+  function updateMtPictoModeButtons(){
+    const vrij = document.getElementById('mt-picto-mode-vrij');
+    const inl  = document.getElementById('mt-picto-mode-inline');
+    if (_pictoModus === 'inline'){
+      inl.style.background  = '#0a66c2'; inl.style.color = '#fff'; inl.style.borderColor = '#0a66c2';
+      vrij.style.background = '#2d3f55'; vrij.style.color = '#e2e8f0'; vrij.style.borderColor = 'rgba(255,255,255,.2)';
+    } else {
+      vrij.style.background = '#0a66c2'; vrij.style.color = '#fff'; vrij.style.borderColor = '#0a66c2';
+      inl.style.background  = '#2d3f55'; inl.style.color = '#e2e8f0'; inl.style.borderColor = 'rgba(255,255,255,.2)';
+    }
+  }
+  document.getElementById('mt-picto-mode-vrij').addEventListener('click', e => {
+    e.stopPropagation();
+    _pictoModus = 'vrij';
+    // Sync ook de dock-knoppen
+    document.getElementById('btnPictoModeVrij').click();
+    updateMtPictoModeButtons();
+  });
+  document.getElementById('mt-picto-mode-inline').addEventListener('click', e => {
+    e.stopPropagation();
+    _pictoModus = 'inline';
+    document.getElementById('btnPictoModeInline').click();
+    updateMtPictoModeButtons();
   });
 
   // Herpositioneer bij scrollen/resize
@@ -1223,18 +1256,59 @@ requestAnimationFrame(() => {
     pictoGrid.appendChild(cell);
   });
 
+  // Picto-modus: 'vrij' of 'inline'
+  // Sla cursor op bij aanraken van het pictogrammen-paneel
+  document.querySelector('.dock').addEventListener('pointerdown', ()=>{ saveSelection(); });
+
+  let _pictoModus = 'vrij';
+
+  document.getElementById('btnPictoModeVrij').addEventListener('click', ()=>{
+    _pictoModus = 'vrij';
+    document.getElementById('btnPictoModeVrij').style.cssText += ';background:#0a66c2;color:#fff;border-color:#0a66c2';
+    document.getElementById('btnPictoModeInline').style.cssText += ';background:#fff;color:#111;border-color:#d0d7de';
+    document.getElementById('pictoModeHint').textContent = 'Vrij: sleep het picto naar de juiste plek.';
+  });
+  document.getElementById('btnPictoModeInline').addEventListener('click', ()=>{
+    _pictoModus = 'inline';
+    document.getElementById('btnPictoModeInline').style.cssText += ';background:#0a66c2;color:#fff;border-color:#0a66c2';
+    document.getElementById('btnPictoModeVrij').style.cssText += ';background:#fff;color:#111;border-color:#d0d7de';
+    document.getElementById('pictoModeHint').textContent = 'Inline: klik eerst in de tekst waar het picto moet komen, dan kies je picto.';
+  });
+
   function handlePictoInsert(src, ev){
     const sel=window.getSelection();
     const ae=document.activeElement;
-    const wantInline = (ev && (ev.ctrlKey || ev.metaKey));
+    const wantInline = _pictoModus === 'inline' || (ev && (ev.ctrlKey || ev.metaKey));
 
     /* Inline in tekst */
-    if (wantInline && ae && ae.isContentEditable && sel && sel.rangeCount){
-      const span=document.createElement('span'); span.className='picto-inline';
-      span.innerHTML=`<img src="${src}" alt="picto" style="height:16px;vertical-align:text-bottom">`;
-      const r=sel.getRangeAt(0); r.deleteContents(); r.insertNode(span);
-      r.setStartAfter(span); r.setEndAfter(span); sel.removeAllRanges(); sel.addRange(r);
-      pushSnapshot();
+    if (wantInline){
+      restoreSelection(); // herstel cursor die verloren ging bij dock/toolbar-klik
+      const sel = window.getSelection();
+      const ae = document.activeElement;
+      if (ae && ae.isContentEditable && sel && sel.rangeCount){
+        const span=document.createElement('span'); span.className='picto-inline';
+        span.style.cssText = 'display:inline-block;position:relative;vertical-align:middle;margin:0 3px;cursor:pointer';
+        const img = document.createElement('img');
+        img.src = src; img.alt = 'picto';
+        img.style.cssText = 'height:32px;width:auto;display:block;border-radius:4px';
+        img.title = 'Klik om te vergroten/verkleinen';
+        // Klik op inline picto: cyclus door groottes
+        const SIZES = [20,28,32,40,48,56,64];
+        img.addEventListener('click', e => {
+          e.stopPropagation();
+          const h = parseInt(img.style.height);
+          const idx = SIZES.indexOf(h);
+          const nieuw = SIZES[(idx + 1) % SIZES.length];
+          img.style.height = nieuw + 'px';
+          pushSnapshot();
+        });
+        span.appendChild(img);
+        const r=sel.getRangeAt(0); r.deleteContents(); r.insertNode(span);
+        r.setStartAfter(span); r.setEndAfter(span); sel.removeAllRanges(); sel.addRange(r);
+        pushSnapshot();
+      } else {
+        alert('Klik eerst in de tekst op de plek waar het picto moet komen, en kies dan het picto.');
+      }
       return;
     }
 
@@ -1836,6 +1910,22 @@ upgradeWeekendToEditable();
   new ResizeObserver(scheduleLayoutSync).observe($('#weekTop'));
 
   /* Bij elke input in plan/bring: meteen her-equalizen + overflow check */
+  // Verwijder geselecteerde inline picto met Backspace of Delete
+  document.addEventListener('keydown', (e)=>{
+    if (e.key !== 'Backspace' && e.key !== 'Delete') return;
+    const sel = window.getSelection();
+    if (!sel || sel.isCollapsed || sel.rangeCount === 0) return;
+    const range = sel.getRangeAt(0);
+    // Kijk of de selectie een inline picto bevat
+    const frag = range.cloneContents();
+    const pictos = frag.querySelectorAll('.picto-inline');
+    if (pictos.length === 0) return;
+    // Er zit een picto in de selectie — verwijder alles
+    range.deleteContents();
+    e.preventDefault();
+    pushSnapshot();
+  });
+
   document.addEventListener('input', (e)=>{
     if (e.target && e.target.closest && e.target.closest('.planBox, .bringBox, .day')) {
       scheduleLayoutSync();
