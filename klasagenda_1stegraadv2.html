@@ -431,12 +431,10 @@
     upgradeWeekendToEditable();
     $$('.day').forEach(updatePlanBoxClass);
     ensureTaskDeleteButtons(document);
-    _maxNotesH = 0;
-    scheduleLayoutSync();
-    requestAnimationFrame(()=> requestAnimationFrame(()=>{
-      const wc = document.getElementById('weekendCol');
-      if (wc && wc.offsetHeight > 50) _maxNotesH = wc.offsetHeight;
-    }));
+   _maxNotesH = 0;
+const _wcVoor = document.getElementById('weekendCol');
+if (_wcVoor && _wcVoor.offsetHeight > 50) _maxNotesH = _wcVoor.offsetHeight;
+window._klasagenda.equalizePlanHeights();
     pushSnapshot();
   }
 
@@ -1729,6 +1727,7 @@ upgradeWeekendToEditable();
     makeFreePicto,
     applyPanelPictos,
     scheduleLayoutSync,
+    syncNotesToWeekend,
     equalizePlanHeights,
     pushSnapshot,
     updatePlanBoxClass,
@@ -2082,9 +2081,17 @@ upgradeWeekendToEditable();
               const planBoxEl = doelDag.querySelector(`[data-key="d${idx2}.plan"]`);
               const ta = planBoxEl?.querySelector('.wkTA');
               const ce = planBoxEl?.querySelector('.wkCE[contenteditable]');
-              if (ce) ce.innerHTML = dag.weekendHtml || dag.plan || '';
-              else if (ta) ta.value = dag.weekendText || '';
-              else if (planBoxEl) planBoxEl.innerHTML = dag.plan || '';
+              if (ce) {
+                // weekendHtml = ce.innerHTML (correct), dag.plan = volledige planBox HTML (bevat wrapper-div → niet gebruiken)
+                if (dag.weekendHtml != null) {
+                  ce.innerHTML = dag.weekendHtml;
+                } else if (dag.weekendText) {
+                  ce.innerText = dag.weekendText;
+                }
+                // dag.plan niet gebruiken als fallback: die bevat de wkCE-wrapper zelf
+              } else if (ta) {
+                ta.value = dag.weekendText || '';
+              }
               // Ik denk aan
               const br = doelDag.querySelector(`[data-key="d${idx2}.bring"]`);
               if (br) br.innerHTML = dag.bring || '';
@@ -2112,14 +2119,16 @@ upgradeWeekendToEditable();
               }
             });
             // Paneel-picto's: NIET applyPanelPictos aanroepen want die zitten al in notes HTML
-            window._klasagenda.pushSnapshot();
-            // Reset _maxNotesH en meet opnieuw — anders groeien weekend + mededelingen
-            _maxNotesH = 0;
-            window._klasagenda.equalizePlanHeights();
-            requestAnimationFrame(()=> requestAnimationFrame(()=>{
-              const wc = document.getElementById('weekendCol');
-              if (wc && wc.offsetHeight > 50) _maxNotesH = wc.offsetHeight;
-            }));
+          window._klasagenda.pushSnapshot();
+_maxNotesH = 0;
+window._klasagenda.equalizePlanHeights();
+requestAnimationFrame(() => {
+  requestAnimationFrame(() => {
+    const wc = document.getElementById('weekendCol');
+    if (wc && wc.offsetHeight > 50) _maxNotesH = wc.offsetHeight;
+    window._klasagenda.syncNotesToWeekend();
+  });
+});
             toonArchiefToast(`✅ Hele week van ${naam} overgenomen — inclusief picto's!`);
             return;
           }
@@ -2149,9 +2158,17 @@ upgradeWeekendToEditable();
             const planBoxEl = doelDag.querySelector(`[data-key="d${idx2}.plan"]`);
             const ta = planBoxEl?.querySelector('.wkTA');
             const ce = planBoxEl?.querySelector('.wkCE[contenteditable]');
-            if (ce) ce.innerHTML = dag.weekendHtml || dag.plan || '';
-            else if (ta) ta.value = dag.weekendText || '';
-            else if (planBoxEl) planBoxEl.innerHTML = dag.plan || '';
+            if (ce) {
+              if (dag.weekendHtml != null) {
+                ce.innerHTML = dag.weekendHtml;
+              } else if (dag.weekendText) {
+                ce.innerText = dag.weekendText;
+              }
+            } else if (ta) {
+              ta.value = dag.weekendText || '';
+            } else if (planBoxEl) {
+              planBoxEl.innerHTML = dag.plan || '';
+            }
           }
           if (type === 'bring' || type === 'alles'){
             const br = doelDag.querySelector(`[data-key="d${idx2}.bring"]`);
