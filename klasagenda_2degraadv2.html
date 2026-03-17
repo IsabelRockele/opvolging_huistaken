@@ -202,12 +202,12 @@
   }
 
   /* Pictopaneel (niet in print) */
-  .dock{position:fixed;right:16px;top:76px;z-index:60;width:260px;background:#fff;border:1px solid #e5e7eb;border-radius:10px;box-shadow:0 6px 24px rgba(0,0,0,.08);padding:.7rem}
-  .dock h4{margin:.1rem 0 .4rem;font-size:1rem}
-  .picto-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem}
-  .picto{border:1px solid #e5e7eb;border-radius:8px;background:#fafbfc;display:flex;align-items:center;justify-content:center;padding:.35rem;cursor:pointer}
+  .dock{position:fixed;right:16px;top:76px;z-index:60;width:180px;background:#fff;border:1px solid #e5e7eb;border-radius:8px;box-shadow:0 4px 14px rgba(0,0,0,.07);padding:.45rem;opacity:.92}
+  .dock h4{margin:.1rem 0 .3rem;font-size:.8rem;color:#6b7280;font-weight:600;text-transform:uppercase;letter-spacing:.04em}
+  .picto-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:.3rem}
+  .picto{border:1px solid #e5e7eb;border-radius:6px;background:#fafbfc;display:flex;align-items:center;justify-content:center;padding:.2rem;cursor:pointer}
   .picto:hover{background:#f0f4f8}
-  .picto img{width:42px;height:42px;object-fit:contain}
+  .picto img{width:28px;height:28px;object-fit:contain}
   .dock small{color:#6b7280;display:block;margin-top:.35rem}
   .dock[hidden]{ display:none !important; }
   .dock .uploadRow{ margin-top:.5rem; display:flex; gap:.5rem; align-items:center; }
@@ -530,14 +530,37 @@
     <div class="mt-sep"></div>
     <button class="mt-btn" id="mt-smaller" title="Geselecteerde tekst kleiner">A−</button>
     <select id="mt-fontsize" title="Tekengrootte geselecteerde tekst" style="background:#2d3f55;color:#e2e8f0;border:1px solid rgba(255,255,255,.2);border-radius:5px;padding:2px 4px;font-size:12px;cursor:pointer">
-      <option value="1">8pt</option>
-      <option value="2">10pt</option>
-      <option value="3" selected>12pt</option>
-      <option value="4">14pt</option>
-      <option value="5">18pt</option>
-      <option value="6">24pt</option>
+      <option value="4">4pt</option>
+      <option value="5">5pt</option>
+      <option value="6">6pt</option>
+      <option value="7">7pt</option>
+      <option value="8">8pt</option>
+      <option value="9">9pt</option>
+      <option value="10">10pt</option>
+      <option value="11">11pt</option>
+      <option value="12" selected>12pt</option>
     </select>
     <button class="mt-btn" id="mt-bigger" title="Geselecteerde tekst groter">A+</button>
+    <div class="mt-sep"></div>
+    <span style="color:#e2e8f0;font-size:11px;white-space:nowrap" title="Regelafstand">↕</span>
+    <select id="mt-lineheight" title="Regelafstand" style="background:#2d3f55;color:#e2e8f0;border:1px solid rgba(255,255,255,.2);border-radius:5px;padding:2px 4px;font-size:12px;cursor:pointer">
+      <option value="0.5">0.5×</option>
+      <option value="0.75">0.75×</option>
+      <option value="1">1×</option>
+      <option value="1.15">1.15×</option>
+      <option value="1.28" selected>1.28×</option>
+      <option value="1.5">1.5×</option>
+      <option value="2">2×</option>
+    </select>
+    <div class="mt-sep"></div>
+    <select id="mt-color" title="Tekstkleur" style="background:#2d3f55;color:#e2e8f0;border:1px solid rgba(255,255,255,.2);border-radius:5px;padding:2px 4px;font-size:12px;cursor:pointer">
+      <option value="#111111">⬛ zwart</option>
+      <option value="#0b4dad">🔵 blauw</option>
+      <option value="#117a2c">🟢 groen</option>
+      <option value="#c22727">🔴 rood</option>
+      <option value="#7c3aed">🟣 paars</option>
+      <option value="#d97706">🟠 oranje</option>
+    </select>
     <div class="mt-sep"></div>
     <button class="mt-btn" id="mt-bullet" title="Bolletje toevoegen">● +</button>
     <select id="mt-bulletsize" title="Bolletjesgrootte van deze dag" style="background:#2d3f55;color:#e2e8f0;border:1px solid rgba(255,255,255,.2);border-radius:5px;padding:2px 4px;font-size:12px;cursor:pointer">
@@ -589,9 +612,12 @@
     const barH = 42;
     let top = rect.top - barH - 8 + window.scrollY;
     if (top < 8 + window.scrollY) top = rect.bottom + 6 + window.scrollY;
+    // Meet de echte breedte van de toolbar na render
+    miniBar.classList.add('visible');
+    const barW = miniBar.offsetWidth || 560;
     let left = rect.left + window.scrollX;
-    const barW = 440;
-    if (left + barW > window.innerWidth - 8) left = window.innerWidth - barW - 8;
+    if (left + barW > window.scrollX + window.innerWidth - 8) left = window.scrollX + window.innerWidth - barW - 8;
+    if (left < window.scrollX + 8) left = window.scrollX + 8;
     miniBar.style.top  = top + 'px';
     miniBar.style.left = left + 'px';
     miniBar.classList.add('visible');
@@ -626,15 +652,32 @@
     if (panel) { toonMiniBar(panel); return; }
     if (!inMini && !inToolbar) verbergMiniBar();
   }, true);
-  miniBar.addEventListener('pointerdown', e => e.stopPropagation());
+  let _savedRange = null;
+  function saveSelection(){
+    const sel = window.getSelection();
+    if (sel && sel.rangeCount > 0 && !sel.isCollapsed){
+      _savedRange = sel.getRangeAt(0).cloneRange();
+    }
+  }
+  function restoreSelection(){
+    if (!_savedRange) return;
+    const sel = window.getSelection();
+    sel.removeAllRanges();
+    sel.addRange(_savedRange);
+  }
+  miniBar.addEventListener('pointerdown', e => {
+    saveSelection();
+    e.stopPropagation();
+  });
 
   // Knoppen
   function mtExec(cmd){ document.execCommand(cmd); }
 
-  document.getElementById('mt-bold').addEventListener('click', ()=>{ mtExec('bold'); pushSnapshot(); });
-  document.getElementById('mt-italic').addEventListener('click', ()=>{ mtExec('italic'); pushSnapshot(); });
-  document.getElementById('mt-underline').addEventListener('click', ()=>{ mtExec('underline'); pushSnapshot(); });
+  document.getElementById('mt-bold').addEventListener('click', ()=>{ restoreSelection(); mtExec('bold'); pushSnapshot(); });
+  document.getElementById('mt-italic').addEventListener('click', ()=>{ restoreSelection(); mtExec('italic'); pushSnapshot(); });
+  document.getElementById('mt-underline').addEventListener('click', ()=>{ restoreSelection(); mtExec('underline'); pushSnapshot(); });
   document.getElementById('mt-fluo').addEventListener('click', ()=>{
+    restoreSelection();
     document.execCommand('hiliteColor', false, '#ffff66');
     pushSnapshot();
   });
@@ -646,30 +689,126 @@
     document.getElementById('btnAddBullet').click();
   });
 
-  // Tekstgrootte op selectie (zoals Word) via fontSize command
-  // fontSize 1-6 → 8,10,12,14,18,24pt
-  const MT_SIZES = [null,'8pt','10pt','12pt','14pt','18pt','24pt'];
+  // Tekstgrootte op selectie via inline font-size style (per 1pt, zoals Word)
+  const MT_SIZES = [4,5,6,7,8,9,10,11,12];
+
+  function getSelectionFontSize(){
+    const sel = window.getSelection();
+    if (!sel || sel.rangeCount === 0) return 12;
+    const node = sel.getRangeAt(0).startContainer;
+    const el = node.nodeType === 3 ? node.parentElement : node;
+    const cs = window.getComputedStyle(el);
+    return Math.round(parseFloat(cs.fontSize) * 0.75); // px → pt
+  }
+
+  function getCaretBlock(){
+    const sel = window.getSelection();
+    if (!sel || sel.rangeCount === 0) return null;
+    const node = sel.getRangeAt(0).startContainer;
+    let el = node.nodeType === 3 ? node.parentElement : node;
+    while (el && el.contentEditable !== 'true'){
+      const d = getComputedStyle(el).display;
+      if (d === 'block' || d === 'list-item' || d === 'flex') return el;
+      el = el.parentElement;
+    }
+    return el;
+  }
+
+  function applyFontSizePt(pt){
+    const sel = window.getSelection();
+    if (!sel || sel.rangeCount === 0) return;
+    if (sel.isCollapsed){
+      const block = getCaretBlock();
+      if (block && block.contentEditable !== 'true') block.style.fontSize = pt + 'pt';
+      return;
+    }
+    const range = sel.getRangeAt(0);
+    const span = document.createElement('span');
+    span.style.fontSize = pt + 'pt';
+    try { range.surroundContents(span); }
+    catch(e) {
+      const frag = range.extractContents();
+      span.appendChild(frag);
+      range.insertNode(span);
+    }
+    const newRange = document.createRange();
+    newRange.selectNodeContents(span);
+    sel.removeAllRanges();
+    sel.addRange(newRange);
+  }
+
+  function updateFontsizeSelect(){
+    const pt = getSelectionFontSize();
+    const sel = document.getElementById('mt-fontsize');
+    let best = '12';
+    let bestDist = 999;
+    for (const opt of sel.options){
+      const d = Math.abs(parseInt(opt.value) - pt);
+      if (d < bestDist){ bestDist = d; best = opt.value; }
+    }
+    sel.value = best;
+  }
 
   document.getElementById('mt-smaller').addEventListener('click', ()=>{
+    restoreSelection();
     const sel = document.getElementById('mt-fontsize');
-    const huidig = parseInt(sel.value);
-    if (huidig > 1){
-      sel.value = huidig - 1;
-      document.execCommand('fontSize', false, huidig - 1);
-      pushSnapshot();
-    }
+    const idx = MT_SIZES.indexOf(parseInt(sel.value));
+    const nieuw = idx > 0 ? MT_SIZES[idx-1] : MT_SIZES[0];
+    sel.value = nieuw;
+    applyFontSizePt(nieuw);
+    pushSnapshot();
   });
   document.getElementById('mt-bigger').addEventListener('click', ()=>{
+    restoreSelection();
     const sel = document.getElementById('mt-fontsize');
-    const huidig = parseInt(sel.value);
-    if (huidig < 6){
-      sel.value = huidig + 1;
-      document.execCommand('fontSize', false, huidig + 1);
-      pushSnapshot();
-    }
+    const idx = MT_SIZES.indexOf(parseInt(sel.value));
+    const nieuw = idx < MT_SIZES.length-1 ? MT_SIZES[idx+1] : MT_SIZES[MT_SIZES.length-1];
+    sel.value = nieuw;
+    applyFontSizePt(nieuw);
+    pushSnapshot();
   });
   document.getElementById('mt-fontsize').addEventListener('change', e=>{
-    document.execCommand('fontSize', false, e.target.value);
+    restoreSelection();
+    applyFontSizePt(parseInt(e.target.value));
+    pushSnapshot();
+  });
+
+  // Regelafstand op cursor-positie of selectie
+  document.getElementById('mt-lineheight').addEventListener('change', e=>{
+    const lh = e.target.value;
+    const sel = window.getSelection();
+    if (!sel || sel.rangeCount === 0) return;
+    if (sel.isCollapsed){
+      const block = getCaretBlock();
+      if (block && block.contentEditable !== 'true') block.style.lineHeight = lh;
+    } else {
+      const range = sel.getRangeAt(0);
+      const ancestor = range.commonAncestorContainer;
+      const el = ancestor.nodeType === 3 ? ancestor.parentElement : ancestor;
+      let block = el;
+      while (block && block.contentEditable !== 'true' && getComputedStyle(block).display === 'inline'){
+        block = block.parentElement;
+      }
+      if (block && block.contentEditable !== 'true'){
+        block.style.lineHeight = lh;
+      } else {
+        const span = document.createElement('span');
+        span.style.lineHeight = lh;
+        try { range.surroundContents(span); }
+        catch(e2) {
+          const frag = range.extractContents();
+          span.appendChild(frag);
+          range.insertNode(span);
+        }
+      }
+    }
+    pushSnapshot();
+  });
+
+  // Tekstkleur op selectie (herstel selectie want die gaat verloren bij dropdown-klik)
+  document.getElementById('mt-color').addEventListener('change', e=>{
+    restoreSelection();
+    document.execCommand('foreColor', false, e.target.value);
     pushSnapshot();
   });
 
@@ -953,6 +1092,7 @@
       }
     });
   }
+
 
   /* Zwemweek: alleen de zin in Ik denk aan */
   function toggleSwimWeek(on){
@@ -1719,7 +1859,6 @@ upgradeWeekendToEditable();
   document.addEventListener('click', (e)=>{
     if(!e.target.classList.contains('liDel')) return;
     const li   = e.target.closest('li');
-    const day  = e.target.closest('day');
     li?.remove();
     const dd = e.target.closest('.day');
     if (dd) updatePlanBoxClass(dd);
@@ -1896,10 +2035,11 @@ upgradeWeekendToEditable();
   document.getElementById('btnArchief').addEventListener('click', ()=>{
     const mi = getMaandInfo();
     const huidigJaar = new Date().getFullYear();
-    // Jaar-opties vullen: huidig jaar + 4 jaar terug
+    // Jaar-opties vullen: alleen jaren vanaf 2025 (lopende en toekomstige schooljaren)
     const arfJaar = document.getElementById('arfJaar');
     arfJaar.innerHTML = '';
-    for (let j = huidigJaar; j >= huidigJaar - 4; j--){
+    const minJaar = 2025;
+    for (let j = huidigJaar; j >= minJaar; j--){
       const opt = document.createElement('option');
       opt.value = j;
       opt.textContent = j;
