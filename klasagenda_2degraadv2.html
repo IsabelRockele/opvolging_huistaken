@@ -238,10 +238,17 @@
     z-index: 10;
   }
 
+ /* PRINT */
   @media print{
     @page{ size: A4 landscape; margin: 0 }
 
-    .toolbar, .dock, .mini-toolbar, .klas-tabs{ display: none !important; }
+    /* 1. Verberg alle UI-elementen EN de gele autosave-balk */
+    .toolbar, .dock, .mini-toolbar, .klas-tabs, 
+    div[style*="background:#fffbeb"], 
+    div[style*="background: #fffbeb"] { 
+      display: none !important; 
+    }
+    
     body{ background:#fff; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
 
     [contenteditable], input, textarea { caret-color: transparent !important; }
@@ -259,12 +266,24 @@
       overflow: hidden;
     }
 
+    /* 2. Zorg dat mededelingen NOOIT een scrollbalk tonen op papier */
+    .panelBody {
+      overflow: hidden !important; 
+      height: auto !important; 
+      min-height: 0 !important;
+    }
+
     /* Dagvakken strikt begrenzen */
     .week-top{ overflow: hidden; }
     .week-top > .day{ overflow: hidden; max-height: 130mm; }
     .day .body{ overflow: hidden; }
-    .planBox{ overflow: hidden; }
-    .bringBox{ overflow: hidden; }
+    
+    /* Zorg dat vakken hun inhoud niet afknippen maar ook geen balken tonen */
+    .planBox, .bringBox { 
+      overflow: hidden !important; 
+      height: auto; 
+    }
+    
     .picto-free{ max-width: 100%; }
 
     .week-top > .day,
@@ -274,8 +293,7 @@
     }
 
     .panelBody:empty::before{ display:none; }
-    .picto-free .handle{ display:none !important; }
-    .picto-free.selected{ outline:none !important; }
+    .picto-free .handle, .picto-free.selected { display:none !important; outline:none !important; }
     .tasklist .liDel{ display:none !important; }
     .day.overflowing::after{ display:none; }
   }
