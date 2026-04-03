@@ -524,7 +524,7 @@
   const swimChk=$('#zwemweek');
 
   /* ── Tab-systeem: L1 / L2 ── */
-  let aktieveKlas = 'L2';
+  window.aktieveKlas = 'L2';
   const tabState = { L1: null, L2: null };
 
   function getKlasIcon(klas){
@@ -532,14 +532,14 @@
   }
 
   function wisselKlas(nieuweKlas){
-    if (nieuweKlas === aktieveKlas) return;
+    if (nieuweKlas === window.aktieveKlas) return;
 
     // 1) Huidige staat opslaan onder de huidige klas
-    tabState[aktieveKlas] = captureAllVoorTab();
+    tabState[window.aktieveKlas] = captureAllVoorTab();
 
     // 2) Tab UI bijwerken
     $$('.klas-tab').forEach(t => t.classList.toggle('active', t.dataset.klas === nieuweKlas));
-    aktieveKlas = nieuweKlas;
+    window.aktieveKlas = nieuweKlas;
     tplSel.value = nieuweKlas;
 
     // 3) DOM volledig leegmaken vóór laden
@@ -2681,14 +2681,16 @@ notesBody.addEventListener('input', ()=>{
               const ta = planBoxEl?.querySelector('.wkTA');
               const ce = planBoxEl?.querySelector('.wkCE[contenteditable]');
               if (ce) {
-                if (dag.weekendHtml != null) {
-                  ce.innerHTML = dag.weekendHtml;
-                } else if (dag.weekendText) {
-                  ce.innerText = dag.weekendText;
-                }
-              } else if (ta) {
-                ta.value = dag.weekendText || '';
-              }
+  if (dag.weekendHtml != null) {
+    ce.innerHTML = dag.weekendHtml;
+  } else if (dag.weekendText) {
+    ce.innerText = dag.weekendText;
+  }
+} else if (ta) {
+  ta.value = dag.weekendText || '';
+} else if (planBoxEl) {
+  planBoxEl.innerHTML = dag.plan || '';
+}
               // Ik denk aan
               const br = doelDag.querySelector(`[data-key="d${idx2}.bring"]`);
               if (br) br.innerHTML = dag.bring || '';
