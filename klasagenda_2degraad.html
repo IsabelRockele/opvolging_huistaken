@@ -6,81 +6,26 @@
 <title>Klasagenda L3–L4 – A4 liggend (Arial)</title>
 <style>
   :root{
-  --page-w: 297mm; --page-h: 210mm;
-  --m-top: 8mm; --m-side: 8mm;
-  --gap: 3.2mm;
-  --bottom-row-h: 84mm;
-  --ink:#111; --line:#111; --muted:#6b7280;
-}
+    --page-w: 297mm; --page-h: 210mm;
+    --m-top: 8mm; --m-side: 8mm;
+    --gap: 3.2mm;
+    --ink:#111; --line:#111; --muted:#6b7280;
+  }
   html,body{height:100%}
   body{margin:0;background:#f3f5f7;color:var(--ink);font-family:Arial,Helvetica,sans-serif;font-size:12pt;line-height:1.28}
   *{box-sizing:border-box}
 
-  /* Waarschuwing: dagvak te vol voor print */
-  .day.overflowing{ box-shadow: 0 0 0 2.5px #ef4444 !important; }
-  .day.overflowing::after{
-    content: '⚠️ te vol voor print';
-    position: absolute;
-    bottom: 2px; right: 4px;
-    font-size: 8pt;
-    color: #ef4444;
-    pointer-events: none;
-    z-index: 10;
-  }
-
-  /* Klas-tabs */
-  .klas-tabs{display:flex;gap:0;background:#e5e7eb;padding:0;border-bottom:2px solid #d0d7de;position:sticky;top:0;z-index:51}
-  .klas-tab{padding:.5rem 1.6rem;font-weight:700;font-size:1rem;cursor:pointer;border:none;background:transparent;border-bottom:3px solid transparent;margin-bottom:-2px;transition:all .15s;font-family:inherit;color:#6b7280}
-  .klas-tab.active{background:#fff;color:#0a66c2;border-bottom:3px solid #0a66c2}
-  .klas-tab:hover:not(.active){background:#f0f4f8;color:#111}
-
-  /* Zwevende mini-toolbar */
-  .mini-toolbar{
-    position:fixed;
-    z-index:200;
-    background:#1e293b;
-    border-radius:10px;
-    padding:5px 8px;
-    display:none;
-    align-items:center;
-    gap:3px;
-    box-shadow:0 4px 20px rgba(0,0,0,.28);
-    pointer-events:auto;
-    user-select:none;
-  }
-  .mini-toolbar.visible{ display:flex; }
-  .mt-btn{
-    appearance:none;border:none;background:transparent;color:#e2e8f0;
-    padding:4px 7px;border-radius:6px;cursor:pointer;font-size:13px;
-    font-family:Arial,sans-serif;font-weight:700;line-height:1.2;
-    transition:background .12s;white-space:nowrap;
-  }
-  .mt-btn:hover{ background:rgba(255,255,255,.15); }
-  .mt-btn.active-fmt{ background:rgba(99,179,237,.35);color:#fff; }
-  .mt-sep{ width:1px;height:20px;background:rgba(255,255,255,.18);margin:0 2px; }
-  .mt-picto-grid{
-    display:grid;grid-template-columns:repeat(4,1fr);gap:3px;
-    padding:6px;background:#1e293b;border-radius:8px;
-    position:absolute;top:calc(100% + 6px);left:0;
-    box-shadow:0 4px 20px rgba(0,0,0,.28);
-    display:none;
-  }
-  .mt-picto-grid.open{ display:grid; }
-  .mt-picto-item{
-    width:38px;height:38px;border-radius:6px;cursor:pointer;
-    display:flex;align-items:center;justify-content:center;
-    background:rgba(255,255,255,.08);
-  }
-  .mt-picto-item:hover{ background:rgba(255,255,255,.22); }
-  .mt-picto-item img{ width:28px;height:28px;object-fit:contain; }
-
   /* Toolbar (niet in print) */
-  .toolbar{position:sticky;top:42px;z-index:50;display:flex;flex-wrap:wrap;gap:.6rem 1rem;align-items:center;padding:.6rem .8rem;background:#fff;border-bottom:1px solid #e5e7eb}
+  .toolbar{position:sticky;top:0;z-index:50;display:flex;flex-wrap:wrap;gap:.6rem 1rem;align-items:center;padding:.6rem .8rem;background:#fff;border-bottom:1px solid #e5e7eb}
   .toolbar .group{display:flex;gap:.6rem;align-items:center;flex-wrap:wrap}
   .toolbar select{font:inherit;padding:.3rem .45rem}
   .toolbar button{appearance:none;border:1px solid #d0d7de;background:#fff;padding:.45rem .7rem;border-radius:.5rem;cursor:pointer;font-weight:700}
   .toolbar button.primary{background:#0a66c2;border-color:#0a66c2;color:#fff}
   .sep{width:1px;height:28px;background:#e5e7eb;margin:0 .25rem}
+
+  /* Meldingsbalk overflow */
+  .alert{display:none;align-items:center;gap:.6rem;background:#ffecec;border:1px solid #f2b8b5;color:#7a1f1a;padding:.45rem .7rem;border-radius:.5rem;}
+  .alert.show{display:flex}
 
   /* Pagina */
   .page{width:var(--page-w);min-height:var(--page-h);margin:0 auto;background:#fff;padding:var(--m-top) var(--m-side) var(--m-side) var(--m-side)}
@@ -90,51 +35,24 @@
   .right-head{display:flex;align-items:center;gap:6px}
   .monthBox{border:2px solid var(--line);border-radius:10px;padding:2px 8px;font-weight:700;background:#fff;min-width:52mm;text-transform:lowercase}
   .classIcon{
-  width: 22mm;              /* iets breder (mag u nog verhogen) */
-  height: 12mm;             /* HOUD deze hoogte: header blijft even hoog */
-  display: flex;
-  align-items: flex-end;    /* zet de zebra onderaan in het vak */
-  justify-content: center;
-  overflow: visible;        /* laat de afbeelding onder het vak uitsteken */
-}
-.classIcon img{
-  max-width: none;
-  max-height: none;
-  height: 18mm;             /* GROOTTE van de zebra  → verhoog/verlaag naar wens */
-  transform: translateY(1.2mm); /* duw hem nog iets lager richting vrijdagkader */
-  object-fit: contain;
-}
+    width:22mm;height:12mm;display:flex;align-items:flex-end;justify-content:center;overflow:visible;
+  }
+  .classIcon img{
+    max-width:none;max-height:none;height:18mm;transform:translateY(1.2mm);object-fit:contain;
+  }
+
   /* Grids */
   .week-top{display:grid;grid-template-columns:repeat(5,1fr);gap:var(--gap)}
-  .bottom-row{
-  display:grid;
-  grid-template-columns:1.5fr 3.5fr;
-  gap:var(--gap);
-  margin-top:3mm;
-  height:var(--bottom-row-h);
-}
-
-.weekendCol{
-  display:grid;
-  grid-template-rows:1fr 1fr;
-  gap:var(--gap);
-  height:100%;
-  min-height:0;
-}
+  .bottom-row{display:grid;grid-template-columns:1.5fr 3.5fr;gap:var(--gap);margin-top:3mm}
+  .weekendCol{display:grid;grid-template-rows:auto auto;gap:var(--gap)}
 
   /* Dagkaarten */
-  .day{position:relative;border:2.6px solid var(--line);border-radius:7px;background:#fff;display:flex;flex-direction:column;--bullet:14px;--plan-fs:12pt;--task-gap:6pt; z-index:1;}
- .day header{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  padding:2.6mm;
-  border-bottom:2.6px solid var(--line);
-  background:#f0f0f0;            /* lichtgrijs */
-  border-top-left-radius:7px;
-  border-top-right-radius:7px;
-}
-  .day header.stacked{flex-direction:column;justify-content:center;gap:1.2mm} /* ma–vr: datum onder dag */
+  .day{position:relative;border:2.6px solid var(--line);border-radius:7px;background:#fff;display:flex;flex-direction:column;--bullet:14px;--plan-fs:11pt;--task-gap:6pt; z-index:1;}
+  .day header{
+    display:flex;justify-content:space-between;align-items:center;
+    padding:2.6mm;border-bottom:2.6px solid var(--line);background:#f0f0f0;border-top-left-radius:7px;border-top-right-radius:7px;
+  }
+  .day header.stacked{flex-direction:column;justify-content:center;gap:1.2mm}
   .dn{font-weight:800;letter-spacing:.02em;font-size:11.5pt}
   .hdrLeft{display:flex;align-items:center;gap:3mm}
   .hdrEnv{width:6.5mm;height:4.6mm}
@@ -147,203 +65,76 @@
   .body{display:flex;flex-direction:column;padding:2mm;gap:1mm;flex:1;overflow:visible;position: relative;}
   .cell h3{margin:0 0 .3mm;font-size:10.2pt}
 
-  /* Planbox werkdagen */
+  /* Agenda-gebied (voorheen plan) */
   .planBox{
-    border:2.6px solid var(--line);
-    border-radius:4px;
-    padding:1.6mm;
-    display:flex;
-    flex-direction:column;
-    flex:0;
-    min-height:0;
-    font-size:var(--plan-fs);
-    overflow:visible;
+    border:2.6px solid var(--line);border-radius:4px;padding:1.6mm;display:flex;flex-direction:column;flex:0;min-height:0;font-size:var(--plan-fs);overflow:visible;
   }
   .tasklist{list-style:none;margin:0;padding:0;display:block}
-  .tasklist li{display:flex;align-items:flex-start;gap:.32rem;margin-bottom:var(--task-gap)}
+  .tasklist li{display:flex;align-items:flex-start;gap:.32rem;margin-bottom:var(--task-gap); position:relative;}
   .tasklist li:last-child{margin-bottom:0}
   .bullet{display:inline-block;width:var(--bullet);height:var(--bullet);border:2px solid #0a3a52;border-radius:50%}
-  .bullet-num{display:inline-block;min-width:var(--bullet);font-weight:700;font-size:var(--bullet);color:#0a3a52;flex-shrink:0}
   .tasktext[contenteditable]{flex:1;min-height:1.05em;outline:none}
-
-  /* Verwijderknopje in elke li */
-  .tasklist li{ position: relative; }
   .tasklist .liDel{
     position:absolute; right:-2px; top:-4px; border:1px solid #d0d7de; background:#fff;
     border-radius:10px; width:18px; height:18px; line-height:16px; text-align:center; cursor:pointer; font-weight:700; padding:0;
   }
   .tasklist .liDel:hover{ background:#f5f7fa }
 
-  /* Vrije tekstvlak in plan – verberg als er bullets zijn */
   .planText[contenteditable]{outline:none;min-height:0;white-space:pre-wrap}
   .planBox.has-tasks .planText{display:none}
   .planBox.has-tasks{padding-bottom:1mm}
 
-  /* Weekend: compact invulvak bovenaan, zoals weekdagen */
-.day.small{
-  min-height:0;
-}
-
-.day.small .body{
-  flex:0 0 auto;
-  min-height:0;
-  overflow:visible;
-}
-
-.day.small .planBox{
-  flex:0 0 auto;
-  min-height:0;
-  height:auto;
-  overflow:visible;
-  margin-bottom:0;
-  border:none;
-  padding:0;
-  background:transparent;
-}
-
-.wkTA{
-  width:100%;
-  border:1px solid var(--line);
-  border-radius:6px;
-  outline:none;
-  resize:none;
-  background:#fff;
-  font-family:Arial,Helvetica,sans-serif;
-  font-size:11pt;
-  line-height:1.28;
-  height:22mm;
-  max-height:22mm;
-  overflow:hidden;
-  padding:.35rem .5rem;
-  margin:0;
-}
-
-.wkTA.maxed{
-  height:18mm;
-  max-height:18mm;
-}
-
-.wkCE[contenteditable]{
-  display:block;
-  width:100%;
-  height:18mm;
-  min-height:18mm;
-  max-height:18mm;
-  padding:.35rem .5rem;
-  border:1px solid var(--line);
-  border-radius:6px;
-  background:#fff;
-  outline:none;
-  white-space:pre-wrap;
-  overflow:hidden;
-}
+  /* Weekend */
+  .day.small .tasklist{ display:block; }
+  .planBox.has-tasks .wkCE{ display:none; }
+  .wkTA{
+    width:100%; border:none; outline:none; resize:none; background:transparent;
+    font-family:Arial,Helvetica,sans-serif; font-size:11pt; line-height:1.28;
+    height:calc(2 * 1.28em);
+    overflow:hidden; padding:0; margin:0;
+  }
+  .wkTA.maxed{ height:calc(3 * 1.28em); }
+  .wkCE[contenteditable]{
+    display:block; min-height:3.2em; padding:.4rem .5rem; border:1px solid var(--line);
+    border-radius:6px; background:#fff; outline:none; white-space:pre-wrap;
+  }
 
   /* Ik denk aan */
-  .bringBox{
-    border:2.6px solid var(--line);
-    border-radius:4px;
-    padding:1.6mm;
-    min-height:10mm;
-    position:relative;
-    font-size: var(--bring-fs, 12pt);
-  }
+  .bringBox{border:2.6px solid var(--line);border-radius:4px;padding:1.6mm;min-height:10mm;position:relative;font-size: var(--bring-fs, 11pt);}
   .bringText[contenteditable]{min-height:8mm;outline:none}
-  .picto-inline img{vertical-align:middle}
+  .picto-inline img{height:16px;vertical-align:text-bottom}
 
   /* Mededelingen */
-.panel{
-  position:relative;
-  border:2.6px solid var(--line);
-  border-radius:7px;
-  background:#fff;
-  display:flex;
-  flex-direction:column;
-  min-height:0;
-  height:100%;
-  z-index:0;
-}
+  .panel{position:relative;border:2.6px solid var(--line);border-radius:7px;background:#fff;display:flex;flex-direction:column;height:1px; z-index:0;}
+  .panel header{padding:2.6mm;border-bottom:2.6px solid var(--line);font-weight:700}
+  .panelBody{padding:2mm;flex:1;min-height:40px;overflow:auto;outline:none}
+  .sign{position:absolute;right:6mm;bottom:6mm;border:2.6px solid var(--line);border-radius:7px;padding:2mm 5mm;min-width:70mm;height:22mm;font-size:10pt;color:var(--muted);background:#fff;display:flex;align-items:flex-start}
 
-.panel header{
-  padding:2.6mm;
-  border-bottom:2.6px solid var(--line);
-  font-weight:700;
-}
-
-.panelInner{
-  padding:2mm;
-  min-height:0;
-  height:100%;
-  overflow:hidden;
-}
-
-.panelBody{
-  min-width:0;
-  min-height:0;
-  height:100%;
-  overflow:hidden;
-  outline:none;
-  white-space:pre-wrap;
-}
-
-.sign{
-  float:right;
-  clear:right;
-  margin:10px 0 6px 14px;
-
-  border:2.6px solid var(--line);
-  border-radius:7px;
-  padding:2mm 5mm;
-  width:70mm;
-  height:22mm;
-  font-size:10pt;
-  color:var(--muted);
-  background:#fff;
-  display:flex;
-  align-items:flex-start;
-}
   /* Vrije pictogrammen */
-  .picto-free{
-    position:absolute; left:10px; top:10px;
-    cursor:grab; user-select:none; z-index:5; touch-action:none;
-    outline:2px solid transparent;
-  }
+  .picto-free{position:absolute; left:10px; top:10px; cursor:grab; user-select:none; z-index:5; touch-action:none; outline:2px solid transparent;}
   .picto-free.dragging{ cursor:grabbing; }
   .picto-free.selected{ outline:2px solid #0a66c2; }
   .picto-free img{display:block;max-width:100%;max-height:100%;pointer-events:none}
-  .picto-free .handle{
-    position:absolute; right:-6px; bottom:-6px; width:12px; height:12px;
-    border:2px solid #0a66c2; background:#e7f1fb; border-radius:3px;
-    cursor:nwse-resize; touch-action:none;
-  }
+  .picto-free .handle{position:absolute; right:-6px; bottom:-6px; width:12px; height:12px; border:2px solid #0a66c2; background:#e7f1fb; border-radius:3px; cursor:nwse-resize; touch-action:none;}
 
   /* Pictopaneel (niet in print) */
-  .dock{position:fixed;right:16px;top:76px;z-index:60;width:180px;background:#fff;border:1px solid #e5e7eb;border-radius:8px;box-shadow:0 4px 14px rgba(0,0,0,.07);padding:.45rem;opacity:.92}
-  .dock h4{margin:.1rem 0 .3rem;font-size:.8rem;color:#6b7280;font-weight:600;text-transform:uppercase;letter-spacing:.04em}
-  .picto-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:.3rem}
-  .picto{border:1px solid #e5e7eb;border-radius:6px;background:#fafbfc;display:flex;align-items:center;justify-content:center;padding:.2rem;cursor:pointer}
+  .dock{position:fixed;right:16px;top:76px;z-index:60;width:260px;background:#fff;border:1px solid #e5e7eb;border-radius:10px;box-shadow:0 6px 24px rgba(0,0,0,.08);padding:.7rem}
+  .dock h4{margin:.1rem 0 .4rem;font-size:1rem}
+  .picto-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem}
+  .picto{border:1px solid #e5e7eb;border-radius:8px;background:#fafbfc;display:flex;align-items:center;justify-content:center;padding:.35rem;cursor:pointer}
   .picto:hover{background:#f0f4f8}
-  .picto img{width:28px;height:28px;object-fit:contain}
+  .picto img{width:42px;height:42px;object-fit:contain}
   .dock small{color:#6b7280;display:block;margin-top:.35rem}
   .dock[hidden]{ display:none !important; }
   .dock .uploadRow{ margin-top:.5rem; display:flex; gap:.5rem; align-items:center; }
 
-
   /* PRINT */
   @media print{
     @page{ size: A4 landscape; margin: 0 }
-
-    /* 1. Verberg alle UI-elementen EN de gele autosave-balk */
-    .toolbar, .dock, .mini-toolbar, .klas-tabs, 
-    div[style*="background:#fffbeb"], 
-    div[style*="background: #fffbeb"] { 
-      display: none !important; 
-    }
-    
+    .toolbar, .dock{ display: none !important; }
     body{ background:#fff; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
-
     [contenteditable], input, textarea { caret-color: transparent !important; }
     .day, .day *:focus { outline: none !important; }
-
     .page{
       width: var(--page-w);
       height: var(--page-h);
@@ -355,75 +146,40 @@
       page-break-after: avoid;
       overflow: hidden;
     }
-
-    /* 2. Zorg dat mededelingen NOOIT een scrollbalk tonen op papier */
-    .panelBody {
-  overflow: hidden !important; 
-  height: auto !important; 
-  min-height: 0 !important;
-}
-
-.panelInner{
-  display:block !important;
-}
-
-.sign{
-  float:right !important;
-  clear:right !important;
-  margin:10px 0 6px 14px !important;
-}
-
-    /* Dagvakken strikt begrenzen */
-    .week-top{ overflow: hidden; }
-    .week-top > .day{ overflow: hidden; max-height: 130mm; }
-    .day .body{ overflow: hidden; }
-    
-    /* Zorg dat vakken hun inhoud niet afknippen maar ook geen balken tonen */
-    .planBox, .bringBox { 
-      overflow: hidden !important; 
-      height: auto; 
-    }
-    
-    .picto-free{ max-width: 100%; }
-
-    .week-top > .day,
-    .bottom-row > *{
-      break-inside: avoid;
-      page-break-inside: avoid;
-    }
-
-    .panelBody:empty::before{ display:none; }
-    .picto-free .handle, .picto-free.selected { display:none !important; outline:none !important; }
-    .tasklist .liDel{ display:none !important; }
-    .day.overflowing{
-  box-shadow:none !important;
-}
-
-.day.overflowing::after{
-  display:none !important;
-}
+    .week-top > .day, .bottom-row > *{ break-inside: avoid; page-break-inside: avoid; }
+    .tasklist .liDel, .picto-free .handle, .picto-free.selected{ display:none !important; outline:none !important; }
   }
 </style>
 </head>
 <body>
-  <!-- Klas-tabs -->
-  <div class="klas-tabs" id="klasTabs" style="display:flex;align-items:center;justify-content:space-between">
-    <div style="display:flex">
-      <button class="klas-tab" data-klas="L3">🌵 L3</button>
-      <button class="klas-tab active" data-klas="L4">🦙 L4</button>
-    </div>
-    <a href="./klasagendav2.html" style="margin-right:.6rem;appearance:none;border:1px solid #d0d7de;background:#fff;padding:.35rem .75rem;border-radius:8px;font-weight:700;cursor:pointer;text-decoration:none;color:#111;font-family:Arial,sans-serif;font-size:.88rem;white-space:nowrap">← Keuze graad</a>
-  </div>
-
   <div class="toolbar" role="region" aria-label="Bediening">
     <div class="group">
+      <label for="tpl">Sjabloon</label>
+      <select id="tpl">
+        <option value="L3" selected>Agenda L3</option>
+        <option value="L4">Agenda L4</option>
+      </select>
       <label><input id="zwemweek" type="checkbox"> Zwemweek</label>
-      <span class="sep"></span>
-      <label title="Tekstgrootte actieve dag">
+      <div id="overflowAlert" class="alert" role="status" aria-live="polite">⚠️ Let op: er staat te veel tekst. Dit past mogelijks niet op één blad bij printen.</div>
+    </div>
+    <div class="group">
+      <button id="btnAddBullet">+ bolletje</button>
+      <label>Agenda-tekst:
         <select id="planFS"><option>10pt</option><option selected>11pt</option><option>12pt</option><option>14pt</option></select>
       </label>
-      <button id="applyAllFS" title="Pas tekstgrootte toe op alle weekdagen">→ alle dagen</button>
+      <label>Bolletje:
+        <select id="bulletSize"><option value="12">klein</option><option value="14" selected>middel</option><option value="16">groot</option></select>
+      </label>
+      <label>Tussenruimte:
+        <select id="taskGap"><option value="4">4pt</option><option value="5">5pt</option><option value="6" selected>6pt</option></select>
+      </label>
+      <button id="applyAllFS">FS → ma–vr</button>
+      <button id="applyAllGap">Gap → ma–vr</button>
       <span class="sep"></span>
+      <button id="btnBold" title="Vet (Ctrl+B)">B</button>
+      <button id="btnItalic" title="Schuin (Ctrl+I)"><i>I</i></button>
+      <button id="btnUnderline" title="Onderlijn (Ctrl+U)"><u>U</u></button>
+      <button id="btnHighlight" title="Markeren (fluo)">Fluo</button>
       <label>Tekstkleur:
         <select id="textColor">
           <option value="#111">zwart</option>
@@ -431,46 +187,24 @@
           <option value="#117a2c">groen</option>
           <option value="#c22727">rood</option>
         </select>
-        <button type="button" id="btnApplyColor">Pas toe</button>
+        <button type="button" id="btnApplyColor" title="Kleur toepassen">Pas toe</button>
       </label>
+
       <span class="sep"></span>
-      <button id="btnCopyMon" hidden aria-hidden="true" style="display:none">Kopieer maandag</button>
+      <button id="btnUndo" title="Laatste actie ongedaan maken">Ongedaan maken</button>
       <button id="btnDelPicto" title="Geselecteerd pictogram verwijderen">Verwijder picto</button>
-      <span class="sep"></span>
+      <!-- Knop "Kopieer maandag" is bewust verwijderd voor 2de graad -->
       <button id="btnExport">Export</button>
       <input id="fileImport" type="file" accept="application/json" hidden>
       <button id="btnImport">Import</button>
-      <span class="sep"></span>
-      <button id="btnBewaar" class="primary" style="background:#16a34a;border-color:#16a34a">📚 Bewaar in archief</button>
-      <button id="btnArchief" style="background:#7c3aed;border:1px solid #7c3aed;color:#fff;appearance:none;padding:.45rem .7rem;border-radius:.5rem;cursor:pointer;font-weight:700">🗂️ Archief raadplegen</button>
-      <span class="sep"></span>
       <button id="btnPrint" class="primary">PDF / Print</button>
       <button id="btnToggleDock">Pictogrammen</button>
-      <button id="btnHelp" title="Uitleg & handleiding" style="background:#f59e0b;border:1px solid #f59e0b;color:#fff;appearance:none;padding:.45rem .7rem;border-radius:.5rem;cursor:pointer;font-weight:700">❓ Uitleg</button>
     </div>
   </div>
 
-  <!-- Autosave infobalk -->
-  <div style="background:#fffbeb;border-bottom:1px solid #fde68a;padding:.45rem 1rem;font-size:.82rem;color:#92400e;display:flex;align-items:center;gap:.5rem;flex-wrap:wrap">
-    <span>💾 <strong>Autosave</strong> bewaart je agenda automatisch op <em>deze laptop</em>, in <em>deze browser</em>.</span>
-    <span style="color:#b45309">·</span>
-    <span>📚 Wil je zeker zijn dat je agenda bewaard blijft, of wil je die delen met collega's? Gebruik dan <strong>📚 Bewaar in archief</strong>.</span>
-  </div>
-
-  <!-- Verborgen knoppen die nog steeds gebruikt worden door JS maar niet getoond -->
-  <button id="btnAddBullet" hidden></button>
-  <button id="btnBold" hidden></button>
-  <button id="btnItalic" hidden></button>
-  <button id="btnUnderline" hidden></button>
-  <button id="btnHighlight" hidden></button>
-  <button id="btnUndo" hidden></button>
-  <select id="bulletSize" hidden><option value="12">klein</option><option value="14" selected>middel</option><option value="16">groot</option></select>
-  <select id="taskGap" hidden><option value="4">4pt</option><option value="5">5pt</option><option value="6" selected>6pt</option></select>
-  <button id="applyAllGap" hidden></button>
-
   <main class="page" id="page">
     <header class="page-head">
-      <div class="title"><span class="pill" id="titlePill" contenteditable>agenda L4</span></div>
+      <div class="title"><span class="pill" id="titlePill" contenteditable>agenda L3</span></div>
       <div class="right-head">
         <div class="monthBox" id="monthBox" contenteditable>september 2025</div>
         <div class="classIcon" id="classIconSlot"></div>
@@ -484,32 +218,23 @@
     <section class="bottom-row">
       <div class="weekendCol" id="weekendCol"></div>
 
-  <section class="panel" id="notesPanel">
-  <header>Mededelingen <span style="font-weight:400;color:#6b7280">(berichten aan leerkrachten via smartschool)</span></header>
-
-  <div class="panelInner">
-    <div class="sign" id="notesSign">handtekening ouders</div>
-    <div class="panelBody" id="notesBody" contenteditable></div>
-  </div>
-</section>
+      <section class="panel" id="notesPanel">
+        <header>Mededelingen <span style="font-weight:400;color:#6b7280">(berichten aan leerkrachten via smartschool)</span></header>
+        <div class="panelBody" id="notesBody" contenteditable></div>
+        <div class="sign">handtekening ouders</div>
+      </section>
     </section>
   </main>
 
   <!-- PICTOGRAMMEN -->
   <aside class="dock" aria-label="Pictogrammen">
     <h4>Pictogrammen</h4>
-    <div style="display:flex;gap:.3rem;margin-bottom:.4rem">
-      <button id="btnPictoModeVrij" title="Vrij zwevend plaatsen — sleep naar gewenste plek"
-        style="flex:1;padding:.25rem .3rem;font-size:.75rem;font-weight:700;border-radius:6px;cursor:pointer;border:2px solid #0a66c2;background:#0a66c2;color:#fff">🖼 Vrij</button>
-      <button id="btnPictoModeInline" title="Inline in de tekst — cursor staat er direct naast"
-        style="flex:1;padding:.25rem .3rem;font-size:.75rem;font-weight:700;border-radius:6px;cursor:pointer;border:2px solid #d0d7de;background:#fff;color:#111">📌 Inline</button>
-    </div>
     <div class="picto-grid" id="pictoGrid"></div>
     <div class="uploadRow">
       <button id="btnUploadPicto" title="Eigen pictogram toevoegen">Eigen pictogram…</button>
       <input id="fileUploadPicto" type="file" accept="image/*" hidden>
     </div>
-    <small id="pictoModeHint">Vrij: sleep het picto naar de juiste plek.</small>
+    <small>Klik om een vrij pictogram te plaatsen. <strong>Ctrl-klik</strong> (Mac: Cmd-klik) = als inline pictogram in de tekst.</small>
   </aside>
 
 <script>
@@ -520,113 +245,12 @@
   const ENVELOPE_SVG =
    '<svg viewBox="0 0 48 36" xmlns="http://www.w3.org/2000/svg"><rect x="1.5" y="1.5" width="45" height="33" rx="2.5"/><polyline points="2,2 24,18 46,2"/><polyline points="2,34 20,20"/><polyline points="46,34 28,20"/></svg>';
 
-  const tplSel = { value: 'L4' }; // vervangen door tab-systeem
-  const swimChk=$('#zwemweek');
-
-  /* ── Tab-systeem: L3 / L4 ── */
-  window.aktieveKlas = 'L4';
-  const tabState = { L3: null, L4: null };
-
-  function getKlasIcon(klas){
-    return klas === 'L3' ? 'pictogrammen/cactus.png' : 'pictogrammen/lama.png';
-  }
-
-  function wisselKlas(nieuweKlas){
-    if (nieuweKlas === window.aktieveKlas) return;
-
-    // 1) Huidige staat opslaan onder de huidige klas
-    tabState[window.aktieveKlas] = captureAllVoorTab();
-
-    // 2) Tab UI bijwerken
-    $$('.klas-tab').forEach(t => t.classList.toggle('active', t.dataset.klas === nieuweKlas));
-    window.aktieveKlas = nieuweKlas;
-    tplSel.value = nieuweKlas;
-
-    // 3) DOM volledig leegmaken vóór laden
-    resetAgenda(nieuweKlas);
-
-    // 4) Nieuwe staat inladen als die bestaat
-    if (tabState[nieuweKlas]){
-      isApplying = true;
-      // Pas dagen toe
-      const obj = tabState[nieuweKlas];
-      if (obj.meta?.monthBox) monthBox.textContent = obj.meta.monthBox;
-      if (obj.meta?.swim !== undefined) swimChk.checked = !!obj.meta.swim;
-      if (obj.meta?.notes) $('#notesBody').innerHTML = obj.meta.notes;
-      if (obj.days){
-        $$('.day').forEach(n => {
-          const i = n.dataset.dayIndex;
-          if (obj.days[i]) applyDay(n, obj.days[i]);
-        });
-      }
-      applyPanelPictos(obj.meta?.panelPictos || []);
-      isApplying = false;
-    } else {
-      // Eerste keer deze klas — sla lege staat op
-      tabState[nieuweKlas] = captureAllVoorTab();
-    }
-
-    // 5) Logo altijd correct zetten na alles
-    classIconSlot.innerHTML = `<img src="${getKlasIcon(nieuweKlas)}" alt="klaspictogram ${nieuweKlas}">`;
-    $('#titlePill').textContent = 'agenda ' + nieuweKlas;
-
-    upgradeWeekendToEditable();
-    $$('.day').forEach(updatePlanBoxClass);
-    ensureTaskDeleteButtons(document);
-   _maxNotesH = 0;
-window._klasagenda.equalizePlanHeights();
-requestAnimationFrame(() => {
-  requestAnimationFrame(() => {
-    const wc = document.getElementById('weekendCol');
-    if (wc && wc.offsetHeight > 50) _maxNotesH = wc.offsetHeight;
-    window._klasagenda.syncNotesToWeekend();
-  });
-});
-    pushSnapshot();
-  }
-
-  function resetAgenda(klas){
-    $$('.day').forEach(d => {
-      const idx = d.dataset.dayIndex;
-      // Leeg planBox volledig
-      const planBoxEl = d.querySelector(`[data-key="d${idx}.plan"]`);
-      if (planBoxEl){
-        // Verwijder alle takenlijst-items
-        planBoxEl.querySelectorAll('.tasklist li').forEach(li => li.remove());
-        // Leeg alle contenteditable vlakken
-        planBoxEl.querySelectorAll('[contenteditable]').forEach(el => { el.innerHTML = ''; });
-        // Leeg textarea's
-        planBoxEl.querySelectorAll('textarea').forEach(el => { el.value = ''; });
-        planBoxEl.classList.remove('has-tasks');
-      }
-      // Leeg bring (Ik denk aan)
-      const br = d.querySelector(`[data-key="d${idx}.bring"]`);
-      if (br) br.querySelectorAll('[contenteditable]').forEach(el => { el.innerHTML = ''; });
-      // Verwijder vrije picto's
-      d.querySelectorAll('.picto-free').forEach(p => p.remove());
-    });
-    // Leeg mededelingen
-    const nb = document.getElementById('notesBody');
-    if (nb) nb.innerHTML = '';
-    // Titel + logo
-    const tp = document.getElementById('titlePill');
-    if (tp) tp.textContent = 'agenda ' + klas;
-    classIconSlot.innerHTML = `<img src="${getKlasIcon(klas)}" alt="klaspictogram ${klas}">`;
-    scheduleLayoutSync();
-  }
-
-  document.getElementById('klasTabs').addEventListener('click', e => {
-    const tab = e.target.closest('.klas-tab');
-    if (tab) wisselKlas(tab.dataset.klas);
-  });
+  const tplSel=$('#tpl'), swimChk=$('#zwemweek');
   const btnAddBullet=$('#btnAddBullet');
   const planFS=$('#planFS'), bulletSize=$('#bulletSize'), taskGap=$('#taskGap');
   const applyAllFS=$('#applyAllFS'), applyAllGap=$('#applyAllGap');
   const btnBold=$('#btnBold'), btnItalic=$('#btnItalic'), btnUnderline=$('#btnUnderline'), btnHighlight=$('#btnHighlight');
-  const textColor = $('#textColor');
-  let lastTextRange = null;
-  const btnApplyColor = $('#btnApplyColor');
-  const btnCopyMon=$('#btnCopyMon');
+  const textColor = $('#textColor'); let lastTextRange = null; const btnApplyColor = $('#btnApplyColor');
   const btnExport=$('#btnExport'), btnImport=$('#btnImport'), fileImport=$('#fileImport'), btnPrint=$('#btnPrint');
   const monthBox=$('#monthBox'), classIconSlot=$('#classIconSlot');
   const btnUndo=$('#btnUndo'), btnDelPicto=$('#btnDelPicto');
@@ -634,9 +258,9 @@ requestAnimationFrame(() => {
   const dock = document.querySelector('.dock');
   const btnUploadPicto = $('#btnUploadPicto');
   const fileUploadPicto = $('#fileUploadPicto');
+  const overflowAlert = $('#overflowAlert');
 
   const notesPanel=$('#notesPanel'), notesBody=$('#notesBody');
-  let _notesFullWarned = false;
 
   let activeDay=null;
   let activeHost=null;
@@ -660,419 +284,15 @@ requestAnimationFrame(() => {
     if (!e.target.closest('.picto-free')) clearPictoSelection();
   });
 
-  /* ══════════════════════════════════════════
-     ZWEVENDE MINI-TOOLBAR
-     ══════════════════════════════════════════ */
-  const miniBar = document.createElement('div');
-  miniBar.className = 'mini-toolbar';
-  miniBar.id = 'miniToolbar';
-  miniBar.innerHTML = `
-    <button class="mt-btn" id="mt-bold" title="Vet (Ctrl+B)"><b>B</b></button>
-    <button class="mt-btn" id="mt-italic" title="Schuin (Ctrl+I)"><i>I</i></button>
-    <button class="mt-btn" id="mt-underline" title="Onderlijn (Ctrl+U)"><u>U</u></button>
-    <button class="mt-btn" id="mt-fluo" title="Markeren">🖊</button>
-    <div class="mt-sep"></div>
-    <button class="mt-btn" id="mt-smaller" title="Geselecteerde tekst kleiner">A−</button>
-    <select id="mt-fontsize" title="Tekengrootte geselecteerde tekst" style="background:#2d3f55;color:#e2e8f0;border:1px solid rgba(255,255,255,.2);border-radius:5px;padding:2px 4px;font-size:12px;cursor:pointer">
-      <option value="4">4pt</option>
-      <option value="5">5pt</option>
-      <option value="6">6pt</option>
-      <option value="7">7pt</option>
-      <option value="8">8pt</option>
-      <option value="9">9pt</option>
-      <option value="10">10pt</option>
-      <option value="11">11pt</option>
-      <option value="12" selected>12pt</option>
-    </select>
-    <button class="mt-btn" id="mt-bigger" title="Geselecteerde tekst groter">A+</button>
-    <div class="mt-sep"></div>
-    <span style="color:#e2e8f0;font-size:11px;white-space:nowrap" title="Regelafstand">↕</span>
-    <select id="mt-lineheight" title="Regelafstand" style="background:#2d3f55;color:#e2e8f0;border:1px solid rgba(255,255,255,.2);border-radius:5px;padding:2px 4px;font-size:12px;cursor:pointer">
-      <option value="0.5">0.5×</option>
-      <option value="0.75">0.75×</option>
-      <option value="1">1×</option>
-      <option value="1.15">1.15×</option>
-      <option value="1.28" selected>1.28×</option>
-      <option value="1.5">1.5×</option>
-      <option value="2">2×</option>
-    </select>
-    <div class="mt-sep"></div>
-    <select id="mt-color" title="Tekstkleur" style="background:#2d3f55;color:#e2e8f0;border:1px solid rgba(255,255,255,.2);border-radius:5px;padding:2px 4px;font-size:12px;cursor:pointer">
-      <option value="#111111">⬛ zwart</option>
-      <option value="#0b4dad">🔵 blauw</option>
-      <option value="#117a2c">🟢 groen</option>
-      <option value="#c22727">🔴 rood</option>
-      <option value="#7c3aed">🟣 paars</option>
-      <option value="#d97706">🟠 oranje</option>
-    </select>
-    <div class="mt-sep"></div>
-    <button class="mt-btn" id="mt-bullet" title="Bolletje toevoegen">● +</button>
-    <select id="mt-bulletsize" title="Bolletjesgrootte van deze dag" style="background:#2d3f55;color:#e2e8f0;border:1px solid rgba(255,255,255,.2);border-radius:5px;padding:2px 4px;font-size:12px;cursor:pointer">
-      <option value="12">klein</option>
-      <option value="14" selected>middel</option>
-      <option value="16">groot</option>
-    </select>
-    <div class="mt-sep"></div>
-    <button class="mt-btn" id="mt-picto-btn" title="Pictogram toevoegen">🖼</button>
-    <button class="mt-btn" id="mt-picto-mode-vrij" title="Vrij zwevend (sleep naar plek)" style="font-size:10px;padding:2px 5px;background:#0a66c2;color:#fff;border-color:#0a66c2">Vrij</button>
-    <button class="mt-btn" id="mt-picto-mode-inline" title="Inline in tekst (cursor staat ernaast)" style="font-size:10px;padding:2px 5px">Inline</button>
-    <div class="mt-sep"></div>
-    <button class="mt-btn" id="mt-undo" title="Ongedaan maken">↩</button>
-  `;
-  document.body.appendChild(miniBar);
-
-  // Picto-grid in mini-toolbar (zelfde picto's als dock)
-  const mtPictoGrid = document.createElement('div');
-  mtPictoGrid.className = 'mt-picto-grid';
-  mtPictoGrid.id = 'mtPictoGrid';
-  miniBar.appendChild(mtPictoGrid);
-
-  let miniBarTarget = null; // de dag waar mini-toolbar bij hoort
-  let miniBarHideTimer = null;
-
-  function vulMtPictoGrid(){
-    mtPictoGrid.innerHTML = '';
-    const imgs = [...document.querySelectorAll('#pictoGrid .picto img')];
-    imgs.forEach(img => {
-      const item = document.createElement('div');
-      item.className = 'mt-picto-item';
-      const i = document.createElement('img');
-      i.src = img.src; i.alt = img.alt;
-      item.appendChild(i);
-      item.addEventListener('pointerdown', e => {
-        e.preventDefault(); e.stopPropagation();
-        handlePictoInsert(img.src, null);
-        mtPictoGrid.classList.remove('open');
-        pushSnapshot();
-      });
-      mtPictoGrid.appendChild(item);
-    });
-  }
-
-  let miniBarInPanel = false; // true als mini-toolbar bij mededelingen hoort
-
-function toonMiniBar(el){
-  miniBarTarget = el;
-  miniBarInPanel = (el.id === 'notesPanel' || el.id === 'notesBody');
-
-  let rect;
-
-  if (miniBarInPanel){
-    const panelHeader = notesPanel.querySelector('header');
-    rect = panelHeader ? panelHeader.getBoundingClientRect() : notesPanel.getBoundingClientRect();
-  } else {
-    rect = el.getBoundingClientRect();
-  }
-
-  miniBar.classList.add('visible');
-  const barW = miniBar.offsetWidth || 560;
-  const barH = miniBar.offsetHeight || 42;
-
-  let top = rect.top - barH - 10;
-  if (top < 8){
-    top = 8;
-  }
-
-  let left = rect.left;
-  if (left + barW > window.innerWidth - 8){
-    left = window.innerWidth - barW - 8;
-  }
-  if (left < 8){
-    left = 8;
-  }
-
-  miniBar.style.top = top + 'px';
-  miniBar.style.left = left + 'px';
-
-  vulMtPictoGrid();
-  if (!miniBarInPanel) updateMtBulletSize(el);
-
-  document.getElementById('mt-bullet').style.display = miniBarInPanel ? 'none' : '';
-  document.getElementById('mt-bulletsize').style.display = miniBarInPanel ? 'none' : '';
-}
-
-  function verbergMiniBar(){
-    miniBar.classList.remove('visible');
-    mtPictoGrid.classList.remove('open');
-    miniBarTarget = null;
-  }
-
-  // Toon bij klikken/focus in een dag of mededelingen — via event delegation
-  document.addEventListener('focusin', e => {
-  const dag   = e.target.closest('.day');
-  const panelBody = e.target.closest('#notesBody');
-  const panel = e.target.closest('#notesPanel');
-  const inMini = e.target.closest('#miniToolbar');
-
-  if (dag && !panelBody) { toonMiniBar(dag); return; }
-  if (panelBody) { toonMiniBar(panelBody); return; }
-  if (panel) { toonMiniBar(panel); return; }
-  if (!inMini) verbergMiniBar();
-});
- document.addEventListener('pointerdown', e => {
-  const dag   = e.target.closest('.day');
-  const panelBody = e.target.closest('#notesBody');
-  const panel = e.target.closest('#notesPanel');
-  const inMini    = e.target.closest('#miniToolbar');
-  const inToolbar = e.target.closest('.toolbar');
-
-  if (dag && !panelBody) { toonMiniBar(dag); return; }
-  if (panelBody) { toonMiniBar(panelBody); return; }
-  if (panel) { toonMiniBar(panel); return; }
-  if (!inMini && !inToolbar) verbergMiniBar();
-}, true);
-  // Sla selectie op bij elke pointerdown op de minibar (selectie gaat anders verloren)
-  let _savedRange = null;
-  function saveSelection(){
-    const sel = window.getSelection();
-    if (sel && sel.rangeCount > 0){
-      _savedRange = sel.getRangeAt(0).cloneRange(); // ook collapsed cursor opslaan
-    }
-  }
-  function restoreSelection(){
-    if (!_savedRange) return;
-    const sel = window.getSelection();
-    sel.removeAllRanges();
-    sel.addRange(_savedRange);
-  }
-  miniBar.addEventListener('pointerdown', e => {
-    saveSelection();
-    e.stopPropagation();
-  });
-
-  // Knoppen
-  function mtExec(cmd){ document.execCommand(cmd); }
-
-  document.getElementById('mt-bold').addEventListener('click', ()=>{ restoreSelection(); mtExec('bold'); pushSnapshot(); });
-  document.getElementById('mt-italic').addEventListener('click', ()=>{ restoreSelection(); mtExec('italic'); pushSnapshot(); });
-  document.getElementById('mt-underline').addEventListener('click', ()=>{ restoreSelection(); mtExec('underline'); pushSnapshot(); });
-  document.getElementById('mt-fluo').addEventListener('click', ()=>{
-    restoreSelection();
-    document.execCommand('hiliteColor', false, '#ffff66');
-    pushSnapshot();
-  });
-  document.getElementById('mt-undo').addEventListener('click', ()=>{ doUndo(); });
-
-  document.getElementById('mt-bullet').addEventListener('click', ()=>{
-    if (!activeDay) return;
-    // Zelfde logica als btnAddBullet
-    document.getElementById('btnAddBullet').click();
-  });
-
-  // Tekstgrootte op selectie via inline font-size style (per 1pt, zoals Word)
-  const MT_SIZES = [4,5,6,7,8,9,10,11,12];
-
-  function getSelectionFontSize(){
-    const sel = window.getSelection();
-    if (!sel || sel.rangeCount === 0) return 12;
-    const node = sel.getRangeAt(0).startContainer;
-    const el = node.nodeType === 3 ? node.parentElement : node;
-    const cs = window.getComputedStyle(el);
-    return Math.round(parseFloat(cs.fontSize) * 0.75); // px → pt
-  }
-
-  function getCaretBlock(){
-    // Geeft het dichtstbijzijnde block-element terug van de huidige cursor
-    const sel = window.getSelection();
-    if (!sel || sel.rangeCount === 0) return null;
-    const node = sel.getRangeAt(0).startContainer;
-    let el = node.nodeType === 3 ? node.parentElement : node;
-    while (el && el.contentEditable !== 'true'){
-      const d = getComputedStyle(el).display;
-      if (d === 'block' || d === 'list-item' || d === 'flex') return el;
-      el = el.parentElement;
-    }
-    return el; // de contenteditable zelf als fallback
-  }
-
-  function applyFontSizePt(pt){
-    const sel = window.getSelection();
-    if (!sel || sel.rangeCount === 0) return;
-    if (sel.isCollapsed){
-      // Lege regel: zet font-size op het block-element zodat de spatie verkleint
-      const block = getCaretBlock();
-      if (block && block.contentEditable !== 'true') block.style.fontSize = pt + 'pt';
-      return;
-    }
-    const range = sel.getRangeAt(0);
-    const span = document.createElement('span');
-    span.style.fontSize = pt + 'pt';
-    try { range.surroundContents(span); }
-    catch(e) {
-      const frag = range.extractContents();
-      span.appendChild(frag);
-      range.insertNode(span);
-    }
-    const newRange = document.createRange();
-    newRange.selectNodeContents(span);
-    sel.removeAllRanges();
-    sel.addRange(newRange);
-  }
-
-  function updateFontsizeSelect(){
-    const pt = getSelectionFontSize();
-    const sel = document.getElementById('mt-fontsize');
-    // Zoek dichtstbijzijnde optie
-    let best = '12';
-    let bestDist = 999;
-    for (const opt of sel.options){
-      const d = Math.abs(parseInt(opt.value) - pt);
-      if (d < bestDist){ bestDist = d; best = opt.value; }
-    }
-    sel.value = best;
-  }
-
-  document.getElementById('mt-smaller').addEventListener('click', ()=>{
-    restoreSelection();
-    const sel = document.getElementById('mt-fontsize');
-    const idx = MT_SIZES.indexOf(parseInt(sel.value));
-    const nieuw = idx > 0 ? MT_SIZES[idx-1] : MT_SIZES[0];
-    sel.value = nieuw;
-    applyFontSizePt(nieuw);
-    pushSnapshot();
-  });
-  document.getElementById('mt-bigger').addEventListener('click', ()=>{
-    restoreSelection();
-    const sel = document.getElementById('mt-fontsize');
-    const idx = MT_SIZES.indexOf(parseInt(sel.value));
-    const nieuw = idx < MT_SIZES.length-1 ? MT_SIZES[idx+1] : MT_SIZES[MT_SIZES.length-1];
-    sel.value = nieuw;
-    applyFontSizePt(nieuw);
-    pushSnapshot();
-  });
-  document.getElementById('mt-fontsize').addEventListener('change', e=>{
-    restoreSelection();
-    applyFontSizePt(parseInt(e.target.value));
-    pushSnapshot();
-  });
-
-  // Regelafstand op cursor-positie of selectie
-  document.getElementById('mt-lineheight').addEventListener('change', e=>{
-    const lh = e.target.value;
-    const sel = window.getSelection();
-    if (!sel || sel.rangeCount === 0) return;
-    if (sel.isCollapsed){
-      // Cursor op lege regel: pas line-height toe op het block-element
-      const block = getCaretBlock();
-      if (block && block.contentEditable !== 'true') block.style.lineHeight = lh;
-    } else {
-      const range = sel.getRangeAt(0);
-      const ancestor = range.commonAncestorContainer;
-      const el = ancestor.nodeType === 3 ? ancestor.parentElement : ancestor;
-      let block = el;
-      while (block && block.contentEditable !== 'true' && getComputedStyle(block).display === 'inline'){
-        block = block.parentElement;
-      }
-      if (block && block.contentEditable !== 'true'){
-        block.style.lineHeight = lh;
-      } else {
-        const span = document.createElement('span');
-        span.style.lineHeight = lh;
-        try { range.surroundContents(span); }
-        catch(e2) {
-          const frag = range.extractContents();
-          span.appendChild(frag);
-          range.insertNode(span);
-        }
-      }
-    }
-    pushSnapshot();
-  });
-
-  // Tekstkleur op selectie (herstel selectie want die gaat verloren bij dropdown-klik)
-  document.getElementById('mt-color').addEventListener('change', e=>{
-    restoreSelection();
-    document.execCommand('foreColor', false, e.target.value);
-    pushSnapshot();
-  });
-
-  // Bolletjesgrootte per dag
-  document.getElementById('mt-bulletsize').addEventListener('change', e=>{
-    if (!activeDay) return;
-    activeDay.style.setProperty('--bullet', e.target.value + 'px');
-    pushSnapshot();
-  });
-
-  // Bolletjesgrootte updaten als je van dag wisselt
-  function updateMtBulletSize(dag){
-    if (!dag) return;
-    const bs = document.getElementById('mt-bulletsize');
-    const val = getComputedStyle(dag).getPropertyValue('--bullet').trim().replace('px','') || '14';
-    bs.value = val;
-  }
-
-  document.getElementById('mt-picto-btn').addEventListener('click', e => {
-    e.stopPropagation();
-    mtPictoGrid.classList.toggle('open');
-  });
-
-  function updateMtPictoModeButtons(){
-    const vrij = document.getElementById('mt-picto-mode-vrij');
-    const inl  = document.getElementById('mt-picto-mode-inline');
-    if (_pictoModus === 'inline'){
-      inl.style.background  = '#0a66c2'; inl.style.color = '#fff'; inl.style.borderColor = '#0a66c2';
-      vrij.style.background = '#2d3f55'; vrij.style.color = '#e2e8f0'; vrij.style.borderColor = 'rgba(255,255,255,.2)';
-    } else {
-      vrij.style.background = '#0a66c2'; vrij.style.color = '#fff'; vrij.style.borderColor = '#0a66c2';
-      inl.style.background  = '#2d3f55'; inl.style.color = '#e2e8f0'; inl.style.borderColor = 'rgba(255,255,255,.2)';
-    }
-  }
-  document.getElementById('mt-picto-mode-vrij').addEventListener('click', e => {
-    e.stopPropagation();
-    _pictoModus = 'vrij';
-    // Sync ook de dock-knoppen
-    document.getElementById('btnPictoModeVrij').click();
-    updateMtPictoModeButtons();
-  });
-  document.getElementById('mt-picto-mode-inline').addEventListener('click', e => {
-    e.stopPropagation();
-    _pictoModus = 'inline';
-    document.getElementById('btnPictoModeInline').click();
-    updateMtPictoModeButtons();
-  });
-
-  // Herpositioneer bij scrollen/resize
-  window.addEventListener('scroll', ()=>{
-    if (miniBarTarget && miniBar.classList.contains('visible')) toonMiniBar(miniBarTarget);
-  }, { passive: true });
-  window.addEventListener('resize', ()=>{
-    if (miniBarTarget && miniBar.classList.contains('visible')) toonMiniBar(miniBarTarget);
-  });
-
   /* Undo */
   function snapshot(){
     const data=captureAll();
     data.meta.panelPictos=capturePanelPictos();
     return data;
   }
-  const LS_KEY = 'klasagenda_2degraad_v2';
-
-  function autosave(){
-    try {
-      const data = captureAll();
-      data.meta.panelPictos = capturePanelPictos();
-      localStorage.setItem(LS_KEY, JSON.stringify(data));
-      // Toon kleine bevestiging
-      let toast = document.getElementById('_autosaveToast');
-      if (!toast){
-        toast = document.createElement('div');
-        toast.id = '_autosaveToast';
-        toast.style.cssText = 'position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:#16a34a;color:#fff;padding:.4rem 1rem;border-radius:8px;font-size:.85rem;font-weight:700;z-index:9999;opacity:0;transition:opacity .3s;pointer-events:none';
-        document.body.appendChild(toast);
-      }
-      toast.textContent = '✅ Automatisch opgeslagen';
-      toast.style.opacity = '1';
-      clearTimeout(toast._t);
-      toast._t = setTimeout(()=>{ toast.style.opacity = '0'; }, 2000);
-    } catch(e) { /* localStorage vol of geblokkeerd */ }
-  }
-
-  let _initDone = false;
-
   function pushSnapshot(){
     if(!isApplying) undoStack.push(snapshot());
-    scheduleLayoutSync();                // ← direct her-equalizen na elke wijziging
-    if(!isApplying && _initDone) autosave();
+    scheduleLayoutSync();
   }
   function doUndo(){
     if(undoStack.length<2) return;
@@ -1098,7 +318,7 @@ function toonMiniBar(el){
 
   function buildWeekday(i,name){
     const art=document.createElement('article'); art.className='day'; art.dataset.dayIndex=i;
-    const planHeading='<h3>Ik plan:</h3>'; 
+    const planHeading='<h3>Agenda:</h3>';
     art.innerHTML = weekdayHeaderHtml(name)+
     `<div class="body">
        <div class="cell">
@@ -1134,7 +354,7 @@ function toonMiniBar(el){
      </header>
      <div class="body">
        <div class="cell">
-         <h3>Ik plan:</h3>
+         <h3>Agenda:</h3>
          <div class="planBox" data-key="d${i}.plan">
            <textarea class="wkTA" rows="2" maxlength="300" aria-label="Weekendnotities"></textarea>
          </div>
@@ -1153,21 +373,11 @@ function toonMiniBar(el){
   }
 
   function limitWeekendTextarea(e){
-  const ta = e.target;
-  const lines = ta.value.split('\n').length;
-  if(lines>=3) ta.classList.add('maxed'); else ta.classList.remove('maxed');
-
-  scheduleLayoutSync();
-
-  if (ta.scrollHeight > ta.clientHeight + 2){
-    if (!ta.dataset.fullWarned){
-      alert('Er is geen ruimte meer in dit weekendvak. Probeer eventueel een kleiner lettertype.');
-      ta.dataset.fullWarned = '1';
-    }
-  } else {
-    ta.dataset.fullWarned = '';
+    const ta=e.target;
+    const lines=ta.value.split('\n').length;
+    if(lines>=3) ta.classList.add('maxed'); else ta.classList.remove('maxed');
+    scheduleLayoutSync();
   }
-}
 
   function wireDate(card,idx){
     const dp=card.querySelector('.datePicker'); const lab=card.querySelector('.dDate');
@@ -1196,18 +406,11 @@ function toonMiniBar(el){
   setActiveDay(weekTop.firstElementChild);
 
   /* Plan-stijl en bullets */
-  function applyFsToDay(day,val){ day.style.setProperty('--plan-fs',val); }
+  function applyFsToDay(day,val){ day.style.setProperty('--plan-fs',val); day.style.setProperty('--bring-fs',val); }
   function applyBulletToDay(day,px){ day.style.setProperty('--bullet',px+'px'); }
   function applyGapToDay(day,pt){ day.style.setProperty('--task-gap',pt+'pt'); }
 
-  planFS.addEventListener('change',()=>{
-    if(activeDay){
-      applyFsToDay(activeDay, planFS.value);
-      /* laat “Ik denk aan” dezelfde grootte volgen */
-      activeDay.style.setProperty('--bring-fs', planFS.value);
-      pushSnapshot();
-    }
-  });
+  planFS.addEventListener('change',()=>{ if(activeDay){ applyFsToDay(activeDay, planFS.value); pushSnapshot(); }});
   bulletSize.addEventListener('change',()=>{ if(activeDay){ applyBulletToDay(activeDay,bulletSize.value); pushSnapshot(); }});
   taskGap.addEventListener('change',()=>{ if(activeDay){ applyGapToDay(activeDay,taskGap.value); pushSnapshot(); }});
 
@@ -1218,46 +421,29 @@ function toonMiniBar(el){
   }
 
   function upgradeWeekendToEditable(){
-  ['5','6'].forEach(i=>{
-    const planBox = document.querySelector(`[data-key="d${i}.plan"]`);
-    if (!planBox) return;
-    const ta = planBox.querySelector('.wkTA');
-    if (ta){
-      const div = document.createElement('div');
-      div.className = 'wkCE';
-      div.setAttribute('contenteditable','true');
-      div.innerText = ta.value || '';
+    ['5','6'].forEach(i=>{
+      const planBox = document.querySelector(`[data-key="d${i}.plan"]`);
+      if (!planBox) return;
+      const ta = planBox.querySelector('.wkTA');
+      if (ta){
+        const div = document.createElement('div');
+        div.className = 'wkCE';
+        div.setAttribute('contenteditable','true');
+        div.innerText = ta.value || '';
+        ta.replaceWith(div);
+      }
+    });
+  }
 
-      div.addEventListener('input', ()=>{
-        scheduleLayoutSync();
-
-        if (div.scrollHeight > div.clientHeight + 2){
-          if (!div.dataset.fullWarned){
-            alert('Er is geen ruimte meer in dit weekendvak. Probeer eventueel een kleiner lettertype.');
-            div.dataset.fullWarned = '1';
-          }
-        } else {
-          div.dataset.fullWarned = '';
-        }
-      });
-
-      ta.replaceWith(div);
-    }
-  });
-}
-
-  applyAllFS.addEventListener('click',()=>{
-    if(!activeDay) return;
+  applyAllFS.addEventListener('click',()=>{ if(!activeDay) return;
     const val=getComputedStyle(activeDay).getPropertyValue('--plan-fs').trim()||planFS.value;
     for(let i=1;i<5;i++){
       const d=document.querySelector(`.day[data-day-index="${i}"]`);
       applyFsToDay(d,val);
-      d.style.setProperty('--bring-fs', val);
     }
     pushSnapshot();
   });
-  applyAllGap.addEventListener('click',()=>{
-    if(!activeDay) return;
+  applyAllGap.addEventListener('click',()=>{ if(!activeDay) return;
     const val=(getComputedStyle(activeDay).getPropertyValue('--task-gap').trim()||taskGap.value+'pt').replace('pt','');
     for(let i=1;i<5;i++) applyGapToDay(document.querySelector(`.day[data-day-index="${i}"]`),val);
     pushSnapshot();
@@ -1265,126 +451,57 @@ function toonMiniBar(el){
 
   /* Tekst opmaak */
   function exec(cmd,val=null){ document.execCommand(cmd,false,val); }
-  btnBold.addEventListener('click',()=> exec('bold'));
-  btnItalic.addEventListener('click',()=> exec('italic'));
-  btnUnderline.addEventListener('click',()=> exec('underline'));
-  btnHighlight.addEventListener('click',()=>{
+  $('#btnBold').addEventListener('click',()=> exec('bold'));
+  $('#btnItalic').addEventListener('click',()=> exec('italic'));
+  $('#btnUnderline').addEventListener('click',()=> exec('underline'));
+  $('#btnHighlight').addEventListener('click',()=>{
     const sel=window.getSelection(); if(!sel||sel.isCollapsed) return;
     const r=sel.getRangeAt(0); const m=document.createElement('mark'); m.style.background='#fff89a'; r.surroundContents(m);
   });
 
-  // Alleen selectie bewaren als die in een contenteditable vak zit
-  function inEditable(node){
-    if (!node) return null;
-    const el = (node.nodeType === 1 ? node : node.parentElement);
-    return el ? el.closest('[contenteditable]') : null;
-  }
+  function inEditable(node){ if (!node) return null; const el = (node.nodeType === 1 ? node : node.parentElement); return el ? el.closest('[contenteditable]') : null; }
   document.addEventListener('selectionchange', ()=>{
-    const sel = window.getSelection();
-    if (!sel || !sel.rangeCount) return;
-    const ed = inEditable(sel.anchorNode);
-    if (ed) lastTextRange = sel.getRangeAt(0).cloneRange();
+    const sel = window.getSelection(); if (!sel || !sel.rangeCount) return;
+    const ed = inEditable(sel.anchorNode); if (ed) lastTextRange = sel.getRangeAt(0).cloneRange();
   });
-
-  // Als je de keuzelijst opent, bewaar nog eens expliciet de huidige selectie
   textColor.addEventListener('mousedown', ()=>{
-    const sel = window.getSelection();
-    if (!sel || !sel.rangeCount) return;
-    const ed = inEditable(sel.anchorNode);
-    if (ed) lastTextRange = sel.getRangeAt(0).cloneRange();
+    const sel = window.getSelection(); if (!sel || !sel.rangeCount) return;
+    const ed = inEditable(sel.anchorNode); if (ed) lastTextRange = sel.getRangeAt(0).cloneRange();
   });
-
   function applyTextColor(){
-    const sel = window.getSelection();
-    if (!sel || sel.rangeCount === 0) return;
-    const host = inEditable(sel.anchorNode);
-    if (!host) return;
-    host.focus();
-    try { document.execCommand('styleWithCSS', false, true); } catch(_){}
-    document.execCommand('foreColor', false, textColor.value);
-    pushSnapshot();
+    const sel = window.getSelection(); if (!sel || sel.rangeCount === 0) return;
+    const host = inEditable(sel.anchorNode); if (!host) return;
+    host.focus(); try { document.execCommand('styleWithCSS', false, true); } catch(_){}
+    document.execCommand('foreColor', false, textColor.value); pushSnapshot();
   }
-
-  // 1) Als de waarde verandert
   textColor.addEventListener('change', applyTextColor);
   btnApplyColor.addEventListener('click', applyTextColor);
 
   /* Bolletje */
   btnAddBullet.addEventListener('click',()=>{
-  if(!activeDay) return;
-
-  const isWeekend = activeDay.classList.contains('small');
-  const box = activeDay.querySelector('.planBox');
-
-  let list = activeDay.querySelector('[data-role=tasks]');
-
-  if(!list){
-    list = document.createElement('ul');
-    list.className = 'tasklist';
-    list.setAttribute('data-role','tasks');
-
-    if (isWeekend){
-      const wk = box.querySelector('.wkCE, .wkTA');
-      if (wk) wk.remove();
-      box.appendChild(list);
-    } else {
-      box.prepend(list);
+    if(!activeDay) return;
+    let list = activeDay.querySelector('[data-role=tasks]');
+    if(!list){
+      const box = activeDay.querySelector('.planBox');
+      list = document.createElement('ul'); list.className='tasklist'; list.setAttribute('data-role','tasks'); box.prepend(list);
     }
-  }
-
-  const li = document.createElement('li');
-  li.innerHTML = '<span class="bullet"></span><div class="tasktext" contenteditable></div><button class="liDel" title="Verwijder">×</button>';
-  list.appendChild(li);
-
-
-  const t = li.querySelector('.tasktext');
-  t.focus();
-  const sel = window.getSelection(), rg = document.createRange();
-  rg.selectNodeContents(t);
-  rg.collapse(false);
-  sel.removeAllRanges();
-  sel.addRange(rg);
-
-  updatePlanBoxClass(activeDay);
-  ensureTaskDeleteButtons(activeDay);
-  pushSnapshot();
-});
+    const li=document.createElement('li');
+    li.innerHTML = '<span class="bullet"></span><div class="tasktext" contenteditable></div><button class="liDel" title="Verwijder">×</button>';
+    list.appendChild(li);
+    const t=li.querySelector('.tasktext'); t.focus();
+    const sel=window.getSelection(), rg=document.createRange(); rg.selectNodeContents(t); rg.collapse(false); sel.removeAllRanges(); sel.addRange(rg);
+    updatePlanBoxClass(activeDay);
+    ensureTaskDeleteButtons(activeDay);
+    pushSnapshot();
+  });
 
   function ensureTaskDeleteButtons(root=document){
     root.querySelectorAll('.tasklist li').forEach(li=>{
       if(!li.querySelector('.liDel')){
         const btn = document.createElement('button');
-        btn.className = 'liDel';
-        btn.title = 'Verwijder';
-        btn.textContent = '×';
+        btn.className = 'liDel'; btn.title = 'Verwijder'; btn.textContent = '×';
         li.appendChild(btn);
       }
-    });
-  }
-
-  /* Vervang bolletjes door cijfers in de planBox van vrijdag */
-  function convertBulletsToNumbers(planBox){
-    const items = planBox.querySelectorAll('.tasklist li');
-    items.forEach((li, idx) => {
-      const bullet = li.querySelector('.bullet');
-      if (bullet){
-        const num = document.createElement('span');
-        num.className = 'bullet-num';
-        num.textContent = (idx + 1) + '.';
-        bullet.replaceWith(num);
-      }
-    });
-  }
-
-  /* Hernum de cijfers in vrijdag (na verwijderen of toevoegen) */
-  function renumberVrijdag(){
-    const vrijdag = document.querySelector('.day[data-day-index="4"]');
-    if (!vrijdag) return;
-    const planBox = vrijdag.querySelector('.planBox');
-    if (!planBox) return;
-    planBox.querySelectorAll('.tasklist li').forEach((li, idx) => {
-      const num = li.querySelector('.bullet-num');
-      if (num) num.textContent = (idx + 1) + '.';
     });
   }
 
@@ -1394,47 +511,20 @@ function toonMiniBar(el){
     if(!day) return;
     const bringText = day.querySelector('.bringText');
     const line = 'zwemzak en badmuts';
-
     const tmp = bringText.cloneNode(true);
     tmp.querySelectorAll('br').forEach(br => br.replaceWith('\n'));
     const raw = tmp.textContent.split('\n').map(s=>s.trim());
     let lines = raw.filter(s=>s.length);
-
     if (on) { if (!lines.includes(line)) lines.push(line); }
     else    { lines = lines.filter(t => t !== line); }
-
     bringText.innerHTML = lines.map(t => `<span style="font-size:11pt">${t}</span>`).join('<br>');
     pushSnapshot();
   }
   swimChk.addEventListener('change', ()=> toggleSwimWeek(swimChk.checked));
 
-  /* Kopieer maandag → andere werkdagen, incl. breng-grootte */
- btnCopyMon.addEventListener('click',()=>{ if (btnCopyMon.hidden) return; 
-  const mon=document.querySelector('.day[data-day-index="0"]');
-  const planHtml=mon.querySelector('[data-key="d0.plan"]').innerHTML;
-  const cs=getComputedStyle(mon);
-
-  for(let i=1;i<5;i++){
-    const d=document.querySelector(`.day[data-day-index="${i}"]`);
-
-    // Alleen IK PLAN kopiëren
-    const planBox = d.querySelector(`[data-key="d${i}.plan"]`);
-    planBox.innerHTML = planHtml;
-
-    // Plan-stijl meenemen (optioneel laten staan)
-    d.style.setProperty('--plan-fs', cs.getPropertyValue('--plan-fs'));
-    d.style.setProperty('--task-gap', cs.getPropertyValue('--task-gap'));
-    d.style.setProperty('--bullet',   cs.getPropertyValue('--bullet'));
-
-    updatePlanBoxClass(d);
-    ensureTaskDeleteButtons(d);
-  }
-  pushSnapshot();
-});
-
   /* PICTOGRAMMEN */
   const PICTO_FILES=[
-    'geen_school.png','zwemmen.png','wieltjesdag.png','uitstap.png','kijkdag.png','belangrijk.png','fruit.png','soep.png','zebra.png','bijtje.png'
+    'geen_school.png','zwemmen.png','wieltjesdag.png','uitstap.png','kijkdag.png','belangrijk.png','fruit.png','soep.png','zebra.png','cactus.png','lama.png'
   ];
   const pictoGrid=$('#pictoGrid');
   PICTO_FILES.forEach(name=>{
@@ -1445,175 +535,51 @@ function toonMiniBar(el){
     pictoGrid.appendChild(cell);
   });
 
-  // Picto-modus: 'vrij' of 'inline'
-  // Sla cursor op bij aanraken van het pictogrammen-paneel
-  document.querySelector('.dock').addEventListener('pointerdown', ()=>{ saveSelection(); });
-
-  let _pictoModus = 'vrij';
-
-  document.getElementById('btnPictoModeVrij').addEventListener('click', ()=>{
-    _pictoModus = 'vrij';
-    document.getElementById('btnPictoModeVrij').style.cssText += ';background:#0a66c2;color:#fff;border-color:#0a66c2';
-    document.getElementById('btnPictoModeInline').style.cssText += ';background:#fff;color:#111;border-color:#d0d7de';
-    document.getElementById('pictoModeHint').textContent = 'Vrij: sleep het picto naar de juiste plek.';
-  });
-  document.getElementById('btnPictoModeInline').addEventListener('click', ()=>{
-    _pictoModus = 'inline';
-    document.getElementById('btnPictoModeInline').style.cssText += ';background:#0a66c2;color:#fff;border-color:#0a66c2';
-    document.getElementById('btnPictoModeVrij').style.cssText += ';background:#fff;color:#111;border-color:#d0d7de';
-    document.getElementById('pictoModeHint').textContent = 'Inline: klik eerst in de tekst waar het picto moet komen, dan kies je picto.';
-  });
-
   function handlePictoInsert(src, ev){
     const sel=window.getSelection();
     const ae=document.activeElement;
-    const wantInline = _pictoModus === 'inline' || (ev && (ev.ctrlKey || ev.metaKey));
+    const wantInline = (ev && (ev.ctrlKey || ev.metaKey));
 
-    /* Inline in tekst */
-    if (wantInline){
-      restoreSelection(); // herstel cursor die verloren ging bij dock/toolbar-klik
-      const sel = window.getSelection();
-      const ae = document.activeElement;
-      if (ae && ae.isContentEditable && sel && sel.rangeCount){
-        const span=document.createElement('span'); span.className='picto-inline';
-        span.style.cssText = 'display:inline-block;position:relative;vertical-align:middle;margin:0 3px;cursor:pointer';
-        const img = document.createElement('img');
-        img.src = src; img.alt = 'picto';
-        img.style.cssText = 'height:32px;width:auto;display:block;border-radius:4px';
-        img.title = 'Klik om te vergroten/verkleinen';
-        // Klik op inline picto: cyclus door groottes
-        const SIZES = [20,28,32,40,48,56,64];
-        img.addEventListener('click', e => {
-          e.stopPropagation();
-          const h = parseInt(img.style.height);
-          const idx = SIZES.indexOf(h);
-          const nieuw = SIZES[(idx + 1) % SIZES.length];
-          img.style.height = nieuw + 'px';
-          pushSnapshot();
-        });
-        span.appendChild(img);
-        const r=sel.getRangeAt(0); r.deleteContents(); r.insertNode(span);
-        r.setStartAfter(span); r.setEndAfter(span); sel.removeAllRanges(); sel.addRange(r);
-        pushSnapshot();
-      } else {
-        alert('Klik eerst in de tekst op de plek waar het picto moet komen, en kies dan het picto.');
-      }
+    if (wantInline && ae && ae.isContentEditable && sel && sel.rangeCount){
+      const span=document.createElement('span'); span.className='picto-inline';
+      span.innerHTML=`<img src="${src}" alt="picto" style="height:16px;vertical-align:text-bottom">`;
+      const r=sel.getRangeAt(0); r.deleteContents(); r.insertNode(span);
+      r.setStartAfter(span); r.setEndAfter(span); sel.removeAllRanges(); sel.addRange(r);
+      pushSnapshot();
       return;
     }
 
-    /* Vrij pictogram */
     const pic = makeFreePicto(src);
 
     let host = null;
-    if (lastFocusedHost && lastFocusedHost.isConnected) {
-      host = lastFocusedHost;
-    } else if (activeHost && activeHost.isConnected) {
-      host = activeHost;
-    } else if (activeDay) {
-      host = activeDay.querySelector('.body') || activeDay;
-    } else {
-      alert('Klik eerst in een vak (bv. Ik denk aan, Ik plan of Mededelingen).');
-      return;
-    }
+    if (lastFocusedHost && lastFocusedHost.isConnected) host = lastFocusedHost;
+    else if (activeHost && activeHost.isConnected) host = activeHost;
+    else if (activeDay) host = activeDay.querySelector('.body') || activeDay;
+    else { alert('Klik eerst in een vak (bv. Ik denk aan, Agenda of Mededelingen).'); return; }
 
     let hostType = 'body';
-    if (host.classList && host.classList.contains('bringBox')) {
-      hostType = 'bring';
-    }
+    if (host.classList && host.classList.contains('bringBox')) hostType = 'bring';
+    else if (host.classList && host.classList.contains('body')) hostType = 'body';
     pic.dataset.host = hostType;
 
     host.appendChild(pic);
-
-    // Slim plaatsen: links in het vak, kleine marge bovenaan
-    pic.style.left = '4px';
-    pic.style.top  = '4px';
+    pic.style.left = '8px'; pic.style.top  = '8px';
     pushSnapshot();
   }
 
   function makeFreePicto(src){
     const wrap=document.createElement('div');
     wrap.className='picto-free';
-    wrap.style.width='20mm';   // kleinere standaardgrootte zodat tekst ernaast past
+    wrap.style.width='32mm';
     wrap.style.height='auto';
-    wrap.style.left='4px';
-    wrap.style.top='4px';
+    wrap.style.left='0px';
+    wrap.style.top='0px';
     wrap.style.position='absolute';
     wrap.style.zIndex='5';
     wrap.innerHTML=`<img src="${src}" alt="picto"><div class="handle" title="Schaal"></div>`;
     enableDragResize(wrap);
-    wrap.addEventListener('pointerdown', (e)=>{
-      e.stopPropagation();
-      clearPictoSelection();
-      selectedPicto=wrap;
-      wrap.classList.add('selected');
-    });
-    // Rechtermuisklik → contextmenu
-    wrap.addEventListener('contextmenu', (e)=>{
-      e.preventDefault();
-      e.stopPropagation();
-      toonPictoContextMenu(e.clientX, e.clientY, wrap);
-    });
+    wrap.addEventListener('pointerdown', (e)=>{ e.stopPropagation(); clearPictoSelection(); selectedPicto=wrap; wrap.classList.add('selected'); });
     return wrap;
-  }
-
-  /* Picto contextmenu */
-  function toonPictoContextMenu(x, y, pictoEl){
-    document.getElementById('pictoContextMenu')?.remove();
-    const menu = document.createElement('div');
-    menu.id = 'pictoContextMenu';
-    menu.style.cssText = `position:fixed;left:${x}px;top:${y}px;background:#fff;border:1px solid #e5e7eb;border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,.15);z-index:99999;min-width:140px;overflow:hidden;font-family:Arial,sans-serif;font-size:13px`;
-    menu.innerHTML = `
-      <div id="pcm-delete" style="padding:8px 14px;cursor:pointer;display:flex;align-items:center;gap:8px;color:#b91c1c">
-        <span>🗑</span> Verwijder picto
-      </div>
-      <div id="pcm-smaller" style="padding:8px 14px;cursor:pointer;display:flex;align-items:center;gap:8px;border-top:1px solid #f3f4f6">
-        <span>🔽</span> Kleiner
-      </div>
-      <div id="pcm-bigger" style="padding:8px 14px;cursor:pointer;display:flex;align-items:center;gap:8px">
-        <span>🔼</span> Groter
-      </div>
-    `;
-    document.body.appendChild(menu);
-
-    menu.querySelectorAll('div').forEach(item=>{
-      item.addEventListener('mouseenter', ()=> item.style.background='#f0f4f8');
-      item.addEventListener('mouseleave', ()=> item.style.background='');
-      // Voorkom dat klik op menu-item de "klik buiten" handler triggert
-      item.addEventListener('pointerdown', e=> e.stopPropagation());
-    });
-
-    menu.querySelector('#pcm-delete').addEventListener('click', (e)=>{
-      e.stopPropagation();
-      pictoEl.remove();
-      selectedPicto = null;
-      menu.remove();
-      pushSnapshot();
-    });
-    menu.querySelector('#pcm-smaller').addEventListener('click', (e)=>{
-      e.stopPropagation();
-      const huidig = parseFloat(pictoEl.style.width) || 20;
-      pictoEl.style.width = Math.max(8, huidig - 4) + 'mm';
-      menu.remove();
-      pushSnapshot();
-    });
-    menu.querySelector('#pcm-bigger').addEventListener('click', (e)=>{
-      e.stopPropagation();
-      const huidig = parseFloat(pictoEl.style.width) || 20;
-      pictoEl.style.width = Math.min(60, huidig + 4) + 'mm';
-      menu.remove();
-      pushSnapshot();
-    });
-
-    // Klik buiten menu → sluit
-    const sluitMenu = (e)=>{
-      if (!menu.contains(e.target)){
-        menu.remove();
-        document.removeEventListener('pointerdown', sluitMenu, true);
-      }
-    };
-    setTimeout(()=>{
-      document.addEventListener('pointerdown', sluitMenu, true);
-    }, 50);
   }
 
   /* Drag+resize voor vrije pictogrammen */
@@ -1658,11 +624,7 @@ function toonMiniBar(el){
       nextTop  = Math.max(0, Math.min(e.clientY - offsetY, window.innerHeight - node.offsetHeight));
       if (!needsPaint){
         needsPaint = true;
-        lastRAF = requestAnimationFrame(()=>{
-          node.style.left = nextLeft + 'px';
-          node.style.top  = nextTop  + 'px';
-          needsPaint = false;
-        });
+        lastRAF = requestAnimationFrame(()=>{ node.style.left = nextLeft + 'px'; node.style.top  = nextTop  + 'px'; needsPaint = false; });
       }
     }
 
@@ -1696,21 +658,13 @@ function toonMiniBar(el){
       node.style.top  = topInHost  + 'px';
       node.style.zIndex = origZ || '5';
 
-      if (host.classList && host.classList.contains('bringBox')) {
-        node.dataset.host = 'bring';
-      } else if (host.closest && host.closest('.day')) {
-        node.dataset.host = 'body';
-      }
+      if (host.classList && host.classList.contains('bringBox')) node.dataset.host = 'bring';
+      else if (host.closest && host.closest('.day')) node.dataset.host = 'body';
 
       pushSnapshot();
     }
 
-    function onPointerCancelDrag(){
-      if (!dragging) return;
-      dragging = false; pointerId = null;
-      node.classList.remove('dragging');
-      node.style.zIndex = origZ || '5';
-    }
+    function onPointerCancelDrag(){ if (!dragging) return; dragging = false; pointerId = null; node.classList.remove('dragging'); node.style.zIndex = origZ || '5'; }
 
     node.addEventListener('pointerdown', onPointerDownDrag);
     node.addEventListener('pointermove', onPointerMoveDrag);
@@ -1757,7 +711,6 @@ function toonMiniBar(el){
   /* Export / Import (incl. pictos en bring-fs) */
   function captureDay(d){
     const idx = d.dataset.dayIndex;
-
     const planBoxEl = d.querySelector(`[data-key="d${idx}.plan"]`);
     const ta = planBoxEl ? planBoxEl.querySelector('.wkTA') : null;
     const ce = planBoxEl ? planBoxEl.querySelector('.wkCE[contenteditable]') : null;
@@ -1765,17 +718,8 @@ function toonMiniBar(el){
     const pics = [...d.querySelectorAll('.picto-free')].map(p => {
       const img = p.querySelector('img');
       let host = p.dataset.host || null;
-      if (!host) {
-        if (p.closest('.bringBox')) host = 'bring';
-        else host = 'body';
-      }
-      return {
-        src: img.getAttribute('src'),
-        left: p.style.left || '0px',
-        top:  p.style.top  || '0px',
-        width: p.style.width || '',
-        host
-      };
+      if (!host) { if (p.closest('.bringBox')) host = 'bring'; else host = 'body'; }
+      return { src: img.getAttribute('src'), left: p.style.left || '0px', top:  p.style.top  || '0px', width: p.style.width || '', host };
     });
 
     return {
@@ -1794,14 +738,13 @@ function toonMiniBar(el){
     };
   }
 
-function _isEmptyWeekendHtml(html){
-  const tmp = document.createElement('div');
-  tmp.innerHTML = html || '';
-  // “Leeg” = geen zichtbare tekst én geen takenlijst
-  const hasTasks = !!tmp.querySelector('.tasklist li');
-  const text = tmp.textContent.replace(/\u00a0/g,' ').trim();
-  return { isEmpty: (!hasTasks && text === ''), hasTasks, tmp };
-}
+  function _isEmptyWeekendHtml(html){
+    const tmp = document.createElement('div');
+    tmp.innerHTML = html || '';
+    const hasTasks = !!tmp.querySelector('.tasklist li');
+    const text = tmp.textContent.replace(/\u00a0/g,' ').trim();
+    return { isEmpty: (!hasTasks && text === ''), hasTasks, tmp };
+  }
 
   function applyDay(d,data){
     const idx=d.dataset.dayIndex;
@@ -1810,59 +753,46 @@ function _isEmptyWeekendHtml(html){
     const ta = planBoxEl ? planBoxEl.querySelector('.wkTA') : null;
     const ce = planBoxEl ? planBoxEl.querySelector('.wkCE[contenteditable]') : null;
 
-if (ce) {
-  const hasWeekendHtml = Object.prototype.hasOwnProperty.call(data, 'weekendHtml');
-  const hasWeekendText = Object.prototype.hasOwnProperty.call(data, 'weekendText');
-  const hasPlan        = (typeof data.plan === 'string' && data.plan.trim() !== '');
+    if (ce) {
+      const hasWeekendHtml = Object.prototype.hasOwnProperty.call(data, 'weekendHtml');
+      const hasWeekendText = Object.prototype.hasOwnProperty.call(data, 'weekendText');
+      const hasPlan        = (typeof data.plan === 'string' && data.plan.trim() !== '');
 
-  let done = false;
-
-  // 1) Probeer weekendHtml, maar alleen als het niet “leeg” is
-  if (hasWeekendHtml) {
-    const chk = _isEmptyWeekendHtml(data.weekendHtml);
-    if (!chk.isEmpty) {
-      if (chk.hasTasks) {
-        // weekendHtml bevatte (oude) <ul class="tasklist"> → zet die over
-        const box = ce.closest('.planBox');
-        const ul  = chk.tmp.querySelector('.tasklist');
-        box.innerHTML = '';
-        box.appendChild(ul.cloneNode(true));
-        box.classList.add('has-tasks');
-        ensureTaskDeleteButtons(box);
-      } else {
-        ce.innerHTML = data.weekendHtml || '';
+      let done = false;
+      if (hasWeekendHtml) {
+        const chk = _isEmptyWeekendHtml(data.weekendHtml);
+        if (!chk.isEmpty) {
+          if (chk.hasTasks) {
+            const box = ce.closest('.planBox');
+            const ul  = chk.tmp.querySelector('.tasklist');
+            box.innerHTML = '';
+            box.appendChild(ul.cloneNode(true));
+            box.classList.add('has-tasks');
+            ensureTaskDeleteButtons(box);
+          } else {
+            ce.innerHTML = data.weekendHtml || '';
+          }
+          done = true;
+        }
       }
-      done = true;
-    }
-  }
-
-  // 2) Anders weekendText (platte tekst)
-  if (!done && hasWeekendText && (data.weekendText || '').trim() !== '') {
-    ce.textContent = data.weekendText.trim();
-    done = true;
-  }
-
-  // 3) Anders fallback: haal bruikbare inhoud uit plan (oud export-formaat)
-  if (!done && hasPlan) {
-    const tmp = document.createElement('div');
-    tmp.innerHTML = data.plan;
-    const ul = tmp.querySelector('.tasklist');
-    if (ul) {
-      const box = ce.closest('.planBox');
-      box.innerHTML = '';
-      box.appendChild(ul.cloneNode(true));
-      box.classList.add('has-tasks');
-      ensureTaskDeleteButtons(box);
-    } else {
-      ce.textContent = tmp.textContent.replace(/\u00a0/g,' ').trim();
-    }
-  }
-
-  // Als nog steeds niets gezet is: leeg
-  if (!done && !hasWeekendText && !hasPlan) {
-    ce.innerHTML = '';
-  }
-
+      if (!done && hasWeekendText && (data.weekendText || '').trim() !== '') {
+        ce.textContent = data.weekendText.trim();
+        done = true;
+      }
+      if (!done && hasPlan) {
+        const tmp = document.createElement('div'); tmp.innerHTML = data.plan;
+        const ul = tmp.querySelector('.tasklist');
+        if (ul) {
+          const box = ce.closest('.planBox');
+          box.innerHTML = '';
+          box.appendChild(ul.cloneNode(true));
+          box.classList.add('has-tasks');
+          ensureTaskDeleteButtons(box);
+        } else {
+          ce.textContent = tmp.textContent.replace(/\u00a0/g,' ').trim();
+        }
+      }
+      if (!done && !hasWeekendText && !hasPlan) { ce.innerHTML = ''; }
     } else if (ta) {
       if (Object.prototype.hasOwnProperty.call(data, 'weekendText')) {
         ta.value = data.weekendText || '';
@@ -1885,9 +815,7 @@ if (ce) {
 
     if (data.pictos) {
       const bringHtml = (data.bring || '') + '';
-      function legacyGuessHostFor(src){
-        return bringHtml.includes(src) ? 'bring' : 'body';
-      }
+      function legacyGuessHostFor(src){ return bringHtml.includes(src) ? 'bring' : 'body'; }
       data.pictos.forEach(p => {
         const node = makeFreePicto(p.src);
         node.style.left  = p.left  || '10px';
@@ -1925,7 +853,7 @@ if (ce) {
 
   function captureAll(){
     const meta={
-      template:window.aktieveKlas,
+      template:tplSel.value,
       title:$('#titlePill').textContent,
       monthBox:monthBox.textContent,
       swim:swimChk.checked,
@@ -1935,38 +863,30 @@ if (ce) {
     const days={}; $$('.day').forEach(n=> days[n.dataset.dayIndex]=captureDay(n));
     return {meta,days};
   }
-
-  function captureAllVoorTab(){
-    const data = captureAll();
-    data.meta.panelPictos = capturePanelPictos();
-    return data;
-  }
-
-  function applyAll(obj, vanTabWissel=false){
+  function applyAll(obj){
     if(obj.meta){
-      if(obj.meta.template) tplSel.value = obj.meta.template;
-      $('#titlePill').textContent=obj.meta.title||('agenda '+window.aktieveKlas);
+      tplSel.value=obj.meta.template||'L3';
+      $('#titlePill').textContent=obj.meta.title||('agenda '+tplSel.value.toLowerCase());
       if(obj.meta.monthBox) monthBox.textContent=obj.meta.monthBox;
       swimChk.checked=!!obj.meta.swim;
-      if(obj.meta.classIcon){ classIconSlot.innerHTML='<img alt="klaspictogram" src="'+obj.meta.classIcon+'">'; }
-      else { classIconSlot.innerHTML=`<img src="${getKlasIcon(window.aktieveKlas)}" alt="klaspictogram ${window.aktieveKlas}">`; }
-      if(obj.meta.notes !== undefined){ $('#notesBody').innerHTML=obj.meta.notes||''; }
-      if(!vanTabWissel) applyTemplate();
+      if(obj.meta.classIcon){ classIconSlot.innerHTML='<img alt="klaspictogram" src="'+obj.meta.classIcon+'">'; } else { classIconSlot.innerHTML=''; }
+      if(obj.meta.notes){ $('#notesBody').innerHTML=obj.meta.notes; }
+      applyTemplate();
     }
 
-upgradeWeekendToEditable();
+    upgradeWeekendToEditable();
 
     if(obj.days){ $$('.day').forEach(n=>{ const i=n.dataset.dayIndex; if(obj.days[i]) applyDay(n,obj.days[i]); }); }
     scheduleLayoutSync();
   }
 
-  btnExport.addEventListener('click',()=>{
+  $('#btnExport').addEventListener('click',()=>{
     const data=captureAll();
     data.meta.panelPictos=capturePanelPictos();
     const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
     const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='agenda_2degraad_week.json'; a.click(); URL.revokeObjectURL(a.href);
   });
-  btnImport.addEventListener('click',()=> fileImport.click());
+  $('#btnImport').addEventListener('click',()=> fileImport.click());
   fileImport.addEventListener('change',(e)=>{
     const f=e.target.files && e.target.files[0]; if(!f) return;
     const r=new FileReader();
@@ -1975,13 +895,12 @@ upgradeWeekendToEditable();
   });
   btnPrint.addEventListener('click',()=> window.print());
 
-  /* PRINT: geen schaal via JS, enkel sync & blur */
+  /* PRINT: syncs */
   window.addEventListener('beforeprint', ()=>{
     const a = document.activeElement;
     if (a && typeof a.blur === 'function') a.blur();
     $$('.day').forEach(d => d.style.outline = 'none');
     equalizePlanHeights();
-    // equalizeBringHeights(); // indien ook Ik denk aan gelijk
     syncNotesToWeekend();
   });
 
@@ -2000,23 +919,23 @@ upgradeWeekendToEditable();
     r.readAsDataURL(f);
   });
 
-  /* L3/L4 + logo automatisch */
+  /* L3/L4 + pictogrammen automatisch */
   function applyTemplate(){
-    const tpl = window.aktieveKlas;
-    const cur = classIconSlot.querySelector('img');
-    if (tpl === 'L4') {
-      if (!cur || !/lama\.png$/i.test(cur.src)) {
-        classIconSlot.innerHTML = '<img src="pictogrammen/lama.png" alt="klaspictogram lama">';
-      }
-      if ($('#titlePill').textContent.trim() === 'agenda L3') $('#titlePill').textContent = 'agenda L4';
-    } else if (tpl === 'L3') {
-      if (!cur || !/cactus\.png$/i.test(cur.src)) {
+    const tpl=tplSel.value;
+    const cur=classIconSlot.querySelector('img');
+    if(tpl==='L3'){
+      if(!cur || !/cactus\.png$/i.test(cur.src)){
         classIconSlot.innerHTML = '<img src="pictogrammen/cactus.png" alt="klaspictogram cactus">';
       }
-      if ($('#titlePill').textContent.trim() === 'agenda L4') $('#titlePill').textContent = 'agenda L3';
+      $('#titlePill').textContent = 'agenda L3';
+    }else if(tpl==='L4'){
+      if(!cur || !/lama\.png$/i.test(cur.src)){
+        classIconSlot.innerHTML = '<img src="pictogrammen/lama.png" alt="klaspictogram lama">';
+      }
+      $('#titlePill').textContent = 'agenda L4';
     }
   }
-  // tplSel.addEventListener weggehaald — tabs nemen dit over
+  tplSel.addEventListener('change', ()=>{ applyTemplate(); pushSnapshot(); });
 
   /* Maandlabel */
   function updateMonthBox(){
@@ -2026,22 +945,19 @@ upgradeWeekendToEditable();
   }
 
   /* Mededelingenhoogte = hoogte ZA+ZO */
-  let _syncingNotes = false;
-  // Vaste maximale hoogte voor mededelingen — berekend bij eerste aanroep
-  let _maxNotesH = 0;
-function syncNotesToWeekend(){
-  if (_syncingNotes) return;
+  function syncNotesToWeekend(){
+    const wc   = document.getElementById('weekendCol');
+    const note = document.getElementById('notesPanel');
+    const body = document.getElementById('notesBody');
+    if(!wc||!note) return;
+    note.style.height = wc.offsetHeight + 'px';
+    const headH = note.querySelector('header').offsetHeight;
+    const signH = note.querySelector('.sign').offsetHeight + 12;
+    const pad   = 12;
+    body.style.height = Math.max(40, note.clientHeight - headH - signH - pad) + 'px';
+  }
 
-  const note = document.getElementById('notesPanel');
-  if (!note) return;
-
-  _syncingNotes = true;
-  note.style.minHeight = '';
-  note.style.height = '';
-  _syncingNotes = false;
-}
-
-  /* === NIEUW: Equalizers voor gelijke hoogtes === */
+  /* === Equalizers === */
   function equalizePlanHeights(){
     const boxes = Array.from(document.querySelectorAll('.week-top .day:not(.small) .planBox'));
     if (!boxes.length) return;
@@ -2049,66 +965,25 @@ function syncNotesToWeekend(){
     const maxH = Math.max(...boxes.map(b => b.getBoundingClientRect().height));
     boxes.forEach(b => b.style.height = maxH + 'px');
   }
-  function equalizeBringHeights(){
-    const boxes = Array.from(document.querySelectorAll('.week-top .day:not(.small) .bringBox'));
-    if (!boxes.length) return;
-    boxes.forEach(b => b.style.height = 'auto');
-    const maxH = Math.max(...boxes.map(b => b.getBoundingClientRect().height));
-    boxes.forEach(b => b.style.height = maxH + 'px');
-  }
 
-  /* Layout-sync: equalizers + mededelingen */
-  function checkOverflow(){
-    // Meet de eigen inhoudshoogte van elk dagvak
-    // Drempel: ~320px op scherm = ruim voldoende voor print
-    const MAX_DAY_H = 350;
-    $$('.week-top .day').forEach(d => {
-      const planBox = d.querySelector('.planBox');
-      const bringBox = d.querySelector('.bringBox');
-      const planH = planBox ? planBox.scrollHeight : 0;
-      const bringH = bringBox ? bringBox.scrollHeight : 0;
-      const headerH = d.querySelector('header') ? d.querySelector('header').offsetHeight : 0;
-      const bodyPad = 16;
-      const totaal = headerH + planH + bringH + bodyPad + 20;
-      d.classList.toggle('overflowing', totaal > MAX_DAY_H);
-    });
-  }
-
-  function scheduleLayoutSync(){
-    requestAnimationFrame(()=>{
-      equalizePlanHeights();
-      syncNotesToWeekend();
-      checkOverflow();
-    });
-  }
+  /* Layout-sync: equalizers + mededelingen + overflowcheck */
+  function scheduleLayoutSync(){ requestAnimationFrame(()=>{ equalizePlanHeights(); syncNotesToWeekend(); checkOverflow(); }); }
   window.addEventListener('resize', scheduleLayoutSync);
-  new ResizeObserver(scheduleLayoutSync).observe($('#weekTop'));
-
-  /* Bij elke input in plan/bring: meteen her-equalizen + overflow check */
-  // Verwijder geselecteerde inline picto met Backspace of Delete
-  document.addEventListener('keydown', (e)=>{
-    if (e.key !== 'Backspace' && e.key !== 'Delete') return;
-    const sel = window.getSelection();
-    if (!sel || sel.isCollapsed || sel.rangeCount === 0) return;
-    const range = sel.getRangeAt(0);
-    // Kijk of de selectie een inline picto bevat
-    const frag = range.cloneContents();
-    const pictos = frag.querySelectorAll('.picto-inline');
-    if (pictos.length === 0) return;
-    // Er zit een picto in de selectie — verwijder alles
-    range.deleteContents();
-    e.preventDefault();
-    pushSnapshot();
-  });
+  new ResizeObserver(scheduleLayoutSync).observe($('#weekendCol'));
 
   document.addEventListener('input', (e)=>{
-    if (e.target && e.target.closest && e.target.closest('.planBox, .bringBox, .day')) {
+    if (e.target && e.target.closest && e.target.closest('.planBox, .bringBox, .panelBody')) {
       scheduleLayoutSync();
-      pushSnapshot();
-    } else if (e.target && e.target.id === 'notesBody') {
-      pushSnapshot();
     }
   });
+
+  /* Overflow-check: toon melding indien content > paginahoogte */
+  function checkOverflow(){
+    const page = $('#page');
+    const over = page.scrollHeight - 1 > page.clientHeight; // -1 om miniatuur afronding op te vangen
+    overflowAlert.classList.toggle('show', over);
+    overflowAlert.setAttribute('aria-hidden', over ? 'false' : 'true');
+  }
 
   /* Mededelingen actief maken */
   if (notesPanel){
@@ -2116,25 +991,11 @@ function syncNotesToWeekend(){
     notesBody.addEventListener('focusin', (e)=>{ e.stopPropagation(); lastFocusedHost = notesPanel; setActiveHost(notesPanel); });
     notesBody.addEventListener('pointerdown', (e)=>{ e.stopPropagation(); lastFocusedHost = notesPanel; setActiveHost(notesPanel); });
   }
-notesBody.addEventListener('input', ()=>{
-  _maxNotesH = 0;
-  scheduleLayoutSync();
 
-  if (notesBody.scrollHeight > notesBody.clientHeight + 2){
-    if (!_notesFullWarned){
-      alert('Er is geen ruimte meer in het mededelingenvak. Probeer eventueel een kleiner lettertype.');
-      _notesFullWarned = true;
-    }
-  } else {
-    _notesFullWarned = false;
-  }
-});
   /* Init */
   (function init(){
-    window.aktieveKlas = 'L4';
-    tplSel.value = 'L4';
     const today=new Date();
-    const wd=(today.getDay()+6)%7;
+    const wd=(today.getDay()+6)%7; // maandag=0
     const mon=new Date(today); mon.setDate(today.getDate()-wd);
     $$('.day').forEach(d=>{
       const idx=parseInt(d.dataset.dayIndex,10);
@@ -2146,103 +1007,51 @@ notesBody.addEventListener('input', ()=>{
     dock.hidden = true;
     $$('.day').forEach(updatePlanBoxClass);
     ensureTaskDeleteButtons(document);
+
+    /* Standaard: 11pt voor agenda én ‘ik denk aan’ */
+    $$('.day').forEach(d=>{ applyFsToDay(d,'11pt'); });
+
     scheduleLayoutSync();
     pushSnapshot();
-    // Meet correcte hoogte na eerste render
-    requestAnimationFrame(()=> requestAnimationFrame(()=>{
-      const wc = document.getElementById('weekendCol');
-      if (wc && wc.offsetHeight > 50) _maxNotesH = wc.offsetHeight;
-      // Sla lege beginstaat op voor beide tabs
-      tabState['L4'] = captureAllVoorTab();
-      tabState['L3'] = null;
-      // Alleen _initDone zetten als er geen opgeslagen data is (anders doet de herstel-popup dat)
-      try {
-        if (!localStorage.getItem('klasagenda_2degraad_v2')) _initDone = true;
-      } catch(e) { _initDone = true; }
-    }));
-    // Pin de maximale hoogte van mededelingen na volledig renderen
-    setTimeout(()=>{
-      const wc = document.getElementById('weekendCol');
-      if (wc && wc.offsetHeight > 50) _maxNotesH = wc.offsetHeight;
-    }, 300);
   })();
 
-  function cleanupTaskText(t){
-  if (!t) return;
-
-  // verwijder overbodige trailing <br>'s op het einde
-  while (
-    t.lastChild &&
-    (
-      (t.lastChild.nodeType === 1 && t.lastChild.tagName === 'BR') ||
-      (t.lastChild.nodeType === 3 && t.lastChild.textContent === '')
-    )
-  ){
-    t.removeChild(t.lastChild);
-  }
-
-  // Als browser lege div/p/blokjes maakte op het einde: ook opruimen
-  while (
-    t.lastChild &&
-    t.lastChild.nodeType === 1 &&
-    ['DIV','P'].includes(t.lastChild.tagName) &&
-    (t.lastChild.innerText || '').trim() === ''
-  ){
-    t.removeChild(t.lastChild);
-  }
-}
   /* Takenlijst UX */
   document.addEventListener('keydown', (e)=>{
-  const t = e.target;
-  if (!t || !t.classList || !t.classList.contains('tasktext')) return;
+    const t = e.target;
+    if (!t || !t.classList || !t.classList.contains('tasktext')) return;
 
-  if (e.key === 'Enter'){
-    e.preventDefault();
-    try { document.execCommand('insertLineBreak'); }
-    catch(_){ document.execCommand('insertHTML', false, '<br>'); }
-    pushSnapshot();
-    return;
-  }
+    if (e.key === 'Enter'){
+      e.preventDefault();
+      try { document.execCommand('insertLineBreak'); }
+      catch(_){ document.execCommand('insertHTML', false, '<br>'); }
+      pushSnapshot(); return;
+    }
+    if (e.key === 'Backspace'){
+      const sel = window.getSelection();
+      const atStart = sel && sel.anchorOffset === 0 && sel.isCollapsed;
+      const isEmpty = (t.innerText || '').trim() === '';
+      if (atStart && isEmpty){
+        const li  = t.closest('li');
+        const day = t.closest('.day');
+        e.preventDefault();
+        li?.remove();
+        if (day) updatePlanBoxClass(day);
+        pushSnapshot();
+      }
+    }
+  });
 
-  if (e.key === 'Backspace'){
-    const sel = window.getSelection();
-    const atStart = sel && sel.anchorOffset === 0 && sel.isCollapsed;
-    const isEmpty = (t.innerText || '').trim() === '';
-
-    if (atStart && isEmpty){
+  document.addEventListener('blur', (e)=>{
+    const t = e.target;
+    if (!t || !t.classList || !t.classList.contains('tasktext')) return;
+    if ((t.innerText || '').trim() === ''){
       const li  = t.closest('li');
       const day = t.closest('.day');
-      e.preventDefault();
       li?.remove();
       if (day) updatePlanBoxClass(day);
       pushSnapshot();
-      return;
     }
-
-    setTimeout(()=>{
-      cleanupTaskText(t);
-      pushSnapshot();
-    }, 0);
-  }
-});
-
- document.addEventListener('blur', (e)=>{
-  const t = e.target;
-  if (!t || !t.classList || !t.classList.contains('tasktext')) return;
-
-  cleanupTaskText(t);
-
-  if ((t.innerText || '').trim() === ''){
-    const li  = t.closest('li');
-    const day = t.closest('.day');
-    li?.remove();
-    if (day) updatePlanBoxClass(day);
-    pushSnapshot();
-    return;
-  }
-
-  pushSnapshot();
-}, true);
+  }, true);
 
   document.addEventListener('keydown', (e)=>{
     if (e.key === 'Delete') {
@@ -2256,744 +1065,8 @@ notesBody.addEventListener('input', ()=>{
     const li   = e.target.closest('li');
     li?.remove();
     const dd = e.target.closest('.day');
-    if (dd) {
-      updatePlanBoxClass(dd);
-    }
+    if (dd) updatePlanBoxClass(dd);
     pushSnapshot();
-  });
-
-  // ── Herstel-popup bij laden ──
-  (function(){
-    const LS_KEY_CHECK = 'klasagenda_2degraad_v2';
-    let saved;
-    try { saved = localStorage.getItem(LS_KEY_CHECK); } catch(e){}
-    if (!saved) return; // niets opgeslagen → gewoon lege agenda tonen
-
-    let parsedSaved;
-    try { parsedSaved = JSON.parse(saved); } catch(e){ return; }
-
-    // Bouw popup
-    const ov = document.createElement('div');
-    ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9990;display:flex;align-items:center;justify-content:center;padding:1rem';
-    ov.innerHTML = `
-      <div style="background:#fff;border-radius:16px;padding:2rem;max-width:440px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.18);text-align:center">
-        <div style="font-size:2rem;margin-bottom:.5rem">📋</div>
-        <h2 style="margin:0 0 .5rem;font-size:1.2rem">We vonden je agenda van vorige keer</h2>
-        <p style="margin:0 0 1rem;color:#6b7280;font-size:.95rem">Wil je verder werken waar je gebleven was, of liever opnieuw beginnen met een lege agenda?</p>
-        <p style="margin:0 0 1.4rem;background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:.6rem .8rem;font-size:.82rem;color:#92400e;text-align:left">
-          💡 <strong>Tip:</strong> autosave is handig voor dagelijks gebruik, maar is enkel bewaard op <em>deze laptop</em> in <em>deze browser</em>. Gebruik <strong>📚 Bewaar in archief</strong> als je zeker wil zijn dat je agenda niet verloren gaat of om te delen met collega's.
-        </p>
-        <div style="display:flex;gap:.8rem;justify-content:center;flex-wrap:wrap">
-          <button id="_herstelBtn" style="padding:.6rem 1.3rem;background:#0a66c2;color:#fff;border:none;border-radius:10px;font-weight:700;font-size:1rem;cursor:pointer">↩ Verder werken</button>
-          <button id="_nieuwBtn" style="padding:.6rem 1.3rem;background:#fff;color:#111;border:1.5px solid #d0d7de;border-radius:10px;font-weight:700;font-size:1rem;cursor:pointer">🗒 Opnieuw beginnen</button>
-        </div>
-      </div>`;
-    document.body.appendChild(ov);
-
-    document.getElementById('_herstelBtn').onclick = () => {
-      // Wacht tot de pagina écht klaar is voor we data toepassen
-      requestAnimationFrame(() => requestAnimationFrame(() => {
-        isApplying = true;
-        applyAll(parsedSaved);
-        applyPanelPictos(parsedSaved.meta?.panelPictos || []);
-        upgradeWeekendToEditable();
-        isApplying = false;
-        // Nu pas initDone zetten zodat de volgende pushSnapshot correct autosaved
-        _initDone = true;
-        undoStack.push(snapshot());
-        scheduleLayoutSync();
-        ov.remove();
-      }));
-    };
-    document.getElementById('_nieuwBtn').onclick = () => {
-      try { localStorage.removeItem(LS_KEY_CHECK); } catch(e){}
-      _initDone = true;
-      ov.remove();
-    };
-  })();
-
-  // Maak functies globaal toegankelijk voor de archief-IIFE
-  window._klasagenda = {
-    makeFreePicto,
-    applyPanelPictos,
-    scheduleLayoutSync,
-    syncNotesToWeekend,
-    equalizePlanHeights,
-    pushSnapshot,
-    updatePlanBoxClass,
-    ensureTaskDeleteButtons,
-    upgradeWeekendToEditable,
-    applyDay
-  };
-
-})();
-
-/* ====================================================
-   ARCHIEF – Firebase Realtime Database
-   ==================================================== */
-(function(){
-  const DB_URL = 'https://zisa-klasagenda-default-rtdb.europe-west1.firebasedatabase.app';
-  const GRAAD  = '2degraad';
-
-  const btnBewaar = document.getElementById('btnBewaar');
-
-  async function dbSet(path, data){
-    const r = await fetch(`${DB_URL}/${path}.json`, {
-      method: 'PUT',
-      headers: {'Content-Type':'application/json'},
-      body: JSON.stringify(data)
-    });
-    if (!r.ok) throw new Error('Firebase fout: ' + r.status);
-    return r.json();
-  }
-
-  function getMaandInfo(){
-    const dp = document.querySelector('.datePicker');
-    if (!dp || !dp.value) return null;
-    const d = new Date(dp.value);
-    const maand = d.toLocaleDateString('nl-BE',{month:'long'});
-    const jaar = d.getFullYear();
-    const weekInMaand = Math.ceil(d.getDate() / 7);
-    return { jaar, maand, weekInMaand };
-  }
-
-  function toonModal(){
-    return new Promise(resolve => {
-      // Overlay
-      const ov = document.createElement('div');
-      ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9000;display:flex;align-items:center;justify-content:center';
-
-      const box = document.createElement('div');
-      box.style.cssText = 'background:#fff;border-radius:14px;padding:28px 32px;min-width:340px;max-width:420px;box-shadow:0 8px 40px rgba(0,0,0,.18);font-family:Arial,sans-serif';
-
-      const wl = getMaandInfo();
-      const weekInfo = wl ? `<p style="margin:.3rem 0;color:#374151;font-size:13pt">📅 ${wl.maand} ${wl.jaar}</p>` : '';
-
-      box.innerHTML = `
-        <h2 style="margin:0 0 .6rem;font-size:15pt">📚 Bewaar in archief</h2>
-        ${weekInfo}
-        <label style="display:block;margin:.8rem 0 .3rem;font-weight:700">Jouw naam (verschijnt in het archief):</label>
-        <input id="archiefNaam" type="text" placeholder="bv. Juf Zisa" style="width:100%;padding:.5rem .7rem;border:1.5px solid #d1d5db;border-radius:8px;font-size:12pt;box-sizing:border-box">
-        <label style="display:block;margin:.8rem 0 .3rem;font-weight:700">Klas:</label>
-        <select id="archiefKlas" style="width:100%;padding:.5rem .7rem;border:1.5px solid #d1d5db;border-radius:8px;font-size:12pt;box-sizing:border-box">
-          <option value="L3" ${window.aktieveKlas==='L3'?'selected':''}>L3</option>
-          <option value="L4" ${window.aktieveKlas==='L4'?'selected':''}>L4</option>
-        </select>
-        <label style="display:block;margin:.8rem 0 .3rem;font-weight:700">Week van de maand:</label>
-        <select id="archiefWeek" style="width:100%;padding:.5rem .7rem;border:1.5px solid #d1d5db;border-radius:8px;font-size:12pt;box-sizing:border-box">
-          <option value="1" ${wl&&wl.weekInMaand===1?'selected':''}>Week 1</option>
-          <option value="2" ${wl&&wl.weekInMaand===2?'selected':''}>Week 2</option>
-          <option value="3" ${wl&&wl.weekInMaand===3?'selected':''}>Week 3</option>
-          <option value="4" ${wl&&wl.weekInMaand===4?'selected':''}>Week 4</option>
-          <option value="5" ${wl&&wl.weekInMaand===5?'selected':''}>Week 5</option>
-        </select>
-        <div style="display:flex;gap:.7rem;margin-top:1.2rem;justify-content:flex-end">
-          <button id="archiefAnnul" style="padding:.5rem 1.1rem;border:1px solid #d1d5db;background:#f9fafb;border-radius:8px;cursor:pointer;font-size:11pt">Annuleer</button>
-          <button id="archiefOk" style="padding:.5rem 1.4rem;border:none;background:#16a34a;color:#fff;border-radius:8px;cursor:pointer;font-weight:700;font-size:11pt">Bewaren</button>
-        </div>
-        <p id="archiefMsg" style="margin:.7rem 0 0;font-size:10pt;color:#6b7280"></p>
-      `;
-
-      ov.appendChild(box);
-      document.body.appendChild(ov);
-
-      document.getElementById('archiefAnnul').onclick = () => { document.body.removeChild(ov); resolve(null); };
-      document.getElementById('archiefOk').onclick = async () => {
-        const naam = document.getElementById('archiefNaam').value.trim();
-        const klas = document.getElementById('archiefKlas').value;
-        const week = document.getElementById('archiefWeek').value;
-        const msg  = document.getElementById('archiefMsg');
-        if (!naam){ msg.textContent = '⚠️ Vul eerst je naam in.'; msg.style.color='#b91c1c'; return; }
-        const mi = getMaandInfo();
-        if (!mi){ msg.textContent = '⚠️ Stel eerst de datum in op de agenda.'; msg.style.color='#b91c1c'; return; }
-        msg.textContent = '⏳ Bezig met bewaren…'; msg.style.color='#374151';
-        document.getElementById('archiefOk').disabled = true;
-        resolve({ naam, klas, maand: mi.maand, jaar: mi.jaar, week });
-        document.body.removeChild(ov);
-      };
-    });
-  }
-
-  /* ══════════════════════════════════════════
-     ARCHIEF RAADPLEGEN – inline modal
-     ══════════════════════════════════════════ */
-  const DB_URL2 = 'https://zisa-klasagenda-default-rtdb.europe-west1.firebasedatabase.app';
-  const DAGNAMES2 = ['Maandag','Dinsdag','Woensdag','Donderdag','Vrijdag','Zaterdag','Zondag'];
-  const MAANDEN2 = ['september','oktober','november','december','januari','februari','maart','april','mei','juni','juli','augustus'];
-
-  async function archiefGet(path){
-    const r = await fetch(`${DB_URL2}/${path}.json`);
-    if (!r.ok) throw new Error('Firebase fout: '+r.status);
-    return r.json();
-  }
-
-  // Modal injecteren
-  const archiefModal = document.createElement('div');
-  archiefModal.id = 'archiefModal';
-  archiefModal.style.cssText = 'display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:8000;align-items:center;justify-content:center;padding:1rem';
-  archiefModal.innerHTML = `
-    <div style="background:#fff;border-radius:14px;width:100%;max-width:560px;max-height:90vh;overflow-y:auto;box-shadow:0 8px 40px rgba(0,0,0,.2);font-family:Arial,sans-serif">
-      <div style="padding:16px 20px;border-bottom:1px solid #e5e7eb;display:flex;justify-content:space-between;align-items:center">
-        <strong style="font-size:1.05rem">🗂️ Archief raadplegen</strong>
-        <button id="archiefModalSluit" style="border:none;background:none;font-size:1.3rem;cursor:pointer;color:#6b7280">✕</button>
-      </div>
-
-      <!-- Stap 1: filter -->
-      <div id="archiefStap1" style="padding:16px 20px">
-        <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr 1fr;gap:.6rem;margin-bottom:1rem">
-          <div>
-            <label style="display:block;font-weight:700;font-size:.85rem;margin-bottom:.3rem">Graad</label>
-            <select id="arfGraad" style="width:100%;padding:.4rem .5rem;border:1.5px solid #d1d5db;border-radius:7px;font-size:.9rem">
-              <option value="2degraad" selected>Tweede graad</option>
-              <option value="1stegraad">Eerste graad</option>
-            </select>
-          </div>
-          <div>
-            <label style="display:block;font-weight:700;font-size:.85rem;margin-bottom:.3rem">Klas</label>
-            <select id="arfKlas" style="width:100%;padding:.4rem .5rem;border:1.5px solid #d1d5db;border-radius:7px;font-size:.9rem">
-              <option value="">Alle klassen</option>
-              <option value="L3">L3</option>
-              <option value="L4">L4</option>
-              <option value="L1">L1</option>
-              <option value="L2">L2</option>
-            </select>
-          </div>
-          <div>
-            <label style="display:block;font-weight:700;font-size:.85rem;margin-bottom:.3rem">Jaar</label>
-            <select id="arfJaar" style="width:100%;padding:.4rem .5rem;border:1.5px solid #d1d5db;border-radius:7px;font-size:.9rem">
-            </select>
-          </div>
-          <div>
-            <label style="display:block;font-weight:700;font-size:.85rem;margin-bottom:.3rem">Maand</label>
-            <select id="arfMaand" style="width:100%;padding:.4rem .5rem;border:1.5px solid #d1d5db;border-radius:7px;font-size:.9rem">
-              <option value="">— kies —</option>
-              <option>september</option><option>oktober</option><option>november</option>
-              <option>december</option><option>januari</option><option>februari</option>
-              <option>maart</option><option>april</option><option>mei</option>
-              <option>juni</option>
-            </select>
-          </div>
-          <div>
-            <label style="display:block;font-weight:700;font-size:.85rem;margin-bottom:.3rem">Week</label>
-            <select id="arfWeek" style="width:100%;padding:.4rem .5rem;border:1.5px solid #d1d5db;border-radius:7px;font-size:.9rem">
-              <option value="">— kies —</option>
-              <option value="week1">Week 1</option><option value="week2">Week 2</option>
-              <option value="week3">Week 3</option><option value="week4">Week 4</option>
-              <option value="week5">Week 5</option>
-            </select>
-          </div>
-        </div>
-        <button id="arfZoek" style="background:#0a66c2;color:#fff;border:none;padding:.5rem 1.2rem;border-radius:8px;font-weight:700;cursor:pointer;font-size:.9rem">Zoeken</button>
-        <div id="arfResultaten" style="margin-top:1rem"></div>
-      </div>
-    </div>
-  `;
-  document.body.appendChild(archiefModal);
-
-  document.getElementById('archiefModalSluit').onclick = ()=>{ archiefModal.style.display='none'; };
-  archiefModal.addEventListener('click', e=>{ if(e.target===archiefModal) archiefModal.style.display='none'; });
-
-  document.getElementById('btnArchief').addEventListener('click', ()=>{
-    const mi = getMaandInfo();
-    const huidigJaar = new Date().getFullYear();
-    // Jaar-opties vullen: alleen jaren van lopende en vorige schooljaren (vanaf 2025)
-    const arfJaar = document.getElementById('arfJaar');
-    arfJaar.innerHTML = '';
-    const minJaar = 2025;
-    for (let j = huidigJaar; j >= minJaar; j--){
-      const opt = document.createElement('option');
-      opt.value = j;
-      opt.textContent = j;
-      if (mi && j === mi.jaar) opt.selected = true;
-      arfJaar.appendChild(opt);
-    }
-    if (mi){
-      document.getElementById('arfMaand').value = mi.maand;
-      document.getElementById('arfWeek').value = 'week'+mi.weekInMaand;
-    }
-    archiefModal.style.display = 'flex';
-    document.getElementById('arfResultaten').innerHTML = '';
-  });
-
-  document.getElementById('arfZoek').addEventListener('click', async ()=>{
-    const graad = document.getElementById('arfGraad').value;
-    const klas  = document.getElementById('arfKlas').value;
-    const jaar  = document.getElementById('arfJaar').value;
-    const maand = document.getElementById('arfMaand').value;
-    const week  = document.getElementById('arfWeek').value;
-    const res   = document.getElementById('arfResultaten');
-    if (!maand || !week){ res.innerHTML='<p style="color:#b91c1c;font-size:.9rem">⚠️ Kies eerst maand en week.</p>'; return; }
-    res.innerHTML = '<p style="color:#6b7280;font-size:.9rem">⏳ Laden…</p>';
-    try {
-      const data = await archiefGet(`archief/${graad}/${jaar}/${maand}/${week}`);
-      if (!data){
-        res.innerHTML='<p style="color:#6b7280;font-style:italic;font-size:.9rem">Geen agenda\'s gevonden voor deze periode.</p>'; return;
-      }
-      let gefilterd = data;
-      if (klas){
-        gefilterd = {};
-        Object.entries(data).forEach(([k,v])=>{
-          if ((v.meta?.archiefKlas||'') === klas) gefilterd[k] = v;
-        });
-      }
-      if (Object.keys(gefilterd).length === 0){
-        res.innerHTML=`<p style="color:#6b7280;font-style:italic;font-size:.9rem">Geen agenda's gevonden voor klas ${klas} in deze periode.</p>`; return;
-      }
-      renderArchiefResultaten(res, gefilterd, graad, jaar, maand, week);
-    } catch(e){
-      res.innerHTML=`<p style="color:#b91c1c;font-size:.9rem">❌ Fout: ${e.message}</p>`;
-    }
-  });
-
-  function renderArchiefResultaten(container, data, graad, jaar, maand, week){
-    let html = `<p style="font-size:.85rem;color:#6b7280;margin:0 0 .6rem">${Object.keys(data).length} agenda('s) gevonden voor ${maand} — ${week.replace('week','week ')}</p>`;
-    Object.entries(data).forEach(([sleutel, obj])=>{
-      const naam = obj.meta?.archiefNaam || sleutel;
-      const klas = obj.meta?.archiefKlas || '';
-      html += `<div style="border:1.5px solid #e5e7eb;border-radius:9px;margin-bottom:.8rem;overflow:hidden">
-        <div style="background:#f0f4f8;padding:.5rem .8rem;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.4rem">
-          <span style="font-weight:700;font-size:.92rem">📖 ${naam} ${klas?'('+klas+')':''}</span>
-          <button class="arf-plak-btn" data-type="heleweeek" data-sleutel="${sleutel}" data-graad="${graad}" data-jaar="${jaar}" data-maand="${maand}" data-week="${week}"
-            style="font-size:.8rem;padding:.3rem .8rem;border:1.5px solid #0a66c2;color:#fff;background:#0a66c2;border-radius:6px;cursor:pointer;font-weight:700;white-space:nowrap">
-            ↙ Hele week overnemen
-          </button>
-        </div>
-        <div style="padding:.6rem .8rem">`;
-
-      // Mededelingen
-      const notes = obj.meta?.notes || '';
-      const notesTekst = notes.replace(/<[^>]*>/g,'').trim();
-      if (notesTekst){
-        html += `<div style="border:1.5px solid #fcd34d;border-radius:7px;padding:.5rem .7rem;margin-bottom:.5rem;background:#fffbeb">
-          <div style="font-size:.8rem;font-weight:700;color:#92400e;margin-bottom:.3rem">📋 Mededelingen</div>
-          <div style="font-size:.85rem;color:#374151;line-height:1.4">${notes}</div>
-          <button class="arf-plak-btn" data-type="notes" data-sleutel="${sleutel}" data-graad="${graad}" data-jaar="${jaar}" data-maand="${maand}" data-week="${week}"
-            style="margin-top:.5rem;font-size:.8rem;padding:.3rem .7rem;border:1.5px solid #d97706;color:#d97706;background:#fff;border-radius:6px;cursor:pointer;font-weight:700">
-            ↙ Plak in mijn agenda
-          </button>
-        </div>`;
-      }
-
-      // Dagen
-      const days = obj.days || {};
-      Object.entries(days).sort((a,b)=>parseInt(a)-parseInt(b)).forEach(([idx, dag])=>{
-        const dagNaam = DAGNAMES2[parseInt(idx)] || ('Dag '+idx);
-        const heeftPlan  = dagHeeftInhoudArchief(dag, 'plan');
-        const heeftBring = dagHeeftInhoudArchief(dag, 'bring');
-        if (!heeftPlan && !heeftBring) return;
-
-        // Echte tekst ophalen
-        const planTekst = (()=>{
-          const tmp = document.createElement('div');
-          tmp.innerHTML = dag.plan || dag.weekendHtml || '';
-          // Bullets als lijst tonen
-          const items = tmp.querySelectorAll('li .tasktext, li');
-          if (items.length) return [...items].map(li=>('• '+li.textContent.trim())).filter(s=>s!=='• ').join('<br>');
-          return tmp.textContent.trim();
-        })();
-        const bringTekst = (()=>{
-          const tmp = document.createElement('div');
-          tmp.innerHTML = dag.bring || '';
-          return tmp.textContent.trim();
-        })();
-
-        const datum = dag.date ? new Date(dag.date).toLocaleDateString('nl-BE',{day:'numeric',month:'short'}) : '';
-
-        html += `<div style="border:1px solid #e5e7eb;border-radius:7px;margin-bottom:.4rem;overflow:hidden">
-          <div style="background:#f9fafb;padding:.35rem .7rem;font-weight:700;font-size:.88rem;display:flex;justify-content:space-between;align-items:center">
-            <span>${dagNaam} <span style="color:#6b7280;font-weight:400;font-size:.8rem">${datum}</span></span>
-          </div>
-          <div style="padding:.4rem .7rem">`;
-
-        if (heeftPlan && planTekst){
-          html += `<div style="margin-bottom:.3rem">
-            <span style="font-size:.78rem;font-weight:700;color:#0a66c2;text-transform:uppercase;letter-spacing:.03em">Plan</span>
-            <div style="font-size:.85rem;color:#374151;line-height:1.4;margin-top:.15rem">${planTekst}</div>
-            <button class="arf-plak-btn" data-type="plan" data-dayidx="${idx}" data-sleutel="${sleutel}" data-graad="${graad}" data-jaar="${jaar}" data-maand="${maand}" data-week="${week}"
-              style="margin-top:.3rem;font-size:.78rem;padding:.25rem .6rem;border:1.5px solid #0a66c2;color:#0a66c2;background:#fff;border-radius:6px;cursor:pointer;font-weight:700">↙ Plan overnemen</button>
-          </div>`;
-        }
-        if (heeftBring && bringTekst){
-          html += `<div style="${heeftPlan?'border-top:1px solid #f0f0f0;padding-top:.3rem;margin-top:.2rem':''}">
-            <span style="font-size:.78rem;font-weight:700;color:#16a34a;text-transform:uppercase;letter-spacing:.03em">Ik denk aan</span>
-            <div style="font-size:.85rem;color:#374151;line-height:1.4;margin-top:.15rem">${bringTekst}</div>
-            <button class="arf-plak-btn" data-type="bring" data-dayidx="${idx}" data-sleutel="${sleutel}" data-graad="${graad}" data-jaar="${jaar}" data-maand="${maand}" data-week="${week}"
-              style="margin-top:.3rem;font-size:.78rem;padding:.25rem .6rem;border:1.5px solid #16a34a;color:#16a34a;background:#fff;border-radius:6px;cursor:pointer;font-weight:700">↙ Ik denk aan overnemen</button>
-          </div>`;
-        }
-        if (heeftPlan && heeftBring){
-          html += `<div style="margin-top:.4rem;padding-top:.3rem;border-top:1px solid #f0f0f0">
-            <button class="arf-plak-btn" data-type="alles" data-dayidx="${idx}" data-sleutel="${sleutel}" data-graad="${graad}" data-jaar="${jaar}" data-maand="${maand}" data-week="${week}"
-              style="font-size:.78rem;padding:.3rem .8rem;border:1.5px solid #7c3aed;color:#7c3aed;background:#fff;border-radius:6px;cursor:pointer;font-weight:700">↙ Hele dag overnemen</button>
-          </div>`;
-        }
-
-        html += `</div></div>`;
-      });
-
-      html += `</div></div>`;
-    });
-    container.innerHTML = html;
-
-    // Plak-knoppen
-    container.querySelectorAll('.arf-plak-btn').forEach(btn=>{
-      btn.addEventListener('click', async ()=>{
-        const type    = btn.dataset.type;
-        const dayIdx  = btn.dataset.dayidx;
-        const sleutel = btn.dataset.sleutel;
-        const graad   = btn.dataset.graad;
-        const jaar    = btn.dataset.jaar;
-        const maand   = btn.dataset.maand;
-        const week    = btn.dataset.week;
-
-        const origTekst = btn.textContent;
-        btn.textContent = '⏳…'; btn.disabled = true;
-        try {
-          const obj = await archiefGet(`archief/${graad}/${jaar}/${maand}/${week}/${sleutel}`);
-          const naam = obj.meta?.archiefNaam || sleutel;
-
-          // ── Hele week overnemen ──
-          if (type === 'heleweeek'){
-            if (!confirm(`Hele week van ${naam} overnemen?\n\nDit overschrijft alle dagen én mededelingen in jouw huidige agenda.`)) return;
-            // Mededelingen — eerst leegmaken dan vullen
-            const notesBody = document.getElementById('notesBody');
-            if (notesBody){
-              notesBody.innerHTML = '';
-              notesBody.innerHTML = obj.meta?.notes || '';
-            }            // Alle dagen — eerst upgradeWeekendToEditable zodat ce bestaat
-            window._klasagenda.upgradeWeekendToEditable();
-            const mijnDagen = [...document.querySelectorAll('.day')];
-            const bronDagen = obj.days || {};
-            Object.entries(bronDagen).forEach(([idx, dag])=>{
-              const doelDag = mijnDagen.find(d => parseInt(d.dataset.dayIndex) === parseInt(idx));
-              if (!doelDag) return;
-              const idx2 = doelDag.dataset.dayIndex;
-              // Plan
-              const planBoxEl = doelDag.querySelector(`[data-key="d${idx2}.plan"]`);
-              const ta = planBoxEl?.querySelector('.wkTA');
-              const ce = planBoxEl?.querySelector('.wkCE[contenteditable]');
-              if (ce) {
-                if (dag.weekendHtml != null) {
-                  ce.innerHTML = dag.weekendHtml;
-                } else if (dag.weekendText) {
-                  ce.innerText = dag.weekendText;
-                }
-              } else if (ta) {
-                ta.value = dag.weekendText || '';
-              }
-              // Ik denk aan
-              const br = doelDag.querySelector(`[data-key="d${idx2}.bring"]`);
-              if (br) br.innerHTML = dag.bring || '';
-              // Picto's verwijderen en nieuwe plaatsen
-              doelDag.querySelectorAll('.picto-free').forEach(p=>p.remove());
-              if (dag.pictos){
-                dag.pictos.forEach(p=>{
-                  const node = window._klasagenda.makeFreePicto(p.src);
-                  node.style.left = p.left || '4px';
-                  node.style.top  = p.top  || '4px';
-                  if (p.width) node.style.width = p.width;
-                  const hostEl = p.host === 'bring'
-                    ? (doelDag.querySelector(`[data-key="d${idx2}.bring"]`) || doelDag)
-                    : (doelDag.querySelector('.body') || doelDag);
-                  node.dataset.host = p.host || 'body';
-                  hostEl.appendChild(node);
-                });
-              }
-              // CSS vars
-              if (dag.vars){
-                if (dag.vars.planFS)  doelDag.style.setProperty('--plan-fs', dag.vars.planFS);
-                if (dag.vars.bullet)  doelDag.style.setProperty('--bullet',  dag.vars.bullet);
-                if (dag.vars.gap)     doelDag.style.setProperty('--task-gap',dag.vars.gap);
-                if (dag.vars.bringFS) doelDag.style.setProperty('--bring-fs',dag.vars.bringFS);
-              }
-            });
-            // Paneel-picto's: NIET applyPanelPictos aanroepen want die zitten al in notes HTML
-    window._klasagenda.pushSnapshot();
-    _maxNotesH = 0;
-    window._klasagenda.scheduleLayoutSync();
-    toonArchiefToast(`✅ Hele week van ${naam} overgenomen — inclusief picto's!`);
-    return;
-          }
-
-          // ── Mededelingen ──
-          if (type === 'notes'){
-  const notesBody = document.getElementById('notesBody');
-  if (notesBody){
-    notesBody.innerHTML = obj.meta?.notes || '';
-    _maxNotesH = 0;
-    window._klasagenda.scheduleLayoutSync();
-    toonArchiefToast('✅ Mededelingen van '+naam+' zijn ingeplakt!');
-  }
-  return;
-}
-
-          // ── Dag-onderdeel ──
-          const dag = obj.days?.[dayIdx];
-          if (!dag){ alert('Dag niet gevonden.'); return; }
-          const doelIdx = await kiesDagModal(naam, DAGNAMES2[parseInt(dayIdx)]);
-          if (doelIdx === null) return;
-
-          const doelDag = [...document.querySelectorAll('.day')].find(d=>parseInt(d.dataset.dayIndex)===doelIdx);
-          if (!doelDag){ alert('Doeldag niet gevonden.'); return; }
-
-          const idx2 = doelDag.dataset.dayIndex;
-
-          if (type === 'plan' || type === 'alles'){
-            const planBoxEl = doelDag.querySelector(`[data-key="d${idx2}.plan"]`);
-            const ta = planBoxEl?.querySelector('.wkTA');
-            const ce = planBoxEl?.querySelector('.wkCE[contenteditable]');
-            if (ce) {
-              if (dag.weekendHtml != null) {
-                ce.innerHTML = dag.weekendHtml;
-              } else if (dag.weekendText) {
-                ce.innerText = dag.weekendText;
-              }
-            } else if (ta) {
-              ta.value = dag.weekendText || '';
-            } else if (planBoxEl) {
-              planBoxEl.innerHTML = dag.plan || '';
-            }
-          }
-          if (type === 'bring' || type === 'alles'){
-            const br = doelDag.querySelector(`[data-key="d${idx2}.bring"]`);
-            if (br) br.innerHTML = dag.bring || '';
-          }
-          if (type === 'alles' && dag.pictos){
-            doelDag.querySelectorAll('.picto-free').forEach(p=>p.remove());
-            dag.pictos.forEach(p=>{
-              const node = window._klasagenda.makeFreePicto(p.src);
-              node.style.left = p.left || '4px';
-              node.style.top  = p.top  || '4px';
-              if (p.width) node.style.width = p.width;
-              const hostEl = p.host === 'bring'
-                ? (doelDag.querySelector(`[data-key="d${idx2}.bring"]`) || doelDag)
-                : (doelDag.querySelector('.body') || doelDag);
-              node.dataset.host = p.host || 'body';
-              hostEl.appendChild(node);
-            });
-          }
-          window._klasagenda.pushSnapshot();
-          toonArchiefToast('✅ '+DAGNAMES2[parseInt(dayIdx)]+' van '+naam+' ingeplakt in '+DAGNAMES2[doelIdx]+'!');
-        } catch(e){
-          alert('Fout: '+e.message);
-        }
-        btn.textContent = origTekst;
-        btn.disabled = false;
-      });
-    });
-  }
-
-  function dagHeeftInhoudArchief(dag, type){
-    if (!dag) return false;
-    const html = type==='bring' ? (dag.bring||'') : (dag.plan||dag.weekendHtml||'');
-    const tmp = document.createElement('div');
-    tmp.innerHTML = html;
-    return tmp.textContent.trim().length > 0;
-  }
-
-  // Dag-kiezer mini-modal
-  function kiesDagModal(vanNaam, vanDag){
-    return new Promise(resolve=>{
-      const ov = document.createElement('div');
-      ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:9000;display:flex;align-items:center;justify-content:center';
-      const box = document.createElement('div');
-      box.style.cssText = 'background:#fff;border-radius:12px;padding:20px 24px;max-width:340px;width:100%;box-shadow:0 8px 32px rgba(0,0,0,.18);font-family:Arial,sans-serif';
-      box.innerHTML = `<p style="margin:0 0 .8rem;font-weight:700;font-size:.95rem">In welke dag van jouw agenda plakken?<br><span style="font-weight:400;color:#6b7280;font-size:.85rem">Van: ${vanDag} van ${vanNaam}</span></p>
-        <div style="display:grid;gap:.35rem" id="kiesDagLijst"></div>
-        <button id="kiesDagAnnul" style="margin-top:.8rem;border:1px solid #d1d5db;background:#f9fafb;padding:.4rem .9rem;border-radius:7px;cursor:pointer;font-size:.88rem">Annuleer</button>`;
-      ov.appendChild(box);
-      document.body.appendChild(ov);
-
-      const lijst = box.querySelector('#kiesDagLijst');
-      document.querySelectorAll('.day').forEach(d=>{
-        const i = parseInt(d.dataset.dayIndex);
-        const naam = DAGNAMES2[i] || ('Dag '+i);
-        const dp = d.querySelector('.datePicker');
-        const datum = dp?.value ? new Date(dp.value).toLocaleDateString('nl-BE',{day:'numeric',month:'short'}) : '';
-        const btn2 = document.createElement('button');
-        btn2.style.cssText = 'text-align:left;padding:.4rem .7rem;border:1.5px solid #e5e7eb;border-radius:7px;cursor:pointer;background:#fff;font-size:.88rem;font-family:Arial,sans-serif';
-        btn2.innerHTML = `<strong>${naam}</strong> <span style="color:#6b7280;font-size:.8rem">${datum}</span>`;
-        btn2.onmouseover = ()=>btn2.style.borderColor='#7c3aed';
-        btn2.onmouseout  = ()=>btn2.style.borderColor='#e5e7eb';
-        btn2.onclick = ()=>{ document.body.removeChild(ov); resolve(i); };
-        lijst.appendChild(btn2);
-      });
-
-      box.querySelector('#kiesDagAnnul').onclick = ()=>{ document.body.removeChild(ov); resolve(null); };
-    });
-  }
-
-  function toonArchiefToast(tekst){
-    let t = document.getElementById('archiefToast');
-    if (!t){
-      t = document.createElement('div');
-      t.id = 'archiefToast';
-      t.style.cssText = 'position:fixed;bottom:24px;right:24px;background:#111;color:#fff;padding:.7rem 1.2rem;border-radius:10px;font-size:.92rem;z-index:9999;opacity:0;transition:opacity .3s;pointer-events:none;max-width:320px;line-height:1.4';
-      document.body.appendChild(t);
-    }
-    t.textContent = tekst;
-    t.style.opacity = '1';
-    setTimeout(()=>t.style.opacity='0', 4000);
-  }
-
-  /* ══════════════════════════════════════════
-     UITLEG-MODAL
-     ══════════════════════════════════════════ */
-  const helpModal = document.createElement('div');
-  helpModal.style.cssText = 'display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9500;align-items:center;justify-content:center;padding:1rem';
-  helpModal.innerHTML = `
-    <div style="background:#fff;border-radius:16px;width:100%;max-width:640px;max-height:90vh;overflow-y:auto;box-shadow:0 8px 40px rgba(0,0,0,.2);font-family:Arial,sans-serif">
-      <div style="padding:18px 22px;border-bottom:1px solid #e5e7eb;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;background:#fff;z-index:1">
-        <strong style="font-size:1.1rem">❓ Handleiding klasagenda</strong>
-        <button id="helpModalSluit" style="border:none;background:none;font-size:1.4rem;cursor:pointer;color:#6b7280;line-height:1">✕</button>
-      </div>
-      <div style="padding:20px 22px;line-height:1.65;font-size:.93rem;color:#374151">
-
-        <h3 style="margin:.5rem 0 .4rem;color:#0a66c2;font-size:1rem">🖊 Typen in de agenda</h3>
-        <p style="margin:0 0 .6rem">Klik gewoon in een dagvak om te beginnen typen. Zodra je klikt verschijnt er een <strong>donker balkje</strong> (mini-toolbar) boven de dag met alle opmaakopties.</p>
-
-        <h3 style="margin:1rem 0 .4rem;color:#0a66c2;font-size:1rem">🎨 Mini-toolbar (verschijnt boven dag)</h3>
-        <ul style="margin:.2rem 0 .6rem;padding-left:1.2rem">
-          <li><strong>B / I / U</strong> — vet, schuin, onderlijnd (ook via Ctrl+B/I/U)</li>
-          <li><strong>🖊</strong> — tekst markeren in geel</li>
-          <li><strong>A− / A+</strong> — geselecteerde tekst kleiner of groter maken</li>
-          <li><strong>Dropdown (8pt–24pt)</strong> — lettergrootte van geselecteerde tekst kiezen</li>
-          <li><strong>● +</strong> — bolletje toevoegen om aan te vinken</li>
-          <li><strong>Dropdown klein/middel/groot</strong> — grootte van alle bolletjes in die dag</li>
-          <li><strong>🖼</strong> — pictogram invoegen (grid verschijnt, klik een picto)</li>
-          <li><strong>↩</strong> — laatste actie ongedaan maken</li>
-        </ul>
-
-        <h3 style="margin:1rem 0 .4rem;color:#0a66c2;font-size:1rem">🖼 Pictogrammen</h3>
-        <ul style="margin:.2rem 0 .6rem;padding-left:1.2rem">
-          <li>Klik in een dagvak → klik 🖼 in de mini-toolbar → kies een picto</li>
-          <li>Het picto verschijnt <strong>links in het vak</strong> — je kan ernaast typen</li>
-          <li><strong>Versleep</strong> een picto door erop te klikken en te slepen</li>
-          <li><strong>Groter/kleiner</strong> maken via het blauwe hoekje rechtsonder</li>
-          <li><strong>Rechtermuisklik</strong> op een picto → menu: verwijder / kleiner / groter</li>
-          <li>Via knop <em>Pictogrammen</em> in de toolbar open je het volledige picto-paneel</li>
-        </ul>
-
-        <h3 style="margin:1rem 0 .4rem;color:#0a66c2;font-size:1rem">🌵🦙 Tabs L3 / L4</h3>
-        <p style="margin:0 0 .6rem">Bovenaan staan twee tabs: <strong>L3</strong> en <strong>L4</strong>. Elke leerkracht klikt op haar eigen klas. De agenda's staan volledig los van elkaar — wat je in L3 typt, ziet L4 niet en omgekeerd. Wisselen van tab bewaart automatisch de huidige inhoud.</p>
-
-        <h3 style="margin:1rem 0 .4rem;color:#16a34a;font-size:1rem">📚 Bewaar in archief</h3>
-        <p style="margin:0 0 .3rem">Sla je ingevulde agenda op in het gedeeld archief zodat collega's die kunnen raadplegen.</p>
-        <ul style="margin:.2rem 0 .6rem;padding-left:1.2rem">
-          <li>Klik <strong>📚 Bewaar in archief</strong> → vul je naam, klas en weeknummer in</li>
-          <li><strong>Bewaar per week</strong>: sla elke week apart op (december week 1, december week 2, …)</li>
-          <li>Zo kan je later altijd een specifieke week terugvinden</li>
-          <li>Heb je een week al bewaard en wil je die bijwerken? Bewaar gewoon opnieuw met dezelfde naam/klas/week — die overschrijft de vorige versie</li>
-        </ul>
-
-        <h3 style="margin:1rem 0 .4rem;color:#7c3aed;font-size:1rem">🗂️ Archief raadplegen</h3>
-        <p style="margin:0 0 .3rem">Bekijk agenda's van andere leerkrachten en neem wat je nodig hebt over.</p>
-        <ul style="margin:.2rem 0 .6rem;padding-left:1.2rem">
-          <li>Klik <strong>🗂️ Archief raadplegen</strong> → kies graad, klas, jaar, maand en week → <em>Zoeken</em></li>
-          <li><strong>↙ Hele week overnemen</strong> — kopieert alle dagen + mededelingen + picto's in één klik</li>
-          <li><strong>↙ Plan overnemen</strong> — kopieert enkel het plan van die dag</li>
-          <li><strong>↙ Ik denk aan overnemen</strong> — kopieert enkel de "ik denk aan" van die dag</li>
-          <li><strong>↙ Hele dag overnemen</strong> — plan + ik denk aan van die dag samen</li>
-          <li><strong>↙ Plak mededelingen</strong> — kopieert de mededelingen</li>
-          <li>Je kan altijd een vorig schooljaar opzoeken via de jaar-selector</li>
-        </ul>
-
-        <h3 style="margin:1rem 0 .4rem;color:#0a66c2;font-size:1rem">💾 Export / Import</h3>
-        <p style="margin:0 0 .6rem"><strong>Export</strong> slaat je agenda op als bestand op je computer (.json). <strong>Import</strong> laadt zo'n bestand terug in. Handig als backup of om te delen via e-mail.</p>
-
-        <h3 style="margin:1rem 0 .4rem;color:#0a66c2;font-size:1rem">🖨️ Afdrukken</h3>
-        <p style="margin:0 0 .6rem">Klik <strong>PDF / Print</strong> om de agenda af te drukken op A4 liggend. De toolbar en tabs verdwijnen automatisch in de afdruk.</p>
-
-        <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:.8rem 1rem;margin-top:1rem;font-size:.88rem;color:#1e40af">
-          💡 <strong>Tip:</strong> Bewaar je agenda <strong>elke week</strong> in het archief — zo bouw je een volledig overzicht op per maand. Collega's kunnen dan snel jouw agenda raadplegen en de onderdelen overnemen die voor hen ook gelden.
-        </div>
-
-        <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:.8rem 1rem;margin-top:.6rem;font-size:.88rem;color:#991b1b">
-          ⚠️ <strong>Te vol voor print?</strong> Als een dagvak een <strong>rode rand</strong> krijgt, past de inhoud niet meer op één A4. Oplossing: klik in dat vak → selecteer alle tekst (Ctrl+A) → klik <strong>A−</strong> in de mini-toolbar om de tekst te verkleinen. Voor picto's: rechtermuisklik → <strong>Kleiner</strong>.
-        </div>
-
-      </div>
-    </div>
-  `;
-  document.body.appendChild(helpModal);
-  document.getElementById('helpModalSluit').onclick = ()=>{ helpModal.style.display='none'; };
-  helpModal.addEventListener('click', e=>{ if(e.target===helpModal) helpModal.style.display='none'; });
-  document.getElementById('btnHelp').addEventListener('click', ()=>{ helpModal.style.display='flex'; });
-
-  btnBewaar && btnBewaar.addEventListener('click', async () => {
-    const input = await toonModal();
-    if (!input) return;
-
-    // Haal agenda-data op (zelfde als Export)
-    const captureAll = window._captureAll || null;
-    let data;
-    try {
-      // captureAll is gedefinieerd in de hoofdscript via IIFE → we vangen het via een tijdelijke knop-simulatie
-      // Alternatief: we lezen de JSON direct via de Export-knop logica
-      // We dupliceren captureAll hier beknopt:
-      const tplSel  = document.getElementById('tpl');
-      const monthBox = document.getElementById('monthBox');
-      const swimChk  = document.getElementById('zwemweek');
-      const titlePill = document.getElementById('titlePill');
-      const classIconSlot = document.getElementById('classIconSlot');
-      const notesBody = document.getElementById('notesBody');
-
-      function captureDayArchief(d){
-        const idx = d.dataset.dayIndex;
-        const planBoxEl = d.querySelector(`[data-key="d${idx}.plan"]`);
-        const ta = planBoxEl ? planBoxEl.querySelector('.wkTA') : null;
-        const ce = planBoxEl ? planBoxEl.querySelector('.wkCE[contenteditable]') : null;
-        const pics = [...d.querySelectorAll('.picto-free')].map(p => {
-          const img = p.querySelector('img');
-          return { src: img.getAttribute('src'), left: p.style.left||'0px', top: p.style.top||'0px', width: p.style.width||'', host: p.dataset.host||'body' };
-        });
-        return {
-          date: d.querySelector('.datePicker').value || null,
-          plan: planBoxEl ? planBoxEl.innerHTML : '',
-          bring: d.querySelector(`[data-key="d${idx}.bring"]`)?.innerHTML || '',
-          vars: {
-            planFS:  d.style.getPropertyValue('--plan-fs')  || null,
-            bullet:  d.style.getPropertyValue('--bullet')   || null,
-            gap:     d.style.getPropertyValue('--task-gap') || null,
-            bringFS: d.style.getPropertyValue('--bring-fs') || null
-          },
-          pictos: pics,
-          weekendText: ta ? ta.value : null,
-          weekendHtml: ce ? ce.innerHTML : null
-        };
-      }
-
-      const meta = {
-        template:   tplSel ? tplSel.value : 'L4',
-        title:      titlePill ? titlePill.textContent : '',
-        monthBox:   monthBox ? monthBox.textContent : '',
-        swim:       swimChk ? swimChk.checked : false,
-        classIcon:  (classIconSlot && classIconSlot.querySelector('img')) ? classIconSlot.querySelector('img').src : null,
-        notes:      notesBody ? notesBody.innerHTML : '',
-        archiefNaam: input.naam,
-        archiefKlas: input.klas,
-        graad:       GRAAD,
-        opgeslagen:  new Date().toISOString()
-      };
-      const days = {};
-      document.querySelectorAll('.day').forEach(n => { days[n.dataset.dayIndex] = captureDayArchief(n); });
-      data = { meta, days };
-    } catch(e) {
-      alert('Fout bij ophalen agenda: ' + e.message);
-      return;
-    }
-
-    // Pad: archief/2degraad/2025/oktober/week1/juf-zisa-L4
-    const { jaar, maand, week } = input;
-    const naamSlug = input.naam.toLowerCase().replace(/[^a-z0-9]/g,'-').replace(/-+/g,'-');
-    const path = `archief/${GRAAD}/${jaar}/${maand}/week${week}/${naamSlug}-${input.klas}`;
-
-    try {
-      await dbSet(path, data);
-      alert(`✅ Agenda bewaard in het archief!\n\nJe collega kan die vinden via:\nArchief → Eerste graad → ${maand} ${jaar} → week ${week}`);
-    } catch(e) {
-      alert('❌ Kon niet bewaren: ' + e.message + '\n\nControleer je internetverbinding.');
-    }
   });
 
 })();
