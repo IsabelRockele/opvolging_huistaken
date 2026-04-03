@@ -1475,11 +1475,14 @@ function toonMiniBar(el){
       const sel = window.getSelection();
       const ae = document.activeElement;
       if (ae && ae.isContentEditable && sel && sel.rangeCount){
-        const span=document.createElement('span'); span.className='picto-inline';
-        span.style.cssText = 'display:inline-block;position:relative;vertical-align:middle;margin:0 3px;cursor:pointer';
-        const img = document.createElement('img');
-        img.src = src; img.alt = 'picto';
-        img.style.cssText = 'height:32px;width:auto;display:block;border-radius:4px';
+        const span = document.createElement('span');
+span.className = 'picto-inline';
+span.style.cssText = 'display:inline-flex;align-items:center;vertical-align:middle;margin:0 3px;cursor:pointer';
+
+const img = document.createElement('img');
+img.src = src;
+img.alt = 'picto';
+img.style.cssText = 'height:32px;width:auto;display:inline-block;vertical-align:middle;border-radius:4px';
         img.title = 'Klik om te vergroten/verkleinen';
         // Klik op inline picto: cyclus door groottes
         const SIZES = [20,28,32,40,48,56,64];
@@ -1492,9 +1495,22 @@ function toonMiniBar(el){
           pushSnapshot();
         });
         span.appendChild(img);
-        const r=sel.getRangeAt(0); r.deleteContents(); r.insertNode(span);
-        r.setStartAfter(span); r.setEndAfter(span); sel.removeAllRanges(); sel.addRange(r);
-        pushSnapshot();
+
+const spacer = document.createTextNode('\u00A0');
+
+const r = sel.getRangeAt(0);
+r.deleteContents();
+r.insertNode(spacer);
+r.insertNode(span);
+
+const nieuwBereik = document.createRange();
+nieuwBereik.setStart(spacer, 1);
+nieuwBereik.collapse(true);
+
+sel.removeAllRanges();
+sel.addRange(nieuwBereik);
+
+pushSnapshot();
       } else {
         alert('Klik eerst in de tekst op de plek waar het picto moet komen, en kies dan het picto.');
       }
