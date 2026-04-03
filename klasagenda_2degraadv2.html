@@ -6,14 +6,27 @@
 <title>Klasagenda L3–L4 – A4 liggend (Arial)</title>
 <style>
   :root{
-    --page-w: 297mm; --page-h: 210mm;
-    --m-top: 8mm; --m-side: 8mm;
-    --gap: 3.2mm;
-    --ink:#111; --line:#111; --muted:#6b7280;
-  }
+  --page-w: 297mm; --page-h: 210mm;
+  --m-top: 8mm; --m-side: 8mm;
+  --gap: 3.2mm;
+  --bottom-row-h: 84mm;
+  --ink:#111; --line:#111; --muted:#6b7280;
+}
   html,body{height:100%}
   body{margin:0;background:#f3f5f7;color:var(--ink);font-family:Arial,Helvetica,sans-serif;font-size:12pt;line-height:1.28}
   *{box-sizing:border-box}
+
+  /* Waarschuwing: dagvak te vol voor print */
+  .day.overflowing{ box-shadow: 0 0 0 2.5px #ef4444 !important; }
+  .day.overflowing::after{
+    content: '⚠️ te vol voor print';
+    position: absolute;
+    bottom: 2px; right: 4px;
+    font-size: 8pt;
+    color: #ef4444;
+    pointer-events: none;
+    z-index: 10;
+  }
 
   /* Klas-tabs */
   .klas-tabs{display:flex;gap:0;background:#e5e7eb;padding:0;border-bottom:2px solid #d0d7de;position:sticky;top:0;z-index:51}
@@ -93,9 +106,21 @@
 }
   /* Grids */
   .week-top{display:grid;grid-template-columns:repeat(5,1fr);gap:var(--gap)}
-  .bottom-row{display:grid;grid-template-columns:1.5fr 3.5fr;gap:var(--gap);margin-top:3mm;align-items:stretch}
-  .weekendCol{display:grid;grid-template-rows:1fr 1fr;gap:var(--gap);overflow:hidden}
-  .day.small{min-height:0;overflow:hidden}
+  .bottom-row{
+  display:grid;
+  grid-template-columns:1.5fr 3.5fr;
+  gap:var(--gap);
+  margin-top:3mm;
+  height:var(--bottom-row-h);
+}
+
+.weekendCol{
+  display:grid;
+  grid-template-rows:1fr 1fr;
+  gap:var(--gap);
+  height:100%;
+  min-height:0;
+}
 
   /* Dagkaarten */
   .day{position:relative;border:2.6px solid var(--line);border-radius:7px;background:#fff;display:flex;flex-direction:column;--bullet:14px;--plan-fs:12pt;--task-gap:6pt; z-index:1;}
@@ -138,6 +163,7 @@
   .tasklist li{display:flex;align-items:flex-start;gap:.32rem;margin-bottom:var(--task-gap)}
   .tasklist li:last-child{margin-bottom:0}
   .bullet{display:inline-block;width:var(--bullet);height:var(--bullet);border:2px solid #0a3a52;border-radius:50%}
+  .bullet-num{display:inline-block;min-width:var(--bullet);font-weight:700;font-size:var(--bullet);color:#0a3a52;flex-shrink:0}
   .tasktext[contenteditable]{flex:1;min-height:1.05em;outline:none}
 
   /* Verwijderknopje in elke li */
@@ -153,19 +179,64 @@
   .planBox.has-tasks .planText{display:none}
   .planBox.has-tasks{padding-bottom:1mm}
 
-  /* Weekend: nieuw – bullets toelaten; verberg wkCE zodra er bullets zijn */
-  .day.small .tasklist{ display:block; }               /* i.p.v. display:none */
-  .planBox.has-tasks .wkCE{ display:none; }
+  /* Weekend: compact invulvak bovenaan, zoals weekdagen */
+.day.small{
+  min-height:0;
+}
 
-  /* Weekend: textarea (legacy) / contenteditable (nieuw) */
-  .day.small .tasklist{display:block}
-  .wkTA{
-    width:100%; border:none; outline:none; resize:none; background:transparent;
-    font-family:Arial,Helvetica,sans-serif; font-size:11pt; line-height:1.28;
-    height:calc(2 * 1.28em);
-    overflow:hidden; padding:0; margin:0;
-  }
-  .wkTA.maxed{ height:calc(3 * 1.28em); }
+.day.small .body{
+  flex:0 0 auto;
+  min-height:0;
+  overflow:visible;
+}
+
+.day.small .planBox{
+  flex:0 0 auto;
+  min-height:0;
+  height:auto;
+  overflow:visible;
+  margin-bottom:0;
+  border:none;
+  padding:0;
+  background:transparent;
+}
+
+.wkTA{
+  width:100%;
+  border:1px solid var(--line);
+  border-radius:6px;
+  outline:none;
+  resize:none;
+  background:#fff;
+  font-family:Arial,Helvetica,sans-serif;
+  font-size:11pt;
+  line-height:1.28;
+  height:22mm;
+  max-height:22mm;
+  overflow:hidden;
+  padding:.35rem .5rem;
+  margin:0;
+}
+
+.wkTA.maxed{
+  height:18mm;
+  max-height:18mm;
+}
+
+.wkCE[contenteditable]{
+  display:block;
+  width:100%;
+  height:18mm;
+  min-height:18mm;
+  max-height:18mm;
+  padding:.35rem .5rem;
+  border:1px solid var(--line);
+  border-radius:6px;
+  background:#fff;
+  outline:none;
+  white-space:pre-wrap;
+  overflow:hidden;
+}
 
   /* Ik denk aan */
   .bringBox{
@@ -180,12 +251,56 @@
   .picto-inline img{vertical-align:middle}
 
   /* Mededelingen */
-  .panel{position:relative;border:2.6px solid var(--line);border-radius:7px;background:#fff;display:flex;flex-direction:column;height:1px; z-index:0;}
-  .panel header{padding:2.6mm;border-bottom:2.6px solid var(--line);font-weight:700}
-  .panelBody{padding:2mm;flex:1;min-height:60px;overflow:auto;outline:none}
-  .panelBody:empty::before{content:'Klik hier om mededelingen te typen…';color:#adb5bd;pointer-events:none;font-style:italic}
-  .sign{position:absolute;right:6mm;bottom:6mm;border:2.6px solid var(--line);border-radius:7px;padding:2mm 5mm;min-width:70mm;height:22mm;font-size:10pt;color:var(--muted);background:#fff;display:flex;align-items:flex-start}
+.panel{
+  position:relative;
+  border:2.6px solid var(--line);
+  border-radius:7px;
+  background:#fff;
+  display:flex;
+  flex-direction:column;
+  min-height:0;
+  height:100%;
+  z-index:0;
+}
 
+.panel header{
+  padding:2.6mm;
+  border-bottom:2.6px solid var(--line);
+  font-weight:700;
+}
+
+.panelInner{
+  padding:2mm;
+  min-height:0;
+  height:100%;
+  overflow:hidden;
+}
+
+.panelBody{
+  min-width:0;
+  min-height:0;
+  height:100%;
+  overflow:hidden;
+  outline:none;
+  white-space:pre-wrap;
+}
+
+.sign{
+  float:right;
+  clear:right;
+  margin:10px 0 6px 14px;
+
+  border:2.6px solid var(--line);
+  border-radius:7px;
+  padding:2mm 5mm;
+  width:70mm;
+  height:22mm;
+  font-size:10pt;
+  color:var(--muted);
+  background:#fff;
+  display:flex;
+  align-items:flex-start;
+}
   /* Vrije pictogrammen */
   .picto-free{
     position:absolute; left:10px; top:10px;
@@ -212,33 +327,8 @@
   .dock[hidden]{ display:none !important; }
   .dock .uploadRow{ margin-top:.5rem; display:flex; gap:.5rem; align-items:center; }
 
-  /* Weekend: contenteditable vak */
-  .wkCE[contenteditable]{
-    display:block;
-    min-height:3.2em;
-    padding:.4rem .5rem;
-    border:1px solid var(--line);
-    border-radius:6px;
-    background:#fff;
-    outline:none;
-    white-space:pre-wrap;
-    overflow:visible;
-  }
 
   /* PRINT */
-  /* Waarschuwing: dagvak te vol voor print */
-  .day.overflowing{ box-shadow: 0 0 0 2.5px #ef4444 !important; }
-  .day.overflowing::after{
-    content: '⚠️ te vol voor print';
-    position: absolute;
-    bottom: 2px; right: 4px;
-    font-size: 8pt;
-    color: #ef4444;
-    pointer-events: none;
-    z-index: 10;
-  }
-
- /* PRINT */
   @media print{
     @page{ size: A4 landscape; margin: 0 }
 
@@ -268,10 +358,20 @@
 
     /* 2. Zorg dat mededelingen NOOIT een scrollbalk tonen op papier */
     .panelBody {
-      overflow: hidden !important; 
-      height: auto !important; 
-      min-height: 0 !important;
-    }
+  overflow: hidden !important; 
+  height: auto !important; 
+  min-height: 0 !important;
+}
+
+.panelInner{
+  display:block !important;
+}
+
+.sign{
+  float:right !important;
+  clear:right !important;
+  margin:10px 0 6px 14px !important;
+}
 
     /* Dagvakken strikt begrenzen */
     .week-top{ overflow: hidden; }
@@ -295,7 +395,13 @@
     .panelBody:empty::before{ display:none; }
     .picto-free .handle, .picto-free.selected { display:none !important; outline:none !important; }
     .tasklist .liDel{ display:none !important; }
-    .day.overflowing::after{ display:none; }
+    .day.overflowing{
+  box-shadow:none !important;
+}
+
+.day.overflowing::after{
+  display:none !important;
+}
   }
 </style>
 </head>
@@ -328,7 +434,7 @@
         <button type="button" id="btnApplyColor">Pas toe</button>
       </label>
       <span class="sep"></span>
-      <button id="btnCopyMon">Kopieer maandag</button>
+      <button id="btnCopyMon" hidden aria-hidden="true" style="display:none">Kopieer maandag</button>
       <button id="btnDelPicto" title="Geselecteerd pictogram verwijderen">Verwijder picto</button>
       <span class="sep"></span>
       <button id="btnExport">Export</button>
@@ -378,11 +484,14 @@
     <section class="bottom-row">
       <div class="weekendCol" id="weekendCol"></div>
 
-      <section class="panel" id="notesPanel">
-        <header>Mededelingen <span style="font-weight:400;color:#6b7280">(berichten aan leerkrachten via smartschool)</span></header>
-        <div class="panelBody" id="notesBody" contenteditable></div>
-        <div class="sign">handtekening ouders</div>
-      </section>
+  <section class="panel" id="notesPanel">
+  <header>Mededelingen <span style="font-weight:400;color:#6b7280">(berichten aan leerkrachten via smartschool)</span></header>
+
+  <div class="panelInner">
+    <div class="sign" id="notesSign">handtekening ouders</div>
+    <div class="panelBody" id="notesBody" contenteditable></div>
+  </div>
+</section>
     </section>
   </main>
 
@@ -411,11 +520,11 @@
   const ENVELOPE_SVG =
    '<svg viewBox="0 0 48 36" xmlns="http://www.w3.org/2000/svg"><rect x="1.5" y="1.5" width="45" height="33" rx="2.5"/><polyline points="2,2 24,18 46,2"/><polyline points="2,34 20,20"/><polyline points="46,34 28,20"/></svg>';
 
-  const tplSel = { value: 'L2' }; // vervangen door tab-systeem
+  const tplSel = { value: 'L4' }; // vervangen door tab-systeem
   const swimChk=$('#zwemweek');
 
-  /* ── Tab-systeem: L1 / L2 ── */
-  let aktieveKlas = 'L4';
+  /* ── Tab-systeem: L3 / L4 ── */
+  window.aktieveKlas = 'L4';
   const tabState = { L3: null, L4: null };
 
   function getKlasIcon(klas){
@@ -423,14 +532,14 @@
   }
 
   function wisselKlas(nieuweKlas){
-    if (nieuweKlas === aktieveKlas) return;
+    if (nieuweKlas === window.aktieveKlas) return;
 
     // 1) Huidige staat opslaan onder de huidige klas
-    tabState[aktieveKlas] = captureAllVoorTab();
+    tabState[window.aktieveKlas] = captureAllVoorTab();
 
     // 2) Tab UI bijwerken
     $$('.klas-tab').forEach(t => t.classList.toggle('active', t.dataset.klas === nieuweKlas));
-    aktieveKlas = nieuweKlas;
+    window.aktieveKlas = nieuweKlas;
     tplSel.value = nieuweKlas;
 
     // 3) DOM volledig leegmaken vóór laden
@@ -464,12 +573,15 @@
     upgradeWeekendToEditable();
     $$('.day').forEach(updatePlanBoxClass);
     ensureTaskDeleteButtons(document);
-    _maxNotesH = 0;
-    scheduleLayoutSync();
-    requestAnimationFrame(()=> requestAnimationFrame(()=>{
-      const wc = document.getElementById('weekendCol');
-      if (wc && wc.offsetHeight > 50) _maxNotesH = wc.offsetHeight;
-    }));
+   _maxNotesH = 0;
+window._klasagenda.equalizePlanHeights();
+requestAnimationFrame(() => {
+  requestAnimationFrame(() => {
+    const wc = document.getElementById('weekendCol');
+    if (wc && wc.offsetHeight > 50) _maxNotesH = wc.offsetHeight;
+    window._klasagenda.syncNotesToWeekend();
+  });
+});
     pushSnapshot();
   }
 
@@ -524,6 +636,7 @@
   const fileUploadPicto = $('#fileUploadPicto');
 
   const notesPanel=$('#notesPanel'), notesBody=$('#notesBody');
+  let _notesFullWarned = false;
 
   let activeDay=null;
   let activeHost=null;
@@ -638,28 +751,45 @@
 
   let miniBarInPanel = false; // true als mini-toolbar bij mededelingen hoort
 
-  function toonMiniBar(el){
-    miniBarTarget = el;
-    miniBarInPanel = el.id === 'notesPanel';
-    const rect = el.getBoundingClientRect();
-    const barH = 42;
-    let top = rect.top - barH - 8 + window.scrollY;
-    if (top < 8 + window.scrollY) top = rect.bottom + 6 + window.scrollY;
-    // Meet de echte breedte van de toolbar na render
-    miniBar.classList.add('visible');
-    const barW = miniBar.offsetWidth || 560;
-    let left = rect.left + window.scrollX;
-    if (left + barW > window.scrollX + window.innerWidth - 8) left = window.scrollX + window.innerWidth - barW - 8;
-    if (left < window.scrollX + 8) left = window.scrollX + 8;
-    miniBar.style.top  = top + 'px';
-    miniBar.style.left = left + 'px';
-    miniBar.classList.add('visible');
-    vulMtPictoGrid();
-    if (!miniBarInPanel) updateMtBulletSize(el);
-    // Bolletje-knop en bolletjesgrootte verbergen bij mededelingen
-    document.getElementById('mt-bullet').style.display    = miniBarInPanel ? 'none' : '';
-    document.getElementById('mt-bulletsize').style.display = miniBarInPanel ? 'none' : '';
+function toonMiniBar(el){
+  miniBarTarget = el;
+  miniBarInPanel = (el.id === 'notesPanel' || el.id === 'notesBody');
+
+  let rect;
+
+  if (miniBarInPanel){
+    const panelHeader = notesPanel.querySelector('header');
+    rect = panelHeader ? panelHeader.getBoundingClientRect() : notesPanel.getBoundingClientRect();
+  } else {
+    rect = el.getBoundingClientRect();
   }
+
+  miniBar.classList.add('visible');
+  const barW = miniBar.offsetWidth || 560;
+  const barH = miniBar.offsetHeight || 42;
+
+  let top = rect.top - barH - 10;
+  if (top < 8){
+    top = 8;
+  }
+
+  let left = rect.left;
+  if (left + barW > window.innerWidth - 8){
+    left = window.innerWidth - barW - 8;
+  }
+  if (left < 8){
+    left = 8;
+  }
+
+  miniBar.style.top = top + 'px';
+  miniBar.style.left = left + 'px';
+
+  vulMtPictoGrid();
+  if (!miniBarInPanel) updateMtBulletSize(el);
+
+  document.getElementById('mt-bullet').style.display = miniBarInPanel ? 'none' : '';
+  document.getElementById('mt-bulletsize').style.display = miniBarInPanel ? 'none' : '';
+}
 
   function verbergMiniBar(){
     miniBar.classList.remove('visible');
@@ -669,27 +799,34 @@
 
   // Toon bij klikken/focus in een dag of mededelingen — via event delegation
   document.addEventListener('focusin', e => {
-    const dag   = e.target.closest('.day');
-    const panel = e.target.closest('#notesPanel');
-    const inMini = e.target.closest('#miniToolbar');
-    if (dag)   { toonMiniBar(dag);   return; }
-    if (panel) { toonMiniBar(panel); return; }
-    if (!inMini) verbergMiniBar();
-  });
-  document.addEventListener('pointerdown', e => {
-    const dag   = e.target.closest('.day');
-    const panel = e.target.closest('#notesPanel');
-    const inMini    = e.target.closest('#miniToolbar');
-    const inToolbar = e.target.closest('.toolbar');
-    if (dag)   { toonMiniBar(dag);   return; }
-    if (panel) { toonMiniBar(panel); return; }
-    if (!inMini && !inToolbar) verbergMiniBar();
-  }, true);
+  const dag   = e.target.closest('.day');
+  const panelBody = e.target.closest('#notesBody');
+  const panel = e.target.closest('#notesPanel');
+  const inMini = e.target.closest('#miniToolbar');
+
+  if (dag && !panelBody) { toonMiniBar(dag); return; }
+  if (panelBody) { toonMiniBar(panelBody); return; }
+  if (panel) { toonMiniBar(panel); return; }
+  if (!inMini) verbergMiniBar();
+});
+ document.addEventListener('pointerdown', e => {
+  const dag   = e.target.closest('.day');
+  const panelBody = e.target.closest('#notesBody');
+  const panel = e.target.closest('#notesPanel');
+  const inMini    = e.target.closest('#miniToolbar');
+  const inToolbar = e.target.closest('.toolbar');
+
+  if (dag && !panelBody) { toonMiniBar(dag); return; }
+  if (panelBody) { toonMiniBar(panelBody); return; }
+  if (panel) { toonMiniBar(panel); return; }
+  if (!inMini && !inToolbar) verbergMiniBar();
+}, true);
+  // Sla selectie op bij elke pointerdown op de minibar (selectie gaat anders verloren)
   let _savedRange = null;
   function saveSelection(){
     const sel = window.getSelection();
     if (sel && sel.rangeCount > 0){
-      _savedRange = sel.getRangeAt(0).cloneRange();
+      _savedRange = sel.getRangeAt(0).cloneRange(); // ook collapsed cursor opslaan
     }
   }
   function restoreSelection(){
@@ -735,6 +872,7 @@
   }
 
   function getCaretBlock(){
+    // Geeft het dichtstbijzijnde block-element terug van de huidige cursor
     const sel = window.getSelection();
     if (!sel || sel.rangeCount === 0) return null;
     const node = sel.getRangeAt(0).startContainer;
@@ -744,13 +882,14 @@
       if (d === 'block' || d === 'list-item' || d === 'flex') return el;
       el = el.parentElement;
     }
-    return el;
+    return el; // de contenteditable zelf als fallback
   }
 
   function applyFontSizePt(pt){
     const sel = window.getSelection();
     if (!sel || sel.rangeCount === 0) return;
     if (sel.isCollapsed){
+      // Lege regel: zet font-size op het block-element zodat de spatie verkleint
       const block = getCaretBlock();
       if (block && block.contentEditable !== 'true') block.style.fontSize = pt + 'pt';
       return;
@@ -773,6 +912,7 @@
   function updateFontsizeSelect(){
     const pt = getSelectionFontSize();
     const sel = document.getElementById('mt-fontsize');
+    // Zoek dichtstbijzijnde optie
     let best = '12';
     let bestDist = 999;
     for (const opt of sel.options){
@@ -812,6 +952,7 @@
     const sel = window.getSelection();
     if (!sel || sel.rangeCount === 0) return;
     if (sel.isCollapsed){
+      // Cursor op lege regel: pas line-height toe op het block-element
       const block = getCaretBlock();
       if (block && block.contentEditable !== 'true') block.style.lineHeight = lh;
     } else {
@@ -879,6 +1020,7 @@
   document.getElementById('mt-picto-mode-vrij').addEventListener('click', e => {
     e.stopPropagation();
     _pictoModus = 'vrij';
+    // Sync ook de dock-knoppen
     document.getElementById('btnPictoModeVrij').click();
     updateMtPictoModeButtons();
   });
@@ -910,6 +1052,7 @@
       const data = captureAll();
       data.meta.panelPictos = capturePanelPictos();
       localStorage.setItem(LS_KEY, JSON.stringify(data));
+      // Toon kleine bevestiging
       let toast = document.getElementById('_autosaveToast');
       if (!toast){
         toast = document.createElement('div');
@@ -921,7 +1064,7 @@
       toast.style.opacity = '1';
       clearTimeout(toast._t);
       toast._t = setTimeout(()=>{ toast.style.opacity = '0'; }, 2000);
-    } catch(e) {}
+    } catch(e) { /* localStorage vol of geblokkeerd */ }
   }
 
   let _initDone = false;
@@ -955,7 +1098,7 @@
 
   function buildWeekday(i,name){
     const art=document.createElement('article'); art.className='day'; art.dataset.dayIndex=i;
-    const planHeading=(i===4)?'<h3 contenteditable>Ik geef af:</h3>':'<h3>Ik plan:</h3>';
+    const planHeading='<h3>Ik plan:</h3>'; 
     art.innerHTML = weekdayHeaderHtml(name)+
     `<div class="body">
        <div class="cell">
@@ -1010,11 +1153,21 @@
   }
 
   function limitWeekendTextarea(e){
-    const ta=e.target;
-    const lines=ta.value.split('\n').length;
-    if(lines>=3) ta.classList.add('maxed'); else ta.classList.remove('maxed');
-    scheduleLayoutSync();
+  const ta = e.target;
+  const lines = ta.value.split('\n').length;
+  if(lines>=3) ta.classList.add('maxed'); else ta.classList.remove('maxed');
+
+  scheduleLayoutSync();
+
+  if (ta.scrollHeight > ta.clientHeight + 2){
+    if (!ta.dataset.fullWarned){
+      alert('Er is geen ruimte meer in dit weekendvak. Probeer eventueel een kleiner lettertype.');
+      ta.dataset.fullWarned = '1';
+    }
+  } else {
+    ta.dataset.fullWarned = '';
   }
+}
 
   function wireDate(card,idx){
     const dp=card.querySelector('.datePicker'); const lab=card.querySelector('.dDate');
@@ -1065,19 +1218,33 @@
   }
 
   function upgradeWeekendToEditable(){
-    ['5','6'].forEach(i=>{
-      const planBox = document.querySelector(`[data-key="d${i}.plan"]`);
-      if (!planBox) return;
-      const ta = planBox.querySelector('.wkTA');
-      if (ta){
-        const div = document.createElement('div');
-        div.className = 'wkCE';
-        div.setAttribute('contenteditable','true');
-        div.innerText = ta.value || '';
-        ta.replaceWith(div);
-      }
-    });
-  }
+  ['5','6'].forEach(i=>{
+    const planBox = document.querySelector(`[data-key="d${i}.plan"]`);
+    if (!planBox) return;
+    const ta = planBox.querySelector('.wkTA');
+    if (ta){
+      const div = document.createElement('div');
+      div.className = 'wkCE';
+      div.setAttribute('contenteditable','true');
+      div.innerText = ta.value || '';
+
+      div.addEventListener('input', ()=>{
+        scheduleLayoutSync();
+
+        if (div.scrollHeight > div.clientHeight + 2){
+          if (!div.dataset.fullWarned){
+            alert('Er is geen ruimte meer in dit weekendvak. Probeer eventueel een kleiner lettertype.');
+            div.dataset.fullWarned = '1';
+          }
+        } else {
+          div.dataset.fullWarned = '';
+        }
+      });
+
+      ta.replaceWith(div);
+    }
+  });
+}
 
   applyAllFS.addEventListener('click',()=>{
     if(!activeDay) return;
@@ -1144,23 +1311,44 @@
 
   /* Bolletje */
   btnAddBullet.addEventListener('click',()=>{
-    if(!activeDay) return;
-    let list = activeDay.querySelector('[data-role=tasks]');
-    if(!list){
-      const box = activeDay.querySelector('.planBox');
-      list = document.createElement('ul');
-      list.className='tasklist'; list.setAttribute('data-role','tasks');
+  if(!activeDay) return;
+
+  const isWeekend = activeDay.classList.contains('small');
+  const box = activeDay.querySelector('.planBox');
+
+  let list = activeDay.querySelector('[data-role=tasks]');
+
+  if(!list){
+    list = document.createElement('ul');
+    list.className = 'tasklist';
+    list.setAttribute('data-role','tasks');
+
+    if (isWeekend){
+      const wk = box.querySelector('.wkCE, .wkTA');
+      if (wk) wk.remove();
+      box.appendChild(list);
+    } else {
       box.prepend(list);
     }
-    const li=document.createElement('li');
-    li.innerHTML = '<span class="bullet"></span><div class="tasktext" contenteditable></div><button class="liDel" title="Verwijder">×</button>';
-    list.appendChild(li);
-    const t=li.querySelector('.tasktext'); t.focus();
-    const sel=window.getSelection(), rg=document.createRange(); rg.selectNodeContents(t); rg.collapse(false); sel.removeAllRanges(); sel.addRange(rg);
-    updatePlanBoxClass(activeDay);
-    ensureTaskDeleteButtons(activeDay);
-    pushSnapshot();
-  });
+  }
+
+  const li = document.createElement('li');
+  li.innerHTML = '<span class="bullet"></span><div class="tasktext" contenteditable></div><button class="liDel" title="Verwijder">×</button>';
+  list.appendChild(li);
+
+
+  const t = li.querySelector('.tasktext');
+  t.focus();
+  const sel = window.getSelection(), rg = document.createRange();
+  rg.selectNodeContents(t);
+  rg.collapse(false);
+  sel.removeAllRanges();
+  sel.addRange(rg);
+
+  updatePlanBoxClass(activeDay);
+  ensureTaskDeleteButtons(activeDay);
+  pushSnapshot();
+});
 
   function ensureTaskDeleteButtons(root=document){
     root.querySelectorAll('.tasklist li').forEach(li=>{
@@ -1174,6 +1362,31 @@
     });
   }
 
+  /* Vervang bolletjes door cijfers in de planBox van vrijdag */
+  function convertBulletsToNumbers(planBox){
+    const items = planBox.querySelectorAll('.tasklist li');
+    items.forEach((li, idx) => {
+      const bullet = li.querySelector('.bullet');
+      if (bullet){
+        const num = document.createElement('span');
+        num.className = 'bullet-num';
+        num.textContent = (idx + 1) + '.';
+        bullet.replaceWith(num);
+      }
+    });
+  }
+
+  /* Hernum de cijfers in vrijdag (na verwijderen of toevoegen) */
+  function renumberVrijdag(){
+    const vrijdag = document.querySelector('.day[data-day-index="4"]');
+    if (!vrijdag) return;
+    const planBox = vrijdag.querySelector('.planBox');
+    if (!planBox) return;
+    planBox.querySelectorAll('.tasklist li').forEach((li, idx) => {
+      const num = li.querySelector('.bullet-num');
+      if (num) num.textContent = (idx + 1) + '.';
+    });
+  }
 
   /* Zwemweek: alleen de zin in Ik denk aan */
   function toggleSwimWeek(on){
@@ -1196,7 +1409,7 @@
   swimChk.addEventListener('change', ()=> toggleSwimWeek(swimChk.checked));
 
   /* Kopieer maandag → andere werkdagen, incl. breng-grootte */
- btnCopyMon.addEventListener('click',()=>{
+ btnCopyMon.addEventListener('click',()=>{ if (btnCopyMon.hidden) return; 
   const mon=document.querySelector('.day[data-day-index="0"]');
   const planHtml=mon.querySelector('[data-key="d0.plan"]').innerHTML;
   const cs=getComputedStyle(mon);
@@ -1232,6 +1445,8 @@
     pictoGrid.appendChild(cell);
   });
 
+  // Picto-modus: 'vrij' of 'inline'
+  // Sla cursor op bij aanraken van het pictogrammen-paneel
   document.querySelector('.dock').addEventListener('pointerdown', ()=>{ saveSelection(); });
 
   let _pictoModus = 'vrij';
@@ -1256,7 +1471,7 @@
 
     /* Inline in tekst */
     if (wantInline){
-      restoreSelection();
+      restoreSelection(); // herstel cursor die verloren ging bij dock/toolbar-klik
       const sel = window.getSelection();
       const ae = document.activeElement;
       if (ae && ae.isContentEditable && sel && sel.rangeCount){
@@ -1266,6 +1481,7 @@
         img.src = src; img.alt = 'picto';
         img.style.cssText = 'height:32px;width:auto;display:block;border-radius:4px';
         img.title = 'Klik om te vergroten/verkleinen';
+        // Klik op inline picto: cyclus door groottes
         const SIZES = [20,28,32,40,48,56,64];
         img.addEventListener('click', e => {
           e.stopPropagation();
@@ -1709,7 +1925,7 @@ if (ce) {
 
   function captureAll(){
     const meta={
-      template:aktieveKlas,
+      template:window.aktieveKlas,
       title:$('#titlePill').textContent,
       monthBox:monthBox.textContent,
       swim:swimChk.checked,
@@ -1729,11 +1945,11 @@ if (ce) {
   function applyAll(obj, vanTabWissel=false){
     if(obj.meta){
       if(obj.meta.template) tplSel.value = obj.meta.template;
-      $('#titlePill').textContent=obj.meta.title||('agenda '+aktieveKlas);
+      $('#titlePill').textContent=obj.meta.title||('agenda '+window.aktieveKlas);
       if(obj.meta.monthBox) monthBox.textContent=obj.meta.monthBox;
       swimChk.checked=!!obj.meta.swim;
       if(obj.meta.classIcon){ classIconSlot.innerHTML='<img alt="klaspictogram" src="'+obj.meta.classIcon+'">'; }
-      else { classIconSlot.innerHTML=`<img src="${getKlasIcon(aktieveKlas)}" alt="klaspictogram ${aktieveKlas}">`; }
+      else { classIconSlot.innerHTML=`<img src="${getKlasIcon(window.aktieveKlas)}" alt="klaspictogram ${window.aktieveKlas}">`; }
       if(obj.meta.notes !== undefined){ $('#notesBody').innerHTML=obj.meta.notes||''; }
       if(!vanTabWissel) applyTemplate();
     }
@@ -1784,9 +2000,9 @@ upgradeWeekendToEditable();
     r.readAsDataURL(f);
   });
 
-  /* L1/L2 + logo automatisch */
+  /* L3/L4 + logo automatisch */
   function applyTemplate(){
-    const tpl = aktieveKlas;
+    const tpl = window.aktieveKlas;
     const cur = classIconSlot.querySelector('img');
     if (tpl === 'L4') {
       if (!cur || !/lama\.png$/i.test(cur.src)) {
@@ -1811,25 +2027,19 @@ upgradeWeekendToEditable();
 
   /* Mededelingenhoogte = hoogte ZA+ZO */
   let _syncingNotes = false;
+  // Vaste maximale hoogte voor mededelingen — berekend bij eerste aanroep
   let _maxNotesH = 0;
-  function syncNotesToWeekend(){
-    if (_syncingNotes) return;
-    const wc   = document.getElementById('weekendCol');
-    const note = document.getElementById('notesPanel');
-    const body = document.getElementById('notesBody');
-    if(!wc||!note) return;
-    _syncingNotes = true;
-    note.style.height = '1px';
-    const wcH = wc.offsetHeight;
-    if (_maxNotesH === 0 && wcH > 50) _maxNotesH = wcH;
-    const doelH = _maxNotesH > 0 ? Math.min(wcH, _maxNotesH) : wcH;
-    note.style.height = doelH + 'px';
-    const headH = note.querySelector('header').offsetHeight;
-    const signH = note.querySelector('.sign').offsetHeight + 12;
-    const pad   = 12;
-    body.style.height = Math.max(40, note.clientHeight - headH - signH - pad) + 'px';
-    _syncingNotes = false;
-  }
+function syncNotesToWeekend(){
+  if (_syncingNotes) return;
+
+  const note = document.getElementById('notesPanel');
+  if (!note) return;
+
+  _syncingNotes = true;
+  note.style.minHeight = '';
+  note.style.height = '';
+  _syncingNotes = false;
+}
 
   /* === NIEUW: Equalizers voor gelijke hoogtes === */
   function equalizePlanHeights(){
@@ -1847,9 +2057,12 @@ upgradeWeekendToEditable();
     boxes.forEach(b => b.style.height = maxH + 'px');
   }
 
+  /* Layout-sync: equalizers + mededelingen */
   function checkOverflow(){
-    const MAX_DAY_H = 320;
-    Array.from(document.querySelectorAll('.week-top .day')).forEach(d => {
+    // Meet de eigen inhoudshoogte van elk dagvak
+    // Drempel: ~320px op scherm = ruim voldoende voor print
+    const MAX_DAY_H = 350;
+    $$('.week-top .day').forEach(d => {
       const planBox = d.querySelector('.planBox');
       const bringBox = d.querySelector('.bringBox');
       const planH = planBox ? planBox.scrollHeight : 0;
@@ -1861,7 +2074,6 @@ upgradeWeekendToEditable();
     });
   }
 
-  /* Layout-sync: equalizers + mededelingen */
   function scheduleLayoutSync(){
     requestAnimationFrame(()=>{
       equalizePlanHeights();
@@ -1872,23 +2084,25 @@ upgradeWeekendToEditable();
   window.addEventListener('resize', scheduleLayoutSync);
   new ResizeObserver(scheduleLayoutSync).observe($('#weekTop'));
 
-  /* Bij elke input in plan/bring: meteen her-equalizen */
+  /* Bij elke input in plan/bring: meteen her-equalizen + overflow check */
   // Verwijder geselecteerde inline picto met Backspace of Delete
   document.addEventListener('keydown', (e)=>{
     if (e.key !== 'Backspace' && e.key !== 'Delete') return;
     const sel = window.getSelection();
     if (!sel || sel.isCollapsed || sel.rangeCount === 0) return;
     const range = sel.getRangeAt(0);
+    // Kijk of de selectie een inline picto bevat
     const frag = range.cloneContents();
     const pictos = frag.querySelectorAll('.picto-inline');
     if (pictos.length === 0) return;
+    // Er zit een picto in de selectie — verwijder alles
     range.deleteContents();
     e.preventDefault();
     pushSnapshot();
   });
 
   document.addEventListener('input', (e)=>{
-    if (e.target && e.target.closest && e.target.closest('.planBox, .bringBox')) {
+    if (e.target && e.target.closest && e.target.closest('.planBox, .bringBox, .day')) {
       scheduleLayoutSync();
       pushSnapshot();
     } else if (e.target && e.target.id === 'notesBody') {
@@ -1902,10 +2116,22 @@ upgradeWeekendToEditable();
     notesBody.addEventListener('focusin', (e)=>{ e.stopPropagation(); lastFocusedHost = notesPanel; setActiveHost(notesPanel); });
     notesBody.addEventListener('pointerdown', (e)=>{ e.stopPropagation(); lastFocusedHost = notesPanel; setActiveHost(notesPanel); });
   }
+notesBody.addEventListener('input', ()=>{
+  _maxNotesH = 0;
+  scheduleLayoutSync();
 
+  if (notesBody.scrollHeight > notesBody.clientHeight + 2){
+    if (!_notesFullWarned){
+      alert('Er is geen ruimte meer in het mededelingenvak. Probeer eventueel een kleiner lettertype.');
+      _notesFullWarned = true;
+    }
+  } else {
+    _notesFullWarned = false;
+  }
+});
   /* Init */
   (function init(){
-    aktieveKlas = 'L4';
+    window.aktieveKlas = 'L4';
     tplSel.value = 'L4';
     const today=new Date();
     const wd=(today.getDay()+6)%7;
@@ -1922,29 +2148,131 @@ upgradeWeekendToEditable();
     ensureTaskDeleteButtons(document);
     scheduleLayoutSync();
     pushSnapshot();
-    // Sla lege beginstaat op voor beide tabs
-    // L2 is actief → sla op als L2
-    tabState['L4'] = captureAllVoorTab();
-    tabState['L3'] = null;
-    setTimeout(()=>{
+    // Meet correcte hoogte na eerste render
+    requestAnimationFrame(()=> requestAnimationFrame(()=>{
       const wc = document.getElementById('weekendCol');
       if (wc && wc.offsetHeight > 50) _maxNotesH = wc.offsetHeight;
-      // Alleen _initDone zetten als er geen opgeslagen data is
+      // Sla lege beginstaat op voor beide tabs
+      tabState['L4'] = captureAllVoorTab();
+      tabState['L3'] = null;
+      // Alleen _initDone zetten als er geen opgeslagen data is (anders doet de herstel-popup dat)
       try {
         if (!localStorage.getItem('klasagenda_2degraad_v2')) _initDone = true;
       } catch(e) { _initDone = true; }
+    }));
+    // Pin de maximale hoogte van mededelingen na volledig renderen
+    setTimeout(()=>{
+      const wc = document.getElementById('weekendCol');
+      if (wc && wc.offsetHeight > 50) _maxNotesH = wc.offsetHeight;
     }, 300);
+  })();
+
+  function cleanupTaskText(t){
+  if (!t) return;
+
+  // verwijder overbodige trailing <br>'s op het einde
+  while (
+    t.lastChild &&
+    (
+      (t.lastChild.nodeType === 1 && t.lastChild.tagName === 'BR') ||
+      (t.lastChild.nodeType === 3 && t.lastChild.textContent === '')
+    )
+  ){
+    t.removeChild(t.lastChild);
+  }
+
+  // Als browser lege div/p/blokjes maakte op het einde: ook opruimen
+  while (
+    t.lastChild &&
+    t.lastChild.nodeType === 1 &&
+    ['DIV','P'].includes(t.lastChild.tagName) &&
+    (t.lastChild.innerText || '').trim() === ''
+  ){
+    t.removeChild(t.lastChild);
+  }
+}
+  /* Takenlijst UX */
+  document.addEventListener('keydown', (e)=>{
+  const t = e.target;
+  if (!t || !t.classList || !t.classList.contains('tasktext')) return;
+
+  if (e.key === 'Enter'){
+    e.preventDefault();
+    try { document.execCommand('insertLineBreak'); }
+    catch(_){ document.execCommand('insertHTML', false, '<br>'); }
+    pushSnapshot();
+    return;
+  }
+
+  if (e.key === 'Backspace'){
+    const sel = window.getSelection();
+    const atStart = sel && sel.anchorOffset === 0 && sel.isCollapsed;
+    const isEmpty = (t.innerText || '').trim() === '';
+
+    if (atStart && isEmpty){
+      const li  = t.closest('li');
+      const day = t.closest('.day');
+      e.preventDefault();
+      li?.remove();
+      if (day) updatePlanBoxClass(day);
+      pushSnapshot();
+      return;
+    }
+
+    setTimeout(()=>{
+      cleanupTaskText(t);
+      pushSnapshot();
+    }, 0);
+  }
+});
+
+ document.addEventListener('blur', (e)=>{
+  const t = e.target;
+  if (!t || !t.classList || !t.classList.contains('tasktext')) return;
+
+  cleanupTaskText(t);
+
+  if ((t.innerText || '').trim() === ''){
+    const li  = t.closest('li');
+    const day = t.closest('.day');
+    li?.remove();
+    if (day) updatePlanBoxClass(day);
+    pushSnapshot();
+    return;
+  }
+
+  pushSnapshot();
+}, true);
+
+  document.addEventListener('keydown', (e)=>{
+    if (e.key === 'Delete') {
+      const node = selectedPicto || document.querySelector('.picto-free.selected');
+      if (node) { node.remove(); selectedPicto=null; pushSnapshot(); }
+    }
+  });
+
+  document.addEventListener('click', (e)=>{
+    if(!e.target.classList.contains('liDel')) return;
+    const li   = e.target.closest('li');
+    li?.remove();
+    const dd = e.target.closest('.day');
+    if (dd) {
+      updatePlanBoxClass(dd);
+    }
+    pushSnapshot();
+  });
 
   // ── Herstel-popup bij laden ──
   (function(){
     const LS_KEY_CHECK = 'klasagenda_2degraad_v2';
     let saved;
     try { saved = localStorage.getItem(LS_KEY_CHECK); } catch(e){}
-    if (!saved) return;
+    if (!saved) return; // niets opgeslagen → gewoon lege agenda tonen
 
     let parsedSaved;
     try { parsedSaved = JSON.parse(saved); } catch(e){ return; }
 
+    // Bouw popup
     const ov = document.createElement('div');
     ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9990;display:flex;align-items:center;justify-content:center;padding:1rem';
     ov.innerHTML = `
@@ -1963,12 +2291,14 @@ upgradeWeekendToEditable();
     document.body.appendChild(ov);
 
     document.getElementById('_herstelBtn').onclick = () => {
+      // Wacht tot de pagina écht klaar is voor we data toepassen
       requestAnimationFrame(() => requestAnimationFrame(() => {
         isApplying = true;
         applyAll(parsedSaved);
         applyPanelPictos(parsedSaved.meta?.panelPictos || []);
         upgradeWeekendToEditable();
         isApplying = false;
+        // Nu pas initDone zetten zodat de volgende pushSnapshot correct autosaved
         _initDone = true;
         undoStack.push(snapshot());
         scheduleLayoutSync();
@@ -1995,62 +2325,6 @@ upgradeWeekendToEditable();
     upgradeWeekendToEditable,
     applyDay
   };
-
-  })();
-
-  /* Takenlijst UX */
-  document.addEventListener('keydown', (e)=>{
-    const t = e.target;
-    if (!t || !t.classList || !t.classList.contains('tasktext')) return;
-
-    if (e.key === 'Enter'){
-      e.preventDefault();
-      try { document.execCommand('insertLineBreak'); }
-      catch(_){ document.execCommand('insertHTML', false, '<br>'); }
-      window._klasagenda.pushSnapshot(); return;
-    }
-    if (e.key === 'Backspace'){
-      const sel = window.getSelection();
-      const atStart = sel && sel.anchorOffset === 0 && sel.isCollapsed;
-      const isEmpty = (t.innerText || '').trim() === '';
-      if (atStart && isEmpty){
-        const li  = t.closest('li');
-        const day = t.closest('.day');
-        e.preventDefault();
-        li?.remove();
-        if (day) updatePlanBoxClass(day);
-        window._klasagenda.pushSnapshot();
-      }
-    }
-  });
-
-  document.addEventListener('blur', (e)=>{
-    const t = e.target;
-    if (!t || !t.classList || !t.classList.contains('tasktext')) return;
-    if ((t.innerText || '').trim() === ''){
-      const li  = t.closest('li');
-      const day = t.closest('.day');
-      li?.remove();
-      if (day) updatePlanBoxClass(day);
-      window._klasagenda.pushSnapshot();
-    }
-  }, true);
-
-  document.addEventListener('keydown', (e)=>{
-    if (e.key === 'Delete') {
-      const node = selectedPicto || document.querySelector('.picto-free.selected');
-      if (node) { node.remove(); selectedPicto=null; window._klasagenda.pushSnapshot(); }
-    }
-  });
-
-  document.addEventListener('click', (e)=>{
-    if(!e.target.classList.contains('liDel')) return;
-    const li   = e.target.closest('li');
-    li?.remove();
-    const dd = e.target.closest('.day');
-    if (dd) updatePlanBoxClass(dd);
-    window._klasagenda.pushSnapshot();
-  });
 
 })();
 
@@ -2102,8 +2376,8 @@ upgradeWeekendToEditable();
         <input id="archiefNaam" type="text" placeholder="bv. Juf Zisa" style="width:100%;padding:.5rem .7rem;border:1.5px solid #d1d5db;border-radius:8px;font-size:12pt;box-sizing:border-box">
         <label style="display:block;margin:.8rem 0 .3rem;font-weight:700">Klas:</label>
         <select id="archiefKlas" style="width:100%;padding:.5rem .7rem;border:1.5px solid #d1d5db;border-radius:8px;font-size:12pt;box-sizing:border-box">
-          <option value="L3" ${aktieveKlas==='L3'?'selected':''}>L3</option>
-          <option value="L4" ${aktieveKlas==='L4'?'selected':''}>L4</option>
+          <option value="L3" ${window.aktieveKlas==='L3'?'selected':''}>L3</option>
+          <option value="L4" ${window.aktieveKlas==='L4'?'selected':''}>L4</option>
         </select>
         <label style="display:block;margin:.8rem 0 .3rem;font-weight:700">Week van de maand:</label>
         <select id="archiefWeek" style="width:100%;padding:.5rem .7rem;border:1.5px solid #d1d5db;border-radius:8px;font-size:12pt;box-sizing:border-box">
@@ -2170,18 +2444,18 @@ upgradeWeekendToEditable();
           <div>
             <label style="display:block;font-weight:700;font-size:.85rem;margin-bottom:.3rem">Graad</label>
             <select id="arfGraad" style="width:100%;padding:.4rem .5rem;border:1.5px solid #d1d5db;border-radius:7px;font-size:.9rem">
+              <option value="2degraad" selected>Tweede graad</option>
               <option value="1stegraad">Eerste graad</option>
-              <option value="2degraad">Tweede graad</option>
             </select>
           </div>
           <div>
             <label style="display:block;font-weight:700;font-size:.85rem;margin-bottom:.3rem">Klas</label>
             <select id="arfKlas" style="width:100%;padding:.4rem .5rem;border:1.5px solid #d1d5db;border-radius:7px;font-size:.9rem">
               <option value="">Alle klassen</option>
-              <option value="L1">L1</option>
-              <option value="L2">L2</option>
               <option value="L3">L3</option>
               <option value="L4">L4</option>
+              <option value="L1">L1</option>
+              <option value="L2">L2</option>
             </select>
           </div>
           <div>
@@ -2222,7 +2496,7 @@ upgradeWeekendToEditable();
   document.getElementById('btnArchief').addEventListener('click', ()=>{
     const mi = getMaandInfo();
     const huidigJaar = new Date().getFullYear();
-    // Jaar-opties vullen: alleen jaren vanaf 2025 (lopende en toekomstige schooljaren)
+    // Jaar-opties vullen: alleen jaren van lopende en vorige schooljaren (vanaf 2025)
     const arfJaar = document.getElementById('arfJaar');
     arfJaar.innerHTML = '';
     const minJaar = 2025;
@@ -2381,10 +2655,13 @@ upgradeWeekendToEditable();
           // ── Hele week overnemen ──
           if (type === 'heleweeek'){
             if (!confirm(`Hele week van ${naam} overnemen?\n\nDit overschrijft alle dagen én mededelingen in jouw huidige agenda.`)) return;
-            // Mededelingen
+            // Mededelingen — eerst leegmaken dan vullen
             const notesBody = document.getElementById('notesBody');
-            if (notesBody) notesBody.innerHTML = obj.meta?.notes || '';
-            // Alle dagen
+            if (notesBody){
+              notesBody.innerHTML = '';
+              notesBody.innerHTML = obj.meta?.notes || '';
+            }            // Alle dagen — eerst upgradeWeekendToEditable zodat ce bestaat
+            window._klasagenda.upgradeWeekendToEditable();
             const mijnDagen = [...document.querySelectorAll('.day')];
             const bronDagen = obj.days || {};
             Object.entries(bronDagen).forEach(([idx, dag])=>{
@@ -2431,27 +2708,24 @@ upgradeWeekendToEditable();
               }
             });
             // Paneel-picto's: NIET applyPanelPictos aanroepen want die zitten al in notes HTML
-            window._klasagenda.pushSnapshot();
-            _maxNotesH = 0;
-            window._klasagenda.equalizePlanHeights();
-            requestAnimationFrame(()=> requestAnimationFrame(()=>{
-              const wc = document.getElementById('weekendCol');
-              if (wc && wc.offsetHeight > 50) _maxNotesH = wc.offsetHeight;
-              window._klasagenda.syncNotesToWeekend();
-            }));
-            toonArchiefToast(`✅ Hele week van ${naam} overgenomen — inclusief picto's!`);
-            return;
+    window._klasagenda.pushSnapshot();
+    _maxNotesH = 0;
+    window._klasagenda.scheduleLayoutSync();
+    toonArchiefToast(`✅ Hele week van ${naam} overgenomen — inclusief picto's!`);
+    return;
           }
 
           // ── Mededelingen ──
           if (type === 'notes'){
-            const notesBody = document.getElementById('notesBody');
-            if (notesBody){
-              notesBody.innerHTML = obj.meta?.notes || '';
-              toonArchiefToast('✅ Mededelingen van '+naam+' zijn ingeplakt!');
-            }
-            return;
-          }
+  const notesBody = document.getElementById('notesBody');
+  if (notesBody){
+    notesBody.innerHTML = obj.meta?.notes || '';
+    _maxNotesH = 0;
+    window._klasagenda.scheduleLayoutSync();
+    toonArchiefToast('✅ Mededelingen van '+naam+' zijn ingeplakt!');
+  }
+  return;
+}
 
           // ── Dag-onderdeel ──
           const dag = obj.days?.[dayIdx];
@@ -2690,7 +2964,7 @@ upgradeWeekendToEditable();
       }
 
       const meta = {
-        template:   tplSel ? tplSel.value : 'L2',
+        template:   tplSel ? tplSel.value : 'L4',
         title:      titlePill ? titlePill.textContent : '',
         monthBox:   monthBox ? monthBox.textContent : '',
         swim:       swimChk ? swimChk.checked : false,
@@ -2709,14 +2983,14 @@ upgradeWeekendToEditable();
       return;
     }
 
-    // Pad: archief/1stegraad/2025/oktober/week1/juf-zisa-L1
+    // Pad: archief/2degraad/2025/oktober/week1/juf-zisa-L4
     const { jaar, maand, week } = input;
     const naamSlug = input.naam.toLowerCase().replace(/[^a-z0-9]/g,'-').replace(/-+/g,'-');
     const path = `archief/${GRAAD}/${jaar}/${maand}/week${week}/${naamSlug}-${input.klas}`;
 
     try {
       await dbSet(path, data);
-      alert(`✅ Agenda bewaard in het archief!\n\nJe collega kan die vinden via:\nArchief → Tweede graad → ${maand} ${jaar} → week ${week}`);
+      alert(`✅ Agenda bewaard in het archief!\n\nJe collega kan die vinden via:\nArchief → Eerste graad → ${maand} ${jaar} → week ${week}`);
     } catch(e) {
       alert('❌ Kon niet bewaren: ' + e.message + '\n\nControleer je internetverbinding.');
     }
