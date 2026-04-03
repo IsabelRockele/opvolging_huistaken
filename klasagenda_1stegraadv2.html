@@ -6,11 +6,12 @@
 <title>Klasagenda L1–L2 – A4 liggend (Arial)</title>
 <style>
   :root{
-    --page-w: 297mm; --page-h: 210mm;
-    --m-top: 8mm; --m-side: 8mm;
-    --gap: 3.2mm;
-    --ink:#111; --line:#111; --muted:#6b7280;
-  }
+  --page-w: 297mm; --page-h: 210mm;
+  --m-top: 8mm; --m-side: 8mm;
+  --gap: 3.2mm;
+  --bottom-row-h: 84mm;
+  --ink:#111; --line:#111; --muted:#6b7280;
+}
   html,body{height:100%}
   body{margin:0;background:#f3f5f7;color:var(--ink);font-family:Arial,Helvetica,sans-serif;font-size:12pt;line-height:1.28}
   *{box-sizing:border-box}
@@ -105,8 +106,21 @@
 }
   /* Grids */
   .week-top{display:grid;grid-template-columns:repeat(5,1fr);gap:var(--gap)}
-  .bottom-row{display:grid;grid-template-columns:1.5fr 3.5fr;gap:var(--gap);margin-top:3mm}
-  .weekendCol{display:grid;grid-template-rows:auto auto;gap:var(--gap)}
+  .bottom-row{
+  display:grid;
+  grid-template-columns:1.5fr 3.5fr;
+  gap:var(--gap);
+  margin-top:3mm;
+  height:var(--bottom-row-h);
+}
+
+.weekendCol{
+  display:grid;
+  grid-template-rows:1fr 1fr;
+  gap:var(--gap);
+  height:100%;
+  min-height:0;
+}
 
   /* Dagkaarten */
   .day{position:relative;border:2.6px solid var(--line);border-radius:7px;background:#fff;display:flex;flex-direction:column;--bullet:14px;--plan-fs:12pt;--task-gap:6pt; z-index:1;}
@@ -165,19 +179,64 @@
   .planBox.has-tasks .planText{display:none}
   .planBox.has-tasks{padding-bottom:1mm}
 
-  /* Weekend: nieuw – bullets toelaten; verberg wkCE zodra er bullets zijn */
-  .day.small .tasklist{ display:block; }               /* i.p.v. display:none */
-  .planBox.has-tasks .wkCE{ display:none; }
+  /* Weekend: compact invulvak bovenaan, zoals weekdagen */
+.day.small{
+  min-height:0;
+}
 
-  /* Weekend: textarea (legacy) / contenteditable (nieuw) */
-  .day.small .tasklist{display:block}
-  .wkTA{
-    width:100%; border:none; outline:none; resize:none; background:transparent;
-    font-family:Arial,Helvetica,sans-serif; font-size:11pt; line-height:1.28;
-    height:calc(2 * 1.28em);
-    overflow:hidden; padding:0; margin:0;
-  }
-  .wkTA.maxed{ height:calc(3 * 1.28em); }
+.day.small .body{
+  flex:0 0 auto;
+  min-height:0;
+  overflow:visible;
+}
+
+.day.small .planBox{
+  flex:0 0 auto;
+  min-height:0;
+  height:auto;
+  overflow:visible;
+  margin-bottom:0;
+  border:none;
+  padding:0;
+  background:transparent;
+}
+
+.wkTA{
+  width:100%;
+  border:1px solid var(--line);
+  border-radius:6px;
+  outline:none;
+  resize:none;
+  background:#fff;
+  font-family:Arial,Helvetica,sans-serif;
+  font-size:11pt;
+  line-height:1.28;
+  height:22mm;
+  max-height:22mm;
+  overflow:hidden;
+  padding:.35rem .5rem;
+  margin:0;
+}
+
+.wkTA.maxed{
+  height:18mm;
+  max-height:18mm;
+}
+
+.wkCE[contenteditable]{
+  display:block;
+  width:100%;
+  height:18mm;
+  min-height:18mm;
+  max-height:18mm;
+  padding:.35rem .5rem;
+  border:1px solid var(--line);
+  border-radius:6px;
+  background:#fff;
+  outline:none;
+  white-space:pre-wrap;
+  overflow:hidden;
+}
 
   /* Ik denk aan */
   .bringBox{
@@ -192,12 +251,56 @@
   .picto-inline img{vertical-align:middle}
 
   /* Mededelingen */
-  .panel{position:relative;border:2.6px solid var(--line);border-radius:7px;background:#fff;display:flex;flex-direction:column;height:1px; z-index:0;}
-  .panel header{padding:2.6mm;border-bottom:2.6px solid var(--line);font-weight:700}
-  .panelBody{padding:2mm;flex:1;min-height:60px;overflow:auto;outline:none}
-  .panelBody:empty::before{content:'Klik hier om mededelingen te typen…';color:#adb5bd;pointer-events:none;font-style:italic}
-  .sign{position:absolute;right:6mm;bottom:6mm;border:2.6px solid var(--line);border-radius:7px;padding:2mm 5mm;min-width:70mm;height:22mm;font-size:10pt;color:var(--muted);background:#fff;display:flex;align-items:flex-start}
+.panel{
+  position:relative;
+  border:2.6px solid var(--line);
+  border-radius:7px;
+  background:#fff;
+  display:flex;
+  flex-direction:column;
+  min-height:0;
+  height:100%;
+  z-index:0;
+}
 
+.panel header{
+  padding:2.6mm;
+  border-bottom:2.6px solid var(--line);
+  font-weight:700;
+}
+
+.panelInner{
+  padding:2mm;
+  min-height:0;
+  height:100%;
+  overflow:hidden;
+}
+
+.panelBody{
+  min-width:0;
+  min-height:0;
+  height:100%;
+  overflow:hidden;
+  outline:none;
+  white-space:pre-wrap;
+}
+
+.sign{
+  float:right;
+  clear:right;
+  margin:10px 0 6px 14px;
+
+  border:2.6px solid var(--line);
+  border-radius:7px;
+  padding:2mm 5mm;
+  width:70mm;
+  height:22mm;
+  font-size:10pt;
+  color:var(--muted);
+  background:#fff;
+  display:flex;
+  align-items:flex-start;
+}
   /* Vrije pictogrammen */
   .picto-free{
     position:absolute; left:10px; top:10px;
@@ -224,18 +327,6 @@
   .dock[hidden]{ display:none !important; }
   .dock .uploadRow{ margin-top:.5rem; display:flex; gap:.5rem; align-items:center; }
 
-  /* Weekend: contenteditable vak */
-  .wkCE[contenteditable]{
-    display:block;
-    min-height:3.2em;
-    padding:.4rem .5rem;
-    border:1px solid var(--line);
-    border-radius:6px;
-    background:#fff;
-    outline:none;
-    white-space:pre-wrap;
-    overflow:visible;
-  }
 
   /* PRINT */
   @media print{
@@ -267,10 +358,20 @@
 
     /* 2. Zorg dat mededelingen NOOIT een scrollbalk tonen op papier */
     .panelBody {
-      overflow: hidden !important; 
-      height: auto !important; 
-      min-height: 0 !important;
-    }
+  overflow: hidden !important; 
+  height: auto !important; 
+  min-height: 0 !important;
+}
+
+.panelInner{
+  display:block !important;
+}
+
+.sign{
+  float:right !important;
+  clear:right !important;
+  margin:10px 0 6px 14px !important;
+}
 
     /* Dagvakken strikt begrenzen */
     .week-top{ overflow: hidden; }
@@ -294,7 +395,13 @@
     .panelBody:empty::before{ display:none; }
     .picto-free .handle, .picto-free.selected { display:none !important; outline:none !important; }
     .tasklist .liDel{ display:none !important; }
-    .day.overflowing::after{ display:none; }
+    .day.overflowing{
+  box-shadow:none !important;
+}
+
+.day.overflowing::after{
+  display:none !important;
+}
   }
 </style>
 </head>
@@ -377,11 +484,14 @@
     <section class="bottom-row">
       <div class="weekendCol" id="weekendCol"></div>
 
-      <section class="panel" id="notesPanel">
-        <header>Mededelingen <span style="font-weight:400;color:#6b7280">(berichten aan leerkrachten via smartschool)</span></header>
-        <div class="panelBody" id="notesBody" contenteditable></div>
-        <div class="sign">handtekening ouders</div>
-      </section>
+  <section class="panel" id="notesPanel">
+  <header>Mededelingen <span style="font-weight:400;color:#6b7280">(berichten aan leerkrachten via smartschool)</span></header>
+
+  <div class="panelInner">
+    <div class="sign" id="notesSign">handtekening ouders</div>
+    <div class="panelBody" id="notesBody" contenteditable></div>
+  </div>
+</section>
     </section>
   </main>
 
@@ -526,6 +636,7 @@ requestAnimationFrame(() => {
   const fileUploadPicto = $('#fileUploadPicto');
 
   const notesPanel=$('#notesPanel'), notesBody=$('#notesBody');
+  let _notesFullWarned = false;
 
   let activeDay=null;
   let activeHost=null;
@@ -640,28 +751,45 @@ requestAnimationFrame(() => {
 
   let miniBarInPanel = false; // true als mini-toolbar bij mededelingen hoort
 
-  function toonMiniBar(el){
-    miniBarTarget = el;
-    miniBarInPanel = el.id === 'notesPanel';
-    const rect = el.getBoundingClientRect();
-    const barH = 42;
-    let top = rect.top - barH - 8 + window.scrollY;
-    if (top < 8 + window.scrollY) top = rect.bottom + 6 + window.scrollY;
-    // Meet de echte breedte van de toolbar na render
-    miniBar.classList.add('visible');
-    const barW = miniBar.offsetWidth || 560;
-    let left = rect.left + window.scrollX;
-    if (left + barW > window.scrollX + window.innerWidth - 8) left = window.scrollX + window.innerWidth - barW - 8;
-    if (left < window.scrollX + 8) left = window.scrollX + 8;
-    miniBar.style.top  = top + 'px';
-    miniBar.style.left = left + 'px';
-    miniBar.classList.add('visible');
-    vulMtPictoGrid();
-    if (!miniBarInPanel) updateMtBulletSize(el);
-    // Bolletje-knop en bolletjesgrootte verbergen bij mededelingen
-    document.getElementById('mt-bullet').style.display    = miniBarInPanel ? 'none' : '';
-    document.getElementById('mt-bulletsize').style.display = miniBarInPanel ? 'none' : '';
+function toonMiniBar(el){
+  miniBarTarget = el;
+  miniBarInPanel = (el.id === 'notesPanel' || el.id === 'notesBody');
+
+  let rect;
+
+  if (miniBarInPanel){
+    const panelHeader = notesPanel.querySelector('header');
+    rect = panelHeader ? panelHeader.getBoundingClientRect() : notesPanel.getBoundingClientRect();
+  } else {
+    rect = el.getBoundingClientRect();
   }
+
+  miniBar.classList.add('visible');
+  const barW = miniBar.offsetWidth || 560;
+  const barH = miniBar.offsetHeight || 42;
+
+  let top = rect.top - barH - 10;
+  if (top < 8){
+    top = 8;
+  }
+
+  let left = rect.left;
+  if (left + barW > window.innerWidth - 8){
+    left = window.innerWidth - barW - 8;
+  }
+  if (left < 8){
+    left = 8;
+  }
+
+  miniBar.style.top = top + 'px';
+  miniBar.style.left = left + 'px';
+
+  vulMtPictoGrid();
+  if (!miniBarInPanel) updateMtBulletSize(el);
+
+  document.getElementById('mt-bullet').style.display = miniBarInPanel ? 'none' : '';
+  document.getElementById('mt-bulletsize').style.display = miniBarInPanel ? 'none' : '';
+}
 
   function verbergMiniBar(){
     miniBar.classList.remove('visible');
@@ -671,22 +799,28 @@ requestAnimationFrame(() => {
 
   // Toon bij klikken/focus in een dag of mededelingen — via event delegation
   document.addEventListener('focusin', e => {
-    const dag   = e.target.closest('.day');
-    const panel = e.target.closest('#notesPanel');
-    const inMini = e.target.closest('#miniToolbar');
-    if (dag)   { toonMiniBar(dag);   return; }
-    if (panel) { toonMiniBar(panel); return; }
-    if (!inMini) verbergMiniBar();
-  });
-  document.addEventListener('pointerdown', e => {
-    const dag   = e.target.closest('.day');
-    const panel = e.target.closest('#notesPanel');
-    const inMini    = e.target.closest('#miniToolbar');
-    const inToolbar = e.target.closest('.toolbar');
-    if (dag)   { toonMiniBar(dag);   return; }
-    if (panel) { toonMiniBar(panel); return; }
-    if (!inMini && !inToolbar) verbergMiniBar();
-  }, true);
+  const dag   = e.target.closest('.day');
+  const panelBody = e.target.closest('#notesBody');
+  const panel = e.target.closest('#notesPanel');
+  const inMini = e.target.closest('#miniToolbar');
+
+  if (dag && !panelBody) { toonMiniBar(dag); return; }
+  if (panelBody) { toonMiniBar(panelBody); return; }
+  if (panel) { toonMiniBar(panel); return; }
+  if (!inMini) verbergMiniBar();
+});
+ document.addEventListener('pointerdown', e => {
+  const dag   = e.target.closest('.day');
+  const panelBody = e.target.closest('#notesBody');
+  const panel = e.target.closest('#notesPanel');
+  const inMini    = e.target.closest('#miniToolbar');
+  const inToolbar = e.target.closest('.toolbar');
+
+  if (dag && !panelBody) { toonMiniBar(dag); return; }
+  if (panelBody) { toonMiniBar(panelBody); return; }
+  if (panel) { toonMiniBar(panel); return; }
+  if (!inMini && !inToolbar) verbergMiniBar();
+}, true);
   // Sla selectie op bij elke pointerdown op de minibar (selectie gaat anders verloren)
   let _savedRange = null;
   function saveSelection(){
@@ -1019,11 +1153,21 @@ requestAnimationFrame(() => {
   }
 
   function limitWeekendTextarea(e){
-    const ta=e.target;
-    const lines=ta.value.split('\n').length;
-    if(lines>=3) ta.classList.add('maxed'); else ta.classList.remove('maxed');
-    scheduleLayoutSync();
+  const ta = e.target;
+  const lines = ta.value.split('\n').length;
+  if(lines>=3) ta.classList.add('maxed'); else ta.classList.remove('maxed');
+
+  scheduleLayoutSync();
+
+  if (ta.scrollHeight > ta.clientHeight + 2){
+    if (!ta.dataset.fullWarned){
+      alert('Er is geen ruimte meer in dit weekendvak. Probeer eventueel een kleiner lettertype.');
+      ta.dataset.fullWarned = '1';
+    }
+  } else {
+    ta.dataset.fullWarned = '';
   }
+}
 
   function wireDate(card,idx){
     const dp=card.querySelector('.datePicker'); const lab=card.querySelector('.dDate');
@@ -1074,19 +1218,33 @@ requestAnimationFrame(() => {
   }
 
   function upgradeWeekendToEditable(){
-    ['5','6'].forEach(i=>{
-      const planBox = document.querySelector(`[data-key="d${i}.plan"]`);
-      if (!planBox) return;
-      const ta = planBox.querySelector('.wkTA');
-      if (ta){
-        const div = document.createElement('div');
-        div.className = 'wkCE';
-        div.setAttribute('contenteditable','true');
-        div.innerText = ta.value || '';
-        ta.replaceWith(div);
-      }
-    });
-  }
+  ['5','6'].forEach(i=>{
+    const planBox = document.querySelector(`[data-key="d${i}.plan"]`);
+    if (!planBox) return;
+    const ta = planBox.querySelector('.wkTA');
+    if (ta){
+      const div = document.createElement('div');
+      div.className = 'wkCE';
+      div.setAttribute('contenteditable','true');
+      div.innerText = ta.value || '';
+
+      div.addEventListener('input', ()=>{
+        scheduleLayoutSync();
+
+        if (div.scrollHeight > div.clientHeight + 2){
+          if (!div.dataset.fullWarned){
+            alert('Er is geen ruimte meer in dit weekendvak. Probeer eventueel een kleiner lettertype.');
+            div.dataset.fullWarned = '1';
+          }
+        } else {
+          div.dataset.fullWarned = '';
+        }
+      });
+
+      ta.replaceWith(div);
+    }
+  });
+}
 
   applyAllFS.addEventListener('click',()=>{
     if(!activeDay) return;
@@ -1153,28 +1311,48 @@ requestAnimationFrame(() => {
 
   /* Bolletje */
   btnAddBullet.addEventListener('click',()=>{
-    if(!activeDay) return;
-    let list = activeDay.querySelector('[data-role=tasks]');
-    if(!list){
-      const box = activeDay.querySelector('.planBox');
-      list = document.createElement('ul');
-      list.className='tasklist'; list.setAttribute('data-role','tasks');
+  if(!activeDay) return;
+
+  const isWeekend = activeDay.classList.contains('small');
+  const box = activeDay.querySelector('.planBox');
+
+  let list = activeDay.querySelector('[data-role=tasks]');
+
+  if(!list){
+    list = document.createElement('ul');
+    list.className = 'tasklist';
+    list.setAttribute('data-role','tasks');
+
+    if (isWeekend){
+      const wk = box.querySelector('.wkCE, .wkTA');
+      if (wk) wk.remove();
+      box.appendChild(list);
+    } else {
       box.prepend(list);
     }
-    const li=document.createElement('li');
-    li.innerHTML = '<span class="bullet"></span><div class="tasktext" contenteditable></div><button class="liDel" title="Verwijder">×</button>';
-    list.appendChild(li);
-    // Op vrijdag (index 4): bolletje meteen omzetten naar cijfer
-    if (activeDay && parseInt(activeDay.dataset.dayIndex) === 4){
-      convertBulletsToNumbers(activeDay.querySelector('.planBox'));
-      renumberVrijdag();
-    }
-    const t=li.querySelector('.tasktext'); t.focus();
-    const sel=window.getSelection(), rg=document.createRange(); rg.selectNodeContents(t); rg.collapse(false); sel.removeAllRanges(); sel.addRange(rg);
-    updatePlanBoxClass(activeDay);
-    ensureTaskDeleteButtons(activeDay);
-    pushSnapshot();
-  });
+  }
+
+  const li = document.createElement('li');
+  li.innerHTML = '<span class="bullet"></span><div class="tasktext" contenteditable></div><button class="liDel" title="Verwijder">×</button>';
+  list.appendChild(li);
+
+  if (!isWeekend && parseInt(activeDay.dataset.dayIndex) === 4){
+    convertBulletsToNumbers(activeDay.querySelector('.planBox'));
+    renumberVrijdag();
+  }
+
+  const t = li.querySelector('.tasktext');
+  t.focus();
+  const sel = window.getSelection(), rg = document.createRange();
+  rg.selectNodeContents(t);
+  rg.collapse(false);
+  sel.removeAllRanges();
+  sel.addRange(rg);
+
+  updatePlanBoxClass(activeDay);
+  ensureTaskDeleteButtons(activeDay);
+  pushSnapshot();
+});
 
   function ensureTaskDeleteButtons(root=document){
     root.querySelectorAll('.tasklist li').forEach(li=>{
@@ -1858,31 +2036,17 @@ upgradeWeekendToEditable();
   let _syncingNotes = false;
   // Vaste maximale hoogte voor mededelingen — berekend bij eerste aanroep
   let _maxNotesH = 0;
-  function syncNotesToWeekend(){
-    if (_syncingNotes) return;
-    const wc   = document.getElementById('weekendCol');
-    const note = document.getElementById('notesPanel');
-    const body = document.getElementById('notesBody');
-    if(!wc||!note) return;
-    _syncingNotes = true;
+function syncNotesToWeekend(){
+  if (_syncingNotes) return;
 
-    // Reset mededelingen hoogte zodat weekendCol zijn eigen hoogte bepaalt
-    note.style.height = '1px';
-    const wcH = wc.offsetHeight;
+  const note = document.getElementById('notesPanel');
+  if (!note) return;
 
-    // Sla de eerste geldige hoogte op als maximum (lege agenda = correcte hoogte)
-    if (_maxNotesH === 0 && wcH > 50) _maxNotesH = wcH;
-
-    // Gebruik de weekendkolom hoogte maar nooit groter dan het eerste maximum
-    const doelH = _maxNotesH > 0 ? Math.min(wcH, _maxNotesH) : wcH;
-    note.style.height = doelH + 'px';
-
-    const headH = note.querySelector('header').offsetHeight;
-    const signH = note.querySelector('.sign').offsetHeight + 12;
-    const pad   = 12;
-    body.style.height = Math.max(40, note.clientHeight - headH - signH - pad) + 'px';
-    _syncingNotes = false;
-  }
+  _syncingNotes = true;
+  note.style.minHeight = '';
+  note.style.height = '';
+  _syncingNotes = false;
+}
 
   /* === NIEUW: Equalizers voor gelijke hoogtes === */
   function equalizePlanHeights(){
@@ -1904,7 +2068,7 @@ upgradeWeekendToEditable();
   function checkOverflow(){
     // Meet de eigen inhoudshoogte van elk dagvak
     // Drempel: ~320px op scherm = ruim voldoende voor print
-    const MAX_DAY_H = 320;
+    const MAX_DAY_H = 350;
     $$('.week-top .day').forEach(d => {
       const planBox = d.querySelector('.planBox');
       const bringBox = d.querySelector('.bringBox');
@@ -1959,7 +2123,19 @@ upgradeWeekendToEditable();
     notesBody.addEventListener('focusin', (e)=>{ e.stopPropagation(); lastFocusedHost = notesPanel; setActiveHost(notesPanel); });
     notesBody.addEventListener('pointerdown', (e)=>{ e.stopPropagation(); lastFocusedHost = notesPanel; setActiveHost(notesPanel); });
   }
+notesBody.addEventListener('input', ()=>{
+  _maxNotesH = 0;
+  scheduleLayoutSync();
 
+  if (notesBody.scrollHeight > notesBody.clientHeight + 2){
+    if (!_notesFullWarned){
+      alert('Er is geen ruimte meer in het mededelingenvak. Probeer eventueel een kleiner lettertype.');
+      _notesFullWarned = true;
+    }
+  } else {
+    _notesFullWarned = false;
+  }
+});
   /* Init */
   (function init(){
     aktieveKlas = 'L2';
@@ -1998,43 +2174,82 @@ upgradeWeekendToEditable();
     }, 300);
   })();
 
+  function cleanupTaskText(t){
+  if (!t) return;
+
+  // verwijder overbodige trailing <br>'s op het einde
+  while (
+    t.lastChild &&
+    (
+      (t.lastChild.nodeType === 1 && t.lastChild.tagName === 'BR') ||
+      (t.lastChild.nodeType === 3 && t.lastChild.textContent === '')
+    )
+  ){
+    t.removeChild(t.lastChild);
+  }
+
+  // Als browser lege div/p/blokjes maakte op het einde: ook opruimen
+  while (
+    t.lastChild &&
+    t.lastChild.nodeType === 1 &&
+    ['DIV','P'].includes(t.lastChild.tagName) &&
+    (t.lastChild.innerText || '').trim() === ''
+  ){
+    t.removeChild(t.lastChild);
+  }
+}
   /* Takenlijst UX */
   document.addEventListener('keydown', (e)=>{
-    const t = e.target;
-    if (!t || !t.classList || !t.classList.contains('tasktext')) return;
+  const t = e.target;
+  if (!t || !t.classList || !t.classList.contains('tasktext')) return;
 
-    if (e.key === 'Enter'){
-      e.preventDefault();
-      try { document.execCommand('insertLineBreak'); }
-      catch(_){ document.execCommand('insertHTML', false, '<br>'); }
-      pushSnapshot(); return;
-    }
-    if (e.key === 'Backspace'){
-      const sel = window.getSelection();
-      const atStart = sel && sel.anchorOffset === 0 && sel.isCollapsed;
-      const isEmpty = (t.innerText || '').trim() === '';
-      if (atStart && isEmpty){
-        const li  = t.closest('li');
-        const day = t.closest('.day');
-        e.preventDefault();
-        li?.remove();
-        if (day) updatePlanBoxClass(day);
-        pushSnapshot();
-      }
-    }
-  });
+  if (e.key === 'Enter'){
+    e.preventDefault();
+    try { document.execCommand('insertLineBreak'); }
+    catch(_){ document.execCommand('insertHTML', false, '<br>'); }
+    pushSnapshot();
+    return;
+  }
 
-  document.addEventListener('blur', (e)=>{
-    const t = e.target;
-    if (!t || !t.classList || !t.classList.contains('tasktext')) return;
-    if ((t.innerText || '').trim() === ''){
+  if (e.key === 'Backspace'){
+    const sel = window.getSelection();
+    const atStart = sel && sel.anchorOffset === 0 && sel.isCollapsed;
+    const isEmpty = (t.innerText || '').trim() === '';
+
+    if (atStart && isEmpty){
       const li  = t.closest('li');
       const day = t.closest('.day');
+      e.preventDefault();
       li?.remove();
       if (day) updatePlanBoxClass(day);
       pushSnapshot();
+      return;
     }
-  }, true);
+
+    setTimeout(()=>{
+      cleanupTaskText(t);
+      pushSnapshot();
+    }, 0);
+  }
+});
+
+ document.addEventListener('blur', (e)=>{
+  const t = e.target;
+  if (!t || !t.classList || !t.classList.contains('tasktext')) return;
+
+  cleanupTaskText(t);
+
+  if ((t.innerText || '').trim() === ''){
+    const li  = t.closest('li');
+    const day = t.closest('.day');
+    li?.remove();
+    if (day) updatePlanBoxClass(day);
+    pushSnapshot();
+    return;
+  }
+
+  pushSnapshot();
+}, true);
 
   document.addEventListener('keydown', (e)=>{
     if (e.key === 'Delete') {
@@ -2501,24 +2716,24 @@ upgradeWeekendToEditable();
               }
             });
             // Paneel-picto's: NIET applyPanelPictos aanroepen want die zitten al in notes HTML
-          window._klasagenda.pushSnapshot();
-_maxNotesH = 0;
-const _wcVoor = document.getElementById('weekendCol');
-if (_wcVoor && _wcVoor.offsetHeight > 50) _maxNotesH = _wcVoor.offsetHeight;
-window._klasagenda.equalizePlanHeights();
-            toonArchiefToast(`✅ Hele week van ${naam} overgenomen — inclusief picto's!`);
-            return;
+    window._klasagenda.pushSnapshot();
+    _maxNotesH = 0;
+    window._klasagenda.scheduleLayoutSync();
+    toonArchiefToast(`✅ Hele week van ${naam} overgenomen — inclusief picto's!`);
+    return;
           }
 
           // ── Mededelingen ──
           if (type === 'notes'){
-            const notesBody = document.getElementById('notesBody');
-            if (notesBody){
-              notesBody.innerHTML = obj.meta?.notes || '';
-              toonArchiefToast('✅ Mededelingen van '+naam+' zijn ingeplakt!');
-            }
-            return;
-          }
+  const notesBody = document.getElementById('notesBody');
+  if (notesBody){
+    notesBody.innerHTML = obj.meta?.notes || '';
+    _maxNotesH = 0;
+    window._klasagenda.scheduleLayoutSync();
+    toonArchiefToast('✅ Mededelingen van '+naam+' zijn ingeplakt!');
+  }
+  return;
+}
 
           // ── Dag-onderdeel ──
           const dag = obj.days?.[dayIdx];
