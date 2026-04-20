@@ -3,33 +3,551 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Gedragsopvolging</title>
+  <title>Gedragsopvolging – juf Zisa</title>
 
-  <!-- Stijlen -->
   <link rel="stylesheet" href="gedragsopvolging.css" />
 
-  <!-- Manifest & iconen zoals in de andere pagina's -->
   <link rel="manifest" href="manifest.json" />
   <link rel="apple-touch-icon" href="icon-192x192.png" />
-  <meta name="theme-color" content="#4A90E2" />
+  <meta name="theme-color" content="#d99775" />
 
-  <!-- jsPDF & html2canvas voor PDF -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+  <style>
+    :root {
+      --tekst: #3d3a36;
+      --tekst-zacht: #6b655d;
+      --wit: #ffffff;
+      --creme: #faf6ef;
+      --creme-warm: #f5efe4;
+      --accent: #d99775;
+      --accent-licht: #f4dcc9;
+      --accent-donker: #b87a5e;
+      --geel-zacht: #f5d58e;
+      --geel-licht: #fdf4dc;
+      --groen-zacht: #9ec4a3;
+      --groen-donker: #5a8a63;
+      --blauw-zacht: #a8c5d6;
+      --blauw-donker: #6b9bb8;
+      --rood-zacht: #c97070;
+      --rood-licht: #f5dcdc;
+      --rand: #d9d1c2;
+      --rand-donker: #a89d8a;
+      --grijs-licht: #ede8dd;
+      --schaduw: rgba(120, 110, 95, 0.18);
+      --schaduw-sterk: rgba(120, 110, 95, 0.28);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      padding: 20px;
+      font-family: 'Segoe UI', Tahoma, sans-serif;
+      background: var(--creme);
+      color: var(--tekst);
+      min-height: 100vh;
+    }
+
+    /* TOPBALK (header) - zelfde stijl als dashboard */
+    .topbar {
+      background: linear-gradient(135deg, #6b5d52 0%, #8a7a6d 100%);
+      color: var(--wit);
+      padding: 22px 32px;
+      border-radius: 16px;
+      position: relative;
+      overflow: hidden;
+      border: 2px solid var(--rand-donker);
+      margin-bottom: 20px;
+      box-shadow: 0 4px 16px var(--schaduw);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 14px;
+    }
+
+    .topbar::before {
+      content: "";
+      position: absolute;
+      top: 0; right: 0; bottom: 0;
+      width: 42%;
+      background-image: repeating-linear-gradient(
+        90deg,
+        rgba(255,255,255,0.32) 0 16px,
+        transparent 16px 32px
+      );
+      clip-path: polygon(30% 0, 100% 0, 100% 100%, 0 100%);
+      pointer-events: none;
+    }
+
+    .topbar h1 {
+      font-size: 1.8em;
+      font-weight: 900;
+      margin: 0;
+      letter-spacing: -0.5px;
+      position: relative;
+      z-index: 2;
+    }
+
+    .topbar h1::before {
+      content: "📊 ";
+    }
+
+    .topbar-buttons {
+      display: flex;
+      gap: 10px;
+      position: relative;
+      z-index: 2;
+      flex-wrap: wrap;
+    }
+
+    .topbar-buttons button {
+      background: rgba(255,255,255,0.2);
+      color: var(--wit);
+      border: 1.5px solid rgba(255,255,255,0.4);
+      padding: 8px 16px;
+      border-radius: 10px;
+      font-size: 0.9em;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.15s;
+    }
+
+    .topbar-buttons button:hover {
+      background: rgba(255,255,255,0.35);
+      transform: translateY(-1px);
+    }
+
+    /* HOOFDLAYOUT */
+    .main-layout {
+      display: grid;
+      grid-template-columns: minmax(280px, 340px) minmax(0, 1fr);
+      gap: 18px;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    @media (max-width: 900px) {
+      .main-layout { grid-template-columns: 1fr; }
+      .pane-overzicht { order: 2; }
+    }
+
+    .pane {
+      background: var(--wit);
+      border: 2px solid var(--rand-donker);
+      border-radius: 16px;
+      padding: 22px 24px;
+      box-shadow: 0 3px 12px var(--schaduw);
+    }
+
+    .pane h2 {
+      margin: 0 0 12px 0;
+      font-size: 1.25em;
+      font-weight: 800;
+      color: var(--tekst);
+    }
+
+    /* FORMULIER */
+    .field {
+      margin-bottom: 14px;
+    }
+
+    .field-group {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .field-group .field {
+      flex: 1;
+      min-width: 140px;
+    }
+
+    .field label {
+      display: block;
+      font-size: 0.88em;
+      font-weight: 600;
+      margin-bottom: 5px;
+      color: var(--tekst);
+    }
+
+    .field input[type="text"],
+    .field input[type="number"],
+    .field input[type="date"],
+    .field select,
+    .field textarea {
+      width: 100%;
+      padding: 9px 12px;
+      border: 1.5px solid var(--rand-donker);
+      border-radius: 8px;
+      font-family: inherit;
+      font-size: 0.95em;
+      background: var(--wit);
+      color: var(--tekst);
+    }
+
+    .field input:focus,
+    .field select:focus,
+    .field textarea:focus {
+      outline: none;
+      background: #fffbe6;
+      border-color: var(--accent);
+    }
+
+    .field textarea {
+      resize: vertical;
+      min-height: 70px;
+    }
+
+    .hint {
+      margin: 4px 0 0 0;
+      font-size: 0.82em;
+      color: var(--tekst-zacht);
+      font-style: italic;
+    }
+
+    .btn-primary {
+      margin-top: 6px;
+      padding: 11px 22px;
+      font-size: 1em;
+      font-weight: 700;
+      border-radius: 10px;
+      border: 2px solid var(--rand-donker);
+      background: var(--accent);
+      color: var(--wit);
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.15s;
+      box-shadow: 0 2px 6px var(--schaduw);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 10px var(--schaduw-sterk);
+      background: var(--accent-donker);
+    }
+
+    /* OVERZICHT */
+    .pane-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+      margin-bottom: 10px;
+      padding-bottom: 10px;
+      border-bottom: 2px solid var(--rand);
+      flex-wrap: wrap;
+    }
+
+    .pane-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .pane-actions button {
+      padding: 8px 14px;
+      font-size: 0.88em;
+      font-weight: 600;
+      border-radius: 10px;
+      border: 1.5px solid var(--rand-donker);
+      background: var(--geel-zacht);
+      color: var(--tekst);
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.15s;
+      box-shadow: 0 2px 4px var(--schaduw);
+    }
+
+    .pane-actions button:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 3px 6px var(--schaduw-sterk);
+    }
+
+    .subtext {
+      margin: 2px 0 0 0;
+      font-size: 0.9em;
+      color: var(--tekst-zacht);
+    }
+
+    /* INFO BOXEN */
+    .info-box {
+      padding: 12px 16px;
+      background: var(--geel-licht);
+      border-radius: 10px;
+      border: 1.5px solid var(--rand-donker);
+      font-size: 0.92em;
+      color: var(--tekst);
+      margin-bottom: 14px;
+    }
+
+    /* TABEL */
+    .table-wrapper {
+      margin-top: 12px;
+      max-height: calc(100vh - 280px);
+      overflow: auto;
+      border-radius: 10px;
+      border: 1.5px solid var(--rand-donker);
+      background: var(--wit);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: var(--wit);
+      font-size: 0.92em;
+    }
+
+    thead {
+      position: sticky;
+      top: 0;
+      background: var(--creme-warm);
+      z-index: 1;
+    }
+
+    th,
+    td {
+      border-bottom: 1px solid var(--rand);
+      padding: 8px 10px;
+      text-align: left;
+      vertical-align: top;
+    }
+
+    th {
+      font-weight: 700;
+      white-space: nowrap;
+      color: var(--tekst);
+      border-bottom: 2px solid var(--rand-donker);
+    }
+
+    tbody tr:hover {
+      background: var(--geel-licht);
+    }
+
+    td.datum { white-space: nowrap; }
+    td.reden { max-width: 280px; }
+
+    .badge-speeltijd {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 999px;
+      background: var(--rood-licht);
+      color: var(--rood-zacht);
+      font-size: 0.82em;
+      font-weight: 700;
+      border: 1px solid var(--rood-zacht);
+    }
+
+    .badge-uitgezeten {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 999px;
+      background: #dcfce7;
+      color: var(--groen-donker);
+      font-size: 0.82em;
+      font-weight: 700;
+      border: 1px solid var(--groen-zacht);
+    }
+
+    /* ACTIEKNOPPEN TABEL */
+    .actieknoppen {
+      display: flex;
+      gap: 5px;
+      flex-wrap: wrap;
+    }
+
+    .actieknoppen button:not(.btn-binnen):not(.btn-ongedaan) {
+      padding: 5px 10px;
+      font-size: 0.82em;
+      font-weight: 600;
+      border-radius: 6px;
+      border: 1.5px solid var(--rand-donker);
+      background: var(--creme-warm);
+      color: var(--tekst);
+      cursor: pointer;
+      font-family: inherit;
+    }
+
+    .actieknoppen button:not(.btn-binnen):not(.btn-ongedaan):hover {
+      background: var(--geel-licht);
+    }
+
+    .btn-binnen {
+      background-color: var(--groen-donker) !important;
+      color: white !important;
+      border: 1.5px solid var(--groen-donker) !important;
+      padding: 6px 12px !important;
+      border-radius: 8px !important;
+      font-weight: 700 !important;
+      font-family: inherit !important;
+      cursor: pointer;
+      font-size: 0.85em;
+    }
+
+    .btn-binnen:hover {
+      background-color: #3f6e47 !important;
+    }
+
+    .btn-ongedaan {
+      background-color: var(--rood-zacht) !important;
+      color: white !important;
+      border: 1.5px solid var(--rood-zacht) !important;
+      padding: 6px 12px !important;
+      border-radius: 8px !important;
+      font-weight: 700 !important;
+      font-family: inherit !important;
+      cursor: pointer;
+      font-size: 0.85em;
+    }
+
+    .btn-ongedaan:hover {
+      background-color: #b35555 !important;
+    }
+
+    .actie-verwijder {
+      border-color: var(--rood-zacht) !important;
+      color: var(--rood-zacht) !important;
+      background: var(--rood-licht) !important;
+    }
+
+    .actie-verwijder:hover {
+      background: #f5c9c9 !important;
+    }
+
+    /* PDF-KLAS CONTAINER */
+    .pdf-klas-container {
+      margin-top: 22px;
+      padding: 18px 20px;
+      border: 1.5px solid var(--rand-donker);
+      border-radius: 12px;
+      background: var(--creme-warm);
+    }
+
+    .pdf-klas-container h3 {
+      margin: 0 0 12px 0;
+      font-size: 1.1em;
+      font-weight: 800;
+      color: var(--tekst);
+    }
+
+    .pdf-klas-container label {
+      margin-right: 12px;
+      font-weight: 600;
+      font-size: 0.92em;
+    }
+
+    .pdf-klas-container input[type="date"] {
+      padding: 7px 10px;
+      border: 1.5px solid var(--rand-donker);
+      border-radius: 8px;
+      font-family: inherit;
+      font-size: 0.92em;
+      background: var(--wit);
+      color: var(--tekst);
+      margin-right: 6px;
+    }
+
+    .pdf-klas-container button {
+      margin-top: 12px;
+      padding: 9px 18px;
+      border-radius: 10px;
+      background: var(--blauw-zacht);
+      color: var(--tekst);
+      border: 2px solid var(--rand-donker);
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 0.95em;
+      font-weight: 700;
+      box-shadow: 0 2px 6px var(--schaduw);
+      transition: all 0.15s;
+    }
+
+    .pdf-klas-container button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 10px var(--schaduw-sterk);
+    }
+
+    /* OVERZICHT SPEELTIJDEN */
+    #speeltijdenOverzicht {
+      margin-top: 14px;
+      padding: 14px 16px;
+      background: var(--geel-licht);
+      border: 1.5px solid var(--rand-donker);
+      border-radius: 12px;
+    }
+
+    #speeltijdenOverzicht h3 {
+      margin: 0 0 14px 0;
+      font-size: 1.05em;
+      font-weight: 800;
+    }
+
+    .overzicht-leerling {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 14px;
+      padding: 10px 14px;
+      margin-bottom: 8px;
+      background: var(--wit);
+      border: 1.5px solid var(--rand);
+      border-radius: 8px;
+      flex-wrap: wrap;
+    }
+
+    .overzicht-leerling strong {
+      font-size: 0.98em;
+      color: var(--tekst);
+    }
+
+    .overzicht-leerling span {
+      color: var(--accent-donker);
+      margin-left: 6px;
+      font-weight: 700;
+    }
+
+    .overzicht-leerling button {
+      white-space: nowrap;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-family: inherit;
+      font-size: 0.9em;
+      font-weight: 600;
+      border: 1.5px solid var(--rand-donker);
+      background: var(--groen-zacht);
+      color: var(--tekst);
+      cursor: pointer;
+    }
+
+    .overzicht-leerling button:hover {
+      background: var(--groen-donker);
+      color: var(--wit);
+    }
+
+    @media (max-width: 600px) {
+      body { padding: 12px; }
+      .topbar { padding: 16px 20px; }
+      .topbar h1 { font-size: 1.4em; }
+      .pane { padding: 18px 16px; }
+    }
+  </style>
 </head>
 <body>
   <header class="topbar">
     <h1>Gedragsopvolging</h1>
     <div class="topbar-buttons">
-      <button id="btnTerugDashboard" type="button">Terug naar huistaken</button>
-      <button id="btnLogout" type="button">Uitloggen</button>
+      <button id="btnTerugDashboard" type="button">← Terug naar dashboard</button>
+      <button id="btnLogout" type="button">🚪 Uitloggen</button>
     </div>
   </header>
 
   <main class="main-layout">
     <!-- Linkerkolom: invoer van nieuwe registratie -->
     <section class="pane pane-form">
-      <h2>Nieuwe registratie</h2>
+      <h2>✏️ Nieuwe registratie</h2>
 
       <div class="field">
         <label for="leerlingSelect">Leerling</label>
@@ -68,7 +586,7 @@
       </div>
 
       <button id="btnOpslaan" class="btn-primary" type="button">
-        Registratie toevoegen
+        ➕ Registratie toevoegen
       </button>
     </section>
 
@@ -76,18 +594,16 @@
     <section class="pane pane-overzicht">
       <div class="pane-header">
         <div>
-          <h2 id="overzichtTitel">Overzicht</h2>
+          <h2 id="overzichtTitel">📋 Overzicht</h2>
           <p id="totaalInfo" class="subtext"></p>
         </div>
         <div class="pane-actions">
-  <button id="btnOverzichtSpeeltijden" type="button">
-    Overzicht speeltijden
-  </button>
-  <button id="btnPdfLeerling" type="button">
-    PDF voor ouders
-  </button>
-</div>
-
+          <button id="btnOverzichtSpeeltijden" type="button">
+            👀 Overzicht speeltijden
+          </button>
+          <button id="btnPdfLeerling" type="button">
+            📄 PDF voor ouders
+          </button>
         </div>
       </div>
 
@@ -98,11 +614,10 @@
       <div id="geenRegistratiesMelding" class="info-box" style="display:none;">
         Er zijn nog geen registraties voor deze leerling.
       </div>
-      
-      <div id="speeltijdenOverzicht" class="info-box" style="display:none;">
-  <!-- overzicht van leerlingen met resterende speeltijden -->
-</div>
 
+      <div id="speeltijdenOverzicht" class="info-box" style="display:none;">
+        <!-- overzicht van leerlingen met resterende speeltijden -->
+      </div>
 
       <div id="tabelContainer" class="table-wrapper">
         <table id="sanctiesTabel">
@@ -121,27 +636,27 @@
           </tbody>
         </table>
       </div>
+
       <!-- =============================
-     PDF voor volledige klas
-     ============================= -->
-<div class="pdf-klas-container" style="margin-top:20px;">
-  <h3>Klasoverzicht – PDF</h3>
+           PDF voor volledige klas
+           ============================= -->
+      <div class="pdf-klas-container">
+        <h3>📚 Klasoverzicht – PDF</h3>
 
-  <label style="margin-right:10px;">
-    Van:
-    <input type="date" id="filterVan">
-  </label>
+        <label>
+          Van:
+          <input type="date" id="filterVan">
+        </label>
 
-  <label style="margin-right:10px;">
-    Tot:
-    <input type="date" id="filterTot">
-  </label>
+        <label>
+          Tot:
+          <input type="date" id="filterTot">
+        </label>
 
-  <button type="button" onclick="window.genereerPDFKlas()" 
-          style="padding:6px 12px; border-radius:6px; background:#3b82f6; color:white; border:none; cursor:pointer;">
-    PDF volledige klas
-  </button>
-</div>
+        <button type="button" onclick="window.genereerPDFKlas()">
+          📄 PDF volledige klas
+        </button>
+      </div>
 
     </section>
   </main>
@@ -150,7 +665,7 @@
   <div id="pdfContainer" style="position:absolute; left:-9999px; top:0; width: 700px; background:#fff; padding:20px;"></div>
 
   <!-- Firebase-init + service worker (zoals index/dashboard) -->
- <script type="module" src="script.js?v=6"></script>
+  <script type="module" src="script.js?v=6"></script>
   <!-- Specifieke logica voor gedragsopvolging -->
   <script type="module" src="gedragsopvolging.js"></script>
 </body>
