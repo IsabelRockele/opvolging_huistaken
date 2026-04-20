@@ -668,31 +668,33 @@ async function genereerBulkPdf() {
 
     const { telling, statusDetails } = berekenLeerlingData(leerling, periode);
 
-    let samenvattingHTML = "<h3>Samenvatting</h3><ul>";
+    let samenvattingHTML = "<h3 style='margin-top:20px;'>Samenvatting</h3><ul style='margin:0;padding-left:20px;line-height:1.6;'>";
     samenvattingHTML += `<li><strong>Op tijd:</strong> ${telling['op tijd']} keer</li>`;
     for (const [status, detailLijst] of Object.entries(statusDetails)) {
       if (detailLijst.length > 0) {
         const statusNaam = status.charAt(0).toUpperCase() + status.slice(1);
-        samenvattingHTML += `<li><strong>${statusNaam}:</strong> ${detailLijst.length} keer<ul>`;
-        detailLijst.forEach(d => { samenvattingHTML += `<li>${d}</li>`; });
+        samenvattingHTML += `<li><strong>${statusNaam}:</strong> ${detailLijst.length} keer<ul style='margin:4px 0;'>`;
+        detailLijst.forEach(d => { samenvattingHTML += `<li style='font-size:0.9em;color:#555;'>${d}</li>`; });
         samenvattingHTML += `</ul></li>`;
       }
     }
     samenvattingHTML += "</ul>";
 
-  container.innerHTML = `
-  <h1>Overzicht opvolging huistaken</h1>
-  <h2>${leerling.naam}</h2>
-  <h3>Rapportperiode ${periode}</h3>
+    container.innerHTML = `
+      <div style="font-family: Arial, sans-serif; padding: 30px; color: #222;">
+        <div style="text-align:center; margin-bottom: 18px; padding-bottom: 14px; border-bottom: 2px solid #ccc;">
+          <h1 style="margin:0; font-size: 22pt;">Overzicht opvolging huistaken</h1>
+          <h2 style="margin:8px 0 0 0; font-size: 16pt; font-weight: normal; color: #555;">${leerling.naam}</h2>
+          <p style="margin:4px 0 0 0; font-size: 12pt; color: #777;">Rapportperiode ${periode}</p>
+        </div>
 
-  <canvas id="pdf-chart-${leerling.id}" width="400" height="400"></canvas>
+        <div style="display: flex; justify-content: center; margin: 20px 0;">
+          <canvas id="pdf-chart-${leerling.id}" width="320" height="320"></canvas>
+        </div>
 
-  <div id="pdf-samenvatting">${samenvattingHTML}</div>
-
-  <div class="pdf-logo-container">
-    <img src="afbeeldingen/schoollogo.png" alt="Schoollogo">
-  </div>
-`;
+        <div id="pdf-samenvatting" style="font-size: 11pt;">${samenvattingHTML}</div>
+      </div>
+    `;
 
     // Chart per leerling
     const totaal = Object.values(telling).reduce((a, b) => a + b, 0);
@@ -710,21 +712,51 @@ async function genereerBulkPdf() {
           backgroundColor: Object.keys(telling).filter(k => telling[k] > 0).map(k => chartKleuren[k])
         }]
       },
-      options: { animation: false, responsive: false, plugins: { legend: { position: "bottom" } } }
+      options: {
+        animation: false,
+        responsive: false,
+        plugins: {
+          legend: {
+            position: "bottom",
+            labels: { font: { size: 12 }, padding: 12 }
+          }
+        }
+      }
     });
 
+    // Even wachten zodat de chart zeker gerenderd is voor de screenshot
+    await new Promise(r => setTimeout(r, 150));
+
     // Render naar PDF
-    const canvas = await html2canvas(container, { scale: 2 });
+    const canvas = await html2canvas(container, { scale: 2, backgroundColor: '#ffffff' });
     const imgData = canvas.toDataURL('image/png');
     const imgProps = pdf.getImageProperties(imgData);
-   const pageWidth  = pdf.internal.pageSize.getWidth();
-const pageHeight = pdf.internal.pageSize.getHeight();
 
-if (i > 0) pdf.addPage();
+    const pageWidth  = pdf.internal.pageSize.getWidth();
+    const pageHeight = pdf.internal.pageSize.getHeight();
 
-/* Forceer afbeelding exact in één A4 */
-pdf.addImage(imgData, 'PNG', 0, 0, pageWidth, pageHeight);
+    if (i > 0) pdf.addPage();
 
+    // Plaats de afbeelding proportioneel — met marges bovenaan en links
+    // Breedte vullen binnen marges, hoogte mag natuurlijk blijven (niet uitrekken!)
+    const marge = 10; // mm
+    const maxBreedte = pageWidth - (2 * marge);
+    const schaal = maxBreedte / imgProps.width;
+    const berekendeHoogte = imgProps.height * schaal;
+
+    // Als de inhoud langer is dan één pagina, schalen we terug zodat alles past
+    let finaleBreedte = maxBreedte;
+    let finaleHoogte = berekendeHoogte;
+    if (berekendeHoogte > pageHeight - (2 * marge)) {
+      const maxHoogte = pageHeight - (2 * marge);
+      const schaalH = maxHoogte / imgProps.height;
+      finaleBreedte = imgProps.width * schaalH;
+      finaleHoogte = maxHoogte;
+    }
+
+    // Centreer horizontaal
+    const xOffset = (pageWidth - finaleBreedte) / 2;
+    pdf.addImage(imgData, 'PNG', xOffset, marge, finaleBreedte, finaleHoogte);
 
     // voortgang
     const progress = Math.round(((i + 1) / gesorteerdeLeerlingen.length) * 100);
