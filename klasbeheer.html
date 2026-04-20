@@ -1207,33 +1207,9 @@
       <span>👥 Team: <strong id="team-naam-label">–</strong></span>
       <span>·</span>
       <span id="aantal-leden">– leden</span>
+      <span>·</span>
+      <span>📅 Schooljaar: <input type="text" id="klas-schooljaar" class="klas-input" style="width:100px;" value="2026-2027" onchange="schooljaarZetten()"></span>
       <span class="sync-status" id="sync-status">✓ Bewaard in cloud</span>
-    </div>
-
-    <div class="klas-balk">
-      <div class="klas-item">
-        <label for="klas-naam">👩‍🏫 Naam:</label>
-        <input type="text" id="klas-naam" class="klas-input" style="width:130px;" value="" onchange="klasInstellingenZetten()">
-      </div>
-      <div class="klas-item">
-        <label for="klas-nr">🏫 Klas:</label>
-        <input type="text" id="klas-nr" class="klas-input" style="width:60px;" value="" onchange="klasInstellingenZetten()">
-      </div>
-      <div class="klas-item">
-        <label for="klas-kinderen">👧 Aantal kinderen:</label>
-        <input type="number" id="klas-kinderen" class="klas-input" min="0" value="23" onchange="klasInstellingenZetten()">
-      </div>
-      <div class="klas-item">
-        <label for="klas-reserve">📦 Reserve:</label>
-        <input type="number" id="klas-reserve" class="klas-input" min="0" value="5" onchange="klasInstellingenZetten()">
-      </div>
-      <div class="klas-item">
-        <span class="klas-totaal">= <span id="klas-totaal-nr">28</span> nodig</span>
-      </div>
-      <div class="klas-item">
-        <label for="klas-schooljaar">📅 Schooljaar:</label>
-        <input type="text" id="klas-schooljaar" class="klas-input" style="width:100px;" value="2026-2027" onchange="klasInstellingenZetten()">
-      </div>
     </div>
 
     <div class="tabs">
@@ -1254,6 +1230,31 @@
         <div class="leerjaar-schakelaar">
           <button class="leerjaar-knop actief" data-leerjaar="L1" onclick="leerjaarWisselen('L1')">📘 Leerjaar 1</button>
           <button class="leerjaar-knop" data-leerjaar="L2" onclick="leerjaarWisselen('L2')">📗 Leerjaar 2</button>
+        </div>
+
+        <div class="klas-balk" id="klas-balk">
+          <div class="klas-item" style="font-weight:800;color:var(--accent-donker);margin-right:4px;">
+            <span id="klas-balk-leerjaar-label">📘 Leerjaar 1</span>
+          </div>
+          <div class="klas-item">
+            <label for="klas-naam">👩‍🏫 Leerkracht:</label>
+            <input type="text" id="klas-naam" class="klas-input" style="width:130px;" value="" onchange="klasInstellingenZetten()">
+          </div>
+          <div class="klas-item">
+            <label for="klas-nr">🏫 Klas:</label>
+            <input type="text" id="klas-nr" class="klas-input" style="width:60px;" value="" onchange="klasInstellingenZetten()">
+          </div>
+          <div class="klas-item">
+            <label for="klas-kinderen">👧 Aantal kinderen:</label>
+            <input type="number" id="klas-kinderen" class="klas-input" min="0" value="23" onchange="klasInstellingenZetten()">
+          </div>
+          <div class="klas-item">
+            <label for="klas-reserve">📦 Reserve:</label>
+            <input type="number" id="klas-reserve" class="klas-input" min="0" value="5" onchange="klasInstellingenZetten()">
+          </div>
+          <div class="klas-item">
+            <span class="klas-totaal">= <span id="klas-totaal-nr">28</span> nodig</span>
+          </div>
         </div>
 
         <div style="margin-bottom: 20px;">
