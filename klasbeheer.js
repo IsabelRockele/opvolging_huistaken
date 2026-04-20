@@ -1568,7 +1568,7 @@ window.pdfWerkboeken = function () {
   doc.setFont(undefined, 'normal');
   const regel2 = `${teamData.instellingen.naam || ''}${teamData.instellingen.klasNr ? ' · klas ' + teamData.instellingen.klasNr : ''}${sj ? ' · ' + sj : ''}`;
   doc.text(regel2, 14, 25);
-  doc.text(`Standaard: ${teamData.instellingen.kinderen || 0} kinderen + ${teamData.instellingen.reserve || 0} reserve (per deel kan dit afwijken)`, 14, 30);
+  doc.text(`${teamData.instellingen.kinderen || 0} kinderen + ${teamData.instellingen.reserve || 0} reserve = ${totaalNodig()} per werkboek nodig`, 14, 30);
 
   let y = 38;
 
@@ -1581,34 +1581,28 @@ window.pdfWerkboeken = function () {
     y += 4;
 
     const body = m.delen.map(d => {
-      const kinderen = (d.kinderen !== undefined && d.kinderen !== null) ? d.kinderen : (teamData.instellingen.kinderen || 0);
-      const reserve = (d.reserve !== undefined && d.reserve !== null) ? d.reserve : (teamData.instellingen.reserve || 0);
-      const nodig = kinderen + reserve;
+      const nodig = totaalNodig();
       const tekort = Math.max(0, nodig - (d.stock || 0));
       return [
         d.naam,
-        String(kinderen),
-        String(reserve),
-        String(nodig),
         String(d.stock || 0),
-        tekort > 0 ? '+' + tekort : '✓'
+        String(nodig),
+        tekort > 0 ? '+' + tekort : 'OK'
       ];
     });
 
     doc.autoTable({
       startY: y,
-      head: [['Deel', 'Kinderen', 'Reserve', 'Nodig', 'In stock', 'Bijbestellen']],
+      head: [['Deel', 'In stock', 'Nodig', 'Bijbestellen']],
       body,
       theme: 'grid',
-      styles: { fontSize: 9, cellPadding: 3 },
+      styles: { fontSize: 10, cellPadding: 3 },
       headStyles: { fillColor: [138, 122, 109], textColor: 255, fontStyle: 'bold' },
       columnStyles: {
-        0: { cellWidth: 62 },
-        1: { halign: 'center', cellWidth: 22 },
-        2: { halign: 'center', cellWidth: 22 },
-        3: { halign: 'center', cellWidth: 22, fontStyle: 'bold' },
-        4: { halign: 'center', cellWidth: 24 },
-        5: { halign: 'center', cellWidth: 30, fillColor: [245, 220, 220] }
+        0: { cellWidth: 80 },
+        1: { halign: 'center', cellWidth: 30 },
+        2: { halign: 'center', cellWidth: 30, fontStyle: 'bold' },
+        3: { halign: 'center', cellWidth: 40, fillColor: [245, 220, 220] }
       },
       margin: { left: 14, right: 14 }
     });
@@ -1758,7 +1752,8 @@ window.pdfStock = function () {
 
     doc.setFontSize(13);
     doc.setFont(undefined, 'bold');
-    doc.text(`${cat.icoon || ''} ${cat.naam}`.trim(), 14, y);
+    // Geen emoji in PDF - standaard font ondersteunt geen emoji's
+    doc.text(cat.naam, 14, y);
     y += 4;
 
     const body = cat.producten.map(p => {
@@ -1844,12 +1839,6 @@ window.stockBestellijstPdf = function () {
     'Ander': [190, 190, 190],
     'Geen winkel gekozen': [220, 220, 220]
   };
-  const icons = {
-    'Lyreco': '🖍️',
-    'Action': '🛍️',
-    'Ander': '📍',
-    'Geen winkel gekozen': '❓'
-  };
 
   let y = 33;
   let eersteWinkel = true;
@@ -1867,7 +1856,8 @@ window.stockBestellijstPdf = function () {
 
     doc.setFontSize(15);
     doc.setFont(undefined, 'bold');
-    doc.text(`${icons[winkel]} ${winkel}`, 14, y);
+    // Geen emoji - standaard PDF font ondersteunt die niet
+    doc.text(winkel, 14, y);
 
     doc.setFontSize(10);
     doc.setFont(undefined, 'normal');
@@ -1922,7 +1912,8 @@ window.pdfKnutsels = function () {
   let y = 33;
 
   // Lijst per knutsel
-  const feestNaam = { moederdag: '💐 Moederdag', vaderdag: '👔 Vaderdag', pasen: '🐣 Pasen', sint: '🎁 Sinterklaas', kerst: '🎄 Kerst', ander: '✨ Ander' };
+  // Geen emoji's in PDF - standaard PDF font ondersteunt die niet
+  const feestNaam = { moederdag: 'Moederdag', vaderdag: 'Vaderdag', pasen: 'Pasen', sint: 'Sinterklaas', kerst: 'Kerst', ander: 'Ander' };
 
   ditJaar.forEach(k => {
     if (y > 255) { doc.addPage(); y = 20; }
@@ -1965,7 +1956,7 @@ window.pdfKnutsels = function () {
   if (y > 230) { doc.addPage(); y = 20; }
   doc.setFontSize(14);
   doc.setFont(undefined, 'bold');
-  doc.text('🛒 Alle materialen samen', 14, y);
+  doc.text('Alle materialen samen', 14, y);
   y += 2;
 
   const alleMat = new Set();
