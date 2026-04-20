@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Dashboard Huistaken – juf Zisa</title>
+  <title>GO! Basisschool De Linde – Dashboard huistaken</title>
   <link rel="stylesheet" href="dashboard.css" />
 
   <link rel="manifest" href="manifest.json">
@@ -51,10 +51,8 @@
     .header {
       background: linear-gradient(135deg, #6b5d52 0%, #8a7a6d 100%);
       color: var(--wit);
-      padding: 22px 32px;
+      padding: 18px 28px;
       border-radius: 16px;
-      position: relative;
-      overflow: hidden;
       border: 2px solid var(--rand-donker);
       margin-bottom: 24px;
       box-shadow: 0 4px 16px var(--schaduw);
@@ -65,39 +63,45 @@
       gap: 14px;
     }
 
-    .header::before {
-      content: "";
-      position: absolute;
-      top: 0; right: 0; bottom: 0;
-      width: 42%;
-      background-image: repeating-linear-gradient(
-        90deg,
-        rgba(255,255,255,0.32) 0 16px,
-        transparent 16px 32px
-      );
-      clip-path: polygon(30% 0, 100% 0, 100% 100%, 0 100%);
-      pointer-events: none;
+    .header-merk {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      flex: 1;
+      min-width: 260px;
+    }
+
+    .header-merk .logo {
+      flex-shrink: 0;
+      height: 58px;
+      width: auto;
+      background: var(--wit);
+      border-radius: 10px;
+      padding: 5px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+    }
+
+    .header-merk .titels {
+      flex: 1;
     }
 
     .header h1 {
-      font-size: 1.9em;
+      font-size: 1.5em;
       font-weight: 900;
       margin: 0;
-      letter-spacing: -0.5px;
-      position: relative;
-      z-index: 2;
+      letter-spacing: -0.3px;
       text-align: left;
     }
 
-    .header h1::before {
-      content: "🦓 ";
+    .header .ondertitel {
+      font-size: 0.9em;
+      opacity: 0.85;
+      margin-top: 2px;
     }
 
     .header-knoppen {
       display: flex;
       gap: 10px;
-      position: relative;
-      z-index: 2;
       flex-wrap: wrap;
     }
 
@@ -375,7 +379,8 @@
     @media (max-width: 600px) {
       body { padding: 12px; }
       .header { padding: 16px 20px; }
-      .header h1 { font-size: 1.4em; }
+      .header h1 { font-size: 1.2em; }
+      .header-merk .logo { height: 48px; }
       .modus-container { padding: 20px; }
       .extra-acties button { min-width: 140px; padding: 12px 18px; font-size: 0.95em; }
     }
@@ -384,7 +389,13 @@
 <body>
 
   <div class="header">
-    <h1>Dashboard Huistaken</h1>
+    <div class="header-merk">
+      <img src="afbeeldingen/schoollogo.png" alt="Schoollogo" class="logo" onerror="this.style.display='none'">
+      <div class="titels">
+        <h1>GO! Basisschool De Linde</h1>
+        <div class="ondertitel">Dashboard huistaken</div>
+      </div>
+    </div>
     <div class="header-knoppen">
       <button id="btnTerugNaarKeuze" style="display:none;">← Terug naar dashboard</button>
       <button id="wijzigWachtwoordBtn">🔐 Wachtwoord wijzigen</button>
