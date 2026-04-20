@@ -3,49 +3,440 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Huistaken App</title>
+  <title>juf Zisa – Huistaken-opvolgsysteem</title>
   <link rel="stylesheet" href="style.css" />
 
   <link rel="manifest" href="manifest.json">
   <link rel="apple-touch-icon" href="icon-192x192.png">
-  <meta name="theme-color" content="#4A90E2">
+  <meta name="theme-color" content="#d99775">
 
+  <style>
+    :root {
+      --tekst: #3d3a36;
+      --tekst-zacht: #6b655d;
+      --wit: #ffffff;
+      --creme: #faf6ef;
+      --creme-warm: #f5efe4;
+      --accent: #d99775;
+      --accent-licht: #f4dcc9;
+      --accent-donker: #b87a5e;
+      --geel-zacht: #f5d58e;
+      --geel-licht: #fdf4dc;
+      --groen-zacht: #9ec4a3;
+      --groen-donker: #5a8a63;
+      --blauw-zacht: #a8c5d6;
+      --rand: #d9d1c2;
+      --rand-donker: #a89d8a;
+      --schaduw: rgba(120, 110, 95, 0.18);
+      --schaduw-sterk: rgba(120, 110, 95, 0.28);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, sans-serif;
+      background: var(--creme);
+      color: var(--tekst);
+      margin: 0;
+      padding: 24px 16px;
+      min-height: 100vh;
+    }
+
+    /* HOOFDTITEL als header-bar */
+    .hoofdbanner {
+      background: linear-gradient(135deg, #6b5d52 0%, #8a7a6d 100%);
+      color: var(--wit);
+      padding: 22px 32px;
+      border-radius: 16px;
+      position: relative;
+      overflow: hidden;
+      border: 2px solid var(--rand-donker);
+      margin: 0 auto 28px;
+      max-width: 820px;
+      box-shadow: 0 4px 16px var(--schaduw);
+      text-align: center;
+    }
+
+    .hoofdbanner::before {
+      content: "";
+      position: absolute;
+      top: 0; right: 0; bottom: 0;
+      width: 42%;
+      background-image: repeating-linear-gradient(
+        90deg,
+        rgba(255,255,255,0.32) 0 16px,
+        transparent 16px 32px
+      );
+      clip-path: polygon(30% 0, 100% 0, 100% 100%, 0 100%);
+      pointer-events: none;
+    }
+
+    .hoofdbanner h1 {
+      font-size: 1.8em;
+      font-weight: 900;
+      margin: 0;
+      letter-spacing: -0.5px;
+      position: relative;
+      z-index: 2;
+    }
+
+    .hoofdbanner .ondertitel {
+      font-size: 0.95em;
+      opacity: 0.9;
+      margin-top: 4px;
+      position: relative;
+      z-index: 2;
+    }
+
+    /* LOGIN KAART */
+    #auth {
+      background: var(--wit);
+      border: 2px solid var(--rand-donker);
+      border-radius: 16px;
+      padding: 28px 32px;
+      max-width: 480px;
+      margin: 0 auto 24px;
+      box-shadow: 0 4px 16px var(--schaduw);
+      text-align: center;
+    }
+
+    #auth h2 {
+      margin: 0 0 20px 0;
+      font-size: 1.3em;
+      font-weight: 800;
+      color: var(--tekst);
+    }
+
+    #auth input[type="email"],
+    #auth input[type="password"] {
+      display: block;
+      width: 100%;
+      max-width: 340px;
+      margin: 0 auto 12px;
+      padding: 12px 14px;
+      border: 1.5px solid var(--rand-donker);
+      border-radius: 10px;
+      font-family: inherit;
+      font-size: 1em;
+      background: var(--creme);
+      color: var(--tekst);
+      transition: all 0.15s;
+    }
+
+    #auth input:focus {
+      outline: none;
+      background: #fffbe6;
+      border-color: var(--accent);
+    }
+
+    .auth-knoppen {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-top: 14px;
+    }
+
+    #auth button {
+      padding: 11px 22px;
+      font-size: 1em;
+      font-weight: 700;
+      border-radius: 10px;
+      border: 2px solid var(--rand-donker);
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.15s;
+      box-shadow: 0 2px 6px var(--schaduw);
+      min-width: 140px;
+    }
+
+    #auth button:first-of-type {
+      background: var(--geel-zacht);
+      color: var(--tekst);
+    }
+
+    #auth button:nth-of-type(2) {
+      background: var(--accent);
+      color: var(--wit);
+    }
+
+    #auth button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 10px var(--schaduw-sterk);
+    }
+
+    #auth button:active {
+      transform: translateY(0);
+    }
+
+    .wachtwoord-opties {
+      margin-top: 18px;
+      font-size: 0.9em;
+    }
+
+    .wachtwoord-opties a {
+      color: var(--accent-donker);
+      text-decoration: none;
+      font-weight: 600;
+    }
+
+    .wachtwoord-opties a:hover {
+      text-decoration: underline;
+    }
+
+    /* PUBLIEKE LINKS */
+    .publieke-links {
+      background: var(--wit);
+      border: 2px solid var(--rand-donker);
+      border-radius: 16px;
+      padding: 24px 28px;
+      max-width: 620px;
+      margin: 0 auto;
+      box-shadow: 0 3px 12px var(--schaduw);
+    }
+
+    .publieke-links h2 {
+      margin: 0 0 6px 0;
+      font-size: 1.2em;
+      text-align: center;
+      font-weight: 800;
+      color: var(--tekst);
+    }
+
+    .publieke-links .uitleg {
+      color: var(--tekst-zacht);
+      font-size: 0.95em;
+      text-align: center;
+      margin: 0 0 18px 0;
+    }
+
+    .link-tegels {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 12px;
+    }
+
+    .tegel {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
+      border: 2px solid var(--rand-donker);
+      border-radius: 12px;
+      padding: 14px 18px;
+      background: var(--creme-warm);
+      color: var(--tekst);
+      transition: all 0.15s;
+      box-shadow: 0 2px 6px var(--schaduw);
+    }
+
+    .tegel:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px var(--schaduw-sterk);
+      background: var(--geel-licht);
+      border-color: var(--accent);
+    }
+
+    .tegel-icoon {
+      font-size: 2em;
+      flex-shrink: 0;
+    }
+
+    .tegel-tekst strong {
+      font-size: 1.05em;
+      display: block;
+      margin-bottom: 2px;
+    }
+
+    .tegel-tekst span {
+      display: block;
+      font-size: 0.88em;
+      color: var(--tekst-zacht);
+    }
+
+    .nieuw-badge {
+      background: var(--accent);
+      color: #fff;
+      font-size: 0.7rem;
+      padding: 2px 8px;
+      border-radius: 10px;
+      vertical-align: middle;
+      margin-left: 4px;
+      font-weight: 700;
+    }
+
+    /* INGELOGD KAART (verschijnt alleen als reeds ingelogd) */
+    .ingelogd-kaart {
+      background: linear-gradient(135deg, var(--accent-licht) 0%, var(--geel-licht) 100%);
+      border: 2px solid var(--accent);
+      border-radius: 16px;
+      padding: 20px 24px;
+      max-width: 620px;
+      margin: 0 auto 22px;
+      box-shadow: 0 4px 16px var(--schaduw);
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .ingelogd-icoon {
+      font-size: 2.4em;
+      flex-shrink: 0;
+    }
+
+    .ingelogd-tekst {
+      flex: 1;
+      min-width: 180px;
+    }
+
+    .ingelogd-tekst strong {
+      display: block;
+      font-size: 1.05em;
+      color: var(--tekst);
+      margin-bottom: 2px;
+    }
+
+    .ingelogd-tekst .email {
+      font-size: 0.88em;
+      color: var(--tekst-zacht);
+      font-style: italic;
+    }
+
+    .ingelogd-knoppen {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .ingelogd-knoppen .knop-groot {
+      padding: 11px 20px;
+      font-size: 0.95em;
+      font-weight: 700;
+      border-radius: 10px;
+      border: 2px solid var(--accent-donker);
+      background: var(--accent);
+      color: var(--wit);
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.15s;
+      box-shadow: 0 2px 6px var(--schaduw);
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .ingelogd-knoppen .knop-groot:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 10px var(--schaduw-sterk);
+      background: var(--accent-donker);
+    }
+
+    .ingelogd-knoppen .knop-klein {
+      padding: 11px 16px;
+      font-size: 0.88em;
+      font-weight: 600;
+      border-radius: 10px;
+      border: 1.5px solid var(--rand-donker);
+      background: var(--wit);
+      color: var(--tekst);
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.15s;
+    }
+
+    .ingelogd-knoppen .knop-klein:hover {
+      background: var(--creme-warm);
+    }
+
+    /* Als gebruiker al is ingelogd, login-kaart wat minder prominent */
+    #auth.reeds-ingelogd {
+      opacity: 0.55;
+      transition: opacity 0.25s;
+    }
+
+    #auth.reeds-ingelogd:hover {
+      opacity: 1;
+    }
+
+    #auth.reeds-ingelogd h2::before {
+      content: "Andere account? ";
+      font-size: 0.75em;
+      color: var(--tekst-zacht);
+      font-weight: 600;
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    @media (max-width: 500px) {
+      body { padding: 16px 10px; }
+      .hoofdbanner { padding: 18px 20px; }
+      .hoofdbanner h1 { font-size: 1.4em; }
+      #auth { padding: 22px 20px; }
+      .auth-knoppen { flex-direction: column; }
+      #auth button { width: 100%; }
+    }
+  </style>
 </head>
 <body>
-  <h1>Huistaken-opvolgsysteem</h1>
+
+  <div class="hoofdbanner">
+    <h1>🦓 juf Zisa</h1>
+    <div class="ondertitel">Huistaken-opvolgsysteem & klasmiddelen</div>
+  </div>
+
+  <!-- Ingelogd-kaart: alleen zichtbaar als script.js een ingelogde gebruiker detecteert -->
+  <div id="ingelogd-kaart" class="ingelogd-kaart" style="display:none;">
+    <div class="ingelogd-icoon">👋</div>
+    <div class="ingelogd-tekst">
+      <strong>Welkom terug!</strong>
+      <span class="email">Ingelogd als <span id="ingelogd-email"></span></span>
+    </div>
+    <div class="ingelogd-knoppen">
+      <a href="dashboard.html" class="knop-groot">
+        📦 Naar mijn dashboard →
+      </a>
+      <button class="knop-klein" onclick="uitloggenVanIndex()">Uitloggen</button>
+    </div>
+  </div>
+
   <div id="auth">
-    <h2>Inloggen of Registreren</h2>
+    <h2>🔐 Inloggen of registreren</h2>
     <input type="email" id="email" placeholder="E-mailadres" />
     <input type="password" id="password" placeholder="Wachtwoord" />
-    <button onclick="register()">Registreren</button>
-    <button onclick="login()">Inloggen</button>
-    
+    <div class="auth-knoppen">
+      <button onclick="register()">Registreren</button>
+      <button onclick="login()">Inloggen</button>
+    </div>
+
     <div class="wachtwoord-opties">
       <a href="#" onclick="wachtwoordVergeten()">Wachtwoord vergeten?</a>
     </div>
   </div>
-  <!-- Publieke snelkoppelingen naar klasagenda (geen login vereist) -->
-<section class="publieke-links" aria-labelledby="publiek-kop">
-  <h2 id="publiek-kop">Klasagenda zonder inloggen</h2>
-  <p class="uitleg">De agenda’s zijn vrij te openen. Inloggen is enkel nodig voor de huiswerkapp.</p>
 
-  <div class="link-tegels">
-  <a class="tegel" href="klasagenda.html" target="_blank" rel="noopener">
-    <div class="tegel-icoon">📘</div>
-    <div class="tegel-tekst">
-      <strong>Klasagenda</strong>
-      <span>Eerste, tweede en derde graad</span>
+  <!-- Publieke snelkoppelingen naar klasagenda (geen login vereist) -->
+  <section class="publieke-links" aria-labelledby="publiek-kop">
+    <h2 id="publiek-kop">📅 Klasagenda zonder inloggen</h2>
+    <p class="uitleg">De agenda's zijn vrij te openen. Inloggen is enkel nodig voor de huiswerkapp.</p>
+
+    <div class="link-tegels">
+      <a class="tegel" href="klasagenda.html" target="_blank" rel="noopener">
+        <div class="tegel-icoon">📘</div>
+        <div class="tegel-tekst">
+          <strong>Klasagenda</strong>
+          <span>Eerste, tweede en derde graad</span>
+        </div>
+      </a>
+      <a class="tegel" href="klasagendav2.html" target="_blank" rel="noopener">
+        <div class="tegel-icoon">📗</div>
+        <div class="tegel-tekst">
+          <strong>Klasagenda <span class="nieuw-badge">NIEUW</span></strong>
+          <span>Nieuwe versie — probeer & test</span>
+        </div>
+      </a>
     </div>
-  </a>
-  <a class="tegel" href="klasagendav2.html" target="_blank" rel="noopener" style="border-color:#f59e0b;background:#fffbeb;">
-    <div class="tegel-icoon">📗</div>
-    <div class="tegel-tekst">
-      <strong>Klasagenda <span style="background:#f59e0b;color:#fff;font-size:.7rem;padding:1px 6px;border-radius:8px;vertical-align:middle">NIEUW</span></strong>
-      <span>Nieuwe versie — probeer & test</span>
-    </div>
-  </a>
-</div>
-</section>
+  </section>
 
   <script type="module" src="script.js"></script>
 </body>
