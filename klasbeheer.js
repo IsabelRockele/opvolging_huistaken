@@ -48,12 +48,26 @@ function standaardData(eigenaarUid, eigenaarEmail) {
     laatst_gewijzigd: serverTimestamp(),
 
     instellingen: {
+      schooljaar: '2026-2027',
+      huidigSchooljaar: '2026-2027',
+      // Gedeelde info over hele team (legacy - niet meer getoond, maar blijft bewaard voor oudere teams)
       naam: '',
       klasNr: '',
       kinderen: 23,
       reserve: 5,
-      schooljaar: '2026-2027',
-      huidigSchooljaar: '2026-2027'
+      // Per leerjaar aparte instellingen (nieuwe structuur)
+      L1: {
+        naam: '',
+        klasNr: '',
+        kinderen: 23,
+        reserve: 5
+      },
+      L2: {
+        naam: '',
+        klasNr: '',
+        kinderen: 23,
+        reserve: 5
+      }
     },
 
     // Werkboeken per leerjaar
@@ -328,10 +342,35 @@ function koppelRealtime() {
 
 function normaliseerTeamData() {
   if (!teamData) return;
-  if (!teamData.instellingen) teamData.instellingen = {
-    naam: '', klasNr: '', kinderen: 23, reserve: 5,
-    schooljaar: '2026-2027', huidigSchooljaar: '2026-2027'
-  };
+  if (!teamData.instellingen) teamData.instellingen = {};
+  const i = teamData.instellingen;
+
+  // Basisvelden (gedeeld)
+  if (i.schooljaar === undefined) i.schooljaar = '2026-2027';
+  if (i.huidigSchooljaar === undefined) i.huidigSchooljaar = '2026-2027';
+
+  // Oude velden (bewaren voor compat)
+  if (i.naam === undefined) i.naam = '';
+  if (i.klasNr === undefined) i.klasNr = '';
+  if (i.kinderen === undefined) i.kinderen = 23;
+  if (i.reserve === undefined) i.reserve = 5;
+
+  // Nieuwe per-leerjaar structuur - initialiseer indien afwezig
+  // (overneemt de oude top-level waarden zodat er geen data verloren gaat)
+  if (!i.L1) {
+    i.L1 = { naam: i.naam, klasNr: i.klasNr, kinderen: i.kinderen, reserve: i.reserve };
+  }
+  if (!i.L2) {
+    i.L2 = { naam: i.naam, klasNr: i.klasNr, kinderen: i.kinderen, reserve: i.reserve };
+  }
+  // Zorg dat elke L1/L2 alle velden heeft
+  ['L1', 'L2'].forEach(lj => {
+    if (i[lj].naam === undefined) i[lj].naam = '';
+    if (i[lj].klasNr === undefined) i[lj].klasNr = '';
+    if (i[lj].kinderen === undefined) i[lj].kinderen = 23;
+    if (i[lj].reserve === undefined) i[lj].reserve = 5;
+  });
+
   if (!teamData.werkboeken) teamData.werkboeken = { L1: [], L2: [] };
   if (!teamData.werkboeken.L1) teamData.werkboeken.L1 = [];
   if (!teamData.werkboeken.L2) teamData.werkboeken.L2 = [];
@@ -485,7 +524,29 @@ function escape(s) {
 }
 
 function totaalNodig() {
-  return (teamData.instellingen.kinderen || 0) + (teamData.instellingen.reserve || 0);
+  const lj = teamData.instellingen[huidigLeerjaar] || {};
+  return (lj.kinderen || 0) + (lj.reserve || 0);
+}
+
+// Helper: geef een tekstje zoals "L1: Hanne (1A) · L2: Isabel (2A)" voor gedeelde PDF-headers
+// Voor Lyreco, Stock, Knutsels en Bestellijst die voor het hele team zijn.
+function teamHeaderTekst() {
+  if (!teamData) return '';
+  const i = teamData.instellingen;
+  const stukjes = [];
+  ['L1', 'L2'].forEach(lj => {
+    const d = i[lj];
+    if (!d) return;
+    const naam = (d.naam || '').trim();
+    const klas = (d.klasNr || '').trim();
+    if (naam || klas) {
+      let stuk = lj + ': ';
+      if (naam) stuk += naam;
+      if (klas) stuk += (naam ? ' (' : '') + 'klas ' + klas + (naam ? ')' : '');
+      stukjes.push(stuk);
+    }
+  });
+  return stukjes.join(' · ');
 }
 
 // ==============================================
@@ -516,28 +577,60 @@ function allesRenderen() {
 
 function klasInstellingenTonen() {
   const i = teamData.instellingen;
-  document.getElementById('klas-naam').value = i.naam || '';
-  document.getElementById('klas-nr').value = i.klasNr || '';
-  document.getElementById('klas-kinderen').value = i.kinderen ?? 23;
-  document.getElementById('klas-reserve').value = i.reserve ?? 5;
-  document.getElementById('klas-schooljaar').value = i.schooljaar || '';
-  document.getElementById('klas-totaal-nr').textContent = totaalNodig();
-  document.getElementById('huidig-schooljaar').value = i.huidigSchooljaar || '';
-  document.getElementById('team-naam-label').textContent = i.klasNr || i.naam || 'Mijn team';
-  document.getElementById('aantal-leden').textContent = (teamData.leden_emails?.length || 0) + ' leden';
+  const lj = i[huidigLeerjaar] || {};
+  // Werkboeken-balk: waarden voor actieve leerjaar
+  const klasBalkLabel = document.getElementById('klas-balk-leerjaar-label');
+  if (klasBalkLabel) klasBalkLabel.textContent = huidigLeerjaar === 'L1' ? '📘 Leerjaar 1' : '📗 Leerjaar 2';
+  const klasNaamEl = document.getElementById('klas-naam');
+  const klasNrEl = document.getElementById('klas-nr');
+  const klasKinderenEl = document.getElementById('klas-kinderen');
+  const klasReserveEl = document.getElementById('klas-reserve');
+  if (klasNaamEl) klasNaamEl.value = lj.naam || '';
+  if (klasNrEl) klasNrEl.value = lj.klasNr || '';
+  if (klasKinderenEl) klasKinderenEl.value = lj.kinderen ?? 23;
+  if (klasReserveEl) klasReserveEl.value = lj.reserve ?? 5;
+  const totaalEl = document.getElementById('klas-totaal-nr');
+  if (totaalEl) totaalEl.textContent = totaalNodig();
+  // Team-balk: gedeelde info
+  const sjEl = document.getElementById('klas-schooljaar');
+  if (sjEl) sjEl.value = i.schooljaar || '';
+  const huidigSjEl = document.getElementById('huidig-schooljaar');
+  if (huidigSjEl) huidigSjEl.value = i.huidigSchooljaar || '';
+  // Team-label toont alle klassen samen
+  const teamLabels = [];
+  if (i.L1 && i.L1.klasNr) teamLabels.push(i.L1.klasNr);
+  if (i.L2 && i.L2.klasNr) teamLabels.push(i.L2.klasNr);
+  const teamNaamEl = document.getElementById('team-naam-label');
+  if (teamNaamEl) teamNaamEl.textContent = teamLabels.length ? teamLabels.join(' + ') : 'Mijn team';
+  const aantalLedenEl = document.getElementById('aantal-leden');
+  if (aantalLedenEl) aantalLedenEl.textContent = (teamData.leden_emails?.length || 0) + ' leden';
 }
 
+// Wijzigt de instellingen van het ACTIEVE leerjaar (L1 of L2)
 window.klasInstellingenZetten = function () {
-  teamData.instellingen.naam = document.getElementById('klas-naam').value.trim();
-  teamData.instellingen.klasNr = document.getElementById('klas-nr').value.trim();
-  teamData.instellingen.kinderen = parseInt(document.getElementById('klas-kinderen').value) || 0;
-  teamData.instellingen.reserve = parseInt(document.getElementById('klas-reserve').value) || 0;
-  teamData.instellingen.schooljaar = document.getElementById('klas-schooljaar').value.trim();
+  const lj = teamData.instellingen[huidigLeerjaar];
+  if (!lj) return;
+  lj.naam = document.getElementById('klas-naam').value.trim();
+  lj.klasNr = document.getElementById('klas-nr').value.trim();
+  lj.kinderen = parseInt(document.getElementById('klas-kinderen').value) || 0;
+  lj.reserve = parseInt(document.getElementById('klas-reserve').value) || 0;
   document.getElementById('klas-totaal-nr').textContent = totaalNodig();
   planBewaren();
   // Live update: alleen de getallen in de tabel bijwerken, GEEN hele tabel herteekenen
-  // (anders verlies je focus tijdens typen)
   werkboekenCijfersLive();
+  // Team-label bovenaan updaten (klas-nr kan mee veranderd zijn)
+  const i = teamData.instellingen;
+  const teamLabels = [];
+  if (i.L1 && i.L1.klasNr) teamLabels.push(i.L1.klasNr);
+  if (i.L2 && i.L2.klasNr) teamLabels.push(i.L2.klasNr);
+  const teamNaamEl = document.getElementById('team-naam-label');
+  if (teamNaamEl) teamNaamEl.textContent = teamLabels.length ? teamLabels.join(' + ') : 'Mijn team';
+};
+
+// Schooljaar is een gedeelde waarde (team-balk)
+window.schooljaarZetten = function () {
+  teamData.instellingen.schooljaar = document.getElementById('klas-schooljaar').value.trim();
+  planBewaren();
 };
 
 window.huidigSchooljaarZetten = function () {
@@ -554,6 +647,8 @@ window.leerjaarWisselen = function (lj) {
   document.querySelectorAll('.leerjaar-knop').forEach(k => {
     k.classList.toggle('actief', k.dataset.leerjaar === lj);
   });
+  // De klas-balk bijwerken: toont nu de waarden van het actieve leerjaar
+  klasInstellingenTonen();
   werkboekenTonen();
 };
 
@@ -662,8 +757,9 @@ function werkboekenStatsTonen() {
     });
   });
 
+  const ljData = teamData.instellingen[huidigLeerjaar] || {};
   stats.innerHTML = `
-    <div>👥 <strong>${nodig}</strong> per deel nodig <span style="color:var(--tekst-zacht);">(${teamData.instellingen.kinderen || 0} kinderen + ${teamData.instellingen.reserve || 0} reserve)</span></div>
+    <div>👥 <strong>${nodig}</strong> per deel nodig <span style="color:var(--tekst-zacht);">(${ljData.kinderen || 0} kinderen + ${ljData.reserve || 0} reserve)</span></div>
     <div>📚 <strong>${methodes.length}</strong> methodes, <strong>${totaalDelen}</strong> delen</div>
     <div>🛒 Totaal bij te bestellen: <strong>${totaalBijbestellen}</strong> werkboeken</div>
   `;
@@ -1559,6 +1655,8 @@ window.pdfWerkboeken = function () {
   const doc = new jsPDF();
   const sj = teamData.instellingen.schooljaar || '';
   const leerjaar = huidigLeerjaar === 'L1' ? 'Leerjaar 1' : 'Leerjaar 2';
+  // Gegevens van het ACTIEVE leerjaar (L1 of L2) - elke leerkracht krijgt zo zijn/haar eigen PDF
+  const ljData = teamData.instellingen[huidigLeerjaar] || {};
 
   doc.setFontSize(18);
   doc.setFont(undefined, 'bold');
@@ -1566,9 +1664,9 @@ window.pdfWerkboeken = function () {
 
   doc.setFontSize(10);
   doc.setFont(undefined, 'normal');
-  const regel2 = `${teamData.instellingen.naam || ''}${teamData.instellingen.klasNr ? ' · klas ' + teamData.instellingen.klasNr : ''}${sj ? ' · ' + sj : ''}`;
+  const regel2 = `${ljData.naam || ''}${ljData.klasNr ? ' · klas ' + ljData.klasNr : ''}${sj ? ' · ' + sj : ''}`;
   doc.text(regel2, 14, 25);
-  doc.text(`${teamData.instellingen.kinderen || 0} kinderen + ${teamData.instellingen.reserve || 0} reserve = ${totaalNodig()} per werkboek nodig`, 14, 30);
+  doc.text(`${ljData.kinderen || 0} kinderen + ${ljData.reserve || 0} reserve = ${totaalNodig()} per werkboek nodig`, 14, 30);
 
   let y = 38;
 
@@ -1630,7 +1728,8 @@ window.pdfLyreco = function () {
 
   doc.setFontSize(10);
   doc.setFont(undefined, 'normal');
-  const regel2 = `${teamData.instellingen.naam || ''}${teamData.instellingen.klasNr ? ' · klas ' + teamData.instellingen.klasNr : ''}${sj ? ' · ' + sj : ''}`;
+  const teamRegel = teamHeaderTekst();
+  const regel2 = teamRegel + (teamRegel && sj ? ' · ' : '') + (sj || '');
   doc.text(regel2, 14, 25);
 
   let y = 35;
@@ -1741,7 +1840,8 @@ window.pdfStock = function () {
 
   doc.setFontSize(10);
   doc.setFont(undefined, 'normal');
-  const regel2 = `${teamData.instellingen.naam || ''}${teamData.instellingen.klasNr ? ' · klas ' + teamData.instellingen.klasNr : ''}${sj ? ' · ' + sj : ''}`;
+  const teamRegel = teamHeaderTekst();
+  const regel2 = teamRegel + (teamRegel && sj ? ' · ' : '') + (sj || '');
   doc.text(regel2, 14, 25);
 
   let y = 33;
@@ -1828,7 +1928,8 @@ window.stockBestellijstPdf = function () {
 
   doc.setFontSize(10);
   doc.setFont(undefined, 'normal');
-  const regel2 = `${teamData.instellingen.naam || ''}${teamData.instellingen.klasNr ? ' · klas ' + teamData.instellingen.klasNr : ''}${sj ? ' · ' + sj : ''}`;
+  const teamRegel = teamHeaderTekst();
+  const regel2 = teamRegel + (teamRegel && sj ? ' · ' : '') + (sj || '');
   doc.text(regel2, 14, 25);
 
   // Volgorde: Lyreco, Action, Ander, Geen winkel
@@ -1906,7 +2007,7 @@ window.pdfKnutsels = function () {
 
   doc.setFontSize(10);
   doc.setFont(undefined, 'normal');
-  const regel2 = `${teamData.instellingen.naam || ''}${teamData.instellingen.klasNr ? ' · klas ' + teamData.instellingen.klasNr : ''}`;
+  const regel2 = teamHeaderTekst();
   doc.text(regel2, 14, 25);
 
   let y = 33;
