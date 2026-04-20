@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Klasbeheer – juf Zisa</title>
+<title>GO! Basisschool De Linde – Klasbeheer</title>
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icon-192x192.png">
 <meta name="theme-color" content="#4A90E2">
@@ -117,58 +117,47 @@
   header {
     background: linear-gradient(135deg, #6b5d52 0%, #8a7a6d 100%);
     color: var(--wit);
-    padding: 24px 32px;
+    padding: 18px 28px;
     border-radius: 16px 16px 0 0;
-    position: relative;
-    overflow: hidden;
     border: 2px solid var(--rand-donker);
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
   }
 
-  header::before {
-    content: "";
-    position: absolute;
-    top: 0; right: 0; bottom: 0;
-    width: 45%;
-    background-image: repeating-linear-gradient(
-      90deg,
-      rgba(255,255,255,0.35) 0 16px,
-      transparent 16px 32px
-    );
-    clip-path: polygon(25% 0, 100% 0, 100% 100%, 0 100%);
+  header .logo {
+    flex-shrink: 0;
+    height: 58px;
+    width: auto;
+    background: var(--wit);
+    border-radius: 10px;
+    padding: 5px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+  }
+
+  header .titels {
+    flex: 1;
+    min-width: 200px;
   }
 
   header h1 {
-    font-size: 1.9em;
+    font-size: 1.5em;
     font-weight: 900;
-    letter-spacing: -0.5px;
-    position: relative;
-    z-index: 1;
+    letter-spacing: -0.3px;
+    margin: 0;
   }
 
   header .ondertitel {
-    font-size: 0.95em;
+    font-size: 0.9em;
     opacity: 0.85;
-    margin-top: 4px;
-    position: relative;
-    z-index: 1;
-  }
-
-  header .zebra {
-    position: absolute;
-    right: 32px;
-    top: 50%;
-    transform: translateY(-50%);
-    font-size: 2.4em;
-    z-index: 2;
+    margin-top: 2px;
   }
 
   header .acties {
-    position: absolute;
-    top: 16px;
-    right: 90px;
-    z-index: 2;
     display: flex;
     gap: 8px;
+    flex-wrap: wrap;
   }
 
   header .acties button {
@@ -1135,7 +1124,7 @@
   @media print {
     body { background: white; padding: 0; }
     .tabs, .knop, .toevoegen, .methode-toevoegen, .deel-toevoegen,
-    .kaart-acties, header .zebra, header .acties, .methode-acties, .knutsel-filters,
+    .kaart-acties, header .acties, .methode-acties, .knutsel-filters,
     .klas-balk, .team-balk, .stock-product-toevoegen, .stock-cat-acties,
     .stock-verwijder { display: none !important; }
     main, header { border: 1px solid #888; box-shadow: none; border-radius: 0; }
@@ -1143,8 +1132,8 @@
   }
 
   @media (max-width: 600px) {
-    header h1 { font-size: 1.4em; }
-    header .zebra { font-size: 1.8em; right: 16px; }
+    header h1 { font-size: 1.2em; }
+    header .logo { height: 48px; }
     main { padding: 18px; }
     .klas-balk { padding: 14px 18px; gap: 14px; }
   }
@@ -1182,7 +1171,7 @@
       </div>
       <div class="team-keuze" onclick="kijkTeamStatus()">
         <div class="emoji">👥</div>
-        <h3>Ben je toegevoegd aan een team? Klik dan hier.</h3>
+        <h3>Wacht op uitnodiging</h3>
         <p>Mijn collega heeft me al uitgenodigd. Check of ik erbij hoor. <em>Opmerking: klik hier alleen als je zeker weet dat iemand jou heeft toegevoegd.</em></p>
       </div>
     </div>
@@ -1195,12 +1184,14 @@
   <div id="app-scherm" style="display:none;">
 
     <header>
-      <h1>Klasbeheer</h1>
-      <div class="ondertitel">Werkboeken, klasmateriaal &amp; knutselideetjes · juf Zisa</div>
+      <img src="afbeeldingen/schoollogo.png" alt="Schoollogo" class="logo" onerror="this.style.display='none'">
+      <div class="titels">
+        <h1>GO! Basisschool De Linde</h1>
+        <div class="ondertitel">Klasbeheer — werkboeken, klasmateriaal &amp; knutselideetjes</div>
+      </div>
       <div class="acties">
         <button onclick="window.location.href='dashboard.html'">← Dashboard</button>
       </div>
-      <div class="zebra">🦓</div>
     </header>
 
     <div class="team-balk">
