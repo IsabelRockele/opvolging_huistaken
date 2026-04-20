@@ -1,0 +1,1589 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Klasbeheer – juf Zisa</title>
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192x192.png">
+<meta name="theme-color" content="#4A90E2">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+<style>
+  :root {
+    --tekst: #3d3a36;
+    --tekst-zacht: #6b655d;
+    --wit: #ffffff;
+    --creme: #faf6ef;
+    --creme-warm: #f5efe4;
+    --accent: #d99775;
+    --accent-licht: #f4dcc9;
+    --accent-donker: #b87a5e;
+    --geel-zacht: #f5d58e;
+    --geel-licht: #fdf4dc;
+    --roze-zacht: #e8b8bc;
+    --groen-zacht: #9ec4a3;
+    --groen-donker: #5a8a63;
+    --blauw-zacht: #a8c5d6;
+    --blauw-app: #4A90E2;
+    --paars-zacht: #c4b3d4;
+    --bruin-zacht: #d4b89a;
+    --rand: #d9d1c2;
+    --rand-donker: #a89d8a;
+    --grijs-licht: #ede8dd;
+    --grijs: #8a8578;
+    --rood-zacht: #c97070;
+    --rood-licht: #f5dcdc;
+    --schaduw: rgba(120, 110, 95, 0.18);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Segoe UI', Tahoma, sans-serif;
+    background: var(--creme);
+    color: var(--tekst);
+    min-height: 100vh;
+    padding: 20px;
+  }
+
+  .container { max-width: 1300px; margin: 0 auto; }
+
+  /* LOADING SCHERM */
+  #loading-scherm, #login-scherm, #team-scherm {
+    text-align: center;
+    padding: 60px 20px;
+    background: var(--wit);
+    border-radius: 16px;
+    max-width: 600px;
+    margin: 40px auto;
+    box-shadow: 0 4px 20px var(--schaduw);
+  }
+
+  #loading-scherm h2, #login-scherm h2, #team-scherm h2 {
+    margin-bottom: 16px;
+    color: var(--tekst);
+  }
+
+  #login-scherm p, #team-scherm p {
+    color: var(--tekst-zacht);
+    margin-bottom: 20px;
+    line-height: 1.5;
+  }
+
+  .team-knoppen {
+    display: flex;
+    gap: 16px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-top: 20px;
+  }
+
+  .team-keuze {
+    background: var(--creme-warm);
+    border: 2px solid var(--rand);
+    border-radius: 12px;
+    padding: 24px;
+    flex: 1;
+    min-width: 240px;
+    max-width: 280px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .team-keuze:hover {
+    border-color: var(--accent);
+    background: var(--geel-licht);
+    transform: translateY(-2px);
+  }
+
+  .team-keuze h3 {
+    margin-bottom: 8px;
+    font-size: 1.1em;
+  }
+
+  .team-keuze .emoji {
+    font-size: 2.5em;
+    margin-bottom: 12px;
+  }
+
+  .team-keuze p {
+    font-size: 0.9em;
+    color: var(--tekst-zacht);
+    margin: 0;
+  }
+
+  /* HEADER */
+  header {
+    background: linear-gradient(135deg, #6b5d52 0%, #8a7a6d 100%);
+    color: var(--wit);
+    padding: 24px 32px;
+    border-radius: 16px 16px 0 0;
+    position: relative;
+    overflow: hidden;
+    border: 2px solid var(--rand-donker);
+  }
+
+  header::before {
+    content: "";
+    position: absolute;
+    top: 0; right: 0; bottom: 0;
+    width: 45%;
+    background-image: repeating-linear-gradient(
+      90deg,
+      rgba(255,255,255,0.35) 0 16px,
+      transparent 16px 32px
+    );
+    clip-path: polygon(25% 0, 100% 0, 100% 100%, 0 100%);
+  }
+
+  header h1 {
+    font-size: 1.9em;
+    font-weight: 900;
+    letter-spacing: -0.5px;
+    position: relative;
+    z-index: 1;
+  }
+
+  header .ondertitel {
+    font-size: 0.95em;
+    opacity: 0.85;
+    margin-top: 4px;
+    position: relative;
+    z-index: 1;
+  }
+
+  header .zebra {
+    position: absolute;
+    right: 32px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 2.4em;
+    z-index: 2;
+  }
+
+  header .acties {
+    position: absolute;
+    top: 16px;
+    right: 90px;
+    z-index: 2;
+    display: flex;
+    gap: 8px;
+  }
+
+  header .acties button {
+    background: rgba(255,255,255,0.2);
+    color: var(--wit);
+    border: 1px solid rgba(255,255,255,0.4);
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 0.85em;
+    cursor: pointer;
+    font-family: inherit;
+    font-weight: 600;
+  }
+
+  header .acties button:hover {
+    background: rgba(255,255,255,0.3);
+  }
+
+  /* TEAM-INFO BALK */
+  .team-balk {
+    background: var(--geel-licht);
+    border-left: 2px solid var(--rand-donker);
+    border-right: 2px solid var(--rand-donker);
+    padding: 10px 28px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: wrap;
+    font-size: 0.9em;
+  }
+
+  .team-balk strong { color: var(--tekst); }
+
+  .team-balk .sync-status {
+    margin-left: auto;
+    color: var(--groen-donker);
+    font-weight: 600;
+  }
+
+  .team-balk .sync-status.bezig { color: var(--accent-donker); }
+
+  /* KLAS-INSTELLINGEN BOVENAAN */
+  .klas-balk {
+    background: var(--geel-licht);
+    border-left: 2px solid var(--rand-donker);
+    border-right: 2px solid var(--rand-donker);
+    padding: 14px 28px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    flex-wrap: wrap;
+  }
+
+  .klas-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 600;
+  }
+
+  .klas-item label {
+    font-size: 0.9em;
+    font-weight: 600;
+    color: var(--tekst);
+  }
+
+  .klas-input {
+    width: 60px;
+    padding: 6px 8px;
+    border: 1.5px solid var(--rand-donker);
+    border-radius: 6px;
+    font-family: inherit;
+    font-weight: 600;
+    text-align: center;
+    background: var(--wit);
+    font-size: 0.95em;
+    color: var(--tekst);
+  }
+
+  .klas-totaal {
+    background: var(--accent);
+    color: var(--wit);
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-weight: 700;
+  }
+
+  /* TABS */
+  .tabs {
+    display: flex;
+    background: var(--wit);
+    border-left: 2px solid var(--rand-donker);
+    border-right: 2px solid var(--rand-donker);
+    flex-wrap: wrap;
+  }
+
+  .tab {
+    flex: 1;
+    min-width: 140px;
+    padding: 14px 20px;
+    background: var(--wit);
+    border: none;
+    border-bottom: 2px solid var(--rand-donker);
+    cursor: pointer;
+    font-size: 0.95em;
+    font-weight: 600;
+    color: var(--tekst-zacht);
+    font-family: inherit;
+    transition: all 0.2s;
+    border-right: 1px solid var(--rand);
+  }
+
+  .tab:last-child { border-right: none; }
+  .tab:hover { background: var(--creme-warm); color: var(--tekst); }
+
+  .tab.actief {
+    background: var(--geel-zacht);
+    color: var(--tekst);
+    border-bottom: 2px solid var(--geel-zacht);
+  }
+
+  /* CONTENT */
+  main {
+    background: var(--wit);
+    padding: 28px;
+    border-radius: 0 0 16px 16px;
+    border: 2px solid var(--rand-donker);
+    border-top: none;
+    min-height: 500px;
+  }
+
+  .paneel { display: none; }
+  .paneel.actief { display: block; animation: fade 0.25s ease; }
+
+  @keyframes fade {
+    from { opacity: 0; transform: translateY(4px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  h2 {
+    font-size: 1.5em;
+    margin-bottom: 6px;
+    font-weight: 800;
+  }
+
+  .sub {
+    color: var(--grijs);
+    margin-bottom: 20px;
+    font-size: 0.95em;
+  }
+
+  h3 {
+    font-size: 1.1em;
+    font-weight: 800;
+  }
+
+  /* LEERJAAR SCHAKELAAR */
+  .leerjaar-schakelaar {
+    display: inline-flex;
+    background: var(--creme-warm);
+    border: 1.5px solid var(--rand-donker);
+    border-radius: 10px;
+    padding: 4px;
+    margin-bottom: 20px;
+    gap: 4px;
+  }
+
+  .leerjaar-knop {
+    padding: 8px 20px;
+    background: transparent;
+    border: none;
+    border-radius: 7px;
+    font-family: inherit;
+    font-weight: 700;
+    font-size: 0.95em;
+    cursor: pointer;
+    color: var(--tekst-zacht);
+    transition: all 0.15s;
+  }
+
+  .leerjaar-knop.actief {
+    background: var(--accent);
+    color: var(--wit);
+  }
+
+  .leerjaar-knop:hover:not(.actief) {
+    background: var(--wit);
+    color: var(--tekst);
+  }
+
+  /* KNOPPEN */
+  .knop {
+    background: var(--geel-zacht);
+    color: var(--tekst);
+    border: 1.5px solid var(--rand-donker);
+    padding: 10px 18px;
+    border-radius: 10px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 0.95em;
+    transition: all 0.15s;
+    box-shadow: 0 2px 4px var(--schaduw);
+  }
+
+  .knop:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 3px 6px var(--schaduw);
+  }
+
+  .knop:active {
+    transform: translateY(1px);
+    box-shadow: 0 1px 2px var(--schaduw);
+  }
+
+  .knop.klein {
+    padding: 6px 12px;
+    font-size: 0.85em;
+  }
+
+  .knop.rood { background: var(--rood-zacht); color: var(--wit); }
+  .knop.groen { background: var(--groen-zacht); color: var(--tekst); }
+  .knop.blauw { background: var(--blauw-zacht); color: var(--tekst); }
+  .knop.grijs { background: var(--grijs-licht); }
+
+  /* FORMULIER */
+  .form-rij {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+    gap: 12px;
+    margin-bottom: 14px;
+  }
+
+  label {
+    display: block;
+    font-size: 0.85em;
+    font-weight: 600;
+    margin-bottom: 4px;
+    color: var(--tekst);
+  }
+
+  input, select, textarea {
+    width: 100%;
+    padding: 9px 12px;
+    border: 1.5px solid var(--rand-donker);
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 0.95em;
+    background: var(--wit);
+    color: var(--tekst);
+  }
+
+  input:focus, select:focus, textarea:focus {
+    outline: none;
+    background: #fffbe6;
+    border-color: var(--accent);
+  }
+
+  textarea { resize: vertical; min-height: 60px; }
+
+  /* METHODE BLOK */
+  .methode {
+    background: var(--wit);
+    border: 1.5px solid var(--rand-donker);
+    border-radius: 12px;
+    margin-bottom: 20px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px var(--schaduw);
+  }
+
+  .methode-kop {
+    background: linear-gradient(135deg, #8a7a6d 0%, #a89585 100%);
+    color: var(--wit);
+    padding: 14px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .methode-kop h3 {
+    color: var(--wit);
+    font-size: 1.15em;
+  }
+
+  .methode-acties {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .methode-body {
+    padding: 16px 20px;
+  }
+
+  .tabel-wrap {
+    overflow-x: auto;
+  }
+
+  table.vol {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  table.vol th, table.vol td {
+    padding: 8px 10px;
+    text-align: left;
+    border-bottom: 1px solid var(--rand);
+    font-size: 0.95em;
+  }
+
+  table.vol th {
+    background: var(--creme-warm);
+    font-weight: 700;
+    color: var(--tekst);
+    white-space: nowrap;
+  }
+
+  table.vol tr:hover {
+    background: var(--geel-licht);
+  }
+
+  table.vol .getal {
+    text-align: center;
+    font-weight: 700;
+  }
+
+  table.vol .bestel-getal {
+    color: var(--rood-zacht);
+    font-weight: 800;
+  }
+
+  table.vol .ok {
+    color: var(--groen-donker);
+  }
+
+  .tabel-input {
+    width: 80px;
+    padding: 5px 8px;
+    border: 1.5px solid var(--rand);
+    border-radius: 6px;
+    text-align: center;
+    font-family: inherit;
+    font-weight: 600;
+  }
+
+  .tabel-input.klein { width: 60px; }
+
+  .deel-toevoegen {
+    background: var(--creme-warm);
+    border: 1.5px dashed var(--rand-donker);
+    border-radius: 8px;
+    padding: 12px;
+    margin-top: 12px;
+    display: flex;
+    gap: 10px;
+    align-items: flex-end;
+    flex-wrap: wrap;
+  }
+
+  .deel-toevoegen input {
+    padding: 7px 10px;
+    font-size: 0.9em;
+  }
+
+  .methode-toevoegen {
+    background: var(--geel-licht);
+    border: 2px dashed var(--geel-zacht);
+    border-radius: 12px;
+    padding: 18px 20px;
+    margin-top: 20px;
+  }
+
+  .methode-toevoegen h3 { margin-bottom: 10px; }
+
+  .samenvatting {
+    background: var(--accent-licht);
+    border: 1.5px solid var(--accent);
+    border-radius: 10px;
+    padding: 14px 18px;
+    margin-bottom: 20px;
+    display: flex;
+    gap: 18px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  .samenvatting strong {
+    color: var(--accent-donker);
+    font-size: 1.1em;
+  }
+
+  .toevoegen {
+    background: var(--geel-licht);
+    border: 2px dashed var(--geel-zacht);
+    border-radius: 12px;
+    padding: 18px 20px;
+    margin-bottom: 20px;
+  }
+
+  .toevoegen h3 { margin-bottom: 10px; }
+
+  .budget-blok {
+    background: var(--creme-warm);
+    border: 1.5px solid var(--rand-donker);
+    border-radius: 12px;
+    padding: 18px 20px;
+    margin-bottom: 20px;
+  }
+
+  .budget-overzicht {
+    display: flex;
+    gap: 20px;
+    margin-top: 10px;
+    flex-wrap: wrap;
+    font-size: 0.95em;
+  }
+
+  .budget-overzicht > div {
+    background: var(--wit);
+    padding: 10px 16px;
+    border-radius: 8px;
+    border: 1px solid var(--rand);
+  }
+
+  .budget-overzicht strong {
+    display: block;
+    color: var(--tekst-zacht);
+    font-size: 0.85em;
+    font-weight: 600;
+    margin-bottom: 2px;
+  }
+
+  .budget-overzicht span {
+    font-size: 1.15em;
+    font-weight: 800;
+    color: var(--tekst);
+  }
+
+  .budget-overzicht .over {
+    color: var(--groen-donker);
+  }
+
+  .budget-overzicht .over.neg {
+    color: var(--rood-zacht);
+  }
+
+  /* STOCK - ACCORDION */
+  .stock-layout {
+    display: grid;
+    grid-template-columns: 260px 1fr;
+    gap: 20px;
+    margin-top: 10px;
+  }
+
+  @media (max-width: 850px) {
+    .stock-layout { grid-template-columns: 1fr; }
+  }
+
+  .stock-cat-lijst {
+    background: var(--creme-warm);
+    border: 1.5px solid var(--rand-donker);
+    border-radius: 12px;
+    padding: 12px;
+    align-self: start;
+    position: sticky;
+    top: 20px;
+  }
+
+  .stock-cat-lijst h3 {
+    margin-bottom: 10px;
+    color: var(--tekst);
+    font-size: 1em;
+  }
+
+  .stock-cat-knop {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    padding: 10px 12px;
+    background: var(--wit);
+    border: 1.5px solid var(--rand);
+    border-radius: 8px;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 0.92em;
+    font-weight: 600;
+    color: var(--tekst);
+    margin-bottom: 6px;
+    text-align: left;
+    transition: all 0.15s;
+  }
+
+  .stock-cat-knop:hover {
+    background: var(--geel-licht);
+    border-color: var(--accent);
+  }
+
+  .stock-cat-knop.actief {
+    background: var(--accent);
+    color: var(--wit);
+    border-color: var(--accent-donker);
+  }
+
+  .stock-cat-knop .badge {
+    margin-left: auto;
+    background: var(--rood-zacht);
+    color: var(--wit);
+    border-radius: 10px;
+    padding: 2px 8px;
+    font-size: 0.75em;
+    font-weight: 700;
+    min-width: 22px;
+    text-align: center;
+  }
+
+  .stock-cat-knop.actief .badge {
+    background: var(--wit);
+    color: var(--accent-donker);
+  }
+
+  .stock-cat-toevoegen-btn {
+    width: 100%;
+    padding: 10px 12px;
+    background: var(--geel-zacht);
+    border: 2px dashed var(--rand-donker);
+    border-radius: 8px;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 0.88em;
+    font-weight: 600;
+    color: var(--tekst);
+    margin-top: 10px;
+  }
+
+  .stock-cat-toevoegen-btn:hover {
+    background: var(--accent-licht);
+  }
+
+  .stock-cat-inhoud {
+    background: var(--wit);
+    border: 1.5px solid var(--rand-donker);
+    border-radius: 12px;
+    padding: 20px;
+    min-height: 400px;
+  }
+
+  .stock-cat-kop {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 16px;
+    padding-bottom: 14px;
+    border-bottom: 2px solid var(--rand);
+  }
+
+  .stock-cat-kop h3 {
+    font-size: 1.3em;
+  }
+
+  .stock-cat-acties {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .stock-tabel {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 14px;
+  }
+
+  .stock-tabel th {
+    background: var(--creme-warm);
+    padding: 10px 12px;
+    text-align: left;
+    font-size: 0.88em;
+    font-weight: 700;
+    color: var(--tekst);
+    border-bottom: 2px solid var(--rand-donker);
+  }
+
+  .stock-tabel th.nummer,
+  .stock-tabel td.nummer {
+    text-align: center;
+    width: 75px;
+  }
+
+  .stock-tabel th.totaal-kol,
+  .stock-tabel td.totaal-kol {
+    text-align: center;
+    width: 75px;
+    background: var(--geel-licht);
+  }
+
+  .stock-totaal {
+    display: inline-block;
+    min-width: 44px;
+    padding: 6px 10px;
+    background: var(--accent-licht);
+    border: 1.5px solid var(--accent);
+    border-radius: 6px;
+    font-weight: 800;
+    color: var(--accent-donker);
+    font-size: 0.95em;
+  }
+
+  .stock-tabel th.winkel-kol,
+  .stock-tabel td.winkel-kol {
+    width: 150px;
+    text-align: center;
+  }
+
+  .stock-tabel th.acties-kol,
+  .stock-tabel td.acties-kol {
+    width: 80px;
+    text-align: center;
+  }
+
+  .stock-tabel td {
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--rand);
+    vertical-align: middle;
+  }
+
+  .stock-tabel tr:last-child td {
+    border-bottom: none;
+  }
+
+  .stock-tabel tr:hover {
+    background: var(--geel-licht);
+  }
+
+  .stock-input-num {
+    width: 65px;
+    padding: 6px 8px;
+    border: 1.5px solid var(--rand);
+    border-radius: 6px;
+    font-family: inherit;
+    font-weight: 600;
+    text-align: center;
+    background: var(--wit);
+    font-size: 0.95em;
+    color: var(--tekst);
+  }
+
+  .stock-input-num:focus {
+    outline: none;
+    background: #fffbe6;
+    border-color: var(--accent);
+  }
+
+  .stock-input-num.te-bestellen {
+    background: var(--rood-licht);
+    font-weight: 700;
+  }
+
+  .stock-input-num.te-bestellen:focus {
+    background: #fff0f0;
+  }
+
+  .stock-naam-input {
+    width: 100%;
+    padding: 6px 8px;
+    border: 1.5px solid transparent;
+    border-radius: 6px;
+    font-family: inherit;
+    font-weight: 600;
+    background: transparent;
+    font-size: 0.95em;
+    color: var(--tekst);
+  }
+
+  .stock-naam-input:hover {
+    border-color: var(--rand);
+    background: var(--creme);
+  }
+
+  .stock-naam-input:focus {
+    outline: none;
+    background: #fffbe6;
+    border-color: var(--accent);
+  }
+
+  .stock-winkel-select {
+    width: 100%;
+    padding: 5px 6px;
+    border: 1.5px solid var(--rand);
+    border-radius: 6px;
+    font-family: inherit;
+    font-size: 0.85em;
+    font-weight: 600;
+    background: var(--wit);
+    cursor: pointer;
+  }
+
+  .stock-winkel-select.lyreco { background: #e3f0e1; color: #2d5f2e; }
+  .stock-winkel-select.action { background: #ffe8d6; color: #8f4a1a; }
+  .stock-winkel-select.ander { background: #e8e8e8; color: #555; }
+
+  .stock-verwijder {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    font-size: 1.1em;
+    color: var(--grijs);
+    padding: 4px 8px;
+    border-radius: 6px;
+    transition: all 0.15s;
+  }
+
+  .stock-verwijder:hover {
+    background: var(--rood-licht);
+    color: var(--rood-zacht);
+  }
+
+  .stock-product-toevoegen {
+    background: var(--creme);
+    border: 1.5px dashed var(--rand-donker);
+    border-radius: 8px;
+    padding: 12px;
+    display: grid;
+    grid-template-columns: 1fr 80px 80px 80px 130px auto;
+    gap: 10px;
+    align-items: end;
+  }
+
+  @media (max-width: 900px) {
+    .stock-product-toevoegen {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+
+  .stock-product-toevoegen input,
+  .stock-product-toevoegen select {
+    padding: 7px 10px;
+    font-size: 0.9em;
+  }
+
+  .stock-geen-selectie {
+    text-align: center;
+    padding: 80px 20px;
+    color: var(--grijs);
+    font-style: italic;
+  }
+
+  .stock-geen-selectie .icoon-groot {
+    font-size: 3em;
+    display: block;
+    margin-bottom: 16px;
+    opacity: 0.4;
+  }
+
+  /* KNUTSELS */
+  .jaar-blok {
+    background: var(--creme-warm);
+    border: 1.5px solid var(--rand-donker);
+    border-radius: 10px;
+    padding: 12px 18px;
+    margin-bottom: 18px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: wrap;
+  }
+
+  .jaar-blok select {
+    width: auto;
+    min-width: 120px;
+  }
+
+  .knutsel-filters {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+  }
+
+  .filter-knop {
+    padding: 8px 14px;
+    border: 1.5px solid var(--rand-donker);
+    border-radius: 20px;
+    background: var(--wit);
+    font-family: inherit;
+    font-size: 0.9em;
+    font-weight: 600;
+    cursor: pointer;
+    color: var(--tekst);
+    transition: all 0.15s;
+  }
+
+  .filter-knop:hover { background: var(--creme-warm); }
+
+  .filter-knop.actief {
+    background: var(--accent);
+    color: var(--wit);
+    border-color: var(--accent-donker);
+  }
+
+  .knutsel-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 16px;
+  }
+
+  .knutsel-kaart {
+    background: var(--wit);
+    border: 1.5px solid var(--rand-donker);
+    border-radius: 12px;
+    padding: 16px;
+    box-shadow: 0 2px 6px var(--schaduw);
+    display: flex;
+    flex-direction: column;
+  }
+
+  .knutsel-kaart.dit-jaar {
+    border-color: var(--accent);
+    background: var(--accent-licht);
+  }
+
+  .knutsel-kop {
+    display: flex;
+    justify-content: space-between;
+    align-items: start;
+    gap: 10px;
+    margin-bottom: 8px;
+  }
+
+  .knutsel-titel {
+    font-weight: 800;
+    font-size: 1.05em;
+    color: var(--tekst);
+    margin-bottom: 4px;
+  }
+
+  .knutsel-tags {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-bottom: 8px;
+  }
+
+  .knutsel-tag {
+    font-size: 0.75em;
+    padding: 2px 8px;
+    border-radius: 10px;
+    background: var(--creme-warm);
+    color: var(--tekst);
+    font-weight: 600;
+  }
+
+  .knutsel-tag.jaar {
+    background: var(--geel-zacht);
+  }
+
+  .knutsel-tag.feest {
+    background: var(--blauw-zacht);
+  }
+
+  .knutsel-materiaal {
+    font-size: 0.88em;
+    color: var(--tekst);
+    margin-bottom: 8px;
+  }
+
+  .knutsel-materiaal ul {
+    padding-left: 18px;
+    margin-top: 4px;
+  }
+
+  .knutsel-notitie {
+    font-size: 0.85em;
+    color: var(--tekst-zacht);
+    font-style: italic;
+    padding-top: 8px;
+    border-top: 1px dashed var(--rand);
+    margin-top: auto;
+    margin-bottom: 8px;
+  }
+
+  .kaart-acties {
+    display: flex;
+    gap: 6px;
+    margin-top: auto;
+    padding-top: 10px;
+    border-top: 1px solid var(--rand);
+  }
+
+  .bestel-lijst {
+    background: var(--creme-warm);
+    border: 1.5px solid var(--rand-donker);
+    border-radius: 12px;
+    padding: 18px 22px;
+    margin-top: 22px;
+  }
+
+  .bestel-lijst h3 {
+    margin-bottom: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  /* INSTELLINGEN */
+  .instellingen-blok {
+    background: var(--creme-warm);
+    border: 1.5px solid var(--rand-donker);
+    border-radius: 10px;
+    padding: 16px 20px;
+    margin-bottom: 16px;
+  }
+
+  .instellingen-blok h3 {
+    margin-bottom: 8px;
+  }
+
+  .instellingen-blok p {
+    margin-bottom: 12px;
+    color: var(--tekst-zacht);
+    font-size: 0.95em;
+  }
+
+  .knop-rij {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .leden-lijst {
+    list-style: none;
+    padding: 0;
+    margin: 10px 0;
+  }
+
+  .leden-lijst li {
+    background: var(--wit);
+    padding: 10px 14px;
+    border-radius: 8px;
+    margin-bottom: 6px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border: 1px solid var(--rand);
+  }
+
+  .leden-lijst .email { font-weight: 600; }
+  .leden-lijst .eigenaar-badge {
+    background: var(--accent);
+    color: var(--wit);
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 0.75em;
+    font-weight: 700;
+    margin-left: 6px;
+  }
+
+  /* PRINT */
+  @media print {
+    body { background: white; padding: 0; }
+    .tabs, .knop, .toevoegen, .methode-toevoegen, .deel-toevoegen,
+    .kaart-acties, header .zebra, header .acties, .methode-acties, .knutsel-filters,
+    .klas-balk, .team-balk, .stock-product-toevoegen, .stock-cat-acties,
+    .stock-verwijder { display: none !important; }
+    main, header { border: 1px solid #888; box-shadow: none; border-radius: 0; }
+    .methode, .stock-categorie { box-shadow: none; page-break-inside: avoid; }
+  }
+
+  @media (max-width: 600px) {
+    header h1 { font-size: 1.4em; }
+    header .zebra { font-size: 1.8em; right: 16px; }
+    main { padding: 18px; }
+    .klas-balk { padding: 14px 18px; gap: 14px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+
+  <!-- LOADING SCHERM -->
+  <div id="loading-scherm">
+    <h2>⏳ Bezig met laden...</h2>
+    <p>Een moment geduld aub.</p>
+  </div>
+
+  <!-- LOGIN VEREIST SCHERM -->
+  <div id="login-scherm" style="display:none;">
+    <h2>🔒 Inloggen vereist</h2>
+    <p>Log in via de huiswerkapp om klasbeheer te gebruiken. Zo zijn jouw gegevens veilig bewaard en kan je samenwerken met collega's.</p>
+    <button class="knop groen" onclick="window.location.href='index.html'" style="font-size:1.05em;">
+      ➡️ Naar inlogpagina
+    </button>
+  </div>
+
+  <!-- TEAM-KEUZE SCHERM -->
+  <div id="team-scherm" style="display:none;">
+    <h2>🚀 Welkom in klasbeheer!</h2>
+    <p>Je bent nog niet aangesloten bij een team. Een <strong>team</strong> is een gedeelde ruimte voor klasbeheer. Collega's die je uitnodigt zien dezelfde werkboeken, stock, bestellijsten en knutselideetjes als jij.</p>
+
+    <div class="team-knoppen">
+      <div class="team-keuze" onclick="nieuwTeamAanmaken()">
+        <div class="emoji">✨</div>
+        <h3>Nieuw team aanmaken</h3>
+        <p>Ik start een nieuwe, gedeelde werkplek. Ik kan meteen één collega uitnodigen (of solo starten en later iemand toevoegen).</p>
+      </div>
+      <div class="team-keuze" onclick="kijkTeamStatus()">
+        <div class="emoji">👥</div>
+        <h3>Wacht op uitnodiging</h3>
+        <p>Mijn collega heeft me al uitgenodigd. Check of ik erbij hoor. <em>Opmerking: klik hier alleen als je zeker weet dat iemand jou heeft toegevoegd.</em></p>
+      </div>
+    </div>
+    <p style="margin-top:30px;font-size:0.85em;">
+      Niet de juiste keuze? <a href="dashboard.html" style="color:var(--blauw-app);">Terug naar dashboard</a>
+    </p>
+  </div>
+
+  <!-- HOOFDAPP (verborgen tot ingelogd + team) -->
+  <div id="app-scherm" style="display:none;">
+
+    <header>
+      <h1>Klasbeheer</h1>
+      <div class="ondertitel">Werkboeken, klasmateriaal &amp; knutselideetjes · juf Zisa</div>
+      <div class="acties">
+        <button onclick="window.location.href='dashboard.html'">← Dashboard</button>
+      </div>
+      <div class="zebra">🦓</div>
+    </header>
+
+    <div class="team-balk">
+      <span>👥 Team: <strong id="team-naam-label">–</strong></span>
+      <span>·</span>
+      <span id="aantal-leden">– leden</span>
+      <span class="sync-status" id="sync-status">✓ Bewaard in cloud</span>
+    </div>
+
+    <div class="klas-balk">
+      <div class="klas-item">
+        <label for="klas-naam">👩‍🏫 Naam:</label>
+        <input type="text" id="klas-naam" class="klas-input" style="width:130px;" value="" onchange="klasInstellingenZetten()">
+      </div>
+      <div class="klas-item">
+        <label for="klas-nr">🏫 Klas:</label>
+        <input type="text" id="klas-nr" class="klas-input" style="width:60px;" value="" onchange="klasInstellingenZetten()">
+      </div>
+      <div class="klas-item">
+        <label for="klas-kinderen">👧 Aantal kinderen:</label>
+        <input type="number" id="klas-kinderen" class="klas-input" min="0" value="23" onchange="klasInstellingenZetten()">
+      </div>
+      <div class="klas-item">
+        <label for="klas-reserve">📦 Reserve:</label>
+        <input type="number" id="klas-reserve" class="klas-input" min="0" value="5" onchange="klasInstellingenZetten()">
+      </div>
+      <div class="klas-item">
+        <span class="klas-totaal">= <span id="klas-totaal-nr">28</span> nodig</span>
+      </div>
+      <div class="klas-item">
+        <label for="klas-schooljaar">📅 Schooljaar:</label>
+        <input type="text" id="klas-schooljaar" class="klas-input" style="width:100px;" value="2026-2027" onchange="klasInstellingenZetten()">
+      </div>
+    </div>
+
+    <div class="tabs">
+      <button class="tab actief" data-tab="werkboeken">📚 Werkboeken</button>
+      <button class="tab" data-tab="lyreco">🖍️ Lyreco</button>
+      <button class="tab" data-tab="stock">📦 Stock klasmateriaal</button>
+      <button class="tab" data-tab="knutsel">✂️ Knutselideetjes</button>
+      <button class="tab" data-tab="instellingen">⚙️ Instellingen</button>
+    </div>
+
+    <main>
+
+      <!-- ============ WERKBOEKEN ============ -->
+      <section id="paneel-werkboeken" class="paneel actief">
+        <h2>Werkboeken per methode</h2>
+        <p class="sub">Per leerjaar kan je methodes en delen bijhouden. Het systeem rekent automatisch: <strong>aantal kinderen + reserve − stock = bijbestellen</strong>.</p>
+
+        <div class="leerjaar-schakelaar">
+          <button class="leerjaar-knop actief" data-leerjaar="L1" onclick="leerjaarWisselen('L1')">📘 Leerjaar 1</button>
+          <button class="leerjaar-knop" data-leerjaar="L2" onclick="leerjaarWisselen('L2')">📗 Leerjaar 2</button>
+        </div>
+
+        <div style="margin-bottom: 20px;">
+          <button class="knop groen" onclick="pdfWerkboeken()">📄 Mooi overzicht (PDF)</button>
+        </div>
+
+        <div class="samenvatting" id="wb-stats"></div>
+
+        <div id="wb-methodes"></div>
+
+        <div class="methode-toevoegen">
+          <h3>➕ Nieuwe methode toevoegen <span id="wb-leerjaar-label" style="color:var(--tekst-zacht);font-weight:400;font-size:0.85em;"></span></h3>
+          <div class="form-rij">
+            <div>
+              <label>Naam methode</label>
+              <input type="text" id="nieuw-methode-naam" placeholder="bv. Karakter leerjaar 2">
+            </div>
+            <div>
+              <label>Uitgeverij</label>
+              <input type="text" id="nieuw-methode-uitgever" placeholder="bv. Van In">
+            </div>
+            <div>
+              <label>Eerste deel (naam)</label>
+              <input type="text" id="nieuw-methode-deel" placeholder="bv. Werkschrift a of Blok 1">
+            </div>
+            <div>
+              <label>Stock van dit deel</label>
+              <input type="number" id="nieuw-methode-stock" min="0" value="0">
+            </div>
+          </div>
+          <button class="knop" onclick="methodeToevoegen()">Methode aanmaken</button>
+        </div>
+
+        <div class="bestel-lijst" id="wb-bestel" style="display:none;">
+          <h3>
+            📋 Bestellijst werkboeken <span id="wb-bestel-schooljaar" style="font-weight:400;color:var(--grijs);"></span>
+            <button class="knop klein" onclick="window.print()">🖨️ Afdrukken</button>
+          </h3>
+          <div id="wb-bestel-inhoud"></div>
+        </div>
+      </section>
+
+      <!-- ============ LYRECO ============ -->
+      <section id="paneel-lyreco" class="paneel">
+        <h2>Klasmateriaal &amp; budget</h2>
+        <p class="sub">Materiaal voor Lyreco (of andere leveranciers) met bestelnummers, prijzen en BTW. Daaronder ook een Action-aankopenlijst en budgetoverzicht.</p>
+
+        <div style="margin-bottom: 20px; display:flex; gap:10px; flex-wrap:wrap;">
+          <button class="knop groen" onclick="pdfLyreco()">📄 Mooi overzicht voor collega's (PDF)</button>
+        </div>
+
+        <div class="budget-blok">
+          <h3>💰 Budget dit schooljaar</h3>
+          <div class="form-rij" style="max-width:500px;">
+            <div>
+              <label>Toegekend budget (€)</label>
+              <input type="number" id="budget-bedrag" min="0" step="0.01" value="0" onchange="budgetZetten()">
+            </div>
+          </div>
+          <div class="budget-overzicht" id="budget-overzicht"></div>
+        </div>
+
+        <div class="samenvatting" id="ly-stats"></div>
+
+        <h3 style="margin-top:10px; margin-bottom:10px;">🖍️ Lyreco-bestelling</h3>
+
+        <div class="toevoegen">
+          <h3>➕ Artikel toevoegen</h3>
+          <div class="form-rij">
+            <div>
+              <label>Artikel *</label>
+              <input type="text" id="ly-artikel" placeholder="bv. Stiften Stabilo">
+            </div>
+            <div>
+              <label>Bestelnummer</label>
+              <input type="text" id="ly-nr" placeholder="bv. 4.123.456">
+            </div>
+            <div>
+              <label>Prijs per stuk (€)</label>
+              <input type="number" id="ly-prijs" min="0" step="0.01" value="0">
+            </div>
+            <div>
+              <label>BTW</label>
+              <select id="ly-btw">
+                <option value="6">6% (papier, boeken)</option>
+                <option value="21" selected>21% (standaard)</option>
+              </select>
+            </div>
+            <div>
+              <label>Aantal te bestellen</label>
+              <input type="number" id="ly-bestel" min="0" value="1">
+            </div>
+          </div>
+          <div class="form-rij">
+            <div>
+              <label>In stock (optioneel)</label>
+              <input type="number" id="ly-stock" min="0" value="0">
+            </div>
+            <div>
+              <label>Min. op stock (optioneel)</label>
+              <input type="number" id="ly-min" min="0" value="0">
+            </div>
+          </div>
+          <button class="knop" onclick="lyrecoToevoegen()">Toevoegen</button>
+        </div>
+
+        <div class="tabel-wrap">
+          <table class="vol">
+            <thead>
+              <tr>
+                <th>Artikel</th>
+                <th>Bestelnr</th>
+                <th>Stock</th>
+                <th>Aantal</th>
+                <th>Prijs/st</th>
+                <th>BTW</th>
+                <th>Subtotaal excl.</th>
+                <th>Totaal incl.</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="ly-body"></tbody>
+            <tfoot id="ly-foot"></tfoot>
+          </table>
+        </div>
+
+        <h3 style="margin-top:30px; margin-bottom:10px;">🛍️ Action &amp; andere aankopen</h3>
+        <p class="sub" style="margin-bottom: 14px;">Aankopen buiten Lyreco die ook van het klasbudget gaan.</p>
+
+        <div class="toevoegen">
+          <h3>➕ Aankoop toevoegen</h3>
+          <div class="form-rij">
+            <div>
+              <label>Wat kocht je?</label>
+              <input type="text" id="ac-naam" placeholder="bv. Knutselpapier gekleurd">
+            </div>
+            <div>
+              <label>Winkel</label>
+              <input type="text" id="ac-winkel" value="Action">
+            </div>
+            <div>
+              <label>Prijs (€, totaal incl. BTW)</label>
+              <input type="number" id="ac-prijs" min="0" step="0.01" value="0">
+            </div>
+            <div>
+              <label>Datum</label>
+              <input type="date" id="ac-datum">
+            </div>
+          </div>
+          <button class="knop" onclick="actionToevoegen()">Toevoegen</button>
+        </div>
+
+        <div class="tabel-wrap">
+          <table class="vol">
+            <thead>
+              <tr>
+                <th>Datum</th>
+                <th>Wat</th>
+                <th>Winkel</th>
+                <th>Bedrag</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="ac-body"></tbody>
+            <tfoot id="ac-foot"></tfoot>
+          </table>
+        </div>
+      </section>
+
+      <!-- ============ STOCK ============ -->
+      <section id="paneel-stock" class="paneel">
+        <h2>Stock klasmateriaal</h2>
+        <p class="sub">Per categorie hou je de stock bij voor het 1ste en 2de leerjaar, en hoeveel er nog bijbesteld moet worden. Achter elk product kan je aanduiden waar je het koopt (Lyreco, Action, ...). Zo krijg je een aparte boodschappenlijst per winkel.</p>
+
+        <div style="margin-bottom: 20px; display:flex; gap:10px; flex-wrap:wrap;">
+          <button class="knop groen" onclick="pdfStock()">📄 Volledig overzicht (PDF)</button>
+          <button class="knop blauw" onclick="stockBestellijstPdf()">🛒 Bestellijst per winkel (PDF)</button>
+        </div>
+
+        <div class="samenvatting" id="stock-stats"></div>
+
+        <div class="stock-layout">
+          <!-- Linkse kolom: categorie-lijst -->
+          <div class="stock-cat-lijst">
+            <h3>📂 Categorieën</h3>
+            <div id="stock-cat-knoppen"></div>
+            <button class="stock-cat-toevoegen-btn" onclick="stockCatToevoegenPrompt()">➕ Nieuwe categorie</button>
+          </div>
+
+          <!-- Rechtse kolom: inhoud gekozen categorie -->
+          <div class="stock-cat-inhoud" id="stock-cat-inhoud">
+            <div class="stock-geen-selectie">
+              <span class="icoon-groot">📂</span>
+              Kies een categorie links om producten te zien en te bewerken.
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ KNUTSEL ============ -->
+      <section id="paneel-knutsel" class="paneel">
+        <h2>Knutselideetjes</h2>
+        <p class="sub">Ideeën per feest. Per idee kan je instellen in welk schooljaar je het doet. Zo hou je bij welke knutsels je dit jaar doet en kan je gemakkelijk het materiaal nakijken.</p>
+
+        <div class="jaar-blok">
+          <strong>🔄 Huidig schooljaar:</strong>
+          <input type="text" id="huidig-schooljaar" class="klas-input" style="width:100px;" onchange="huidigSchooljaarZetten()" placeholder="2026-2027">
+          <span style="color:var(--tekst-zacht);font-size:0.9em;">Knutsels in dit schooljaar komen bovenaan en krijgen een accent-kleur.</span>
+        </div>
+
+        <div style="margin-bottom: 20px;">
+          <button class="knop groen" onclick="pdfKnutsels()">📄 Boodschappenlijstje (PDF)</button>
+        </div>
+
+        <div class="toevoegen">
+          <h3>➕ Knutselidee toevoegen</h3>
+          <div class="form-rij">
+            <div>
+              <label>Titel</label>
+              <input type="text" id="kn-titel" placeholder="bv. Schelpenkader moederdag">
+            </div>
+            <div>
+              <label>Feest</label>
+              <select id="kn-feest">
+                <option value="moederdag">💐 Moederdag</option>
+                <option value="vaderdag">👔 Vaderdag</option>
+                <option value="pasen">🐣 Pasen</option>
+                <option value="sint">🎁 Sinterklaas</option>
+                <option value="kerst">🎄 Kerst</option>
+                <option value="ander">✨ Ander</option>
+              </select>
+            </div>
+            <div>
+              <label>Schooljaar</label>
+              <input type="text" id="kn-schooljaar" placeholder="bv. 2026-2027">
+            </div>
+          </div>
+          <div class="form-rij">
+            <div style="grid-column: 1 / -1;">
+              <label>Benodigd materiaal (één per regel)</label>
+              <textarea id="kn-materiaal" rows="4" placeholder="Fotokader in hout&#10;Witte verf&#10;Zeeschelpen&#10;Lijmpistool"></textarea>
+            </div>
+          </div>
+          <div class="form-rij">
+            <div style="grid-column: 1 / -1;">
+              <label>Notities (werkwijze, tips, link...)</label>
+              <textarea id="kn-notitie" rows="2" placeholder="optioneel"></textarea>
+            </div>
+          </div>
+          <button class="knop" onclick="knutselToevoegen()">Toevoegen</button>
+        </div>
+
+        <div class="knutsel-filters">
+          <button class="filter-knop actief" data-filter="alle">Alle</button>
+          <button class="filter-knop" data-filter="dit-jaar">⭐ Dit jaar</button>
+          <button class="filter-knop" data-filter="moederdag">💐 Moederdag</button>
+          <button class="filter-knop" data-filter="vaderdag">👔 Vaderdag</button>
+          <button class="filter-knop" data-filter="pasen">🐣 Pasen</button>
+          <button class="filter-knop" data-filter="sint">🎁 Sint</button>
+          <button class="filter-knop" data-filter="kerst">🎄 Kerst</button>
+          <button class="filter-knop" data-filter="ander">✨ Andere</button>
+        </div>
+
+        <div class="knutsel-grid" id="kn-grid"></div>
+
+        <div class="bestel-lijst" id="kn-bestel" style="display:none;">
+          <h3>
+            🛒 Boodschappenlijstje knutselmateriaal (dit jaar)
+            <button class="knop klein" onclick="window.print()">🖨️ Afdrukken</button>
+          </h3>
+          <ul id="kn-bestel-lijst"></ul>
+        </div>
+      </section>
+
+      <!-- ============ INSTELLINGEN ============ -->
+      <section id="paneel-instellingen" class="paneel">
+        <h2>Instellingen &amp; team</h2>
+        <p class="sub">Beheer je team en je gegevens.</p>
+
+        <div class="instellingen-blok">
+          <h3>👥 Teamleden</h3>
+          <p>Deze personen zien en kunnen bewerken wat jij bewerkt. Voeg hun e-mailadres toe zoals ze ingelogd zijn in de huiswerkapp.</p>
+          <ul class="leden-lijst" id="leden-lijst"></ul>
+          <div id="lid-toevoegen-blok" style="display:none;">
+            <div class="form-rij" style="max-width:500px;">
+              <div>
+                <label>E-mailadres collega</label>
+                <input type="email" id="nieuw-lid-email" placeholder="collega@school.be">
+              </div>
+            </div>
+            <button class="knop" onclick="lidToevoegen()">➕ Lid toevoegen</button>
+          </div>
+        </div>
+
+        <div class="instellingen-blok">
+          <h3>💾 Back-up maken</h3>
+          <p>Download alle gegevens als JSON-bestand. Handig als extra zekerheid (alles staat al in de cloud, maar back-up is nooit te veel).</p>
+          <div class="knop-rij">
+            <button class="knop groen" onclick="exporteren()">⬇️ Back-up downloaden</button>
+          </div>
+        </div>
+
+        <div class="instellingen-blok">
+          <h3>📥 Back-up herstellen</h3>
+          <p>Kies een eerder gedownload JSON-bestand om je gegevens terug te zetten. <strong>Let op:</strong> huidige gegevens worden vervangen (ook voor je teamleden!).</p>
+          <div class="knop-rij">
+            <input type="file" id="import-bestand" accept=".json" style="display:none;" onchange="importeren(event)">
+            <button class="knop blauw" onclick="document.getElementById('import-bestand').click()">⬆️ Bestand kiezen</button>
+          </div>
+        </div>
+
+        <div class="instellingen-blok">
+          <h3>🔄 Nieuw schooljaar starten</h3>
+          <p>Zet alle "stock" van werkboeken op 0 en leeg de Action-aankopen en het budget. Methodes, Lyreco-artikels en knutselideeën blijven.</p>
+          <div class="knop-rij">
+            <button class="knop blauw" onclick="nieuwSchooljaar()">Stock resetten</button>
+          </div>
+        </div>
+
+        <div class="instellingen-blok">
+          <h3>ℹ️ Info</h3>
+          <p style="margin:0;">Alle gegevens worden automatisch bewaard in de cloud (Firebase). Je kan dus thuis, op school of op een iPad werken — je ziet altijd dezelfde data. Als jij of je teamlid iets aanpast, zien jullie dat bij een volgende refresh.</p>
+        </div>
+      </section>
+
+    </main>
+  </div>
+</div>
+
+<script type="module" src="klasbeheer.js?v=1"></script>
+
+</body>
+</html>
