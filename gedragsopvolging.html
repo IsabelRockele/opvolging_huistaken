@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Gedragsopvolging – juf Zisa</title>
+  <title>GO! Basisschool De Linde – Gedragsopvolging</title>
 
   <link rel="stylesheet" href="gedragsopvolging.css" />
 
@@ -54,10 +54,8 @@
     .topbar {
       background: linear-gradient(135deg, #6b5d52 0%, #8a7a6d 100%);
       color: var(--wit);
-      padding: 22px 32px;
+      padding: 18px 28px;
       border-radius: 16px;
-      position: relative;
-      overflow: hidden;
       border: 2px solid var(--rand-donker);
       margin-bottom: 20px;
       box-shadow: 0 4px 16px var(--schaduw);
@@ -68,38 +66,44 @@
       gap: 14px;
     }
 
-    .topbar::before {
-      content: "";
-      position: absolute;
-      top: 0; right: 0; bottom: 0;
-      width: 42%;
-      background-image: repeating-linear-gradient(
-        90deg,
-        rgba(255,255,255,0.32) 0 16px,
-        transparent 16px 32px
-      );
-      clip-path: polygon(30% 0, 100% 0, 100% 100%, 0 100%);
-      pointer-events: none;
+    .topbar-merk {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      flex: 1;
+      min-width: 260px;
+    }
+
+    .topbar-merk .logo {
+      flex-shrink: 0;
+      height: 58px;
+      width: auto;
+      background: var(--wit);
+      border-radius: 10px;
+      padding: 5px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+    }
+
+    .topbar-merk .titels {
+      flex: 1;
     }
 
     .topbar h1 {
-      font-size: 1.8em;
+      font-size: 1.5em;
       font-weight: 900;
       margin: 0;
-      letter-spacing: -0.5px;
-      position: relative;
-      z-index: 2;
+      letter-spacing: -0.3px;
     }
 
-    .topbar h1::before {
-      content: "📊 ";
+    .topbar .ondertitel {
+      font-size: 0.9em;
+      opacity: 0.85;
+      margin-top: 2px;
     }
 
     .topbar-buttons {
       display: flex;
       gap: 10px;
-      position: relative;
-      z-index: 2;
       flex-wrap: wrap;
     }
 
@@ -530,14 +534,21 @@
     @media (max-width: 600px) {
       body { padding: 12px; }
       .topbar { padding: 16px 20px; }
-      .topbar h1 { font-size: 1.4em; }
+      .topbar h1 { font-size: 1.2em; }
+      .topbar-merk .logo { height: 48px; }
       .pane { padding: 18px 16px; }
     }
   </style>
 </head>
 <body>
   <header class="topbar">
-    <h1>Gedragsopvolging</h1>
+    <div class="topbar-merk">
+      <img src="afbeeldingen/schoollogo.png" alt="Schoollogo" class="logo" onerror="this.style.display='none'">
+      <div class="titels">
+        <h1>GO! Basisschool De Linde</h1>
+        <div class="ondertitel">Gedragsopvolging</div>
+      </div>
+    </div>
     <div class="topbar-buttons">
       <button id="btnTerugDashboard" type="button">← Terug naar dashboard</button>
       <button id="btnLogout" type="button">🚪 Uitloggen</button>
