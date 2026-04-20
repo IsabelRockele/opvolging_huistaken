@@ -1,6 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 // AANGEPAST: sendPasswordResetEmail toegevoegd
-import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, sendPasswordResetEmail, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import { getFirestore } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 // De Firebase-configuratie van uw web-app
@@ -30,14 +30,26 @@ onAuthStateChanged(auth, (user) => {
     location.pathname.endsWith('/opvolging_huistaken/');
 
   if (isIndex) {
-    // Optioneel: een kleine hint/link plaatsen onder het loginblok
-    const authBox = document.getElementById('auth');
-    if (authBox && !document.getElementById('naarDashboardLink')) {
-      const p = document.createElement('p');
-      p.id = 'naarDashboardLink';
-      p.style.marginTop = '8px';
-      p.innerHTML = 'U bent ingelogd. <a href="dashboard.html">Ga naar de huiswerkapp</a>.';
-      authBox.insertAdjacentElement('afterend', p);
+    // Nieuwe stijl: toon de 'ingelogd-kaart' bovenaan (die staat al klaar in index.html).
+    // Werkt ook als de kaart niet aanwezig is (oudere versies).
+    const kaart = document.getElementById('ingelogd-kaart');
+    const emailSpan = document.getElementById('ingelogd-email');
+    if (kaart) {
+      if (emailSpan) emailSpan.textContent = user.email || '';
+      kaart.style.display = '';
+      // Ook de inlog-kaart minder prominent maken (kleine opacity)
+      const authBox = document.getElementById('auth');
+      if (authBox) authBox.classList.add('reeds-ingelogd');
+    } else {
+      // Fallback voor oudere index.html zonder de nieuwe kaart
+      const authBox = document.getElementById('auth');
+      if (authBox && !document.getElementById('naarDashboardLink')) {
+        const p = document.createElement('p');
+        p.id = 'naarDashboardLink';
+        p.style.marginTop = '8px';
+        p.innerHTML = 'U bent ingelogd. <a href="dashboard.html">Ga naar de huiswerkapp</a>.';
+        authBox.insertAdjacentElement('afterend', p);
+      }
     }
   }
 });
@@ -101,3 +113,18 @@ if ('serviceWorker' in navigator) {
   });
 }
 
+
+// Uitloggen vanaf de index-pagina (indien reeds ingelogd)
+window.uitloggenVanIndex = function () {
+  signOut(auth)
+    .then(() => {
+      // Kaart verbergen + login-kaart weer prominent
+      const kaart = document.getElementById('ingelogd-kaart');
+      if (kaart) kaart.style.display = 'none';
+      const authBox = document.getElementById('auth');
+      if (authBox) authBox.classList.remove('reeds-ingelogd');
+    })
+    .catch((err) => {
+      alert('Uitloggen lukte niet: ' + err.message);
+    });
+};
