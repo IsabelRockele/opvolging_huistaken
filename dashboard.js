@@ -800,7 +800,7 @@ async function genereerBulkPdf() {
 
     // Plaats de afbeelding proportioneel — met marges bovenaan/links en onderaan ruimte voor voettekst
     const marge = 10; // mm marge boven en onder pagina
-    const voettekstRuimte = logoDataUrl ? 22 : 0; // mm ruimte onderaan voor logo (alleen als logo bestaat)
+    const voettekstRuimte = logoDataUrl ? 28 : 0; // mm ruimte onderaan voor logo (alleen als logo bestaat)
     const maxBreedte = pageWidth - (2 * marge);
     const beschikbareHoogte = pageHeight - (2 * marge) - voettekstRuimte;
     const schaal = maxBreedte / imgProps.width;
@@ -821,7 +821,7 @@ async function genereerBulkPdf() {
 
     // Voettekst: schoollogo onderaan (binnen afdrukgebied, dus marge vanaf rand)
     if (logoDataUrl) {
-      const logoHoogte = 20; // mm
+      const logoHoogte = 20; // mm  — pas dit getal aan om het logo groter/kleiner te maken
       const logoBreedte = logoHoogte * logoRatio;
       const logoX = (pageWidth - logoBreedte) / 2;
       const logoY = pageHeight - marge - logoHoogte;
