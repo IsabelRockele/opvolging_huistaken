@@ -668,31 +668,72 @@ async function genereerBulkPdf() {
 
     const { telling, statusDetails } = berekenLeerlingData(leerling, periode);
 
-    let samenvattingHTML = "<h3 style='margin-top:20px;'>Samenvatting</h3><ul style='margin:0;padding-left:20px;line-height:1.6;'>";
-    samenvattingHTML += `<li><strong>Op tijd:</strong> ${telling['op tijd']} keer</li>`;
+    // Kleuren per status (zelfde als chart)
+    const statusKleurenAchtergrond = {
+      'op tijd': '#e8f8e5',
+      'te laat': '#fff4e0',
+      'onvolledig': '#fffbe0',
+      'niet gemaakt': '#fce4e4',
+      'ziek': '#e8f1fb',
+      'geen': '#f0f0f0'
+    };
+    const statusKleurenRand = {
+      'op tijd': '#9ec4a3',
+      'te laat': '#e8b87a',
+      'onvolledig': '#ddd08c',
+      'niet gemaakt': '#d99090',
+      'ziek': '#a0c2e0',
+      'geen': '#c0c0c0'
+    };
+
+    // Bouw de samenvatting op als visuele kaarten per status
+    let samenvattingHTML = `<h3 style="margin:0 0 14px 0; font-size: 14pt; color: #3d3a36;">📋 Samenvatting</h3>`;
+    samenvattingHTML += `<div style="display: flex; flex-direction: column; gap: 10px;">`;
+
+    // Op tijd altijd eerst
+    if (telling['op tijd'] > 0) {
+      samenvattingHTML += `
+        <div style="background: ${statusKleurenAchtergrond['op tijd']}; border-left: 5px solid ${statusKleurenRand['op tijd']}; padding: 10px 14px; border-radius: 6px;">
+          <div style="font-weight: bold; font-size: 11pt;">✓ Op tijd</div>
+          <div style="font-size: 10pt; color: #555;">${telling['op tijd']} keer</div>
+        </div>
+      `;
+    }
+
     for (const [status, detailLijst] of Object.entries(statusDetails)) {
       if (detailLijst.length > 0) {
         const statusNaam = status.charAt(0).toUpperCase() + status.slice(1);
-        samenvattingHTML += `<li><strong>${statusNaam}:</strong> ${detailLijst.length} keer<ul style='margin:4px 0;'>`;
-        detailLijst.forEach(d => { samenvattingHTML += `<li style='font-size:0.9em;color:#555;'>${d}</li>`; });
-        samenvattingHTML += `</ul></li>`;
+        const bg = statusKleurenAchtergrond[status] || '#f5f5f5';
+        const rand = statusKleurenRand[status] || '#ccc';
+        samenvattingHTML += `
+          <div style="background: ${bg}; border-left: 5px solid ${rand}; padding: 10px 14px; border-radius: 6px;">
+            <div style="font-weight: bold; font-size: 11pt;">${statusNaam}</div>
+            <div style="font-size: 10pt; color: #555; margin-bottom: 4px;">${detailLijst.length} keer</div>
+            <div style="font-size: 9.5pt; color: #666; font-style: italic;">${detailLijst.join(' · ')}</div>
+          </div>
+        `;
       }
     }
-    samenvattingHTML += "</ul>";
+    samenvattingHTML += `</div>`;
 
     container.innerHTML = `
       <div style="font-family: Arial, sans-serif; padding: 30px; color: #222;">
-        <div style="text-align:center; margin-bottom: 18px; padding-bottom: 14px; border-bottom: 2px solid #ccc;">
-          <h1 style="margin:0; font-size: 22pt;">Overzicht opvolging huistaken</h1>
+        <div style="text-align:center; margin-bottom: 24px; padding-bottom: 16px; border-bottom: 3px solid #d99775;">
+          <h1 style="margin:0; font-size: 22pt; color: #3d3a36;">Overzicht opvolging huistaken</h1>
           <h2 style="margin:8px 0 0 0; font-size: 16pt; font-weight: normal; color: #555;">${leerling.naam}</h2>
           <p style="margin:4px 0 0 0; font-size: 12pt; color: #777;">Rapportperiode ${periode}</p>
         </div>
 
-        <div style="display: flex; justify-content: center; margin: 20px 0;">
-          <canvas id="pdf-chart-${leerling.id}" width="320" height="320"></canvas>
+        <div style="display: flex; justify-content: center; margin: 16px 0 32px 0;">
+          <canvas id="pdf-chart-${leerling.id}" width="300" height="300"></canvas>
         </div>
 
-        <div id="pdf-samenvatting" style="font-size: 11pt;">${samenvattingHTML}</div>
+        <div id="pdf-samenvatting" style="font-size: 11pt; margin-top: 16px;">${samenvattingHTML}</div>
+
+        <div style="text-align: center; margin-top: 40px; padding-top: 16px; border-top: 1px solid #ddd;">
+          <img src="afbeeldingen/schoollogo.png" alt="Schoollogo" style="max-height: 80px; opacity: 0.85;"
+               onerror="this.style.display='none'">
+        </div>
       </div>
     `;
 
@@ -724,8 +765,8 @@ async function genereerBulkPdf() {
       }
     });
 
-    // Even wachten zodat de chart zeker gerenderd is voor de screenshot
-    await new Promise(r => setTimeout(r, 150));
+    // Even wachten zodat de chart EN het schoollogo zeker gerenderd zijn voor de screenshot
+    await new Promise(r => setTimeout(r, 250));
 
     // Render naar PDF
     const canvas = await html2canvas(container, { scale: 2, backgroundColor: '#ffffff' });
