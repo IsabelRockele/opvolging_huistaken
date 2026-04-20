@@ -10,7 +10,10 @@ const db = getFirestore();
 
 // Globale variabelen
 let currentUser;
-let huidigeModus = localStorage.getItem('huidigeModus') || null;
+// AANGEPAST: huidigeModus NIET meer uit localStorage lezen, zodat je bij elke keer naar
+// het dashboard terugkeert eerst het keuzescherm ziet (Per Week / Per Dag / Gedrag / Klasbeheer).
+// De keuze blijft wel behouden binnen de huidige sessie, via het gebruik van setModus() hieronder.
+let huidigeModus = null;
 let klasOverzichtChartInstance = null; // Voor de klasoverzicht-grafiek
 let kolomMigratieUitgevoerd = false;   // voorkomt herhaalde migraties in één sessie
 
@@ -108,6 +111,16 @@ function setupEventListeners() {
   document.getElementById('kiesModusWeek').addEventListener('click', () => setModus('week'));
   document.getElementById('kiesModusDag').addEventListener('click', () => setModus('dag'));
   document.getElementById('wisselModusBtn').addEventListener('click', wisselModus);
+  // NIEUW: terug-knop naar keuzescherm (toont weer Per Week / Per Dag / Gedrag / Klasbeheer)
+  const btnTerug = document.getElementById('btnTerugNaarKeuze');
+  if (btnTerug) {
+    btnTerug.addEventListener('click', () => {
+      huidigeModus = null;
+      updateUIModus();
+      // Scroll terug naar boven zodat je het keuzescherm goed ziet
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+  }
   document.getElementById('addLeerlingBtn').addEventListener('click', voegLeerlingToe);
   document.getElementById('rapportperiode').addEventListener('change', renderHoofdweergave);
   document.getElementById('toonOverzichtBtn').addEventListener('click', toonKlasOverzicht);
@@ -167,7 +180,8 @@ function prepareDataForDetailPages() {
 // --- MODUS BEHEER ---
 function setModus(modus) {
   huidigeModus = modus;
-  localStorage.setItem('huidigeModus', modus);
+  // AANGEPAST: niet meer in localStorage bewaren, zodat elke terugkeer naar dashboard
+  // opnieuw start bij het keuzescherm.
   updateUIModus();
 }
 function wisselModus() { setModus(huidigeModus === 'week' ? 'dag' : 'week'); }
@@ -176,6 +190,9 @@ function updateUIModus() {
   const isModusGekozen = !!huidigeModus;
   document.getElementById('modus-keuzescherm').style.display = isModusGekozen ? 'none' : 'block';
   document.getElementById('content').style.display = isModusGekozen ? 'block' : 'none';
+  // Terug-knop in header enkel tonen wanneer een weergave actief is
+  const btnTerug = document.getElementById('btnTerugNaarKeuze');
+  if (btnTerug) btnTerug.style.display = isModusGekozen ? '' : 'none';
   if (isModusGekozen) {
     document.getElementById('wisselModusBtn').textContent = `Wissel naar weergave per ${huidigeModus === 'week' ? 'dag' : 'week'}`;
     renderHoofdweergave();
