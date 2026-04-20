@@ -3,50 +3,420 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Dashboard Huistaken</title>
+  <title>Dashboard Huistaken – juf Zisa</title>
   <link rel="stylesheet" href="dashboard.css" />
 
   <link rel="manifest" href="manifest.json">
   <link rel="apple-touch-icon" href="icon-192x192.png">
-  <meta name="theme-color" content="#4A90E2">
+  <meta name="theme-color" content="#d99775">
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
+  <style>
+    :root {
+      --tekst: #3d3a36;
+      --tekst-zacht: #6b655d;
+      --wit: #ffffff;
+      --creme: #faf6ef;
+      --creme-warm: #f5efe4;
+      --accent: #d99775;
+      --accent-licht: #f4dcc9;
+      --accent-donker: #b87a5e;
+      --geel-zacht: #f5d58e;
+      --geel-licht: #fdf4dc;
+      --groen-zacht: #9ec4a3;
+      --groen-donker: #5a8a63;
+      --blauw-zacht: #a8c5d6;
+      --blauw-donker: #6b9bb8;
+      --paars-zacht: #c4b3d4;
+      --rood-zacht: #c97070;
+      --rand: #d9d1c2;
+      --rand-donker: #a89d8a;
+      --schaduw: rgba(120, 110, 95, 0.18);
+      --schaduw-sterk: rgba(120, 110, 95, 0.28);
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, sans-serif;
+      background: var(--creme);
+      color: var(--tekst);
+      margin: 0;
+      padding: 20px;
+      min-height: 100vh;
+    }
+
+    /* HEADER */
+    .header {
+      background: linear-gradient(135deg, #6b5d52 0%, #8a7a6d 100%);
+      color: var(--wit);
+      padding: 22px 32px;
+      border-radius: 16px;
+      position: relative;
+      overflow: hidden;
+      border: 2px solid var(--rand-donker);
+      margin-bottom: 24px;
+      box-shadow: 0 4px 16px var(--schaduw);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 14px;
+    }
+
+    .header::before {
+      content: "";
+      position: absolute;
+      top: 0; right: 0; bottom: 0;
+      width: 42%;
+      background-image: repeating-linear-gradient(
+        90deg,
+        rgba(255,255,255,0.32) 0 16px,
+        transparent 16px 32px
+      );
+      clip-path: polygon(30% 0, 100% 0, 100% 100%, 0 100%);
+      pointer-events: none;
+    }
+
+    .header h1 {
+      font-size: 1.9em;
+      font-weight: 900;
+      margin: 0;
+      letter-spacing: -0.5px;
+      position: relative;
+      z-index: 2;
+      text-align: left;
+    }
+
+    .header h1::before {
+      content: "🦓 ";
+    }
+
+    .header-knoppen {
+      display: flex;
+      gap: 10px;
+      position: relative;
+      z-index: 2;
+      flex-wrap: wrap;
+    }
+
+    .header-knoppen button {
+      background: rgba(255,255,255,0.2);
+      color: var(--wit);
+      border: 1.5px solid rgba(255,255,255,0.4);
+      padding: 8px 16px;
+      border-radius: 10px;
+      font-size: 0.9em;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.15s;
+    }
+
+    .header-knoppen button:hover {
+      background: rgba(255,255,255,0.35);
+      transform: translateY(-1px);
+    }
+
+    /* MODUS-KEUZE KAART */
+    .modus-container {
+      background: var(--wit);
+      border: 2px solid var(--rand-donker);
+      border-radius: 16px;
+      padding: 26px 28px;
+      margin-bottom: 22px;
+      max-width: 720px;
+      margin-left: auto;
+      margin-right: auto;
+      box-shadow: 0 3px 12px var(--schaduw);
+      text-align: center;
+    }
+
+    .modus-container h2 {
+      margin: 0 0 18px 0;
+      font-size: 1.3em;
+      font-weight: 800;
+      color: var(--tekst);
+    }
+
+    .modus-knoppen {
+      display: flex;
+      gap: 14px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    /* Alle dashboard knoppen in stijl */
+    .modus-knoppen button {
+      padding: 12px 22px;
+      font-size: 1em;
+      font-weight: 700;
+      border-radius: 10px;
+      border: 2px solid var(--rand-donker);
+      background: var(--geel-zacht);
+      color: var(--tekst);
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.15s;
+      box-shadow: 0 2px 6px var(--schaduw);
+      min-width: 140px;
+    }
+
+    .modus-knoppen button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 10px var(--schaduw-sterk);
+    }
+
+    .modus-knoppen button:active {
+      transform: translateY(0);
+    }
+
+    /* Extra knoppen (Gedragsopvolging, Klasbeheer) in eigen tinten */
+    .extra-acties {
+      display: flex;
+      gap: 14px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .extra-acties button {
+      padding: 14px 24px;
+      font-size: 1.05em;
+      font-weight: 700;
+      border-radius: 12px;
+      border: 2px solid var(--rand-donker);
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.15s;
+      box-shadow: 0 2px 6px var(--schaduw);
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 180px;
+      justify-content: center;
+      color: var(--tekst);
+    }
+
+    .extra-acties button.gedrag {
+      background: var(--blauw-zacht);
+    }
+
+    .extra-acties button.klasbeheer {
+      background: var(--accent-licht);
+    }
+
+    .extra-acties button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px var(--schaduw-sterk);
+    }
+
+    /* Content-blok (wanneer modus gekozen) */
+    #content {
+      background: var(--wit);
+      border: 2px solid var(--rand-donker);
+      border-radius: 16px;
+      padding: 24px 28px;
+      box-shadow: 0 3px 12px var(--schaduw);
+      max-width: 1300px;
+      margin: 0 auto;
+    }
+
+    .beheer-container {
+      display: flex;
+      gap: 14px;
+      flex-wrap: wrap;
+      align-items: flex-end;
+      margin-bottom: 18px;
+      padding-bottom: 18px;
+      border-bottom: 2px solid var(--rand);
+    }
+
+    .invoer-groep {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .invoer-groep label {
+      font-weight: 600;
+      font-size: 0.95em;
+    }
+
+    .beheer-container input[type="text"],
+    .beheer-container select {
+      padding: 8px 12px;
+      border: 1.5px solid var(--rand-donker);
+      border-radius: 8px;
+      font-family: inherit;
+      font-size: 0.95em;
+      background: var(--wit);
+      color: var(--tekst);
+    }
+
+    .beheer-container input[type="text"]:focus,
+    .beheer-container select:focus {
+      outline: none;
+      background: #fffbe6;
+      border-color: var(--accent);
+    }
+
+    .beheer-container button,
+    .wissel-knop,
+    .actieknoop {
+      padding: 9px 16px;
+      font-size: 0.95em;
+      font-weight: 600;
+      border-radius: 10px;
+      border: 1.5px solid var(--rand-donker);
+      background: var(--geel-zacht);
+      color: var(--tekst);
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.15s;
+      box-shadow: 0 2px 4px var(--schaduw);
+    }
+
+    .beheer-container button:hover,
+    .wissel-knop:hover,
+    .actieknoop:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 3px 6px var(--schaduw-sterk);
+    }
+
+    .reset-knop {
+      background: var(--rood-zacht) !important;
+      color: var(--wit) !important;
+    }
+
+    #toonOverzichtBtn {
+      background: var(--groen-zacht) !important;
+    }
+
+    #printAlleLeerlingenBtn {
+      background: var(--blauw-zacht) !important;
+    }
+
+    .wissel-knop {
+      display: block;
+      margin: 10px auto;
+      background: var(--accent-licht);
+    }
+
+    .titelbalk {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 14px;
+      flex-wrap: wrap;
+      margin-top: 14px;
+      margin-bottom: 10px;
+    }
+
+    .titelbalk h2 {
+      margin: 0;
+      text-align: left;
+      font-size: 1.3em;
+      color: var(--tekst);
+    }
+
+    .titel-acties {
+      display: flex;
+      gap: 8px;
+    }
+
+    .actieknoop {
+      padding: 7px 12px;
+      font-size: 0.88em;
+      background: var(--accent-licht);
+    }
+
+    hr {
+      border: none;
+      border-top: 2px solid var(--rand);
+      margin: 18px 0;
+    }
+
+    /* DIALOGEN */
+    dialog {
+      border: 2px solid var(--rand-donker);
+      border-radius: 16px;
+      padding: 24px;
+      background: var(--wit);
+      box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+      max-width: 90vw;
+    }
+
+    dialog::backdrop {
+      background: rgba(0,0,0,0.4);
+      backdrop-filter: blur(4px);
+    }
+
+    .dialog-knoppen {
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+      margin-top: 16px;
+    }
+
+    .dialog-knoppen button {
+      padding: 9px 18px;
+      font-size: 0.95em;
+      font-weight: 600;
+      border-radius: 10px;
+      border: 1.5px solid var(--rand-donker);
+      background: var(--geel-zacht);
+      color: var(--tekst);
+      cursor: pointer;
+      font-family: inherit;
+    }
+
+    @media (max-width: 600px) {
+      body { padding: 12px; }
+      .header { padding: 16px 20px; }
+      .header h1 { font-size: 1.4em; }
+      .modus-container { padding: 20px; }
+      .extra-acties button { min-width: 140px; padding: 12px 18px; font-size: 0.95em; }
+    }
+  </style>
 </head>
 <body>
 
   <div class="header">
     <h1>Dashboard Huistaken</h1>
     <div class="header-knoppen">
-      <button id="wijzigWachtwoordBtn">Wachtwoord wijzigen</button>
-      <button id="logoutBtn">Uitloggen</button>
+      <button id="btnTerugNaarKeuze" style="display:none;">← Terug naar dashboard</button>
+      <button id="wijzigWachtwoordBtn">🔐 Wachtwoord wijzigen</button>
+      <button id="logoutBtn">🚪 Uitloggen</button>
     </div>
   </div>
 
   <div id="modus-keuzescherm" class="modus-container">
     <h2>Hoe wil je de huistaken opvolgen?</h2>
     <div class="modus-knoppen">
-        <button id="kiesModusWeek">Per Week</button>
-        <button id="kiesModusDag">Per Dag</button>
+        <button id="kiesModusWeek">📅 Per Week</button>
+        <button id="kiesModusDag">📆 Per Dag</button>
+    </div>
+    <div style="margin-top: 22px; padding-top: 20px; border-top: 2px solid var(--rand);">
+      <h2 style="margin-bottom: 14px;">Andere klasmiddelen</h2>
+      <div class="extra-acties">
+        <button class="gedrag" onclick="window.location.href='gedragsopvolging.html'">
+          📊 Gedragsopvolging
+        </button>
+        <button class="klasbeheer" onclick="window.location.href='klasbeheer.html'">
+          📦 Klasbeheer
+        </button>
+      </div>
     </div>
   </div>
-  
-<div class="modus-container" style="text-align:center; margin-top:20px;">
-    <button onclick="window.location.href='gedragsopvolging.html'"
-            style="padding: 12px 18px; font-size: 16px; border-radius: 8px;
-                   border: 1px solid #ccc; background:#e7e7e7; cursor:pointer;">
-        Gedragsopvolging
-    </button>
-</div>
 
   <div id="content" style="display: none;">
-    
+
     <div class="beheer-container">
       <div class="invoer-groep">
         <input type="text" id="nieuweLeerlingNaam" placeholder="Naam nieuwe leerling" />
-        <button id="addLeerlingBtn">Leerling Toevoegen</button>
+        <button id="addLeerlingBtn">➕ Leerling Toevoegen</button>
       </div>
       <div class="invoer-groep">
         <label for="rapportperiode">Rapportperiode:</label>
@@ -57,27 +427,27 @@
         </select>
       </div>
       <div class="invoer-groep">
-          <button id="toonOverzichtBtn">Toon Klasoverzicht</button>
-          <button id="printAlleLeerlingenBtn">PDF Alle Rapporten</button>
-          <button id="nieuwSchooljaarBtn" class="reset-knop">Nieuw schooljaar</button>
+          <button id="toonOverzichtBtn">📈 Toon Klasoverzicht</button>
+          <button id="printAlleLeerlingenBtn">📄 PDF Alle Rapporten</button>
+          <button id="nieuwSchooljaarBtn" class="reset-knop">🔄 Nieuw schooljaar</button>
       </div>
     </div>
-    <button id="wisselModusBtn" class="wissel-knop">Wissel naar andere weergave</button>
+
+    <button id="wisselModusBtn" class="wissel-knop">🔀 Wissel naar andere weergave</button>
 
     <hr>
 
-<div class="titelbalk">
-  <h2 id="weergave-titel"></h2>
-  <div class="titel-acties">
-    <button id="btnDagToevoegen"  class="actieknoop">+ Dag</button>
-    <button id="btnWeekToevoegen" class="actieknoop">+ Week</button>
-  </div>
-</div>
+    <div class="titelbalk">
+      <h2 id="weergave-titel"></h2>
+      <div class="titel-acties">
+        <button id="btnDagToevoegen"  class="actieknoop">+ Dag</button>
+        <button id="btnWeekToevoegen" class="actieknoop">+ Week</button>
+      </div>
+    </div>
 
-<div id="tabelContainer">
-  <!-- tabel wordt hier gerenderd -->
-</div>
-
+    <div id="tabelContainer">
+      <!-- tabel wordt hier gerenderd -->
+    </div>
 
   </div>
 
@@ -87,7 +457,7 @@
         <div id="klasOverzichtText"></div>
     </div>
     <div class="dialog-knoppen">
-      <button id="printOverzichtBtn" type="button">Afdrukken</button>      
+      <button id="printOverzichtBtn" type="button">🖨️ Afdrukken</button>
       <form method="dialog">
         <button>Sluiten</button>
       </form>
@@ -97,14 +467,14 @@
   <dialog id="progressDialog">
     <h3>PDF genereren...</h3>
     <div id="progressBarContainer" style="width: 300px; height: 20px; border: 1px solid #ccc; border-radius: 10px; overflow: hidden; background-color: #f3f3f3;">
-      <div id="progressBar" style="width: 0%; height: 100%; background-color: #4A90E2; transition: width 0.2s ease-in-out;"></div>
+      <div id="progressBar" style="width: 0%; height: 100%; background-color: #d99775; transition: width 0.2s ease-in-out;"></div>
     </div>
-    <p id="progressText" style="text-align: center; margin-top: 5px; font-family: Arial, sans-serif;">Bezig met voorbereiden...</p>
+    <p id="progressText" style="text-align: center; margin-top: 5px;">Bezig met voorbereiden...</p>
   </dialog>
 
   <div id="pdf-render-container" style="position: absolute; left: -9999px; top: auto; width: 700px; background-color: white; padding: 20px;"></div>
 
-  <  <script type="module" src="script.js?v=6"></script> 
+  <script type="module" src="script.js?v=6"></script>
   <script type="module" src="dashboard.js?v=6"></script>
 </body>
 </html>
