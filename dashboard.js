@@ -663,6 +663,31 @@ async function genereerBulkPdf() {
   const pdf = new jsPDF('p', 'mm', 'a4');
   const container = document.getElementById('pdf-render-container');
 
+  // Schoollogo één keer vooraf inladen om als voettekst op elke pagina te plaatsen.
+  // Als het bestand niet bestaat, wordt gewoon geen voettekst getoond.
+  let logoDataUrl = null;
+  let logoRatio = 1; // breedte / hoogte
+  try {
+    logoDataUrl = await new Promise((resolve, reject) => {
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.onload = () => {
+        logoRatio = img.naturalWidth / img.naturalHeight || 1;
+        const c = document.createElement('canvas');
+        c.width = img.naturalWidth;
+        c.height = img.naturalHeight;
+        c.getContext('2d').drawImage(img, 0, 0);
+        resolve(c.toDataURL('image/png'));
+      };
+      img.onerror = () => reject(new Error('logo niet gevonden'));
+      img.src = 'afbeeldingen/schoollogo.png';
+      // Time-out zodat we niet eindeloos blijven wachten
+      setTimeout(() => reject(new Error('logo timeout')), 2000);
+    });
+  } catch (e) {
+    console.info('Schoollogo niet beschikbaar, PDF wordt zonder voettekst gemaakt.');
+  }
+
   for (let i = 0; i < gesorteerdeLeerlingen.length; i++) {
     const leerling = gesorteerdeLeerlingen[i];
 
@@ -729,11 +754,6 @@ async function genereerBulkPdf() {
         </div>
 
         <div id="pdf-samenvatting" style="font-size: 11pt; margin-top: 16px;">${samenvattingHTML}</div>
-
-        <div style="text-align: center; margin-top: 40px; padding-top: 16px; border-top: 1px solid #ddd;">
-          <img src="afbeeldingen/schoollogo.png" alt="Schoollogo" style="max-height: 80px; opacity: 0.85;"
-               onerror="this.style.display='none'">
-        </div>
       </div>
     `;
 
@@ -778,26 +798,35 @@ async function genereerBulkPdf() {
 
     if (i > 0) pdf.addPage();
 
-    // Plaats de afbeelding proportioneel — met marges bovenaan en links
-    // Breedte vullen binnen marges, hoogte mag natuurlijk blijven (niet uitrekken!)
-    const marge = 10; // mm
+    // Plaats de afbeelding proportioneel — met marges bovenaan/links en onderaan ruimte voor voettekst
+    const marge = 10; // mm marge boven en onder pagina
+    const voettekstRuimte = logoDataUrl ? 22 : 0; // mm ruimte onderaan voor logo (alleen als logo bestaat)
     const maxBreedte = pageWidth - (2 * marge);
+    const beschikbareHoogte = pageHeight - (2 * marge) - voettekstRuimte;
     const schaal = maxBreedte / imgProps.width;
     const berekendeHoogte = imgProps.height * schaal;
 
-    // Als de inhoud langer is dan één pagina, schalen we terug zodat alles past
+    // Als de inhoud te hoog is, schalen we terug zodat alles past (inclusief voettekst)
     let finaleBreedte = maxBreedte;
     let finaleHoogte = berekendeHoogte;
-    if (berekendeHoogte > pageHeight - (2 * marge)) {
-      const maxHoogte = pageHeight - (2 * marge);
-      const schaalH = maxHoogte / imgProps.height;
+    if (berekendeHoogte > beschikbareHoogte) {
+      const schaalH = beschikbareHoogte / imgProps.height;
       finaleBreedte = imgProps.width * schaalH;
-      finaleHoogte = maxHoogte;
+      finaleHoogte = beschikbareHoogte;
     }
 
     // Centreer horizontaal
     const xOffset = (pageWidth - finaleBreedte) / 2;
     pdf.addImage(imgData, 'PNG', xOffset, marge, finaleBreedte, finaleHoogte);
+
+    // Voettekst: schoollogo onderaan (binnen afdrukgebied, dus marge vanaf rand)
+    if (logoDataUrl) {
+      const logoHoogte = 20; // mm
+      const logoBreedte = logoHoogte * logoRatio;
+      const logoX = (pageWidth - logoBreedte) / 2;
+      const logoY = pageHeight - marge - logoHoogte;
+      pdf.addImage(logoDataUrl, 'PNG', logoX, logoY, logoBreedte, logoHoogte);
+    }
 
     // voortgang
     const progress = Math.round(((i + 1) / gesorteerdeLeerlingen.length) * 100);
