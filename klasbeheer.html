@@ -9,6 +9,13 @@
 <meta name="theme-color" content="#4A90E2">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script>
+  // Worker-pad voor pdf.js (nodig om PDFs te kunnen lezen)
+  if (window.pdfjsLib) {
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+  }
+</script>
 <style>
   :root {
     --tekst: #3d3a36;
@@ -1208,6 +1215,7 @@
       <button class="tab" data-tab="lyreco">🖍️ Lyreco</button>
       <button class="tab" data-tab="stock">📦 Stock klasmateriaal</button>
       <button class="tab" data-tab="knutsel">✂️ Knutselideetjes</button>
+      <button class="tab" data-tab="archief">📁 Archief</button>
       <button class="tab" data-tab="instellingen">⚙️ Instellingen</button>
     </div>
 
@@ -1248,8 +1256,9 @@
           </div>
         </div>
 
-        <div style="margin-bottom: 20px;">
+        <div style="margin-bottom: 20px; display:flex; gap:10px; flex-wrap:wrap;">
           <button class="knop groen" onclick="pdfWerkboeken()">📄 Mooi overzicht (PDF)</button>
+          <button class="knop blauw" onclick="werkboekenResetten()" title="Alleen stock-cijfers van het actieve leerjaar terug op 0. Methodes en delen blijven behouden.">🔄 Stock van dit leerjaar op 0</button>
         </div>
 
         <div class="samenvatting" id="wb-stats"></div>
@@ -1295,6 +1304,31 @@
 
         <div style="margin-bottom: 20px; display:flex; gap:10px; flex-wrap:wrap;">
           <button class="knop groen" onclick="pdfLyreco()">📄 Mooi overzicht voor collega's (PDF)</button>
+          <button class="knop blauw" onclick="document.getElementById('lyreco-pdf-upload').click()" title="Importeer artikels uit je Lyreco bestelbevestiging-PDF">
+            📥 Importeer uit Lyreco-PDF
+          </button>
+          <input type="file" id="lyreco-pdf-upload" accept=".pdf" style="display:none;" onchange="lyrecoPdfImporteren(event)">
+        </div>
+
+        <!-- IMPORT PREVIEW DIALOOG -->
+        <div id="lyreco-preview-dialoog" style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.5); z-index:1000; overflow:auto; padding:20px;">
+          <div style="background:var(--wit); max-width:900px; margin:20px auto; border-radius:16px; border:2px solid var(--rand-donker); padding:24px; box-shadow:0 10px 40px rgba(0,0,0,0.3);">
+            <h3 style="margin:0 0 10px 0;">📥 Importeren uit Lyreco-PDF</h3>
+            <p id="lyreco-preview-info" style="color:var(--tekst-zacht); margin-bottom:16px;"></p>
+
+            <div id="lyreco-preview-inhoud" style="max-height:60vh; overflow-y:auto; border:1.5px solid var(--rand); border-radius:10px; padding:12px; margin-bottom:16px;">
+              <!-- Preview-tabel komt hier -->
+            </div>
+
+            <div style="background:var(--geel-licht); border-left:4px solid var(--accent); padding:10px 14px; border-radius:6px; font-size:0.9em; margin-bottom:16px;">
+              <strong>Let op:</strong> BTW staat standaard op 21%. Voor papier/boeken (6% BTW) kan je dit nadien per rij aanpassen in de tabel.
+            </div>
+
+            <div style="display:flex; gap:10px; justify-content:flex-end; flex-wrap:wrap;">
+              <button class="knop grijs" onclick="lyrecoImportAnnuleren()">Annuleren</button>
+              <button class="knop groen" id="lyreco-import-bevestig" onclick="lyrecoImportBevestigen()">✓ Toevoegen aan mijn lijst</button>
+            </div>
+          </div>
         </div>
 
         <div class="budget-blok">
@@ -1423,6 +1457,7 @@
         <div style="margin-bottom: 20px; display:flex; gap:10px; flex-wrap:wrap;">
           <button class="knop groen" onclick="pdfStock()">📄 Volledig overzicht (PDF)</button>
           <button class="knop blauw" onclick="stockBestellijstPdf()">🛒 Bestellijst per winkel (PDF)</button>
+          <button class="knop" style="background:var(--rood-licht);color:var(--rood-zacht);" onclick="stockResetten()" title="Alle L1/L2/bestel op 0">🔄 Tellingen op 0</button>
         </div>
 
         <div class="samenvatting" id="stock-stats"></div>
@@ -1517,6 +1552,23 @@
             <button class="knop klein" onclick="window.print()">🖨️ Afdrukken</button>
           </h3>
           <ul id="kn-bestel-lijst"></ul>
+        </div>
+      </section>
+
+      <!-- ============ ARCHIEF ============ -->
+      <section id="paneel-archief" class="paneel">
+        <h2>📁 Archief vorige schooljaren</h2>
+        <p class="sub">Hier vind je de Lyreco-bestellingen en Action-aankopen van vorige schooljaren terug. Handig om bestelnummers op te zoeken of een oude bestelling te kopiëren. Maximum <strong>3 schooljaren</strong> worden bewaard — bij een 4e "Nieuw schooljaar" verdwijnt het oudste.</p>
+
+        <div id="archief-lijst" style="margin-top: 20px;"></div>
+
+        <div id="archief-detail" style="display:none; margin-top: 24px; background: var(--wit); border: 2px solid var(--accent); border-radius: 12px; padding: 20px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 14px; padding-bottom: 12px; border-bottom: 2px solid var(--rand);">
+            <h3 style="margin:0;">Bekijken: schooljaar <span id="archief-detail-schooljaar"></span></h3>
+            <button class="knop klein" onclick="archiefVerbergen()">✕ Sluiten</button>
+          </div>
+          <div id="archief-detail-lyreco"></div>
+          <div id="archief-detail-action"></div>
         </div>
       </section>
 
