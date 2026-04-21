@@ -131,6 +131,7 @@ function standaardData(eigenaarUid, eigenaarEmail) {
     lyreco: [],
     actions: [],
     knutsels: [],
+    archief: [],
 
     stockCats: [
       {
@@ -378,6 +379,7 @@ function normaliseerTeamData() {
   if (!Array.isArray(teamData.actions)) teamData.actions = [];
   if (!Array.isArray(teamData.knutsels)) teamData.knutsels = [];
   if (!Array.isArray(teamData.stockCats)) teamData.stockCats = [];
+  if (!Array.isArray(teamData.archief)) teamData.archief = [];
   if (!Array.isArray(teamData.leden_emails)) teamData.leden_emails = [];
   if (!Array.isArray(teamData.leden_uids)) teamData.leden_uids = [];
   if (typeof teamData.budget !== 'number') teamData.budget = 0;
@@ -498,6 +500,7 @@ async function bewaarNu() {
       actions: teamData.actions,
       knutsels: teamData.knutsels,
       stockCats: teamData.stockCats,
+      archief: teamData.archief || [],
       laatst_gewijzigd: serverTimestamp()
     });
     zetSyncStatus('✓ Bewaard in cloud', false);
@@ -1059,6 +1062,279 @@ window.lyrecoVerwijderen = function (id) {
   teamData.lyreco = teamData.lyreco.filter(x => x.id !== id);
   planBewaren();
   lyrecoTonen();
+};
+
+// ==============================================
+// LYRECO PDF-IMPORT
+// ==============================================
+// Globale plek om voorbereide import-artikels te bewaren tussen preview en bevestiging
+let lyrecoImportKandidaten = [];
+
+window.lyrecoPdfImporteren = async function (event) {
+  const bestand = event.target.files[0];
+  if (!bestand) return;
+  event.target.value = ''; // reset zodat hetzelfde bestand opnieuw kan gekozen worden
+
+  if (!window.pdfjsLib) {
+    alert('PDF-bibliotheek is niet geladen. Ververs de pagina en probeer opnieuw.');
+    return;
+  }
+
+  try {
+    // PDF inlezen
+    const arrayBuffer = await bestand.arrayBuffer();
+    const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+
+    // Alle tekst van alle pagina's verzamelen
+    let volledigeTekst = '';
+    for (let i = 1; i <= pdf.numPages; i++) {
+      const page = await pdf.getPage(i);
+      const content = await page.getTextContent();
+      // Reconstrueer tekst regel-per-regel op basis van y-coördinaat
+      const items = content.items.map(it => ({
+        tekst: it.str,
+        x: it.transform[4],
+        y: it.transform[5]
+      }));
+      // Sorteer op y (omgekeerd - PDF heeft origin links-onder) dan op x
+      items.sort((a, b) => {
+        if (Math.abs(a.y - b.y) > 3) return b.y - a.y;
+        return a.x - b.x;
+      });
+      // Groepeer tot regels
+      let laatstY = null;
+      let regel = '';
+      items.forEach(it => {
+        if (laatstY !== null && Math.abs(laatstY - it.y) > 3) {
+          volledigeTekst += regel.trim() + '\n';
+          regel = '';
+        }
+        regel += ' ' + it.tekst;
+        laatstY = it.y;
+      });
+      volledigeTekst += regel.trim() + '\n\n'; // pagina-einde
+    }
+
+    // Parseer de tekst
+    const artikels = parseerLyrecoTekst(volledigeTekst);
+
+    if (artikels.length === 0) {
+      alert('❌ Geen artikels gevonden in deze PDF.\n\n' +
+            'Controleer of het de juiste Lyreco-bestelbevestiging is. ' +
+            'Als de tekst in de PDF niet te selecteren is (ingescand beeld), kan import niet werken.');
+      return;
+    }
+
+    // Toon preview
+    lyrecoImportKandidaten = artikels;
+    toonLyrecoPreview(artikels, bestand.name);
+
+  } catch (err) {
+    console.error('PDF-leesfout:', err);
+    alert('❌ Kon de PDF niet lezen.\n\nFoutmelding: ' + (err.message || err));
+  }
+};
+
+// Parseer de platte tekst van een Lyreco-PDF naar artikel-objecten
+function parseerLyrecoTekst(tekst) {
+  const artikels = [];
+
+  // Splits in blokken: elk artikel begint bij een "Referentie:" en de omschrijving staat ervóór
+  // We zoeken naar alle "Referentie: X.XXX.XXX" occurrences en werken terug
+  const refRegex = /Referentie:\s*([\d.]+)/g;
+  const matches = [];
+  let m;
+  while ((m = refRegex.exec(tekst)) !== null) {
+    matches.push({ ref: m[1].trim(), index: m.index });
+  }
+
+  if (matches.length === 0) return [];
+
+  // Verzamel start- en eindposities van elk artikel-blok
+  for (let i = 0; i < matches.length; i++) {
+    const startBlok = i === 0 ? 0 : matches[i - 1].index;
+    const eindBlok = i < matches.length - 1 ? matches[i + 1].index : tekst.length;
+    const blok = tekst.substring(startBlok, eindBlok);
+
+    // Zoek binnen dit blok de data:
+    // - Omschrijving = alles tussen vorige artikel en "Referentie:" (of tussen start en referentie)
+    // - Aantal = "X stuk" of "X,X stuk"
+    // - Prijzen = twee "X,XX EUR" opeenvolgend
+
+    const refIndex = blok.indexOf('Referentie:');
+    if (refIndex === -1) continue;
+
+    const voorRef = blok.substring(0, refIndex);
+    const naRef = blok.substring(refIndex);
+
+    // Omschrijving: laatste paar regels voor "Referentie:"
+    // Filter regels die informatie zijn zoals "Bedankt voor..." weg
+    const voorRefRegels = voorRef.split('\n').map(r => r.trim()).filter(r => r.length > 0);
+    // Neem de laatste 1-3 regels vóór Referentie (typisch 1-2 regels omschrijving)
+    let omschrijving = '';
+    // Filter uit de regels alles wat evident geen omschrijving is
+    const filterPatronen = [
+      /^Bedankt/i, /^Jouw bestelling/i, /^Ordermethode/i, /^Orderdatum/i,
+      /^Nummer/i, /^Rekwisitie/i, /^Klantnummer/i, /^Lindestraat/i, /^\d{4}\s+BORNEM/i,
+      /^Leveringsdatum/i, /^Ter attentie/i, /^BS de linde/i, /^Isabel/i,
+      /^Orderoverzicht/i, /^Bestelinformatie/i, /^Facturatiegegevens/i, /^Informatie levering/i,
+      /^Omschrijving/i, /^Eenh$/i, /^Eenheidsprijs/i, /^Prijs$/i, /^\d{4}-\d{4}/,
+      /^EUR$/i, /^\d+,\d{2}\s*EUR/i, /^\d+\s*stuk/i, /^Beschikbaar:/i,
+      /^\(\d+\)$/, /^Referentie:/i, /^Om deze/i, /^no_reply/i, /^Working together/i,
+      /^For tomorrow/i, /^Lyreco$/i
+    ];
+    const nuttig = voorRefRegels.filter(r => !filterPatronen.some(p => p.test(r)));
+    // Neem de laatste 1-2 regels als omschrijving
+    if (nuttig.length > 0) {
+      omschrijving = nuttig.slice(-2).join(' ').trim();
+    }
+
+    // Aantal: zoek "X stuk" patroon
+    let aantal = 1;
+    const aantalMatch = blok.match(/(\d+(?:,\d+)?)\s+stuk/i);
+    if (aantalMatch) {
+      aantal = parseInt(aantalMatch[1].replace(',', '.')) || 1;
+    }
+
+    // Prijzen: zoek alle "X,XX EUR" patronen in dit blok
+    const prijsRegex = /(\d+(?:\.\d{3})*(?:,\d{1,2}))\s*EUR/g;
+    const prijzen = [];
+    let pm;
+    while ((pm = prijsRegex.exec(blok)) !== null) {
+      const pStr = pm[1].replace(/\./g, '').replace(',', '.');
+      const p = parseFloat(pStr);
+      if (!isNaN(p)) prijzen.push(p);
+    }
+
+    // Eerste prijs = eenheidsprijs, laatste prijs = totaal (meestal 2 bedragen)
+    let prijsPerStuk = 0;
+    if (prijzen.length >= 2) {
+      prijsPerStuk = prijzen[0];
+    } else if (prijzen.length === 1) {
+      // Alleen totaal beschikbaar → deel door aantal
+      prijsPerStuk = aantal > 0 ? prijzen[0] / aantal : prijzen[0];
+    }
+
+    if (omschrijving && matches[i].ref) {
+      artikels.push({
+        artikel: omschrijving,
+        nr: matches[i].ref,
+        bestel: aantal,
+        prijs: prijsPerStuk,
+        btw: 21, // Standaard 21%, gebruiker kan aanpassen
+        stock: 0,
+        min: 0
+      });
+    }
+  }
+
+  return artikels;
+}
+
+function toonLyrecoPreview(artikels, bestandsnaam) {
+  const dlg = document.getElementById('lyreco-preview-dialoog');
+  const info = document.getElementById('lyreco-preview-info');
+  const inhoud = document.getElementById('lyreco-preview-inhoud');
+
+  info.textContent = `Uit "${bestandsnaam}" werden ${artikels.length} artikel${artikels.length === 1 ? '' : 's'} herkend. Controleer hieronder en pas aan indien nodig.`;
+
+  let totaal = 0;
+  const rijen = artikels.map((a, idx) => {
+    const subIncl = a.prijs * a.bestel * 1.21;
+    totaal += subIncl;
+    return `
+      <tr>
+        <td style="padding:6px; vertical-align:middle;">
+          <input type="checkbox" id="ly-imp-${idx}" checked style="transform:scale(1.2); cursor:pointer;">
+        </td>
+        <td style="padding:6px;">
+          <input type="text" value="${escape(a.artikel)}" class="tabel-input" style="width:100%; text-align:left;"
+            onchange="lyrecoImportKandidaten[${idx}].artikel=this.value">
+        </td>
+        <td style="padding:6px;">
+          <input type="text" value="${escape(a.nr)}" class="tabel-input" style="width:100%; text-align:left;"
+            onchange="lyrecoImportKandidaten[${idx}].nr=this.value">
+        </td>
+        <td style="padding:6px;">
+          <input type="number" min="0" value="${a.bestel}" class="tabel-input klein"
+            onchange="lyrecoImportKandidaten[${idx}].bestel=parseInt(this.value)||0">
+        </td>
+        <td style="padding:6px;">
+          <input type="number" min="0" step="0.01" value="${a.prijs.toFixed(2)}" class="tabel-input"
+            onchange="lyrecoImportKandidaten[${idx}].prijs=parseFloat(this.value)||0">
+        </td>
+        <td style="padding:6px;">
+          <select class="tabel-input klein" style="width:70px; text-align:left;"
+            onchange="lyrecoImportKandidaten[${idx}].btw=parseInt(this.value)||21">
+            <option value="6" ${a.btw == 6 ? 'selected' : ''}>6%</option>
+            <option value="21" ${a.btw == 21 ? 'selected' : ''}>21%</option>
+          </select>
+        </td>
+      </tr>
+    `;
+  }).join('');
+
+  inhoud.innerHTML = `
+    <table class="vol" style="width:100%;">
+      <thead>
+        <tr>
+          <th style="width:40px;">✓</th>
+          <th>Artikel</th>
+          <th>Bestelnr</th>
+          <th>Aantal</th>
+          <th>Prijs/st</th>
+          <th>BTW</th>
+        </tr>
+      </thead>
+      <tbody>${rijen}</tbody>
+      <tfoot>
+        <tr style="background:var(--creme-warm); font-weight:800;">
+          <td colspan="5">GESCHAT TOTAAL (incl. 21% BTW)</td>
+          <td colspan="1" style="text-align:right;">€ ${totaal.toFixed(2)}</td>
+        </tr>
+      </tfoot>
+    </table>
+  `;
+
+  dlg.style.display = 'block';
+}
+
+window.lyrecoImportAnnuleren = function () {
+  document.getElementById('lyreco-preview-dialoog').style.display = 'none';
+  lyrecoImportKandidaten = [];
+};
+
+window.lyrecoImportBevestigen = function () {
+  const geselecteerd = lyrecoImportKandidaten.filter((_, idx) => {
+    const cb = document.getElementById('ly-imp-' + idx);
+    return cb && cb.checked;
+  });
+
+  if (geselecteerd.length === 0) {
+    alert('Geen artikels aangevinkt om toe te voegen.');
+    return;
+  }
+
+  // Voeg toe aan bestaande lijst (geen vervanging)
+  geselecteerd.forEach(a => {
+    teamData.lyreco.push({
+      id: maakId(),
+      artikel: a.artikel,
+      nr: a.nr,
+      prijs: a.prijs,
+      btw: a.btw || 21,
+      bestel: a.bestel,
+      stock: 0,
+      min: 0
+    });
+  });
+
+  planBewaren();
+  lyrecoTonen();
+  document.getElementById('lyreco-preview-dialoog').style.display = 'none';
+  lyrecoImportKandidaten = [];
+
+  alert(`✅ ${geselecteerd.length} artikel${geselecteerd.length === 1 ? '' : 's'} toegevoegd aan je Lyreco-lijst.\n\nControleer nog even de BTW-tarieven: papier en boeken hebben meestal 6%, de rest 21%.`);
 };
 
 // ==============================================
@@ -2207,16 +2483,284 @@ window.importeren = function (event) {
   reader.readAsText(bestand);
 };
 
-window.nieuwSchooljaar = function () {
-  if (!confirm('Alle stock van werkboeken gaat naar 0, Action-aankopen en budget worden leeggemaakt. Lyreco-artikels, knutsels en stock-klasmateriaal blijven. Doorgaan?')) return;
+// ==============================================
+// NIEUW SCHOOLJAAR + ARCHIEF
+// ==============================================
 
-  ['L1', 'L2'].forEach(lj => {
-    (teamData.werkboeken[lj] || []).forEach(m => {
-      m.delen.forEach(d => { d.stock = 0; });
-    });
+// Max 3 schooljaren in archief bewaren (FIFO: oudste verdwijnt)
+const MAX_ARCHIEF = 3;
+
+window.nieuwSchooljaar = function () {
+  const huidigJaar = teamData.instellingen.schooljaar || '';
+  const lyrecoAantal = teamData.lyreco.length;
+  const actionAantal = teamData.actions.length;
+
+  // Bereken totalen voor de dialoog
+  let lyrecoTotaal = 0;
+  teamData.lyreco.forEach(l => {
+    lyrecoTotaal += (l.prijs || 0) * (l.bestel || 0) * (1 + (l.btw || 0) / 100);
   });
+  let actionTotaal = 0;
+  teamData.actions.forEach(a => { actionTotaal += (a.prijs || 0); });
+
+  // Bereken wat er uit archief verdwijnt als we 3 al hebben
+  const archief = teamData.archief || [];
+  let verdwijntBericht = '';
+  if (archief.length >= MAX_ARCHIEF) {
+    const oudste = archief[0]; // eerste element = oudste
+    verdwijntBericht = `\n\n⚠️ LET OP: schooljaar "${oudste.schooljaar}" wordt uit archief verwijderd (maximaal ${MAX_ARCHIEF} jaren bewaren).\n   → Maak eerst een back-up in Instellingen als je deze data wil bewaren!`;
+  }
+
+  const bericht = `🔄 Nieuw schooljaar starten\n\n` +
+    `Huidig schooljaar: ${huidigJaar || '(niet ingesteld)'}\n\n` +
+    `Wat gebeurt er?\n\n` +
+    `📦 Lyreco (${lyrecoAantal} artikels, €${lyrecoTotaal.toFixed(2)}) → naar archief\n` +
+    `🛍️ Action (${actionAantal} aankopen, €${actionTotaal.toFixed(2)}) → naar archief\n` +
+    `💰 Budget → terug op 0\n` +
+    `📦 Stock klasmateriaal → alles op 0\n` +
+    `📚 Werkboeken → BLIJVEN zoals ze zijn\n` +
+    `   (elke leerkracht reset zelf via "Stock van dit leerjaar op 0")\n` +
+    `✂️ Knutselideetjes → blijven (filter per jaar werkt)` +
+    verdwijntBericht +
+    `\n\nDoorgaan?`;
+
+  if (!confirm(bericht)) return;
+
+  // Vraag nieuw schooljaar
+  const nieuwJaar = prompt('Wat is het nieuwe schooljaar?', vorigschooljaarPlusEen(huidigJaar));
+  if (nieuwJaar === null || !nieuwJaar.trim()) {
+    alert('Geannuleerd. Er is niets gewijzigd.');
+    return;
+  }
+
+  // 1. Archiveer huidige Lyreco en Action
+  if (lyrecoAantal > 0 || actionAantal > 0) {
+    archief.push({
+      schooljaar: huidigJaar || 'onbekend',
+      gearchiveerd_op: new Date().toISOString(),
+      lyreco: JSON.parse(JSON.stringify(teamData.lyreco)),
+      actions: JSON.parse(JSON.stringify(teamData.actions)),
+      lyreco_totaal_incl: lyrecoTotaal,
+      action_totaal: actionTotaal
+    });
+  }
+
+  // 2. Houd alleen de laatste MAX_ARCHIEF bij (FIFO)
+  while (archief.length > MAX_ARCHIEF) {
+    archief.shift();
+  }
+  teamData.archief = archief;
+
+  // 3. Reset huidige data
+  teamData.lyreco = [];
   teamData.actions = [];
   teamData.budget = 0;
-  planBewaren();
-  alert('Stock van werkboeken is gereset. Action-aankopen en budget zijn leeggemaakt.');
+
+  // BELANGRIJK: werkboeken-stock wordt NIET meer automatisch gereset.
+  // Elke leerkracht moet dit zelf doen via "Stock van dit leerjaar op 0" knop,
+  // zodat de collega's stock niet per ongeluk wordt gewist.
+
+  // Stock klasmateriaal: alle L1/L2/bestel op 0
+  (teamData.stockCats || []).forEach(cat => {
+    (cat.producten || []).forEach(p => {
+      p.l1 = 0;
+      p.l2 = 0;
+      p.bestel = 0;
+    });
+  });
+
+  // 4. Schooljaar updaten
+  teamData.instellingen.schooljaar = nieuwJaar.trim();
+
+  bewaarNu();
+  allesRenderen();
+  alert(`✅ Nieuw schooljaar "${nieuwJaar.trim()}" gestart!\n\n` +
+    `📦 Lyreco en Action zijn gearchiveerd.\n` +
+    `📦 Stock klasmateriaal staat op 0.\n` +
+    `💰 Budget staat op 0.\n\n` +
+    `📚 De werkboeken-stock is NIET gereset.\n` +
+    `   Jij en je collega kunnen elk apart de stock van jullie leerjaar\n` +
+    `   resetten via de knop "Stock van dit leerjaar op 0" in de werkboeken-tab.`);
 };
+
+// Helper: probeer volgend schooljaar te berekenen (bv. "2026-2027" → "2027-2028")
+function vorigschooljaarPlusEen(jaar) {
+  if (!jaar) return '';
+  const match = jaar.match(/^(\d{4})-(\d{4})$/);
+  if (match) {
+    const j1 = parseInt(match[1]) + 1;
+    const j2 = parseInt(match[2]) + 1;
+    return j1 + '-' + j2;
+  }
+  return jaar;
+}
+
+// ==============================================
+// STOCK KLASMATERIAAL: reset-knop
+// ==============================================
+window.stockResetten = function () {
+  if (!confirm('Alle tellingen van stock klasmateriaal (L1, L2 en te bestellen) worden op 0 gezet.\n\nDe productlijst en categorieën blijven bewaard.\n\nDoorgaan?')) return;
+
+  (teamData.stockCats || []).forEach(cat => {
+    (cat.producten || []).forEach(p => {
+      p.l1 = 0;
+      p.l2 = 0;
+      p.bestel = 0;
+    });
+  });
+  planBewaren();
+  stockTonen();
+  alert('✅ Alle stock-tellingen zijn op 0 gezet.');
+};
+
+// ==============================================
+// WERKBOEKEN: reset stock knop (los van nieuw schooljaar)
+// ==============================================
+window.werkboekenResetten = function () {
+  const lj = huidigLeerjaar === 'L1' ? 'Leerjaar 1' : 'Leerjaar 2';
+  const anderLj = huidigLeerjaar === 'L1' ? 'Leerjaar 2' : 'Leerjaar 1';
+  const aantalMethodes = (teamData.werkboeken[huidigLeerjaar] || []).length;
+
+  const bericht = `🔄 Stock resetten voor ${lj}\n\n` +
+    `✓ Alle stock-cijfers van ${lj} → terug op 0\n` +
+    `✓ ${aantalMethodes} methode(s) en alle delen → blijven behouden\n` +
+    `✓ ${anderLj} → wordt NIET aangeraakt\n\n` +
+    `Doorgaan?`;
+
+  if (!confirm(bericht)) return;
+
+  (teamData.werkboeken[huidigLeerjaar] || []).forEach(m => {
+    m.delen.forEach(d => { d.stock = 0; });
+  });
+  planBewaren();
+  werkboekenTonen();
+  alert(`✅ Stock van ${lj} is op 0 gezet.\n\nDe werkboeken-lijst bleef ongewijzigd.`);
+};
+
+// ==============================================
+// ARCHIEF BEKIJKEN
+// ==============================================
+window.archiefBekijken = function (index) {
+  const item = (teamData.archief || [])[index];
+  if (!item) return;
+
+  // Open een dialoog (of scroll naar een div) met de archief-data
+  document.getElementById('archief-detail-schooljaar').textContent = item.schooljaar;
+  const lyDiv = document.getElementById('archief-detail-lyreco');
+  const acDiv = document.getElementById('archief-detail-action');
+
+  // Lyreco tabel
+  if (item.lyreco && item.lyreco.length > 0) {
+    let html = '<h4 style="margin-bottom:10px;">🖍️ Lyreco-bestelling (' + item.lyreco.length + ' artikels)</h4>';
+    html += '<table class="vol"><thead><tr><th>Artikel</th><th>Bestelnr</th><th class="getal">Aantal</th><th class="getal">Prijs/st</th><th class="getal">BTW</th><th class="getal">Totaal incl.</th></tr></thead><tbody>';
+    let tot = 0;
+    item.lyreco.forEach(ly => {
+      const incl = (ly.prijs || 0) * (ly.bestel || 0) * (1 + (ly.btw || 0) / 100);
+      tot += incl;
+      html += `<tr><td>${escape(ly.artikel || '')}</td><td>${escape(ly.nr || '')}</td><td class="getal">${ly.bestel || 0}</td><td class="getal">€ ${(ly.prijs || 0).toFixed(2)}</td><td class="getal">${ly.btw || 0}%</td><td class="getal">€ ${incl.toFixed(2)}</td></tr>`;
+    });
+    html += `<tr style="background:var(--creme-warm);font-weight:800;"><td colspan="5">TOTAAL</td><td class="getal">€ ${tot.toFixed(2)}</td></tr>`;
+    html += '</tbody></table>';
+    html += `<div style="margin-top:14px;display:flex;gap:10px;flex-wrap:wrap;">
+      <button class="knop klein blauw" onclick="archiefKopieerLyreco(${index})">📋 Kopieer deze Lyreco-bestelling naar huidig jaar</button>
+    </div>`;
+    lyDiv.innerHTML = html;
+  } else {
+    lyDiv.innerHTML = '<p style="color:var(--grijs);font-style:italic;">Geen Lyreco-bestelling in dit schooljaar.</p>';
+  }
+
+  // Action tabel
+  if (item.actions && item.actions.length > 0) {
+    let html = '<h4 style="margin-top:20px; margin-bottom:10px;">🛍️ Action &amp; andere aankopen (' + item.actions.length + ')</h4>';
+    html += '<table class="vol"><thead><tr><th>Datum</th><th>Wat</th><th>Winkel</th><th class="getal">Bedrag</th></tr></thead><tbody>';
+    let tot = 0;
+    item.actions.forEach(a => {
+      tot += (a.prijs || 0);
+      html += `<tr><td>${escape(a.datum || '')}</td><td>${escape(a.naam || '')}</td><td>${escape(a.winkel || '')}</td><td class="getal">€ ${(a.prijs || 0).toFixed(2)}</td></tr>`;
+    });
+    html += `<tr style="background:var(--creme-warm);font-weight:800;"><td colspan="3">TOTAAL</td><td class="getal">€ ${tot.toFixed(2)}</td></tr>`;
+    html += '</tbody></table>';
+    acDiv.innerHTML = html;
+  } else {
+    acDiv.innerHTML = '<p style="color:var(--grijs);font-style:italic;">Geen Action-aankopen in dit schooljaar.</p>';
+  }
+
+  document.getElementById('archief-detail').style.display = 'block';
+  // Scroll naar detail
+  document.getElementById('archief-detail').scrollIntoView({ behavior: 'smooth', block: 'start' });
+};
+
+window.archiefVerbergen = function () {
+  document.getElementById('archief-detail').style.display = 'none';
+};
+
+window.archiefKopieerLyreco = function (index) {
+  const item = (teamData.archief || [])[index];
+  if (!item || !item.lyreco || item.lyreco.length === 0) return;
+  if (!confirm(`${item.lyreco.length} artikels uit schooljaar ${item.schooljaar} toevoegen aan huidige Lyreco-bestelling?\n\nLet op: de huidige Lyreco-lijst wordt NIET leeggemaakt. De gekopieerde artikels worden eraan toegevoegd.`)) return;
+
+  item.lyreco.forEach(ly => {
+    teamData.lyreco.push({
+      id: maakId(),
+      artikel: ly.artikel || '',
+      nr: ly.nr || '',
+      prijs: ly.prijs || 0,
+      btw: ly.btw || 21,
+      bestel: ly.bestel || 0,
+      stock: 0, // reset stock (is tenslotte nieuwe bestelling)
+      min: ly.min || 0
+    });
+  });
+
+  planBewaren();
+  lyrecoTonen();
+  alert(`✅ ${item.lyreco.length} artikels toegevoegd aan Lyreco-bestelling.\n\nJe vindt ze nu onder de Lyreco-tab.`);
+  // Schakel naar Lyreco-tab
+  const lyrecoTab = document.querySelector('.tab[data-tab="lyreco"]');
+  if (lyrecoTab) lyrecoTab.click();
+};
+
+function archiefTonen() {
+  if (!teamData) return;
+  const container = document.getElementById('archief-lijst');
+  if (!container) return;
+
+  const archief = teamData.archief || [];
+
+  if (archief.length === 0) {
+    container.innerHTML = `
+      <div style="text-align:center;padding:40px 20px;color:var(--grijs);font-style:italic;">
+        <div style="font-size:3em;margin-bottom:14px;opacity:0.4;">📁</div>
+        Nog geen gearchiveerde schooljaren. Zodra je een "Nieuw schooljaar" start via Instellingen, komen de oude Lyreco en Action-gegevens hier terecht (max ${MAX_ARCHIEF} schooljaren).
+      </div>
+    `;
+    return;
+  }
+
+  // Toon nieuwste bovenaan (reverse)
+  const lijst = [...archief].map((item, origIdx) => ({ ...item, origIdx })).reverse();
+
+  container.innerHTML = lijst.map(item => {
+    const ly = item.lyreco || [];
+    const ac = item.actions || [];
+    const datum = item.gearchiveerd_op ? new Date(item.gearchiveerd_op).toLocaleDateString('nl-BE') : '';
+    return `
+      <div style="background:var(--creme-warm); border:1.5px solid var(--rand-donker); border-radius:12px; padding:16px 20px; margin-bottom:14px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap;">
+          <div>
+            <h3 style="margin:0;font-size:1.15em;">📅 Schooljaar ${escape(item.schooljaar || 'onbekend')}</h3>
+            <div style="font-size:0.85em;color:var(--tekst-zacht);margin-top:4px;">
+              🖍️ ${ly.length} Lyreco-artikels · 🛍️ ${ac.length} Action-aankopen
+              ${datum ? ' · gearchiveerd op ' + datum : ''}
+            </div>
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <button class="knop klein" onclick="archiefBekijken(${item.origIdx})">👁️ Bekijken</button>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+
