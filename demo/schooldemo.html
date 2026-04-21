@@ -1,0 +1,921 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DEMO — GO! Basisschool De Linde</title>
+<style>
+  :root {
+    --tekst: #3d3a36;
+    --tekst-zacht: #6b655d;
+    --creme: #faf6ef;
+    --creme-warm: #f5ead6;
+    --wit: #ffffff;
+    --accent: #d99775;
+    --accent-donker: #b87858;
+    --groen: #9ec4a3;
+    --groen-licht: #e8f8e5;
+    --geel: #e8b87a;
+    --geel-licht: #fff4e0;
+    --rood: #d99090;
+    --rood-licht: #fce4e4;
+    --blauw: #a0c2e0;
+    --blauw-licht: #e8f1fb;
+    --rand: #e4dccf;
+    --rand-donker: #6b5d52;
+    --schaduw: rgba(107, 93, 82, 0.15);
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background: var(--creme);
+    color: var(--tekst);
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+  }
+
+  /* DEMO-BANNER (bovenaan paars om aan te geven dat het DEMO is) */
+  .demo-banner {
+    background: linear-gradient(90deg, #8b4f9f, #a56bb5);
+    color: white;
+    padding: 10px 20px;
+    text-align: center;
+    font-size: 0.9em;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  }
+  .demo-banner a { color: #fff; text-decoration: underline; margin-left: 12px; font-weight: 400; font-size: 0.9em; }
+
+  /* ROL-SCHAKELAAR */
+  .rol-balk {
+    background: var(--wit);
+    border-bottom: 2px solid var(--rand);
+    padding: 10px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .rol-balk-links {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .rol-balk strong { color: var(--accent-donker); }
+
+  .rol-balk select {
+    padding: 6px 10px;
+    border: 1.5px solid var(--rand-donker);
+    border-radius: 8px;
+    background: var(--wit);
+    font-family: inherit;
+    font-size: 0.95em;
+    cursor: pointer;
+  }
+
+  .rol-knop {
+    padding: 8px 14px;
+    border: 1.5px solid var(--rand-donker);
+    background: var(--wit);
+    border-radius: 20px;
+    font-family: inherit;
+    font-size: 0.9em;
+    font-weight: 600;
+    cursor: pointer;
+    color: var(--tekst);
+    transition: all 0.15s;
+  }
+  .rol-knop:hover { background: var(--creme-warm); }
+  .rol-knop.actief {
+    background: var(--accent);
+    color: var(--wit);
+    border-color: var(--accent-donker);
+  }
+
+  /* HEADER */
+  .container {
+    max-width: 1600px;
+    margin: 24px auto;
+    padding: 0 20px;
+  }
+
+  /* Bij brede tabel-modules mag de container nog breder, volledig scherm benutten */
+  .container.breed {
+    max-width: none;
+    padding: 0 24px;
+  }
+
+  header.schoolheader {
+    background: linear-gradient(135deg, #6b5d52 0%, #8a7a6d 100%);
+    color: var(--wit);
+    padding: 18px 28px;
+    border-radius: 16px;
+    border: 2px solid var(--rand-donker);
+    box-shadow: 0 4px 16px var(--schaduw);
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-bottom: 24px;
+  }
+
+  header.schoolheader .logo-plaatsvervanger {
+    flex-shrink: 0;
+    height: 58px;
+    width: 58px;
+    background: var(--wit);
+    border-radius: 10px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.8em;
+  }
+
+  header.schoolheader .titels { flex: 1; min-width: 200px; }
+  header.schoolheader h1 {
+    font-size: 1.5em;
+    font-weight: 900;
+    letter-spacing: -0.3px;
+    margin: 0;
+  }
+  header.schoolheader .ondertitel {
+    font-size: 0.9em;
+    opacity: 0.85;
+    margin-top: 2px;
+  }
+  header.schoolheader .gebruiker-info {
+    font-size: 0.9em;
+    opacity: 0.9;
+    text-align: right;
+  }
+
+  /* MELDINGEN-BANNER */
+  .meldingen {
+    background: var(--wit);
+    border: 2px solid var(--geel);
+    border-radius: 14px;
+    padding: 16px 20px;
+    margin-bottom: 24px;
+    box-shadow: 0 2px 8px var(--schaduw);
+  }
+  .meldingen h3 {
+    margin: 0 0 10px 0;
+    color: var(--accent-donker);
+    font-size: 1em;
+  }
+  .melding {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    border-radius: 10px;
+    margin-bottom: 8px;
+    font-size: 0.95em;
+  }
+  .melding:last-child { margin-bottom: 0; }
+  .melding.geel { background: var(--geel-licht); border-left: 4px solid var(--geel); }
+  .melding.rood { background: var(--rood-licht); border-left: 4px solid var(--rood); }
+  .melding .melding-tekst { flex: 1; }
+  .melding .melding-knop {
+    padding: 6px 12px;
+    border: 1.5px solid var(--rand-donker);
+    background: var(--wit);
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 0.85em;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .melding .melding-knop:hover { background: var(--creme-warm); }
+
+  /* KEUZESCHERM VOOR LEERKRACHT */
+  .tegel-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+
+  .tegel {
+    background: var(--wit);
+    border: 2px solid var(--rand);
+    border-radius: 14px;
+    padding: 20px;
+    cursor: pointer;
+    transition: all 0.15s;
+    box-shadow: 0 2px 8px var(--schaduw);
+    text-align: left;
+    font-family: inherit;
+    color: var(--tekst);
+  }
+  .tegel:hover {
+    border-color: var(--accent);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px var(--schaduw);
+  }
+  .tegel .icoon {
+    font-size: 2em;
+    margin-bottom: 10px;
+  }
+  .tegel h3 {
+    margin: 0 0 6px 0;
+    font-size: 1.1em;
+    color: var(--accent-donker);
+  }
+  .tegel p {
+    margin: 0;
+    font-size: 0.9em;
+    color: var(--tekst-zacht);
+    line-height: 1.4;
+  }
+  .tegel .badge {
+    display: inline-block;
+    margin-top: 10px;
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-size: 0.8em;
+    font-weight: 700;
+  }
+  .tegel .badge.groen { background: var(--groen-licht); color: #4a7a50; }
+  .tegel .badge.geel { background: var(--geel-licht); color: #a86c20; }
+  .tegel .badge.rood { background: var(--rood-licht); color: #9a3a3a; }
+
+  /* SECRETARIAAT TABEL */
+  .sec-paneel {
+    background: var(--wit);
+    border: 2px solid var(--rand);
+    border-radius: 14px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 8px var(--schaduw);
+  }
+  .sec-paneel h2 {
+    margin: 0 0 14px 0;
+    color: var(--accent-donker);
+    font-size: 1.2em;
+  }
+
+  .sec-tabel {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  .sec-tabel th, .sec-tabel td {
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--rand);
+    text-align: left;
+  }
+  .sec-tabel th {
+    background: var(--creme-warm);
+    font-weight: 700;
+    color: var(--tekst);
+    font-size: 0.9em;
+  }
+  .sec-tabel tr:hover td { background: var(--creme); }
+  .sec-tabel .status-bolletje {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    margin-right: 6px;
+  }
+  .sec-tabel .status-bolletje.groen { background: var(--groen); }
+  .sec-tabel .status-bolletje.geel { background: var(--geel); }
+  .sec-tabel .status-bolletje.rood { background: var(--rood); }
+  .sec-tabel button {
+    padding: 5px 10px;
+    border: 1.5px solid var(--rand-donker);
+    background: var(--wit);
+    border-radius: 6px;
+    font-family: inherit;
+    font-size: 0.85em;
+    cursor: pointer;
+  }
+  .sec-tabel button:hover { background: var(--creme-warm); }
+
+  /* PLACEHOLDER BOODSCHAP */
+  .placeholder {
+    background: var(--blauw-licht);
+    border: 2px dashed var(--blauw);
+    border-radius: 14px;
+    padding: 30px;
+    text-align: center;
+    color: var(--tekst-zacht);
+    margin: 20px 0;
+  }
+  .placeholder h3 { color: var(--accent-donker); margin: 0 0 8px 0; }
+  .placeholder .mini { font-size: 0.85em; margin-top: 8px; }
+
+  /* TERUG-KNOP */
+  .terug-knop {
+    background: var(--wit);
+    border: 1.5px solid var(--rand-donker);
+    padding: 8px 14px;
+    border-radius: 20px;
+    font-family: inherit;
+    font-size: 0.9em;
+    font-weight: 600;
+    cursor: pointer;
+    color: var(--tekst);
+    margin-bottom: 16px;
+  }
+  .terug-knop:hover { background: var(--creme-warm); }
+
+  @media (max-width: 700px) {
+    .rol-balk { padding: 10px 14px; }
+    .rol-balk-links { width: 100%; }
+    header.schoolheader .gebruiker-info { text-align: left; width: 100%; }
+  }
+
+  /* REFTER-MODULE */
+  .refter-wrapper {
+    background: var(--wit);
+    border: 2px solid var(--rand);
+    border-radius: 14px;
+    padding: 20px;
+    box-shadow: 0 2px 8px var(--schaduw);
+  }
+
+  .refter-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 16px;
+    padding-bottom: 14px;
+    border-bottom: 1.5px solid var(--rand);
+  }
+
+  .refter-toolbar .maand-nav {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .refter-toolbar button {
+    padding: 7px 14px;
+    border: 1.5px solid var(--rand-donker);
+    background: var(--wit);
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 0.9em;
+    font-weight: 600;
+    cursor: pointer;
+    color: var(--tekst);
+  }
+  .refter-toolbar button:hover { background: var(--creme-warm); }
+  .refter-toolbar button.groen { background: var(--groen-licht); border-color: var(--groen); }
+  .refter-toolbar button.accent { background: var(--accent); color: var(--wit); border-color: var(--accent-donker); }
+  .refter-toolbar button.accent:hover { background: var(--accent-donker); }
+
+  .refter-toolbar .maand-titel {
+    font-size: 1.2em;
+    font-weight: 700;
+    color: var(--accent-donker);
+    min-width: 150px;
+    text-align: center;
+  }
+
+  .refter-scroller {
+    overflow: auto;
+    border: 1.5px solid var(--rand-donker);
+    border-radius: 10px;
+    /* Neem het grootste deel van het scherm, maar laat ruimte voor toolbar/legende */
+    height: calc(100vh - 340px);
+    min-height: 400px;
+    /* Scrollbar styling voor duidelijkheid */
+    scrollbar-width: thin;
+    scrollbar-color: var(--accent) var(--creme);
+  }
+  .refter-scroller::-webkit-scrollbar {
+    width: 12px;
+    height: 12px;
+  }
+  .refter-scroller::-webkit-scrollbar-track {
+    background: var(--creme);
+    border-radius: 6px;
+  }
+  .refter-scroller::-webkit-scrollbar-thumb {
+    background: var(--accent);
+    border-radius: 6px;
+    border: 2px solid var(--creme);
+  }
+  .refter-scroller::-webkit-scrollbar-thumb:hover {
+    background: var(--accent-donker);
+  }
+
+  .refter-kalender {
+    border-collapse: collapse;
+    font-size: 0.85em;
+    background: var(--wit);
+  }
+
+  .refter-kalender th, .refter-kalender td {
+    border: 1px solid #f0ebe0;
+    padding: 0;
+    text-align: center;
+    vertical-align: middle;
+  }
+
+  /* Eerste kolom = naam, sticky */
+  .refter-kalender th.naam-kop, .refter-kalender td.naam-cel {
+    position: sticky;
+    left: 0;
+    z-index: 2;
+    background: var(--wit);
+    text-align: left;
+    padding: 6px 10px;
+    min-width: 180px;
+    max-width: 220px;
+    border-right: 1.5px solid var(--rand);
+  }
+  .refter-kalender th.naam-kop {
+    background: var(--creme-warm);
+    z-index: 3;
+    top: 0;
+  }
+
+  .refter-kalender thead th {
+    position: sticky;
+    top: 0;
+    background: var(--creme-warm);
+    z-index: 1;
+    padding: 6px 4px;
+    font-weight: 700;
+    min-width: 42px;
+    max-width: 42px;
+    border-bottom: 1.5px solid var(--rand);
+  }
+  .refter-kalender thead th.naam-kop { z-index: 3; }
+
+  .refter-kalender thead .dag-nr { font-size: 0.95em; color: var(--tekst); }
+  .refter-kalender thead .dag-weekdag { font-size: 0.7em; color: var(--tekst-zacht); text-transform: uppercase; margin-top: 1px; }
+
+  /* Kolom-types in header (subtiel grijs i.p.v. kleurig) */
+  .refter-kalender thead th.weekend,
+  .refter-kalender thead th.woensdag,
+  .refter-kalender thead th.vakantie,
+  .refter-kalender thead th.feestdag,
+  .refter-kalender thead th.schoolvrij {
+    background: #f0ebe0;
+    color: #a39a8a;
+  }
+
+  /* Niet-schooldagen: effen, zacht, rustig — géén diagonale strepen meer */
+  .refter-kalender td.weekend,
+  .refter-kalender td.woensdag,
+  .refter-kalender td.vakantie,
+  .refter-kalender td.feestdag,
+  .refter-kalender td.schoolvrij {
+    background: #f5f0e5;
+    cursor: not-allowed;
+  }
+
+  /* Niet ingeschreven / personeelskind: iets donkerder maar nog steeds rustig */
+  .refter-kalender td.niet-ingeschreven,
+  .refter-kalender td.personeelskind {
+    background: #e8e2d4;
+    cursor: not-allowed;
+  }
+
+  /* Schooldag = gewoon wit. Alleen afwezig krijgt kleur. */
+  .refter-kalender td.schooldag {
+    background: var(--wit);
+    cursor: pointer;
+    min-width: 42px;
+    height: 36px;
+    font-size: 1em;
+    color: #c0c0c0;
+    transition: background 0.1s;
+  }
+  .refter-kalender td.schooldag:hover { background: #fdf9f0; }
+
+  /* Standaard "aan" = wit met een héél zacht vinkje (bijna onzichtbaar) */
+  .refter-kalender td.aan {
+    background: var(--wit);
+    color: #d5cdb8;
+    cursor: pointer;
+  }
+  .refter-kalender td.aan:hover { background: #fdf9f0; }
+
+  /* Afwezig = vallen duidelijk op (dat is het hele punt) */
+  .refter-kalender td.uit {
+    background: #fce8e8;
+    color: #b85454;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  .refter-kalender td.uit:hover { background: #f9d8d8; }
+
+  /* Vergrendelde dagen door secretariaat (verwerkt voor facturatie, per datum) */
+  .refter-kalender th.kop-vergrendeld {
+    background: #e0ecf6;
+    color: #3a72b8;
+  }
+  /* Klikbare datum-kop in secretariaat-modus */
+  .refter-kalender th.klikbaar-datum {
+    transition: background 0.1s;
+  }
+  .refter-kalender th.klikbaar-datum:hover {
+    background: #d0e2f3;
+    color: #2a5a98;
+  }
+  .refter-kalender td.aan.vergrendeld,
+  .refter-kalender td.schooldag.vergrendeld {
+    background: #f0f7fd;
+    cursor: not-allowed;
+  }
+  .refter-kalender td.uit.vergrendeld {
+    background: #f5dada;
+    cursor: not-allowed;
+  }
+
+  /* Geblokkeerd (door secretariaat) - oude full-tabel regels (deprecated maar laat staan voor compatibiliteit) */
+  .refter-kalender.geblokkeerd td.schooldag,
+  .refter-kalender.geblokkeerd td.aan,
+  .refter-kalender.geblokkeerd td.uit {
+    cursor: not-allowed;
+    opacity: 0.75;
+  }
+  .refter-kalender.geblokkeerd td.schooldag:hover,
+  .refter-kalender.geblokkeerd td.aan:hover,
+  .refter-kalender.geblokkeerd td.uit:hover {
+    background: inherit;
+  }
+
+  /* Leerling-naam cel met icoontjes */
+  .naam-cel .leerling-info {
+    font-size: 0.75em;
+    color: var(--tekst-zacht);
+    margin-top: 2px;
+    font-style: italic;
+  }
+  .naam-cel .verwijder-knop {
+    float: right;
+    background: none;
+    border: none;
+    color: var(--tekst-zacht);
+    cursor: pointer;
+    font-size: 0.9em;
+    padding: 0 4px;
+    opacity: 0;
+    transition: opacity 0.15s;
+  }
+  .refter-kalender tbody tr:hover .verwijder-knop { opacity: 0.7; }
+  .refter-kalender tbody tr:hover .verwijder-knop:hover { opacity: 1; color: var(--accent-donker); }
+
+  /* Legende */
+  .refter-legende {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+    margin-top: 14px;
+    font-size: 0.85em;
+    color: var(--tekst-zacht);
+  }
+  .refter-legende span {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .refter-legende .vb {
+    display: inline-block;
+    width: 18px;
+    height: 14px;
+    border: 1px solid #ddd;
+    border-radius: 3px;
+  }
+  .refter-legende .vb.aan { background: var(--wit); }
+  .refter-legende .vb.uit { background: #fce8e8; }
+  .refter-legende .vb.grijs { background: #f5f0e5; }
+  .refter-legende .vb.donker-grijs { background: #e8e2d4; }
+
+  /* Samenvatting-balk */
+  .refter-samenvatting {
+    margin-top: 16px;
+    padding: 12px 16px;
+    background: var(--creme-warm);
+    border-radius: 10px;
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+    font-size: 0.95em;
+  }
+  .refter-samenvatting strong { color: var(--accent-donker); }
+
+  /* Beheer-dialoog */
+  .dialoog-achtergrond {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 1000;
+    overflow: auto;
+    padding: 20px;
+    display: none;
+  }
+  .dialoog-achtergrond.open { display: block; }
+  .dialoog {
+    background: var(--wit);
+    max-width: 560px;
+    margin: 30px auto;
+    border-radius: 16px;
+    border: 2px solid var(--rand-donker);
+    padding: 24px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+  }
+  .dialoog h3 { margin: 0 0 14px 0; color: var(--accent-donker); }
+  .dialoog label { display: block; margin-bottom: 4px; font-weight: 600; font-size: 0.9em; }
+  .dialoog input[type="text"],
+  .dialoog input[type="date"],
+  .dialoog select {
+    width: 100%;
+    padding: 8px 10px;
+    border: 1.5px solid var(--rand);
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 0.95em;
+    margin-bottom: 12px;
+  }
+  .dialoog .hint {
+    font-size: 0.83em;
+    color: var(--tekst-zacht);
+    margin-top: -8px;
+    margin-bottom: 12px;
+    font-style: italic;
+  }
+  .dialoog-knoppen {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    margin-top: 16px;
+  }
+  .dialoog-knoppen button {
+    padding: 8px 16px;
+    border: 1.5px solid var(--rand-donker);
+    background: var(--wit);
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 0.95em;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .dialoog-knoppen button:hover { background: var(--creme-warm); }
+  .dialoog-knoppen button.accent {
+    background: var(--accent);
+    color: var(--wit);
+    border-color: var(--accent-donker);
+  }
+  .dialoog-knoppen button.accent:hover { background: var(--accent-donker); }
+  .dialoog-knoppen button.gevaar {
+    background: var(--rood-licht);
+    border-color: var(--rood);
+    color: #8a3838;
+  }
+
+  .geblokkeerd-melding {
+    background: var(--geel-licht);
+    border-left: 4px solid var(--geel);
+    padding: 10px 14px;
+    border-radius: 6px;
+    margin-bottom: 14px;
+    font-size: 0.92em;
+  }
+
+  /* UITSTAP-MODULE */
+  .uitstap-kaart {
+    background: var(--wit);
+    border: 2px solid var(--rand);
+    border-radius: 14px;
+    padding: 16px 20px;
+    margin-bottom: 14px;
+    box-shadow: 0 2px 8px var(--schaduw);
+  }
+  .uitstap-kaart-kop {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 12px;
+  }
+  .uitstap-kaart-kop h3 {
+    margin: 0;
+    color: var(--accent-donker);
+    font-size: 1.1em;
+  }
+  .uitstap-kaart-kop .meta {
+    font-size: 0.9em;
+    color: var(--tekst-zacht);
+  }
+  .uitstap-totaal-balk {
+    background: var(--creme-warm);
+    border-radius: 8px;
+    padding: 10px 14px;
+    margin-top: 10px;
+    font-size: 0.92em;
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+  }
+  .uitstap-totaal-balk strong { color: var(--accent-donker); }
+
+  /* Uitstap-kalender (klaslijst + uitstappen) */
+  .uitstap-tabel-wrap {
+    overflow: auto;
+    border: 1.5px solid var(--rand-donker);
+    border-radius: 10px;
+    height: calc(100vh - 340px);
+    min-height: 400px;
+    scrollbar-width: thin;
+    scrollbar-color: var(--accent) var(--creme);
+  }
+  .uitstap-tabel-wrap::-webkit-scrollbar {
+    width: 12px;
+    height: 12px;
+  }
+  .uitstap-tabel-wrap::-webkit-scrollbar-track {
+    background: var(--creme);
+    border-radius: 6px;
+  }
+  .uitstap-tabel-wrap::-webkit-scrollbar-thumb {
+    background: var(--accent);
+    border-radius: 6px;
+    border: 2px solid var(--creme);
+  }
+  .uitstap-tabel-wrap::-webkit-scrollbar-thumb:hover {
+    background: var(--accent-donker);
+  }
+  .uitstap-tabel {
+    border-collapse: collapse;
+    font-size: 0.9em;
+    background: var(--wit);
+    width: 100%;
+  }
+  .uitstap-tabel th, .uitstap-tabel td {
+    border: 1px solid #f0ebe0;
+    padding: 8px 10px;
+    text-align: center;
+    vertical-align: middle;
+  }
+  /* Eerste kolom (naam) sticky */
+  .uitstap-tabel th.naam-kop, .uitstap-tabel td.naam-cel {
+    position: sticky;
+    left: 0;
+    z-index: 2;
+    background: var(--wit);
+    text-align: left;
+    min-width: 180px;
+    max-width: 220px;
+    border-right: 1.5px solid var(--rand);
+  }
+  .uitstap-tabel th.naam-kop { background: var(--creme-warm); z-index: 3; top: 0; }
+  .uitstap-tabel thead th {
+    position: sticky;
+    top: 0;
+    background: var(--creme-warm);
+    z-index: 1;
+    font-weight: 700;
+    min-width: 140px;
+    border-bottom: 1.5px solid var(--rand);
+  }
+  .uitstap-tabel thead th .uitstap-titel { font-size: 0.95em; color: var(--tekst); }
+  .uitstap-tabel thead th .uitstap-meta { font-size: 0.78em; color: var(--tekst-zacht); font-weight: 400; margin-top: 2px; }
+  /* Rustige deelname-cellen: wit als 'mee', duidelijk rood bij afwezig */
+  .uitstap-tabel td.deelname-cel {
+    cursor: pointer;
+    font-size: 1.1em;
+    background: var(--wit);
+    color: #d5cdb8;
+    transition: background 0.1s;
+  }
+  .uitstap-tabel td.deelname-cel:hover { background: #fdf9f0; }
+  .uitstap-tabel td.deelname-cel.afwezig {
+    background: #fce8e8;
+    color: #b85454;
+    font-weight: 700;
+  }
+  .uitstap-tabel td.deelname-cel.afwezig:hover { background: #f9d8d8; }
+
+  /* Bestelling: default leeg, groen vinkje als besteld */
+  .uitstap-tabel td.deelname-cel.besteld {
+    background: #e8f5e8;
+    color: #3a6040;
+    font-weight: 700;
+  }
+  .uitstap-tabel td.deelname-cel.besteld:hover { background: #d5eedc; }
+
+  /* Kop van bestelling krijgt lichtblauw tintje om onderscheid te maken */
+  .uitstap-tabel thead th.kop-bestelling {
+    background: #e8f1fb;
+  }
+
+  /* Werkboeken-klaar sectie */
+  .werkboeken-klaar-paneel {
+    background: var(--wit);
+    border: 2px solid var(--rand);
+    border-radius: 14px;
+    padding: 20px;
+    box-shadow: 0 2px 8px var(--schaduw);
+  }
+  .werkboeken-klaar-paneel .status-box {
+    background: var(--creme);
+    border-radius: 10px;
+    padding: 16px;
+    margin: 16px 0;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: wrap;
+  }
+  .werkboeken-klaar-paneel .status-box.klaar {
+    background: var(--groen-licht);
+    border-left: 4px solid var(--groen);
+  }
+  .werkboeken-klaar-paneel .status-box .status-tekst { flex: 1; min-width: 220px; }
+  .werkboeken-klaar-paneel .werkboeken-lijst {
+    border: 1px solid var(--rand);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  .werkboeken-klaar-paneel .wb-regel {
+    display: grid;
+    grid-template-columns: 1fr 1fr 80px 100px;
+    gap: 10px;
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--rand);
+    align-items: center;
+  }
+  .werkboeken-klaar-paneel .wb-regel:last-child { border-bottom: none; }
+  .werkboeken-klaar-paneel .wb-regel.kop {
+    background: var(--creme-warm);
+    font-weight: 700;
+    font-size: 0.9em;
+  }
+  .werkboeken-klaar-paneel .wb-regel .besteld-vak {
+    text-align: center;
+    font-size: 1.1em;
+  }
+  @media (max-width: 600px) {
+    .werkboeken-klaar-paneel .wb-regel { grid-template-columns: 1fr 80px; gap: 4px; font-size: 0.88em; }
+    .werkboeken-klaar-paneel .wb-regel .uitg-col { display: none; }
+    .werkboeken-klaar-paneel .wb-regel .aantal-col { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<!-- DEMO BANNER -->
+<div class="demo-banner">
+  🧪 DEMO-OMGEVING — alle data is verzonnen en wordt lokaal bewaard
+  <a href="#" onclick="demoResetten(); return false;">🗑️ Alle demo-data wissen</a>
+</div>
+
+<!-- ROL-SCHAKELAAR -->
+<div class="rol-balk">
+  <div class="rol-balk-links">
+    <span>Ik ben: </span>
+    <button class="rol-knop actief" id="rol-leerkracht-knop" onclick="rolKiezen('leerkracht')">👩‍🏫 Leerkracht</button>
+    <button class="rol-knop" id="rol-secretariaat-knop" onclick="rolKiezen('secretariaat')">📋 Secretariaat</button>
+  </div>
+  <div id="leerkracht-kiezer" style="display:flex; align-items:center; gap:8px;">
+    <span>Klas: </span>
+    <select id="klas-select" onchange="klasWisselen()">
+      <!-- Wordt gevuld door JS -->
+    </select>
+  </div>
+</div>
+
+<!-- HOOFDINHOUD -->
+<div class="container">
+  <header class="schoolheader">
+    <div class="logo-plaatsvervanger" title="Hier komt later het schoollogo">🏫</div>
+    <div class="titels">
+      <h1>GO! Basisschool De Linde</h1>
+      <div class="ondertitel" id="header-ondertitel">Dashboard leerkracht</div>
+    </div>
+    <div class="gebruiker-info" id="gebruiker-info">
+      <!-- wordt gevuld door JS -->
+    </div>
+  </header>
+
+  <!-- MELDINGEN (alleen voor leerkracht) -->
+  <div id="meldingen-zone"></div>
+
+  <!-- HOOFDPANEEL (wordt gevuld door JS afhankelijk van rol) -->
+  <div id="hoofdpaneel"></div>
+
+</div>
+
+<script src="demo-data.js"></script>
+<script src="demo-app.js"></script>
+
+</body>
+</html>
