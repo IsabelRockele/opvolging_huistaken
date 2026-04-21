@@ -2,7 +2,7 @@
 // DEMO DATA - BS DE LINDE (verzonnen)
 // ==============================================
 
-const KLASSEN = [
+let KLASSEN = [
   { id: 'K',   leerjaar: 'Kleuters',     klas: 'K1',  leerkracht: 'Griet Peeters'     },
   { id: '1A',  leerjaar: 'Leerjaar 1',   klas: '1A',  leerkracht: 'Hanne De Keersmaecker' },
   { id: '1B',  leerjaar: 'Leerjaar 1',   klas: '1B',  leerkracht: 'Katrien Wauters'   },
@@ -77,7 +77,24 @@ function getState() {
   const opgeslagen = localStorage.getItem(STORAGE_KEY);
   if (opgeslagen) {
     try {
-      return JSON.parse(opgeslagen);
+      const s = JSON.parse(opgeslagen);
+      // Auto-migratie: zorg dat alle verwachte velden bestaan (oude data-versies)
+      if (!s.refter_geblokkeerd_tot) s.refter_geblokkeerd_tot = {};
+      if (!s.refter_invullingen) s.refter_invullingen = {};
+      if (!s.uitstappen) s.uitstappen = {};
+      if (!s.werkboeken_klaar) s.werkboeken_klaar = {};
+      if (!s.werkboeken_besteld) s.werkboeken_besteld = {};
+      if (!s.schooleigen_vrije_dagen) s.schooleigen_vrije_dagen = [];
+      if (!s.deadlines_actief) s.deadlines_actief = {};
+      // Klassen-lijst: als nog niet aanwezig, kopieer vanuit initiële KLASSEN constante
+      if (!s.klassen_lijst) {
+        s.klassen_lijst = KLASSEN.map(k => ({ ...k }));
+      }
+      // Synchroniseer globale KLASSEN referentie
+      KLASSEN = s.klassen_lijst;
+      // Oude 'refter_geblokkeerde_maanden' wordt niet meer gebruikt
+      if (s.refter_geblokkeerde_maanden) delete s.refter_geblokkeerde_maanden;
+      return s;
     } catch (e) {
       console.warn('Kon opgeslagen demo-data niet lezen, nieuwe state gebruiken.');
     }
@@ -85,8 +102,18 @@ function getState() {
   return maakStartState();
 }
 
+// Helper: actuele klassenlijst (bewerkbaar)
+function getKlassen() {
+  if (!state.klassen_lijst) state.klassen_lijst = KLASSEN.map(k => ({ ...k }));
+  // Synchroniseer de globale KLASSEN referentie met de actuele lijst
+  KLASSEN = state.klassen_lijst;
+  return state.klassen_lijst;
+}
+
 function bewaarState(state) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  // Zorg dat KLASSEN altijd refereert naar de actuele lijst
+  if (state.klassen_lijst) KLASSEN = state.klassen_lijst;
 }
 
 function maakStartState() {
