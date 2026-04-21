@@ -40,9 +40,9 @@
   .demo-banner {
     background: linear-gradient(90deg, #8b4f9f, #a56bb5);
     color: white;
-    padding: 10px 20px;
+    padding: 5px 20px;
     text-align: center;
-    font-size: 0.9em;
+    font-size: 0.82em;
     font-weight: 600;
     letter-spacing: 0.3px;
     box-shadow: 0 2px 8px rgba(0,0,0,0.15);
@@ -53,7 +53,7 @@
   .rol-balk {
     background: var(--wit);
     border-bottom: 2px solid var(--rand);
-    padding: 10px 24px;
+    padding: 6px 24px;
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -102,7 +102,7 @@
   /* HEADER */
   .container {
     max-width: 1600px;
-    margin: 24px auto;
+    margin: 12px auto;
     padding: 0 20px;
   }
 
@@ -115,44 +115,44 @@
   header.schoolheader {
     background: linear-gradient(135deg, #6b5d52 0%, #8a7a6d 100%);
     color: var(--wit);
-    padding: 18px 28px;
-    border-radius: 16px;
+    padding: 10px 20px;
+    border-radius: 12px;
     border: 2px solid var(--rand-donker);
     box-shadow: 0 4px 16px var(--schaduw);
     display: flex;
     align-items: center;
-    gap: 16px;
+    gap: 14px;
     flex-wrap: wrap;
-    margin-bottom: 24px;
+    margin-bottom: 14px;
   }
 
   header.schoolheader .logo-plaatsvervanger {
     flex-shrink: 0;
-    height: 58px;
-    width: 58px;
+    height: 42px;
+    width: 42px;
     background: var(--wit);
-    border-radius: 10px;
+    border-radius: 8px;
     box-shadow: 0 2px 6px rgba(0,0,0,0.2);
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.8em;
+    font-size: 1.4em;
   }
 
   header.schoolheader .titels { flex: 1; min-width: 200px; }
   header.schoolheader h1 {
-    font-size: 1.5em;
+    font-size: 1.2em;
     font-weight: 900;
     letter-spacing: -0.3px;
     margin: 0;
   }
   header.schoolheader .ondertitel {
-    font-size: 0.9em;
+    font-size: 0.82em;
     opacity: 0.85;
-    margin-top: 2px;
+    margin-top: 1px;
   }
   header.schoolheader .gebruiker-info {
-    font-size: 0.9em;
+    font-size: 0.82em;
     opacity: 0.9;
     text-align: right;
   }
@@ -183,6 +183,7 @@
   .melding:last-child { margin-bottom: 0; }
   .melding.geel { background: var(--geel-licht); border-left: 4px solid var(--geel); }
   .melding.rood { background: var(--rood-licht); border-left: 4px solid var(--rood); }
+  .melding.grijs { background: #f5f5f5; border-left: 4px solid #bbb; }
   .melding .melding-tekst { flex: 1; }
   .melding .melding-knop {
     padding: 6px 12px;
@@ -317,14 +318,14 @@
   .terug-knop {
     background: var(--wit);
     border: 1.5px solid var(--rand-donker);
-    padding: 8px 14px;
-    border-radius: 20px;
+    padding: 4px 12px;
+    border-radius: 16px;
     font-family: inherit;
-    font-size: 0.9em;
+    font-size: 0.82em;
     font-weight: 600;
     cursor: pointer;
     color: var(--tekst);
-    margin-bottom: 16px;
+    margin-bottom: 10px;
   }
   .terug-knop:hover { background: var(--creme-warm); }
 
@@ -527,6 +528,7 @@
     background: #d0e2f3;
     color: #2a5a98;
   }
+  /* Voor de LEERKRACHT: vergrendeld = niet klikbaar */
   .refter-kalender td.aan.vergrendeld,
   .refter-kalender td.schooldag.vergrendeld {
     background: #f0f7fd;
@@ -535,6 +537,19 @@
   .refter-kalender td.uit.vergrendeld {
     background: #f5dada;
     cursor: not-allowed;
+  }
+  /* Voor SECRETARIAAT: vergrendelde cellen zijn wel klikbaar (correcties) */
+  .refter-kalender.sec-modus td.aan.vergrendeld,
+  .refter-kalender.sec-modus td.schooldag.vergrendeld,
+  .refter-kalender.sec-modus td.uit.vergrendeld {
+    cursor: pointer;
+  }
+  .refter-kalender.sec-modus td.aan.vergrendeld:hover,
+  .refter-kalender.sec-modus td.schooldag.vergrendeld:hover {
+    background: #d8eaf9;
+  }
+  .refter-kalender.sec-modus td.uit.vergrendeld:hover {
+    background: #f0c8c8;
   }
 
   /* Geblokkeerd (door secretariaat) - oude full-tabel regels (deprecated maar laat staan voor compatibiliteit) */
@@ -732,8 +747,11 @@
     overflow: auto;
     border: 1.5px solid var(--rand-donker);
     border-radius: 10px;
-    height: calc(100vh - 340px);
-    min-height: 400px;
+    max-height: calc(100vh - 340px);
+    min-height: 200px;
+    max-width: 100%;
+    display: inline-block;
+    vertical-align: top;
     scrollbar-width: thin;
     scrollbar-color: var(--accent) var(--creme);
   }
@@ -757,7 +775,7 @@
     border-collapse: collapse;
     font-size: 0.9em;
     background: var(--wit);
-    width: 100%;
+    width: auto;
   }
   .uitstap-tabel th, .uitstap-tabel td {
     border: 1px solid #f0ebe0;
@@ -772,6 +790,7 @@
     z-index: 2;
     background: var(--wit);
     text-align: left;
+    width: 220px;
     min-width: 180px;
     max-width: 220px;
     border-right: 1.5px solid var(--rand);
@@ -783,7 +802,9 @@
     background: var(--creme-warm);
     z-index: 1;
     font-weight: 700;
+    width: 170px;
     min-width: 140px;
+    max-width: 200px;
     border-bottom: 1.5px solid var(--rand);
   }
   .uitstap-tabel thead th .uitstap-titel { font-size: 0.95em; color: var(--tekst); }
