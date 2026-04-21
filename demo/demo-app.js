@@ -152,30 +152,131 @@ function toonMeldingen() {
 }
 
 function berekenMeldingen() {
-  // Voor de demo: een paar verzonnen meldingen
   const meldingen = [];
+  const vandaag = new Date();
+  vandaag.setHours(0, 0, 0, 0);
 
-  // Refter-deadline melding (fictief: altijd tonen voor demo)
-  meldingen.push({
-    kleur: 'geel',
-    titel: '🍽️ Refterlijst deze week — deadline morgen (woensdag 12:00)',
-    detail: 'Deze week zijn nog 3 dagen niet aangevuld',
-    actie: 'refter',
-    knopTekst: 'Openen'
+  const dl = state.deadlines_actief || {};
+
+  // Per actieve deadline: bereken volgende deadline datum
+  // Kleuren: grijs (>7 dagen), geel (1-7 dagen), rood (vandaag of voorbij)
+  const config = {
+    refter: { icoon: '🍽️', label: 'Refterlijst', actie: 'refter' },
+    uitstappen: { icoon: '🚌', label: 'Uitstappen doorgeven', actie: 'uitstappen' },
+    werkboeken: { icoon: '📚', label: 'Werkboeken-bestelling', actie: 'klasbeheer' },
+    lyreco: { icoon: '🛒', label: 'Lyreco-bestelling', actie: 'klasbeheer' }
+  };
+
+  Object.keys(config).forEach(id => {
+    const d = dl[id];
+    if (!d || !d.actief) return;
+
+    const deadlineDatum = berekenVolgendeDeadline(d, vandaag);
+    if (!deadlineDatum) return;
+
+    const msVerschil = deadlineDatum - vandaag;
+    const dagen = Math.round(msVerschil / (1000 * 60 * 60 * 24));
+
+    let kleur, detail;
+    if (dagen < 0) {
+      kleur = 'rood';
+      detail = `Was ${Math.abs(dagen)} dag${Math.abs(dagen) === 1 ? '' : 'en'} geleden (${formatDag(toISO(deadlineDatum))})`;
+    } else if (dagen === 0) {
+      kleur = 'rood';
+      detail = 'Deadline is vandaag!';
+    } else if (dagen <= 7) {
+      kleur = 'geel';
+      detail = `Nog ${dagen} dag${dagen === 1 ? '' : 'en'} (${formatDag(toISO(deadlineDatum))})`;
+    } else {
+      kleur = 'grijs';
+      detail = `Over ${dagen} dagen (${formatDag(toISO(deadlineDatum))})`;
+    }
+
+    let titel = `${config[id].icoon} ${config[id].label}`;
+
+    // Speciale toevoeging voor Lyreco: vermeld leverdatum
+    if (id === 'lyreco' && d.lever_datum) {
+      detail += ` · Leverdatum in Lyreco: ${formatDag(d.lever_datum)}`;
+    }
+
+    meldingen.push({
+      kleur,
+      titel,
+      detail,
+      actie: config[id].actie,
+      knopTekst: 'Openen',
+      dagen // voor sorteren
+    });
   });
 
-  // Voor klas 2A: fictieve uitstap-melding
-  if (state.huidigeKlasId === '2A') {
-    meldingen.push({
-      kleur: 'rood',
-      titel: '🚌 Uitstap Technopolis — lijst nog niet doorgegeven',
-      detail: 'Uitstap is over 10 dagen (15/03/2027) — secretariaat wacht op deelnamelijst',
-      actie: 'uitstappen',
-      knopTekst: 'Openen'
-    });
-  }
+  // Sorteer: urgentst eerst (negatieve dagen, dan 0, dan oplopend)
+  meldingen.sort((a, b) => a.dagen - b.dagen);
 
   return meldingen;
+}
+
+// Bereken de eerstvolgende deadline vanuit vandaag
+function berekenVolgendeDeadline(dl, vandaag) {
+  const freq = dl.frequentie || 'datum';
+
+  if (freq === 'datum') {
+    if (!dl.datum) return null;
+    return maakDatum(dl.datum);
+  }
+
+  if (freq === 'wekelijks') {
+    const doelDag = dl.dag != null ? dl.dag : 5; // default vrijdag
+    const huidigeDag = vandaag.getDay();
+    let dagenVerder = (doelDag - huidigeDag + 7) % 7;
+    // Als vandaag zelf de deadline-dag is, toon hem nog (dagenVerder = 0)
+    const d = new Date(vandaag);
+    d.setDate(d.getDate() + dagenVerder);
+    return d;
+  }
+
+  if (freq === 'maandelijks') {
+    const type = dl.maandtype || 'laatste_werkdag';
+    // Probeer deze maand, anders volgende maand
+    for (let offset = 0; offset < 3; offset++) {
+      const jaar = vandaag.getFullYear();
+      const maand = vandaag.getMonth() + offset;
+      let doelDatum;
+      if (type === 'laatste_werkdag') {
+        doelDatum = laatsteWerkdagVanMaand(jaar, maand);
+      } else {
+        const dag = dl.dag_van_maand || 25;
+        // Zorg dat dag niet buiten de maand valt
+        const laatsteDagMaand = new Date(jaar, maand + 1, 0).getDate();
+        doelDatum = new Date(jaar, maand, Math.min(dag, laatsteDagMaand));
+      }
+      if (doelDatum >= vandaag) return doelDatum;
+    }
+    return null;
+  }
+
+  return null;
+}
+
+function laatsteWerkdagVanMaand(jaar, maand) {
+  // Laatste dag van de maand
+  let d = new Date(jaar, maand + 1, 0);
+  // Als weekend, ga terug
+  while (d.getDay() === 0 || d.getDay() === 6) {
+    d.setDate(d.getDate() - 1);
+  }
+  return d;
+}
+
+function maakDatum(isoString) {
+  const [j, m, d] = isoString.split('-').map(Number);
+  return new Date(j, m - 1, d);
+}
+
+function toISO(d) {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
 }
 
 // ==============================================
@@ -215,7 +316,7 @@ function totaalNodig() { return 0; } // niet gebruikt in demo
 
 // Helper: is deze datum geblokkeerd voor de leerkracht?
 function isDatumGeblokkeerd(klasId, datumISO) {
-  const tot = state.refter_geblokkeerd_tot[klasId];
+  const tot = (state.refter_geblokkeerd_tot || {})[klasId];
   if (!tot) return false;
   return datumISO <= tot;
 }
@@ -226,7 +327,7 @@ function toonRefterModule() {
   document.getElementById('meldingen-zone').innerHTML = '';
   document.querySelector('.container').classList.add('breed');
   const klasId = state.huidigeKlasId;
-  const geblokkeerd_tot = state.refter_geblokkeerd_tot[klasId];
+  const geblokkeerd_tot = (state.refter_geblokkeerd_tot || {})[klasId];
 
   hoofdpaneel.innerHTML = `
     <button class="terug-knop" onclick="rolToepassen()">← Terug naar dashboard</button>
@@ -702,9 +803,24 @@ function toonSecretariaatDashboard() {
       ? `<span class="badge geel">${aantalKlaarNogTeBestellen} klas(sen) te bestellen</span>`
       : `<span class="badge groen">Alles besteld</span>`;
 
+  // Tel totaal leerlingen en klassen
+  let totaalLeerlingen = 0;
+  KLASSEN.forEach(k => {
+    const kd = state.klassen[k.id];
+    if (!kd) return;
+    totaalLeerlingen += kd.leerlingen.filter(l => !l.einddatum).length;
+  });
+
   const hoofdpaneel = document.getElementById('hoofdpaneel');
   hoofdpaneel.innerHTML = `
     <div class="tegel-grid">
+
+      <button class="tegel" onclick="secModuleOpenen('klasbeheer')">
+        <div class="icoon">👥</div>
+        <h3>Klasbeheer school</h3>
+        <p>Klassen, titularissen en leerlingen beheren. Schoolverlaters uitschrijven.</p>
+        <span class="badge groen">${KLASSEN.length} klassen · ${totaalLeerlingen} leerlingen</span>
+      </button>
 
       <button class="tegel" onclick="secModuleOpenen('werkboeken')">
         <div class="icoon">📚</div>
@@ -735,11 +851,6 @@ function toonSecretariaatDashboard() {
       </button>
 
     </div>
-
-    <div class="sec-paneel">
-      <h2>📊 Status-overzicht vandaag</h2>
-      ${maakStatusOverzicht()}
-    </div>
   `;
 }
 
@@ -767,7 +878,7 @@ function maakStatusOverzicht() {
   function refterStatus(klasId) {
     const dagen = dagenVanMaand('2026-11');
     if (dagen.length === 0) return '—';
-    const blok = state.refter_geblokkeerd_tot[klasId];
+    const blok = (state.refter_geblokkeerd_tot || {})[klasId];
     if (!blok) return 'rood'; // niets verwerkt
     if (blok >= dagen[dagen.length - 1]) return 'groen'; // hele maand verwerkt
     if (blok >= dagen[0]) return 'geel'; // deels verwerkt
@@ -816,6 +927,9 @@ function maakStatusOverzicht() {
 window.secModuleOpenen = function (modulenaam) {
   if (modulenaam === 'werkboeken') { toonSecWerkboeken(); return; }
   if (modulenaam === 'refter') { toonSecRefter(); return; }
+  if (modulenaam === 'klasbeheer') { toonSecKlasbeheer(); return; }
+  if (modulenaam === 'uitstappen') { toonSecUitstappen(); return; }
+  if (modulenaam === 'deadlines') { toonSecDeadlines(); return; }
 
   const hoofdpaneel = document.getElementById('hoofdpaneel');
   const titels = {
@@ -1174,7 +1288,6 @@ function uitstapInhoudVullen() {
     html += `<tr>`;
     html += `<td class="naam-cel">
       <div style="font-weight:600;">${escapeHtml(l.naam)}</div>
-      ${l.personeelskind ? '<div class="leerling-info">⚹ personeelskind</div>' : ''}
     </td>`;
     uitstappenMaand.forEach(u => {
       const type = u.type || 'activiteit';
@@ -1406,7 +1519,7 @@ window.uitstapVerwijderen = function () {
 window.openRapportGenerator = function () {
   // Vul leerling-dropdown
   const klas = state.klassen[state.huidigeKlasId];
-  const actief = klas.leerlingen.filter(l => !l.einddatum && !l.personeelskind);
+  const actief = klas.leerlingen.filter(l => !l.einddatum);
   const sel = document.getElementById('rp-leerling-select');
   sel.innerHTML = actief.map(l => `<option value="${l.id}">${escapeHtml(l.naam)}</option>`).join('');
 
@@ -1459,7 +1572,7 @@ window.genereerRapport = function () {
   const klas = state.klassen[state.huidigeKlasId];
   const isKleuters = klasInfo.leerjaar === 'Kleuters';
   const maxFactuur = isKleuters ? 55 : 105;
-  const actief = klas.leerlingen.filter(l => !l.einddatum && !l.personeelskind);
+  const actief = klas.leerlingen.filter(l => !l.einddatum);
 
   // Bepaal welke leerlingen we verwerken
   let doelgroep;
@@ -2147,18 +2260,6 @@ function toonSecRefterOverzicht() {
         <button class="accent" onclick="secRefter_exporteerAlleKlassen()" title="CSV per klas voor facturatie">📥 Export alle klassen</button>
       </div>
 
-      <div style="display:flex; gap:14px; flex-wrap:wrap; margin-bottom:18px;">
-        <div style="background:var(--creme-warm); padding:8px 14px; border-radius:6px; font-size:0.92em;">
-          📅 <strong>${schooldagen.length}</strong> refterdagen
-        </div>
-        <div style="background:#e8f5e8; padding:8px 14px; border-radius:6px; font-size:0.92em;">
-          🍽️ <strong>${totaalMaaltijden}</strong> maaltijden totaal
-        </div>
-        <div style="background:#e0ecf6; padding:8px 14px; border-radius:6px; font-size:0.92em;">
-          🔒 <strong>${totaalGeblokkeerd}</strong> klas(sen) met blokkering
-        </div>
-      </div>
-
       <table class="sec-tabel">
         <thead>
           <tr>
@@ -2197,44 +2298,6 @@ function toonSecRefterOverzicht() {
       <p style="margin-top:14px; font-size:0.85em; color:var(--tekst-zacht);">
         💡 In de detail-weergave klik je op een <strong>datumkop</strong> (bv. vrijdag week 47) om alles tot en met die dag te vergrendelen.
       </p>
-    </div>
-
-    <!-- Beheer-dialoog: personeelskinderen + vrije dagen -->
-    <div class="dialoog-achtergrond" id="sec-refter-beheer-dialoog">
-      <div class="dialoog" style="max-width:760px;">
-        <h3>⚙️ Beheer refter</h3>
-
-        <div style="background:var(--creme); border-radius:8px; padding:14px; margin-bottom:18px;">
-          <h4 style="margin:0 0 10px 0; font-size:1em;">📅 School-eigen vrije dagen</h4>
-          <p style="font-size:0.88em; color:var(--tekst-zacht); margin:0 0 10px 0;">
-            Naast de Vlaamse vakanties: voeg pedagogische studiedagen, brugdagen, of andere vrije dagen toe. Die worden grijs in alle refterlijsten.
-          </p>
-          <div id="sec-vrije-dagen-lijst" style="margin-bottom:12px;"></div>
-          <div style="display:flex; gap:8px; align-items:flex-end; flex-wrap:wrap;">
-            <div style="flex:1; min-width:140px;">
-              <label style="font-size:0.85em;">Datum</label>
-              <input type="date" id="nw-vrije-dag-datum" style="width:100%;">
-            </div>
-            <div style="flex:2; min-width:200px;">
-              <label style="font-size:0.85em;">Naam</label>
-              <input type="text" id="nw-vrije-dag-titel" placeholder="bv. Brugdag, Pedagogische studiedag" style="width:100%;">
-            </div>
-            <button class="accent" onclick="vrijeDagToevoegen()" style="padding:8px 16px; border-radius:8px;">➕ Toevoegen</button>
-          </div>
-        </div>
-
-        <div style="background:var(--creme); border-radius:8px; padding:14px;">
-          <h4 style="margin:0 0 10px 0; font-size:1em;">⚹ Personeelskinderen</h4>
-          <p style="font-size:0.88em; color:var(--tekst-zacht); margin:0 0 10px 0;">
-            Kinderen van personeel betalen geen refter. Hun naam blijft zichtbaar in de lijst, maar hun rij is grijs en niet aanvinkbaar door de leerkracht.
-          </p>
-          <div id="sec-personeel-lijst"></div>
-        </div>
-
-        <div class="dialoog-knoppen">
-          <button onclick="sluitDialoog('sec-refter-beheer-dialoog')">Sluiten</button>
-        </div>
-      </div>
     </div>
   `;
 }
@@ -2351,9 +2414,12 @@ function toonSecRefterDetail() {
           // Secretariaat ziet welke dagen vergrendeld zijn maar kan ze wel wijzigen
           const isVergrendeld = geblokkeerd_tot && d <= geblokkeerd_tot;
           const extraClass = isVergrendeld ? ' vergrendeld' : '';
+          const titelTekst = isVergrendeld
+            ? `🔒 Vergrendeld voor leerkracht — maar jij kan nog wijzigen. Klik om om te schakelen ${status === 'uit' ? 'naar at mee' : 'naar afwezig'}.`
+            : `Klik om om te schakelen ${status === 'uit' ? 'naar at mee' : 'naar afwezig'}.`;
           tabelHtml += `<td class="${status === 'leeg' ? 'schooldag' : status}${extraClass}"
             onclick="secRefter_celKlik('${l.id}', '${d}')"
-            title="Secretariaat-modus: je kan deze cel wijzigen ook als ze vergrendeld is voor de leerkracht.">${symbool}</td>`;
+            title="${titelTekst}">${symbool}</td>`;
         }
       });
     }
@@ -2372,8 +2438,11 @@ function toonSecRefterDetail() {
       </p>
 
       <div style="background:#e0ecf6; border-left:4px solid #3a72b8; padding:10px 14px; border-radius:8px; margin-bottom:14px; font-size:0.9em;">
-        💡 <strong>Klik op een datum-kop</strong> (cijfer + dag bovenaan) om alles tot en met die dag te vergrendelen voor de leerkracht (per week of per dag).
-        Jij kan nog steeds wijzigen indien correctie nodig.
+        💡 <strong>Twee dingen die je kan doen:</strong>
+        <ul style="margin:6px 0 0 18px; padding:0;">
+          <li>Klik op een <strong>datum-kop</strong> (bv. VR 13) om alles tot en met die dag te vergrendelen voor de leerkracht.</li>
+          <li>Klik op een <strong>cel</strong> (ook op vergrendelde dagen) om een correctie te maken — de blokkering blijft intact.</li>
+        </ul>
       </div>
 
       <div class="refter-toolbar">
@@ -2382,12 +2451,13 @@ function toonSecRefterDetail() {
           <span class="maand-titel">${maandLabel}</span>
           <button onclick="secRefter_maandWisselen(1)">▶</button>
         </div>
+        <button onclick="openSecRefterBeheer()" title="Personeelskinderen en school-eigen vrije dagen">⚙️ Beheren</button>
         <button class="accent" onclick="secRefter_exporteerKlas('${klasId}')" title="CSV download voor facturatie">📥 Exporteren (CSV)</button>
-        ${geblokkeerd_tot ? `<button onclick="secRefter_blokkeringWissen('${klasId}')">🔓 Alle blokkering wissen</button>` : ''}
+        ${geblokkeerd_tot ? `<button onclick="secRefter_blokkeringWissen('${klasId}')" title="Alle vergrendeling wegnemen">🔓 Alle blokkering wissen</button>` : ''}
       </div>
 
       <div class="refter-scroller">
-        <table class="refter-kalender">${tabelHtml}</table>
+        <table class="refter-kalender sec-modus">${tabelHtml}</table>
       </div>
 
       <div class="refter-legende">
@@ -2467,6 +2537,50 @@ function volgendeDag(datumISO) {
 // BEHEER: personeelskinderen + vrije dagen
 // ==============================================
 window.openSecRefterBeheer = function () {
+  // Maak de dialoog aan als hij nog niet bestaat
+  if (!document.getElementById('sec-refter-beheer-dialoog')) {
+    const dialoog = document.createElement('div');
+    dialoog.innerHTML = `
+      <div class="dialoog-achtergrond" id="sec-refter-beheer-dialoog">
+        <div class="dialoog" style="max-width:760px;">
+          <h3>⚙️ Beheer refter</h3>
+
+          <div style="background:var(--creme); border-radius:8px; padding:14px; margin-bottom:18px;">
+            <h4 style="margin:0 0 10px 0; font-size:1em;">📅 School-eigen vrije dagen</h4>
+            <p style="font-size:0.88em; color:var(--tekst-zacht); margin:0 0 10px 0;">
+              Naast de Vlaamse vakanties: voeg pedagogische studiedagen, brugdagen, of andere vrije dagen toe. Die worden grijs in alle refterlijsten.
+            </p>
+            <div id="sec-vrije-dagen-lijst" style="margin-bottom:12px;"></div>
+            <div style="display:flex; gap:8px; align-items:flex-end; flex-wrap:wrap;">
+              <div style="flex:1; min-width:140px;">
+                <label style="font-size:0.85em;">Datum</label>
+                <input type="date" id="nw-vrije-dag-datum" style="width:100%;">
+              </div>
+              <div style="flex:2; min-width:200px;">
+                <label style="font-size:0.85em;">Naam</label>
+                <input type="text" id="nw-vrije-dag-titel" placeholder="bv. Brugdag, Pedagogische studiedag" style="width:100%;">
+              </div>
+              <button class="accent" onclick="vrijeDagToevoegen()" style="padding:8px 16px; border-radius:8px;">➕ Toevoegen</button>
+            </div>
+          </div>
+
+          <div style="background:var(--creme); border-radius:8px; padding:14px;">
+            <h4 style="margin:0 0 10px 0; font-size:1em;">⚹ Personeelskinderen</h4>
+            <p style="font-size:0.88em; color:var(--tekst-zacht); margin:0 0 10px 0;">
+              Kinderen van personeel betalen geen refter. Hun naam blijft zichtbaar in de lijst, maar hun rij is grijs en niet aanvinkbaar door de leerkracht.
+            </p>
+            <div id="sec-personeel-lijst"></div>
+          </div>
+
+          <div class="dialoog-knoppen">
+            <button onclick="sluitDialoog('sec-refter-beheer-dialoog')">Sluiten</button>
+          </div>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(dialoog);
+  }
+
   vulVrijeDagenLijst();
   vulPersoneelLijst();
   document.getElementById('sec-refter-beheer-dialoog').classList.add('open');
@@ -2516,9 +2630,11 @@ window.vrijeDagVerwijderen = function (datum) {
 
 function vulPersoneelLijst() {
   const div = document.getElementById('sec-personeel-lijst');
+  if (!div) return;
   let html = '';
   KLASSEN.forEach(k => {
     const klasData = state.klassen[k.id];
+    if (!klasData || !klasData.leerlingen) return;
     const personeelskinderen = klasData.leerlingen.filter(l => l.personeelskind);
     const overige = klasData.leerlingen.filter(l => !l.personeelskind && !l.einddatum);
 
@@ -2530,11 +2646,14 @@ function vulPersoneelLijst() {
         </summary>
         <div style="margin-top:8px; padding-left:8px; columns:2; column-gap:16px;">
           ${[...personeelskinderen, ...overige].map(l => `
-            <div style="display:flex; align-items:center; gap:8px; padding:3px 0; break-inside:avoid;">
-              <input type="checkbox" id="pk-${l.id}" ${l.personeelskind ? 'checked' : ''}
-                onchange="togglePersoneelskind('${k.id}', '${l.id}', this.checked)"
-                style="width:16px; height:16px; cursor:pointer;">
-              <label for="pk-${l.id}" style="cursor:pointer; font-size:0.9em; ${l.personeelskind ? 'color:var(--accent-donker); font-weight:600;' : ''}">${l.personeelskind ? '⚹ ' : ''}${escapeHtml(l.naam)}</label>
+            <div onclick="togglePersoneelskind('${k.id}', '${l.id}')"
+                 style="display:flex; align-items:center; gap:8px; padding:4px 6px; break-inside:avoid; cursor:pointer; border-radius:4px; ${l.personeelskind ? 'background:#fff7ed;' : ''}"
+                 onmouseover="this.style.background='${l.personeelskind ? '#ffe8c9' : '#f5f5f5'}'"
+                 onmouseout="this.style.background='${l.personeelskind ? '#fff7ed' : 'transparent'}'">
+              <span style="width:18px; height:18px; border:2px solid ${l.personeelskind ? 'var(--accent-donker)' : '#bbb'}; border-radius:4px; display:inline-flex; align-items:center; justify-content:center; flex-shrink:0; background:${l.personeelskind ? 'var(--accent-donker)' : 'white'};">
+                ${l.personeelskind ? '<span style="color:white; font-size:12px; font-weight:700;">✓</span>' : ''}
+              </span>
+              <span style="font-size:0.9em; ${l.personeelskind ? 'color:var(--accent-donker); font-weight:600;' : ''}">${l.personeelskind ? '⚹ ' : ''}${escapeHtml(l.naam)}</span>
             </div>
           `).join('')}
         </div>
@@ -2544,11 +2663,12 @@ function vulPersoneelLijst() {
   div.innerHTML = html;
 }
 
-window.togglePersoneelskind = function (klasId, leerlingId, isPersoneel) {
+window.togglePersoneelskind = function (klasId, leerlingId) {
   const klas = state.klassen[klasId];
+  if (!klas) return;
   const l = klas.leerlingen.find(x => x.id === leerlingId);
   if (!l) return;
-  l.personeelskind = isPersoneel;
+  l.personeelskind = !l.personeelskind;
   bewaarState(state);
   vulPersoneelLijst();
 };
@@ -2623,4 +2743,1269 @@ window.secRefter_exporteerAlleKlassen = function () {
   KLASSEN.forEach((k, idx) => {
     setTimeout(() => secRefter_exporteerKlas(k.id), idx * 200);
   });
+};
+
+// ==============================================
+// SECRETARIAAT: KLASBEHEER VAN DE HELE SCHOOL
+// ==============================================
+
+let secKb_geselecteerdeKlas = null;
+let secKb_toonUitgeschrevenen = false;
+
+function toonSecKlasbeheer() {
+  document.getElementById('meldingen-zone').innerHTML = '';
+  document.querySelector('.container').classList.remove('breed');
+
+  if (secKb_geselecteerdeKlas) {
+    toonSecKlasbeheerDetail();
+  } else {
+    toonSecKlasbeheerOverzicht();
+  }
+}
+
+function toonSecKlasbeheerOverzicht() {
+  const hoofdpaneel = document.getElementById('hoofdpaneel');
+  const klassen = getKlassen();
+
+  // Tellingen per klas
+  const rijen = klassen.map(k => {
+    const kd = state.klassen[k.id] || { leerlingen: [] };
+    const actief = kd.leerlingen.filter(l => !l.einddatum);
+    const personeelskinderen = actief.filter(l => l.personeelskind);
+    const uitgeschreven = kd.leerlingen.filter(l => l.einddatum);
+    return { klas: k, aantalActief: actief.length, aantalPersoneel: personeelskinderen.length, aantalUitgeschreven: uitgeschreven.length };
+  });
+
+  const totaalActief = rijen.reduce((s, r) => s + r.aantalActief, 0);
+
+  hoofdpaneel.innerHTML = `
+    <button class="terug-knop" onclick="rolToepassen()">← Terug naar dashboard</button>
+
+    <div class="sec-paneel">
+      <h2>👥 Klasbeheer — overzicht alle klassen</h2>
+      <p style="color:var(--tekst-zacht); font-size:0.92em; margin:-8px 0 16px 0;">
+        Beheer klassen, titularissen en leerlingen. Wijzigingen werken meteen door in refter, uitstappen en werkboeken.
+      </p>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:18px;">
+        <button class="accent" onclick="openKlasBewerken(null)">➕ Nieuwe klas</button>
+        <div style="margin-left:auto; background:var(--creme-warm); padding:8px 14px; border-radius:6px; font-size:0.92em;">
+          🏫 <strong>${klassen.length}</strong> klassen · 👦👧 <strong>${totaalActief}</strong> actieve leerlingen
+        </div>
+      </div>
+
+      <table class="sec-tabel">
+        <thead>
+          <tr>
+            <th style="width:60px;">Volgorde</th>
+            <th>Klas</th>
+            <th>Leerjaar</th>
+            <th>Titularis</th>
+            <th style="text-align:right;">Leerlingen</th>
+            <th style="text-align:right;">Personeel</th>
+            <th style="text-align:right;">Uitgeschreven</th>
+            <th style="width:180px;">Acties</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${rijen.map((r, idx) => `
+            <tr>
+              <td>
+                <button onclick="klasOmhoog('${r.klas.id}')" title="Omhoog" ${idx === 0 ? 'disabled' : ''} style="padding:2px 8px; font-size:1em;">▲</button>
+                <button onclick="klasOmlaag('${r.klas.id}')" title="Omlaag" ${idx === rijen.length - 1 ? 'disabled' : ''} style="padding:2px 8px; font-size:1em;">▼</button>
+              </td>
+              <td><strong>${escapeHtml(r.klas.klas)}</strong></td>
+              <td>${escapeHtml(r.klas.leerjaar)}</td>
+              <td>${escapeHtml(r.klas.leerkracht)}</td>
+              <td style="text-align:right;"><strong>${r.aantalActief}</strong></td>
+              <td style="text-align:right; color:var(--tekst-zacht);">${r.aantalPersoneel > 0 ? '⚹ ' + r.aantalPersoneel : '—'}</td>
+              <td style="text-align:right; color:var(--tekst-zacht);">${r.aantalUitgeschreven > 0 ? r.aantalUitgeschreven : '—'}</td>
+              <td>
+                <button onclick="secKb_openKlas('${r.klas.id}')">Leerlingen</button>
+                <button onclick="openKlasBewerken('${r.klas.id}')" title="Klasnaam of titularis wijzigen">✎</button>
+              </td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+
+      <p style="margin-top:14px; font-size:0.85em; color:var(--tekst-zacht);">
+        💡 Gebruik ▲ ▼ om klassen te herordenen. Klik op <strong>Leerlingen</strong> om leerlingen te beheren (ook een <strong>📋 Lijst plakken</strong> knop voor snelle invoer). Klik op <strong>✎</strong> om klasnaam of titularis te wijzigen.
+      </p>
+    </div>
+  `;
+}
+
+window.secKb_openKlas = function (klasId) {
+  secKb_geselecteerdeKlas = klasId;
+  secKb_toonUitgeschrevenen = false;
+  toonSecKlasbeheer();
+};
+
+window.secKb_terug = function () {
+  secKb_geselecteerdeKlas = null;
+  toonSecKlasbeheer();
+};
+
+// -----------------------------------------------
+// DETAIL: leerlingenlijst van één klas
+// -----------------------------------------------
+function toonSecKlasbeheerDetail() {
+  const klasId = secKb_geselecteerdeKlas;
+  const klas = getKlassen().find(k => k.id === klasId);
+  const klasData = state.klassen[klasId] || { leerlingen: [] };
+  const hoofdpaneel = document.getElementById('hoofdpaneel');
+
+  // Sorteer alfabetisch op achternaam, dan voornaam
+  const gesorteerd = klasData.leerlingen.slice().sort((a, b) => {
+    if (a.achternaam !== b.achternaam) return a.achternaam.localeCompare(b.achternaam);
+    return a.voornaam.localeCompare(b.voornaam);
+  });
+
+  const actief = gesorteerd.filter(l => !l.einddatum);
+  const uitgeschreven = gesorteerd.filter(l => l.einddatum);
+  const personeelskinderen = actief.filter(l => l.personeelskind);
+
+  hoofdpaneel.innerHTML = `
+    <button class="terug-knop" onclick="secKb_terug()">← Terug naar klasoverzicht</button>
+
+    <div class="sec-paneel">
+      <h2>👥 Klas ${escapeHtml(klas.klas)} — ${escapeHtml(klas.leerkracht)}</h2>
+      <p style="color:var(--tekst-zacht); font-size:0.92em; margin:-8px 0 16px 0;">
+        ${klas.leerjaar} · <strong>${actief.length}</strong> actieve leerlingen${personeelskinderen.length > 0 ? ` · ⚹ ${personeelskinderen.length} personeelskind${personeelskinderen.length > 1 ? 'eren' : ''}` : ''}${uitgeschreven.length > 0 ? ` · ${uitgeschreven.length} uitgeschreven` : ''}
+      </p>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:16px;">
+        <button class="accent" onclick="openLeerlingBewerken('${klasId}', null)">➕ Leerling toevoegen</button>
+        <button onclick="openLijstPlakken('${klasId}')" title="Plak een lijst uit Excel of Word">📋 Lijst plakken</button>
+        ${uitgeschreven.length > 0 ? `
+          <button onclick="secKb_toggleUitgeschrevenen()" style="${secKb_toonUitgeschrevenen ? 'background:var(--creme-warm);' : ''}">
+            ${secKb_toonUitgeschrevenen ? '🙈 Verberg uitgeschrevenen' : `👁️ Toon uitgeschrevenen (${uitgeschreven.length})`}
+          </button>
+        ` : ''}
+      </div>
+
+      ${actief.length === 0 ? `
+        <p style="text-align:center; padding:30px; color:var(--tekst-zacht); font-style:italic;">
+          Nog geen leerlingen in deze klas. Klik op "➕ Leerling toevoegen" om te starten.
+        </p>
+      ` : `
+        <table class="sec-tabel">
+          <thead>
+            <tr>
+              <th style="width:35%;">Naam</th>
+              <th style="width:22%;">Status</th>
+              <th style="width:18%;">Sinds</th>
+              <th style="width:25%; text-align:right;">Acties</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${actief.map(l => `
+              <tr>
+                <td>
+                  <strong>${escapeHtml(l.achternaam)}</strong> ${escapeHtml(l.voornaam)}
+                </td>
+                <td>
+                  ${l.personeelskind ? '<span style="color:var(--accent-donker); font-weight:600;">⚹ personeelskind</span>' : '<span style="color:var(--tekst-zacht);">leerling</span>'}
+                </td>
+                <td>
+                  ${l.startdatum && l.startdatum > '2026-09-01'
+                    ? `<span style="color:var(--tekst-zacht);">${formatDag(l.startdatum)}</span>`
+                    : '<span style="color:var(--tekst-zacht);">start schooljaar</span>'}
+                </td>
+                <td style="text-align:right;">
+                  <button onclick="openLeerlingBewerken('${klasId}', '${l.id}')" title="Naam, startdatum of personeelskind wijzigen">✎ Bewerken</button>
+                  <button onclick="leerlingUitschrijven('${klasId}', '${l.id}')" title="Leerling verlaat de school" style="color:#a54848;">↗ Uitschrijven</button>
+                </td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      `}
+
+      ${secKb_toonUitgeschrevenen && uitgeschreven.length > 0 ? `
+        <h3 style="margin-top:24px; color:var(--tekst-zacht); font-size:1.05em;">📂 Uitgeschreven leerlingen</h3>
+        <p style="font-size:0.88em; color:var(--tekst-zacht); margin-top:-4px;">
+          Deze leerlingen blijven zichtbaar in oude maanden en uitstappen (voor facturatie). Je kan ze terug inschrijven indien nodig.
+        </p>
+        <table class="sec-tabel" style="opacity:0.85;">
+          <thead>
+            <tr>
+              <th style="width:35%;">Naam</th>
+              <th style="width:22%;">Was</th>
+              <th style="width:18%;">Uitgeschreven</th>
+              <th style="width:25%; text-align:right;">Acties</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${uitgeschreven.map(l => `
+              <tr>
+                <td><strong>${escapeHtml(l.achternaam)}</strong> ${escapeHtml(l.voornaam)}</td>
+                <td>${l.personeelskind ? '⚹ personeelskind' : 'leerling'}</td>
+                <td>${formatDag(l.einddatum)}</td>
+                <td style="text-align:right;">
+                  <button onclick="leerlingHerinschrijven('${klasId}', '${l.id}')" title="Terug actief maken">↩ Herinschrijven</button>
+                </td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      ` : ''}
+    </div>
+  `;
+}
+
+window.secKb_toggleUitgeschrevenen = function () {
+  secKb_toonUitgeschrevenen = !secKb_toonUitgeschrevenen;
+  toonSecKlasbeheer();
+};
+
+// -----------------------------------------------
+// KLAS BEWERKEN / TOEVOEGEN
+// -----------------------------------------------
+window.openKlasBewerken = function (klasId) {
+  // Maak dialoog aan als hij nog niet bestaat
+  if (!document.getElementById('klas-bewerken-dialoog')) {
+    const dlg = document.createElement('div');
+    dlg.innerHTML = `
+      <div class="dialoog-achtergrond" id="klas-bewerken-dialoog">
+        <div class="dialoog">
+          <h3 id="klas-bewerken-titel">Klas bewerken</h3>
+          <input type="hidden" id="kb-id">
+
+          <label>Klas-ID <span style="color:var(--tekst-zacht); font-weight:400;">(intern, bv. "2A" of "K1")</span></label>
+          <input type="text" id="kb-klas" placeholder="2A">
+          <div class="hint">Kort en uniek. Wordt gebruikt om de klas te herkennen in refter, uitstappen, enz.</div>
+
+          <label>Leerjaar</label>
+          <select id="kb-leerjaar">
+            <option value="Kleuters">Kleuters</option>
+            <option value="Leerjaar 1">Leerjaar 1</option>
+            <option value="Leerjaar 2">Leerjaar 2</option>
+            <option value="Leerjaar 3">Leerjaar 3</option>
+            <option value="Leerjaar 4">Leerjaar 4</option>
+            <option value="Leerjaar 5">Leerjaar 5</option>
+            <option value="Leerjaar 6">Leerjaar 6</option>
+          </select>
+
+          <label>Titularis (klasleerkracht)</label>
+          <input type="text" id="kb-leerkracht" placeholder="bv. Isabel Rockelé">
+
+          <div class="dialoog-knoppen">
+            <button onclick="sluitDialoog('klas-bewerken-dialoog')">Annuleren</button>
+            <button id="kb-verwijder-knop" class="gevaar" onclick="klasVerwijderen()" style="display:none;">🗑️ Klas verwijderen</button>
+            <button class="accent" onclick="klasOpslaan()">Opslaan</button>
+          </div>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(dlg);
+  }
+
+  const klassen = getKlassen();
+  if (klasId) {
+    // Bewerken
+    const k = klassen.find(x => x.id === klasId);
+    if (!k) return;
+    document.getElementById('klas-bewerken-titel').textContent = `✎ Klas ${k.klas} bewerken`;
+    document.getElementById('kb-id').value = k.id;
+    document.getElementById('kb-klas').value = k.klas;
+    document.getElementById('kb-leerjaar').value = k.leerjaar;
+    document.getElementById('kb-leerkracht').value = k.leerkracht;
+    document.getElementById('kb-verwijder-knop').style.display = 'inline-block';
+  } else {
+    // Nieuw
+    document.getElementById('klas-bewerken-titel').textContent = '➕ Nieuwe klas';
+    document.getElementById('kb-id').value = '';
+    document.getElementById('kb-klas').value = '';
+    document.getElementById('kb-leerjaar').value = 'Leerjaar 1';
+    document.getElementById('kb-leerkracht').value = '';
+    document.getElementById('kb-verwijder-knop').style.display = 'none';
+  }
+  document.getElementById('klas-bewerken-dialoog').classList.add('open');
+};
+
+window.klasOpslaan = function () {
+  const id = document.getElementById('kb-id').value;
+  const klas = document.getElementById('kb-klas').value.trim();
+  const leerjaar = document.getElementById('kb-leerjaar').value;
+  const leerkracht = document.getElementById('kb-leerkracht').value.trim();
+
+  if (!klas) { alert('Vul een klas-naam in.'); return; }
+  if (!leerkracht) { alert('Vul een titularis in.'); return; }
+
+  const klassen = getKlassen();
+
+  if (id) {
+    // Bewerken - gebruik de originele id (die verander je niet, anders breekt data)
+    const k = klassen.find(x => x.id === id);
+    if (!k) return;
+    k.klas = klas;
+    k.leerjaar = leerjaar;
+    k.leerkracht = leerkracht;
+  } else {
+    // Nieuw: gebruik klas-naam als id (gestript van spaties)
+    const nieuwId = klas.replace(/\s+/g, '').toUpperCase();
+    if (klassen.find(x => x.id === nieuwId)) {
+      alert(`Er bestaat al een klas met id "${nieuwId}". Kies een andere klas-naam.`);
+      return;
+    }
+    klassen.push({ id: nieuwId, klas, leerjaar, leerkracht });
+    // Initialiseer klas-data
+    if (!state.klassen[nieuwId]) {
+      state.klassen[nieuwId] = { leerlingen: [], werkboeken: [] };
+    }
+  }
+
+  bewaarState(state);
+  sluitDialoog('klas-bewerken-dialoog');
+  toonSecKlasbeheer();
+};
+
+window.klasVerwijderen = function () {
+  const id = document.getElementById('kb-id').value;
+  if (!id) return;
+  const klassen = getKlassen();
+  const k = klassen.find(x => x.id === id);
+  if (!k) return;
+  const kd = state.klassen[id];
+  const aantalLeerlingen = kd ? kd.leerlingen.filter(l => !l.einddatum).length : 0;
+  if (aantalLeerlingen > 0) {
+    alert(`Kan klas "${k.klas}" niet verwijderen: er zijn nog ${aantalLeerlingen} actieve leerling${aantalLeerlingen === 1 ? '' : 'en'}. Schrijf ze eerst uit of verplaats ze.`);
+    return;
+  }
+  if (!confirm(`Klas "${k.klas}" definitief verwijderen?\n\nAlle historiek (refter, uitstappen, werkboeken) van deze klas wordt ook gewist.`)) return;
+  state.klassen_lijst = klassen.filter(x => x.id !== id);
+  delete state.klassen[id];
+  delete state.refter_invullingen[id];
+  delete state.refter_geblokkeerd_tot[id];
+  delete state.uitstappen[id];
+  delete state.werkboeken_klaar[id];
+  bewaarState(state);
+  sluitDialoog('klas-bewerken-dialoog');
+  secKb_geselecteerdeKlas = null;
+  toonSecKlasbeheer();
+};
+
+// -----------------------------------------------
+// LEERLING BEWERKEN / TOEVOEGEN
+// -----------------------------------------------
+window.openLeerlingBewerken = function (klasId, leerlingId) {
+  if (!document.getElementById('leerling-bewerken-dialoog')) {
+    const dlg = document.createElement('div');
+    dlg.innerHTML = `
+      <div class="dialoog-achtergrond" id="leerling-bewerken-dialoog">
+        <div class="dialoog">
+          <h3 id="lb-titel">Leerling toevoegen</h3>
+          <input type="hidden" id="lb-klasId">
+          <input type="hidden" id="lb-leerlingId">
+
+          <label>Achternaam</label>
+          <input type="text" id="lb-achternaam" placeholder="bv. Aerts" autocomplete="off">
+
+          <label>Voornaam</label>
+          <input type="text" id="lb-voornaam" placeholder="bv. Luna" autocomplete="off">
+          <div class="hint">De lijst wordt automatisch alfabetisch gesorteerd op achternaam, dan voornaam.</div>
+
+          <label>Startdatum</label>
+          <input type="date" id="lb-startdatum">
+          <div class="hint">1 september voor leerlingen die vanaf het begin van het schooljaar in de klas zitten. Anders de dag dat ze in de klas komen.</div>
+
+          <label style="display:flex; align-items:center; gap:8px; cursor:pointer; padding:10px 12px; border:1.5px solid var(--rand); border-radius:8px; margin-top:8px;">
+            <input type="checkbox" id="lb-personeelskind" style="width:18px; height:18px;">
+            <span>
+              <strong>⚹ Personeelskind</strong>
+              <div style="font-size:0.85em; color:var(--tekst-zacht);">Betaalt geen refter. Naam blijft zichtbaar, maar rij is grijs in de refterlijst.</div>
+            </span>
+          </label>
+
+          <div class="dialoog-knoppen">
+            <button onclick="sluitDialoog('leerling-bewerken-dialoog')">Annuleren</button>
+            <button class="accent" onclick="leerlingOpslaan()">Opslaan</button>
+          </div>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(dlg);
+  }
+
+  document.getElementById('lb-klasId').value = klasId;
+  document.getElementById('lb-leerlingId').value = leerlingId || '';
+
+  if (leerlingId) {
+    const kd = state.klassen[klasId];
+    const l = kd.leerlingen.find(x => x.id === leerlingId);
+    if (!l) return;
+    document.getElementById('lb-titel').textContent = `✎ ${l.achternaam} ${l.voornaam} bewerken`;
+    document.getElementById('lb-achternaam').value = l.achternaam;
+    document.getElementById('lb-voornaam').value = l.voornaam;
+    document.getElementById('lb-startdatum').value = l.startdatum || '2026-09-01';
+    document.getElementById('lb-personeelskind').checked = !!l.personeelskind;
+  } else {
+    document.getElementById('lb-titel').textContent = '➕ Leerling toevoegen';
+    document.getElementById('lb-achternaam').value = '';
+    document.getElementById('lb-voornaam').value = '';
+    document.getElementById('lb-startdatum').value = new Date().toISOString().substring(0, 10);
+    document.getElementById('lb-personeelskind').checked = false;
+  }
+  document.getElementById('leerling-bewerken-dialoog').classList.add('open');
+
+  // Focus op achternaam
+  setTimeout(() => document.getElementById('lb-achternaam').focus(), 50);
+};
+
+window.leerlingOpslaan = function () {
+  const klasId = document.getElementById('lb-klasId').value;
+  const leerlingId = document.getElementById('lb-leerlingId').value;
+  const achternaam = document.getElementById('lb-achternaam').value.trim();
+  const voornaam = document.getElementById('lb-voornaam').value.trim();
+  const startdatum = document.getElementById('lb-startdatum').value;
+  const personeelskind = document.getElementById('lb-personeelskind').checked;
+
+  if (!achternaam) { alert('Vul een achternaam in.'); return; }
+  if (!voornaam) { alert('Vul een voornaam in.'); return; }
+
+  if (!state.klassen[klasId]) state.klassen[klasId] = { leerlingen: [], werkboeken: [] };
+  const kd = state.klassen[klasId];
+
+  if (leerlingId) {
+    // Bewerken
+    const l = kd.leerlingen.find(x => x.id === leerlingId);
+    if (!l) return;
+    l.achternaam = achternaam;
+    l.voornaam = voornaam;
+    l.naam = achternaam + ' ' + voornaam;
+    l.startdatum = startdatum;
+    l.personeelskind = personeelskind;
+  } else {
+    // Nieuw
+    const nieuwId = klasId + '-l' + Date.now();
+    kd.leerlingen.push({
+      id: nieuwId,
+      achternaam,
+      voornaam,
+      naam: achternaam + ' ' + voornaam,
+      startdatum,
+      einddatum: null,
+      personeelskind
+    });
+  }
+
+  bewaarState(state);
+  sluitDialoog('leerling-bewerken-dialoog');
+  toonSecKlasbeheer();
+};
+
+window.leerlingUitschrijven = function (klasId, leerlingId) {
+  const kd = state.klassen[klasId];
+  const l = kd.leerlingen.find(x => x.id === leerlingId);
+  if (!l) return;
+  const vandaag = new Date().toISOString().substring(0, 10);
+  const datum = prompt(
+    `Uitschrijven van ${l.achternaam} ${l.voornaam}.\n\nVanaf welke datum is de leerling niet meer in de klas?\n(YYYY-MM-DD formaat, bv. ${vandaag})`,
+    vandaag
+  );
+  if (!datum) return;
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(datum)) {
+    alert('Ongeldige datum. Gebruik YYYY-MM-DD formaat (bv. 2026-11-30).');
+    return;
+  }
+  l.einddatum = datum;
+  bewaarState(state);
+  toonSecKlasbeheer();
+};
+
+window.leerlingHerinschrijven = function (klasId, leerlingId) {
+  const kd = state.klassen[klasId];
+  const l = kd.leerlingen.find(x => x.id === leerlingId);
+  if (!l) return;
+  if (!confirm(`${l.achternaam} ${l.voornaam} terug actief maken?\n\nEinddatum wordt weggehaald. De leerling staat vanaf nu weer in de actieve lijst.`)) return;
+  l.einddatum = null;
+  bewaarState(state);
+  toonSecKlasbeheer();
+};
+
+// -----------------------------------------------
+// LIJST PLAKKEN: meerdere leerlingen tegelijk importeren
+// -----------------------------------------------
+window.openLijstPlakken = function (klasId) {
+  if (!document.getElementById('lijst-plakken-dialoog')) {
+    const dlg = document.createElement('div');
+    dlg.innerHTML = `
+      <div class="dialoog-achtergrond" id="lijst-plakken-dialoog">
+        <div class="dialoog" style="max-width:720px;">
+          <h3>📋 Lijst plakken</h3>
+          <p style="font-size:0.9em; color:var(--tekst-zacht); margin:0 0 10px 0;">
+            Plak hier een lijst van leerlingen uit Excel, Word of een e-mail. Elke regel = één leerling.
+          </p>
+
+          <div style="background:var(--creme); border-radius:8px; padding:12px 14px; margin-bottom:14px; font-size:0.9em;">
+            <strong>Ondersteunde formaten:</strong><br>
+            <code style="background:var(--wit); padding:2px 6px; border-radius:3px;">Aerts Luna</code>
+            &nbsp;— achternaam voornaam (ruimte)<br>
+            <code style="background:var(--wit); padding:2px 6px; border-radius:3px;">Aerts, Luna</code>
+            &nbsp;— achternaam, voornaam (komma)<br>
+            <code style="background:var(--wit); padding:2px 6px; border-radius:3px;">Aerts&nbsp;&nbsp;Luna</code>
+            &nbsp;— achternaam [TAB] voornaam (uit Excel)<br>
+            <span style="color:var(--tekst-zacht);">Lege regels worden overgeslagen.</span>
+          </div>
+
+          <input type="hidden" id="lp-klasId">
+
+          <label>Lijst met leerlingen</label>
+          <textarea id="lp-lijst" rows="12"
+            placeholder="Aerts Luna&#10;Bogaerts Luna&#10;Claes Lucas&#10;De Clerck Lucas&#10;..."
+            style="width:100%; font-family:monospace; font-size:0.95em; padding:10px; border:1.5px solid var(--rand); border-radius:8px; resize:vertical;"></textarea>
+
+          <label>Startdatum voor alle leerlingen</label>
+          <input type="date" id="lp-startdatum">
+          <div class="hint">Wordt voor alle nieuwe leerlingen in de lijst gebruikt.</div>
+
+          <div id="lp-voorbeeld" style="display:none; margin-top:12px;"></div>
+
+          <div class="dialoog-knoppen">
+            <button onclick="sluitDialoog('lijst-plakken-dialoog')">Annuleren</button>
+            <button onclick="lijstPlakkenVoorbeeld()">👁️ Voorbeeld tonen</button>
+            <button class="accent" onclick="lijstPlakkenImporteren()">✓ Leerlingen toevoegen</button>
+          </div>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(dlg);
+  }
+
+  document.getElementById('lp-klasId').value = klasId;
+  document.getElementById('lp-lijst').value = '';
+  document.getElementById('lp-startdatum').value = '2026-09-01';
+  document.getElementById('lp-voorbeeld').style.display = 'none';
+  document.getElementById('lp-voorbeeld').innerHTML = '';
+  document.getElementById('lijst-plakken-dialoog').classList.add('open');
+
+  setTimeout(() => document.getElementById('lp-lijst').focus(), 50);
+};
+
+// Parser: neemt tekst en probeert achternaam + voornaam per regel te halen
+function parseLeerlingenLijst(tekst) {
+  const regels = tekst.split('\n').map(r => r.trim()).filter(r => r.length > 0);
+  const resultaat = [];
+  const fouten = [];
+
+  regels.forEach((regel, idx) => {
+    let achternaam = '';
+    let voornaam = '';
+
+    // Probeer: "Achternaam, Voornaam" (komma)
+    if (regel.includes(',')) {
+      const delen = regel.split(',').map(x => x.trim());
+      achternaam = delen[0];
+      voornaam = delen[1] || '';
+    }
+    // Probeer: Tab-gescheiden (uit Excel)
+    else if (regel.includes('\t')) {
+      const delen = regel.split('\t').map(x => x.trim()).filter(x => x);
+      achternaam = delen[0];
+      voornaam = delen.slice(1).join(' ');
+    }
+    // Probeer: "Achternaam Voornaam" (meerdere spaties → tab, of gewoon spatie)
+    else {
+      // Meerdere spaties = separator
+      if (/ {2,}/.test(regel)) {
+        const delen = regel.split(/ {2,}/).map(x => x.trim());
+        achternaam = delen[0];
+        voornaam = delen.slice(1).join(' ');
+      } else {
+        // Eén spatie: eerste woord = achternaam, rest = voornaam
+        const delen = regel.split(/\s+/);
+        if (delen.length < 2) {
+          fouten.push(`Regel ${idx + 1}: "${regel}" — geen voornaam herkend`);
+          return;
+        }
+        achternaam = delen[0];
+        voornaam = delen.slice(1).join(' ');
+      }
+    }
+
+    if (!achternaam || !voornaam) {
+      fouten.push(`Regel ${idx + 1}: "${regel}" — kan achternaam en voornaam niet onderscheiden`);
+      return;
+    }
+    resultaat.push({ achternaam, voornaam, origineel: regel });
+  });
+
+  return { leerlingen: resultaat, fouten };
+}
+
+window.lijstPlakkenVoorbeeld = function () {
+  const tekst = document.getElementById('lp-lijst').value;
+  const { leerlingen, fouten } = parseLeerlingenLijst(tekst);
+  const div = document.getElementById('lp-voorbeeld');
+
+  if (leerlingen.length === 0 && fouten.length === 0) {
+    div.style.display = 'none';
+    alert('Plak eerst een lijst in het tekstvak.');
+    return;
+  }
+
+  let html = '<div style="background:var(--creme-warm); border-radius:8px; padding:12px 14px;">';
+  html += `<strong>${leerlingen.length} leerling${leerlingen.length === 1 ? '' : 'en'} herkend:</strong>`;
+  html += '<div style="max-height:200px; overflow-y:auto; margin-top:8px; background:var(--wit); border-radius:6px; padding:8px;">';
+
+  // Sorteer alfabetisch zoals ze straks zullen verschijnen
+  const gesorteerd = leerlingen.slice().sort((a, b) => {
+    if (a.achternaam !== b.achternaam) return a.achternaam.localeCompare(b.achternaam);
+    return a.voornaam.localeCompare(b.voornaam);
+  });
+  gesorteerd.forEach(l => {
+    html += `<div style="padding:3px 0; font-size:0.92em;"><strong>${escapeHtml(l.achternaam)}</strong> ${escapeHtml(l.voornaam)}</div>`;
+  });
+  html += '</div>';
+
+  if (fouten.length > 0) {
+    html += `<div style="margin-top:10px; background:#fce8e8; border-radius:6px; padding:8px 10px; color:#8a3838; font-size:0.9em;">
+      <strong>⚠️ ${fouten.length} regel${fouten.length === 1 ? '' : 's'} niet herkend:</strong><br>
+      ${fouten.map(f => '• ' + escapeHtml(f)).join('<br>')}
+    </div>`;
+  }
+  html += '</div>';
+  div.innerHTML = html;
+  div.style.display = 'block';
+};
+
+window.lijstPlakkenImporteren = function () {
+  const klasId = document.getElementById('lp-klasId').value;
+  const tekst = document.getElementById('lp-lijst').value;
+  const startdatum = document.getElementById('lp-startdatum').value;
+
+  const { leerlingen, fouten } = parseLeerlingenLijst(tekst);
+
+  if (leerlingen.length === 0) {
+    alert('Geen leerlingen herkend in de lijst. Controleer het formaat.');
+    return;
+  }
+
+  let bericht = `${leerlingen.length} leerling${leerlingen.length === 1 ? '' : 'en'} toevoegen aan deze klas?`;
+  if (fouten.length > 0) {
+    bericht += `\n\n⚠️ ${fouten.length} regel${fouten.length === 1 ? '' : 's'} niet herkend, worden overgeslagen.`;
+  }
+  if (!confirm(bericht)) return;
+
+  if (!state.klassen[klasId]) state.klassen[klasId] = { leerlingen: [], werkboeken: [] };
+  const kd = state.klassen[klasId];
+
+  const baseTime = Date.now();
+  leerlingen.forEach((l, idx) => {
+    kd.leerlingen.push({
+      id: klasId + '-l' + (baseTime + idx),
+      achternaam: l.achternaam,
+      voornaam: l.voornaam,
+      naam: l.achternaam + ' ' + l.voornaam,
+      startdatum: startdatum,
+      einddatum: null,
+      personeelskind: false
+    });
+  });
+
+  bewaarState(state);
+  sluitDialoog('lijst-plakken-dialoog');
+  toonSecKlasbeheer();
+};
+
+// -----------------------------------------------
+// KLAS VOLGORDE WIJZIGEN
+// -----------------------------------------------
+window.klasOmhoog = function (klasId) {
+  const klassen = getKlassen();
+  const idx = klassen.findIndex(k => k.id === klasId);
+  if (idx <= 0) return;
+  // Swap met vorige
+  [klassen[idx - 1], klassen[idx]] = [klassen[idx], klassen[idx - 1]];
+  bewaarState(state);
+  toonSecKlasbeheer();
+};
+
+window.klasOmlaag = function (klasId) {
+  const klassen = getKlassen();
+  const idx = klassen.findIndex(k => k.id === klasId);
+  if (idx < 0 || idx >= klassen.length - 1) return;
+  // Swap met volgende
+  [klassen[idx], klassen[idx + 1]] = [klassen[idx + 1], klassen[idx]];
+  bewaarState(state);
+  toonSecKlasbeheer();
+};
+
+// ==============================================
+// SECRETARIAAT: UITSTAPPEN
+// ==============================================
+
+let secUs_huidigeMaand = '2026-11';
+let secUs_geselecteerdeKlas = null;
+
+function toonSecUitstappen() {
+  document.getElementById('meldingen-zone').innerHTML = '';
+  document.querySelector('.container').classList.add('breed');
+
+  if (secUs_geselecteerdeKlas) {
+    toonSecUitstappenDetail();
+  } else {
+    toonSecUitstappenOverzicht();
+  }
+}
+
+function toonSecUitstappenOverzicht() {
+  const hoofdpaneel = document.getElementById('hoofdpaneel');
+  const [jaar, maand] = secUs_huidigeMaand.split('-').map(Number);
+  const maandNamen = ['Januari','Februari','Maart','April','Mei','Juni','Juli','Augustus','September','Oktober','November','December'];
+  const maandLabel = `${maandNamen[maand - 1]} ${jaar}`;
+
+  const klassen = getKlassen();
+
+  // Bereken per klas
+  const rijen = klassen.map(k => {
+    const klasData = state.klassen[k.id] || { leerlingen: [] };
+    const alleUs = state.uitstappen[k.id] || [];
+    const usMaand = alleUs.filter(u => u.datum.startsWith(secUs_huidigeMaand));
+
+    const actieveLL = klasData.leerlingen.filter(l => {
+      const maandStart = secUs_huidigeMaand + '-01';
+      const maandEind = secUs_huidigeMaand + '-31';
+      if (l.einddatum && l.einddatum < maandStart) return false;
+      if (l.startdatum && l.startdatum > maandEind) return false;
+      return true;
+    });
+
+    let aantalActiviteiten = 0;
+    let aantalBestellingen = 0;
+    let totaalOpbrengst = 0; // alles: activiteiten + bestellingen
+
+    usMaand.forEach(u => {
+      const type = u.type || 'activiteit';
+      if (type === 'bestelling') {
+        aantalBestellingen++;
+        let besteldAantal = 0;
+        actieveLL.forEach(l => {
+          if ((u.deelnemers || {})[l.id] === 'besteld') besteldAantal++;
+        });
+        totaalOpbrengst += besteldAantal * u.prijs;
+      } else {
+        aantalActiviteiten++;
+        let aantalMee = 0;
+        actieveLL.forEach(l => {
+          const s = (u.deelnemers || {})[l.id] || 'mee';
+          if (s === 'mee') aantalMee++;
+        });
+        totaalOpbrengst += aantalMee * u.prijs;
+      }
+    });
+
+    return { klas: k, aantalActiviteiten, aantalBestellingen, totaalOpbrengst };
+  });
+
+  hoofdpaneel.innerHTML = `
+    <button class="terug-knop" onclick="rolToepassen()">← Terug naar dashboard</button>
+
+    <div class="sec-paneel">
+      <h2>🚌 Uitstappen — overzicht alle klassen</h2>
+      <p style="color:var(--tekst-zacht); font-size:0.92em; margin:-8px 0 16px 0;">
+        Overzicht per klas: aantal activiteiten en bestellingen deze maand. Klik <strong>Openen</strong> om te zien wie wat betaalt voor facturatie.
+      </p>
+
+      <div class="refter-toolbar">
+        <div class="maand-nav">
+          <button onclick="secUs_maandWisselen(-1)">◀</button>
+          <span class="maand-titel">${maandLabel}</span>
+          <button onclick="secUs_maandWisselen(1)">▶</button>
+        </div>
+        <button class="accent" onclick="secUs_exporteerAlleKlassen()" title="CSV per klas voor facturatie">📥 Export alle klassen</button>
+      </div>
+
+      <table class="sec-tabel">
+        <thead>
+          <tr>
+            <th>Klas</th>
+            <th>Leerkracht</th>
+            <th style="text-align:right;">🎓 Activiteiten</th>
+            <th style="text-align:right;">🛒 Bestellingen</th>
+            <th style="width:100px;">Acties</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${rijen.map(r => `
+            <tr>
+              <td><strong>${escapeHtml(r.klas.klas)}</strong></td>
+              <td>${escapeHtml(r.klas.leerkracht)}</td>
+              <td style="text-align:right;">${r.aantalActiviteiten > 0 ? r.aantalActiviteiten : '<span style="color:var(--tekst-zacht);">—</span>'}</td>
+              <td style="text-align:right;">${r.aantalBestellingen > 0 ? r.aantalBestellingen : '<span style="color:var(--tekst-zacht);">—</span>'}</td>
+              <td>
+                ${(r.aantalActiviteiten + r.aantalBestellingen) > 0
+                  ? `<button onclick="secUs_openKlas('${r.klas.id}')">Openen</button>`
+                  : `<span style="color:var(--tekst-zacht); font-style:italic; font-size:0.85em;">geen</span>`}
+              </td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+
+      <p style="margin-top:14px; font-size:0.85em; color:var(--tekst-zacht);">
+        💡 Klik <strong>Openen</strong> om te zien wie wat bestelde of bijwoonde. CSV-export per klas is mogelijk in de detail-weergave.
+      </p>
+    </div>
+  `;
+}
+
+window.secUs_maandWisselen = function (delta) {
+  const [j, m] = secUs_huidigeMaand.split('-').map(Number);
+  const d = new Date(j, m - 1 + delta, 1);
+  secUs_huidigeMaand = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+  toonSecUitstappen();
+};
+
+window.secUs_openKlas = function (klasId) {
+  secUs_geselecteerdeKlas = klasId;
+  toonSecUitstappen();
+};
+
+window.secUs_terug = function () {
+  secUs_geselecteerdeKlas = null;
+  toonSecUitstappen();
+};
+
+function toonSecUitstappenDetail() {
+  const klasId = secUs_geselecteerdeKlas;
+  const klas = getKlassen().find(k => k.id === klasId);
+  const klasData = state.klassen[klasId] || { leerlingen: [] };
+  const hoofdpaneel = document.getElementById('hoofdpaneel');
+
+  const [jaar, maand] = secUs_huidigeMaand.split('-').map(Number);
+  const maandNamen = ['Januari','Februari','Maart','April','Mei','Juni','Juli','Augustus','September','Oktober','November','December'];
+  const maandLabel = `${maandNamen[maand - 1]} ${jaar}`;
+
+  const alleUs = state.uitstappen[klasId] || [];
+  const usMaand = alleUs
+    .filter(u => u.datum.startsWith(secUs_huidigeMaand))
+    .sort((a, b) => a.datum.localeCompare(b.datum));
+
+  const actieveLL = klasData.leerlingen.filter(l => {
+    const maandStart = secUs_huidigeMaand + '-01';
+    const maandEind = secUs_huidigeMaand + '-31';
+    if (l.einddatum && l.einddatum < maandStart) return false;
+    if (l.startdatum && l.startdatum > maandEind) return false;
+    return true;
+  }).slice().sort((a, b) => {
+    if (a.achternaam !== b.achternaam) return a.achternaam.localeCompare(b.achternaam);
+    return a.voornaam.localeCompare(b.voornaam);
+  });
+
+  let tabelHtml = '';
+  if (usMaand.length === 0) {
+    tabelHtml = `<p style="text-align:center; padding:30px; color:var(--tekst-zacht); font-style:italic;">
+      Geen uitstappen of bestellingen in ${maandLabel} voor deze klas.
+    </p>`;
+  } else {
+    // Kop
+    let html = '<div class="uitstap-tabel-wrap"><table class="uitstap-tabel"><thead><tr>';
+    html += '<th class="naam-kop">Leerling</th>';
+    usMaand.forEach(u => {
+      const type = u.type || 'activiteit';
+      const icoon = type === 'bestelling' ? '🛒' : '🎓';
+      html += `<th class="kop-${type}">
+        <div class="uitstap-titel">${icoon} ${escapeHtml(u.titel)}</div>
+        <div class="uitstap-meta">${formatDag(u.datum)} · € ${u.prijs.toFixed(2).replace('.', ',')}</div>
+      </th>`;
+    });
+    html += '</tr></thead><tbody>';
+
+    actieveLL.forEach(l => {
+      html += '<tr>';
+      html += `<td class="naam-cel">
+        <div style="font-weight:600;">${escapeHtml(l.naam)}</div>
+      </td>`;
+      usMaand.forEach(u => {
+        const type = u.type || 'activiteit';
+        if (type === 'bestelling') {
+          const besteld = (u.deelnemers || {})[l.id] === 'besteld';
+          const klasNaam = besteld ? 'deelname-cel besteld' : 'deelname-cel';
+          const tekst = besteld ? '✓' : '';
+          html += `<td class="${klasNaam}">${tekst}</td>`;
+        } else {
+          const status = (u.deelnemers || {})[l.id] || 'mee';
+          const klasNaam = status === 'afwezig' ? 'deelname-cel afwezig' : 'deelname-cel';
+          const tekst = status === 'afwezig' ? '✗' : '';
+          html += `<td class="${klasNaam}">${tekst}</td>`;
+        }
+      });
+      html += '</tr>';
+    });
+
+    html += '</tbody></table></div>';
+    tabelHtml = html;
+  }
+
+  hoofdpaneel.innerHTML = `
+    <button class="terug-knop" onclick="secUs_terug()">← Terug naar overzicht</button>
+
+    <div class="refter-wrapper">
+      <h2 style="margin:0 0 6px 0; color:var(--accent-donker);">🚌 Uitstappen — Klas ${escapeHtml(klas.klas)} <span style="font-size:0.7em; color:var(--tekst-zacht); font-weight:400;">(secretariaat)</span></h2>
+      <p style="margin:0 0 14px 0; color:var(--tekst-zacht); font-size:0.92em;">
+        Leerkracht: <strong>${escapeHtml(klas.leerkracht)}</strong> · ${maandLabel}
+      </p>
+
+      <div class="refter-toolbar">
+        <div class="maand-nav">
+          <button onclick="secUs_maandWisselen(-1)">◀</button>
+          <span class="maand-titel">${maandLabel}</span>
+          <button onclick="secUs_maandWisselen(1)">▶</button>
+        </div>
+        <button class="accent" onclick="secUs_exporteerKlas('${klasId}')" title="CSV download voor facturatie">📥 Exporteren (CSV)</button>
+      </div>
+
+      ${tabelHtml}
+    </div>
+  `;
+}
+
+// ==============================================
+// CSV EXPORT uitstappen
+// ==============================================
+window.secUs_exporteerKlas = function (klasId) {
+  const klas = getKlassen().find(k => k.id === klasId);
+  const klasData = state.klassen[klasId] || { leerlingen: [] };
+  const alleUs = state.uitstappen[klasId] || [];
+  const usMaand = alleUs
+    .filter(u => u.datum.startsWith(secUs_huidigeMaand))
+    .sort((a, b) => a.datum.localeCompare(b.datum));
+
+  if (usMaand.length === 0) {
+    alert(`Geen uitstappen of bestellingen in deze maand voor klas ${klas.klas}.`);
+    return;
+  }
+
+  const actieveLL = klasData.leerlingen.filter(l => {
+    const maandStart = secUs_huidigeMaand + '-01';
+    const maandEind = secUs_huidigeMaand + '-31';
+    if (l.einddatum && l.einddatum < maandStart) return false;
+    if (l.startdatum && l.startdatum > maandEind) return false;
+    return true;
+  }).slice().sort((a, b) => {
+    if (a.achternaam !== b.achternaam) return a.achternaam.localeCompare(b.achternaam);
+    return a.voornaam.localeCompare(b.voornaam);
+  });
+
+  const [jaar, maand] = secUs_huidigeMaand.split('-').map(Number);
+  const maandNamen = ['januari','februari','maart','april','mei','juni','juli','augustus','september','oktober','november','december'];
+
+  // CSV kop
+  let csv = 'Naam;';
+  usMaand.forEach(u => {
+    const type = u.type || 'activiteit';
+    const prefix = type === 'bestelling' ? '[🛒] ' : '[🎓] ';
+    csv += `"${prefix}${u.titel.replace(/"/g, '""')} (${formatDag(u.datum)})";`;
+  });
+  csv = csv.slice(0, -1) + '\n'; // laatste puntkomma weg
+
+  // Per leerling: bedrag als factureerbaar, leeg als niet
+  // Bij uitstappen: iedereen betaalt, ook personeelskinderen
+  actieveLL.forEach(l => {
+    csv += `"${l.naam.replace(/"/g, '""')}";`;
+    usMaand.forEach(u => {
+      const type = u.type || 'activiteit';
+      if (type === 'bestelling') {
+        const besteld = (u.deelnemers || {})[l.id] === 'besteld';
+        csv += besteld ? u.prijs.toFixed(2).replace('.', ',') : '';
+        csv += ';';
+      } else {
+        const status = (u.deelnemers || {})[l.id] || 'mee';
+        csv += (status === 'mee') ? u.prijs.toFixed(2).replace('.', ',') : '';
+        csv += ';';
+      }
+    });
+    csv = csv.slice(0, -1) + '\n';
+  });
+
+  // Download
+  const filename = `uitstappen_${klas.klas.replace(/\s+/g, '')}_${maandNamen[maand - 1]}_${jaar}.csv`;
+  const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+};
+
+window.secUs_exporteerAlleKlassen = function () {
+  const klassen = getKlassen();
+  // Enkel klassen met uitstappen deze maand
+  const klassenMetUs = klassen.filter(k => {
+    const us = state.uitstappen[k.id] || [];
+    return us.some(u => u.datum.startsWith(secUs_huidigeMaand));
+  });
+
+  if (klassenMetUs.length === 0) {
+    alert('Geen klassen met uitstappen of bestellingen deze maand.');
+    return;
+  }
+  if (!confirm(`CSV-bestand downloaden voor ${klassenMetUs.length} klas${klassenMetUs.length === 1 ? '' : 'sen'} met uitstappen in ${secUs_huidigeMaand}?\n\nElke klas krijgt een apart bestand.`)) return;
+  klassenMetUs.forEach((k, idx) => {
+    setTimeout(() => secUs_exporteerKlas(k.id), idx * 200);
+  });
+};
+
+// ==============================================
+// SECRETARIAAT: DEADLINES INSTELLEN
+// ==============================================
+// Structuur van state.deadlines_actief:
+// {
+//   refter: { actief: true, dag: 5 (=vrijdag), herinnering_dagen: 2 },
+//   uitstappen: { actief: true, type: 'laatste_werkdag', herinnering_dagen: 3 },
+//   werkboeken: { actief: true, datum: '2027-04-15', herinnering_dagen: 7 },
+//   lyreco: { actief: true, bestel_datum: '2026-12-10', lever_datum: '2027-01-08', herinnering_dagen: 5 }
+// }
+
+function toonSecDeadlines() {
+  document.getElementById('meldingen-zone').innerHTML = '';
+  document.querySelector('.container').classList.remove('breed');
+
+  const hoofdpaneel = document.getElementById('hoofdpaneel');
+  const dl = state.deadlines_actief || {};
+
+  hoofdpaneel.innerHTML = `
+    <button class="terug-knop" onclick="rolToepassen()">← Terug naar dashboard</button>
+
+    <div class="sec-paneel">
+      <h2>⏰ Deadlines instellen</h2>
+      <p style="color:var(--tekst-zacht); font-size:0.92em; margin:-8px 0 16px 0;">
+        Stel hieronder deadlines in voor de leerkrachten. Alleen <strong>actieve</strong> deadlines worden getoond op hun dashboard.
+        Deadlines die nog niet relevant zijn (bv. werkboeken in april) laat je gewoon uit tot het moment daar is.
+      </p>
+
+      <!-- REFTER -->
+      ${maakDeadlineBlok_refter(dl.refter)}
+
+      <!-- UITSTAPPEN -->
+      ${maakDeadlineBlok_uitstappen(dl.uitstappen)}
+
+      <!-- WERKBOEKEN -->
+      ${maakDeadlineBlok_werkboeken(dl.werkboeken)}
+
+      <!-- LYRECO -->
+      ${maakDeadlineBlok_lyreco(dl.lyreco)}
+
+    </div>
+  `;
+}
+
+function maakDeadlineBlok(id, titel, icoon, beschrijving, actief, inhoud) {
+  return `
+    <div style="background:${actief ? 'var(--creme-warm)' : 'var(--creme)'}; border-radius:10px; padding:12px 16px; margin-bottom:10px; border-left:4px solid ${actief ? 'var(--accent)' : '#ccc'};">
+      <div style="display:flex; align-items:flex-start; gap:14px; flex-wrap:wrap;">
+        <div style="flex:1; min-width:280px;">
+          <div style="display:flex; align-items:baseline; gap:10px; flex-wrap:wrap; margin-bottom:4px;">
+            <h3 style="margin:0; font-size:1.05em; color:var(--tekst);">${icoon} ${titel}</h3>
+            ${actief ? '<span style="font-size:0.78em; color:var(--groen);">● actief</span>' : '<span style="font-size:0.78em; color:var(--tekst-zacht);">○ niet actief</span>'}
+            <span style="font-size:0.85em; color:var(--tekst-zacht); font-style:italic;">${beschrijving}</span>
+          </div>
+          ${inhoud}
+        </div>
+        <label style="display:flex; align-items:center; gap:8px; cursor:pointer; background:white; padding:6px 12px; border-radius:8px; border:1.5px solid var(--rand);">
+          <input type="checkbox" id="dl-actief-${id}" ${actief ? 'checked' : ''} onchange="deadlineActiefToggle('${id}', this.checked)" style="width:18px; height:18px;">
+          <span style="font-weight:600; font-size:0.9em;">Actief</span>
+        </label>
+      </div>
+    </div>
+  `;
+}
+
+// -----------------------------------------------
+// REFTER deadline (keuze: wekelijks / maandelijks / specifieke datum)
+// -----------------------------------------------
+function maakDeadlineBlok_refter(dl) {
+  const actief = dl && dl.actief;
+  const frequentie = (dl && dl.frequentie) || 'wekelijks';
+  const dag = (dl && dl.dag != null) ? dl.dag : 5; // vrijdag default
+  const dagVanMaand = (dl && dl.dag_van_maand) || 25;
+  const maandtype = (dl && dl.maandtype) || 'specifiek';
+  const datum = (dl && dl.datum) || '';
+  const herinnering = (dl && dl.herinnering_dagen != null) ? dl.herinnering_dagen : 2;
+
+  const inhoud = maakFrequentieInhoud('refter', frequentie, dag, maandtype, dagVanMaand, datum, herinnering);
+
+  return maakDeadlineBlok('refter', 'Refterlijst', '🍽️',
+    'Wanneer moeten leerkrachten hun refterlijst afgesloten hebben?',
+    actief, inhoud);
+}
+
+// -----------------------------------------------
+// UITSTAPPEN deadline (keuze: wekelijks / maandelijks / specifieke datum)
+// -----------------------------------------------
+function maakDeadlineBlok_uitstappen(dl) {
+  const actief = dl && dl.actief;
+  const frequentie = (dl && dl.frequentie) || 'maandelijks';
+  const dag = (dl && dl.dag != null) ? dl.dag : 5;
+  const dagVanMaand = (dl && dl.dag_van_maand) || 25;
+  const maandtype = (dl && dl.maandtype) || 'laatste_werkdag';
+  const datum = (dl && dl.datum) || '';
+  const herinnering = (dl && dl.herinnering_dagen != null) ? dl.herinnering_dagen : 3;
+
+  const inhoud = maakFrequentieInhoud('uitstappen', frequentie, dag, maandtype, dagVanMaand, datum, herinnering);
+
+  return maakDeadlineBlok('uitstappen', 'Uitstappen doorgeven', '🚌',
+    'Wanneer moeten leerkrachten hun uitstappen en bestellingen doorgegeven hebben?',
+    actief, inhoud);
+}
+
+// -----------------------------------------------
+// WERKBOEKEN deadline (keuze, typisch specifieke datum)
+// -----------------------------------------------
+function maakDeadlineBlok_werkboeken(dl) {
+  const actief = dl && dl.actief;
+  const frequentie = (dl && dl.frequentie) || 'datum';
+  const dag = (dl && dl.dag != null) ? dl.dag : 5;
+  const dagVanMaand = (dl && dl.dag_van_maand) || 15;
+  const maandtype = (dl && dl.maandtype) || 'specifiek';
+  const datum = (dl && dl.datum) || '2027-04-15';
+  const herinnering = (dl && dl.herinnering_dagen != null) ? dl.herinnering_dagen : 7;
+
+  const inhoud = maakFrequentieInhoud('werkboeken', frequentie, dag, maandtype, dagVanMaand, datum, herinnering);
+
+  return maakDeadlineBlok('werkboeken', 'Werkboeken-bestelling', '📚',
+    'Tegen wanneer moeten leerkrachten hun werkboekenlijst voor volgend schooljaar klaar hebben?',
+    actief, inhoud);
+}
+
+// -----------------------------------------------
+// LYRECO deadline (keuze frequentie + extra leverdatum veld)
+// -----------------------------------------------
+function maakDeadlineBlok_lyreco(dl) {
+  const actief = dl && dl.actief;
+  const frequentie = (dl && dl.frequentie) || 'datum';
+  const dag = (dl && dl.dag != null) ? dl.dag : 5;
+  const dagVanMaand = (dl && dl.dag_van_maand) || 10;
+  const maandtype = (dl && dl.maandtype) || 'specifiek';
+  const datum = (dl && dl.datum) || '2026-12-10';
+  const leverdatum = (dl && dl.lever_datum) || '2027-01-08';
+  const herinnering = (dl && dl.herinnering_dagen != null) ? dl.herinnering_dagen : 5;
+
+  const inhoudFrequentie = maakFrequentieInhoud('lyreco', frequentie, dag, maandtype, dagVanMaand, datum, herinnering);
+
+  const inhoud = `
+    ${inhoudFrequentie}
+    <div style="margin-top:10px; padding-top:10px; border-top:1px solid var(--rand); display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap;">
+      <div>
+        <label style="font-size:0.8em; display:block; margin-bottom:3px; color:var(--tekst-zacht);">🚚 Leverdatum invullen in Lyreco</label>
+        <input type="date" id="dl-lyreco-lever" value="${leverdatum}" onchange="deadlineLyrecoLeverOpslaan()">
+      </div>
+      <div style="font-size:0.82em; color:var(--tekst-zacht); font-style:italic; padding-bottom:8px;">Deze datum zien leerkrachten zodat ze hem correct invullen in hun Lyreco-bestelformulier.</div>
+    </div>
+  `;
+
+  return maakDeadlineBlok('lyreco', 'Lyreco-bestelling', '🛒',
+    'Leerkrachten geven periodiek een Lyreco-bestelling door (klasmateriaal). Stel in tegen wanneer ze bestellen, en welke leverdatum ze moeten gebruiken.',
+    actief, inhoud);
+}
+
+window.deadlineLyrecoLeverOpslaan = function () {
+  if (!state.deadlines_actief.lyreco) state.deadlines_actief.lyreco = {};
+  state.deadlines_actief.lyreco.lever_datum = document.getElementById('dl-lyreco-lever').value;
+  bewaarState(state);
+};
+
+// -----------------------------------------------
+// GENERIEKE FREQUENTIE-INVOER
+// -----------------------------------------------
+function maakFrequentieInhoud(id, frequentie, dag, maandtype, dagVanMaand, datum, herinnering) {
+  const dagenVdWeek = ['zondag','maandag','dinsdag','woensdag','donderdag','vrijdag','zaterdag'];
+
+  return `
+    <div style="display:flex; flex-wrap:wrap; gap:10px; align-items:flex-end;">
+      <div style="flex:0 0 auto;">
+        <label style="font-size:0.8em; display:block; margin-bottom:3px; color:var(--tekst-zacht);">Frequentie</label>
+        <select id="dl-${id}-frequentie" onchange="deadlineFrequentieGewijzigd('${id}')">
+          <option value="wekelijks" ${frequentie === 'wekelijks' ? 'selected' : ''}>Elke week</option>
+          <option value="maandelijks" ${frequentie === 'maandelijks' ? 'selected' : ''}>Elke maand</option>
+          <option value="datum" ${frequentie === 'datum' ? 'selected' : ''}>Specifieke datum</option>
+        </select>
+      </div>
+
+      <!-- Wekelijks: dag-dropdown -->
+      <div id="dl-${id}-wekelijks" style="${frequentie === 'wekelijks' ? '' : 'display:none;'} flex:0 0 auto;">
+        <label style="font-size:0.8em; display:block; margin-bottom:3px; color:var(--tekst-zacht);">op</label>
+        <select id="dl-${id}-dag" onchange="deadlineOpslaan('${id}')">
+          ${[1,2,3,4,5].map(d => `<option value="${d}" ${d === dag ? 'selected' : ''}>${dagenVdWeek[d]}</option>`).join('')}
+        </select>
+      </div>
+
+      <!-- Maandelijks: type-dropdown -->
+      <div id="dl-${id}-maandelijks" style="${frequentie === 'maandelijks' ? '' : 'display:none;'} flex:0 0 auto; display:${frequentie === 'maandelijks' ? 'flex' : 'none'}; gap:8px; align-items:flex-end;">
+        <div>
+          <label style="font-size:0.8em; display:block; margin-bottom:3px; color:var(--tekst-zacht);">op</label>
+          <select id="dl-${id}-maandtype" onchange="deadlineMaandtypeGewijzigd('${id}')">
+            <option value="laatste_werkdag" ${maandtype === 'laatste_werkdag' ? 'selected' : ''}>Laatste werkdag</option>
+            <option value="specifiek" ${maandtype === 'specifiek' ? 'selected' : ''}>Dag…</option>
+          </select>
+        </div>
+        <div id="dl-${id}-maanddag-blok" style="${maandtype === 'specifiek' ? '' : 'display:none;'}">
+          <label style="font-size:0.8em; display:block; margin-bottom:3px; color:var(--tekst-zacht);">van de maand</label>
+          <input type="number" id="dl-${id}-maanddag" min="1" max="31" value="${dagVanMaand}" onchange="deadlineOpslaan('${id}')" style="width:70px;">
+        </div>
+      </div>
+
+      <!-- Specifieke datum -->
+      <div id="dl-${id}-datum" style="${frequentie === 'datum' ? '' : 'display:none;'} flex:0 0 auto;">
+        <label style="font-size:0.8em; display:block; margin-bottom:3px; color:var(--tekst-zacht);">Datum</label>
+        <input type="date" id="dl-${id}-datum-input" value="${datum}" onchange="deadlineOpslaan('${id}')">
+      </div>
+    </div>
+  `;
+}
+
+window.deadlineFrequentieGewijzigd = function (id) {
+  const freq = document.getElementById(`dl-${id}-frequentie`).value;
+  document.getElementById(`dl-${id}-wekelijks`).style.display = freq === 'wekelijks' ? 'block' : 'none';
+  document.getElementById(`dl-${id}-maandelijks`).style.display = freq === 'maandelijks' ? 'flex' : 'none';
+  document.getElementById(`dl-${id}-datum`).style.display = freq === 'datum' ? 'block' : 'none';
+  deadlineOpslaan(id);
+};
+
+window.deadlineMaandtypeGewijzigd = function (id) {
+  const t = document.getElementById(`dl-${id}-maandtype`).value;
+  document.getElementById(`dl-${id}-maanddag-blok`).style.display = t === 'specifiek' ? 'block' : 'none';
+  deadlineOpslaan(id);
+};
+
+// Generieke opslag voor alle 4 deadlines
+window.deadlineOpslaan = function (id) {
+  if (!state.deadlines_actief[id]) state.deadlines_actief[id] = {};
+  const d = state.deadlines_actief[id];
+
+  const freqEl = document.getElementById(`dl-${id}-frequentie`);
+  if (freqEl) d.frequentie = freqEl.value;
+
+  const dagEl = document.getElementById(`dl-${id}-dag`);
+  if (dagEl) d.dag = parseInt(dagEl.value);
+
+  const maandtypeEl = document.getElementById(`dl-${id}-maandtype`);
+  if (maandtypeEl) d.maandtype = maandtypeEl.value;
+
+  const maanddagEl = document.getElementById(`dl-${id}-maanddag`);
+  if (maanddagEl) d.dag_van_maand = parseInt(maanddagEl.value) || 25;
+
+  const datumEl = document.getElementById(`dl-${id}-datum-input`);
+  if (datumEl) d.datum = datumEl.value;
+
+  bewaarState(state);
+};
+window.deadlineActiefToggle = function (id, actief) {
+  if (!state.deadlines_actief[id]) state.deadlines_actief[id] = {};
+  // Eerst de andere velden opslaan (in geval ze net gewijzigd waren vóór de toggle)
+  deadlineOpslaan(id);
+  // Voor lyreco: sla ook leverdatum op
+  if (id === 'lyreco') {
+    const leverEl = document.getElementById('dl-lyreco-lever');
+    if (leverEl) state.deadlines_actief.lyreco.lever_datum = leverEl.value;
+  }
+  state.deadlines_actief[id].actief = actief;
+  bewaarState(state);
+  toonSecDeadlines();
 };
