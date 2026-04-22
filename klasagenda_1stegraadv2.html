@@ -1215,6 +1215,10 @@ function toonMiniBar(el){
     const box = day.querySelector('.planBox');
     const has = box.querySelectorAll('.tasklist li').length>0;
     box.classList.toggle('has-tasks', has);
+    // Bonus: ruim lege .planText op zodat die geen "spookregel" onder de lijst veroorzaakt
+    // (kan ontstaan na plakken uit archief of oude localStorage-inhoud)
+    const pt = box.querySelector('.planText');
+    if (pt && pt.textContent.trim() === '' && pt.innerHTML !== '') pt.innerHTML = '';
   }
 
   function upgradeWeekendToEditable(){
@@ -2776,6 +2780,14 @@ notesBody.addEventListener('input', ()=>{
                 if (dag.vars.gap)     doelDag.style.setProperty('--task-gap',dag.vars.gap);
                 if (dag.vars.bringFS) doelDag.style.setProperty('--bring-fs',dag.vars.bringFS);
               }
+              // Has-tasks klasse updaten + lege planText opruimen
+              // (anders blijft de onderste lege contenteditable div staan als een "spookregel")
+              const planBoxForClass = doelDag.querySelector(`[data-key="d${idx2}.plan"]`);
+              if (planBoxForClass){
+                const pt = planBoxForClass.querySelector('.planText');
+                if (pt && pt.textContent.trim() === '') pt.innerHTML = '';
+                window._klasagenda.updatePlanBoxClass(doelDag);
+              }
             });
             // Paneel-picto's: NIET applyPanelPictos aanroepen want die zitten al in notes HTML
     window._klasagenda.pushSnapshot();
@@ -2841,6 +2853,15 @@ notesBody.addEventListener('input', ()=>{
               node.dataset.host = p.host || 'body';
               hostEl.appendChild(node);
             });
+          }
+          // Has-tasks klasse updaten + lege planText opruimen (zie hele-week fix)
+          if (type === 'plan' || type === 'alles'){
+            const pbEl = doelDag.querySelector(`[data-key="d${idx2}.plan"]`);
+            if (pbEl){
+              const pt = pbEl.querySelector('.planText');
+              if (pt && pt.textContent.trim() === '') pt.innerHTML = '';
+              window._klasagenda.updatePlanBoxClass(doelDag);
+            }
           }
           window._klasagenda.pushSnapshot();
           toonArchiefToast('✅ '+DAGNAMES2[parseInt(dayIdx)]+' van '+naam+' ingeplakt in '+DAGNAMES2[doelIdx]+'!');
