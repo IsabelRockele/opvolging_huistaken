@@ -129,26 +129,59 @@ function badgeUitstappen() {
 function toonMeldingen() {
   const zone = document.getElementById('meldingen-zone');
   const meldingen = berekenMeldingen();
+  const mededelingen = (state.mededelingen || []).filter(m => !isMededelingVerlopen(m));
+  const klasId = state.huidigeKlasId;
 
-  if (meldingen.length === 0) {
+  if (meldingen.length === 0 && mededelingen.length === 0) {
     zone.innerHTML = '';
     return;
   }
 
-  zone.innerHTML = `
-    <div class="meldingen">
-      <h3>⚠️ ${meldingen.length} aandachtspunt${meldingen.length === 1 ? '' : 'en'}</h3>
-      ${meldingen.map(m => `
-        <div class="melding ${m.kleur}">
-          <div class="melding-tekst">
-            <strong>${m.titel}</strong><br>
-            <span style="color:var(--tekst-zacht); font-size:0.88em;">${m.detail}</span>
+  let html = '';
+
+  // MEDEDELINGEN bovenaan (paarse balk, opvallend)
+  if (mededelingen.length > 0) {
+    html += `<div class="mededelingen-zone">`;
+    mededelingen.forEach(m => {
+      const gelezen = (m.gelezen_door || []).includes(klasId);
+      html += `
+        <div class="mededeling ${gelezen ? 'gelezen' : ''}">
+          <div class="mededeling-icoon">📢</div>
+          <div class="mededeling-inhoud">
+            <div class="mededeling-titel">${escapeHtml(m.titel)}</div>
+            <div class="mededeling-bericht">${escapeHtml(m.bericht)}</div>
+            <div class="mededeling-meta">Van secretariaat${m.vervalt ? ` · Tot ${formatDag(m.vervalt)}` : ''}</div>
           </div>
-          <button class="melding-knop" onclick="moduleOpenen('${m.actie}')">${m.knopTekst}</button>
+          <div class="mededeling-actie">
+            ${gelezen
+              ? '<span class="mededeling-gelezen">✓ Bekeken</span>'
+              : `<button onclick="mededelingBekeken('${m.id}')">Bekeken</button>`}
+          </div>
         </div>
-      `).join('')}
-    </div>
-  `;
+      `;
+    });
+    html += `</div>`;
+  }
+
+  // DEADLINE-MELDINGEN
+  if (meldingen.length > 0) {
+    html += `
+      <div class="meldingen">
+        <h3>⚠️ ${meldingen.length} aandachtspunt${meldingen.length === 1 ? '' : 'en'}</h3>
+        ${meldingen.map(m => `
+          <div class="melding ${m.kleur}">
+            <div class="melding-tekst">
+              <strong>${m.titel}</strong><br>
+              <span style="color:var(--tekst-zacht); font-size:0.88em;">${m.detail}</span>
+            </div>
+            <button class="melding-knop" onclick="moduleOpenen('${m.actie}')">${m.knopTekst}</button>
+          </div>
+        `).join('')}
+      </div>
+    `;
+  }
+
+  zone.innerHTML = html;
 }
 
 function berekenMeldingen() {
@@ -847,11 +880,28 @@ function toonSecretariaatDashboard() {
         <div class="icoon">⏰</div>
         <h3>Deadlines instellen</h3>
         <p>Bepaal wanneer leerkrachten bepaalde taken klaar moeten hebben.</p>
-        <span class="badge geel">In opbouw</span>
+      </button>
+
+      <button class="tegel" onclick="secModuleOpenen('mededelingen')">
+        <div class="icoon">📢</div>
+        <h3>Mededelingen</h3>
+        <p>Stuur een bericht naar alle leerkrachten (bv. toneel, bezoek, onverwachte vraag).</p>
+        ${(state.mededelingen || []).filter(m => !isMededelingVerlopen(m)).length > 0
+          ? `<span class="badge groen">${(state.mededelingen || []).filter(m => !isMededelingVerlopen(m)).length} actief</span>`
+          : ''}
       </button>
 
     </div>
   `;
+}
+
+function isMededelingVerlopen(m) {
+  if (!m.vervalt) return false;
+  const vandaag = new Date();
+  vandaag.setHours(0, 0, 0, 0);
+  const [j, ma, d] = m.vervalt.split('-').map(Number);
+  const vervalDatum = new Date(j, ma - 1, d);
+  return vandaag > vervalDatum;
 }
 
 function maakStatusOverzicht() {
@@ -930,6 +980,7 @@ window.secModuleOpenen = function (modulenaam) {
   if (modulenaam === 'klasbeheer') { toonSecKlasbeheer(); return; }
   if (modulenaam === 'uitstappen') { toonSecUitstappen(); return; }
   if (modulenaam === 'deadlines') { toonSecDeadlines(); return; }
+  if (modulenaam === 'mededelingen') { toonSecMededelingen(); return; }
 
   const hoofdpaneel = document.getElementById('hoofdpaneel');
   const titels = {
@@ -1274,11 +1325,17 @@ function uitstapInhoudVullen() {
     const type = u.type || 'activiteit';
     const icoon = type === 'bestelling' ? '🛒' : '🎓';
     const typeLabel = type === 'bestelling' ? 'Bestelling (buiten max. factuur)' : 'Activiteit';
-    html += `<th class="kop-${type}" title="${typeLabel}">
+    const isIngegeven = !!u.ingegeven;
+    const ingegevenBadge = isIngegeven
+      ? `<div style="margin-top:4px; font-size:0.72em; color:#3a6040; font-weight:700;">✓ Ingegeven</div>`
+      : '';
+    html += `<th class="kop-${type} ${isIngegeven ? 'kop-ingegeven' : ''}" title="${typeLabel}">
       <div class="uitstap-titel">${icoon} ${escapeHtml(u.titel)}</div>
       <div class="uitstap-meta">${formatDag(u.datum)} · € ${u.prijs.toFixed(2).replace('.', ',')}</div>
-      <div style="margin-top:4px;">
-        <button onclick="openUitstapBewerken('${u.id}')" style="padding:2px 8px; font-size:0.75em; border:1px solid var(--rand-donker); background:var(--wit); border-radius:5px; cursor:pointer;">✏️</button>
+      ${ingegevenBadge}
+      <div style="margin-top:4px; display:flex; gap:4px; justify-content:center;">
+        <button onclick="openUitstapBewerken('${u.id}')" title="Bewerken" style="padding:2px 8px; font-size:0.75em; border:1px solid var(--rand-donker); background:var(--wit); border-radius:5px; cursor:pointer;">✏️</button>
+        <button onclick="uitstapIngegevenToggle('${u.id}')" title="${isIngegeven ? 'Markeer als nog NIET doorgegeven' : 'Markeer als doorgegeven aan secretariaat'}" style="padding:2px 8px; font-size:0.75em; border:1px solid var(--rand-donker); background:${isIngegeven ? '#d5eedc' : 'var(--wit)'}; border-radius:5px; cursor:pointer;">${isIngegeven ? '✓' : '☐'}</button>
       </div>
     </th>`;
   });
@@ -3475,29 +3532,18 @@ function toonSecUitstappenOverzicht() {
 
     let aantalActiviteiten = 0;
     let aantalBestellingen = 0;
-    let totaalOpbrengst = 0; // alles: activiteiten + bestellingen
+    let aantalIngegeven = 0;
+    let aantalNogNiet = 0;
 
     usMaand.forEach(u => {
       const type = u.type || 'activiteit';
-      if (type === 'bestelling') {
-        aantalBestellingen++;
-        let besteldAantal = 0;
-        actieveLL.forEach(l => {
-          if ((u.deelnemers || {})[l.id] === 'besteld') besteldAantal++;
-        });
-        totaalOpbrengst += besteldAantal * u.prijs;
-      } else {
-        aantalActiviteiten++;
-        let aantalMee = 0;
-        actieveLL.forEach(l => {
-          const s = (u.deelnemers || {})[l.id] || 'mee';
-          if (s === 'mee') aantalMee++;
-        });
-        totaalOpbrengst += aantalMee * u.prijs;
-      }
+      if (type === 'bestelling') aantalBestellingen++;
+      else aantalActiviteiten++;
+      if (u.ingegeven) aantalIngegeven++;
+      else aantalNogNiet++;
     });
 
-    return { klas: k, aantalActiviteiten, aantalBestellingen, totaalOpbrengst };
+    return { klas: k, aantalActiviteiten, aantalBestellingen, aantalIngegeven, aantalNogNiet, totaalAantal: usMaand.length };
   });
 
   hoofdpaneel.innerHTML = `
@@ -3525,23 +3571,37 @@ function toonSecUitstappenOverzicht() {
             <th>Leerkracht</th>
             <th style="text-align:right;">🎓 Activiteiten</th>
             <th style="text-align:right;">🛒 Bestellingen</th>
+            <th>Status</th>
             <th style="width:100px;">Acties</th>
           </tr>
         </thead>
         <tbody>
-          ${rijen.map(r => `
-            <tr>
-              <td><strong>${escapeHtml(r.klas.klas)}</strong></td>
-              <td>${escapeHtml(r.klas.leerkracht)}</td>
-              <td style="text-align:right;">${r.aantalActiviteiten > 0 ? r.aantalActiviteiten : '<span style="color:var(--tekst-zacht);">—</span>'}</td>
-              <td style="text-align:right;">${r.aantalBestellingen > 0 ? r.aantalBestellingen : '<span style="color:var(--tekst-zacht);">—</span>'}</td>
-              <td>
-                ${(r.aantalActiviteiten + r.aantalBestellingen) > 0
-                  ? `<button onclick="secUs_openKlas('${r.klas.id}')">Openen</button>`
-                  : `<span style="color:var(--tekst-zacht); font-style:italic; font-size:0.85em;">geen</span>`}
-              </td>
-            </tr>
-          `).join('')}
+          ${rijen.map(r => {
+            let statusHtml;
+            if (r.totaalAantal === 0) {
+              statusHtml = '<span style="color:var(--tekst-zacht);">—</span>';
+            } else if (r.aantalNogNiet === 0) {
+              statusHtml = `<span style="color:var(--groen); font-weight:600;">✓ Alles ingegeven</span>`;
+            } else if (r.aantalIngegeven === 0) {
+              statusHtml = `<span style="color:var(--tekst-zacht);">Nog niets ingegeven</span>`;
+            } else {
+              statusHtml = `<span style="color:#b5862c;">⏳ ${r.aantalIngegeven}/${r.totaalAantal} ingegeven</span>`;
+            }
+            return `
+              <tr>
+                <td><strong>${escapeHtml(r.klas.klas)}</strong></td>
+                <td>${escapeHtml(r.klas.leerkracht)}</td>
+                <td style="text-align:right;">${r.aantalActiviteiten > 0 ? r.aantalActiviteiten : '<span style="color:var(--tekst-zacht);">—</span>'}</td>
+                <td style="text-align:right;">${r.aantalBestellingen > 0 ? r.aantalBestellingen : '<span style="color:var(--tekst-zacht);">—</span>'}</td>
+                <td>${statusHtml}</td>
+                <td>
+                  ${(r.aantalActiviteiten + r.aantalBestellingen) > 0
+                    ? `<button onclick="secUs_openKlas('${r.klas.id}')">Openen</button>`
+                    : `<span style="color:var(--tekst-zacht); font-style:italic; font-size:0.85em;">geen</span>`}
+                </td>
+              </tr>
+            `;
+          }).join('')}
         </tbody>
       </table>
 
@@ -3607,9 +3667,14 @@ function toonSecUitstappenDetail() {
     usMaand.forEach(u => {
       const type = u.type || 'activiteit';
       const icoon = type === 'bestelling' ? '🛒' : '🎓';
-      html += `<th class="kop-${type}">
+      const isIngegeven = !!u.ingegeven;
+      const ingegevenBadge = isIngegeven
+        ? `<div style="margin-top:4px; font-size:0.72em; color:#3a6040; font-weight:700;">✓ Ingegeven</div>`
+        : `<div style="margin-top:4px; font-size:0.72em; color:#b5862c;">⏳ Nog niet ingegeven</div>`;
+      html += `<th class="kop-${type} ${isIngegeven ? 'kop-ingegeven' : ''}">
         <div class="uitstap-titel">${icoon} ${escapeHtml(u.titel)}</div>
         <div class="uitstap-meta">${formatDag(u.datum)} · € ${u.prijs.toFixed(2).replace('.', ',')}</div>
+        ${ingegevenBadge}
       </th>`;
     });
     html += '</tr></thead><tbody>';
@@ -4008,4 +4073,195 @@ window.deadlineActiefToggle = function (id, actief) {
   state.deadlines_actief[id].actief = actief;
   bewaarState(state);
   toonSecDeadlines();
+};
+
+// ==============================================
+// SECRETARIAAT: MEDEDELINGEN
+// ==============================================
+// Structuur: state.mededelingen = [
+//   { id, titel, bericht, aangemaakt, vervalt, gelezen_door: ['2A', '3A', ...] }
+// ]
+
+function toonSecMededelingen() {
+  document.getElementById('meldingen-zone').innerHTML = '';
+  document.querySelector('.container').classList.remove('breed');
+
+  const hoofdpaneel = document.getElementById('hoofdpaneel');
+  const alle = state.mededelingen || [];
+  const actieve = alle.filter(m => !isMededelingVerlopen(m));
+  const verlopen = alle.filter(m => isMededelingVerlopen(m));
+
+  const klassen = getKlassen();
+  const totaalLeerkrachten = klassen.length;
+
+  hoofdpaneel.innerHTML = `
+    <button class="terug-knop" onclick="rolToepassen()">← Terug naar dashboard</button>
+
+    <div class="sec-paneel">
+      <h2>📢 Mededelingen</h2>
+      <p style="color:var(--tekst-zacht); font-size:0.92em; margin:-8px 0 16px 0;">
+        Stuur een bericht dat op het dashboard van alle leerkrachten verschijnt. Handig voor ad-hoc vragen (toneel, doorgeven aantal, onverwachte bezoeken, …).
+      </p>
+
+      <div style="margin-bottom:16px;">
+        <button class="accent" onclick="openMededelingBewerken(null)">➕ Nieuwe mededeling</button>
+      </div>
+
+      ${actieve.length === 0 ? `
+        <p style="text-align:center; padding:30px; color:var(--tekst-zacht); font-style:italic;">
+          Geen actieve mededelingen. Klik op <strong>➕ Nieuwe mededeling</strong> om er een te maken.
+        </p>
+      ` : `
+        <h3 style="font-size:1em; color:var(--tekst); margin:20px 0 10px 0;">Actieve mededelingen</h3>
+        ${actieve.map(m => maakMededelingKaart(m, totaalLeerkrachten, false)).join('')}
+      `}
+
+      ${verlopen.length > 0 ? `
+        <h3 style="font-size:1em; color:var(--tekst-zacht); margin:24px 0 10px 0;">📂 Verlopen (${verlopen.length})</h3>
+        ${verlopen.slice(0, 5).map(m => maakMededelingKaart(m, totaalLeerkrachten, true)).join('')}
+      ` : ''}
+    </div>
+  `;
+}
+
+function maakMededelingKaart(m, totaal, verlopen) {
+  const gelezenAantal = (m.gelezen_door || []).length;
+  return `
+    <div style="background:${verlopen ? '#f5f5f5' : '#f4eaf8'}; border-left:4px solid ${verlopen ? '#bbb' : '#9f74b2'}; border-radius:10px; padding:12px 16px; margin-bottom:10px; ${verlopen ? 'opacity:0.7;' : ''}">
+      <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:10px; flex-wrap:wrap;">
+        <div style="flex:1; min-width:260px;">
+          <strong style="font-size:1em;">${escapeHtml(m.titel)}</strong>
+          <p style="margin:4px 0 0 0; font-size:0.92em; color:var(--tekst); white-space:pre-line;">${escapeHtml(m.bericht)}</p>
+          <div style="font-size:0.82em; color:var(--tekst-zacht); margin-top:8px;">
+            📅 Aangemaakt ${formatDag(m.aangemaakt)}${m.vervalt ? ` · Verloopt na ${formatDag(m.vervalt)}` : ''}
+            · 👁️ Gelezen door <strong>${gelezenAantal}</strong>/${totaal}
+          </div>
+        </div>
+        <div style="display:flex; gap:6px; flex-wrap:wrap;">
+          ${!verlopen ? `<button onclick="openMededelingBewerken('${m.id}')">✎ Bewerken</button>` : ''}
+          <button onclick="mededelingVerwijderen('${m.id}')" style="color:#a54848;">🗑️ ${verlopen ? 'Wissen' : 'Intrekken'}</button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+window.openMededelingBewerken = function (id) {
+  if (!document.getElementById('med-bewerken-dialoog')) {
+    const dlg = document.createElement('div');
+    dlg.innerHTML = `
+      <div class="dialoog-achtergrond" id="med-bewerken-dialoog">
+        <div class="dialoog" style="max-width:600px;">
+          <h3 id="med-titel-h">📢 Nieuwe mededeling</h3>
+          <input type="hidden" id="med-id">
+
+          <label>Titel (korte kop)</label>
+          <input type="text" id="med-titel" placeholder="bv. Toneel op school vrijdag" autocomplete="off">
+
+          <label>Bericht</label>
+          <textarea id="med-bericht" rows="4" placeholder="bv. Geef tegen 9u door hoeveel kinderen aanwezig zijn. Secretariaat meldt dit aan de organisatie." style="width:100%; font-family:inherit; padding:10px; border:1.5px solid var(--rand); border-radius:8px; resize:vertical;"></textarea>
+
+          <label>Verloopt op</label>
+          <input type="date" id="med-vervalt">
+          <div class="hint">Na deze datum verdwijnt de mededeling automatisch van het leerkracht-dashboard.</div>
+
+          <div class="dialoog-knoppen">
+            <button onclick="sluitDialoog('med-bewerken-dialoog')">Annuleren</button>
+            <button class="accent" onclick="mededelingOpslaan()">Verzenden</button>
+          </div>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(dlg);
+  }
+
+  document.getElementById('med-id').value = id || '';
+
+  if (id) {
+    const m = (state.mededelingen || []).find(x => x.id === id);
+    if (!m) return;
+    document.getElementById('med-titel-h').textContent = '✎ Mededeling bewerken';
+    document.getElementById('med-titel').value = m.titel;
+    document.getElementById('med-bericht').value = m.bericht;
+    document.getElementById('med-vervalt').value = m.vervalt || '';
+  } else {
+    document.getElementById('med-titel-h').textContent = '📢 Nieuwe mededeling';
+    document.getElementById('med-titel').value = '';
+    document.getElementById('med-bericht').value = '';
+    // Default vervaldatum: over 7 dagen
+    const d = new Date();
+    d.setDate(d.getDate() + 7);
+    document.getElementById('med-vervalt').value = d.toISOString().substring(0, 10);
+  }
+  document.getElementById('med-bewerken-dialoog').classList.add('open');
+  setTimeout(() => document.getElementById('med-titel').focus(), 50);
+};
+
+window.mededelingOpslaan = function () {
+  const id = document.getElementById('med-id').value;
+  const titel = document.getElementById('med-titel').value.trim();
+  const bericht = document.getElementById('med-bericht').value.trim();
+  const vervalt = document.getElementById('med-vervalt').value;
+
+  if (!titel) { alert('Vul een titel in.'); return; }
+  if (!bericht) { alert('Vul een bericht in.'); return; }
+
+  if (!state.mededelingen) state.mededelingen = [];
+
+  if (id) {
+    const m = state.mededelingen.find(x => x.id === id);
+    if (m) {
+      m.titel = titel;
+      m.bericht = bericht;
+      m.vervalt = vervalt;
+      // Bij bewerken: reset "gelezen door" zodat iedereen het opnieuw ziet
+      m.gelezen_door = [];
+    }
+  } else {
+    state.mededelingen.push({
+      id: 'm' + Date.now(),
+      titel,
+      bericht,
+      vervalt,
+      aangemaakt: new Date().toISOString().substring(0, 10),
+      gelezen_door: []
+    });
+  }
+
+  bewaarState(state);
+  sluitDialoog('med-bewerken-dialoog');
+  toonSecMededelingen();
+};
+
+window.mededelingVerwijderen = function (id) {
+  const m = (state.mededelingen || []).find(x => x.id === id);
+  if (!m) return;
+  if (!confirm(`Mededeling "${m.titel}" verwijderen?`)) return;
+  state.mededelingen = state.mededelingen.filter(x => x.id !== id);
+  bewaarState(state);
+  toonSecMededelingen();
+};
+
+// Leerkracht markeert mededeling als gelezen
+window.mededelingBekeken = function (id) {
+  const m = (state.mededelingen || []).find(x => x.id === id);
+  if (!m) return;
+  const klasId = state.huidigeKlasId;
+  if (!m.gelezen_door) m.gelezen_door = [];
+  if (!m.gelezen_door.includes(klasId)) {
+    m.gelezen_door.push(klasId);
+    bewaarState(state);
+    toonMeldingen();
+  }
+};
+
+// Markeer een uitstap als ingegeven/niet-ingegeven (door leerkracht)
+window.uitstapIngegevenToggle = function (uitstapId) {
+  const klasId = state.huidigeKlasId;
+  const u = (state.uitstappen[klasId] || []).find(x => x.id === uitstapId);
+  if (!u) return;
+  u.ingegeven = !u.ingegeven;
+  if (u.ingegeven) u.ingegeven_op = new Date().toISOString();
+  bewaarState(state);
+  uitstapInhoudVullen();
 };
