@@ -86,6 +86,7 @@ function getState() {
       if (!s.werkboeken_besteld) s.werkboeken_besteld = {};
       if (!s.schooleigen_vrije_dagen) s.schooleigen_vrije_dagen = [];
       if (!s.deadlines_actief) s.deadlines_actief = {};
+      if (!s.mededelingen) s.mededelingen = [];
       // Klassen-lijst: als nog niet aanwezig, kopieer vanuit initiële KLASSEN constante
       if (!s.klassen_lijst) {
         s.klassen_lijst = KLASSEN.map(k => ({ ...k }));
