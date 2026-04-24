@@ -1215,6 +1215,10 @@ function toonMiniBar(el){
     const box = day.querySelector('.planBox');
     const has = box.querySelectorAll('.tasklist li').length>0;
     box.classList.toggle('has-tasks', has);
+    // Bonus: ruim lege .planText op zodat die geen "spookregel" onder de lijst veroorzaakt
+    // (kan ontstaan na plakken uit archief of oude localStorage-inhoud)
+    const pt = box.querySelector('.planText');
+    if (pt && pt.textContent.trim() === '' && pt.innerHTML !== '') pt.innerHTML = '';
   }
 
   function upgradeWeekendToEditable(){
@@ -2353,11 +2357,56 @@ notesBody.addEventListener('input', ()=>{
 
   const btnBewaar = document.getElementById('btnBewaar');
 
+  /* ─────────────────────────────────────────────────────────────
+     PICTO-SRC NORMALISATIE
+     Zet absolute URLs (http://127.0.0.1:xxxx/, http://localhost:xxxx/,
+     file:///...) terug naar relatieve paden "pictogrammen/xxx.png".
+     Zo blijven archief-items werken ongeacht vanwaar ze geladen zijn.
+     ───────────────────────────────────────────────────────────── */
+  function _normalizeOneSrc(src){
+    if (typeof src !== 'string' || !src) return src;
+    // Behoud data: URLs en echte CDN-https URLs ongemoeid
+    if (src.startsWith('data:')) return src;
+    // Zoek het laatste voorkomen van "pictogrammen/"
+    const m = src.match(/pictogrammen\/[^"'?#]+/i);
+    if (m) return m[0]; // → "pictogrammen/fruit.png"
+    return src;
+  }
+  function _normalizeHtmlStringSrcs(html){
+    if (typeof html !== 'string' || !html) return html;
+    // Vervang src="..." en src='...' binnen <img> tags
+    return html.replace(/(<img\b[^>]*?\bsrc\s*=\s*)(["'])(.*?)\2/gi, (m, pre, q, url) => {
+      return pre + q + _normalizeOneSrc(url) + q;
+    });
+  }
+  function _normalizeDeep(obj){
+    if (obj == null) return obj;
+    if (typeof obj === 'string') return _normalizeHtmlStringSrcs(obj);
+    if (Array.isArray(obj)) return obj.map(_normalizeDeep);
+    if (typeof obj === 'object'){
+      const out = {};
+      for (const k of Object.keys(obj)){
+        if (k === 'src') out[k] = _normalizeOneSrc(obj[k]);
+        else out[k] = _normalizeDeep(obj[k]);
+      }
+      return out;
+    }
+    return obj;
+  }
+  // Globaal beschikbaar maken zodat de LEES-IIFE ze ook kan gebruiken
+  window._klasagendaPictoFix = {
+    oneSrc: _normalizeOneSrc,
+    htmlStr: _normalizeHtmlStringSrcs,
+    deep: _normalizeDeep
+  };
+
   async function dbSet(path, data){
+    // Normaliseer ALLE picto-src paden voor we naar Firebase schrijven
+    const cleanData = _normalizeDeep(data);
     const r = await fetch(`${DB_URL}/${path}.json`, {
       method: 'PUT',
       headers: {'Content-Type':'application/json'},
-      body: JSON.stringify(data)
+      body: JSON.stringify(cleanData)
     });
     if (!r.ok) throw new Error('Firebase fout: ' + r.status);
     return r.json();
@@ -2440,7 +2489,11 @@ notesBody.addEventListener('input', ()=>{
   async function archiefGet(path){
     const r = await fetch(`${DB_URL2}/${path}.json`);
     if (!r.ok) throw new Error('Firebase fout: '+r.status);
-    return r.json();
+    const data = await r.json();
+    // Cureer bestaande archief-items: absolute Live Server/localhost URLs
+    // worden hier ter plekke omgezet naar relatieve "pictogrammen/..." paden.
+    const fix = window._klasagendaPictoFix;
+    return fix ? fix.deep(data) : data;
   }
 
   // Modal injecteren
@@ -2722,6 +2775,13 @@ notesBody.addEventListener('input', ()=>{
                 if (dag.vars.gap)     doelDag.style.setProperty('--task-gap',dag.vars.gap);
                 if (dag.vars.bringFS) doelDag.style.setProperty('--bring-fs',dag.vars.bringFS);
               }
+              // Has-tasks klasse updaten + lege planText opruimen
+              // (anders blijft de onderste lege contenteditable div staan als een "spookregel")
+              if (planBoxEl){
+                const pt = planBoxEl.querySelector('.planText');
+                if (pt && pt.textContent.trim() === '') pt.innerHTML = '';
+                window._klasagenda.updatePlanBoxClass(doelDag);
+              }
             });
             // Paneel-picto's: NIET applyPanelPictos aanroepen want die zitten al in notes HTML
     window._klasagenda.pushSnapshot();
@@ -2787,6 +2847,15 @@ notesBody.addEventListener('input', ()=>{
               node.dataset.host = p.host || 'body';
               hostEl.appendChild(node);
             });
+          }
+          // Has-tasks klasse updaten + lege planText opruimen (zie hele-week fix)
+          if (type === 'plan' || type === 'alles'){
+            const pbEl = doelDag.querySelector(`[data-key="d${idx2}.plan"]`);
+            if (pbEl){
+              const pt = pbEl.querySelector('.planText');
+              if (pt && pt.textContent.trim() === '') pt.innerHTML = '';
+              window._klasagenda.updatePlanBoxClass(doelDag);
+            }
           }
           window._klasagenda.pushSnapshot();
           toonArchiefToast('✅ '+DAGNAMES2[parseInt(dayIdx)]+' van '+naam+' ingeplakt in '+DAGNAMES2[doelIdx]+'!');
