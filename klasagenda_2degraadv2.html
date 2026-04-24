@@ -274,6 +274,7 @@
   min-height:0;
   height:100%;
   overflow:hidden;
+  position:relative; /* anker voor absoluut gepositioneerde .sign */
 }
 
 .panelBody{
@@ -285,9 +286,22 @@
   white-space:pre-wrap;
 }
 
-.sign{
+/* Fix: reserveer binnen panelBody een "gat" met dezelfde afmetingen als
+   .sign, zodat tekst rond én onder het handtekeningvak vloeit.
+   .sign zelf wordt hieronder absoluut gepositioneerd op exact dezelfde plek. */
+.panelBody::before{
+  content:"";
   float:right;
-  clear:right;
+  width: calc(70mm + 14px);   /* .sign width + .sign margin-left */
+  height: calc(22mm + 16px);  /* .sign height + margin top+bottom */
+  /* geen margins/borders: dit is enkel een reservering, de echte sign ligt erover */
+}
+
+.sign{
+  /* Absoluut i.p.v. float, zodat .panelBody::before de tekst-flow bepaalt */
+  position:absolute;
+  top:2mm;            /* = .panelInner padding */
+  right:2mm;          /* = .panelInner padding */
   margin:10px 0 6px 14px;
 
   border:2.6px solid var(--line);
@@ -300,6 +314,7 @@
   background:#fff;
   display:flex;
   align-items:flex-start;
+  pointer-events:none; /* tekst eronder/ernaast blijft klikbaar voor de editor */
 }
   /* Vrije pictogrammen */
   .picto-free{
@@ -365,11 +380,15 @@
 
 .panelInner{
   display:block !important;
+  position:relative !important; /* anker voor absoluut gepositioneerde .sign */
 }
 
 .sign{
-  float:right !important;
-  clear:right !important;
+  /* Print: behoud absoluut-positionering zodat de pseudo-float
+     in .panelBody de tekst-flow correct rond en onder de handtekening laat lopen */
+  position:absolute !important;
+  top:2mm !important;
+  right:2mm !important;
   margin:10px 0 6px 14px !important;
 }
 
