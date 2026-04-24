@@ -210,6 +210,10 @@
       background: var(--accent-licht);
     }
 
+    .extra-acties button.klasagenda {
+      background: var(--groen-zacht);
+    }
+
     .extra-acties button:hover {
       transform: translateY(-2px);
       box-shadow: 0 4px 12px var(--schaduw-sterk);
@@ -398,6 +402,7 @@
     </div>
     <div class="header-knoppen">
       <button id="btnTerugNaarKeuze" style="display:none;">← Terug naar dashboard</button>
+      <button onclick="window.location.href='index.html'">🏠 Home</button>
       <button id="wijzigWachtwoordBtn">🔐 Wachtwoord wijzigen</button>
       <button id="logoutBtn">🚪 Uitloggen</button>
     </div>
@@ -412,6 +417,9 @@
     <div style="margin-top: 22px; padding-top: 20px; border-top: 2px solid var(--rand);">
       <h2 style="margin-bottom: 14px;">Andere klasmiddelen</h2>
       <div class="extra-acties">
+        <button class="klasagenda" onclick="window.location.href='index.html'">
+          📅 Klasagenda
+        </button>
         <button class="gedrag" onclick="window.location.href='gedragsopvolging.html'">
           📊 Gedragsopvolging
         </button>
