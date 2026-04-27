@@ -128,6 +128,7 @@ function standaardData(eigenaarUid, eigenaarEmail) {
     },
 
     budget: 0,
+    bestelKinderen: 46, // Totaal aantal kinderen voor bestelling klasmateriaal (beide leerjaren samen)
     lyreco: [],
     actions: [],
     knutsels: [],
@@ -384,14 +385,29 @@ function normaliseerTeamData() {
   if (!Array.isArray(teamData.leden_uids)) teamData.leden_uids = [];
   if (typeof teamData.budget !== 'number') teamData.budget = 0;
 
+  // Aantal kinderen voor bestelling klasmateriaal (totaal van beide leerjaren) — apart aanpasbaar
+  if (typeof teamData.bestelKinderen !== 'number') {
+    const kinderenL1 = (teamData.klasInstellingen?.L1?.kinderen) || 0;
+    const kinderenL2 = (teamData.klasInstellingen?.L2?.kinderen) || 0;
+    teamData.bestelKinderen = kinderenL1 + kinderenL2;
+  }
+
   // Normaliseer stock-producten (oude versies missen 'winkel')
   teamData.stockCats.forEach(cat => {
     if (!Array.isArray(cat.producten)) cat.producten = [];
     cat.producten.forEach(p => {
       if (p.winkel === undefined) p.winkel = '';
+      if (p.winkelAnder === undefined) p.winkelAnder = ''; // vrije winkelnaam wanneer winkel === 'Ander'
       if (p.l1 === undefined) p.l1 = 0;
       if (p.l2 === undefined) p.l2 = 0;
       if (p.bestel === undefined) p.bestel = 0;
+      // bestelManueel = true zodra de leerkracht het bestel-aantal handmatig wijzigt;
+      // dan negeert de auto-berekening dit product.
+      // Voor bestaande data: als er al een bestel-waarde > 0 staat, beschouwen we dit als manueel
+      // (anders zou de auto-berekening eigen ingevulde waarden overschrijven bij eerste keer openen).
+      if (p.bestelManueel === undefined) {
+        p.bestelManueel = (parseInt(p.bestel) || 0) > 0;
+      }
     });
   });
 
@@ -496,6 +512,7 @@ async function bewaarNu() {
       instellingen: teamData.instellingen,
       werkboeken: teamData.werkboeken,
       budget: teamData.budget,
+      bestelKinderen: teamData.bestelKinderen,
       lyreco: teamData.lyreco,
       actions: teamData.actions,
       knutsels: teamData.knutsels,
@@ -574,8 +591,23 @@ function allesRenderen() {
   actionTonen();
   budgetTonen();
   knutselsTonen();
+  // Auto-bestel toepassen vóór stockTonen: zo zijn de cijfers correct bij eerste paint
+  if (teamData) autoBestelToepassenStil();
   stockTonen();
   ledenTonen();
+}
+
+// Stille variant van autoBestelToepassen: werkt alleen het data-model bij, geen DOM-mutaties.
+// Wordt gebruikt vóór een volledige render zodat we niet onnodig naar DOM-elementen zoeken die nog niet bestaan.
+function autoBestelToepassenStil() {
+  if (!teamData || !Array.isArray(teamData.stockCats)) return;
+  teamData.stockCats.forEach(cat => {
+    if (!isMateriaalKids(cat)) return;
+    cat.producten.forEach(p => {
+      if (p.bestelManueel) return;
+      p.bestel = autoBestelAantal(p);
+    });
+  });
 }
 
 function klasInstellingenTonen() {
@@ -979,20 +1011,20 @@ function lyrecoTonen() {
     totAantal += (ly.bestel || 0);
 
     return `
-      <tr>
-        <td><input type="text" value="${escape(ly.artikel)}" class="tabel-input" style="width:100%;text-align:left;" onchange="lyrecoUpdaten('${ly.id}','artikel',this.value)"></td>
-        <td><input type="text" value="${escape(ly.nr)}" class="tabel-input" style="width:100%;text-align:left;" onchange="lyrecoUpdaten('${ly.id}','nr',this.value)"></td>
-        <td><input type="number" min="0" value="${ly.stock}" class="tabel-input klein" onchange="lyrecoUpdaten('${ly.id}','stock',this.value)"></td>
-        <td><input type="number" min="0" value="${ly.bestel}" class="tabel-input klein" onchange="lyrecoUpdaten('${ly.id}','bestel',this.value)"></td>
-        <td><input type="number" min="0" step="0.01" value="${ly.prijs}" class="tabel-input" onchange="lyrecoUpdaten('${ly.id}','prijs',this.value)"></td>
+      <tr data-ly-id="${ly.id}">
+        <td><input type="text" value="${escape(ly.artikel)}" class="tabel-input" style="width:100%;text-align:left;" oninput="lyrecoVeldUpdaten('${ly.id}','artikel',this.value)"></td>
+        <td><input type="text" value="${escape(ly.nr)}" class="tabel-input" style="width:100%;text-align:left;" oninput="lyrecoVeldUpdaten('${ly.id}','nr',this.value)"></td>
+        <td><input type="number" min="0" value="${ly.stock}" class="tabel-input klein" oninput="lyrecoVeldUpdaten('${ly.id}','stock',this.value)"></td>
+        <td><input type="number" min="0" value="${ly.bestel}" class="tabel-input klein" oninput="lyrecoVeldUpdaten('${ly.id}','bestel',this.value)"></td>
+        <td><input type="number" min="0" step="0.01" value="${ly.prijs}" class="tabel-input" oninput="lyrecoVeldUpdaten('${ly.id}','prijs',this.value)"></td>
         <td>
-          <select class="tabel-input klein" style="width:70px;text-align:left;" onchange="lyrecoUpdaten('${ly.id}','btw',this.value)">
+          <select class="tabel-input klein" style="width:70px;text-align:left;" onchange="lyrecoVeldUpdaten('${ly.id}','btw',this.value)">
             <option value="6" ${ly.btw == 6 ? 'selected' : ''}>6%</option>
             <option value="21" ${ly.btw == 21 ? 'selected' : ''}>21%</option>
           </select>
         </td>
-        <td class="getal">€ ${subExcl.toFixed(2)}</td>
-        <td class="getal"><strong>€ ${subIncl.toFixed(2)}</strong></td>
+        <td class="getal" data-cel="subExcl">€ ${subExcl.toFixed(2)}</td>
+        <td class="getal" data-cel="subIncl"><strong>€ ${subIncl.toFixed(2)}</strong></td>
         <td><button class="knop klein rood" onclick="lyrecoVerwijderen('${ly.id}')">🗑️</button></td>
       </tr>
     `;
@@ -1054,6 +1086,68 @@ window.lyrecoUpdaten = function (id, veld, waarde) {
   planBewaren();
   lyrecoTonen();
 };
+
+// Lichte versie die alleen subtotaal-cel + footer + stats bijwerkt — geen re-render → focus blijft staan
+window.lyrecoVeldUpdaten = function (id, veld, waarde) {
+  const ly = teamData.lyreco.find(x => x.id === id);
+  if (!ly) return;
+  if (['stock','bestel','min','btw'].includes(veld)) ly[veld] = parseInt(waarde) || 0;
+  else if (veld === 'prijs') ly[veld] = parseFloat(waarde) || 0;
+  else ly[veld] = waarde;
+
+  // Update subtotaal-cellen van deze rij
+  if (['prijs','bestel','btw'].includes(veld)) {
+    const rij = document.querySelector(`tr[data-ly-id="${id}"]`);
+    if (rij) {
+      const subExcl = (ly.prijs || 0) * (ly.bestel || 0);
+      const subIncl = subExcl * (1 + (ly.btw || 0) / 100);
+      const celExcl = rij.querySelector('[data-cel="subExcl"]');
+      const celIncl = rij.querySelector('[data-cel="subIncl"]');
+      if (celExcl) celExcl.textContent = '€ ' + subExcl.toFixed(2);
+      if (celIncl) celIncl.innerHTML = '<strong>€ ' + subIncl.toFixed(2) + '</strong>';
+    }
+    lyrecoFooterEnStatsBijwerken();
+    budgetTonen();
+  }
+  planBewaren();
+};
+
+// Herberekent footer-rij + samenvatting boven de tabel zonder de tabel zelf te hertekenen
+function lyrecoFooterEnStatsBijwerken() {
+  if (!teamData) return;
+  const items = teamData.lyreco;
+  let totExcl = 0, totIncl = 0, totAantal = 0;
+  items.forEach(ly => {
+    const subExcl = (ly.prijs || 0) * (ly.bestel || 0);
+    totExcl += subExcl;
+    totIncl += subExcl * (1 + (ly.btw || 0) / 100);
+    totAantal += (ly.bestel || 0);
+  });
+
+  const foot = document.getElementById('ly-foot');
+  if (foot) {
+    foot.innerHTML = `
+      <tr style="background:var(--creme-warm);font-weight:800;">
+        <td colspan="3">TOTAAL</td>
+        <td class="getal">${totAantal}</td>
+        <td></td>
+        <td></td>
+        <td class="getal">€ ${totExcl.toFixed(2)}</td>
+        <td class="getal">€ ${totIncl.toFixed(2)}</td>
+        <td></td>
+      </tr>
+    `;
+  }
+
+  const stats = document.getElementById('ly-stats');
+  if (stats) {
+    stats.innerHTML = `
+      <div>🖍️ <strong>${items.length}</strong> artikels</div>
+      <div>📦 Totaal te bestellen: <strong>${totAantal}</strong> stuks</div>
+      <div>💰 Totaal incl. BTW: <strong>€ ${totIncl.toFixed(2)}</strong></div>
+    `;
+  }
+}
 
 window.lyrecoVerwijderen = function (id) {
   const ly = teamData.lyreco.find(x => x.id === id);
@@ -1346,9 +1440,13 @@ function actionTonen() {
   const foot = document.getElementById('ac-foot');
   const items = teamData.actions;
 
+  // Datalist altijd updaten zodat reeds gebruikte winkelnamen als suggestie verschijnen
+  acWinkelsDatalistVullen();
+
   if (items.length === 0) {
     body.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--grijs);padding:20px;font-style:italic;">Nog geen aankopen.</td></tr>';
     foot.innerHTML = '';
+    acPerWinkelTonen();
     return;
   }
 
@@ -1356,11 +1454,11 @@ function actionTonen() {
   body.innerHTML = items.map(a => {
     tot += (a.prijs || 0);
     return `
-      <tr>
-        <td><input type="date" value="${a.datum || ''}" class="tabel-input" style="width:130px;text-align:left;" onchange="actionUpdaten('${a.id}','datum',this.value)"></td>
-        <td><input type="text" value="${escape(a.naam)}" class="tabel-input" style="width:100%;text-align:left;" onchange="actionUpdaten('${a.id}','naam',this.value)"></td>
-        <td><input type="text" value="${escape(a.winkel)}" class="tabel-input" style="width:100px;text-align:left;" onchange="actionUpdaten('${a.id}','winkel',this.value)"></td>
-        <td><input type="number" min="0" step="0.01" value="${a.prijs}" class="tabel-input" onchange="actionUpdaten('${a.id}','prijs',this.value)"></td>
+      <tr data-ac-id="${a.id}">
+        <td><input type="date" value="${a.datum || ''}" class="tabel-input" style="width:130px;text-align:left;" oninput="actionVeldUpdaten('${a.id}','datum',this.value)"></td>
+        <td><input type="text" value="${escape(a.naam)}" class="tabel-input" style="width:100%;text-align:left;" oninput="actionVeldUpdaten('${a.id}','naam',this.value)"></td>
+        <td><input type="text" value="${escape(a.winkel)}" class="tabel-input" style="width:120px;text-align:left;" list="ac-winkels-lijst" oninput="actionVeldUpdaten('${a.id}','winkel',this.value)"></td>
+        <td><input type="number" min="0" step="0.01" value="${a.prijs}" class="tabel-input" oninput="actionVeldUpdaten('${a.id}','prijs',this.value)"></td>
         <td><button class="knop klein rood" onclick="actionVerwijderen('${a.id}')">🗑️</button></td>
       </tr>
     `;
@@ -1374,23 +1472,76 @@ function actionTonen() {
     </tr>
   `;
 
+  acPerWinkelTonen();
   budgetTonen();
+}
+
+// Toon totaal per winkel onder de aankopentabel — handig om snel te zien
+// hoeveel je in elke winkel uitgaf en welk budget er nog over is.
+function acPerWinkelTonen() {
+  const wrap = document.getElementById('ac-per-winkel');
+  if (!wrap || !teamData) return;
+  const items = teamData.actions || [];
+  if (items.length === 0) {
+    wrap.innerHTML = '';
+    return;
+  }
+
+  // Optellen per winkelnaam (lege/onbekende → "Geen winkel")
+  const perWinkel = {};
+  items.forEach(a => {
+    const w = (a.winkel || '').trim() || 'Geen winkel';
+    if (!perWinkel[w]) perWinkel[w] = { totaal: 0, aantal: 0 };
+    perWinkel[w].totaal += (parseFloat(a.prijs) || 0);
+    perWinkel[w].aantal += 1;
+  });
+
+  // Sorteer: hoogste bedrag eerst
+  const winkels = Object.keys(perWinkel).sort((a, b) => perWinkel[b].totaal - perWinkel[a].totaal);
+
+  wrap.innerHTML = `
+    <span style="font-weight:700;color:var(--tekst-zacht);font-size:0.88em;align-self:center;">📊 Per winkel:</span>
+    ${winkels.map(w => `
+      <div class="winkel-pil">
+        <span class="naam">${escape(w)}</span>
+        <span class="bedrag">€ ${perWinkel[w].totaal.toFixed(2)}</span>
+        <span class="aantal">(${perWinkel[w].aantal} aankoop${perWinkel[w].aantal === 1 ? '' : 'en'})</span>
+      </div>
+    `).join('')}
+  `;
+}
+
+// Vul de datalist met alle reeds gebruikte winkelnamen (uniek, alfabetisch),
+// aangevuld met enkele standaardvoorstellen. Zo krijgt Isabel ze als suggestie
+// zodra ze begint te typen in het Winkel-veld.
+function acWinkelsDatalistVullen() {
+  const datalist = document.getElementById('ac-winkels-lijst');
+  if (!datalist || !teamData) return;
+  const standaard = ['Action', 'Lyreco', 'HEMA', 'Schleiper', 'Carrefour', 'Colruyt', 'Ava'];
+  const gebruikt = (teamData.actions || [])
+    .map(a => (a.winkel || '').trim())
+    .filter(w => w);
+  const alle = Array.from(new Set([...standaard, ...gebruikt])).sort((a, b) => a.localeCompare(b, 'nl'));
+  datalist.innerHTML = alle.map(w => `<option value="${escape(w)}"></option>`).join('');
 }
 
 window.actionToevoegen = function () {
   const naam = document.getElementById('ac-naam').value.trim();
   if (!naam) { alert('Geef een naam voor de aankoop.'); return; }
 
+  const winkelInvoer = document.getElementById('ac-winkel').value.trim();
+  if (!winkelInvoer) { alert('Geef een winkel op (bv. Action, HEMA, Schleiper...).'); return; }
+
   teamData.actions.push({
     id: maakId(),
     naam,
-    winkel: document.getElementById('ac-winkel').value.trim() || 'Action',
+    winkel: winkelInvoer,
     prijs: parseFloat(document.getElementById('ac-prijs').value) || 0,
     datum: document.getElementById('ac-datum').value || new Date().toISOString().split('T')[0]
   });
 
   document.getElementById('ac-naam').value = '';
-  document.getElementById('ac-winkel').value = 'Action';
+  document.getElementById('ac-winkel').value = '';
   document.getElementById('ac-prijs').value = 0;
 
   planBewaren();
@@ -1405,6 +1556,41 @@ window.actionUpdaten = function (id, veld, waarde) {
   planBewaren();
   actionTonen();
 };
+
+// Lichte versie zonder volledige re-render → focus blijft staan tijdens typen
+window.actionVeldUpdaten = function (id, veld, waarde) {
+  const a = teamData.actions.find(x => x.id === id);
+  if (!a) return;
+  if (veld === 'prijs') a[veld] = parseFloat(waarde) || 0;
+  else a[veld] = waarde;
+
+  if (veld === 'prijs') {
+    actionFooterBijwerken();
+    acPerWinkelTonen();
+    budgetTonen();
+  } else if (veld === 'winkel') {
+    // Winkelnaam wijzigt → overzicht per winkel én datalist herrekenen
+    acPerWinkelTonen();
+    acWinkelsDatalistVullen();
+  }
+  planBewaren();
+};
+
+function actionFooterBijwerken() {
+  if (!teamData) return;
+  let tot = 0;
+  teamData.actions.forEach(a => { tot += (a.prijs || 0); });
+  const foot = document.getElementById('ac-foot');
+  if (foot) {
+    foot.innerHTML = `
+      <tr style="background:var(--creme-warm);font-weight:800;">
+        <td colspan="3">TOTAAL</td>
+        <td class="getal">€ ${tot.toFixed(2)}</td>
+        <td></td>
+      </tr>
+    `;
+  }
+}
 
 window.actionVerwijderen = function (id) {
   const a = teamData.actions.find(x => x.id === id);
@@ -1454,6 +1640,12 @@ function stockTonen() {
   if (!teamData) return;
   const knoppen = document.getElementById('stock-cat-knoppen');
   const stats = document.getElementById('stock-stats');
+
+  // Sync bestel-kinderen input bovenaan (alleen wanneer veld niet de focus heeft, anders verstoor je het typen)
+  const bk = document.getElementById('bestel-kinderen');
+  if (bk && document.activeElement !== bk) {
+    bk.value = teamData.bestelKinderen || 0;
+  }
 
   // Stats
   let totaalProducten = 0;
@@ -1521,6 +1713,8 @@ function stockCatInhoudTonen() {
     return;
   }
 
+  const isKidsCat = isMateriaalKids(cat);
+
   const rijen = cat.producten.length === 0
     ? '<tr><td colspan="7" style="text-align:center;color:var(--grijs);padding:20px;font-style:italic;">Nog geen producten in deze categorie.</td></tr>'
     : cat.producten.map(p => {
@@ -1528,26 +1722,39 @@ function stockCatInhoudTonen() {
                             p.winkel === 'Action' ? 'action' :
                             p.winkel ? 'ander' : '';
         const totaal = (parseInt(p.l1) || 0) + (parseInt(p.l2) || 0);
+        // Auto-indicator alleen tonen in Materiaal kids
+        let autoHint = '';
+        if (isKidsCat) {
+          if (p.bestelManueel) {
+            autoHint = `<button class="auto-toggle manueel" title="Handmatig ingesteld — klik om terug naar auto te schakelen" onclick="stockBestelTerugNaarAuto('${cat.id}','${p.id}')">✏️</button>`;
+          } else {
+            autoHint = `<span class="auto-toggle auto" title="Automatisch berekend (kinderen − stock)">⚙️</span>`;
+          }
+        }
         return `
           <tr>
             <td>
               <input type="text" value="${escape(p.naam)}" class="stock-naam-input"
-                onchange="stockProductUpdaten('${cat.id}','${p.id}','naam',this.value)">
+                oninput="stockProductUpdaten('${cat.id}','${p.id}','naam',this.value)">
             </td>
             <td class="nummer">
               <input type="number" min="0" value="${p.l1}" class="stock-input-num"
-                onchange="stockProductUpdaten('${cat.id}','${p.id}','l1',this.value)">
+                oninput="stockProductUpdaten('${cat.id}','${p.id}','l1',this.value)">
             </td>
             <td class="nummer">
               <input type="number" min="0" value="${p.l2}" class="stock-input-num"
-                onchange="stockProductUpdaten('${cat.id}','${p.id}','l2',this.value)">
+                oninput="stockProductUpdaten('${cat.id}','${p.id}','l2',this.value)">
             </td>
             <td class="totaal-kol">
               <span class="stock-totaal" id="totaal-${p.id}">${totaal}</span>
             </td>
             <td class="nummer">
-              <input type="number" min="0" value="${p.bestel}" class="stock-input-num te-bestellen"
-                onchange="stockProductUpdaten('${cat.id}','${p.id}','bestel',this.value)">
+              <span class="bestel-cel">
+                <input type="number" min="0" value="${p.bestel}" class="stock-input-num te-bestellen"
+                  data-product-id="${p.id}"
+                  oninput="stockProductUpdaten('${cat.id}','${p.id}','bestel',this.value)">
+                ${autoHint}
+              </span>
             </td>
             <td class="winkel-kol">
               <select class="stock-winkel-select ${winkelClass}"
@@ -1557,6 +1764,11 @@ function stockCatInhoudTonen() {
                 <option value="Action" ${p.winkel === 'Action' ? 'selected' : ''}>🛍️ Action</option>
                 <option value="Ander" ${p.winkel === 'Ander' ? 'selected' : ''}>📍 Ander</option>
               </select>
+              ${p.winkel === 'Ander' ? `
+                <input type="text" class="stock-winkel-ander" placeholder="Naam winkel..."
+                  value="${escape(p.winkelAnder || '')}"
+                  oninput="stockProductUpdaten('${cat.id}','${p.id}','winkelAnder',this.value)">
+              ` : ''}
             </td>
             <td class="acties-kol">
               <button class="stock-verwijder" onclick="stockProductVerwijderen('${cat.id}','${p.id}')" title="Product verwijderen">🗑️</button>
@@ -1668,14 +1880,23 @@ window.stockProductToevoegen = function (catId) {
   const naam = naamEl.value.trim();
   if (!naam) { alert('Geef een naam voor het product.'); return; }
 
-  cat.producten.push({
+  const ingevuldBestel = parseInt(document.getElementById('nieuw-stock-bestel-' + catId).value) || 0;
+  const nieuwProduct = {
     id: maakId(),
     naam,
     l1: parseInt(document.getElementById('nieuw-stock-l1-' + catId).value) || 0,
     l2: parseInt(document.getElementById('nieuw-stock-l2-' + catId).value) || 0,
-    bestel: parseInt(document.getElementById('nieuw-stock-bestel-' + catId).value) || 0,
-    winkel: document.getElementById('nieuw-stock-winkel-' + catId).value || ''
-  });
+    bestel: ingevuldBestel,
+    winkel: document.getElementById('nieuw-stock-winkel-' + catId).value || '',
+    // Als de leerkracht zelf een bestel-aantal opgaf bij toevoegen → manueel; anders auto
+    bestelManueel: ingevuldBestel > 0
+  };
+  cat.producten.push(nieuwProduct);
+
+  // Voor Materiaal kids zonder ingevuld bestel-aantal: meteen auto-berekenen
+  if (isMateriaalKids(cat) && !nieuwProduct.bestelManueel) {
+    nieuwProduct.bestel = autoBestelAantal(nieuwProduct);
+  }
 
   planBewaren();
   stockTonen();
@@ -1703,6 +1924,24 @@ window.stockProductUpdaten = function (catId, productId, veld, waarde) {
   } else {
     p[veld] = waarde;
   }
+
+  // Als de leerkracht het bestel-veld zelf invult → markeren als manueel
+  if (veld === 'bestel') {
+    p.bestelManueel = true;
+  }
+
+  // Als L1/L2 wijzigt in "Materiaal kids" en bestel-veld nog niet manueel is → auto-bestel updaten
+  if ((veld === 'l1' || veld === 'l2') && isMateriaalKids(cat) && !p.bestelManueel) {
+    const nieuw = autoBestelAantal(p);
+    if (p.bestel !== nieuw) {
+      p.bestel = nieuw;
+      const inp = document.querySelector(`input.stock-input-num.te-bestellen[data-product-id="${productId}"]`);
+      if (inp && document.activeElement !== inp) {
+        inp.value = nieuw;
+      }
+    }
+  }
+
   planBewaren();
 
   // Alleen bij winkel-wijziging de hele tabel hertekenen (kleur dropdown verandert)
@@ -1765,6 +2004,85 @@ function stockCatKnopBadgesBijwerken() {
     }
   });
 }
+
+// ==============================================
+// AANTAL KINDEREN VOOR BESTELLING + AUTO BEREKENING "Materiaal kids"
+// ==============================================
+
+// Een categorie geldt als 'Materiaal kids' als de naam (case-insensitief, zonder spaties) overeenkomt.
+function isMateriaalKids(cat) {
+  if (!cat || !cat.naam) return false;
+  return cat.naam.trim().toLowerCase() === 'materiaal kids';
+}
+
+// Berekent het auto-suggestie aantal voor een product: kinderen − stock L1 − stock L2 (nooit negatief)
+function autoBestelAantal(p) {
+  const kinderen = parseInt(teamData.bestelKinderen) || 0;
+  const l1 = parseInt(p.l1) || 0;
+  const l2 = parseInt(p.l2) || 0;
+  const tekort = kinderen - l1 - l2;
+  return tekort > 0 ? tekort : 0;
+}
+
+// Schrijft auto-bestel terug in alle "Materiaal kids" producten die NOG NIET handmatig zijn aangepast,
+// werkt enkel het bestel-veld in de DOM bij (geen volledige re-render → focus blijft staan).
+function autoBestelToepassen() {
+  if (!teamData) return;
+  teamData.stockCats.forEach(cat => {
+    if (!isMateriaalKids(cat)) return;
+    cat.producten.forEach(p => {
+      if (p.bestelManueel) return; // niet overschrijven als gebruiker zelf gewijzigd heeft
+      const nieuw = autoBestelAantal(p);
+      if (p.bestel !== nieuw) {
+        p.bestel = nieuw;
+        // DOM-veld bijwerken (zonder focus te stelen)
+        const inp = document.querySelector(`input.stock-input-num.te-bestellen[data-product-id="${p.id}"]`);
+        if (inp && document.activeElement !== inp) {
+          inp.value = nieuw;
+        }
+      }
+    });
+  });
+  stockStatsBijwerken();
+  stockCatKnopBadgesBijwerken();
+}
+
+// Wordt aangeroepen wanneer leerkracht het aantal kinderen bovenaan wijzigt
+window.bestelKinderenZetten = function (waarde) {
+  if (!teamData) return;
+  teamData.bestelKinderen = parseInt(waarde) || 0;
+  autoBestelToepassen();
+  planBewaren();
+};
+
+// "↻ Auto opnieuw" knop: zet bestelManueel terug op false voor alle Materiaal kids producten,
+// zodat de auto-berekening alle vakjes weer overschrijft. Vraagt om bevestiging.
+window.autoBestelHerstellen = function () {
+  if (!teamData) return;
+  if (!confirm('Wil je alle bestel-aantallen in "Materiaal kids" terugzetten naar de automatische berekening (kinderen − stock)?\n\nJe handmatige aanpassingen voor deze categorie gaan dan verloren.')) return;
+  teamData.stockCats.forEach(cat => {
+    if (!isMateriaalKids(cat)) return;
+    cat.producten.forEach(p => { p.bestelManueel = false; });
+  });
+  autoBestelToepassen();
+  // Volledige hertekening zodat de bestel-vakjes allemaal de nieuwe waarde tonen
+  stockTonen();
+  planBewaren();
+};
+
+// Per-product terug naar auto schakelen (klik op het ✏️ icoon)
+window.stockBestelTerugNaarAuto = function (catId, productId) {
+  const cat = teamData.stockCats.find(c => c.id === catId);
+  if (!cat) return;
+  const p = cat.producten.find(x => x.id === productId);
+  if (!p) return;
+  p.bestelManueel = false;
+  p.bestel = autoBestelAantal(p);
+  planBewaren();
+  stockCatInhoudTonen(); // hertekenen om icoon én cijfer mee te updaten
+  stockStatsBijwerken();
+  stockCatKnopBadgesBijwerken();
+};
 
 // ==============================================
 // KNUTSELS
@@ -2134,13 +2452,21 @@ window.pdfStock = function () {
 
     const body = cat.producten.map(p => {
       const totaal = (parseInt(p.l1) || 0) + (parseInt(p.l2) || 0);
+      // Voor 'Ander' tonen we de zelf ingetypte naam (bv. "HEMA"), zo niet de standaard winkel
+      let winkelTekst = '—';
+      if (p.winkel === 'Ander') {
+        const eigen = (p.winkelAnder || '').trim();
+        winkelTekst = eigen ? eigen : 'Ander';
+      } else if (p.winkel) {
+        winkelTekst = p.winkel;
+      }
       return [
         p.naam,
         String(p.l1 || 0),
         String(p.l2 || 0),
         String(totaal),
         String(p.bestel || 0),
-        p.winkel || '—'
+        winkelTekst
       ];
     });
 
@@ -2176,16 +2502,25 @@ window.stockBestellijstPdf = function () {
     return;
   }
 
-  // Groepeer producten met "te bestellen > 0" per winkel
-  const perWinkel = {}; // { 'Lyreco': [{cat, naam, aantal}], 'Action': [...], 'Ander': [...], 'Geen winkel': [...] }
+  // Groepeer producten met "te bestellen > 0" per winkel.
+  // Voor winkel === 'Ander' gebruiken we de zelf ingetypte naam (winkelAnder) zodat
+  // bv. alle HEMA-items en alle Schleiper-items elk een eigen sectie krijgen.
+  const perWinkel = {};
   teamData.stockCats.forEach(cat => {
     cat.producten.forEach(p => {
       const bestel = parseInt(p.bestel) || 0;
-      if (bestel > 0) {
-        const winkel = p.winkel || 'Geen winkel gekozen';
-        if (!perWinkel[winkel]) perWinkel[winkel] = [];
-        perWinkel[winkel].push({ categorie: cat.naam, naam: p.naam, aantal: bestel });
+      if (bestel === 0) return;
+      let winkel;
+      if (p.winkel === 'Ander') {
+        const eigen = (p.winkelAnder || '').trim();
+        winkel = eigen ? eigen : 'Ander (geen naam ingevuld)';
+      } else if (!p.winkel) {
+        winkel = 'Geen winkel gekozen';
+      } else {
+        winkel = p.winkel;
       }
+      if (!perWinkel[winkel]) perWinkel[winkel] = [];
+      perWinkel[winkel].push({ categorie: cat.naam, naam: p.naam, aantal: bestel });
     });
   });
 
@@ -2208,17 +2543,26 @@ window.stockBestellijstPdf = function () {
   const regel2 = teamRegel + (teamRegel && sj ? ' · ' : '') + (sj || '');
   doc.text(regel2, 14, 25);
 
-  // Volgorde: Lyreco, Action, Ander, Geen winkel
-  const volgorde = ['Lyreco', 'Action', 'Ander', 'Geen winkel gekozen'];
+  // Volgorde: Lyreco, Action, dan alle eigen Ander-winkels (alfabetisch),
+  // dan "Ander (zonder naam)" en "Geen winkel" als laatste.
+  const vasteVolgorde = ['Lyreco', 'Action'];
+  const eindVolgorde = ['Ander (geen naam ingevuld)', 'Geen winkel gekozen'];
+  const eigenWinkels = Object.keys(perWinkel)
+    .filter(w => !vasteVolgorde.includes(w) && !eindVolgorde.includes(w))
+    .sort((a, b) => a.localeCompare(b, 'nl'));
+  const volgorde = [...vasteVolgorde, ...eigenWinkels, ...eindVolgorde];
+
+  // Vaste kleuren voor bekende winkels; eigen winkels krijgen een neutrale paarsblauwe tint
   const kleuren = {
     'Lyreco': [164, 207, 152],
     'Action': [244, 172, 114],
-    'Ander': [190, 190, 190],
+    'Ander (geen naam ingevuld)': [190, 190, 190],
     'Geen winkel gekozen': [220, 220, 220]
   };
+  const eigenKleur = [197, 184, 222]; // zacht paars voor zelf toegevoegde winkels
 
-  let y = 33;
   let eersteWinkel = true;
+  let y = 33;
 
   volgorde.forEach(winkel => {
     if (!perWinkel[winkel]) return;
@@ -2242,6 +2586,7 @@ window.stockBestellijstPdf = function () {
     y += 12;
 
     const body = items.map(it => [it.categorie, it.naam, String(it.aantal)]);
+    const headKleur = kleuren[winkel] || eigenKleur;
 
     doc.autoTable({
       startY: y,
@@ -2249,7 +2594,7 @@ window.stockBestellijstPdf = function () {
       body,
       theme: 'grid',
       styles: { fontSize: 10, cellPadding: 3 },
-      headStyles: { fillColor: kleuren[winkel], textColor: 40, fontStyle: 'bold' },
+      headStyles: { fillColor: headKleur, textColor: 40, fontStyle: 'bold' },
       columnStyles: {
         0: { cellWidth: 55 },
         1: { cellWidth: 95 },
@@ -2606,8 +2951,11 @@ window.stockResetten = function () {
       p.l1 = 0;
       p.l2 = 0;
       p.bestel = 0;
+      p.bestelManueel = false;
     });
   });
+  // Auto-bestel meteen opnieuw toepassen voor Materiaal kids (alle bestel-vakjes worden = aantal kinderen)
+  autoBestelToepassenStil();
   planBewaren();
   stockTonen();
   alert('✅ Alle stock-tellingen zijn op 0 gezet.');
@@ -2762,5 +3110,3 @@ function archiefTonen() {
     `;
   }).join('');
 }
-
-
