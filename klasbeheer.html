@@ -614,6 +614,62 @@
   }
 
   /* STOCK - ACCORDION */
+  .bestel-kinderen-balk {
+    background: var(--accent-licht);
+    border: 1.5px solid var(--accent);
+    border-radius: 10px;
+    padding: 14px 18px;
+    margin-bottom: 18px;
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    flex-wrap: wrap;
+  }
+
+  .bestel-kinderen-balk .klas-item label {
+    font-size: 0.95em;
+  }
+
+  .ac-per-winkel {
+    margin-top: 18px;
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .ac-per-winkel .winkel-pil {
+    background: var(--creme-warm);
+    border: 1.5px solid var(--rand);
+    border-radius: 10px;
+    padding: 10px 14px;
+    font-size: 0.92em;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .ac-per-winkel .winkel-pil .naam {
+    font-weight: 700;
+    color: var(--accent-donker);
+  }
+
+  .ac-per-winkel .winkel-pil .bedrag {
+    font-weight: 700;
+    color: var(--tekst);
+  }
+
+  .ac-per-winkel .winkel-pil .aantal {
+    color: var(--tekst-zacht);
+    font-size: 0.86em;
+  }
+
+  .ac-per-winkel .leeg {
+    color: var(--tekst-zacht);
+    font-style: italic;
+    font-size: 0.88em;
+    padding: 4px 0;
+  }
+
   .stock-layout {
     display: grid;
     grid-template-columns: 260px 1fr;
@@ -830,6 +886,38 @@
     background: #fff0f0;
   }
 
+  .bestel-cel {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    justify-content: center;
+  }
+
+  .auto-toggle {
+    font-size: 0.95em;
+    line-height: 1;
+    padding: 2px;
+    background: transparent;
+    border: none;
+    cursor: default;
+  }
+
+  .auto-toggle.auto {
+    opacity: 0.55;
+  }
+
+  .auto-toggle.manueel {
+    cursor: pointer;
+    opacity: 0.7;
+    border-radius: 4px;
+    padding: 2px 4px;
+  }
+
+  .auto-toggle.manueel:hover {
+    background: var(--accent-licht);
+    opacity: 1;
+  }
+
   .stock-naam-input {
     width: 100%;
     padding: 6px 8px;
@@ -868,6 +956,23 @@
   .stock-winkel-select.lyreco { background: #e3f0e1; color: #2d5f2e; }
   .stock-winkel-select.action { background: #ffe8d6; color: #8f4a1a; }
   .stock-winkel-select.ander { background: #e8e8e8; color: #555; }
+
+  .stock-winkel-ander {
+    width: 100%;
+    margin-top: 4px;
+    padding: 4px 6px;
+    border: 1.5px solid var(--rand);
+    border-radius: 6px;
+    font-family: inherit;
+    font-size: 0.82em;
+    background: #fafafa;
+  }
+
+  .stock-winkel-ander:focus {
+    outline: 2px solid var(--accent);
+    outline-offset: -1px;
+    background: #fff;
+  }
 
   .stock-verwijder {
     background: transparent;
@@ -1406,8 +1511,8 @@
           </table>
         </div>
 
-        <h3 style="margin-top:30px; margin-bottom:10px;">🛍️ Action &amp; andere aankopen</h3>
-        <p class="sub" style="margin-bottom: 14px;">Aankopen buiten Lyreco die ook van het klasbudget gaan.</p>
+        <h3 style="margin-top:30px; margin-bottom:10px;">🛍️ Aankopen in andere winkels</h3>
+        <p class="sub" style="margin-bottom: 14px;">Aankopen buiten Lyreco die ook van het klasbudget gaan (Action, HEMA, Schleiper...). Zo zie je live welk budget er nog over is.</p>
 
         <div class="toevoegen">
           <h3>➕ Aankoop toevoegen</h3>
@@ -1418,7 +1523,8 @@
             </div>
             <div>
               <label>Winkel</label>
-              <input type="text" id="ac-winkel" value="Action">
+              <input type="text" id="ac-winkel" list="ac-winkels-lijst" placeholder="bv. Action, HEMA, Schleiper...">
+              <datalist id="ac-winkels-lijst"></datalist>
             </div>
             <div>
               <label>Prijs (€, totaal incl. BTW)</label>
@@ -1447,12 +1553,26 @@
             <tfoot id="ac-foot"></tfoot>
           </table>
         </div>
+
+        <div id="ac-per-winkel" class="ac-per-winkel"></div>
       </section>
 
       <!-- ============ STOCK ============ -->
       <section id="paneel-stock" class="paneel">
         <h2>Stock klasmateriaal</h2>
         <p class="sub">Per categorie hou je de stock bij voor het 1ste en 2de leerjaar, en hoeveel er nog bijbesteld moet worden. Achter elk product kan je aanduiden waar je het koopt (Lyreco, Action, ...). Zo krijg je een aparte boodschappenlijst per winkel.</p>
+
+        <div class="bestel-kinderen-balk">
+          <div class="klas-item">
+            <label for="bestel-kinderen">🧒 We bestellen voor:</label>
+            <input type="number" id="bestel-kinderen" class="klas-input" min="0" value="46" oninput="bestelKinderenZetten(this.value)">
+            <span style="font-weight:600;">kinderen</span>
+          </div>
+          <div style="color:var(--tekst-zacht);font-size:0.88em;line-height:1.4;">
+            Bij <strong>"Materiaal kids"</strong> wordt <em>te bestellen</em> automatisch (kinderen − stock L1 − stock L2). Je kan elk vak nog manueel aanpassen (bv. als iets per doos verkocht wordt).
+            <button class="knop klein" style="margin-left:8px;" onclick="autoBestelHerstellen()" title="Zet alle bestel-aantallen in 'Materiaal kids' terug naar de automatische berekening">↻ Auto opnieuw</button>
+          </div>
+        </div>
 
         <div style="margin-bottom: 20px; display:flex; gap:10px; flex-wrap:wrap;">
           <button class="knop groen" onclick="pdfStock()">📄 Volledig overzicht (PDF)</button>
