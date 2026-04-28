@@ -2480,7 +2480,7 @@ window.pdfWerkboeken = function () {
       if (y > 240) { doc.addPage(); y = 20; }
       doc.setFontSize(10);
       doc.setFont(undefined, 'italic');
-      doc.text('🧑 Voor de leerkracht', 14, y);
+      doc.text('Voor de leerkracht', 14, y);
       y += 2;
 
       const lkBody = lkMat.map(item => {
@@ -2509,9 +2509,9 @@ window.pdfWerkboeken = function () {
         },
         margin: { left: 14, right: 14 }
       });
-      y = doc.lastAutoTable.finalY + 6;
+      y = doc.lastAutoTable.finalY + 14;
     } else {
-      y += 4;
+      y += 12;
     }
   });
 
