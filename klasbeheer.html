@@ -541,6 +541,43 @@
 
   .methode-toevoegen h3 { margin-bottom: 10px; }
 
+  /* LEERKRACHTMATERIAAL — apart blok onder de werkboek-tabel per methode */
+  .leerkracht-blok {
+    margin-top: 18px;
+    padding: 14px 16px;
+    background: var(--creme-warm);
+    border: 1.5px solid var(--bruin-zacht);
+    border-radius: 10px;
+  }
+
+  .leerkracht-kop {
+    font-weight: 700;
+    color: var(--accent-donker);
+    margin-bottom: 10px;
+    font-size: 0.98em;
+  }
+
+  .leerkracht-sub {
+    font-weight: 400;
+    color: var(--tekst-zacht);
+    font-size: 0.85em;
+    font-style: italic;
+  }
+
+  .leerkracht-leeg {
+    color: var(--tekst-zacht);
+    font-style: italic;
+    font-size: 0.9em;
+    padding: 8px 4px 12px;
+    margin: 0;
+  }
+
+  .leerkracht-toevoegen {
+    background: rgba(255,255,255,0.5);
+    border: 1.5px dashed var(--bruin-zacht);
+    margin-top: 10px;
+  }
+
   .samenvatting {
     background: var(--accent-licht);
     border: 1.5px solid var(--accent);
@@ -1329,7 +1366,7 @@
       <!-- ============ WERKBOEKEN ============ -->
       <section id="paneel-werkboeken" class="paneel actief">
         <h2>Werkboeken per methode</h2>
-        <p class="sub">Per leerjaar kan je methodes en delen bijhouden. Het systeem rekent automatisch: <strong>aantal kinderen + reserve − stock = bijbestellen</strong>.</p>
+        <p class="sub">Per leerjaar kan je methodes en delen bijhouden. Voor de werkboeken rekent het systeem automatisch: <strong>aantal kinderen + reserve − stock = bijbestellen</strong>. Daaronder kan je per methode ook materiaal voor de leerkracht zelf bijhouden (handleiding, wandplaten, …).</p>
 
         <div class="leerjaar-schakelaar">
           <button class="leerjaar-knop actief" data-leerjaar="L1" onclick="leerjaarWisselen('L1')">📘 Leerjaar 1</button>
