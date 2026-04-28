@@ -376,6 +376,12 @@ function normaliseerTeamData() {
   if (!teamData.werkboeken) teamData.werkboeken = { L1: [], L2: [] };
   if (!teamData.werkboeken.L1) teamData.werkboeken.L1 = [];
   if (!teamData.werkboeken.L2) teamData.werkboeken.L2 = [];
+  // Migratie: zorg dat elke methode een leerkrachtMateriaal-array heeft (handleiding, wandplaten, ...)
+  ['L1','L2'].forEach(lj => {
+    (teamData.werkboeken[lj] || []).forEach(m => {
+      if (!Array.isArray(m.leerkrachtMateriaal)) m.leerkrachtMateriaal = [];
+    });
+  });
   if (!Array.isArray(teamData.lyreco)) teamData.lyreco = [];
   if (!Array.isArray(teamData.actions)) teamData.actions = [];
   if (!Array.isArray(teamData.knutsels)) teamData.knutsels = [];
@@ -706,6 +712,8 @@ function werkboekenTonen() {
 
   container.innerHTML = methodes.map(m => {
     const rijen = m.delen.map(d => werkboekRijHtml(m.id, d, nodig)).join('');
+    const lkMat = m.leerkrachtMateriaal || [];
+    const lkRijen = lkMat.map(item => leerkrachtRijHtml(m.id, item)).join('');
 
     return `
       <div class="methode">
@@ -721,7 +729,7 @@ function werkboekenTonen() {
             <table class="vol">
               <thead>
                 <tr>
-                  <th>Deel</th>
+                  <th>Deel <span style="font-weight:400;color:var(--tekst-zacht);font-size:0.85em;">(per kind)</span></th>
                   <th class="getal">In stock</th>
                   <th class="getal">Nodig</th>
                   <th class="getal">Bijbestellen</th>
@@ -741,6 +749,46 @@ function werkboekenTonen() {
               <input type="number" min="0" value="0" id="nieuw-deel-stock-${m.id}" style="width:80px;">
             </div>
             <button class="knop klein" onclick="deelToevoegen('${m.id}')">➕ Toevoegen</button>
+          </div>
+
+          <!-- LEERKRACHTMATERIAAL: handleiding, wandplaten, ... (1× per klas) -->
+          <div class="leerkracht-blok">
+            <div class="leerkracht-kop">
+              🧑‍🏫 Voor de leerkracht <span class="leerkracht-sub">— handleiding, wandplaten, … (niet per kind)</span>
+            </div>
+            ${lkMat.length > 0 ? `
+              <div class="tabel-wrap">
+                <table class="vol">
+                  <thead>
+                    <tr>
+                      <th>Item</th>
+                      <th class="getal">In stock</th>
+                      <th class="getal">Nodig</th>
+                      <th class="getal">Bijbestellen</th>
+                      <th></th>
+                    </tr>
+                  </thead>
+                  <tbody id="wb-lk-body-${m.id}">${lkRijen}</tbody>
+                </table>
+              </div>
+            ` : `
+              <p class="leerkracht-leeg">Nog geen leerkrachtmateriaal toegevoegd voor deze methode.</p>
+            `}
+            <div class="deel-toevoegen leerkracht-toevoegen">
+              <div>
+                <label>Nieuw item</label>
+                <input type="text" id="nieuw-lk-naam-${m.id}" placeholder="bv. Handleiding of Wandplatenpakket">
+              </div>
+              <div>
+                <label>Aantal</label>
+                <input type="number" min="1" value="1" id="nieuw-lk-aantal-${m.id}" style="width:70px;">
+              </div>
+              <div>
+                <label>Stock</label>
+                <input type="number" min="0" value="0" id="nieuw-lk-stock-${m.id}" style="width:70px;">
+              </div>
+              <button class="knop klein" onclick="leerkrachtToevoegen('${m.id}')">➕ Toevoegen</button>
+            </div>
           </div>
         </div>
       </div>
@@ -775,6 +823,34 @@ function werkboekRijHtml(mId, d, nodig) {
   `;
 }
 
+// Genereert HTML voor één rij in de "Voor de leerkracht"-tabel (handleiding, wandplaten, ...)
+function leerkrachtRijHtml(mId, item) {
+  const stock = item.stock || 0;
+  const aantal = item.aantal || 1;
+  const tekort = Math.max(0, aantal - stock);
+
+  return `
+    <tr id="wb-lk-rij-${item.id}">
+      <td>${escape(item.naam)}</td>
+      <td class="getal">
+        <input type="number" min="0" value="${stock}" class="tabel-input"
+          onchange="leerkrachtStockUpdaten('${mId}','${item.id}',this.value)">
+      </td>
+      <td class="getal" id="wb-lk-nodig-${item.id}">
+        <input type="number" min="1" value="${aantal}" class="tabel-input" style="width:60px;text-align:center;font-weight:bold;"
+          onchange="leerkrachtAantalUpdaten('${mId}','${item.id}',this.value)">
+      </td>
+      <td class="getal ${tekort > 0 ? 'bestel-getal' : 'ok'}" id="wb-lk-tekort-${item.id}">
+        ${tekort > 0 ? '+' + tekort : '✓'}
+      </td>
+      <td class="getal">
+        <button class="knop klein grijs" onclick="leerkrachtHernoemen('${mId}','${item.id}')" title="Hernoemen">✏️</button>
+        <button class="knop klein rood" onclick="leerkrachtVerwijderen('${mId}','${item.id}')" title="Verwijderen">🗑️</button>
+      </td>
+    </tr>
+  `;
+}
+
 // Werk de stats-balk bovenaan bij (zonder tabel te hertekenen)
 function werkboekenStatsTonen() {
   const stats = document.getElementById('wb-stats');
@@ -784,19 +860,28 @@ function werkboekenStatsTonen() {
 
   let totaalDelen = 0;
   let totaalBijbestellen = 0;
+  let totaalLkBijbestellen = 0;
   methodes.forEach(m => {
     m.delen.forEach(d => {
       totaalDelen++;
       const tekort = Math.max(0, nodig - (d.stock || 0));
       totaalBijbestellen += tekort;
     });
+    (m.leerkrachtMateriaal || []).forEach(item => {
+      const tekort = Math.max(0, (item.aantal || 1) - (item.stock || 0));
+      totaalLkBijbestellen += tekort;
+    });
   });
 
   const ljData = teamData.instellingen[huidigLeerjaar] || {};
+  const lkRegel = totaalLkBijbestellen > 0
+    ? `<div>🧑‍🏫 + <strong>${totaalLkBijbestellen}</strong> stuk(s) leerkrachtmateriaal</div>`
+    : '';
   stats.innerHTML = `
     <div>👥 <strong>${nodig}</strong> per deel nodig <span style="color:var(--tekst-zacht);">(${ljData.kinderen || 0} kinderen + ${ljData.reserve || 0} reserve)</span></div>
     <div>📚 <strong>${methodes.length}</strong> methodes, <strong>${totaalDelen}</strong> delen</div>
     <div>🛒 Totaal bij te bestellen: <strong>${totaalBijbestellen}</strong> werkboeken</div>
+    ${lkRegel}
   `;
 }
 
@@ -851,7 +936,13 @@ function werkboekBestellijstTonen() {
     m.delen.forEach(d => {
       const tekort = Math.max(0, nodig - (d.stock || 0));
       if (tekort > 0) {
-        bestelRijen.push({ methode: m.naam, uitgever: m.uitgever, deel: d.naam, aantal: tekort });
+        bestelRijen.push({ methode: m.naam, uitgever: m.uitgever, deel: d.naam, aantal: tekort, type: 'kind' });
+      }
+    });
+    (m.leerkrachtMateriaal || []).forEach(item => {
+      const tekort = Math.max(0, (item.aantal || 1) - (item.stock || 0));
+      if (tekort > 0) {
+        bestelRijen.push({ methode: m.naam, uitgever: m.uitgever, deel: item.naam, aantal: tekort, type: 'leerkracht' });
       }
     });
   });
@@ -869,13 +960,13 @@ function werkboekBestellijstTonen() {
     bestelDiv.style.display = 'block';
     bestelInhoud.innerHTML = `
       <table class="vol">
-        <thead><tr><th>Methode</th><th>Uitgever</th><th>Deel</th><th class="getal">Aantal</th></tr></thead>
+        <thead><tr><th>Methode</th><th>Uitgever</th><th>Deel / Item</th><th class="getal">Aantal</th></tr></thead>
         <tbody>
           ${bestelRijen.map(r => `
             <tr>
               <td>${escape(r.methode)}</td>
               <td>${escape(r.uitgever || '')}</td>
-              <td>${escape(r.deel)}</td>
+              <td>${r.type === 'leerkracht' ? '🧑‍🏫 ' : ''}${escape(r.deel)}</td>
               <td class="getal bestel-getal">${r.aantal}</td>
             </tr>
           `).join('')}
@@ -898,7 +989,8 @@ window.methodeToevoegen = function () {
     id: maakId(),
     naam,
     uitgever,
-    delen: [{ id: maakId(), naam: deelNaam, stock: deelStock }]
+    delen: [{ id: maakId(), naam: deelNaam, stock: deelStock }],
+    leerkrachtMateriaal: []
   });
 
   document.getElementById('nieuw-methode-naam').value = '';
@@ -983,6 +1075,88 @@ window.stockDeelUpdaten = function (mId, dId, waarde) {
   werkboekenStatsTonen();
   werkboekBestellijstTonen();
 };
+
+// ==============================================
+// LEERKRACHTMATERIAAL (handleiding, wandplaten, ...)
+// ==============================================
+window.leerkrachtToevoegen = function (mId) {
+  const m = teamData.werkboeken[huidigLeerjaar].find(x => x.id === mId);
+  if (!m) return;
+  const naamInput = document.getElementById('nieuw-lk-naam-' + mId);
+  const aantalInput = document.getElementById('nieuw-lk-aantal-' + mId);
+  const stockInput = document.getElementById('nieuw-lk-stock-' + mId);
+  const naam = naamInput.value.trim();
+  if (!naam) { alert('Geef een naam voor het item.'); return; }
+  const aantal = Math.max(1, parseInt(aantalInput.value) || 1);
+  const stock = Math.max(0, parseInt(stockInput.value) || 0);
+
+  if (!Array.isArray(m.leerkrachtMateriaal)) m.leerkrachtMateriaal = [];
+  m.leerkrachtMateriaal.push({ id: maakId(), naam, aantal, stock });
+  planBewaren();
+  werkboekenTonen();
+};
+
+window.leerkrachtVerwijderen = function (mId, itemId) {
+  const m = teamData.werkboeken[huidigLeerjaar].find(x => x.id === mId);
+  if (!m || !Array.isArray(m.leerkrachtMateriaal)) return;
+  const item = m.leerkrachtMateriaal.find(x => x.id === itemId);
+  if (!item) return;
+  if (!confirm(`"${item.naam}" verwijderen?`)) return;
+  m.leerkrachtMateriaal = m.leerkrachtMateriaal.filter(x => x.id !== itemId);
+  planBewaren();
+  werkboekenTonen();
+};
+
+window.leerkrachtHernoemen = function (mId, itemId) {
+  const m = teamData.werkboeken[huidigLeerjaar].find(x => x.id === mId);
+  if (!m || !Array.isArray(m.leerkrachtMateriaal)) return;
+  const item = m.leerkrachtMateriaal.find(x => x.id === itemId);
+  if (!item) return;
+  const nieuweNaam = prompt('Nieuwe naam:', item.naam);
+  if (nieuweNaam === null) return;
+  item.naam = nieuweNaam.trim() || item.naam;
+  planBewaren();
+  werkboekenTonen();
+};
+
+// Stock-input bijwerken — geen volledige hertekening, focus blijft staan
+window.leerkrachtStockUpdaten = function (mId, itemId, waarde) {
+  const m = teamData.werkboeken[huidigLeerjaar].find(x => x.id === mId);
+  if (!m || !Array.isArray(m.leerkrachtMateriaal)) return;
+  const item = m.leerkrachtMateriaal.find(x => x.id === itemId);
+  if (!item) return;
+  item.stock = Math.max(0, parseInt(waarde) || 0);
+  planBewaren();
+  leerkrachtRijBijwerken(item);
+  werkboekenStatsTonen();
+  werkboekBestellijstTonen();
+};
+
+// Aantal-input bijwerken (bv. 1 -> 2 handleidingen)
+window.leerkrachtAantalUpdaten = function (mId, itemId, waarde) {
+  const m = teamData.werkboeken[huidigLeerjaar].find(x => x.id === mId);
+  if (!m || !Array.isArray(m.leerkrachtMateriaal)) return;
+  const item = m.leerkrachtMateriaal.find(x => x.id === itemId);
+  if (!item) return;
+  item.aantal = Math.max(1, parseInt(waarde) || 1);
+  planBewaren();
+  leerkrachtRijBijwerken(item);
+  werkboekenStatsTonen();
+  werkboekBestellijstTonen();
+};
+
+// Werk één leerkracht-rij bij (zonder hele tabel te hertekenen)
+function leerkrachtRijBijwerken(item) {
+  const aantal = item.aantal || 1;
+  const stock = item.stock || 0;
+  const tekort = Math.max(0, aantal - stock);
+
+  const tekortCel = document.getElementById('wb-lk-tekort-' + item.id);
+  if (tekortCel) {
+    tekortCel.className = 'getal ' + (tekort > 0 ? 'bestel-getal' : 'ok');
+    tekortCel.textContent = tekort > 0 ? '+' + tekort : '✓';
+  }
+}
 
 
 // LYRECO
@@ -2285,7 +2459,7 @@ window.pdfWerkboeken = function () {
 
     doc.autoTable({
       startY: y,
-      head: [['Deel', 'In stock', 'Nodig', 'Bijbestellen']],
+      head: [['Deel (per kind)', 'In stock', 'Nodig', 'Bijbestellen']],
       body,
       theme: 'grid',
       styles: { fontSize: 10, cellPadding: 3 },
@@ -2298,7 +2472,47 @@ window.pdfWerkboeken = function () {
       },
       margin: { left: 14, right: 14 }
     });
-    y = doc.lastAutoTable.finalY + 8;
+    y = doc.lastAutoTable.finalY + 4;
+
+    // Voor de leerkracht (indien aanwezig)
+    const lkMat = m.leerkrachtMateriaal || [];
+    if (lkMat.length > 0) {
+      if (y > 240) { doc.addPage(); y = 20; }
+      doc.setFontSize(10);
+      doc.setFont(undefined, 'italic');
+      doc.text('🧑 Voor de leerkracht', 14, y);
+      y += 2;
+
+      const lkBody = lkMat.map(item => {
+        const aantal = item.aantal || 1;
+        const tekort = Math.max(0, aantal - (item.stock || 0));
+        return [
+          item.naam,
+          String(item.stock || 0),
+          String(aantal),
+          tekort > 0 ? '+' + tekort : 'OK'
+        ];
+      });
+
+      doc.autoTable({
+        startY: y,
+        head: [['Item', 'In stock', 'Nodig', 'Bijbestellen']],
+        body: lkBody,
+        theme: 'grid',
+        styles: { fontSize: 9, cellPadding: 2.5 },
+        headStyles: { fillColor: [180, 170, 155], textColor: 255, fontStyle: 'bold' },
+        columnStyles: {
+          0: { cellWidth: 80 },
+          1: { halign: 'center', cellWidth: 30 },
+          2: { halign: 'center', cellWidth: 30, fontStyle: 'bold' },
+          3: { halign: 'center', cellWidth: 40, fillColor: [245, 230, 215] }
+        },
+        margin: { left: 14, right: 14 }
+      });
+      y = doc.lastAutoTable.finalY + 6;
+    } else {
+      y += 4;
+    }
   });
 
   doc.save(`Werkboeken_${huidigLeerjaar}_${sj || 'overzicht'}.pdf`);
@@ -2979,6 +3193,7 @@ window.werkboekenResetten = function () {
 
   (teamData.werkboeken[huidigLeerjaar] || []).forEach(m => {
     m.delen.forEach(d => { d.stock = 0; });
+    (m.leerkrachtMateriaal || []).forEach(item => { item.stock = 0; });
   });
   planBewaren();
   werkboekenTonen();
