@@ -1201,6 +1201,10 @@ function toonMiniBar(el){
         }
       }
       updateMonthBox();
+      // ✅ Sla de datumwijziging op in localStorage (autosave)
+      // Enkel op idx===0 om dubbele snapshots te vermijden — de cascade
+      // op idx 1..6 gebeurt synchroon en wordt mee opgepakt door deze ene snapshot.
+      if(idx===0) pushSnapshot();
     });
   }
 
@@ -2451,11 +2455,22 @@ notesBody.addEventListener('input', ()=>{
       box.style.cssText = 'background:#fff;border-radius:14px;padding:28px 32px;min-width:340px;max-width:420px;box-shadow:0 8px 40px rgba(0,0,0,.18);font-family:Arial,sans-serif';
 
       const wl = getMaandInfo();
-      const weekInfo = wl ? `<p style="margin:.3rem 0;color:#374151;font-size:13pt">📅 ${wl.maand} ${wl.jaar}</p>` : '';
+      // Schooljaar-maanden in didactische volgorde
+      const MAANDEN_MODAL = ['september','oktober','november','december','januari','februari','maart','april','mei','juni','juli','augustus'];
+      // Jaar bepalen: huidig schooljaar = startjaar in september. Bv. mei 2026 = schooljaar 2025-2026.
+      const _vandaag = new Date();
+      const _huidigStartjaar = _vandaag.getMonth() >= 8 ? _vandaag.getFullYear() : _vandaag.getFullYear() - 1;
+      // Standaardselectie = wat de datepicker zegt, anders huidige maand
+      const _maandStd = wl ? wl.maand : _vandaag.toLocaleDateString('nl-BE',{month:'long'});
+      const _jaarStd  = wl ? wl.jaar  : _vandaag.getFullYear();
+      const _weekStd  = wl ? wl.weekInMaand : Math.ceil(_vandaag.getDate()/7);
+      const _maandOpties = MAANDEN_MODAL.map(m => `<option value="${m}" ${m===_maandStd?'selected':''}>${m.charAt(0).toUpperCase()+m.slice(1)}</option>`).join('');
+      // Toon huidig + volgend kalenderjaar (en eventueel het vorige als de datepicker daarheen wijst)
+      const _jaarKandidaten = [...new Set([_huidigStartjaar, _huidigStartjaar+1, _jaarStd, _vandaag.getFullYear(), _vandaag.getFullYear()+1])].sort((a,b)=>a-b);
+      const _jaarOpties = _jaarKandidaten.map(j => `<option value="${j}" ${j===_jaarStd?'selected':''}>${j}</option>`).join('');
 
       box.innerHTML = `
         <h2 style="margin:0 0 .6rem;font-size:15pt">📚 Bewaar in archief</h2>
-        ${weekInfo}
         <label style="display:block;margin:.8rem 0 .3rem;font-weight:700">Jouw naam (verschijnt in het archief):</label>
         <input id="archiefNaam" type="text" placeholder="bv. Juf Zisa" style="width:100%;padding:.5rem .7rem;border:1.5px solid #d1d5db;border-radius:8px;font-size:12pt;box-sizing:border-box">
         <label style="display:block;margin:.8rem 0 .3rem;font-weight:700">Klas:</label>
@@ -2463,13 +2478,21 @@ notesBody.addEventListener('input', ()=>{
           <option value="L1" ${aktieveKlas==='L1'?'selected':''}>L1</option>
           <option value="L2" ${aktieveKlas==='L2'?'selected':''}>L2</option>
         </select>
+        <label style="display:block;margin:.8rem 0 .3rem;font-weight:700">Maand:</label>
+        <select id="archiefMaand" style="width:100%;padding:.5rem .7rem;border:1.5px solid #d1d5db;border-radius:8px;font-size:12pt;box-sizing:border-box">
+          ${_maandOpties}
+        </select>
+        <label style="display:block;margin:.8rem 0 .3rem;font-weight:700">Jaar:</label>
+        <select id="archiefJaar" style="width:100%;padding:.5rem .7rem;border:1.5px solid #d1d5db;border-radius:8px;font-size:12pt;box-sizing:border-box">
+          ${_jaarOpties}
+        </select>
         <label style="display:block;margin:.8rem 0 .3rem;font-weight:700">Week van de maand:</label>
         <select id="archiefWeek" style="width:100%;padding:.5rem .7rem;border:1.5px solid #d1d5db;border-radius:8px;font-size:12pt;box-sizing:border-box">
-          <option value="1" ${wl&&wl.weekInMaand===1?'selected':''}>Week 1</option>
-          <option value="2" ${wl&&wl.weekInMaand===2?'selected':''}>Week 2</option>
-          <option value="3" ${wl&&wl.weekInMaand===3?'selected':''}>Week 3</option>
-          <option value="4" ${wl&&wl.weekInMaand===4?'selected':''}>Week 4</option>
-          <option value="5" ${wl&&wl.weekInMaand===5?'selected':''}>Week 5</option>
+          <option value="1" ${_weekStd===1?'selected':''}>Week 1</option>
+          <option value="2" ${_weekStd===2?'selected':''}>Week 2</option>
+          <option value="3" ${_weekStd===3?'selected':''}>Week 3</option>
+          <option value="4" ${_weekStd===4?'selected':''}>Week 4</option>
+          <option value="5" ${_weekStd===5?'selected':''}>Week 5</option>
         </select>
         <div style="display:flex;gap:.7rem;margin-top:1.2rem;justify-content:flex-end">
           <button id="archiefAnnul" style="padding:.5rem 1.1rem;border:1px solid #d1d5db;background:#f9fafb;border-radius:8px;cursor:pointer;font-size:11pt">Annuleer</button>
@@ -2483,16 +2506,16 @@ notesBody.addEventListener('input', ()=>{
 
       document.getElementById('archiefAnnul').onclick = () => { document.body.removeChild(ov); resolve(null); };
       document.getElementById('archiefOk').onclick = async () => {
-        const naam = document.getElementById('archiefNaam').value.trim();
-        const klas = document.getElementById('archiefKlas').value;
-        const week = document.getElementById('archiefWeek').value;
-        const msg  = document.getElementById('archiefMsg');
+        const naam  = document.getElementById('archiefNaam').value.trim();
+        const klas  = document.getElementById('archiefKlas').value;
+        const maand = document.getElementById('archiefMaand').value;
+        const jaar  = parseInt(document.getElementById('archiefJaar').value, 10);
+        const week  = document.getElementById('archiefWeek').value;
+        const msg   = document.getElementById('archiefMsg');
         if (!naam){ msg.textContent = '⚠️ Vul eerst je naam in.'; msg.style.color='#b91c1c'; return; }
-        const mi = getMaandInfo();
-        if (!mi){ msg.textContent = '⚠️ Stel eerst de datum in op de agenda.'; msg.style.color='#b91c1c'; return; }
         msg.textContent = '⏳ Bezig met bewaren…'; msg.style.color='#374151';
         document.getElementById('archiefOk').disabled = true;
-        resolve({ naam, klas, maand: mi.maand, jaar: mi.jaar, week });
+        resolve({ naam, klas, maand, jaar, week });
         document.body.removeChild(ov);
       };
     });
