@@ -458,11 +458,13 @@
       <button id="btnImport">Import</button>
       <span class="sep"></span>
       <button id="btnBewaar" class="primary" style="background:#16a34a;border-color:#16a34a">📚 Bewaar in archief</button>
+      <button id="btnUpdateArchief" style="display:none;background:#0a66c2;border:1px solid #0a66c2;color:#fff;appearance:none;padding:.45rem .7rem;border-radius:.5rem;cursor:pointer;font-weight:700" title="Overschrijf het bestaande archief-item met de huidige agenda">💾 Update archief</button>
       <button id="btnArchief" style="background:#7c3aed;border:1px solid #7c3aed;color:#fff;appearance:none;padding:.45rem .7rem;border-radius:.5rem;cursor:pointer;font-weight:700">🗂️ Archief raadplegen</button>
       <span class="sep"></span>
       <button id="btnPrint" class="primary">PDF / Print</button>
       <button id="btnToggleDock">Pictogrammen</button>
       <button id="btnHelp" title="Uitleg & handleiding" style="background:#f59e0b;border:1px solid #f59e0b;color:#fff;appearance:none;padding:.45rem .7rem;border-radius:.5rem;cursor:pointer;font-weight:700">❓ Uitleg</button>
+      <span id="archiefKoppelingChip" style="display:none;margin-left:.6rem;padding:.35rem .6rem;background:#dcfce7;color:#166534;border:1px solid #86efac;border-radius:8px;font-size:.85rem;font-weight:600;align-self:center">🔗 <span id="archiefKoppelingTekst"></span></span>
     </div>
   </div>
 
@@ -2371,7 +2373,8 @@ notesBody.addEventListener('input', ()=>{
     updatePlanBoxClass,
     ensureTaskDeleteButtons,
     upgradeWeekendToEditable,
-    applyDay
+    applyDay,
+    updateMonthBox
   };
 
 })();
@@ -2384,6 +2387,143 @@ notesBody.addEventListener('input', ()=>{
   const GRAAD  = '1stegraad';
 
   const btnBewaar = document.getElementById('btnBewaar');
+  const btnUpdateArchief = document.getElementById('btnUpdateArchief');
+  const archiefKoppelingChip   = document.getElementById('archiefKoppelingChip');
+  const archiefKoppelingTekst  = document.getElementById('archiefKoppelingTekst');
+
+  // ✨ Sleutels in localStorage
+  const KOPPELING_LS_KEY = 'klasagenda_1stegraad_v2_koppeling';
+  const NAAM_LS_KEY      = 'klasagenda_archief_naam';   // gedeeld over beide graden — zelfde leerkracht
+  let _archiefKoppeling = null;  // { graad, jaar, maand, week, naam, klas, sleutel }
+
+  function _slugify(s){
+    return (s||'').toLowerCase().replace(/[^a-z0-9]/g,'-').replace(/-+/g,'-').replace(/^-|-$/g,'');
+  }
+  function _berekenSleutel(naam, klas){
+    return _slugify(naam) + '-' + klas;
+  }
+  function _berekenPad(graad, jaar, maand, week, sleutel){
+    return `archief/${graad}/${jaar}/${maand}/week${week}/${sleutel}`;
+  }
+  function _getOnthoudenNaam(){
+    try { return localStorage.getItem(NAAM_LS_KEY) || ''; } catch(e){ return ''; }
+  }
+  function _zetOnthoudenNaam(naam){
+    try { if (naam) localStorage.setItem(NAAM_LS_KEY, naam); } catch(e){}
+  }
+
+  function _toonKoppeling(){
+    if (!btnUpdateArchief || !archiefKoppelingChip) return;
+    if (_archiefKoppeling){
+      btnUpdateArchief.style.display = '';
+      archiefKoppelingChip.style.display = '';
+      const k = _archiefKoppeling;
+      archiefKoppelingTekst.textContent = `${k.naam} — ${k.klas} — ${k.maand} ${k.jaar} — week ${k.week}`;
+    } else {
+      btnUpdateArchief.style.display = 'none';
+      archiefKoppelingChip.style.display = 'none';
+      archiefKoppelingTekst.textContent = '';
+    }
+  }
+  function _zetKoppeling(k){
+    _archiefKoppeling = k;
+    if (k){
+      try { localStorage.setItem(KOPPELING_LS_KEY, JSON.stringify(k)); } catch(e){}
+    } else {
+      try { localStorage.removeItem(KOPPELING_LS_KEY); } catch(e){}
+    }
+    _toonKoppeling();
+  }
+  // Inlezen bij start
+  try {
+    const _raw = localStorage.getItem(KOPPELING_LS_KEY);
+    if (_raw){ _archiefKoppeling = JSON.parse(_raw); }
+  } catch(e){ _archiefKoppeling = null; }
+  setTimeout(_toonKoppeling, 0);
+
+  // ✨ Gedeelde captureFullData
+  function captureFullData(naam, klas){
+    const tplSel  = document.getElementById('tpl');
+    const monthBox = document.getElementById('monthBox');
+    const swimChk  = document.getElementById('zwemweek');
+    const titlePill = document.getElementById('titlePill');
+    const classIconSlot = document.getElementById('classIconSlot');
+    const notesBody = document.getElementById('notesBody');
+
+    function captureDayArchief(d){
+      const idx = d.dataset.dayIndex;
+      const planBoxEl = d.querySelector(`[data-key="d${idx}.plan"]`);
+      const ta = planBoxEl ? planBoxEl.querySelector('.wkTA') : null;
+      const ce = planBoxEl ? planBoxEl.querySelector('.wkCE[contenteditable]') : null;
+      const pics = [...d.querySelectorAll('.picto-free')].map(p => {
+        const img = p.querySelector('img');
+        return { src: img.getAttribute('src'), left: p.style.left||'0px', top: p.style.top||'0px', width: p.style.width||'', host: p.dataset.host||'body' };
+      });
+      return {
+        date: d.querySelector('.datePicker').value || null,
+        plan: planBoxEl ? planBoxEl.innerHTML : '',
+        bring: d.querySelector(`[data-key="d${idx}.bring"]`)?.innerHTML || '',
+        vars: {
+          planFS:  d.style.getPropertyValue('--plan-fs')  || null,
+          bullet:  d.style.getPropertyValue('--bullet')   || null,
+          gap:     d.style.getPropertyValue('--task-gap') || null,
+          bringFS: d.style.getPropertyValue('--bring-fs') || null
+        },
+        pictos: pics,
+        weekendText: ta ? ta.value : null,
+        weekendHtml: ce ? ce.innerHTML : null
+      };
+    }
+
+    const meta = {
+      template:   tplSel ? tplSel.value : 'L2',
+      title:      titlePill ? titlePill.textContent : '',
+      monthBox:   monthBox ? monthBox.textContent : '',
+      swim:       swimChk ? swimChk.checked : false,
+      classIcon:  (classIconSlot && classIconSlot.querySelector('img')) ? classIconSlot.querySelector('img').src : null,
+      notes:      notesBody ? notesBody.innerHTML : '',
+      archiefNaam: naam,
+      archiefKlas: klas,
+      graad:       GRAAD,
+      opgeslagen:  new Date().toISOString()
+    };
+    const days = {};
+    document.querySelectorAll('.day').forEach(n => { days[n.dataset.dayIndex] = captureDayArchief(n); });
+    return { meta, days };
+  }
+
+  // ✨ Update-knop met waarschuwing als naam afwijkt van onthouden naam
+  btnUpdateArchief && btnUpdateArchief.addEventListener('click', async () => {
+    if (!_archiefKoppeling){
+      alert('⚠️ Geen koppeling actief. Klik eerst op "📚 Bewaar in archief" of open een week uit het archief.');
+      return;
+    }
+    const k = _archiefKoppeling;
+    // Veiligheidscheck: als de archief-naam afwijkt van de onthouden naam → vraag bevestiging
+    const onthoudenNaam = _getOnthoudenNaam();
+    if (onthoudenNaam && k.naam.toLowerCase() !== onthoudenNaam.toLowerCase()){
+      const ok = confirm(
+        '⚠️ LET OP\n\n' +
+        'Deze week is van ' + k.naam + ' (' + k.klas + ').\n' +
+        'Jij bent ingesteld als: ' + onthoudenNaam + '.\n\n' +
+        'Als je nu klikt op OK, overschrijf je ' + k.naam + ' haar archief.\n\n' +
+        'Wil je in plaats daarvan een eigen kopie maken? Klik dan ANNULEREN en gebruik "📚 Bewaar in archief".'
+      );
+      if (!ok) return;
+    }
+    const origTekst = btnUpdateArchief.textContent;
+    btnUpdateArchief.textContent = '⏳ Bezig…'; btnUpdateArchief.disabled = true;
+    try {
+      const data = captureFullData(k.naam, k.klas);
+      const path = _berekenPad(k.graad, k.jaar, k.maand, k.week, k.sleutel);
+      await dbSet(path, data);
+      btnUpdateArchief.textContent = '✅ Bijgewerkt!';
+      setTimeout(()=>{ btnUpdateArchief.textContent = origTekst; btnUpdateArchief.disabled = false; }, 1500);
+    } catch(e){
+      alert('❌ Kon niet bijwerken: ' + e.message + '\n\nControleer je internetverbinding.');
+      btnUpdateArchief.textContent = origTekst; btnUpdateArchief.disabled = false;
+    }
+  });
 
   /* ─────────────────────────────────────────────────────────────
      PICTO-SRC NORMALISATIE
@@ -2471,8 +2611,11 @@ notesBody.addEventListener('input', ()=>{
 
       box.innerHTML = `
         <h2 style="margin:0 0 .6rem;font-size:15pt">📚 Bewaar in archief</h2>
+        <div style="background:#fef3c7;border:1px solid #fcd34d;border-radius:8px;padding:.6rem .8rem;margin:.4rem 0 .8rem;font-size:.88rem;color:#92400e;line-height:1.45">
+          ⚠️ <strong>Belangrijk:</strong> gebruik <strong>altijd dezelfde naam</strong> (bv. <em>Isabel</em>). Zo vindt het archief jouw eerdere agenda's terug en kan je ze later snel bijwerken met de blauwe knop <strong>💾 Update archief</strong>.
+        </div>
         <label style="display:block;margin:.8rem 0 .3rem;font-weight:700">Jouw naam (verschijnt in het archief):</label>
-        <input id="archiefNaam" type="text" placeholder="bv. Juf Zisa" style="width:100%;padding:.5rem .7rem;border:1.5px solid #d1d5db;border-radius:8px;font-size:12pt;box-sizing:border-box">
+        <input id="archiefNaam" type="text" placeholder="bv. Isabel" value="${(typeof _getOnthoudenNaam==='function' ? _getOnthoudenNaam() : '').replace(/"/g,'&quot;')}" style="width:100%;padding:.5rem .7rem;border:1.5px solid #d1d5db;border-radius:8px;font-size:12pt;box-sizing:border-box">
         <label style="display:block;margin:.8rem 0 .3rem;font-weight:700">Klas:</label>
         <select id="archiefKlas" style="width:100%;padding:.5rem .7rem;border:1.5px solid #d1d5db;border-radius:8px;font-size:12pt;box-sizing:border-box">
           <option value="L1" ${aktieveKlas==='L1'?'selected':''}>L1</option>
@@ -2819,6 +2962,20 @@ notesBody.addEventListener('input', ()=>{
                 if (dag.vars.gap)     doelDag.style.setProperty('--task-gap',dag.vars.gap);
                 if (dag.vars.bringFS) doelDag.style.setProperty('--bring-fs',dag.vars.bringFS);
               }
+              // ✅ Datum overnemen uit archief
+              if (dag.date){
+                const dpDoel = doelDag.querySelector('.datePicker');
+                const labDoel = doelDag.querySelector('.dDate');
+                if (dpDoel){
+                  dpDoel.value = dag.date;
+                  const _d = new Date(dag.date);
+                  if (!isNaN(_d) && labDoel){
+                    const _dd = String(_d.getDate()).padStart(2,'0');
+                    const _mm = String(_d.getMonth()+1).padStart(2,'0');
+                    labDoel.textContent = _dd + ' / ' + _mm;
+                  }
+                }
+              }
               // Has-tasks klasse updaten + lege planText opruimen
               // (anders blijft de onderste lege contenteditable div staan als een "spookregel")
               const planBoxForClass = doelDag.querySelector(`[data-key="d${idx2}.plan"]`);
@@ -2829,6 +2986,20 @@ notesBody.addEventListener('input', ()=>{
               }
             });
             // Paneel-picto's: NIET applyPanelPictos aanroepen want die zitten al in notes HTML
+    window._klasagenda.updateMonthBox();   // ✅ maand-label bovenaan bijwerken
+    // ✨ Auto-koppeling: vanaf nu wijst "💾 Update archief" naar deze week
+    {
+      const _weekNum = (week||'').toString().replace(/^week/,'');
+      _zetKoppeling({
+        graad: graad,
+        jaar:  parseInt(jaar, 10),
+        maand: maand,
+        week:  _weekNum,
+        naam:  obj.meta?.archiefNaam || naam,
+        klas:  obj.meta?.archiefKlas || '',
+        sleutel: sleutel
+      });
+    }
     window._klasagenda.pushSnapshot();
     _maxNotesH = 0;
     window._klasagenda.scheduleLayoutSync();
@@ -3008,12 +3179,32 @@ notesBody.addEventListener('input', ()=>{
         <p style="margin:0 0 .6rem">Bovenaan staan twee tabs: <strong>L1</strong> en <strong>L2</strong>. Elke leerkracht klikt op haar eigen klas. De agenda's staan volledig los van elkaar — wat je in L1 typt, ziet L2 niet en omgekeerd. Wisselen van tab bewaart automatisch de huidige inhoud.</p>
 
         <h3 style="margin:1rem 0 .4rem;color:#16a34a;font-size:1rem">📚 Bewaar in archief</h3>
-        <p style="margin:0 0 .3rem">Sla je ingevulde agenda op in het gedeeld archief zodat collega's die kunnen raadplegen.</p>
+        <p style="margin:0 0 .3rem">Sla je ingevulde agenda op in het online archief. Zo kan je ze terugvinden vanaf <strong>elke laptop</strong> (school, thuis, …) en kunnen collega's ze raadplegen.</p>
+        <div style="background:#fef3c7;border:1px solid #fcd34d;border-radius:8px;padding:.6rem .8rem;margin:.4rem 0;font-size:.88rem;color:#92400e">
+          ⚠️ <strong>Heel belangrijk:</strong> gebruik <strong>altijd dezelfde naam</strong> als je iets bewaart — bv. steeds <em>Isabel</em>, niet de ene keer <em>Isabel</em> en de andere keer <em>Juf Zisa</em>. Dan worden je agenda's netjes onder één persoon bewaard, en kan je ze later vlot bijwerken.
+        </div>
         <ul style="margin:.2rem 0 .6rem;padding-left:1.2rem">
-          <li>Klik <strong>📚 Bewaar in archief</strong> → vul je naam, klas en weeknummer in</li>
-          <li><strong>Bewaar per week</strong>: sla elke week apart op (december week 1, december week 2, …)</li>
+          <li>Klik <strong>📚 Bewaar in archief</strong> → vul je naam, klas, maand, jaar en weeknummer in</li>
+          <li>De <strong>volgende keer staat je naam al ingevuld</strong> op die laptop</li>
+          <li><strong>Bewaar per week</strong>: sla elke week apart op (mei week 1, mei week 2, …)</li>
           <li>Zo kan je later altijd een specifieke week terugvinden</li>
-          <li>Heb je een week al bewaard en wil je die bijwerken? Bewaar gewoon opnieuw met dezelfde naam/klas/week — die overschrijft de vorige versie</li>
+        </ul>
+
+        <h3 style="margin:1rem 0 .4rem;color:#0a66c2;font-size:1rem">💾 Update archief (blauwe knop)</h3>
+        <p style="margin:0 0 .3rem">Deze blauwe knop verschijnt automatisch zodra je een week <strong>bewaard</strong> hebt of een week <strong>opent uit archief</strong>. Met één klik werk je die week bij — zonder modal.</p>
+        <ul style="margin:.2rem 0 .6rem;padding-left:1.2rem">
+          <li>Bovenaan zie je dan een <strong>groene chip</strong> met daarin: jouw naam, klas, maand en week. Dat is je “gekoppelde week”.</li>
+          <li>Maak je een wijziging? Klik <strong>💾 Update archief</strong> → klaar. Geen invullen meer.</li>
+          <li><strong>Werk je op meerdere laptops?</strong> Op de andere laptop: open de week via 🗂️ Archief raadplegen → ↙ Hele week overnemen → de blauwe knop verschijnt vanzelf. Zo kan je vlot doorwerken.</li>
+          <li><strong>Voor een nieuwe week</strong> (bv. mei week 2): klik weer <strong>📚 Bewaar in archief</strong> en vul de nieuwe maand/week in. De koppeling springt over naar die nieuwe week.</li>
+        </ul>
+
+        <h3 style="margin:1rem 0 .4rem;color:#dc2626;font-size:1rem">⚠️ Waarschuwing: “deze week is van iemand anders”</h3>
+        <p style="margin:0 0 .3rem">Als je <strong>💾 Update archief</strong> klikt op een week die niet onder jouw naam staat (bv. omdat je inspiratie haalde uit de week van een collega), krijg je een waarschuwing.</p>
+        <ul style="margin:.2rem 0 .6rem;padding-left:1.2rem">
+          <li><strong>Annuleer de waarschuwing</strong> → klik vervolgens op <strong>📚 Bewaar in archief</strong> → vul jouw eigen naam en klas in</li>
+          <li>Vanaf nu staat het bewaard onder <strong>jouw</strong> naam, en wijst de blauwe knop naar jouw eigen versie</li>
+          <li>Op die manier kan je <strong>nooit per ongeluk de agenda van een collega overschrijven</strong></li>
         </ul>
 
         <h3 style="margin:1rem 0 .4rem;color:#7c3aed;font-size:1rem">🗂️ Archief raadplegen</h3>
@@ -3054,73 +3245,26 @@ notesBody.addEventListener('input', ()=>{
     const input = await toonModal();
     if (!input) return;
 
-    // Haal agenda-data op (zelfde als Export)
-    const captureAll = window._captureAll || null;
+    // ✨ Onthoud naam voor volgende keer
+    _zetOnthoudenNaam(input.naam);
+
     let data;
     try {
-      // captureAll is gedefinieerd in de hoofdscript via IIFE → we vangen het via een tijdelijke knop-simulatie
-      // Alternatief: we lezen de JSON direct via de Export-knop logica
-      // We dupliceren captureAll hier beknopt:
-      const tplSel  = document.getElementById('tpl');
-      const monthBox = document.getElementById('monthBox');
-      const swimChk  = document.getElementById('zwemweek');
-      const titlePill = document.getElementById('titlePill');
-      const classIconSlot = document.getElementById('classIconSlot');
-      const notesBody = document.getElementById('notesBody');
-
-      function captureDayArchief(d){
-        const idx = d.dataset.dayIndex;
-        const planBoxEl = d.querySelector(`[data-key="d${idx}.plan"]`);
-        const ta = planBoxEl ? planBoxEl.querySelector('.wkTA') : null;
-        const ce = planBoxEl ? planBoxEl.querySelector('.wkCE[contenteditable]') : null;
-        const pics = [...d.querySelectorAll('.picto-free')].map(p => {
-          const img = p.querySelector('img');
-          return { src: img.getAttribute('src'), left: p.style.left||'0px', top: p.style.top||'0px', width: p.style.width||'', host: p.dataset.host||'body' };
-        });
-        return {
-          date: d.querySelector('.datePicker').value || null,
-          plan: planBoxEl ? planBoxEl.innerHTML : '',
-          bring: d.querySelector(`[data-key="d${idx}.bring"]`)?.innerHTML || '',
-          vars: {
-            planFS:  d.style.getPropertyValue('--plan-fs')  || null,
-            bullet:  d.style.getPropertyValue('--bullet')   || null,
-            gap:     d.style.getPropertyValue('--task-gap') || null,
-            bringFS: d.style.getPropertyValue('--bring-fs') || null
-          },
-          pictos: pics,
-          weekendText: ta ? ta.value : null,
-          weekendHtml: ce ? ce.innerHTML : null
-        };
-      }
-
-      const meta = {
-        template:   tplSel ? tplSel.value : 'L2',
-        title:      titlePill ? titlePill.textContent : '',
-        monthBox:   monthBox ? monthBox.textContent : '',
-        swim:       swimChk ? swimChk.checked : false,
-        classIcon:  (classIconSlot && classIconSlot.querySelector('img')) ? classIconSlot.querySelector('img').src : null,
-        notes:      notesBody ? notesBody.innerHTML : '',
-        archiefNaam: input.naam,
-        archiefKlas: input.klas,
-        graad:       GRAAD,
-        opgeslagen:  new Date().toISOString()
-      };
-      const days = {};
-      document.querySelectorAll('.day').forEach(n => { days[n.dataset.dayIndex] = captureDayArchief(n); });
-      data = { meta, days };
+      data = captureFullData(input.naam, input.klas);
     } catch(e) {
       alert('Fout bij ophalen agenda: ' + e.message);
       return;
     }
 
-    // Pad: archief/1stegraad/2025/oktober/week1/juf-zisa-L1
     const { jaar, maand, week } = input;
-    const naamSlug = input.naam.toLowerCase().replace(/[^a-z0-9]/g,'-').replace(/-+/g,'-');
-    const path = `archief/${GRAAD}/${jaar}/${maand}/week${week}/${naamSlug}-${input.klas}`;
+    const sleutel = _berekenSleutel(input.naam, input.klas);
+    const path = _berekenPad(GRAAD, jaar, maand, week, sleutel);
 
     try {
       await dbSet(path, data);
-      alert(`✅ Agenda bewaard in het archief!\n\nJe collega kan die vinden via:\nArchief → Eerste graad → ${maand} ${jaar} → week ${week}`);
+      // ✨ Koppeling zetten zodat "Update archief" knop verschijnt
+      _zetKoppeling({ graad: GRAAD, jaar, maand, week, naam: input.naam, klas: input.klas, sleutel });
+      alert(`✅ Agenda bewaard in het archief!\n\nVanaf nu kan je elke wijziging snel bijwerken via de blauwe knop “💾 Update archief”.\n\nJe collega kan jouw agenda vinden via:\nArchief → ${maand} ${jaar} → week ${week}`);
     } catch(e) {
       alert('❌ Kon niet bewaren: ' + e.message + '\n\nControleer je internetverbinding.');
     }
