@@ -1384,7 +1384,7 @@ window.lyrecoPdfImporteren = async function (event) {
     }
 
     // Parseer de tekst
-    const artikels = parseerLyrecoTekst(volledigeTekst);
+    const { artikels, btw } = parseerLyrecoTekst(volledigeTekst);
 
     if (artikels.length === 0) {
       alert('❌ Geen artikels gevonden in deze PDF.\n\n' +
@@ -1395,7 +1395,7 @@ window.lyrecoPdfImporteren = async function (event) {
 
     // Toon preview
     lyrecoImportKandidaten = artikels;
-    toonLyrecoPreview(artikels, bestand.name);
+    toonLyrecoPreview(artikels, bestand.name, btw);
 
   } catch (err) {
     console.error('PDF-leesfout:', err);
@@ -1404,112 +1404,195 @@ window.lyrecoPdfImporteren = async function (event) {
 };
 
 // Parseer de platte tekst van een Lyreco-PDF naar artikel-objecten
+// Lyreco-PDF structuur per artikel (in tekst-uitvoer van pdf.js):
+//   [omschrijving regel 1]
+//   [omschrijving regel 2]
+//   [aantal] (eventueel gevolgd door totaalprijs op zelfde regel bij split-layout)
+//   [eenheidprijs] EUR    (en/of "EUR" of totaalprijs op aparte regels)
+//   stuk (1)
+//   Referentie: X.XXX.XXX
+//   Beschikbaar: ...
+//
+// Per artikel parseerWe: van na de VORIGE "Referentie:" tot het BEGIN van de huidige.
+// Daardoor hoort alles wat vóór de huidige Referentie staat bij dit artikel.
 function parseerLyrecoTekst(tekst) {
   const artikels = [];
 
-  // Splits in blokken: elk artikel begint bij een "Referentie:" en de omschrijving staat ervóór
-  // We zoeken naar alle "Referentie: X.XXX.XXX" occurrences en werken terug
-  const refRegex = /Referentie:\s*([\d.]+)/g;
-  const matches = [];
-  let m;
-  while ((m = refRegex.exec(tekst)) !== null) {
-    matches.push({ ref: m[1].trim(), index: m.index });
+  // Detecteer BTW-percentage uit totalen onderaan PDF
+  // "Totaal exclusief BTW: 568,26 EUR" en "BTW: 119,33 EUR" → 21%
+  let btwPercentage = 21; // default
+  const exclMatch = tekst.match(/Totaal\s+exclusief\s+BTW[:\s]+(\d+(?:\.\d{3})*(?:,\d{1,2}))\s*EUR/i);
+  const btwMatch = tekst.match(/(?:^|\n)\s*BTW[:\s]+(\d+(?:\.\d{3})*(?:,\d{1,2}))\s*EUR/i);
+  if (exclMatch && btwMatch) {
+    const excl = parseFloat(exclMatch[1].replace(/\./g, '').replace(',', '.'));
+    const btw = parseFloat(btwMatch[1].replace(/\./g, '').replace(',', '.'));
+    if (excl > 0) {
+      const ratio = (btw / excl) * 100;
+      // Snap naar dichtstbijzijnde standaard tarief
+      if (Math.abs(ratio - 6) < 1.5) btwPercentage = 6;
+      else if (Math.abs(ratio - 12) < 1.5) btwPercentage = 12;
+      else btwPercentage = 21;
+    }
   }
 
-  if (matches.length === 0) return [];
+  // Vind alle "Referentie:" posities
+  const refRegex = /Referentie:\s*([\d.]+)/g;
+  const refs = [];
+  let m;
+  while ((m = refRegex.exec(tekst)) !== null) {
+    refs.push({ ref: m[1].trim(), index: m.index, end: m.index + m[0].length });
+  }
+  if (refs.length === 0) return { artikels: [], btw: btwPercentage };
 
-  // Verzamel start- en eindposities van elk artikel-blok
-  for (let i = 0; i < matches.length; i++) {
-    const startBlok = i === 0 ? 0 : matches[i - 1].index;
-    const eindBlok = i < matches.length - 1 ? matches[i + 1].index : tekst.length;
+  // Header- en footer-regels die geen omschrijving zijn
+  const filterPatronen = [
+    /^Bedankt/i, /^Dank je/i, /^Jouw bestelling/i, /^Je krijgt/i,
+    /^Ordermethode/i, /^Orderdatum/i, /^Ordernummer/i, /^Jouw ordernummer/i,
+    /^Nummer/i, /^Rekwisitie/i, /^Klantnummer/i, /^Lindestraat/i, /^\d{4}\s+BORNEM/i,
+    /^Leveringsdatum/i, /^Ter attentie/i, /^BS de linde/i,
+    /^Isabel\s+Rockele/i, /^Rockele\b/i,
+    /^Internet\b/i, /^\d{2}\/\d{2}\/\d{4}/,
+    /^Orderoverzicht/i, /^Bestelinformatie/i, /^Facturatiegegevens/i, /^Informatie levering/i,
+    /^Omschrijving/i, /^Eenh\b/i, /^Eenheidsprijs/i, /^Eenheidprijs/i, /^Prijs$/i,
+    /^EUR$/i, /^[\d.]+,\d{2}\s*EUR$/i, /^\s*\d+\s*$/, /^\d+\s+\d+,\d{2}/,
+    /^stuk\s*\(\d+\)/i, /^Beschikbaar:/i,
+    /^\(\d+\)$/, /^Referentie:/i, /^Om deze/i, /^no_reply/i, /^Working together/i,
+    /^For tomorrow/i, /^Lyreco$/i,
+    /^Totaal/i, /^BTW[:\s]/i,
+    /^Als je nog/i, /^customer\./i, /^Met vriendelijke/i, /^Lyreco Customer/i
+  ];
+
+  for (let i = 0; i < refs.length; i++) {
+    // Blok = van na de vorige Referentie (of doc-start) tot net vóór huidige Referentie
+    const startBlok = i === 0 ? 0 : refs[i - 1].end;
+    const eindBlok = refs[i].index;
     const blok = tekst.substring(startBlok, eindBlok);
+    const regels = blok.split('\n').map(r => r.trim()).filter(r => r.length > 0);
 
-    // Zoek binnen dit blok de data:
-    // - Omschrijving = alles tussen vorige artikel en "Referentie:" (of tussen start en referentie)
-    // - Aantal = "X stuk" of "X,X stuk"
-    // - Prijzen = twee "X,XX EUR" opeenvolgend
+    // Stap 1: zoek de aantal-regel.
+    // Lyreco gebruikt verschillende layouts:
+    //   "4 17,63 EUR"      → aantal=4, eenheidprijs=17.63 (combinatie-regel, geen split)
+    //   "4 70,52"          → aantal=4, totaalprijs=70.52 (split-layout, EUR staat verderop)
+    //   "2"                → aantal=2 (eenvoudige regel, prijzen volgen erna)
+    let aantal = 0;
+    let aantalRegelIdx = -1;
+    let aantalIsSplitLayout = false;
+    let totaalUitSplit = 0;
 
-    const refIndex = blok.indexOf('Referentie:');
-    if (refIndex === -1) continue;
+    for (let j = 0; j < regels.length; j++) {
+      const r = regels[j];
 
-    const voorRef = blok.substring(0, refIndex);
-    const naRef = blok.substring(refIndex);
+      // "X NN,NN EUR" - aantal direct gevolgd door eenheidprijs op zelfde regel
+      const combiMetEUR = r.match(/^(\d+)\s+(\d+(?:\.\d{3})*(?:,\d{1,2}))\s*EUR/);
+      if (combiMetEUR) {
+        aantal = parseInt(combiMetEUR[1]);
+        aantalRegelIdx = j;
+        aantalIsSplitLayout = false;
+        continue;
+      }
+      // "X NN,NN" zonder EUR → in dit geval is NN,NN de TOTAALPRIJS (kolom-split)
+      const splitZonderEUR = r.match(/^(\d+)\s+(\d+(?:\.\d{3})*(?:,\d{1,2}))\s*$/);
+      if (splitZonderEUR) {
+        aantal = parseInt(splitZonderEUR[1]);
+        aantalRegelIdx = j;
+        aantalIsSplitLayout = true;
+        totaalUitSplit = parseFloat(splitZonderEUR[2].replace(/\./g, '').replace(',', '.'));
+        continue;
+      }
+      // Pure getal-regel (1-4 cijfers), gevolgd door een prijs- of stuk-regel
+      if (/^\d{1,4}$/.test(r) && j > 0) {
+        const volgende = regels[j + 1] || '';
+        if (/\d+,\d{2}\s*EUR/.test(volgende) || /^stuk\s*\(/i.test(volgende)) {
+          aantal = parseInt(r);
+          aantalRegelIdx = j;
+          aantalIsSplitLayout = false;
+        }
+      }
+    }
 
-    // Omschrijving: laatste paar regels voor "Referentie:"
-    // Filter regels die informatie zijn zoals "Bedankt voor..." weg
-    const voorRefRegels = voorRef.split('\n').map(r => r.trim()).filter(r => r.length > 0);
-    // Neem de laatste 1-3 regels vóór Referentie (typisch 1-2 regels omschrijving)
+    // Stap 2: omschrijving = regels VOOR aantal-regel, gefilterd
     let omschrijving = '';
-    // Filter uit de regels alles wat evident geen omschrijving is
-    const filterPatronen = [
-      /^Bedankt/i, /^Jouw bestelling/i, /^Ordermethode/i, /^Orderdatum/i,
-      /^Nummer/i, /^Rekwisitie/i, /^Klantnummer/i, /^Lindestraat/i, /^\d{4}\s+BORNEM/i,
-      /^Leveringsdatum/i, /^Ter attentie/i, /^BS de linde/i, /^Isabel/i,
-      /^Orderoverzicht/i, /^Bestelinformatie/i, /^Facturatiegegevens/i, /^Informatie levering/i,
-      /^Omschrijving/i, /^Eenh$/i, /^Eenheidsprijs/i, /^Prijs$/i, /^\d{4}-\d{4}/,
-      /^EUR$/i, /^\d+,\d{2}\s*EUR/i, /^\d+\s*stuk/i, /^Beschikbaar:/i,
-      /^\(\d+\)$/, /^Referentie:/i, /^Om deze/i, /^no_reply/i, /^Working together/i,
-      /^For tomorrow/i, /^Lyreco$/i
-    ];
-    const nuttig = voorRefRegels.filter(r => !filterPatronen.some(p => p.test(r)));
-    // Neem de laatste 1-2 regels als omschrijving
-    if (nuttig.length > 0) {
-      omschrijving = nuttig.slice(-2).join(' ').trim();
+    if (aantalRegelIdx > 0) {
+      const omschrijvingRegels = regels.slice(0, aantalRegelIdx)
+        .filter(r => !filterPatronen.some(p => p.test(r)));
+      omschrijving = omschrijvingRegels.join(' ').replace(/\s+/g, ' ').trim();
+    } else {
+      // Fallback: pak laatste 1-2 regels die niet gefilterd worden
+      const nuttig = regels.filter(r => !filterPatronen.some(p => p.test(r)));
+      if (nuttig.length > 0) omschrijving = nuttig.slice(-2).join(' ').replace(/\s+/g, ' ').trim();
+      if (aantal === 0) aantal = 1;
     }
 
-    // Aantal: zoek "X stuk" patroon
-    let aantal = 1;
-    const aantalMatch = blok.match(/(\d+(?:,\d+)?)\s+stuk/i);
-    if (aantalMatch) {
-      aantal = parseInt(aantalMatch[1].replace(',', '.')) || 1;
-    }
+    // Stap 3: eenheidprijs bepalen (alleen zoeken NA de aantal-regel)
+    let prijsPerStuk = 0;
+    const zoekvanaf = aantalRegelIdx >= 0
+      ? regels.slice(aantalRegelIdx + 1).join('\n')
+      : blok;
 
-    // Prijzen: zoek alle "X,XX EUR" patronen in dit blok
     const prijsRegex = /(\d+(?:\.\d{3})*(?:,\d{1,2}))\s*EUR/g;
     const prijzen = [];
     let pm;
-    while ((pm = prijsRegex.exec(blok)) !== null) {
-      const pStr = pm[1].replace(/\./g, '').replace(',', '.');
-      const p = parseFloat(pStr);
+    while ((pm = prijsRegex.exec(zoekvanaf)) !== null) {
+      const p = parseFloat(pm[1].replace(/\./g, '').replace(',', '.'));
       if (!isNaN(p)) prijzen.push(p);
     }
 
-    // Eerste prijs = eenheidsprijs, laatste prijs = totaal (meestal 2 bedragen)
-    let prijsPerStuk = 0;
-    if (prijzen.length >= 2) {
-      prijsPerStuk = prijzen[0];
+    if (aantalIsSplitLayout && totaalUitSplit > 0 && aantal > 0) {
+      // Split-layout: aantalregel bevatte al de totaalprijs.
+      // Eerste prijs hierna is normaal de eenheidprijs.
+      if (prijzen.length >= 1) {
+        const kandidaat = prijzen[0];
+        if (Math.abs(aantal * kandidaat - totaalUitSplit) < 0.05) {
+          prijsPerStuk = kandidaat; // klopt
+        } else {
+          prijsPerStuk = totaalUitSplit / aantal; // bereken uit totaal
+        }
+      } else {
+        prijsPerStuk = totaalUitSplit / aantal;
+      }
+    } else if (prijzen.length >= 2 && aantal > 0) {
+      // Normaal: prijzen[0] = eenheidprijs, prijzen[1] = totaal — verifieer
+      const k1 = prijzen[0], k2 = prijzen[1];
+      if (Math.abs(aantal * k1 - k2) < 0.05) prijsPerStuk = k1;
+      else if (Math.abs(aantal * k2 - k1) < 0.05) prijsPerStuk = k2;
+      else prijsPerStuk = k1;
     } else if (prijzen.length === 1) {
-      // Alleen totaal beschikbaar → deel door aantal
       prijsPerStuk = aantal > 0 ? prijzen[0] / aantal : prijzen[0];
     }
 
-    if (omschrijving && matches[i].ref) {
+    if (omschrijving && refs[i].ref) {
       artikels.push({
         artikel: omschrijving,
-        nr: matches[i].ref,
-        bestel: aantal,
-        prijs: prijsPerStuk,
-        btw: 21, // Standaard 21%, gebruiker kan aanpassen
+        nr: refs[i].ref,
+        bestel: aantal || 1,
+        prijs: Math.round(prijsPerStuk * 100) / 100,
+        btw: btwPercentage,
         stock: 0,
         min: 0
       });
     }
   }
 
-  return artikels;
+  return { artikels, btw: btwPercentage };
 }
 
-function toonLyrecoPreview(artikels, bestandsnaam) {
+function toonLyrecoPreview(artikels, bestandsnaam, gedetecteerdeBtw) {
   const dlg = document.getElementById('lyreco-preview-dialoog');
   const info = document.getElementById('lyreco-preview-info');
   const inhoud = document.getElementById('lyreco-preview-inhoud');
 
-  info.textContent = `Uit "${bestandsnaam}" werden ${artikels.length} artikel${artikels.length === 1 ? '' : 's'} herkend. Controleer hieronder en pas aan indien nodig.`;
+  const btwInfo = gedetecteerdeBtw
+    ? ` (BTW automatisch ingesteld op ${gedetecteerdeBtw}% — pas aan per artikel waar nodig, bv. 6% voor papier/boeken)`
+    : '';
+  info.textContent = `Uit "${bestandsnaam}" werden ${artikels.length} artikel${artikels.length === 1 ? '' : 's'} herkend${btwInfo}. Controleer hieronder en pas aan indien nodig.`;
 
-  let totaal = 0;
+  let totaalIncl = 0;
+  let totaalExcl = 0;
   const rijen = artikels.map((a, idx) => {
-    const subIncl = a.prijs * a.bestel * 1.21;
-    totaal += subIncl;
+    const subExcl = a.prijs * a.bestel;
+    const subIncl = subExcl * (1 + (a.btw || 21) / 100);
+    totaalExcl += subExcl;
+    totaalIncl += subIncl;
     return `
       <tr>
         <td style="padding:6px; vertical-align:middle;">
@@ -1550,15 +1633,19 @@ function toonLyrecoPreview(artikels, bestandsnaam) {
           <th>Artikel</th>
           <th>Bestelnr</th>
           <th>Aantal</th>
-          <th>Prijs/st</th>
+          <th>Prijs/st (excl.)</th>
           <th>BTW</th>
         </tr>
       </thead>
       <tbody>${rijen}</tbody>
       <tfoot>
+        <tr style="background:var(--creme-warm);">
+          <td colspan="5" style="text-align:right;">Totaal exclusief BTW</td>
+          <td style="text-align:right;">€ ${totaalExcl.toFixed(2)}</td>
+        </tr>
         <tr style="background:var(--creme-warm); font-weight:800;">
-          <td colspan="5">GESCHAT TOTAAL (incl. 21% BTW)</td>
-          <td colspan="1" style="text-align:right;">€ ${totaal.toFixed(2)}</td>
+          <td colspan="5" style="text-align:right;">GESCHAT TOTAAL inclusief BTW</td>
+          <td style="text-align:right;">€ ${totaalIncl.toFixed(2)}</td>
         </tr>
       </tfoot>
     </table>
