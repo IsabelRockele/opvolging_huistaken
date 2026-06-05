@@ -1,0 +1,171 @@
+﻿<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Schooloverzicht</title>
+  <style>
+    :root {
+      --tekst: #223044;
+      --muted: #65748b;
+      --bg: #f7f8fb;
+      --card: #ffffff;
+      --border: #d9dee8;
+      --yellow: #f6d76b;
+      --mint: #bfe8dc;
+      --danger: #f5c2c7;
+      --shadow: 0 8px 24px rgba(34,48,68,.08);
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: Arial, sans-serif; background: var(--bg); color: var(--tekst); }
+    header { background: white; border-bottom: 1px solid var(--border); padding: 18px 24px; display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+    h1 { margin: 0; font-size: 26px; }
+    .subtitle { color: var(--muted); margin-top: 4px; font-size: 14px; }
+    main { width: min(1300px, calc(100vw - 40px)); margin: 24px auto; }
+    button, .button { border: 0; border-radius: 12px; padding: 10px 14px; background: var(--yellow); color: var(--tekst); font-weight: 800; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
+    .ghost { background: #eef2f7; }
+    .panel { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 18px; box-shadow: var(--shadow); margin-bottom: 18px; }
+    .toolbar { display: flex; gap: 10px; align-items: center; justify-content: space-between; flex-wrap: wrap; margin-bottom: 14px; }
+    .toolbar input { min-width: 280px; flex: 1; padding: 11px 13px; border: 1px solid var(--border); border-radius: 10px; font: inherit; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px; }
+    .class-card { border: 1px solid var(--border); background: #fbfcfe; border-radius: 14px; padding: 14px; display: grid; gap: 10px; }
+    .class-title { font-size: 20px; font-weight: 900; }
+    .meta { color: var(--muted); font-size: 13px; line-height: 1.45; }
+    .actions { display: flex; flex-wrap: wrap; gap: 8px; }
+    .error { background: var(--danger); border: 1px solid #e89aa3; border-radius: 12px; padding: 12px; }
+    .empty { color: var(--muted); padding: 20px; text-align: center; }
+  </style>
+</head>
+<body>
+  <header>
+    <div>
+      <h1>Schooloverzicht</h1>
+      <div id="status" class="subtitle">Even controleren of je schoolbrede toegang hebt...</div>
+    </div>
+    <div class="actions">
+      <a class="button ghost" href="index.html">&#127968; Keuzescherm</a>
+      <button id="logoutBtn" class="ghost">&#128682; Uitloggen</button>
+    </div>
+  </header>
+
+  <main>
+    <section class="panel">
+      <div class="toolbar">
+        <div>
+          <h2 id="modeTitle" style="margin:0">Huistaken per klas</h2>
+          <div id="modeHelp" class="meta">Klik op een klas om te openen.</div>
+        </div>
+        <input id="zoek" placeholder="Zoek op klas, leerjaar of leerkracht..." />
+      </div>
+      <div id="classes" class="grid"></div>
+    </section>
+  </main>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+    import { getFirestore, collection, doc, getDoc, getDocs, query, where } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyA7KxXMvZ4dzBQDut3CMyWUblLte2tFzoQ",
+      authDomain: "huiswerkapp-a311e.firebaseapp.com",
+      projectId: "huiswerkapp-a311e",
+      storageBucket: "huiswerkapp-a311e.appspot.com",
+      messagingSenderId: "797169941164",
+      appId: "1:797169941164:web:511d9618079f1378d0fd09"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+    const allowedRoles = ['directie', 'zorgcoordinator', 'zorgleerkracht'];
+    let allClasses = [];
+    const params = new URLSearchParams(window.location.search);
+    const mode = params.get('mode') === 'overgang' ? 'overgang' : 'huistaken';
+
+    const esc = value => String(value ?? '').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#039;');
+
+    document.getElementById('logoutBtn').addEventListener('click', () => signOut(auth));
+    document.getElementById('zoek').addEventListener('input', renderClasses);
+    updateModeText();
+    function updateModeText() {
+      const title = document.getElementById('modeTitle');
+      const help = document.getElementById('modeHelp');
+      if (mode === 'overgang') {
+        if (title) title.textContent = 'Overgangsbesprekingen per klas';
+        if (help) help.textContent = 'Klik op een klas om de overgangsbespreking van die klas te openen.';
+      } else {
+        if (title) title.textContent = 'Huistaken per klas';
+        if (help) help.textContent = 'Klik op een klas om de huistakenopvolging van die leerkracht te openen.';
+      }
+    }
+
+    onAuthStateChanged(auth, async user => {
+      if (!user) {
+        window.location.href = 'index.html';
+        return;
+      }
+
+      try {
+        const roleSnap = await getDoc(doc(db, 'schoolrollen', user.uid));
+        const role = roleSnap.exists() ? roleSnap.data().rol : '';
+        if (!allowedRoles.includes(role)) {
+          document.getElementById('status').textContent = 'Geen schoolbrede toegang voor dit account.';
+          document.getElementById('classes').innerHTML = '<div class="error">Dit scherm is alleen voor directie, zorgcoordinator en zorgleerkrachten.</div>';
+          return;
+        }
+
+        document.getElementById('status').textContent = `Ingelogd met schoolbrede rol: ${role}`;
+        const snap = await getDocs(query(collection(db, 'klasleerkrachten'), where('actief', '==', true)));
+        allClasses = snap.docs.map(d => ({ id: d.id, ...d.data() }))
+          .sort((a, b) => String(a.klas || a.id).localeCompare(String(b.klas || b.id), 'nl', { numeric: true }));
+        renderClasses();
+      } catch (err) {
+        console.error(err);
+        document.getElementById('status').textContent = 'Laden mislukt.';
+        document.getElementById('classes').innerHTML = `<div class="error">${esc(err.message)}</div>`;
+      }
+    });
+
+    function renderClasses() {
+      const term = document.getElementById('zoek').value.trim().toLowerCase();
+      const filtered = allClasses.filter(klas => {
+        const haystack = [
+          klas.klas,
+          klas.leerjaar,
+          ...(klas.leerkracht_namen || []),
+          ...(klas.leerkracht_emails || [])
+        ].join(' ').toLowerCase();
+        return !term || haystack.includes(term);
+      });
+
+      if (!filtered.length) {
+        document.getElementById('classes').innerHTML = '<div class="empty">Geen klassen gevonden.</div>';
+        return;
+      }
+
+      document.getElementById('classes').innerHTML = filtered.map(klas => {
+        const namen = (klas.leerkracht_namen || []).join(', ') || 'Onbekende leerkracht';
+        const emails = (klas.leerkracht_emails || []).join(', ');
+        const uids = klas.leerkracht_uids || [];
+        const uid = uids[0] || '';
+        const openUrl = uid
+          ? (mode === 'overgang'
+              ? `overgangsbespreking.html?beheerUid=${encodeURIComponent(uid)}&klas=${encodeURIComponent(klas.klas || klas.id)}&naam=${encodeURIComponent(namen)}`
+              : `dashboard.html?beheerUid=${encodeURIComponent(uid)}&klas=${encodeURIComponent(klas.klas || klas.id)}&naam=${encodeURIComponent(namen)}`)
+          : '';
+        const openLabel = mode === 'overgang' ? '&#128196; Overgang openen' : '&#128230; Huistaken openen';
+        return `<article class="class-card">
+          <div>
+            <div class="class-title">${esc(klas.klas || klas.id)}</div>
+            <div class="meta">${esc(klas.leerjaar || '')} Â· ${esc(namen)}<br>${esc(emails)}</div>
+          </div>
+          <div class="actions">
+            ${uid ? `<a class="button" href="${openUrl}">${openLabel}</a>` : '<span class="meta">Geen UID gekoppeld</span>'}
+          </div>
+        </article>`;
+      }).join('');
+    }
+  </script>
+</body>
+</html>
