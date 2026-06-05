@@ -1,4 +1,4 @@
-// Importeer Firebase services
+﻿// Importeer Firebase services
 import { getAuth, onAuthStateChanged, signOut, updatePassword } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import {
   getFirestore, doc, onSnapshot, setDoc, updateDoc, getDoc,
@@ -10,6 +10,9 @@ const db = getFirestore();
 
 // Globale variabelen
 let currentUser;
+let targetUserId = null;
+let beheerKlasLabel = '';
+let beheerNaamLabel = '';
 // AANGEPAST: huidigeModus NIET meer uit localStorage lezen, zodat je bij elke keer naar
 // het dashboard terugkeert eerst het keuzescherm ziet (Per Week / Per Dag / Gedrag / Klasbeheer).
 // De keuze blijft wel behouden binnen de huidige sessie, via het gebruik van setModus() hieronder.
@@ -39,7 +42,7 @@ const chartKleuren = {
 const dagNamen = ['zo', 'ma', 'di', 'wo', 'do', 'vr', 'za'];
 
 // --- HELPERS VOOR DOCREF & BASISDOC ---
-const getDocRef = () => doc(db, "leerkrachten", currentUser.uid);
+const getDocRef = () => doc(db, "leerkrachten", targetUserId || currentUser.uid);
 
 // Alleen bij eerste keer een basisdocument zetten (NIET meer 'leerlingen' invullen!)
 async function ensureLeerkrachtDocExists() {
@@ -89,13 +92,31 @@ async function migrateKolommenIfNeeded(data) {
     kolomMigratieUitgevoerd = true;
   }
 }
+function updateBeheerHeader() {
+  const ondertitel = document.querySelector('.header .ondertitel');
+  if (!ondertitel) return;
+  if (targetUserId && currentUser && targetUserId !== currentUser.uid) {
+    const delen = ['Schooloverzicht'];
+    if (beheerKlasLabel) delen.push(beheerKlasLabel);
+    if (beheerNaamLabel) delen.push(beheerNaamLabel);
+    ondertitel.textContent = delen.join(' - ');
+  } else {
+    ondertitel.textContent = 'Dashboard huistaken';
+  }
+}
+
 
 // --- INIT & AUTH ---
 document.addEventListener('DOMContentLoaded', () => {
   onAuthStateChanged(auth, async (user) => {
     if (user) {
       currentUser = user;
-      await ensureLeerkrachtDocExists();   // verzeker dat basisdoc bestaat (klaslijst blijft ongewijzigd)
+      const params = new URLSearchParams(window.location.search);
+      targetUserId = params.get('beheerUid') || currentUser.uid;
+      beheerKlasLabel = params.get('klas') || '';
+      beheerNaamLabel = params.get('naam') || '';
+      if (targetUserId === currentUser.uid) await ensureLeerkrachtDocExists();
+      updateBeheerHeader();   // verzeker dat basisdoc bestaat (klaslijst blijft ongewijzigd)
       setupEventListeners();
       koppelDataEnRender();
     } else {
