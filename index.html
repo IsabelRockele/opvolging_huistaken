@@ -1,9 +1,9 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="nl">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>GO! Basisschool De Linde – Huistaken-opvolgsysteem</title>
+  <title>GO! Basisschool De Linde - Huistaken-opvolgsysteem</title>
   <link rel="stylesheet" href="style.css" />
 
   <link rel="manifest" href="manifest.json">
@@ -306,6 +306,13 @@
       flex-wrap: wrap;
     }
 
+    .app-keuze-uitleg {
+      flex-basis: 100%;
+      margin: 6px 0 2px;
+      color: var(--tekst-zacht);
+      font-size: 0.9em;
+    }
+
     .ingelogd-knoppen .knop-groot {
       padding: 11px 20px;
       font-size: 0.95em;
@@ -328,6 +335,17 @@
       transform: translateY(-2px);
       box-shadow: 0 4px 10px var(--schaduw-sterk);
       background: var(--accent-donker);
+    }
+
+    .ingelogd-knoppen .knop-groot.zorg {
+      background: var(--groen-zacht);
+      border-color: var(--groen-donker);
+      color: var(--tekst);
+    }
+
+    .ingelogd-knoppen .knop-groot.zorg:hover {
+      background: var(--groen-donker);
+      color: var(--wit);
     }
 
     .ingelogd-knoppen .knop-klein {
@@ -375,6 +393,128 @@
       .auth-knoppen { flex-direction: column; }
       #auth button { width: 100%; }
     }
+    /* Brede startpagina met meer gebruik van de ruimte */
+    .start-grid {
+      width: min(1280px, calc(100vw - 48px));
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: minmax(420px, 1.15fr) minmax(340px, 0.85fr);
+      grid-template-areas:
+        "keuze login"
+        "agenda agenda";
+      gap: 24px;
+      align-items: stretch;
+    }
+
+    .hoofdbanner {
+      max-width: 1280px;
+      width: min(1280px, calc(100vw - 48px));
+      margin-bottom: 24px;
+    }
+
+    #ingelogd-kaart {
+      grid-area: keuze;
+      max-width: none;
+      margin: 0;
+      align-content: center;
+      min-height: 245px;
+    }
+
+    #auth {
+      grid-area: login;
+      max-width: none;
+      margin: 0;
+    }
+
+    .publieke-links {
+      grid-area: agenda;
+      max-width: none;
+      margin: 0;
+    }
+
+    .ingelogd-tekst strong {
+      font-size: 1.35em;
+    }
+
+    .ingelogd-knoppen {
+      width: 100%;
+      display: grid;
+      grid-template-columns: repeat(2, minmax(190px, 1fr)) auto;
+      gap: 12px;
+      align-items: stretch;
+    }
+
+    .ingelogd-knoppen .knop-groot,
+    .ingelogd-knoppen .knop-klein {
+      justify-content: center;
+      min-height: 58px;
+      white-space: normal;
+      text-align: center;
+    }
+
+    @media (max-width: 940px) {
+      .start-grid {
+        width: min(720px, calc(100vw - 28px));
+        grid-template-columns: 1fr;
+        grid-template-areas:
+          "keuze"
+          "login"
+          "agenda";
+      }
+
+      .hoofdbanner {
+        width: min(720px, calc(100vw - 28px));
+      }
+
+      .ingelogd-knoppen {
+        grid-template-columns: 1fr;
+      }
+    }
+    .ingelogd-knoppen .knop-groot.school {
+      background: var(--blauw-zacht);
+      border-color: #6f91a5;
+      color: var(--tekst);
+    }
+
+    .ingelogd-knoppen .knop-groot.school:hover {
+      background: #6f91a5;
+      color: var(--wit);
+    }
+    .wachtwoord-veld-wrap {
+      position: relative;
+      width: 100%;
+      max-width: 340px;
+      margin: 0 auto 12px;
+    }
+
+    .wachtwoord-veld-wrap input[type="password"],
+    .wachtwoord-veld-wrap input[type="text"] {
+      margin-bottom: 0 !important;
+      padding-right: 48px !important;
+    }
+
+    .toon-wachtwoord-knop {
+      position: absolute;
+      right: 8px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 36px;
+      height: 36px;
+      min-width: 36px !important;
+      padding: 0 !important;
+      border-radius: 9px !important;
+      border: 1px solid var(--rand-donker) !important;
+      background: var(--wit) !important;
+      color: var(--tekst) !important;
+      box-shadow: none !important;
+      font-size: 17px !important;
+      line-height: 1;
+    }
+
+    .toon-wachtwoord-knop:hover {
+      transform: translateY(-50%) !important;
+      background: var(--creme-warm) !important;
+    }
   </style>
 </head>
 <body>
@@ -386,26 +526,29 @@
       <div class="ondertitel">Huistaken-opvolgsysteem & klasmiddelen</div>
     </div>
   </div>
+  <main class="start-grid">
+
 
   <!-- Ingelogd-kaart: alleen zichtbaar als script.js een ingelogde gebruiker detecteert -->
   <div id="ingelogd-kaart" class="ingelogd-kaart" style="display:none;">
-    <div class="ingelogd-icoon">👋</div>
+    <div class="ingelogd-icoon">&#128075;</div>
     <div class="ingelogd-tekst">
       <strong>Welkom terug!</strong>
       <span class="email">Ingelogd als <span id="ingelogd-email"></span></span>
     </div>
     <div class="ingelogd-knoppen">
-      <a href="dashboard.html" class="knop-groot">
-        📦 Naar mijn dashboard →
-      </a>
+      <a id="huistakenKeuzeKnop" href="dashboard.html" class="knop-groot">&#128230; Huistaken opvolgen</a>
+      <a id="overgangKeuzeKnop" href="overgangsbespreking.html" class="knop-groot zorg">&#128196; Overgangsbespreking</a>
+      <a id="schooloverzichtKnop" style="display:none" href="schooloverzicht.html" class="knop-groot school" style="display:none">&#127979; Schooloverzicht</a>
+      <button class="knop-klein" onclick="wijzigWachtwoordVanStart()">Wachtwoord wijzigen</button>
       <button class="knop-klein" onclick="uitloggenVanIndex()">Uitloggen</button>
     </div>
   </div>
 
   <div id="auth">
-    <h2>🔐 Inloggen of registreren</h2>
+    <h2>&#128272; Inloggen of registreren</h2>
     <input type="email" id="email" placeholder="E-mailadres" />
-    <input type="password" id="password" placeholder="Wachtwoord" />
+    <div class="wachtwoord-veld-wrap"><input type="password" id="password" placeholder="Wachtwoord" /><button type="button" class="toon-wachtwoord-knop" onclick="toggleWachtwoordZichtbaar()" title="Wachtwoord tonen of verbergen">&#128065;</button></div>
     <div class="auth-knoppen">
       <button onclick="register()">Registreren</button>
       <button onclick="login()">Inloggen</button>
@@ -418,27 +561,35 @@
 
   <!-- Publieke snelkoppelingen naar klasagenda (geen login vereist) -->
   <section class="publieke-links" aria-labelledby="publiek-kop">
-    <h2 id="publiek-kop">📅 Klasagenda zonder inloggen</h2>
+    <h2 id="publiek-kop">&#128197; Klasagenda zonder inloggen</h2>
     <p class="uitleg">De agenda's zijn vrij te openen. Inloggen is enkel nodig voor de huiswerkapp.</p>
 
     <div class="link-tegels">
       <a class="tegel" href="klasagenda.html" target="_blank" rel="noopener">
-        <div class="tegel-icoon">📘</div>
-        <div class="tegel-tekst">
-          <strong>Klasagenda</strong>
+        <div class="tegel-icoon">&#128216;</div><div class="tegel-tekst"><strong>Klasagenda</strong>
           <span>Eerste, tweede en derde graad</span>
         </div>
       </a>
       <a class="tegel" href="klasagendav2.html" target="_blank" rel="noopener">
-        <div class="tegel-icoon">📗</div>
-        <div class="tegel-tekst">
-          <strong>Klasagenda <span class="nieuw-badge">NIEUW</span></strong>
-          <span>Nieuwe versie — probeer & test</span>
+        <div class="tegel-icoon">&#128217;</div><div class="tegel-tekst"><strong>Klasagenda <span class="nieuw-badge">NIEUW</span></strong>
+          <span>Nieuwe versie - probeer & test</span>
         </div>
       </a>
     </div>
   </section>
+  </main>  <script>
+    function toggleWachtwoordZichtbaar() {
+      const veld = document.getElementById('password');
+      if (!veld) return;
+      veld.type = veld.type === 'password' ? 'text' : 'password';
+    }
+  </script>
+
+
 
   <script type="module" src="script.js"></script>
 </body>
 </html>
+
+
+
