@@ -1,7 +1,7 @@
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+﻿import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 // AANGEPAST: sendPasswordResetEmail toegevoegd
-import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, sendPasswordResetEmail, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-import { getFirestore } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, sendPasswordResetEmail, signOut, updatePassword } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 // De Firebase-configuratie van uw web-app
 const firebaseConfig = {
@@ -39,7 +39,8 @@ onAuthStateChanged(auth, (user) => {
       kaart.style.display = '';
       // Ook de inlog-kaart minder prominent maken (kleine opacity)
       const authBox = document.getElementById('auth');
-      if (authBox) authBox.classList.add('reeds-ingelogd');
+      if (authBox) authBox.style.display = 'none';
+      toonSchooloverzichtKnopAlsNodig(user);
     } else {
       // Fallback voor oudere index.html zonder de nieuwe kaart
       const authBox = document.getElementById('auth');
@@ -53,8 +54,43 @@ onAuthStateChanged(auth, (user) => {
     }
   }
 });
+async function toonSchooloverzichtKnopAlsNodig(user) {
+  const huistakenKnop = document.getElementById('huistakenKeuzeKnop');
+  const overgangKnop = document.getElementById('overgangKeuzeKnop');
+  const schoolKnop = document.getElementById('schooloverzichtKnop');
+  if (schoolKnop) schoolKnop.style.display = 'none';
+  if (!user) return;
 
+  try {
+    const rolRef = doc(db, "schoolrollen", user.uid);
+    const rolSnap = await getDoc(rolRef);
+    const rol = rolSnap.exists() ? String(rolSnap.data().rol || '').toLowerCase() : '';
+    const isSchoolBreed = ['directie', 'zorgcoordinator', 'zorgleerkracht'].includes(rol);
 
+    if (isSchoolBreed) {
+      if (huistakenKnop) {
+        huistakenKnop.href = 'schooloverzicht.html?mode=huistaken';
+        huistakenKnop.textContent = '\uD83D\uDCDA Huistaken per klas';
+      }
+      if (overgangKnop) {
+        overgangKnop.href = 'schooloverzicht.html?mode=overgang';
+        overgangKnop.textContent = '\uD83D\uDCC4 Overgang per klas';
+      }
+    } else {
+      if (huistakenKnop) {
+        huistakenKnop.href = 'dashboard.html';
+        huistakenKnop.textContent = '\uD83D\uDCE6 Huistaken opvolgen';
+      }
+      if (overgangKnop) {
+        overgangKnop.href = 'overgangsbespreking.html';
+        overgangKnop.textContent = '\uD83D\uDCC4 Overgangsbespreking';
+      }
+    }
+  } catch (err) {
+    console.error('Rol controleren mislukt:', err);
+    if (schoolKnop) schoolKnop.style.display = 'none';
+  }
+}
 window.register = function () {
   const email = document.getElementById("email").value;
   const password = document.getElementById("password").value;
@@ -76,7 +112,7 @@ window.login = function () {
   const password = document.getElementById("password").value;
   signInWithEmailAndPassword(auth, email, password)
     .then((userCredential) => {
-      window.location.href = 'dashboard.html';
+      window.location.href = 'index.html';
     })
     .catch((error) => {
       alert("Fout bij inloggen: " + error.message);
@@ -99,6 +135,34 @@ window.wachtwoordVergeten = function() {
             alert("Fout: " + error.message);
         });
 }
+// Wachtwoord wijzigen vanaf het startscherm
+window.wijzigWachtwoordVanStart = function () {
+  const user = auth.currentUser;
+  if (!user) {
+    alert("Log eerst in om uw wachtwoord te wijzigen.");
+    return;
+  }
+
+  const nieuwWachtwoord = prompt("Voer uw nieuwe wachtwoord in (minstens 6 tekens).");
+  if (!nieuwWachtwoord) return;
+  if (nieuwWachtwoord.length < 6) {
+    alert("Het wachtwoord is te kort. Gebruik minstens 6 tekens.");
+    return;
+  }
+
+  updatePassword(user, nieuwWachtwoord)
+    .then(() => {
+      alert("Wachtwoord is gewijzigd.");
+    })
+    .catch((err) => {
+      if (err.code === "auth/requires-recent-login") {
+        alert("Voor de veiligheid moet u opnieuw inloggen. Log uit, log opnieuw in met het tijdelijke wachtwoord en probeer daarna opnieuw.");
+      } else {
+        alert("Wachtwoord wijzigen lukte niet: " + err.message);
+      }
+    });
+};
+
 
 // Service Worker Registratie
 if ('serviceWorker' in navigator) {
@@ -121,10 +185,18 @@ window.uitloggenVanIndex = function () {
       // Kaart verbergen + login-kaart weer prominent
       const kaart = document.getElementById('ingelogd-kaart');
       if (kaart) kaart.style.display = 'none';
+      const schoolKnop = document.getElementById('schooloverzichtKnop');
+      if (schoolKnop) schoolKnop.style.display = 'none';
       const authBox = document.getElementById('auth');
-      if (authBox) authBox.classList.remove('reeds-ingelogd');
+      if (authBox) {
+        authBox.style.display = '';
+        authBox.classList.remove('reeds-ingelogd');
+      }
     })
     .catch((err) => {
       alert('Uitloggen lukte niet: ' + err.message);
     });
 };
+
+
+
