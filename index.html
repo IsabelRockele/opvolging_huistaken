@@ -417,13 +417,14 @@
       max-width: none;
       margin: 0;
       align-content: center;
-      min-height: 245px;
+      min-height: 0;
     }
 
     #auth {
       grid-area: login;
-      max-width: none;
-      margin: 0;
+      max-width: 480px;
+      margin: 0 auto;
+      width: 100%;
     }
 
     .publieke-links {
@@ -531,9 +532,55 @@
       border-radius: 12px;
     }
 
+    .knop-banner {
+      padding: 8px 16px;
+      font-size: 0.88em;
+      font-weight: 700;
+      border-radius: 9px;
+      border: 1.5px solid rgba(255,255,255,0.5);
+      background: rgba(255,255,255,0.18);
+      color: #fff;
+      cursor: pointer;
+      font-family: inherit;
+      transition: background 0.15s;
+      white-space: nowrap;
+    }
+    .knop-banner:hover {
+      background: rgba(255,255,255,0.32);
+    }
+
+    .banner-account {
+      display: none;
+      align-items: center;
+      gap: 12px;
+      flex-shrink: 0;
+      margin-left: auto;
+    }
+    body.start-ingelogd .banner-account {
+      display: flex;
+    }
+    .banner-account-tekst {
+      text-align: right;
+      line-height: 1.3;
+    }
+    .banner-account-tekst strong {
+      display: block;
+      font-size: 0.95em;
+      color: #fff;
+    }
+    .banner-account-tekst span {
+      font-size: 0.82em;
+      opacity: 0.85;
+      color: #fff;
+    }
+
     .start-grid {
       width: min(1320px, calc(100vw - 36px));
-      grid-template-columns: minmax(520px, 1.35fr) minmax(360px, .65fr);
+      grid-template-columns: 1fr;
+      grid-template-areas:
+        "keuze"
+        "login"
+        "agenda";
       gap: 18px;
       align-items: start;
     }
@@ -602,8 +649,9 @@
 
     .portaal-keuzes {
       display: grid;
-      grid-template-columns: repeat(3, minmax(200px, 1fr));
+      grid-template-columns: repeat(4, minmax(180px, 1fr));
       gap: 14px;
+      justify-content: center;
     }
 
     .portaal-tegel {
@@ -699,10 +747,6 @@
       border-radius: 14px;
     }
 
-    body.start-ingelogd #auth {
-      display: none !important;
-    }
-
     body.start-ingelogd .publieke-links {
       margin-top: 0;
     }
@@ -742,6 +786,57 @@
         min-height: 0;
       }
     }
+  /* codex-portaal-4-knoppen */
+  @media (max-width: 1150px) {
+    .portaal-keuzes { grid-template-columns: repeat(2, minmax(200px, 1fr)); }
+  }
+  /* codex-portaal-breder-4-tegels */
+  .start-grid,
+  .hoofdbanner{
+    width:min(1720px, calc(100vw - 36px))!important;
+    max-width:1720px!important;
+  }
+  .portaal-keuzes{
+    grid-template-columns:repeat(4, minmax(245px, 1fr))!important;
+    gap:18px!important;
+  }
+  .portaal-tegel{
+    min-width:0;
+    padding:22px 24px!important;
+  }
+  .portaal-title{
+    overflow-wrap:anywhere;
+    line-height:1.12;
+  }
+  @media (max-width: 1220px){
+    .portaal-keuzes{grid-template-columns:repeat(2, minmax(260px, 1fr))!important;}
+  }
+  @media (max-width: 700px){
+    .portaal-keuzes{grid-template-columns:1fr!important;}
+  }
+  /* codex-portaal-nog-breder */
+  .hoofdbanner,
+  .start-grid{
+    width:min(1860px, calc(100vw - 24px))!important;
+    max-width:1860px!important;
+  }
+  .portaal-keuzes{
+    grid-template-columns:repeat(4, minmax(285px, 1fr))!important;
+    gap:20px!important;
+  }
+  .portaal-title{
+    overflow-wrap:normal!important;
+    word-break:normal!important;
+  }
+  @media (max-width: 1320px){
+    .portaal-keuzes{grid-template-columns:repeat(2, minmax(300px, 1fr))!important;}
+  }
+  @media (max-width: 720px){
+    .portaal-keuzes{grid-template-columns:1fr!important;}
+  }
+
+
+
   </style>
 </head>
 <body>
@@ -752,26 +847,21 @@
       <h1>GO! Basisschool De Linde</h1>
       <div class="ondertitel">Huistaken-opvolgsysteem & klasmiddelen</div>
     </div>
+    <div class="banner-account">
+      <div class="banner-account-tekst">
+        <strong>Welkom terug 👋</strong>
+        <span>Ingelogd als <span id="ingelogd-email-banner"></span></span>
+      </div>
+      <button class="knop-banner" onclick="wijzigWachtwoordVanStart()">Wachtwoord wijzigen</button>
+      <button class="knop-banner" onclick="uitloggenVanIndex()">Uitloggen</button>
+    </div>
   </div>
   <main class="start-grid">
 
 
   <!-- Ingelogd-kaart: alleen zichtbaar als script.js een ingelogde gebruiker detecteert -->
   <div id="ingelogd-kaart" class="ingelogd-kaart startportaal" style="display:none;">
-    <div class="portaal-header">
-      <div class="portaal-welkom">
-        <div class="portaal-icoon">&#128075;</div>
-        <div>
-          <h2>Welkom terug</h2>
-          <p>Ingelogd als <span id="ingelogd-email"></span></p>
-        </div>
-      </div>
-      <div class="portaal-account">
-        <button class="knop-klein" onclick="wijzigWachtwoordVanStart()">Wachtwoord wijzigen</button>
-        <button class="knop-klein" onclick="uitloggenVanIndex()">Uitloggen</button>
-      </div>
-    </div>
-
+    <span id="ingelogd-email" style="display:none;"></span>
     <div class="portaal-keuzes" aria-label="Keuzescherm">
       <a id="huistakenKeuzeKnop" href="dashboard.html" class="portaal-tegel" target="_blank" rel="noopener">
         <span class="portaal-tegel-icoon">&#128230;</span>
@@ -784,6 +874,12 @@
         <span class="portaal-tegel-icoon">&#128196;</span>
         <span class="portaal-title">Overgangsbespreking</span>
         <span class="portaal-desc">Werk leerlingenfiches bij en bereid de overdracht naar de volgende klas voor.</span>
+        <span class="portaal-open">Openen</span>
+      </a>
+      <a id="bestellingenKeuzeKnop" href="bestellingen.html" class="portaal-tegel administratie" target="_blank" rel="noopener" style="display:none">
+        <span class="portaal-tegel-icoon">&#128218;</span>
+        <span class="portaal-title">Bestellingen</span>
+        <span class="portaal-desc">Werkboeken, Lyreco, stock materiaal en knutselideetjes.</span>
         <span class="portaal-open">Openen</span>
       </a>
       <a id="schoolbeheerKeuzeKnop" href="schoolbeheer.html" class="portaal-tegel administratie" target="_blank" rel="noopener" style="display:none">
@@ -838,6 +934,41 @@
       const veld = document.getElementById('password');
       if (!veld) return;
       veld.type = veld.type === 'password' ? 'text' : 'password';
+    }
+
+    // Expose helper for script.js to call after login detection
+    window.toonBannerAccount = function(email) {
+      const el = document.getElementById('banner-account');
+      const emailEl = document.getElementById('banner-email');
+      if (el) { el.style.display = 'flex'; }
+      if (emailEl) { emailEl.textContent = 'Ingelogd als ' + email; }
+      // Also mirror to the old ingelogd-email span if present
+      const old = document.getElementById('ingelogd-email');
+      if (old) old.textContent = email;
+    };
+
+    // Auto-detect when script.js makes the ingelogd-kaart visible
+    const _kaart = document.getElementById('ingelogd-kaart');
+    if (_kaart) {
+      new MutationObserver(() => {
+        if (_kaart.style.display !== 'none' && _kaart.style.display !== '') {
+          // Sync email to banner after short delay (script.js sets it slightly after display)
+          setTimeout(() => {
+            const emailSpan = document.getElementById('ingelogd-email');
+            const bannerEmail = document.getElementById('ingelogd-email-banner');
+            if (bannerEmail && emailSpan) bannerEmail.textContent = emailSpan.textContent;
+          }, 100);
+        }
+      }).observe(_kaart, { attributes: true, attributeFilter: ['style'] });
+    }
+
+    // Also watch ingelogd-email for text changes (in case script.js sets it later)
+    const _emailSpan = document.getElementById('ingelogd-email');
+    if (_emailSpan) {
+      new MutationObserver(() => {
+        const bannerEmail = document.getElementById('ingelogd-email-banner');
+        if (bannerEmail) bannerEmail.textContent = _emailSpan.textContent;
+      }).observe(_emailSpan, { childList: true, characterData: true, subtree: true });
     }
   </script>
 
