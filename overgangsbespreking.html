@@ -298,6 +298,247 @@
       grid-template-columns: 1fr;
     }
   }
+
+  /* layout-rustiger-overgang-codex */
+  header {
+    padding: 12px 28px 0;
+  }
+
+  .header-top {
+    display: grid;
+    grid-template-columns: minmax(260px, 1fr) auto;
+    align-items: start;
+    margin-bottom: 10px;
+  }
+
+  .header-text h1 {
+    font-size: 24px;
+  }
+
+  .header-actions {
+    justify-content: flex-end;
+    max-width: 720px;
+  }
+
+  #firebaseStatus {
+    order: 9;
+    flex-basis: 100%;
+    text-align: right;
+  }
+
+  .tabs {
+    gap: 10px;
+    border-bottom: 0;
+    padding: 0 28px 10px;
+  }
+
+  .tab {
+    background: #eef2f7;
+    border: 1px solid #d9dee8;
+    border-radius: 14px;
+    padding: 12px 18px;
+    font-size: 15px;
+    color: #223044;
+    min-height: 46px;
+  }
+
+  .tab.active {
+    background: var(--yellow);
+    border-color: #e0bd45;
+    box-shadow: 0 8px 18px rgba(34,48,68,.10);
+  }
+
+  .tab[data-tab="students"]::before { content: "\1F465  "; }
+
+  .tab[data-tab="transfer"]::before { content: "\1F4C4  "; }
+
+  .tab[data-tab="settings"],
+  .tab[data-tab="distribution"] {
+    display: none !important;
+  }
+
+  main {
+    max-width: 1500px;
+    padding: 18px 24px 32px;
+  }
+
+  .panel {
+    border-radius: 12px;
+    padding: 18px 20px;
+  }
+
+  .schoolflow-panel {
+    max-width: 1500px;
+    margin: 14px auto 0;
+    padding: 0 24px;
+  }
+
+  .schoolflow-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+
+  .schoolflow-actions button {
+    min-height: 38px;
+    border-radius: 999px;
+    padding: 8px 14px;
+    font-size: 13px;
+    text-align: center;
+    flex: 0 0 auto;
+  }
+
+  .schoolflow-actions button::before {
+    margin-right: 4px;
+  }
+
+  #sfCurrentBtn::before { content: "\1F3EB"; }
+  #sfShareBtn::before { content: "\1F4E4"; }
+  #sfIncomingBtn::before { content: "\1F4E5"; }
+  #sfOutgoingBtn::before { content: "\1F5C2"; }
+  #sfNewClassBtn::before { content: "\2728"; }
+
+  .student-workbar {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    align-items: center;
+    margin: 12px 0 14px;
+    padding: 10px;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    background: #fbfcfe;
+  }
+
+  .student-workbar button {
+    min-height: 40px;
+    border-radius: 12px;
+  }
+
+  .student-workbar button.active {
+    background: var(--yellow);
+  }
+
+  .student-workbar .hint {
+    color: var(--muted);
+    font-size: 13px;
+    margin-left: auto;
+  }
+
+  body:not(.student-add-mode) .klaslijst-box {
+    display: none;
+  }
+
+  body.student-add-mode #studentsContainer {
+    opacity: .35;
+  }
+
+  .klaslijst-box {
+    border-radius: 12px;
+    background: #fffdf7;
+  }
+
+  .leerlingen-toolbar {
+    grid-template-columns: minmax(260px, 1fr) auto;
+  }
+
+  .student-table {
+    border-radius: 10px;
+  }
+
+  .student-table th,
+  .student-table td {
+    padding: 9px 12px;
+  }
+
+  .student-table th {
+    position: static;
+    top: auto;
+    z-index: auto;
+  }
+
+  .modal-overlay {
+    padding: 14px;
+    align-items: center;
+  }
+
+  .modal {
+    max-width: 1080px;
+    max-height: calc(100vh - 28px);
+    display: flex;
+    flex-direction: column;
+    margin: 0;
+    border-radius: 14px;
+  }
+
+  .modal-header {
+    border-radius: 14px 14px 0 0;
+    flex: 0 0 auto;
+  }
+
+  .modal-body {
+    overflow: auto;
+    padding: 14px 18px;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  .modal-footer {
+    flex: 0 0 auto;
+    border-radius: 0 0 14px 14px;
+  }
+
+  .form-section {
+    grid-column: 1 / -1;
+    margin-bottom: 0;
+  }
+
+  .accordion {
+    margin-bottom: 0;
+  }
+
+  .accordion-header {
+    min-height: 48px;
+  }
+
+  .accordion-body {
+    padding: 12px;
+  }
+
+  .accordion-body textarea {
+    min-height: 58px;
+  }
+
+  .field-with-note {
+    margin-bottom: 10px;
+  }
+
+  @media(max-width: 900px) {
+    .header-top {
+      grid-template-columns: 1fr;
+    }
+
+    .header-actions,
+    #firebaseStatus {
+      justify-content: flex-start;
+      text-align: left;
+    }
+
+    .modal-body {
+      grid-template-columns: 1fr;
+    }
+
+    .student-workbar .hint {
+      width: 100%;
+      margin-left: 0;
+    }
+
+    .student-table th {
+      position: static;
+    }
+  }
 </style>
 <script>
   window.addEventListener('DOMContentLoaded', () => {
@@ -430,12 +671,18 @@
     <section class="panel">
             <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:14px">
         <div>
-          <h2 style="margin:0">Leerlingenfiches</h2>
-          <p class="small" style="margin-top:4px">Voeg eerst een klaslijst toe. De leerlingen staan automatisch alfabetisch op achternaam. Klik op een leerling voor de fiche.</p>
+          <h2 style="margin:0">Leerlingen</h2>
+          <p class="small" style="margin-top:4px">Beheer je klaslijst en open daarna de fiches per leerling.</p>
         </div>
         <div class="actions">
-          <button id="addStudentBtn">+ Leerling</button>
+          <button id="addStudentBtn">&#10133; Nieuwe leerling</button>
         </div>
+      </div>
+
+      <div class="student-workbar" id="studentWerkbarCodex">
+        <button type="button" id="toonKlaslijstWerkbladBtn">&#10133; Leerlingen toevoegen</button>
+        <button type="button" id="toonFichesWerkbladBtn" class="ghost active">&#128101; Leerlingenfiches</button>
+        <span class="hint">Werk eerst je klaslijst bij, klik daarna op een leerling om de fiche te openen.</span>
       </div>
 
       <div class="klaslijst-box">
@@ -469,11 +716,11 @@
 
   <div class="tab-panel" data-panel="transfer">
     <section class="panel">
-      <h2>Overdracht bekijken</h2>
-      <p class="help">Blader per onderwerp door de overdracht, of open het volledige document als PDF.</p>
+      <h2>Overdracht</h2>
+      <p class="help">Bekijk de samenvatting per onderwerp en deel de overdracht met de volgende leerkracht.</p>
       <div id="transferOnline"></div>
       <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border)">
-        <button id="transferBtn">📄 Volledig document openen (voor PDF)</button>
+        <button id="transferBtn">&#128196; Volledig document openen (voor PDF)</button>
       </div>
     </section>
   </div>
@@ -2414,7 +2661,7 @@ function renderTransferOnline() {
       + subsectie('Extra zorg', extraZorg, {noteKey:'careNote'})
       + subsectie('Hoge zorg', zorgHoog, {noteKey:'careNote'})
       + subsectie('Middelhoge zorg', zorgMid, {noteKey:'careNote'})
-      + subsectie('AllergieÃ«n', allergieKids, {extra: x => x.allergies ? esc(x.allergies) : ''})
+      + subsectie('Allergie&euml;n', allergieKids, {extra: x => x.allergies ? esc(x.allergies) : ''})
       + subsectie('Medische zorg', medischeKids, {extra: x => x.medicalNote ? esc(x.medicalNote) : ''})
   });
 
@@ -2890,7 +3137,43 @@ sfInitSchoolflow(); writeSettings(); updateBadges(); renderStudents(); updateSav
         autosaveStarted = true;
       }, 2500);
     })();
+
+// layout-rustiger-overgang-js-codex
+(function () {
+  function setStudentMode(mode) {
+    const addMode = mode === 'add';
+    document.body.classList.toggle('student-add-mode', addMode);
+    const addBtn = document.getElementById('toonKlaslijstWerkbladBtn');
+    const fichesBtn = document.getElementById('toonFichesWerkbladBtn');
+    if (addBtn) addBtn.classList.toggle('active', addMode);
+    if (fichesBtn) fichesBtn.classList.toggle('active', !addMode);
+    const input = document.getElementById('klaslijstInput');
+    if (addMode && input) setTimeout(function () { input.focus(); }, 80);
+  }
+
+  window.toonLeerlingenToevoegen = function () { setStudentMode('add'); };
+  window.toonLeerlingenFiches = function () { setStudentMode('fiches'); };
+
+  document.addEventListener('DOMContentLoaded', function () {
+    const addBtn = document.getElementById('toonKlaslijstWerkbladBtn');
+    const fichesBtn = document.getElementById('toonFichesWerkbladBtn');
+    if (addBtn) addBtn.addEventListener('click', function () { setStudentMode('add'); });
+    if (fichesBtn) fichesBtn.addEventListener('click', function () { setStudentMode('fiches'); });
+    setStudentMode('fiches');
+  });
+
+  document.addEventListener('click', function (event) {
+    if (event.target && event.target.id === 'importKlaslijstBtn') {
+      setTimeout(function () { setStudentMode('fiches'); }, 300);
+    }
+  }, true);
+})();
 </script>
 </body>
 </html>
+
+
+
+
+
 
