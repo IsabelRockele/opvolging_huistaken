@@ -120,7 +120,7 @@ async function toonSchooloverzichtKnopAlsNodig(user) {
         'dashboard.html',
         '&#128230;',
         'Huistaken opvolgen',
-        'Open de opvolging van je klas, contractbord en huistaken per leerling.'
+        'Open de opvolging van je klas voor het afgeven van huistaken per leerling.'
       );
       vulTegel(
         overgangKnop,
