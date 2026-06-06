@@ -1,7 +1,6 @@
 ﻿import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-// AANGEPAST: sendPasswordResetEmail toegevoegd
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, sendPasswordResetEmail, signOut, updatePassword } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getFirestore, doc, getDoc, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 // De Firebase-configuratie van uw web-app
 const firebaseConfig = {
@@ -20,7 +19,6 @@ const db = getFirestore(app);
 export { db };
 
 // Als gebruiker al is ingelogd, blijf op de startpagina (index) zodat de klasagenda zichtbaar blijft.
-// Op andere pagina's doen we niets speciaals.
 onAuthStateChanged(auth, (user) => {
   if (!user) return;
 
@@ -30,15 +28,12 @@ onAuthStateChanged(auth, (user) => {
     location.pathname.endsWith('/opvolging_huistaken/');
 
   if (isIndex) {
-    // Nieuwe stijl: toon de 'ingelogd-kaart' bovenaan (die staat al klaar in index.html).
-    // Werkt ook als de kaart niet aanwezig is (oudere versies).
     const kaart = document.getElementById('ingelogd-kaart');
     const emailSpan = document.getElementById('ingelogd-email');
     if (kaart) {
       if (emailSpan) emailSpan.textContent = user.email || '';
       kaart.style.display = '';
       document.body.classList.add('start-ingelogd');
-      // Ook de inlog-kaart minder prominent maken (kleine opacity)
       const authBox = document.getElementById('auth');
       if (authBox) authBox.style.display = 'none';
       toonSchooloverzichtKnopAlsNodig(user);
@@ -55,11 +50,14 @@ onAuthStateChanged(auth, (user) => {
     }
   }
 });
+
 async function toonSchooloverzichtKnopAlsNodig(user) {
   const huistakenKnop = document.getElementById('huistakenKeuzeKnop');
   const overgangKnop = document.getElementById('overgangKeuzeKnop');
   const schoolKnop = document.getElementById('schooloverzichtKnop');
+  const schoolbeheerKnop = document.getElementById('schoolbeheerKeuzeKnop');
   if (schoolKnop) schoolKnop.style.display = 'none';
+  if (schoolbeheerKnop) schoolbeheerKnop.style.display = 'none';
   if (!user) return;
 
   function vulTegel(tegel, href, icoon, titel, tekst) {
@@ -79,6 +77,27 @@ async function toonSchooloverzichtKnopAlsNodig(user) {
     const rolSnap = await getDoc(rolRef);
     const rol = rolSnap.exists() ? String(rolSnap.data().rol || '').toLowerCase() : '';
     const isSchoolBreed = ['directie', 'zorgcoordinator', 'zorgleerkracht'].includes(rol);
+    const isSecretariaat = rol === 'secretariaat';
+
+    let heeftKlasbeheer = false;
+    if (!isSecretariaat) {
+      const email = (user.email || '').toLowerCase();
+      const uidQuery = query(collection(db, "klasleerkrachten"), where("leerkracht_uids", "array-contains", user.uid));
+      const emailQuery = query(collection(db, "klasleerkrachten"), where("leerkracht_emails", "array-contains", email));
+      const snaps = await Promise.all([getDocs(uidQuery), getDocs(emailQuery)]);
+      heeftKlasbeheer = snaps.some(snap => !snap.empty);
+    }
+
+    if (schoolbeheerKnop && (isSecretariaat || heeftKlasbeheer)) {
+      schoolbeheerKnop.style.display = '';
+    }
+
+    // Secretariaat ziet enkel schoolbeheer, geen huistaken of overgang
+    if (isSecretariaat) {
+      if (huistakenKnop) huistakenKnop.style.display = 'none';
+      if (overgangKnop) overgangKnop.style.display = 'none';
+      return;
+    }
 
     if (isSchoolBreed) {
       vulTegel(
@@ -114,8 +133,10 @@ async function toonSchooloverzichtKnopAlsNodig(user) {
   } catch (err) {
     console.error('Rol controleren mislukt:', err);
     if (schoolKnop) schoolKnop.style.display = 'none';
+    if (schoolbeheerKnop) schoolbeheerKnop.style.display = 'none';
   }
 }
+
 window.register = function () {
   const email = document.getElementById("email").value;
   const password = document.getElementById("password").value;
@@ -144,22 +165,21 @@ window.login = function () {
     });
 };
 
-// NIEUW: Functie voor wachtwoord vergeten
-window.wachtwoordVergeten = function() {
-    const email = document.getElementById("email").value;
-    if (!email) {
-        alert("Vul alstublieft uw e-mailadres in het e-mailveld in en klik dan op 'Wachtwoord vergeten?'.");
-        return;
-    }
+window.wachtwoordVergeten = function () {
+  const email = document.getElementById("email").value;
+  if (!email) {
+    alert("Vul alstublieft uw e-mailadres in het e-mailveld in en klik dan op 'Wachtwoord vergeten?'.");
+    return;
+  }
+  sendPasswordResetEmail(auth, email)
+    .then(() => {
+      alert("Er is een e-mail naar u verzonden om uw wachtwoord opnieuw in te stellen. Controleer uw inbox.");
+    })
+    .catch((error) => {
+      alert("Fout: " + error.message);
+    });
+};
 
-    sendPasswordResetEmail(auth, email)
-        .then(() => {
-            alert("Er is een e-mail naar u verzonden om uw wachtwoord opnieuw in te stellen. Controleer uw inbox.");
-        })
-        .catch((error) => {
-            alert("Fout: " + error.message);
-        });
-}
 // Wachtwoord wijzigen vanaf het startscherm
 window.wijzigWachtwoordVanStart = function () {
   const user = auth.currentUser;
@@ -188,7 +208,6 @@ window.wijzigWachtwoordVanStart = function () {
     });
 };
 
-
 // Service Worker Registratie
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
@@ -202,16 +221,21 @@ if ('serviceWorker' in navigator) {
   });
 }
 
-
 // Uitloggen vanaf de index-pagina (indien reeds ingelogd)
 window.uitloggenVanIndex = function () {
   signOut(auth)
     .then(() => {
-      // Kaart verbergen + login-kaart weer prominent
+      // Verberg de ingelogd-kaart
       const kaart = document.getElementById('ingelogd-kaart');
       if (kaart) kaart.style.display = 'none';
+      // Verberg schoolknoppen
       const schoolKnop = document.getElementById('schooloverzichtKnop');
+      const schoolbeheerKnop = document.getElementById('schoolbeheerKeuzeKnop');
       if (schoolKnop) schoolKnop.style.display = 'none';
+      if (schoolbeheerKnop) schoolbeheerKnop.style.display = 'none';
+      // Verwijder de body-klasse zodat #auth niet meer verborgen is via CSS
+      document.body.classList.remove('start-ingelogd');
+      // Toon het loginformulier terug
       const authBox = document.getElementById('auth');
       if (authBox) {
         authBox.style.display = '';
@@ -222,8 +246,3 @@ window.uitloggenVanIndex = function () {
       alert('Uitloggen lukte niet: ' + err.message);
     });
 };
-
-
-
-
-
