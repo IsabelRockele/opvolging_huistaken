@@ -483,6 +483,16 @@
         font-weight:700!important;
       }
     }
+    /* collega-kind: reftercellen zijn streepjes, niet klikbaar */
+    tr.colleague td.day{
+      cursor: default;
+    }
+    td.collega-dag{
+      background: #fff5c8;
+      color: #a08a00;
+      text-align: center;
+      cursor: default;
+    }
     /* codex-refter-print-grey-colleague */
     @media print{
       .refter-print-table th.day.grey,
@@ -715,6 +725,49 @@
 
 
 
+
+    /* ── STICKY NAAM + STICKY HEADER ── */
+    .table-wrap{
+      max-height: calc(100vh - 200px);
+      overflow: auto;
+    }
+    .table-wrap table thead tr th{
+      position: sticky;
+      top: 0;
+      z-index: 3;
+      background: #eef3f9;
+    }
+    .table-wrap table thead tr th:first-child,
+    .table-wrap table tbody tr td:first-child{
+      position: sticky;
+      left: 0;
+      z-index: 2;
+      background: #fff;
+    }
+    .table-wrap table thead tr th:first-child{
+      z-index: 4;
+      background: #eef3f9;
+    }
+    .table-wrap table tbody tr.colleague td:first-child{
+      background: #fff5c8;
+    }
+    .table-wrap table thead tr th:first-child,
+    .table-wrap table tbody tr td:first-child{
+      box-shadow: 2px 0 4px -1px rgba(0,0,0,.10);
+    }
+    /* Print: sticky uitschakelen */
+    @media print{
+      .table-wrap{
+        max-height: none!important;
+        overflow: visible!important;
+      }
+      .table-wrap table thead tr th,
+      .table-wrap table thead tr th:first-child,
+      .table-wrap table tbody tr td:first-child{
+        position: static!important;
+        box-shadow: none!important;
+      }
+    }
   </style>
 </head>
 <body>
@@ -1133,7 +1186,7 @@
       const month=standaardRefterMaand();
       const days=daysInMonth(month), students=activeStudents(`${month}-15`), m=data.refter[month] ||= {}, processedUntil=processedInMonth(month);
       const volledig = refterMaandVolledigVerwerkt(month);
-      $("content").innerHTML = `<div class="panel"><div class="bar"><div><h2>Refter <span class="muted" style="font-weight:400">${esc(activeClass)}</span></h2><p class="muted">Leerkracht vinkt enkel afwezigheden aan.${volledig ? " Deze maand is volledig verwerkt." : ""}</p></div><label class="right no-print" style="max-width:180px">Maand<input id="refterMonth" type="month" value="${month}" onchange="renderRefter()"></label>${isSecretary()?`<label class="no-print" style="max-width:190px">Verwerkt tot<input type="date" value="${processedUntil}" min="${month}-01" max="${month}-${String(days.length).padStart(2,"0")}" onchange="setProcessedRefter(this.value)"></label>`:""}${screenTools("refter")}</div>${helpPanel("refter")}<div class="table-wrap refter-print-wrap"><table class="refter-print-table"><colgroup><col class="refter-name-col">${days.map(()=>`<col class="refter-day-col">`).join("")}</colgroup><thead><tr><th>Leerling</th>${days.map(d=>{const locked=processedUntil&&d.date<=processedUntil&&!isFree(d.date);return`<th class="day ${isFree(d.date)?"grey":""} ${locked?"locked-head":""}">${d.day}${locked&&!isSecretary()?'<br><span class="teacher-lock">&#128274;</span>':locked?'<br><span class="tag done">verwerkt</span>':""}</th>`}).join("")}</tr></thead><tbody>${students.map(s=>`<tr class="${s.colleague?"colleague":""}"><td><strong>${esc(name(s))}</strong>${s.colleague?'<span class="tag green">collega</span>':''}</td>${days.map(d=>{const locked=processedUntil&&d.date<=processedUntil;if(isFree(d.date))return`<td class="day grey">-</td>`;return`<td class="day ${locked?"locked":""}"><input type="checkbox" ${m[s.id]?.[d.date]?"checked":""} ${locked&&!isSecretary()?"disabled":""} onchange="toggleRefter('${month}','${s.id}','${d.date}',this.checked)">${locked&&!isSecretary()?'<br><span class="teacher-lock">&#128274;</span>':locked?'<br><span class="tag done">verwerkt</span>':''}</td>`}).join("")}</tr>`).join("")}</tbody></table></div></div>`;
+      $("content").innerHTML = `<div class="panel"><div class="bar"><div><h2>Refter <span class="muted" style="font-weight:400">${esc(activeClass)}</span></h2><p class="muted">Leerkracht vinkt enkel afwezigheden aan.${volledig ? " Deze maand is volledig verwerkt." : ""}</p></div><label class="right no-print" style="max-width:180px">Maand<input id="refterMonth" type="month" value="${month}" onchange="renderRefter()"></label>${isSecretary()?`<label class="no-print" style="max-width:190px">Verwerkt tot<input type="date" value="${processedUntil}" min="${month}-01" max="${month}-${String(days.length).padStart(2,"0")}" onchange="setProcessedRefter(this.value)"></label>`:""}${screenTools("refter")}</div>${helpPanel("refter")}<div class="table-wrap refter-print-wrap"><table class="refter-print-table"><colgroup><col class="refter-name-col">${days.map(()=>`<col class="refter-day-col">`).join("")}</colgroup><thead><tr><th>Leerling</th>${days.map(d=>{const locked=processedUntil&&d.date<=processedUntil&&!isFree(d.date);return`<th class="day ${isFree(d.date)?"grey":""} ${locked?"locked-head":""}">${d.day}${locked&&!isSecretary()?'<br><span class="teacher-lock">&#128274;</span>':locked?'<br><span class="tag done">verwerkt</span>':""}</th>`}).join("")}</tr></thead><tbody>${students.map(s=>`<tr class="${s.colleague?"colleague":""}"><td><strong>${esc(name(s))}</strong>${s.colleague?'<span class="tag green">collega</span>':''}</td>${days.map(d=>{const locked=processedUntil&&d.date<=processedUntil;if(isFree(d.date))return`<td class="day grey">-</td>`;if(s.colleague)return`<td class="day collega-dag" title="Kind van collega — geen refter">-</td>`;return`<td class="day ${locked?"locked":""}"><input type="checkbox" ${m[s.id]?.[d.date]?"checked":""} ${locked&&!isSecretary()?"disabled":""} onchange="toggleRefter('${month}','${s.id}','${d.date}',this.checked)">${locked&&!isSecretary()?'<br><span class="teacher-lock">&#128274;</span>':locked?'<br><span class="tag done">verwerkt</span>':''}</td>`}).join("")}</tr>`).join("")}</tbody></table></div></div>`;
     }
     window.toggleRefter = (month,sid,date,checked) => { const m=data.refter[month] ||= {}; m[sid] ||= {}; m[sid][date]=checked; markDirty(); };
 
@@ -1442,21 +1495,50 @@
       }
     });
   </script>
+
+  <!-- Dubbele scrollbar: spiegel bovenaan elke table-wrap -->
+  <script>
+  function installScrollMirrors(){
+    document.querySelectorAll('.table-wrap').forEach(wrap => {
+      // Niet twee keer installeren
+      if(wrap.previousElementSibling?.classList?.contains('scroll-mirror-top')) return;
+
+      const mirror = document.createElement('div');
+      mirror.className = 'scroll-mirror-top';
+      const inner = document.createElement('div');
+      mirror.appendChild(inner);
+      wrap.parentNode.insertBefore(mirror, wrap);
+
+      function syncWidth(){
+        inner.style.width = wrap.scrollWidth + 'px';
+      }
+      syncWidth();
+
+      let syncing = false;
+      mirror.addEventListener('scroll', () => {
+        if(syncing) return; syncing = true;
+        wrap.scrollLeft = mirror.scrollLeft;
+        syncing = false;
+      });
+      wrap.addEventListener('scroll', () => {
+        if(syncing) return; syncing = true;
+        mirror.scrollLeft = wrap.scrollLeft;
+        syncWidth();
+        syncing = false;
+      });
+
+      // Herinstalleer als de tabel herrenderd wordt (breedte kan wijzigen)
+      new ResizeObserver(syncWidth).observe(wrap);
+    });
+  }
+
+  // Na elke render opnieuw installeren
+  const _origRender = window.__mirrorRenderHook;
+  const observer = new MutationObserver(() => installScrollMirrors());
+  document.addEventListener('DOMContentLoaded', () => {
+    observer.observe(document.getElementById('content'), { childList: true, subtree: false });
+    installScrollMirrors();
+  });
+  </script>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
