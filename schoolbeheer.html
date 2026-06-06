@@ -1,0 +1,996 @@
+﻿<!doctype html>
+<html lang="nl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Schoolbeheer</title>
+  <style>
+    :root{
+      --ink:#0b2341;--muted:#50658a;--line:#d7e0ec;--soft:#f4f7fb;
+      --yellow:#ffdc63;--yellow-dark:#d5ad1f;--green:#bcebdc;--pink:#f6bec6;
+      --blue:#e9f0f8;--white:#fff;--sidebar-bg:#f0f4f9;--sidebar-w:210px;
+      --header-h:56px;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:Arial,Helvetica,sans-serif;color:var(--ink);background:#f6f8fc;display:flex;flex-direction:column;min-height:100vh}
+
+    /* ── TOPBAR ── */
+    #topbar{
+      height:var(--header-h);display:flex;align-items:center;justify-content:space-between;
+      padding:0 20px;background:#153b63;color:#fff;flex-shrink:0;gap:12px;
+    }
+    #topbar .brand{font-size:16px;font-weight:800;white-space:nowrap}
+    #topbar .meta{font-size:13px;opacity:.75;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    #topbar .tools{display:flex;gap:8px;align-items:center;flex-shrink:0}
+    #topbar .tools button{
+      background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);
+      color:#fff;border-radius:10px;padding:6px 12px;font-size:13px;cursor:pointer;
+    }
+    #topbar .tools button:hover{background:rgba(255,255,255,.25)}
+    #topbar .pill-status{
+      font-size:12px;padding:4px 10px;border-radius:999px;
+      background:rgba(255,255,255,.15);white-space:nowrap;
+    }
+    #topbar .pill-status.saved{background:#bcebdc;color:#0b2341}
+
+    /* ── LAYOUT ── */
+    #shell{display:flex;flex:1;overflow:hidden}
+
+    /* ── SIDEBAR ── */
+    #sidebar{
+      width:var(--sidebar-w);min-width:var(--sidebar-w);background:var(--sidebar-bg);
+      border-right:1px solid var(--line);display:flex;flex-direction:column;
+      overflow-y:auto;
+    }
+    .sb-section{padding:10px 0}
+    .sb-label{
+      font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;
+      color:var(--muted);padding:6px 16px 4px;
+    }
+    .sb-item{
+      display:flex;align-items:center;gap:9px;padding:9px 16px;
+      font-size:14px;cursor:pointer;color:var(--ink);
+      border-left:3px solid transparent;transition:background .12s;
+    }
+    .sb-item:hover{background:#e4eaf3}
+    .sb-item.active{
+      background:#fff;border-left-color:#153b63;color:#153b63;font-weight:800;
+    }
+    .sb-item .sb-icon{font-size:17px;width:20px;text-align:center;flex-shrink:0}
+    .sb-divider{height:1px;background:var(--line);margin:4px 12px}
+
+    /* klas-picker in sidebar */
+    .sb-klas-wrap{padding:10px 12px 14px}
+    .sb-klas-grid{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px}
+    .sb-klas-btn{
+      padding:5px 10px;border-radius:10px;border:1px solid var(--line);
+      background:#fff;font-size:13px;font-weight:700;cursor:pointer;color:var(--ink);
+    }
+    .sb-klas-btn.active{background:#153b63;color:#fff;border-color:#153b63}
+    .sb-klas-btn:hover:not(.active){background:#dde5f0}
+
+    /* schooljaar input */
+    .sb-schooljaar{padding:12px 14px 4px}
+    .sb-schooljaar label{font-size:11px;font-weight:700;color:var(--muted);display:block;margin-bottom:4px}
+    .sb-schooljaar input{
+      width:100%;border:1px solid var(--line);border-radius:10px;
+      padding:7px 10px;font-size:13px;background:#fff;
+    }
+
+    /* ── MAIN ── */
+    #main{flex:1;overflow-y:auto;padding:22px 24px 48px;display:flex;flex-direction:column;gap:0}
+
+    /* content panels */
+    button,.pill,select,input,textarea{font:inherit}
+    button,.pill{border:0;border-radius:16px;background:#edf2f8;color:var(--ink);padding:10px 16px;font-weight:800;cursor:pointer}
+    button.primary,.pill.saved{background:var(--yellow);box-shadow:inset 0 0 0 1px var(--yellow-dark)}
+    button.green{background:var(--green);color:#0b2341}
+    button.pink{background:var(--pink);color:#0b2341}
+    button.danger{background:#f6bec6;color:#0b2341}
+    button.white{background:#fff;border:1px solid var(--line)}
+    button.small{padding:6px 10px;border-radius:12px;font-size:13px}
+    h1{font-size:26px;margin:0 0 6px}
+    h2{font-size:20px;margin:0 0 8px}
+    h3{font-size:16px;margin:0 0 8px}
+    p{margin:0 0 10px}
+    .muted{color:var(--muted)}
+    .small{font-size:13px}
+    .strong{font-weight:800}
+    input,select,textarea{border:1px solid var(--line);border-radius:12px;padding:9px 12px;background:#fff;width:100%}
+    input[type="checkbox"]{width:18px;height:18px;padding:0;margin:0;vertical-align:middle;accent-color:#2f8f67}
+    td input[type="checkbox"],th input[type="checkbox"]{display:block;margin:0 auto}
+    .check-label{display:inline-flex!important;align-items:center;gap:8px;margin:10px 0!important}
+    .check-label input[type="checkbox"]{flex:0 0 auto}
+    textarea{min-height:96px;resize:vertical}
+    .panel{background:#fff;border:1px solid var(--line);border-radius:18px;padding:22px;margin-bottom:16px}
+    .bar{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}
+    .two{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+    .row{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;align-items:end}
+    .notice{background:#fff8d6;border:1px solid #f2c94c;border-radius:14px;padding:14px;margin:12px 0}
+    .table-wrap{overflow:auto;border:1px solid var(--line);border-radius:14px;background:#fff}
+    table{border-collapse:collapse;width:100%;min-width:760px}
+    th,td{border-bottom:1px solid var(--line);padding:10px;text-align:left;vertical-align:middle}
+    th{background:#eef3f9;color:#536985;text-transform:uppercase;font-size:12px;letter-spacing:.03em}
+    td.day,th.day{text-align:center;min-width:42px}
+    .grey{background:#edf0f4;color:#91a0b5}
+    .locked{background:#dcf5ea}
+    .locked-head{background:#bcebdc!important;color:#0b2341}
+    .colleague{background:#fff5c8}
+    .tag{display:inline-block;border-radius:999px;background:#edf2f8;padding:4px 8px;font-size:12px;margin-left:6px}
+    .tag.green{background:#d8f5e9}.tag.done{background:#c9efd9}
+    .teacher-lock{display:inline-block;margin-top:3px;font-size:13px}
+    .status-dot{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:999px;font-weight:900}
+    .status-dot.present{background:#dff7e8;color:#176f3b}
+    .status-dot.absent{background:#ffd8d8;color:#b42318}
+    .absence-check{width:22px;height:22px;accent-color:#e25a5a}
+    .subnav{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0}
+    .subnav button.active{background:var(--yellow);box-shadow:inset 0 0 0 1px var(--yellow-dark)}
+    .right{margin-left:auto}
+    .name-input{min-width:140px}
+    .hidden{display:none!important}
+
+    /* step-grid voor nieuw schooljaar */
+    .step-grid{display:grid;grid-template-columns:1fr 1fr auto;gap:14px;align-items:end;margin-bottom:14px}
+    .step-card{background:var(--soft);border:1px solid var(--line);border-radius:14px;padding:14px}
+    .action-row{display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap}
+
+    /* melding-balk */
+    #messages .notice{margin-bottom:8px}
+    /* codex-checkbox-centering-fix */
+    th.check-col,
+    td.check-col,
+    th.activity-col,
+    td.activity-col,
+    td.checkbox-cell{
+      text-align:center!important;
+      vertical-align:middle!important;
+    }
+    th.check-col,
+    td.check-col{
+      width:140px;
+      min-width:120px;
+      max-width:160px;
+    }
+    th.activity-col,
+    td.activity-col{
+      min-width:150px;
+    }
+    td.check-col input[type="checkbox"],
+    td.checkbox-cell input[type="checkbox"],
+    td.activity-col input[type="checkbox"],
+    td.activity-cell input[type="checkbox"]{
+      display:block!important;
+      margin-left:auto!important;
+      margin-right:auto!important;
+    }
+    td.activity-col .teacher-lock,
+    td.activity-cell .teacher-lock{
+      display:block;
+      margin-top:4px;
+      text-align:center;
+    }
+    td.activity-col .status-dot,
+    td.activity-cell .status-dot{
+      margin-left:auto;
+      margin-right:auto;
+    }
+    /* codex-classlist-layout-fix */
+    .class-admin-compact{
+      background:#fffdf0;
+      border:1px solid #f2d36b;
+      border-radius:14px;
+      padding:14px 16px;
+      margin:8px 0 16px;
+    }
+    .class-admin-compact h3{margin-bottom:4px}
+    .class-admin-compact .row{
+      grid-template-columns:minmax(180px,260px) minmax(150px,210px) minmax(180px,240px);
+      align-items:end;
+    }
+    .class-list-tools{
+      display:grid;
+      grid-template-columns:minmax(300px,1.05fr) minmax(300px,.95fr);
+      gap:18px;
+      align-items:start;
+      margin-top:12px;
+    }
+    .class-tool-card{
+      border:1px solid var(--line);
+      border-radius:16px;
+      background:#fbfcfe;
+      padding:16px;
+      min-height:100%;
+    }
+    .class-tool-card h3{margin-bottom:6px}
+    .class-tool-card textarea{min-height:118px}
+    .student-add-form{
+      display:grid;
+      grid-template-columns:repeat(3,minmax(130px,1fr));
+      gap:12px;
+      align-items:end;
+    }
+    .student-add-actions{
+      display:flex;
+      align-items:center;
+      gap:18px;
+      flex-wrap:wrap;
+      margin-top:14px;
+    }
+    .student-add-actions .check-label{margin:0!important}
+    .student-add-actions button{margin-left:auto}
+    .class-list-heading{
+      display:flex;
+      justify-content:space-between;
+      align-items:end;
+      gap:12px;
+      margin-top:22px;
+      margin-bottom:8px;
+    }
+    @media(max-width:900px){
+      .class-list-tools{grid-template-columns:1fr}
+      .student-add-form{grid-template-columns:1fr}
+      .student-add-actions button{margin-left:0;width:100%}
+      .class-admin-compact .row{grid-template-columns:1fr}
+    }
+    /* codex-classlist-collapsed-tools */
+    .class-actions{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      align-items:center;
+      margin:14px 0 12px;
+      padding:10px;
+      background:#f6f8fc;
+      border:1px solid var(--line);
+      border-radius:14px;
+    }
+    .class-actions button{
+      border-radius:12px;
+      padding:9px 14px;
+    }
+    .class-actions .hint{
+      margin-left:auto;
+      font-size:13px;
+      color:var(--muted);
+    }
+    .class-tool-panel{
+      border:1px solid var(--line);
+      border-radius:16px;
+      background:#fff;
+      padding:16px;
+      margin:0 0 16px;
+    }
+    .class-tool-panel.compact-warning{
+      background:#fffdf0;
+      border-color:#f2d36b;
+    }
+    .student-add-actions{
+      display:flex;
+      align-items:center;
+      gap:18px;
+      flex-wrap:wrap;
+      margin-top:14px;
+    }
+    .student-add-actions .check-label{margin:0!important}
+    .student-add-actions button{margin-left:auto}
+    @media(max-width:900px){
+      .class-actions .hint{width:100%;margin-left:0}
+      .student-add-actions button{margin-left:0;width:100%}
+    }
+
+
+
+
+    /* responsive */
+    @media(max-width:800px){
+      #sidebar{display:none}
+      #main{padding:14px}
+      .two{grid-template-columns:1fr}
+      .step-grid{grid-template-columns:1fr}
+    }
+    @media print{
+      #topbar,#sidebar,.no-print,button,input,select,textarea{display:none!important}
+      #main{padding:0}
+      .panel{box-shadow:none;border:0;margin:0}
+      .table-wrap{overflow:visible;border:0}
+      table{min-width:0;font-size:12px}
+    }
+  </style>
+</head>
+<body>
+
+  <!-- TOPBAR -->
+  <header id="topbar">
+    <span class="brand">Schoolbeheer</span>
+    <span class="meta" id="topMeta">Laden...</span>
+    <div class="tools no-print">
+      <span class="pill-status" id="status">Laden...</span>
+      <button onclick="location.href='index.html'">&#127968; Keuzescherm</button>
+      <button onclick="window.print()">Afdrukken</button>
+      <button id="logoutBtn">Uitloggen</button>
+    </div>
+  </header>
+
+  <div id="shell">
+
+    <!-- SIDEBAR -->
+    <nav id="sidebar">
+
+      <div class="sb-schooljaar no-print">
+        <label>Schooljaar</label>
+        <input id="schooljaarInput" value="2026-2027">
+      </div>
+
+      <div class="sb-divider" style="margin-top:10px"></div>
+
+      <div class="sb-klas-wrap no-print">
+        <div class="sb-label">Klas</div>
+        <div class="sb-klas-grid" id="klasPills"></div>
+      </div>
+
+      <div class="sb-divider"></div>
+
+      <div class="sb-section">
+        <div class="sb-label">Modules</div>
+        <div class="sb-item secretary-label" data-tab="administratie" id="navAdministratie">
+          <span class="sb-icon">&#128196;</span> Administratie
+        </div>
+        <div class="sb-item teacher-label hidden" data-tab="klaslijst" id="navKlaslijst">
+          <span class="sb-icon">&#128100;</span> Klaslijst
+        </div>
+        <div class="sb-item" data-tab="refter" id="navRefter">
+          <span class="sb-icon">&#127860;</span> Refter
+        </div>
+        <div class="sb-item" data-tab="activiteiten" id="navActiviteiten">
+          <span class="sb-icon">&#128652;</span> Activiteiten
+        </div>
+        <div class="sb-item" data-tab="aankopen" id="navAankopen">
+          <span class="sb-icon">&#128717;</span> Aankopen
+        </div>
+        <div class="sb-item secretary-only hidden" data-tab="werkboeken" id="navWerkboeken">
+          <span class="sb-icon">&#128218;</span> Werkboeken
+        </div>
+      </div>
+
+    </nav>
+
+    <!-- MAIN CONTENT -->
+    <main id="main">
+      <section id="messages"></section>
+      <section id="content">
+        <div class="panel"><h2>Even laden</h2><p class="muted">We controleren je login.</p></div>
+      </section>
+    </main>
+
+  </div>
+
+  <script type="module">
+    import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+    import { getFirestore, doc, getDoc, setDoc, deleteDoc, onSnapshot, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyA7KxXMvZ4dzBQDut3CMyWUblLte2tFzoQ",
+      authDomain: "huiswerkapp-a311e.firebaseapp.com",
+      projectId: "huiswerkapp-a311e",
+      storageBucket: "huiswerkapp-a311e.appspot.com",
+      messagingSenderId: "797169941164",
+      appId: "1:797169941164:web:511d9618079f1378d0fd09"
+    };
+
+    const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+    const DEFAULT_CLASSES = ["1A","2A","3A","4A","5A","6A"];
+    const esc = v => String(v ?? "").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;");
+    const uid = () => Math.random().toString(36).slice(2,9) + Date.now().toString(36).slice(-4);
+    const $ = id => document.getElementById(id);
+    let user = null, role = "", allowedClasses = [], allClasses = [...DEFAULT_CLASSES],
+        activeClass = "", schooljaar = "2026-2027", data = null, unsub = null,
+        tab = "administratie", adminPanel = "klaslijsten", classListMode = "", saveTimer = null;
+
+    const standardFree = [
+      {naam:"Herfstvakantie",start:"2026-11-02",end:"2026-11-08"},
+      {naam:"Wapenstilstand",start:"2026-11-11",end:"2026-11-11"},
+      {naam:"Kerstvakantie",start:"2026-12-21",end:"2027-01-03"},
+      {naam:"Krokusvakantie",start:"2027-02-08",end:"2027-02-14"},
+      {naam:"Paasvakantie",start:"2027-03-29",end:"2027-04-11"},
+      {naam:"Dag van de Arbeid",start:"2027-05-01",end:"2027-05-01"},
+      {naam:"Hemelvaart",start:"2027-05-06",end:"2027-05-07"},
+      {naam:"Pinkstermaandag",start:"2027-05-17",end:"2027-05-17"}
+    ];
+
+    function setStatus(text, saved=false){
+      $("status").textContent = text;
+      $("status").classList.toggle("saved", saved);
+    }
+    function isSecretary(){ return role === "secretariaat"; }
+    function startDate(){ return `${schooljaar.slice(0,4)}-09-01`; }
+    function endDate(){ return `${schooljaar.slice(5,9)}-07-30`; }
+    function emptyClassDoc(klas){ return { schooljaar, klas, leerlingen:[], refter:{}, activiteiten:[], aankopen:[], vrijeDagen:[...standardFree], messages:[], processed:{refter:""}, bijgewerktOp:new Date().toISOString() }; }
+    function classRef(klas=activeClass){ return doc(db, "schoolbeheer", schooljaar, "klassen", klas); }
+    function name(s){ const last = s.last || s.lastName || ""; const first = s.first || s.firstName || ""; return `${last}, ${first}`.replace(/^, /,"").replace(/, $/,""); }
+    function activeStudents(date=`${schooljaar.slice(0,4)}-09-15`){ return (data?.leerlingen||[]).filter(s => (!s.start || s.start <= date) && (!s.end || s.end >= date)).sort((a,b)=>name(a).localeCompare(name(b),"nl")); }
+
+    function setActiveNav(tabName){
+      document.querySelectorAll(".sb-item").forEach(el => {
+        el.classList.toggle("active", el.dataset.tab === tabName);
+      });
+    }
+
+    function renderScope(){
+      $("topMeta").textContent = `${user.email} — ${isSecretary() ? "secretariaat" : "klasleerkracht"} — ${schooljaar}`;
+      document.querySelectorAll(".secretary-only").forEach(x => x.classList.toggle("hidden", !isSecretary()));
+      document.querySelectorAll(".teacher-label").forEach(x => x.classList.toggle("hidden", isSecretary()));
+      document.querySelectorAll(".secretary-label").forEach(x => x.classList.toggle("hidden", !isSecretary()));
+      renderKlasPills();
+      setActiveNav(tab);
+    }
+
+    function renderKlasPills(){
+      const lijst = isSecretary() ? allClasses : allowedClasses;
+      $("klasPills").innerHTML = lijst.map(k =>
+        `<button class="sb-klas-btn ${k===activeClass?"active":""}" onclick="openClass('${esc(k)}')">${esc(k)}</button>`
+      ).join("");
+    }
+
+    async function loadRole(){
+      const snap = await getDoc(doc(db, "schoolrollen", user.uid));
+      role = snap.exists() ? String(snap.data().rol || "").trim().toLowerCase() : "";
+    }
+
+    async function loadClassesFromFirebase(){
+      const docs = await getDocs(collection(db, "schoolbeheer", schooljaar, "klassen"));
+      const found = docs.docs.map(d => d.id);
+      allClasses = [...new Set([...DEFAULT_CLASSES, ...found])].sort((a,b)=>a.localeCompare(b,"nl",{numeric:true}));
+    }
+
+    async function loadAllowedClasses(){
+      if(isSecretary()){
+        await loadClassesFromFirebase();
+        allowedClasses = [...allClasses];
+        return;
+      }
+      const email = (user.email || "").toLowerCase();
+      const uidQuery = query(collection(db, "klasleerkrachten"), where("leerkracht_uids", "array-contains", user.uid));
+      const emailQuery = query(collection(db, "klasleerkrachten"), where("leerkracht_emails", "array-contains", email));
+      const snaps = await Promise.all([getDocs(uidQuery), getDocs(emailQuery)]);
+      const found = new Set();
+      snaps.forEach(s => s.docs.forEach(d => {
+        const item = d.data();
+        if(String(item.schooljaar || schooljaar) === schooljaar && item.klas) found.add(String(item.klas).trim());
+      }));
+      allowedClasses = [...found].sort((a,b)=>a.localeCompare(b,"nl",{numeric:true}));
+      allClasses = [...new Set([...DEFAULT_CLASSES, ...allowedClasses])];
+    }
+
+    window.openClass = async function(klas){
+      activeClass = klas;
+      schooljaar = $("schooljaarInput").value.trim() || schooljaar;
+      renderScope();
+      if(unsub) unsub();
+      setStatus("Laden...");
+      $("content").innerHTML = `<div class="panel"><h2>Laden</h2><p class="muted">We halen ${esc(activeClass)} op.</p></div>`;
+      unsub = onSnapshot(classRef(), snap => {
+        if(!snap.exists()){
+          data = null;
+          $("messages").innerHTML = "";
+          $("content").innerHTML = `<div class="panel"><h2>Klas nog niet gestart</h2><p class="muted">${isSecretary() ? "Ga naar Administratie > Klaslijsten en gebruik Klassen beheren om de klas te starten." : "Secretariaat moet deze klas eerst starten."}</p></div>`;
+          setStatus("Nog niet gestart");
+          return;
+        }
+        data = snap.data();
+        normalize();
+        if(isSecretary() && tab === "klaslijst") tab = "administratie";
+        if(!isSecretary() && tab === "administratie") tab = "klaslijst";
+        setStatus("Bewaard", true);
+        setActiveNav(tab);
+        render();
+        renderKlasPills();
+      }, err => {
+        console.error(err);
+        $("content").innerHTML = `<div class="panel"><h2>Laden mislukt</h2><p class="muted">${esc(err.message)}</p></div>`;
+        setStatus("Fout");
+      });
+    };
+
+    async function startClass(){
+      if(!isSecretary()) return;
+      schooljaar = $("schooljaarInput").value.trim() || schooljaar;
+      const nieuweKlas = $("nieuweKlasInput").value.trim().toUpperCase();
+      if(!nieuweKlas) return alert("Typ eerst een klasnaam, bijvoorbeeld 2B.");
+      const ref = doc(db, "schoolbeheer", schooljaar, "klassen", nieuweKlas);
+      const bestaand = await getDoc(ref);
+      if(!bestaand.exists()) await setDoc(ref, emptyClassDoc(nieuweKlas));
+      $("nieuweKlasInput").value = "";
+      if(!allClasses.includes(nieuweKlas)) allClasses.push(nieuweKlas);
+      allClasses.sort((a,b)=>a.localeCompare(b,"nl",{numeric:true}));
+      allowedClasses = [...allClasses];
+      await openClass(nieuweKlas);
+    }
+
+    async function deleteCurrentClass(){
+      if(!isSecretary() || !activeClass) return;
+      const ok = prompt(`Typ ${activeClass} om deze klas te verwijderen.`);
+      if(ok !== activeClass) return;
+      await deleteDoc(classRef(activeClass));
+      allClasses = allClasses.filter(k => k !== activeClass);
+      allowedClasses = allowedClasses.filter(k => k !== activeClass);
+      data = null;
+      activeClass = allowedClasses[0] || "";
+      renderScope();
+      if(activeClass) await openClass(activeClass);
+      else $("content").innerHTML = `<div class="panel"><h2>Geen klassen</h2><p class="muted">Maak een klas aan om te starten.</p></div>`;
+    }
+
+    function normalize(){
+      data.leerlingen ||= [];
+      data.refter ||= {};
+      data.activiteiten ||= [];
+      data.aankopen ||= [];
+      data.vrijeDagen ||= [...standardFree];
+      data.messages ||= [];
+      data.processed ||= {refter:""};
+    }
+
+    function markDirty(){ setStatus("Wijzigingen..."); clearTimeout(saveTimer); saveTimer = setTimeout(saveNow, 600); }
+    async function saveNow(){ if(!data) return; data.bijgewerktOp = new Date().toISOString(); await setDoc(classRef(), data); setStatus("Bewaard", true); }
+
+    function render(){
+      if(!data) return;
+      if(!isSecretary() && ["administratie","werkboeken"].includes(tab)) tab = "klaslijst";
+      if(isSecretary() && tab === "klaslijst") tab = "administratie";
+      setActiveNav(tab);
+      renderMessages();
+      if(tab==="administratie") renderAdmin();
+      if(tab==="klaslijst") renderClassList();
+      if(tab==="refter") renderRefter();
+      if(tab==="activiteiten") renderActivities();
+      if(tab==="aankopen") renderPurchases();
+      if(tab==="werkboeken") renderWorkbooks();
+    }
+
+    function renderMessages(){
+      $("messages").innerHTML = (data.messages||[]).filter(m=>!m.archived).map(m=>`
+        <div class="notice"><div class="bar">
+          <strong>${esc(m.text)}</strong><span class="muted">tegen ${esc(m.due)}</span>
+          ${isSecretary()?`<span class="right muted">${m.done?"In orde":"Nog niet in orde"}</span><button class="small" onclick="archiveMsg('${m.id}')">Archiveren</button><button class="small pink" onclick="deleteMsg('${m.id}')">Verwijderen</button>`:
+          `<label class="right"><input type="checkbox" ${m.done?"checked":""} onchange="doneMsg('${m.id}',this.checked)"> in orde</label>`}
+        </div></div>`).join("");
+    }
+    window.doneMsg = (id,checked) => { const m=data.messages.find(x=>x.id===id); if(m)m.done=checked; markDirty(); renderMessages(); };
+    window.archiveMsg = id => { const m=data.messages.find(x=>x.id===id); if(m)m.archived=true; markDirty(); renderMessages(); };
+    window.deleteMsg = id => { data.messages=data.messages.filter(x=>x.id!==id); markDirty(); renderMessages(); };
+
+    function renderAdmin(){
+      $("content").innerHTML = `
+        <div class="panel">
+          <h2>Administratie <span class="muted" style="font-weight:400;font-size:16px">— ${esc(activeClass)}</span></h2>
+          <p class="muted">Klaslijsten, vrije dagen, meldingen en overgang naar volgend schooljaar.</p>
+          <div class="subnav no-print">
+            ${["klaslijsten","vrije dagen","meldingen","nieuw schooljaar"].map(p=>`<button class="${adminPanel===p?"active":""}" onclick="openAdmin('${p}')">${p[0].toUpperCase()+p.slice(1)}</button>`).join("")}
+          </div>
+          <div id="adminBody"></div>
+        </div>`;
+      if(adminPanel==="klaslijsten") renderAdminClasslists();
+      if(adminPanel==="vrije dagen") renderFreeDays(true);
+      if(adminPanel==="meldingen") renderMessageAdmin();
+      if(adminPanel==="nieuw schooljaar") renderNewYearHome();
+    }
+    window.openAdmin = p => { adminPanel = p; renderAdmin(); };
+
+            function renderAdminClasslists(){
+      $("adminBody").innerHTML = `${classListContent()}`;
+    }
+
+    function renderClassList(){ $("content").innerHTML = `<div class="panel"><h2>Klaslijst <span class="muted" style="font-weight:400">${esc(activeClass)}</span></h2>${classListContent()}</div>`; }
+
+            function classListContent(){
+      const canManageClasses = isSecretary();
+      const toolButtons = `
+        <div class="class-actions no-print">
+          <button class="${classListMode==="plakken"?"primary":""}" onclick="openClassListTool('plakken')">Klaslijst plakken</button>
+          <button class="${classListMode==="nieuw"?"primary":""}" onclick="openClassListTool('nieuw')">Nieuwe leerling</button>
+          ${canManageClasses ? `<button class="${classListMode==="beheer"?"primary":""}" onclick="openClassListTool('beheer')">Klassen beheren</button>` : ""}
+          <span class="hint">Kies alleen wat je nu nodig hebt.</span>
+        </div>`;
+
+      let toolPanel = "";
+      if(classListMode === "plakken"){
+        toolPanel = `<section class="class-tool-panel no-print">
+          <div class="bar"><div><h3>Klaslijst plakken</h3><p class="muted small">Gebruik dit vooral bij een nieuwe klas. Best: Achternaam, Voornaam.</p></div><button class="small white right" onclick="openClassListTool('')">Sluiten</button></div>
+          <textarea id="pasteNames" placeholder="Peeters, Noor&#10;Janssens, Lina"></textarea>
+          <div style="margin-top:12px"><button class="primary" onclick="importNames()">Klaslijst toevoegen</button></div>
+        </section>`;
+      }
+      if(classListMode === "nieuw"){
+        toolPanel = `<section class="class-tool-panel no-print">
+          <div class="bar"><div><h3>Nieuwe leerling</h3><p class="muted small">Voor een leerling die later instroomt of nog ontbrak.</p></div><button class="small white right" onclick="openClassListTool('')">Sluiten</button></div>
+          <div class="student-add-form">
+            <label>Achternaam<input id="newLast"></label>
+            <label>Voornaam<input id="newFirst"></label>
+            <label>Startdatum<input id="newStart" type="date" value="${startDate()}"></label>
+          </div>
+          <div class="student-add-actions">
+            <label class="check-label"><input id="newColleague" type="checkbox"> <span>kind van collega, gratis refter</span></label>
+            <button class="green" onclick="addStudent()">Leerling toevoegen</button>
+          </div>
+        </section>`;
+      }
+      if(classListMode === "beheer" && canManageClasses){
+        toolPanel = `<section class="class-tool-panel compact-warning no-print">
+          <div class="bar"><div><h3>Klassen beheren</h3><p class="muted small">Alleen nodig voor een extra klas, bijvoorbeeld 2B, of om een overbodige klas weg te halen.</p></div><button class="small white right" onclick="openClassListTool('')">Sluiten</button></div>
+          <div class="row">
+            <label>Nieuwe klas<input id="nieuweKlasInput" placeholder="bv. 2B" style="text-transform:uppercase"></label>
+            <button class="green" id="startClassBtn" type="button">Klas starten</button>
+            <button class="danger" id="deleteClassBtn" type="button">Huidige klas verwijderen</button>
+          </div>
+        </section>`;
+      }
+
+      return `<p class="muted">Namen kan je bewerken bij typfouten. Uitschrijven bewaart vorige gegevens.</p>
+        ${toolButtons}
+        ${toolPanel}
+        <div class="class-list-heading">
+          <h3>Leerlingen</h3>
+          <span class="muted small">${activeStudents().length} leerling(en)</span>
+        </div>
+        ${studentTable()}`;
+    }
+
+    window.openClassListTool = mode => {
+      classListMode = classListMode === mode ? "" : mode;
+      render();
+      setTimeout(() => {
+        const firstInput = document.querySelector(".class-tool-panel input, .class-tool-panel textarea");
+        if(firstInput) firstInput.focus();
+        if(classListMode === "beheer"){
+          $("startClassBtn")?.addEventListener("click", startClass);
+          $("deleteClassBtn")?.addEventListener("click", deleteCurrentClass);
+        }
+      }, 0);
+    };
+    function parseName(line){ line=line.trim(); if(!line)return null; if(line.includes(",")){ const [last,first]=line.split(","); return {last:last.trim(),first:first.trim()}; } const parts=line.split(/\s+/); return {first:parts.shift(),last:parts.join(" ")}; }
+    window.importNames = () => { $("pasteNames").value.split(/\r?\n/).map(parseName).filter(Boolean).forEach(n=>addStudentObj(n.last,n.first,false,startDate())); markDirty(); render(); };
+    window.addStudent = () => { addStudentObj($("newLast").value,$("newFirst").value,$("newColleague").checked,$("newStart").value||startDate()); markDirty(); render(); };
+    function addStudentObj(last,first,colleague,start){ if(!last||!first)return; if(data.leerlingen.some(s=>(s.last||"").toLowerCase()===last.toLowerCase()&&(s.first||"").toLowerCase()===first.toLowerCase()))return; data.leerlingen.push({id:uid(),last,first,colleague,start,end:endDate()}); }
+    window.updateStudent = (id,field,value) => { const s=data.leerlingen.find(x=>x.id===id); if(s){ s[field]=value; markDirty(); } };
+    window.toggleColleague = (id,checked) => { const s=data.leerlingen.find(x=>x.id===id); if(s)s.colleague=checked; markDirty(); };
+    window.leaveStudent = id => { const d=prompt("Uitschrijfdatum?",`${schooljaar.slice(0,4)}-09-30`); if(!d)return; const s=data.leerlingen.find(x=>x.id===id); if(s)s.end=d; markDirty(); render(); };
+    function studentTable(){
+      return `<div class="table-wrap"><table><thead><tr><th>Achternaam</th><th>Voornaam</th><th class="check-col">Kind collega</th><th>Start</th><th>Einde</th><th></th></tr></thead><tbody>${activeStudents().map(s=>`<tr class="${s.colleague?"colleague":""}">
+        <td><input class="name-input" value="${esc(s.last||"")}" onchange="updateStudent('${s.id}','last',this.value)"></td>
+        <td><input class="name-input" value="${esc(s.first||"")}" onchange="updateStudent('${s.id}','first',this.value)"></td>
+        <td class="check-col"><input type="checkbox" ${s.colleague?"checked":""} onchange="toggleColleague('${s.id}',this.checked)"></td>
+        <td>${s.start===startDate()?"standaard":`<input type="date" value="${esc(s.start||startDate())}" onchange="updateStudent('${s.id}','start',this.value)">`}</td>
+        <td>${s.end===endDate()?"standaard":`<input type="date" value="${esc(s.end||endDate())}" onchange="updateStudent('${s.id}','end',this.value)">`}</td>
+        <td><button class="small pink" onclick="leaveStudent('${s.id}')">uitschrijven</button></td>
+      </tr>`).join("")}</tbody></table></div>`;
+    }
+
+    function daysInMonth(month){ const [y,m]=month.split("-").map(Number); const last=new Date(y,m,0).getDate(); return Array.from({length:last},(_,i)=>{const d=`${month}-${String(i+1).padStart(2,"0")}`; return {date:d,day:i+1,week:new Date(d+"T12:00:00").getDay()};}); }
+    function isFree(date){ const w=new Date(date+"T12:00:00").getDay(); return w===0||w===3||w===6||(data.vrijeDagen||[]).some(v=>date>=v.start&&date<=v.end); }
+    function processedInMonth(month){ const value=data.processed?.refter||""; return value && value.slice(0,7)===month ? value : ""; }
+    window.setProcessedRefter = value => { data.processed.refter=value||""; markDirty(); renderRefter(); };
+
+    function renderRefter(){
+      const month=$("refterMonth")?.value || `${schooljaar.slice(0,4)}-09`;
+      const days=daysInMonth(month), students=activeStudents(`${month}-15`), m=data.refter[month] ||= {}, processedUntil=processedInMonth(month);
+      $("content").innerHTML = `<div class="panel"><div class="bar"><div><h2>Refter <span class="muted" style="font-weight:400">${esc(activeClass)}</span></h2><p class="muted">Leerkracht vinkt enkel afwezigheden aan.</p></div><label class="right no-print" style="max-width:180px">Maand<input id="refterMonth" type="month" value="${month}" onchange="renderRefter()"></label>${isSecretary()?`<label class="no-print" style="max-width:190px">Verwerkt tot<input type="date" value="${processedUntil}" min="${month}-01" max="${month}-${String(days.length).padStart(2,"0")}" onchange="setProcessedRefter(this.value)"></label>`:""}</div><div class="table-wrap"><table><thead><tr><th>Leerling</th>${days.map(d=>{const locked=processedUntil&&d.date<=processedUntil&&!isFree(d.date);return`<th class="day ${isFree(d.date)?"grey":""} ${locked?"locked-head":""}">${d.day}${locked&&!isSecretary()?'<br><span class="teacher-lock">&#128274;</span>':locked?'<br><span class="tag done">verwerkt</span>':""}</th>`}).join("")}</tr></thead><tbody>${students.map(s=>`<tr class="${s.colleague?"colleague":""}"><td><strong>${esc(name(s))}</strong>${s.colleague?'<span class="tag green">collega</span>':''}</td>${days.map(d=>{const locked=processedUntil&&d.date<=processedUntil;if(isFree(d.date))return`<td class="day grey">-</td>`;return`<td class="day ${locked?"locked":""}"><input type="checkbox" ${m[s.id]?.[d.date]?"checked":""} ${locked&&!isSecretary()?"disabled":""} onchange="toggleRefter('${month}','${s.id}','${d.date}',this.checked)">${locked&&!isSecretary()?'<br><span class="teacher-lock">&#128274;</span>':locked?'<br><span class="tag done">verwerkt</span>':''}</td>`}).join("")}</tr>`).join("")}</tbody></table></div></div>`;
+    }
+    window.toggleRefter = (month,sid,date,checked) => { const m=data.refter[month] ||= {}; m[sid] ||= {}; m[sid][date]=checked; markDirty(); };
+
+    function renderActivities(){
+      $("content").innerHTML = `<div class="panel"><h2>Activiteiten <span class="muted" style="font-weight:400">${esc(activeClass)}</span></h2><p class="muted">${isSecretary()?"Secretariaat kijkt na: groen is aanwezig, rood is afwezig.":"Voeg activiteiten toe en vink afwezigen aan."}</p>${!isSecretary()?`<div class="row no-print"><label>Activiteit<input id="actName"></label><label>Datum<input id="actDate" type="date" value="${schooljaar.slice(0,4)}-09-20"></label><label>Prijs<input id="actPrice" type="number" value="0"></label><button class="primary" onclick="addActivity()">Activiteit toevoegen</button></div>`:""}${activitiesTable()}</div>`;
+    }
+    function activitiesTable(){ const list=data.activiteiten, students=activeStudents(); return list.length ? `<div class="table-wrap" style="margin-top:14px"><table><thead><tr><th>Leerling</th>${list.map(a=>`<th>${esc(a.name)}<br><span class="muted">${a.date} - &euro;${Number(a.price||0).toFixed(2)}</span>${a.processed?'<br><span class="tag done">verwerkt</span>':''}${isSecretary()?`<br><button class="small" onclick="toggleActProcessed('${a.id}')">${a.processed?'heropen':'verwerk'}</button>`:""}</th>`).join("")}</tr></thead><tbody>${students.map(s=>`<tr><td><strong>${esc(name(s))}</strong></td>${list.map(a=>{const absent=!!a.absent?.[s.id]; if(isSecretary())return`<td class="activity-col ${a.processed?"locked":""}">${absent?'<span class="status-dot absent">&#10006;</span>':'<span class="status-dot present">&#10003;</span>'}</td>`; return`<td class="activity-col ${a.processed?"locked":""}"><input class="absence-check" type="checkbox" ${absent?"checked":""} ${a.processed?"disabled":""} onchange="toggleActAbsent('${a.id}','${s.id}',this.checked)">${a.processed?'<span class="teacher-lock"> &#128274;</span>':''}</td>`}).join("")}</tr>`).join("")}</tbody></table></div>` : `<div class="notice">Nog geen activiteiten ingevoerd.</div>`; }
+    window.addActivity = () => { if(isSecretary())return; if(!$("actName").value.trim())return; data.activiteiten.push({id:uid(),name:$("actName").value.trim(),date:$("actDate").value,price:Number($("actPrice").value||0),absent:{},processed:false}); markDirty(); renderActivities(); };
+    window.toggleActProcessed = id => { if(!isSecretary())return; const a=data.activiteiten.find(x=>x.id===id); if(a)a.processed=!a.processed; markDirty(); renderActivities(); };
+    window.toggleActAbsent = (aid,sid,checked) => { const a=data.activiteiten.find(x=>x.id===aid); a.absent ||= {}; a.absent[sid]=checked; markDirty(); };
+
+    function renderPurchases(){
+      const students=activeStudents();
+      $("content").innerHTML = `<div class="panel"><h2>Aankopen <span class="muted" style="font-weight:400">${esc(activeClass)}</span></h2><p class="muted">${isSecretary()?"Secretariaat kijkt na en vinkt verwerkt aan.":"Voeg aankopen toe wanneer een kind iets koopt."}</p>${!isSecretary()?`<div class="row no-print"><label>Leerling<select id="buyStudent">${students.map(s=>`<option value="${s.id}">${esc(name(s))}</option>`).join("")}</select></label><label>Aankoop<select id="buyType" onchange="buyPrice.value=this.value==='turnshirt'?8:1"><option value="badmuts">Badmuts</option><option value="turnshirt">Turn t-shirt</option><option value="ander">Andere</option></select></label><label>Prijs<input id="buyPrice" type="number" value="1"></label><label>Datum<input id="buyDate" type="date" value="${schooljaar.slice(0,4)}-09-20"></label><button class="primary" onclick="addPurchase()">Aankoop toevoegen</button></div>`:""}${purchaseTable()}</div>`;
+    }
+    window.addPurchase = () => { if(isSecretary())return; data.aankopen.push({id:uid(),studentId:$("buyStudent").value,type:$("buyType").value,price:Number($("buyPrice").value||0),date:$("buyDate").value,processed:false}); markDirty(); renderPurchases(); };
+    function purchaseTable(){ const students=Object.fromEntries(data.leerlingen.map(s=>[s.id,name(s)])); return data.aankopen.length ? `<div class="table-wrap" style="margin-top:14px"><table><thead><tr><th>Leerling</th><th>Aankoop</th><th>Datum</th><th>Prijs</th><th>Verwerkt</th></tr></thead><tbody>${data.aankopen.map(p=>`<tr class="${p.processed?"locked":""}"><td>${esc(students[p.studentId]||"")}</td><td>${esc(p.type)}</td><td>${esc(p.date)}</td><td>&euro;${Number(p.price||0).toFixed(2)}</td><td>${isSecretary()?`<input type="checkbox" ${p.processed?"checked":""} onchange="togglePurchase('${p.id}',this.checked)">`:p.processed?"ja":"nee"}</td></tr>`).join("")}</tbody></table></div>` : `<div class="notice">Nog geen aankopen ingevoerd.</div>`; }
+    window.togglePurchase = (id,checked) => { if(!isSecretary())return; const p=data.aankopen.find(x=>x.id===id); if(p)p.processed=checked; markDirty(); renderPurchases(); };
+
+    function renderMessageAdmin(){
+      $("adminBody").innerHTML = `<h3>Melding sturen</h3><p class="muted">Standaard staan alle klassen aangevinkt.</p><div class="row"><label>Tekst<input id="msgText" placeholder="Refterlijst invullen"></label><label>Tegen<input id="msgDue" type="date" value="${schooljaar.slice(0,4)}-09-25"></label></div><div class="class-picks" style="display:flex;gap:8px;flex-wrap:wrap;margin:12px 0">${allClasses.map(k=>`<label><input class="msgClass" type="checkbox" value="${esc(k)}" checked> ${esc(k)}</label>`).join("")}</div><button class="primary" onclick="addMessage()">Melding toevoegen</button>`;
+    }
+    window.addMessage = async () => {
+      if(!isSecretary() || !$("msgText").value.trim()) return;
+      const selected = [...document.querySelectorAll(".msgClass:checked")].map(x=>x.value);
+      for(const klas of selected){
+        const ref = classRef(klas);
+        const snap = await getDoc(ref);
+        const item = snap.exists() ? snap.data() : emptyClassDoc(klas);
+        item.messages ||= [];
+        item.messages.push({id:uid(),text:$("msgText").value.trim(),due:$("msgDue").value,done:false,archived:false});
+        await setDoc(ref,item);
+      }
+      if(selected.includes(activeClass)){ data.messages.push({id:uid(),text:$("msgText").value.trim(),due:$("msgDue").value,done:false,archived:false}); renderMessages(); }
+      alert("Melding toegevoegd.");
+      renderAdmin();
+    };
+
+    function renderFreeDays(inAdmin=false){
+      const target = inAdmin ? "adminBody" : "content";
+      $(target).innerHTML = `<h3>Vrije dagen</h3><p class="muted">Weekends en woensdagen zijn automatisch grijs.</p><div class="table-wrap"><table><thead><tr><th>Naam</th><th>Van</th><th>Tot</th></tr></thead><tbody>${data.vrijeDagen.map(d=>`<tr><td>${esc(d.naam)}</td><td>${d.start}</td><td>${d.end}</td></tr>`).join("")}</tbody></table></div><div class="row no-print" style="margin-top:14px"><label>Naam<input id="freeName" placeholder="Pedagogische studiedag"></label><label>Van<input id="freeStart" type="date"></label><label>Tot<input id="freeEnd" type="date"></label><button class="primary" onclick="addFreeDay()">Vrije dag toevoegen</button></div>`;
+    }
+    window.addFreeDay = () => { if(!$("freeName").value||!$("freeStart").value)return; data.vrijeDagen.push({naam:$("freeName").value,start:$("freeStart").value,end:$("freeEnd").value||$("freeStart").value}); markDirty(); renderAdmin(); };
+
+    function renderNewYearHome(){
+      $("adminBody").innerHTML = `
+        <h3>Nieuw schooljaar</h3>
+        <p class="muted">Bereid eerst de klaslijsten voor. Daarna bevestig je welke leerkracht volgend schooljaar bij welke klas hoort.</p>
+        <div class="grid" style="margin-top:14px">
+          <button class="panel" style="text-align:left;box-shadow:none" onclick="newYearMode='klaslijsten'; renderNewYear()">
+            <h3>Klaslijsten voorbereiden</h3>
+            <p class="muted">Leerlingen doorschuiven, zittenblijvers aanduiden en controleren.</p>
+          </button>
+          <button class="panel" style="text-align:left;box-shadow:none" onclick="newYearMode='leerkrachten'; renderLeerkrachtenVolgendJaarOnly()">
+            <h3>Klasleerkrachten voorbereiden</h3>
+            <p class="muted">Bevestigen dat leerkrachten in dezelfde klas blijven, of wijzigingen invullen.</p>
+          </button>
+        </div>`;
+    }
+    function terugNaarNieuwSchooljaarHome(){
+      newYearMode = "";
+      renderNewYearHome();
+    }
+    window.terugNaarNieuwSchooljaarHome = terugNaarNieuwSchooljaarHome;
+    function volgendeKlasVoor(klas){ const map={"1A":"2A","2A":"3A","3A":"4A","4A":"5A","5A":"6A","6A":"uit school"}; return map[klas]||""; }
+    async function laadLeerlingenVoorKlas(klas){
+      if(klas===activeClass&&data?.leerlingen?.length) return [...data.leerlingen].sort((a,b)=>name(a).localeCompare(name(b),"nl"));
+      const snap=await getDoc(classRef(klas));
+      if(!snap.exists()) return null;
+      return [...(snap.data().leerlingen||[])].sort((a,b)=>name(a).localeCompare(name(b),"nl"));
+    }
+    async function renderNewYear(){
+      const bron=$("newYearBronKlas")?.value||activeClass||allClasses[0]||"";
+      const voorstel=volgendeKlasVoor(bron);
+      const doel=$("newYearDoelKlas")?.value||(voorstel&&voorstel!=="uit school"?voorstel:"");
+      const leerlingen=bron?await laadLeerlingenVoorKlas(bron):[];
+      const bestaatNiet=leerlingen===null;
+      const lijst=leerlingen||[];
+      $("adminBody").innerHTML = `
+        <button class="white no-print" onclick="terugNaarNieuwSchooljaarHome()">Terug naar keuzes</button><h3>Klaslijsten voorbereiden</h3>
+        <p class="muted">Kies eerst de klas waarvan je de leerlingen wil overhevelen.</p>
+        <div class="notice">Standaard schuift iedereen door naar de doelklas. Wie je aanvinkt als zittenblijver blijft in ${esc(bron||"de bronklas")}.</div>
+        <div class="step-grid no-print">
+          <div class="step-card"><h3>Stap 1: bronklas</h3><label>Welke klas?<select id="newYearBronKlas">${allClasses.map(k=>`<option value="${esc(k)}" ${k===bron?"selected":""}>${esc(k)}</option>`).join("")}</select></label></div>
+          <div class="step-card"><h3>Stap 2: doelklas</h3><label>Overhevelen naar<select id="newYearDoelKlas">${["", ...allClasses,"uit school"].map(k=>`<option value="${esc(k)}" ${k===doel?"selected":""}>${k?esc(k):"Kies doelklas"}</option>`).join("")}</select></label></div>
+          <div class="action-row no-print"><button class="primary" onclick="renderNewYear()">Leerlingen tonen</button><button class="green" onclick="maakNieuwSchooljaarOverzicht()">Controlelijst maken</button></div>
+        </div>
+        <div id="newYearResult" style="margin:14px 0"></div>
+        ${bestaatNiet?`<div class="notice">Deze klas is nog niet gestart.</div>`:""}
+        <div class="table-wrap" style="margin-top:14px">
+          <table><thead><tr><th>Leerling uit ${esc(bron)}</th><th class="check-col">Zittenblijver</th><th>Gaat naar</th></tr></thead>
+          <tbody>${lijst.map(s=>`<tr><td><strong>${esc(name(s))}</strong></td><td class="check-col"><input type="checkbox" class="blijverCheck" data-id="${esc(s.id)}" data-name="${esc(name(s))}"></td><td>${esc(doel||"-")}</td></tr>`).join()||`<tr><td colspan="3">${bestaatNiet?"Klas nog niet gestart.":"Geen leerlingen."}</td></tr>`}</tbody>
+          </table>
+        </div>`;
+    }
+    window.renderNewYear = renderNewYear;
+    window.maakNieuwSchooljaarOverzicht = function(){
+      const bron=$("newYearBronKlas").value;
+      const doel=$("newYearDoelKlas").value;
+      if(!doel) return alert("Kies eerst een doelklas.");
+      const blijven=[], doorgaan=[];
+      document.querySelectorAll(".blijverCheck").forEach(ch => { if(ch.checked) blijven.push(ch.dataset.name); else doorgaan.push(ch.dataset.name); });
+      $("newYearResult").innerHTML = `<section class="notice"><h3>Controle-overzicht</h3><p><strong>${esc(bron)}</strong> → <strong>${esc(doel)}</strong></p><div class="two"><div><h3>Naar ${esc(doel)}</h3>${doorgaan.length?`<ul>${doorgaan.map(n=>`<li>${esc(n)}</li>`).join("")}</ul>`:`<p class="muted">Geen leerlingen.</p>`}</div><div><h3>Blijft in ${esc(bron)}</h3>${blijven.length?`<ul>${blijven.map(n=>`<li>${esc(n)}</li>`).join("")}</ul>`:`<p class="muted">Geen zittenblijvers.</p>`}</div></div><p class="muted">Controleer dit goed.</p><button class="danger" onclick="doorschuivingBewarenNieuwSchooljaar()">Doorschuiving bewaren</button></section>`;
+      $("newYearResult").scrollIntoView({behavior:"smooth", block:"start"});
+    };
+    function volgendSchooljaarVan(huidig){ const start=Number(String(huidig||schooljaar).slice(0,4))+1; return `${start}-${start+1}`; }
+    function studentVoorNieuwSchooljaar(s,doelSchooljaar){ return {id:uid(),first:s.first||s.firstName||"",last:s.last||s.lastName||"",colleague:!!s.colleague,start:`${doelSchooljaar.slice(0,4)}-09-01`,end:`${doelSchooljaar.slice(5,9)}-07-30`}; }
+    async function voegLeerlingenToeAanNieuwSchooljaar(doelSchooljaar,klas,leerlingen){
+      if(!klas||klas==="uit school"||!leerlingen.length) return;
+      const ref=doc(db,"schoolbeheer",doelSchooljaar,"klassen",klas);
+      const snap=await getDoc(ref);
+      const item=snap.exists()?snap.data():emptyClassDoc(klas);
+      item.schooljaar=doelSchooljaar; item.klas=klas;
+      item.leerlingen||=[]; item.refter||={}; item.activiteiten||=[]; item.aankopen||=[]; item.vrijeDagen||=[...standardFree]; item.messages||=[]; item.processed||={refter:""};
+      leerlingen.forEach(s=>{ const nieuw=studentVoorNieuwSchooljaar(s,doelSchooljaar); if(!item.leerlingen.some(b=>name(b).toLowerCase()===name(nieuw).toLowerCase())) item.leerlingen.push(nieuw); });
+      item.leerlingen.sort((a,b)=>name(a).localeCompare(name(b),"nl"));
+      item.bijgewerktOp=new Date().toISOString();
+      await setDoc(ref,item);
+    }
+    window.doorschuivingBewarenNieuwSchooljaar = async function(){
+      if(!isSecretary()) return alert("Alleen secretariaat kan doorschuiving bewaren.");
+      const bron=$("newYearBronKlas").value, doel=$("newYearDoelKlas").value;
+      if(!bron||!doel) return alert("Kies eerst bron- en doelklas.");
+      const bevestig=prompt(`Dit maakt/werkt klaslijsten bij in ${volgendSchooljaarVan(schooljaar)}.\n\nTyp DOORSCHUIVEN om te bevestigen.`);
+      if(bevestig!=="DOORSCHUIVEN") return;
+      const bronLeerlingen=await laadLeerlingenVoorKlas(bron);
+      if(!bronLeerlingen||!bronLeerlingen.length) return alert("Geen leerlingen gevonden.");
+      const zittenblijverIds=new Set([...document.querySelectorAll(".blijverCheck:checked")].map(ch=>ch.dataset.id));
+      const blijven=bronLeerlingen.filter(s=>zittenblijverIds.has(s.id));
+      const doorgaan=bronLeerlingen.filter(s=>!zittenblijverIds.has(s.id));
+      const nieuwJaar=volgendSchooljaarVan(schooljaar);
+      await voegLeerlingenToeAanNieuwSchooljaar(nieuwJaar,bron,blijven);
+      await voegLeerlingenToeAanNieuwSchooljaar(nieuwJaar,doel,doorgaan);
+      alert(`Doorschuiving bewaard in ${nieuwJaar}.\n${doorgaan.length} naar ${doel}, ${blijven.length} zittenblijver(s) in ${bron}.`);
+    };
+
+
+    function volgendSchooljaarVoorLeerkrachten(){
+      const start = Number(String(schooljaar).slice(0,4)) + 1;
+      return `${start}-${start + 1}`;
+    }
+    function lijstNaarTekst(value){
+      return Array.isArray(value) ? value.join(", ") : (value || "");
+    }
+    function tekstNaarLijst(value){
+      return String(value || "").split(",").map(x => x.trim()).filter(Boolean);
+    }
+    async function leerkrachtKoppelingVoor(jaar, klas){
+      const ref = doc(db, "klasleerkrachten", `${jaar}_${klas}`);
+      const snap = await getDoc(ref);
+      return snap.exists() ? snap.data() : null;
+    }
+    async function renderLeerkrachtenVolgendJaar(){
+      const box = $("leerkrachtenVolgendJaar");
+      if(!box || !isSecretary()) return;
+      const nieuwJaar = volgendSchooljaarVoorLeerkrachten();
+      box.innerHTML = `<section class="notice"><h3>Leerkrachten volgend schooljaar</h3><p class="muted">Even laden...</p></section>`;
+      const rijen = [];
+      for(const klas of allClasses){
+        const huidig = await leerkrachtKoppelingVoor(schooljaar, klas);
+        rijen.push({ klas, huidig });
+      }
+      box.innerHTML = `<section class="panel" style="box-shadow:none;margin-top:16px">
+        <h3>Leerkrachten volgend schooljaar</h3>
+        <p class="muted">Standaard blijft elke leerkracht in dezelfde klas. Pas alleen de klas aan waar volgend schooljaar iemand anders staat.</p>
+        <section class="notice no-print">
+          <h3>Nieuwe klas met leerkracht toevoegen</h3>
+          <p class="muted">Gebruik dit bijvoorbeeld als er ooit een 2B komt. Het e-mailadres is genoeg; de leerkracht registreert of logt later in met datzelfde e-mailadres.</p>
+          <div class="row">
+            <label>Klas<input id="nieuweLeerkrachtKlas" placeholder="bv. 2B" style="text-transform:uppercase"></label>
+            <label>Naam leerkracht<input id="nieuweLeerkrachtNaam" placeholder="juf Sara"></label>
+            <label>E-mailadres<input id="nieuweLeerkrachtEmail" placeholder="naam@bsdelinde.net"></label>
+            <button class="green" onclick="voegNieuweKlasMetLeerkrachtToe()">Klas en leerkracht toevoegen</button>
+          </div>
+        </section>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Klas</th><th>Nu</th><th>Volgend schooljaar ${esc(nieuwJaar)}</th></tr></thead>
+            <tbody>${rijen.map(({klas,huidig}) => `
+              <tr>
+                <td><strong>${esc(klas)}</strong></td>
+                <td>${huidig ? `${esc(lijstNaarTekst(huidig.leerkracht_namen))}<br><span class="muted">${esc(lijstNaarTekst(huidig.leerkracht_emails))}</span>` : `<span class="muted">Geen koppeling gevonden</span>`}</td>
+                <td>
+                  <label>Namen<input data-klas="${esc(klas)}" data-field="namen" value="${esc(lijstNaarTekst(huidig?.leerkracht_namen))}" placeholder="juf Isabel"></label>
+                  <label>E-mails<input data-klas="${esc(klas)}" data-field="emails" value="${esc(lijstNaarTekst(huidig?.leerkracht_emails))}" placeholder="naam@bsdelinde.net"></label>
+                </td>
+              </tr>`).join("")}</tbody>
+          </table>
+        </div>
+        <div class="action-row no-print">
+          <button class="primary" onclick="bevestigZelfdeLeerkrachten()">Alle leerkrachten blijven in dezelfde klas</button>
+          <button class="green" onclick="bewaarLeerkrachtenVolgendSchooljaar()">Leerkrachten bewaren voor nieuw schooljaar</button>
+        </div>
+      </section>`;
+    }
+    window.voegNieuweKlasMetLeerkrachtToe = async function(){
+      if(!isSecretary()) return alert("Alleen secretariaat kan een nieuwe klas koppelen.");
+      const nieuwJaar = volgendSchooljaarVoorLeerkrachten();
+      const klas = ($("nieuweLeerkrachtKlas")?.value || "").trim().toUpperCase();
+      const naam = ($("nieuweLeerkrachtNaam")?.value || "").trim();
+      const email = ($("nieuweLeerkrachtEmail")?.value || "").trim().toLowerCase();
+      if(!klas) return alert("Vul eerst de klas in, bijvoorbeeld 2B.");
+      if(!email || !email.includes("@")) return alert("Vul een geldig e-mailadres in.");
+      const bevestig = confirm(`Nieuwe klas ${klas} maken voor ${nieuwJaar} en koppelen aan ${email}?`);
+      if(!bevestig) return;
+
+      await setDoc(doc(db, "klasleerkrachten", `${nieuwJaar}_${klas}`), {
+        actief: true,
+        schooljaar: nieuwJaar,
+        klas,
+        leerjaar: klas,
+        hoofdleerkracht_email: email,
+        leerkracht_emails: [email],
+        leerkracht_namen: naam ? [naam] : [],
+        leerkracht_uids: []
+      });
+
+      const klasRef = doc(db, "schoolbeheer", nieuwJaar, "klassen", klas);
+      const klasSnap = await getDoc(klasRef);
+      if(!klasSnap.exists()){
+        const vorigSchooljaar = schooljaar;
+        schooljaar = nieuwJaar;
+        const nieuwDoc = emptyClassDoc(klas);
+        schooljaar = vorigSchooljaar;
+        await setDoc(klasRef, nieuwDoc);
+      }
+
+      if(!allClasses.includes(klas)){
+        allClasses = [...allClasses, klas].sort((a,b)=>a.localeCompare(b,"nl",{numeric:true}));
+      }
+      alert(`${klas} is klaargezet voor ${nieuwJaar} met ${email}.`);
+      await renderLeerkrachtenVolgendJaarOnly();
+    };
+    window.bevestigZelfdeLeerkrachten = function(){
+      alert("Alles staat al ingevuld zoals dit schooljaar. Klik nu op 'Leerkrachten bewaren voor nieuw schooljaar' om dit echt in Firebase te bewaren.");
+    };
+    window.bewaarLeerkrachtenVolgendSchooljaar = async function(){
+      if(!isSecretary()) return alert("Alleen secretariaat kan dit bewaren.");
+      const nieuwJaar = volgendSchooljaarVoorLeerkrachten();
+      const bevestig = prompt(`Dit maakt de klas-leerkrachtkoppelingen voor ${nieuwJaar}.\n\nTyp LEERKRACHTEN om te bevestigen.`);
+      if(bevestig !== "LEERKRACHTEN") return;
+      let aantal = 0;
+      for(const klas of allClasses){
+        const namen = tekstNaarLijst(document.querySelector(`input[data-klas="${CSS.escape(klas)}"][data-field="namen"]`)?.value);
+        const emails = tekstNaarLijst(document.querySelector(`input[data-klas="${CSS.escape(klas)}"][data-field="emails"]`)?.value).map(x => x.toLowerCase());
+        const huidigeKoppeling = await leerkrachtKoppelingVoor(schooljaar, klas);
+        const uids = Array.isArray(huidigeKoppeling?.leerkracht_uids) ? huidigeKoppeling.leerkracht_uids : [];
+        if(!emails.length) continue;
+        await setDoc(doc(db, "klasleerkrachten", `${nieuwJaar}_${klas}`), {
+          actief: true,
+          schooljaar: nieuwJaar,
+          klas,
+          leerjaar: klas,
+          hoofdleerkracht_email: emails[0] || "",
+          leerkracht_emails: emails,
+          leerkracht_namen: namen,
+          leerkracht_uids: uids
+        });
+        aantal++;
+      }
+      alert(`${aantal} klas-leerkrachtkoppeling(en) bewaard voor ${nieuwJaar}.`);
+    };
+    async function renderLeerkrachtenVolgendJaarOnly(){
+      $("adminBody").innerHTML = `<button class="white no-print" onclick="terugNaarNieuwSchooljaarHome()">Terug naar keuzes</button><div id="leerkrachtenVolgendJaar" style="margin-top:14px"></div>`;
+      await renderLeerkrachtenVolgendJaar();
+    }
+    window.renderLeerkrachtenVolgendJaarOnly = renderLeerkrachtenVolgendJaarOnly;
+    function renderWorkbooks(){ $("content").innerHTML = `<div class="panel"><h2>Werkboeken</h2><p class="muted">Later uit te werken.</p></div>`; }
+
+    // Sidebar navigatie
+    document.querySelectorAll(".sb-item").forEach(el => {
+      el.addEventListener("click", () => {
+        tab = el.dataset.tab;
+        render();
+      });
+    });
+
+    $("schooljaarInput").addEventListener("change", async () => {
+      schooljaar = $("schooljaarInput").value.trim() || schooljaar;
+      await loadAllowedClasses();
+      activeClass = allowedClasses[0] || "";
+      renderScope();
+      if(activeClass) await openClass(activeClass);
+    });
+
+    $("logoutBtn").addEventListener("click", () => signOut(auth).then(() => location.href="index.html"));
+
+    onAuthStateChanged(auth, async authUser => {
+      if(!authUser){ location.href="index.html"; return; }
+      user = authUser;
+      try{
+        await loadRole();
+        await loadAllowedClasses();
+        if(!isSecretary() && !allowedClasses.length){
+          $("content").innerHTML = `<div class="panel"><h2>Geen klas gevonden</h2><p class="muted">Je account is nog niet gekoppeld in klasleerkrachten.</p></div>`;
+          setStatus("Geen klas");
+          return;
+        }
+        activeClass = allowedClasses[0] || DEFAULT_CLASSES[0];
+        renderScope();
+        await openClass(activeClass);
+      }catch(err){
+        console.error(err);
+        $("content").innerHTML = `<div class="panel"><h2>Laden mislukt</h2><p class="muted">${esc(err.message)}</p></div>`;
+        setStatus("Fout");
+      }
+    });
+  </script>
+</body>
+</html>
+
+
+
+
+
+
