@@ -56,8 +56,10 @@ async function toonSchooloverzichtKnopAlsNodig(user) {
   const overgangKnop = document.getElementById('overgangKeuzeKnop');
   const schoolKnop = document.getElementById('schooloverzichtKnop');
   const schoolbeheerKnop = document.getElementById('schoolbeheerKeuzeKnop');
+  const bestellingenKnop = document.getElementById('bestellingenKeuzeKnop');
   if (schoolKnop) schoolKnop.style.display = 'none';
   if (schoolbeheerKnop) schoolbeheerKnop.style.display = 'none';
+  if (bestellingenKnop) bestellingenKnop.style.display = 'none';
   if (!user) return;
 
   function vulTegel(tegel, href, icoon, titel, tekst) {
@@ -90,6 +92,9 @@ async function toonSchooloverzichtKnopAlsNodig(user) {
 
     if (schoolbeheerKnop && (isSecretariaat || heeftKlasbeheer)) {
       schoolbeheerKnop.style.display = '';
+    }
+    if (bestellingenKnop && (isSecretariaat || heeftKlasbeheer)) {
+      bestellingenKnop.style.display = '';
     }
 
     // Secretariaat ziet enkel schoolbeheer, geen huistaken of overgang
@@ -134,6 +139,7 @@ async function toonSchooloverzichtKnopAlsNodig(user) {
     console.error('Rol controleren mislukt:', err);
     if (schoolKnop) schoolKnop.style.display = 'none';
     if (schoolbeheerKnop) schoolbeheerKnop.style.display = 'none';
+  if (bestellingenKnop) bestellingenKnop.style.display = 'none';
   }
 }
 
@@ -231,8 +237,10 @@ window.uitloggenVanIndex = function () {
       // Verberg schoolknoppen
       const schoolKnop = document.getElementById('schooloverzichtKnop');
       const schoolbeheerKnop = document.getElementById('schoolbeheerKeuzeKnop');
+  const bestellingenKnop = document.getElementById('bestellingenKeuzeKnop');
       if (schoolKnop) schoolKnop.style.display = 'none';
       if (schoolbeheerKnop) schoolbeheerKnop.style.display = 'none';
+  if (bestellingenKnop) bestellingenKnop.style.display = 'none';
       // Verwijder de body-klasse zodat #auth niet meer verborgen is via CSS
       document.body.classList.remove('start-ingelogd');
       // Toon het loginformulier terug
