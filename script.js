@@ -37,6 +37,7 @@ onAuthStateChanged(auth, (user) => {
     if (kaart) {
       if (emailSpan) emailSpan.textContent = user.email || '';
       kaart.style.display = '';
+      document.body.classList.add('start-ingelogd');
       // Ook de inlog-kaart minder prominent maken (kleine opacity)
       const authBox = document.getElementById('auth');
       if (authBox) authBox.style.display = 'none';
@@ -61,6 +62,18 @@ async function toonSchooloverzichtKnopAlsNodig(user) {
   if (schoolKnop) schoolKnop.style.display = 'none';
   if (!user) return;
 
+  function vulTegel(tegel, href, icoon, titel, tekst) {
+    if (!tegel) return;
+    tegel.href = href;
+    tegel.target = '_blank';
+    tegel.rel = 'noopener';
+    tegel.innerHTML =
+      '<span class="portaal-tegel-icoon">' + icoon + '</span>' +
+      '<span class="portaal-title">' + titel + '</span>' +
+      '<span class="portaal-desc">' + tekst + '</span>' +
+      '<span class="portaal-open">Openen</span>';
+  }
+
   try {
     const rolRef = doc(db, "schoolrollen", user.uid);
     const rolSnap = await getDoc(rolRef);
@@ -68,23 +81,35 @@ async function toonSchooloverzichtKnopAlsNodig(user) {
     const isSchoolBreed = ['directie', 'zorgcoordinator', 'zorgleerkracht'].includes(rol);
 
     if (isSchoolBreed) {
-      if (huistakenKnop) {
-        huistakenKnop.href = 'schooloverzicht.html?mode=huistaken';
-        huistakenKnop.textContent = '\uD83D\uDCDA Huistaken per klas';
-      }
-      if (overgangKnop) {
-        overgangKnop.href = 'schooloverzicht.html?mode=overgang';
-        overgangKnop.textContent = '\uD83D\uDCC4 Overgang per klas';
-      }
+      vulTegel(
+        huistakenKnop,
+        'schooloverzicht.html?mode=huistaken',
+        '&#128218;',
+        'Huistaken per klas',
+        'Kies eerst een klas en open daarna de huistakenopvolging van die klas.'
+      );
+      vulTegel(
+        overgangKnop,
+        'schooloverzicht.html?mode=overgang',
+        '&#128196;',
+        'Overgang per klas',
+        'Kies eerst een klas en bekijk of vul de overgangsbespreking aan.'
+      );
     } else {
-      if (huistakenKnop) {
-        huistakenKnop.href = 'dashboard.html';
-        huistakenKnop.textContent = '\uD83D\uDCE6 Huistaken opvolgen';
-      }
-      if (overgangKnop) {
-        overgangKnop.href = 'overgangsbespreking.html';
-        overgangKnop.textContent = '\uD83D\uDCC4 Overgangsbespreking';
-      }
+      vulTegel(
+        huistakenKnop,
+        'dashboard.html',
+        '&#128230;',
+        'Huistaken opvolgen',
+        'Open de opvolging van je klas, contractbord en huistaken per leerling.'
+      );
+      vulTegel(
+        overgangKnop,
+        'overgangsbespreking.html',
+        '&#128196;',
+        'Overgangsbespreking',
+        'Werk leerlingenfiches bij en bereid de overdracht naar de volgende klas voor.'
+      );
     }
   } catch (err) {
     console.error('Rol controleren mislukt:', err);
@@ -197,6 +222,8 @@ window.uitloggenVanIndex = function () {
       alert('Uitloggen lukte niet: ' + err.message);
     });
 };
+
+
 
 
 
