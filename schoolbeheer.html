@@ -648,6 +648,67 @@
         padding:1px!important;
       }
     }
+    /* codex-refter-print-use-page-width */
+    @page{
+      size:A4 landscape;
+      margin:4mm;
+    }
+    @media print{
+      .refter-print-wrap{
+        width:100%!important;
+        max-width:100%!important;
+      }
+      .refter-print-table{
+        table-layout:fixed!important;
+        width:auto!important;
+        max-width:100%!important;
+        font-size:9px!important;
+      }
+      .refter-print-table col.refter-name-col{
+        width:48mm!important;
+      }
+      .refter-print-table col.refter-day-col{
+        width:7.3mm!important;
+      }
+      .refter-print-table th:first-child,
+      .refter-print-table td:first-child{
+        width:48mm!important;
+        min-width:48mm!important;
+        max-width:48mm!important;
+        font-size:9px!important;
+        line-height:1.15!important;
+        padding:2px 3px!important;
+        white-space:normal!important;
+        overflow:visible!important;
+      }
+      .refter-print-table th.day,
+      .refter-print-table td.day{
+        width:7.3mm!important;
+        min-width:7.3mm!important;
+        max-width:7.3mm!important;
+        font-size:8.5px!important;
+        line-height:1.1!important;
+        padding:1px!important;
+      }
+      .refter-print-table th,
+      .refter-print-table td{
+        height:5.7mm!important;
+        padding-top:1.5px!important;
+        padding-bottom:1.5px!important;
+      }
+      .refter-print-table .print-absence{
+        font-size:8.8px!important;
+      }
+      h2{
+        font-size:18px!important;
+        margin-bottom:3px!important;
+      }
+      p,.muted{
+        font-size:10px!important;
+        margin-bottom:6px!important;
+      }
+    }
+
 
 
 
@@ -1383,6 +1444,7 @@
   </script>
 </body>
 </html>
+
 
 
 
