@@ -278,6 +278,32 @@
       .class-actions .hint{width:100%;margin-left:0}
       .student-add-actions button{margin-left:0;width:100%}
     }
+    /* codex-help-print-tools */
+    .screen-tools{
+      display:flex;
+      gap:8px;
+      align-items:center;
+      flex-wrap:wrap;
+      margin-left:auto;
+    }
+    .help-panel{
+      display:none;
+      margin:12px 0;
+      padding:14px 16px;
+      background:#eef7ff;
+      border:1px solid #b8d7f2;
+      border-radius:14px;
+      color:var(--ink);
+    }
+    .help-panel.open{display:block}
+    .help-panel h3{margin-bottom:6px}
+    .help-panel ul{margin:8px 0 0 18px;padding:0}
+    .help-panel li{margin:4px 0}
+    .screen-tools button{border-radius:12px;padding:7px 11px;font-size:13px}
+    @media print{
+      .screen-tools,.help-panel,.no-print{display:none!important}
+    }
+
 
 
 
@@ -296,6 +322,338 @@
       .table-wrap{overflow:visible;border:0}
       table{min-width:0;font-size:12px}
     }
+    /* codex-print-pdf-table-fix */
+    @page{
+      size: A4 landscape;
+      margin: 8mm;
+    }
+    @media print{
+      html,body{
+        background:#fff!important;
+        color:#000!important;
+        font-size:10px!important;
+      }
+      #topbar,#sidebar,.no-print,button,.screen-tools,.help-panel{
+        display:none!important;
+      }
+      #shell,#main{
+        display:block!important;
+        overflow:visible!important;
+        padding:0!important;
+        width:100%!important;
+      }
+      .panel{
+        border:0!important;
+        box-shadow:none!important;
+        padding:0!important;
+        margin:0!important;
+      }
+      .bar{
+        display:block!important;
+        margin-bottom:6px!important;
+      }
+      h1,h2{
+        font-size:16px!important;
+        margin:0 0 4px!important;
+      }
+      h3{
+        font-size:12px!important;
+        margin:0 0 4px!important;
+      }
+      p,.muted{
+        font-size:10px!important;
+        color:#222!important;
+        margin:0 0 5px!important;
+      }
+      .table-wrap{
+        overflow:visible!important;
+        border:0!important;
+        border-radius:0!important;
+        width:100%!important;
+      }
+      table{
+        width:100%!important;
+        min-width:0!important;
+        table-layout:fixed!important;
+        border-collapse:collapse!important;
+        font-size:9px!important;
+      }
+      th,td{
+        border:1px solid #555!important;
+        padding:3px 4px!important;
+        color:#000!important;
+        background:#fff!important;
+        vertical-align:middle!important;
+      }
+      th{
+        background:#e6e6e6!important;
+        font-weight:700!important;
+      }
+      td.day,th.day{
+        min-width:0!important;
+        width:auto!important;
+        text-align:center!important;
+        padding:2px!important;
+      }
+      .grey{
+        background:#ddd!important;
+        color:#555!important;
+      }
+      .locked,.locked-head{
+        background:#d8f0df!important;
+      }
+      .colleague{
+        background:#fff2b8!important;
+      }
+      .tag,.teacher-lock{
+        display:none!important;
+      }
+      input[type="checkbox"]{
+        appearance:none!important;
+        -webkit-appearance:none!important;
+        width:9px!important;
+        height:9px!important;
+        border:1px solid #333!important;
+        display:inline-block!important;
+        margin:0 auto!important;
+        background:#fff!important;
+      }
+      input[type="checkbox"]:checked{
+        background:#111!important;
+        box-shadow:inset 0 0 0 2px #fff!important;
+      }
+    }
+    /* codex-refter-print-readable */
+    .print-absence{display:none}
+    @media print{
+      .refter-print-table{
+        table-layout:fixed!important;
+        width:100%!important;
+        font-size:7.5px!important;
+      }
+      .refter-print-table th,
+      .refter-print-table td{
+        border:1px solid #333!important;
+        padding:1.5px 2px!important;
+        line-height:1.05!important;
+        height:14px!important;
+      }
+      .refter-print-table th:first-child,
+      .refter-print-table td:first-child{
+        width:38mm!important;
+        min-width:38mm!important;
+        max-width:38mm!important;
+        white-space:normal!important;
+        overflow:visible!important;
+        word-break:normal!important;
+        overflow-wrap:normal!important;
+        font-size:7.2px!important;
+        text-align:left!important;
+      }
+      .refter-print-table th.day,
+      .refter-print-table td.day{
+        width:7mm!important;
+        min-width:7mm!important;
+        max-width:7mm!important;
+        text-align:center!important;
+        padding:1px!important;
+      }
+      .refter-print-table input[type="checkbox"]{
+        display:none!important;
+      }
+      .refter-print-table .print-absence{
+        display:inline!important;
+        font-weight:800!important;
+        font-size:8px!important;
+      }
+      .refter-print-table .print-absence.empty{
+        color:transparent!important;
+      }
+      .refter-print-table .grey{
+        background:#e1e1e1!important;
+      }
+      .refter-print-table .colleague td:first-child{
+        background:#fff2b8!important;
+      }
+      .refter-print-table .tag,
+      .refter-print-table .teacher-lock{
+        display:none!important;
+      }
+      .refter-print-table strong{
+        font-weight:700!important;
+      }
+    }
+    /* codex-refter-print-grey-colleague */
+    @media print{
+      .refter-print-table th.day.grey,
+      .refter-print-table td.day.grey{
+        background:#cfcfcf!important;
+        color:#444!important;
+      }
+      .refter-print-table tr.colleague td{
+        background:#fff1a8!important;
+      }
+      .refter-print-table tr.colleague td.day.grey{
+        background:#d7d0ad!important;
+      }
+      .refter-print-table tr.colleague td.locked{
+        background:#d7ead0!important;
+      }
+      .refter-print-table tr.colleague td:first-child{
+        font-weight:800!important;
+      }
+    }
+    /* codex-refter-print-force-colors-31-days */
+    @media print{
+      *{
+        -webkit-print-color-adjust:exact!important;
+        print-color-adjust:exact!important;
+      }
+      .refter-print-table{
+        table-layout:fixed!important;
+        width:100%!important;
+        max-width:100%!important;
+      }
+      .refter-print-table th:first-child,
+      .refter-print-table td:first-child{
+        width:31mm!important;
+        min-width:31mm!important;
+        max-width:31mm!important;
+        font-size:6.8px!important;
+        line-height:1.05!important;
+      }
+      .refter-print-table th.day,
+      .refter-print-table td.day{
+        width:6mm!important;
+        min-width:6mm!important;
+        max-width:6mm!important;
+        font-size:7px!important;
+      }
+      .refter-print-table th.day.grey,
+      .refter-print-table td.day.grey{
+        background-color:#bdbdbd!important;
+        background:#bdbdbd!important;
+        color:#333!important;
+      }
+      .refter-print-table tr.colleague td{
+        background-color:#fff0a6!important;
+        background:#fff0a6!important;
+      }
+      .refter-print-table tr.colleague td.day.grey{
+        background-color:#c7c0a0!important;
+        background:#c7c0a0!important;
+      }
+      .refter-print-table tr.colleague td.locked{
+        background-color:#cce8cf!important;
+        background:#cce8cf!important;
+      }
+      .refter-print-table td.day.locked:not(.grey){
+        background-color:#d7f0df!important;
+        background:#d7f0df!important;
+      }
+      .refter-print-table th.locked-head:not(.grey){
+        background-color:#bcebdc!important;
+        background:#bcebdc!important;
+      }
+    }
+    /* codex-refter-print-31-days-final */
+    @page{
+      size:A4 landscape;
+      margin:5mm;
+    }
+    @media print{
+      .refter-print-table{
+        table-layout:fixed!important;
+        width:100%!important;
+        max-width:100%!important;
+        font-size:6.5px!important;
+      }
+      .refter-print-table th,
+      .refter-print-table td{
+        padding:1px!important;
+        line-height:1!important;
+      }
+      .refter-print-table th:first-child,
+      .refter-print-table td:first-child{
+        width:26mm!important;
+        min-width:26mm!important;
+        max-width:26mm!important;
+        font-size:6.2px!important;
+        line-height:1!important;
+        white-space:normal!important;
+      }
+      .refter-print-table th.day,
+      .refter-print-table td.day{
+        width:5mm!important;
+        min-width:5mm!important;
+        max-width:5mm!important;
+        font-size:6.2px!important;
+        padding:0!important;
+      }
+      .refter-print-table .print-absence{
+        font-size:6.5px!important;
+      }
+      .refter-print-table h2,
+      .refter-print-table p{
+        margin:0!important;
+      }
+    }
+    /* codex-refter-print-real-column-widths */
+    @page{
+      size:A4 landscape;
+      margin:4mm;
+    }
+    @media print{
+      .refter-print-wrap{
+        width:100%!important;
+        max-width:100%!important;
+        overflow:visible!important;
+      }
+      .refter-print-table{
+        width:auto!important;
+        max-width:100%!important;
+        table-layout:fixed!important;
+        border-collapse:collapse!important;
+      }
+      .refter-print-table col.refter-name-col{
+        width:28mm!important;
+      }
+      .refter-print-table col.refter-day-col{
+        width:5.2mm!important;
+      }
+      .refter-print-table th:first-child,
+      .refter-print-table td:first-child{
+        width:28mm!important;
+        min-width:28mm!important;
+        max-width:28mm!important;
+        white-space:normal!important;
+        overflow:hidden!important;
+        text-overflow:clip!important;
+        word-break:normal!important;
+        overflow-wrap:normal!important;
+        font-size:6.1px!important;
+        line-height:1!important;
+      }
+      .refter-print-table th.day,
+      .refter-print-table td.day{
+        width:5.2mm!important;
+        min-width:5.2mm!important;
+        max-width:5.2mm!important;
+        font-size:6px!important;
+        line-height:1!important;
+        padding:0!important;
+      }
+      .refter-print-table th,
+      .refter-print-table td{
+        padding:1px!important;
+      }
+    }
+
+
+
+
+
+
   </style>
 </head>
 <body>
@@ -401,13 +759,49 @@
       {naam:"Pinkstermaandag",start:"2027-05-17",end:"2027-05-17"}
     ];
 
+    const helpTexts = {
+      administratie: `<h3>Uitleg administratie</h3><ul><li><strong>Klaslijsten</strong>: leerlingen toevoegen, namen verbeteren, kind van collega aanduiden en uitschrijven.</li><li><strong>Vrije dagen</strong>: extra vrije dagen of studiedagen ingeven. Weekends en woensdagen zijn automatisch grijs.</li><li><strong>Meldingen</strong>: secretariaat stuurt taken naar klassen. Leerkrachten vinken aan wanneer het klaar is.</li><li><strong>Nieuw schooljaar</strong>: leerlingen doorschuiven, zittenblijvers aanduiden en klasleerkrachten klaarzetten.</li></ul>`,
+      klaslijst: `<h3>Uitleg klaslijst</h3><ul><li>Gebruik <strong>Klaslijst plakken</strong> vooral bij een volledig nieuwe klas.</li><li>Gebruik <strong>Nieuwe leerling</strong> voor een leerling die later start.</li><li><strong>Standaard</strong> betekent: startdatum 1/09 van het schooljaar en einddatum 30/06 van dat schooljaar.</li><li>Namen kan je rechtstreeks in de tabel verbeteren.</li><li>Uitschrijven bewaart oudere gegevens voor lijsten en afrekeningen.</li></ul>`,
+      refter: `<h3>Uitleg refter</h3><ul><li>Leerkrachten vinken enkel kinderen aan die afwezig zijn.</li><li>Grijze dagen tellen niet mee.</li><li>Kinderen van collega's krijgen een zachte kleur en betalen geen refter.</li><li>Als secretariaat <strong>Verwerkt tot</strong> invult, worden die dagen vergrendeld bij de leerkracht.</li></ul>`,
+      activiteiten: `<h3>Uitleg activiteiten</h3><ul><li>Leerkrachten voegen de activiteit toe met datum en prijs.</li><li>Daarna vinken ze alleen afwezige leerlingen aan.</li><li>Secretariaat ziet groen voor aanwezig en rood voor afwezig.</li><li>Wanneer secretariaat verwerkt aanvinkt, kan de leerkracht die activiteit niet meer wijzigen.</li></ul>`,
+      aankopen: `<h3>Uitleg aankopen</h3><ul><li>Leerkrachten voegen aankopen toe zoals badmuts of turnshirt.</li><li>De prijs kan bij het toevoegen nog aangepast worden.</li><li>Secretariaat kan aankopen nakijken en als verwerkt aanduiden.</li></ul>`,
+      werkboeken: `<h3>Uitleg werkboeken</h3><ul><li>Dit onderdeel werken we later verder uit.</li><li>Hier komt het overzicht voor werkboeken en materiaalbestellingen.</li></ul>`
+    };
+    function screenTools(key){
+      return `<div class="screen-tools no-print"><button class="white small" onclick="toggleHelp('${key}')">? Uitleg</button><button class="white small" onclick="window.print()">PDF / afdrukken</button></div>`;
+    }
+    function helpPanel(key){
+      return `<section id="help-${key}" class="help-panel">${helpTexts[key] || ""}</section>`;
+    }
+    window.toggleHelp = key => {
+      const box = $("help-" + key);
+      if(box) box.classList.toggle("open");
+    };
+    function schoolMonths(){
+      const start = Number(String(schooljaar).slice(0,4));
+      const end = Number(String(schooljaar).slice(5,9));
+      return [`${start}-09`,`${start}-10`,`${start}-11`,`${start}-12`,`${end}-01`,`${end}-02`,`${end}-03`,`${end}-04`,`${end}-05`,`${end}-06`];
+    }
+    function laatsteOpenRefterDag(month){
+      return [...daysInMonth(month)].reverse().find(d => !isFree(d.date))?.date || "";
+    }
+    function refterMaandVolledigVerwerkt(month){
+      const laatste = laatsteOpenRefterDag(month);
+      const verwerkt = processedInMonth(month);
+      return !!laatste && !!verwerkt && verwerkt >= laatste;
+    }
+    function standaardRefterMaand(){
+      const gekozen = $("refterMonth")?.value;
+      if(gekozen) return gekozen;
+      return schoolMonths().find(m => !refterMaandVolledigVerwerkt(m)) || schoolMonths().at(-1);
+    }
     function setStatus(text, saved=false){
       $("status").textContent = text;
       $("status").classList.toggle("saved", saved);
     }
     function isSecretary(){ return role === "secretariaat"; }
     function startDate(){ return `${schooljaar.slice(0,4)}-09-01`; }
-    function endDate(){ return `${schooljaar.slice(5,9)}-07-30`; }
+    function endDate(){ return `${schooljaar.slice(5,9)}-06-30`; }
     function emptyClassDoc(klas){ return { schooljaar, klas, leerlingen:[], refter:{}, activiteiten:[], aankopen:[], vrijeDagen:[...standardFree], messages:[], processed:{refter:""}, bijgewerktOp:new Date().toISOString() }; }
     function classRef(klas=activeClass){ return doc(db, "schoolbeheer", schooljaar, "klassen", klas); }
     function name(s){ const last = s.last || s.lastName || ""; const first = s.first || s.firstName || ""; return `${last}, ${first}`.replace(/^, /,"").replace(/, $/,""); }
@@ -629,7 +1023,7 @@
         </section>`;
       }
 
-      return `<p class="muted">Namen kan je bewerken bij typfouten. Uitschrijven bewaart vorige gegevens.</p>
+      return `<div class="bar"><p class="muted">Namen kan je bewerken bij typfouten. Uitschrijven bewaart vorige gegevens.</p>${screenTools("klaslijst")}</div>${helpPanel("klaslijst")}
         ${toolButtons}
         ${toolPanel}
         <div class="class-list-heading">
@@ -675,14 +1069,15 @@
     window.setProcessedRefter = value => { data.processed.refter=value||""; markDirty(); renderRefter(); };
 
     function renderRefter(){
-      const month=$("refterMonth")?.value || `${schooljaar.slice(0,4)}-09`;
+      const month=standaardRefterMaand();
       const days=daysInMonth(month), students=activeStudents(`${month}-15`), m=data.refter[month] ||= {}, processedUntil=processedInMonth(month);
-      $("content").innerHTML = `<div class="panel"><div class="bar"><div><h2>Refter <span class="muted" style="font-weight:400">${esc(activeClass)}</span></h2><p class="muted">Leerkracht vinkt enkel afwezigheden aan.</p></div><label class="right no-print" style="max-width:180px">Maand<input id="refterMonth" type="month" value="${month}" onchange="renderRefter()"></label>${isSecretary()?`<label class="no-print" style="max-width:190px">Verwerkt tot<input type="date" value="${processedUntil}" min="${month}-01" max="${month}-${String(days.length).padStart(2,"0")}" onchange="setProcessedRefter(this.value)"></label>`:""}</div><div class="table-wrap"><table><thead><tr><th>Leerling</th>${days.map(d=>{const locked=processedUntil&&d.date<=processedUntil&&!isFree(d.date);return`<th class="day ${isFree(d.date)?"grey":""} ${locked?"locked-head":""}">${d.day}${locked&&!isSecretary()?'<br><span class="teacher-lock">&#128274;</span>':locked?'<br><span class="tag done">verwerkt</span>':""}</th>`}).join("")}</tr></thead><tbody>${students.map(s=>`<tr class="${s.colleague?"colleague":""}"><td><strong>${esc(name(s))}</strong>${s.colleague?'<span class="tag green">collega</span>':''}</td>${days.map(d=>{const locked=processedUntil&&d.date<=processedUntil;if(isFree(d.date))return`<td class="day grey">-</td>`;return`<td class="day ${locked?"locked":""}"><input type="checkbox" ${m[s.id]?.[d.date]?"checked":""} ${locked&&!isSecretary()?"disabled":""} onchange="toggleRefter('${month}','${s.id}','${d.date}',this.checked)">${locked&&!isSecretary()?'<br><span class="teacher-lock">&#128274;</span>':locked?'<br><span class="tag done">verwerkt</span>':''}</td>`}).join("")}</tr>`).join("")}</tbody></table></div></div>`;
+      const volledig = refterMaandVolledigVerwerkt(month);
+      $("content").innerHTML = `<div class="panel"><div class="bar"><div><h2>Refter <span class="muted" style="font-weight:400">${esc(activeClass)}</span></h2><p class="muted">Leerkracht vinkt enkel afwezigheden aan.${volledig ? " Deze maand is volledig verwerkt." : ""}</p></div><label class="right no-print" style="max-width:180px">Maand<input id="refterMonth" type="month" value="${month}" onchange="renderRefter()"></label>${isSecretary()?`<label class="no-print" style="max-width:190px">Verwerkt tot<input type="date" value="${processedUntil}" min="${month}-01" max="${month}-${String(days.length).padStart(2,"0")}" onchange="setProcessedRefter(this.value)"></label>`:""}${screenTools("refter")}</div>${helpPanel("refter")}<div class="table-wrap refter-print-wrap"><table class="refter-print-table"><colgroup><col class="refter-name-col">${days.map(()=>`<col class="refter-day-col">`).join("")}</colgroup><thead><tr><th>Leerling</th>${days.map(d=>{const locked=processedUntil&&d.date<=processedUntil&&!isFree(d.date);return`<th class="day ${isFree(d.date)?"grey":""} ${locked?"locked-head":""}">${d.day}${locked&&!isSecretary()?'<br><span class="teacher-lock">&#128274;</span>':locked?'<br><span class="tag done">verwerkt</span>':""}</th>`}).join("")}</tr></thead><tbody>${students.map(s=>`<tr class="${s.colleague?"colleague":""}"><td><strong>${esc(name(s))}</strong>${s.colleague?'<span class="tag green">collega</span>':''}</td>${days.map(d=>{const locked=processedUntil&&d.date<=processedUntil;if(isFree(d.date))return`<td class="day grey">-</td>`;return`<td class="day ${locked?"locked":""}"><input type="checkbox" ${m[s.id]?.[d.date]?"checked":""} ${locked&&!isSecretary()?"disabled":""} onchange="toggleRefter('${month}','${s.id}','${d.date}',this.checked)">${locked&&!isSecretary()?'<br><span class="teacher-lock">&#128274;</span>':locked?'<br><span class="tag done">verwerkt</span>':''}</td>`}).join("")}</tr>`).join("")}</tbody></table></div></div>`;
     }
     window.toggleRefter = (month,sid,date,checked) => { const m=data.refter[month] ||= {}; m[sid] ||= {}; m[sid][date]=checked; markDirty(); };
 
     function renderActivities(){
-      $("content").innerHTML = `<div class="panel"><h2>Activiteiten <span class="muted" style="font-weight:400">${esc(activeClass)}</span></h2><p class="muted">${isSecretary()?"Secretariaat kijkt na: groen is aanwezig, rood is afwezig.":"Voeg activiteiten toe en vink afwezigen aan."}</p>${!isSecretary()?`<div class="row no-print"><label>Activiteit<input id="actName"></label><label>Datum<input id="actDate" type="date" value="${schooljaar.slice(0,4)}-09-20"></label><label>Prijs<input id="actPrice" type="number" value="0"></label><button class="primary" onclick="addActivity()">Activiteit toevoegen</button></div>`:""}${activitiesTable()}</div>`;
+      $("content").innerHTML = `<div class="panel"><div class="bar"><div><h2>Activiteiten <span class="muted" style="font-weight:400">${esc(activeClass)}</span></h2><p class="muted">${isSecretary()?"Secretariaat kijkt na: groen is aanwezig, rood is afwezig.":"Voeg activiteiten toe en vink afwezigen aan."}</p></div>${screenTools("activiteiten")}</div>${helpPanel("activiteiten")}${!isSecretary()?`<div class="row no-print"><label>Activiteit<input id="actName"></label><label>Datum<input id="actDate" type="date" value="${schooljaar.slice(0,4)}-09-20"></label><label>Prijs<input id="actPrice" type="number" value="0"></label><button class="primary" onclick="addActivity()">Activiteit toevoegen</button></div>`:""}${activitiesTable()}</div>`;
     }
     function activitiesTable(){ const list=data.activiteiten, students=activeStudents(); return list.length ? `<div class="table-wrap" style="margin-top:14px"><table><thead><tr><th>Leerling</th>${list.map(a=>`<th>${esc(a.name)}<br><span class="muted">${a.date} - &euro;${Number(a.price||0).toFixed(2)}</span>${a.processed?'<br><span class="tag done">verwerkt</span>':''}${isSecretary()?`<br><button class="small" onclick="toggleActProcessed('${a.id}')">${a.processed?'heropen':'verwerk'}</button>`:""}</th>`).join("")}</tr></thead><tbody>${students.map(s=>`<tr><td><strong>${esc(name(s))}</strong></td>${list.map(a=>{const absent=!!a.absent?.[s.id]; if(isSecretary())return`<td class="activity-col ${a.processed?"locked":""}">${absent?'<span class="status-dot absent">&#10006;</span>':'<span class="status-dot present">&#10003;</span>'}</td>`; return`<td class="activity-col ${a.processed?"locked":""}"><input class="absence-check" type="checkbox" ${absent?"checked":""} ${a.processed?"disabled":""} onchange="toggleActAbsent('${a.id}','${s.id}',this.checked)">${a.processed?'<span class="teacher-lock"> &#128274;</span>':''}</td>`}).join("")}</tr>`).join("")}</tbody></table></div>` : `<div class="notice">Nog geen activiteiten ingevoerd.</div>`; }
     window.addActivity = () => { if(isSecretary())return; if(!$("actName").value.trim())return; data.activiteiten.push({id:uid(),name:$("actName").value.trim(),date:$("actDate").value,price:Number($("actPrice").value||0),absent:{},processed:false}); markDirty(); renderActivities(); };
@@ -691,7 +1086,7 @@
 
     function renderPurchases(){
       const students=activeStudents();
-      $("content").innerHTML = `<div class="panel"><h2>Aankopen <span class="muted" style="font-weight:400">${esc(activeClass)}</span></h2><p class="muted">${isSecretary()?"Secretariaat kijkt na en vinkt verwerkt aan.":"Voeg aankopen toe wanneer een kind iets koopt."}</p>${!isSecretary()?`<div class="row no-print"><label>Leerling<select id="buyStudent">${students.map(s=>`<option value="${s.id}">${esc(name(s))}</option>`).join("")}</select></label><label>Aankoop<select id="buyType" onchange="buyPrice.value=this.value==='turnshirt'?8:1"><option value="badmuts">Badmuts</option><option value="turnshirt">Turn t-shirt</option><option value="ander">Andere</option></select></label><label>Prijs<input id="buyPrice" type="number" value="1"></label><label>Datum<input id="buyDate" type="date" value="${schooljaar.slice(0,4)}-09-20"></label><button class="primary" onclick="addPurchase()">Aankoop toevoegen</button></div>`:""}${purchaseTable()}</div>`;
+      $("content").innerHTML = `<div class="panel"><div class="bar"><div><h2>Aankopen <span class="muted" style="font-weight:400">${esc(activeClass)}</span></h2><p class="muted">${isSecretary()?"Secretariaat kijkt na en vinkt verwerkt aan.":"Voeg aankopen toe wanneer een kind iets koopt."}</p></div>${screenTools("aankopen")}</div>${helpPanel("aankopen")}${!isSecretary()?`<div class="row no-print"><label>Leerling<select id="buyStudent">${students.map(s=>`<option value="${s.id}">${esc(name(s))}</option>`).join("")}</select></label><label>Aankoop<select id="buyType" onchange="buyPrice.value=this.value==='turnshirt'?8:1"><option value="badmuts">Badmuts</option><option value="turnshirt">Turn t-shirt</option><option value="ander">Andere</option></select></label><label>Prijs<input id="buyPrice" type="number" value="1"></label><label>Datum<input id="buyDate" type="date" value="${schooljaar.slice(0,4)}-09-20"></label><button class="primary" onclick="addPurchase()">Aankoop toevoegen</button></div>`:""}${purchaseTable()}</div>`;
     }
     window.addPurchase = () => { if(isSecretary())return; data.aankopen.push({id:uid(),studentId:$("buyStudent").value,type:$("buyType").value,price:Number($("buyPrice").value||0),date:$("buyDate").value,processed:false}); markDirty(); renderPurchases(); };
     function purchaseTable(){ const students=Object.fromEntries(data.leerlingen.map(s=>[s.id,name(s)])); return data.aankopen.length ? `<div class="table-wrap" style="margin-top:14px"><table><thead><tr><th>Leerling</th><th>Aankoop</th><th>Datum</th><th>Prijs</th><th>Verwerkt</th></tr></thead><tbody>${data.aankopen.map(p=>`<tr class="${p.processed?"locked":""}"><td>${esc(students[p.studentId]||"")}</td><td>${esc(p.type)}</td><td>${esc(p.date)}</td><td>&euro;${Number(p.price||0).toFixed(2)}</td><td>${isSecretary()?`<input type="checkbox" ${p.processed?"checked":""} onchange="togglePurchase('${p.id}',this.checked)">`:p.processed?"ja":"nee"}</td></tr>`).join("")}</tbody></table></div>` : `<div class="notice">Nog geen aankopen ingevoerd.</div>`; }
@@ -784,7 +1179,7 @@
       $("newYearResult").scrollIntoView({behavior:"smooth", block:"start"});
     };
     function volgendSchooljaarVan(huidig){ const start=Number(String(huidig||schooljaar).slice(0,4))+1; return `${start}-${start+1}`; }
-    function studentVoorNieuwSchooljaar(s,doelSchooljaar){ return {id:uid(),first:s.first||s.firstName||"",last:s.last||s.lastName||"",colleague:!!s.colleague,start:`${doelSchooljaar.slice(0,4)}-09-01`,end:`${doelSchooljaar.slice(5,9)}-07-30`}; }
+    function studentVoorNieuwSchooljaar(s,doelSchooljaar){ return {id:uid(),first:s.first||s.firstName||"",last:s.last||s.lastName||"",colleague:!!s.colleague,start:`${doelSchooljaar.slice(0,4)}-09-01`,end:`${doelSchooljaar.slice(5,9)}-06-30`}; }
     async function voegLeerlingenToeAanNieuwSchooljaar(doelSchooljaar,klas,leerlingen){
       if(!klas||klas==="uit school"||!leerlingen.length) return;
       const ref=doc(db,"schoolbeheer",doelSchooljaar,"klassen",klas);
@@ -945,7 +1340,7 @@
       await renderLeerkrachtenVolgendJaar();
     }
     window.renderLeerkrachtenVolgendJaarOnly = renderLeerkrachtenVolgendJaarOnly;
-    function renderWorkbooks(){ $("content").innerHTML = `<div class="panel"><h2>Werkboeken</h2><p class="muted">Later uit te werken.</p></div>`; }
+    function renderWorkbooks(){ $("content").innerHTML = `<div class="panel"><div class="bar"><div><h2>Werkboeken</h2><p class="muted">Later uit te werken.</p></div>${screenTools("werkboeken")}</div>${helpPanel("werkboeken")}</div>`; }
 
     // Sidebar navigatie
     document.querySelectorAll(".sb-item").forEach(el => {
@@ -988,6 +1383,15 @@
   </script>
 </body>
 </html>
+
+
+
+
+
+
+
+
+
 
 
 
