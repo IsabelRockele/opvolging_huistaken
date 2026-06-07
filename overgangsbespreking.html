@@ -914,6 +914,19 @@
                 <label style="display:flex;align-items:center;gap:5px;font-weight:normal;font-size:13px;background:var(--soft);padding:4px 10px;border-radius:8px;cursor:pointer;margin:0"><input type="checkbox" name="repeatedYear" value="6de leerjaar" style="width:auto;margin:0"> 6de</label>
               </div>
             </div>
+            <div class="grid grid-2" style="gap:10px;margin-top:12px">
+              <div class="checkbox-row">
+                <input type="checkbox" id="m_magOpFoto">
+                <label for="m_magOpFoto" style="margin:0">Mag op foto</label>
+              </div>
+              <div class="checkbox-row" style="flex-direction:column;align-items:flex-start;gap:6px">
+                <span style="font-weight:700;font-size:13px">Gaat naar huiswerkklas</span>
+                <div style="display:flex;gap:6px">
+                  <label style="display:flex;align-items:center;gap:5px;font-weight:normal;font-size:13px;background:var(--soft);padding:4px 12px;border-radius:8px;cursor:pointer;margin:0;border:1px solid var(--border)"><input type="checkbox" name="huiswerkklasDag" id="m_huiswerkklas_di" value="dinsdag" style="width:auto;margin:0"> Dinsdag</label>
+                  <label style="display:flex;align-items:center;gap:5px;font-weight:normal;font-size:13px;background:var(--soft);padding:4px 12px;border-radius:8px;cursor:pointer;margin:0;border:1px solid var(--border)"><input type="checkbox" name="huiswerkklasDag" id="m_huiswerkklas_do" value="donderdag" style="width:auto;margin:0"> Donderdag</label>
+                </div>
+              </div>
+            </div>
           </div>
 
           <!-- TAB: Therapieën -->
@@ -1374,6 +1387,8 @@ function updateSectionBadges(s) {
   if (s.stayingThisYear) loopbaanCount++;
   if (s.repeated) loopbaanCount++;
   if (s.newcomer) loopbaanCount++;
+  if (s.magOpFoto) loopbaanCount++;
+  if (Array.isArray(s.huiswerkklas) ? s.huiswerkklas.length > 0 : !!s.huiswerkklas) loopbaanCount++;
   badges.loopbaan = loopbaanCount;
 
   // Therapie
@@ -1426,6 +1441,7 @@ function openModal(studentId = null) {
   if (isEdit) {
     const s = state.students.find(x => x.id === studentId);
     if (!s) return;
+    $('modalTitle').textContent = `Leerling bewerken — ${(s.firstName || '')} ${(s.lastName || '')}`.trim();
     // Basis
     $('m_firstName').value = s.firstName || '';
     $('m_lastName').value = s.lastName || '';
@@ -1465,6 +1481,10 @@ function openModal(studentId = null) {
     document.querySelectorAll('input[name="repeatedYear"]').forEach(cb => { cb.checked = ryVals.includes(cb.value); });
     $('m_newcomer').checked = !!s.newcomer;
     $('m_stayingThisYear').checked = !!s.stayingThisYear;
+    $('m_magOpFoto').checked = !!s.magOpFoto;
+    document.querySelectorAll('input[name="huiswerkklasDag"]').forEach(cb => {
+      cb.checked = Array.isArray(s.huiswerkklas) && s.huiswerkklas.includes(cb.value);
+    });
     // Therapie
     $('m_therapy_logo').checked = !!(s.therapies && s.therapies.logo);
     $('m_therapy_logo_adres').value = (s.therapies && s.therapies.logo_adres) || '';
@@ -1503,10 +1523,11 @@ function openModal(studentId = null) {
      'm_readingNote','m_spellingNote','m_mathNote','m_writingNote',
      'm_focusNote','m_behaviorNote','m_careNote','m_allergies','m_medicalNote','m_socialNote'
     ].forEach(id => $(id).value = '');
-    ['m_repeated','m_newcomer','m_stayingThisYear','m_therapy_logo','m_therapy_kine',
+    ['m_repeated','m_newcomer','m_stayingThisYear','m_magOpFoto','m_therapy_logo','m_therapy_kine',
      'm_therapy_gon','m_therapy_clb','m_therapy_psy'
     ].forEach(id => $(id).checked = false);
     document.querySelectorAll('input[name="repeatedYear"]').forEach(cb => { cb.checked = false; });
+    document.querySelectorAll('input[name="huiswerkklasDag"]').forEach(cb => { cb.checked = false; });
     $('m_gender').value = '-'; $('m_level').value = '3';
     $('m_reading').value = 'basis'; $('m_spelling').value = 'basis';
     $('m_math').value = 'basis'; $('m_writing').value = 'basis';
@@ -1562,6 +1583,8 @@ function saveStudent() {
     repeatedYear: $('m_repeated').checked ? [...document.querySelectorAll('input[name="repeatedYear"]:checked')].map(cb => cb.value) : [],
     newcomer: $('m_newcomer').checked,
     stayingThisYear: $('m_stayingThisYear').checked,
+    magOpFoto: $('m_magOpFoto').checked,
+    huiswerkklas: [...document.querySelectorAll('input[name="huiswerkklasDag"]:checked')].map(cb => cb.value),
     // Therapie
     therapies: {
       logo: $('m_therapy_logo').checked,
@@ -3048,6 +3071,25 @@ function renderTransferOnline() {
       + (stayers.length ? subsectie('Blijven zitten — niet overdragen', stayers) : '')
   });
 
+  // Foto
+  const nietOpFoto = s.filter(x => !x.magOpFoto);
+  const fotoCount = nietOpFoto.length;
+  const fotoInhoud = (() => {
+    if (!fotoCount) return `<div class="transfer-subsectie"><p class="transfer-empty">Alle leerlingen mogen op foto.</p></div>`;
+    return `<div class="transfer-subsectie"><h4>🚫 Mag NIET op foto</h4>` +
+      [...nietOpFoto].sort((a,b) => (a.lastName||'').localeCompare(b.lastName||'','nl')).map(st =>
+        `<div class="transfer-leerling-row"><span class="transfer-leerling-naam transfer-leerling-klik" onclick="openFicheModal('${st.id}')" style="color:#991b1b;font-weight:800">${esc(st.name)}</span></div>`
+      ).join('') + '</div>';
+  })();
+  secties.push({ id:'foto', emoji:'📷', titel:'Foto', kleur:'#fee2e2', count: fotoCount, inhoud: fotoInhoud });
+
+  // Huiswerkklas
+  const hwDi = s.filter(x => Array.isArray(x.huiswerkklas) && x.huiswerkklas.includes('dinsdag'));
+  const hwDo = s.filter(x => Array.isArray(x.huiswerkklas) && x.huiswerkklas.includes('donderdag'));
+  const hwCount = s.filter(x => Array.isArray(x.huiswerkklas) && x.huiswerkklas.length > 0).length;
+  const hwInhoud = subsectie('Dinsdag', hwDi) + subsectie('Donderdag', hwDo);
+  secties.push({ id:'huiswerkklas', emoji:'📚', titel:'Huiswerkklas', kleur:'#ede9fe', count: hwCount, inhoud: hwInhoud });
+
   // Zwemmen
   const BADMUTS_ORDER = ['rood','blauw_ondiep','blauw_diep','groen'];
   const BADMUTS_LABELS2 = {rood:'🔴 Rood', blauw_ondiep:'🔵 Blauw ondiep', blauw_diep:'🔵 Blauw diep', groen:'🟢 Groen'};
@@ -3199,11 +3241,26 @@ function openOverzichtKlasPdf() {
     groep('Andere therapie of begeleiding', leerlingen.filter(x => x.therapies && x.therapies.other), {extra:x => esc(x.therapies.other || '')})
   );
 
-  const loopbaan = onderdeel('Schoolloopbaan',
-    groep('Heeft een leerjaar overgedaan', leerlingen.filter(x => x.repeated), {extra:x => Array.isArray(x.repeatedYear) ? esc(x.repeatedYear.join(', ')) : esc(x.repeatedYear || '')}) +
-    groep('Anderstalige nieuwkomers', leerlingen.filter(x => x.newcomer)) +
-    groep('Blijven zitten - niet overdragen', zittenblijvers, {noteKey:'notes'})
-  );
+  const loopbaan =
+    onderdeel('Schoolloopbaan',
+      groep('Heeft een leerjaar overgedaan', leerlingen.filter(x => x.repeated), {extra:x => Array.isArray(x.repeatedYear) ? esc(x.repeatedYear.join(', ')) : esc(x.repeatedYear || '')}) +
+      groep('Anderstalige nieuwkomers', leerlingen.filter(x => x.newcomer)) +
+      groep('Blijven zitten - niet overdragen', zittenblijvers, {noteKey:'notes'})
+    ) +
+    onderdeel('Foto',
+      `<div class="groep foto-alert">${
+        (() => {
+          const nietOpFoto = sorteer(leerlingen.filter(x => !x.magOpFoto));
+          return nietOpFoto.length
+            ? nietOpFoto.map(s => `<div class="leerling-rij"><strong>${esc(s.name)}</strong><span class="extra foto-nee">🚫 MAG NIET OP FOTO</span></div>`).join('')
+            : '<p class="empty">Alle leerlingen mogen op foto.</p>';
+        })()
+      }</div>`
+    ) +
+    onderdeel('Huiswerkklas',
+      groep('Dinsdag', leerlingen.filter(x => Array.isArray(x.huiswerkklas) && x.huiswerkklas.includes('dinsdag'))) +
+      groep('Donderdag', leerlingen.filter(x => Array.isArray(x.huiswerkklas) && x.huiswerkklas.includes('donderdag')))
+    );
 
   // pdf-zwemmen-kleurblokken-codex
   const BADMUTS_ORDER = ['rood','blauw_ondiep','blauw_diep','groen'];
@@ -3275,6 +3332,8 @@ function openOverzichtKlasPdf() {
     .zwem-groen{background:#dcfce7;border-color:#86efac}.zwem-groen h4{background:#86efac;color:#14532d}
     .zwem-onbekend{background:#f8fafc;border-color:#cbd5e1}.zwem-onbekend h4{background:#e2e8f0;color:#334155}
     .empty{color:#65748b;font-style:italic;margin:3px 0 6px;font-size:12px}
+    .foto-nee{color:#991b1b;font-weight:800;font-size:12px}
+    .foto-alert{background:#fff5f5}
     @media print{
       .toolbar{display:none}
       body{padding-top:0}
