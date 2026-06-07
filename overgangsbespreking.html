@@ -344,77 +344,92 @@
   .student-table th { position:static; top:auto; z-index:auto; }
 
   /* ===== MODAL: BEWERKEN ===== */
-  /* Overlay: vast scherm, scrollbaar */
   .modal-overlay { padding:16px; align-items:flex-start !important; justify-content:center; }
 
-  /* Modal zelf: neemt bijna heel scherm in hoogte */
   #studentModal .modal {
-    width:100%;
-    max-width:860px;
+    width:100%; max-width:920px;
     height:calc(100vh - 32px);
-    display:flex;
-    flex-direction:column;
-    margin:0 auto;
-    border-radius:14px;
-    overflow:hidden;
+    display:flex; flex-direction:column;
+    margin:0 auto; border-radius:14px; overflow:hidden;
   }
-
-  /* Header: vast bovenaan */
-  #studentModal .modal-header {
-    flex:0 0 auto;
-    border-radius:14px 14px 0 0;
-  }
-
-  /* Body: vult de ruimte, scrollt */
+  #studentModal .modal-header { flex:0 0 auto; border-radius:14px 14px 0 0; }
   #studentModal .modal-body {
-    flex:1 1 0;
-    min-height:0;
-    overflow-y:scroll;
-    -webkit-overflow-scrolling:touch;
+    flex:1 1 0; min-height:0;
+    padding:0; overflow:hidden;
+    display:block;
+  }
+  #studentModal .modal-footer { flex:0 0 auto; border-radius:0 0 14px 14px; }
+
+  /* Sidebar layout */
+  .fiche-sidebar-layout {
+    display:grid;
+    grid-template-columns:190px 1fr;
+    height:100%;
+  }
+
+  /* Linker navigatie */
+  .fiche-nav {
+    background:#f4f6fa;
+    border-right:1px solid var(--border);
+    padding:10px 8px;
+    display:flex; flex-direction:column; gap:4px;
+    overflow-y:auto;
+  }
+  .fiche-nav-btn {
+    display:flex; align-items:center; gap:6px;
+    padding:10px 12px;
+    border-radius:10px;
+    border:0; background:transparent;
+    font:inherit; font-size:13px; font-weight:600;
+    color:var(--muted); text-align:left; cursor:pointer;
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  }
+  .fiche-nav-btn:hover { background:#e8ecf3; color:var(--text); }
+  .fiche-nav-btn.active { background:var(--yellow); color:var(--text); font-weight:800; }
+  .fnav-badge {
+    margin-left:auto; flex-shrink:0;
+    background:#15803d; color:#fff;
+    font-size:10px; font-weight:800;
+    padding:1px 6px; border-radius:8px;
+    display:none;
+  }
+  .fnav-badge.heeft-data { display:inline-block; }
+
+  /* Rechter tabinhoud */
+  .fiche-tab-content {
+    overflow-y:auto;
     padding:20px 24px;
-    display:block;        /* GEEN flex, GEEN grid — gewoon block */
+    min-height:0;
   }
-
-  /* Footer: vast onderaan */
-  #studentModal .modal-footer {
-    flex:0 0 auto;
-    border-radius:0 0 14px 14px;
+  .fiche-tab { display:none; }
+  .fiche-tab.active { display:block; }
+  .ftab-title {
+    font-size:16px; font-weight:900;
+    margin-bottom:16px; padding-bottom:10px;
+    border-bottom:2px solid var(--border);
+    display:flex; align-items:center; gap:8px;
   }
-
-  /* Accordions in de body */
-  #studentModal .accordion { margin-bottom:10px; }
-  #studentModal .accordion:last-child { margin-bottom:0; }
-  #studentModal .accordion-body { display:none !important; padding:16px; }
-  #studentModal .accordion.open .accordion-body { display:block !important; }
-  #studentModal .accordion-body textarea { min-height:64px; }
-  #studentModal .field-with-note { margin-bottom:14px; }
-  #studentModal .form-section { margin-bottom:16px; }
+  .fiche-tab .field-with-note { margin-bottom:16px; }
+  .fiche-tab textarea { min-height:70px; }
+  .fiche-tab .note-input { min-height:58px; margin-top:6px; font-size:13px; }
 
   /* ===== FICHE-MODAL ===== */
   .fiche-modal .modal {
-    width:100%;
-    max-width:860px;
-    max-height:calc(100vh - 32px);
-    height:auto;
-    display:flex;
-    flex-direction:column;
-    margin:0 auto;
-    border-radius:14px;
-    overflow:hidden;
+    width:100%; max-width:860px;
+    max-height:calc(100vh - 32px); height:auto;
+    display:flex; flex-direction:column;
+    margin:0 auto; border-radius:14px; overflow:hidden;
   }
-  .fiche-modal .modal-body {
-    flex:1 1 auto;
-    min-height:0;
-    overflow-y:auto;
-    padding:0;
-    display:block;
-  }
+  .fiche-modal .modal-body { flex:1 1 auto; min-height:0; overflow-y:auto; padding:0; display:block; }
 
   @media(max-width:900px) {
     .header-top { grid-template-columns:1fr; }
     .header-actions, #firebaseStatus { justify-content:flex-start; text-align:left; }
     .student-workbar .hint { width:100%; margin-left:0; }
     .student-table th { position:static; }
+    .fiche-sidebar-layout { grid-template-columns:1fr; }
+    .fiche-nav { flex-direction:row; flex-wrap:wrap; border-right:0; border-bottom:1px solid var(--border); }
+    .fiche-nav-btn { white-space:normal; }
   }
 </style>
 <script>
@@ -610,184 +625,214 @@
       <h2 id="modalTitle">Leerling toevoegen</h2>
       <button class="modal-close" id="modalClose" title="Sluiten">✕</button>
     </div>
-    <div class="modal-body">
+    <div class="modal-body" id="modalBody">
       <input type="hidden" id="editId">
 
-      <!-- ALTIJD OPEN: Basis -->
-      <div class="form-section">
-        <h3>📋 Basis</h3>
-        <div class="grid grid-2">
-          <div><label>Voornaam *</label><input id="m_firstName" placeholder="bv. Noor" autocomplete="off"></div>
-          <div><label>Achternaam *</label><input id="m_lastName" placeholder="bv. Peeters" autocomplete="off"></div>
-          <div><label>Geslacht</label><select id="m_gender">
-            <option value="-">Niet opgegeven</option><option value="j">Jongen</option><option value="m">Meisje</option><option value="x">X / anders</option>
-          </select></div>
-          <div><label>Datum laatste update</label><input id="m_updatedDate" type="date"></div>
-          <div><label>Algemeen niveau</label><select id="m_level">
-            <option value="1">1 - veel ondersteuning</option><option value="2">2 - onder basis</option><option value="3" selected>3 - basis</option><option value="4">4 - sterk</option><option value="5">5 - zeer sterk</option>
-          </select></div>
-        </div>
-      </div>
+      <!-- SIDEBAR LAYOUT -->
+      <div class="fiche-sidebar-layout">
 
-      <!-- INKLAPBAAR: Vakgebieden -->
-      <div class="accordion" data-section="vakken">
-        <button type="button" class="accordion-header" onclick="toggleAccordion('vakken')">
-          <h3>📚 Vakgebieden <span class="section-badge empty" id="badge_vakken">leeg</span></h3>
-          <span class="accordion-icon">▶</span>
-        </button>
-        <div class="accordion-body">
-          <div class="field-with-note">
-            <label>Lezen</label>
+        <!-- LINKS: navigatie -->
+        <nav class="fiche-nav">
+          <button type="button" class="fiche-nav-btn active" data-tab="basis" onclick="switchFicheTab('basis')">
+            📋 Basis
+          </button>
+          <button type="button" class="fiche-nav-btn" data-tab="vakken" onclick="switchFicheTab('vakken')">
+            📚 Vakgebieden <span class="fnav-badge" id="fnav_vakken"></span>
+          </button>
+          <button type="button" class="fiche-nav-btn" data-tab="gedrag" onclick="switchFicheTab('gedrag')">
+            🧠 Gedrag <span class="fnav-badge" id="fnav_gedrag"></span>
+          </button>
+          <button type="button" class="fiche-nav-btn" data-tab="zorg" onclick="switchFicheTab('zorg')">
+            ❤️ Zorg <span class="fnav-badge" id="fnav_zorg"></span>
+          </button>
+          <button type="button" class="fiche-nav-btn" data-tab="loopbaan" onclick="switchFicheTab('loopbaan')">
+            🎓 Schoolloopbaan <span class="fnav-badge" id="fnav_loopbaan"></span>
+          </button>
+          <button type="button" class="fiche-nav-btn" data-tab="therapie" onclick="switchFicheTab('therapie')">
+            💊 Therapieën <span class="fnav-badge" id="fnav_therapie"></span>
+          </button>
+          <button type="button" class="fiche-nav-btn" data-tab="sociaal" onclick="switchFicheTab('sociaal')">
+            👥 Sociaal <span class="fnav-badge" id="fnav_sociaal"></span>
+          </button>
+          <button type="button" class="fiche-nav-btn" data-tab="zwemmen" onclick="switchFicheTab('zwemmen')">
+            🏊 Zwemmen <span class="fnav-badge" id="fnav_zwemmen"></span>
+          </button>
+          <button type="button" class="fiche-nav-btn" data-tab="algemeen" onclick="switchFicheTab('algemeen')">
+            📝 Notitie <span class="fnav-badge" id="fnav_algemeen"></span>
+          </button>
+        </nav>
+
+        <!-- RECHTS: inhoud per tab -->
+        <div class="fiche-tab-content">
+
+          <!-- TAB: Basis -->
+          <div class="fiche-tab active" data-tab="basis">
+            <div class="ftab-title">📋 Basis</div>
             <div class="grid grid-2">
-              <select id="m_reading" onchange="toggleAanpassingen('reading',this.value)">
+              <div><label>Voornaam *</label><input id="m_firstName" placeholder="bv. Noor" autocomplete="off"></div>
+              <div><label>Achternaam *</label><input id="m_lastName" placeholder="bv. Peeters" autocomplete="off"></div>
+              <div><label>Geslacht</label><select id="m_gender">
+                <option value="-">Niet opgegeven</option><option value="j">Jongen</option><option value="m">Meisje</option><option value="x">X / anders</option>
+              </select></div>
+              <div><label>Datum laatste update</label><input id="m_updatedDate" type="date"></div>
+            </div>
+            <div style="margin-top:12px"><label>Algemeen niveau</label><select id="m_level">
+              <option value="1">1 - veel ondersteuning</option><option value="2">2 - onder basis</option><option value="3" selected>3 - basis</option><option value="4">4 - sterk</option><option value="5">5 - zeer sterk</option>
+            </select></div>
+          </div>
+
+          <!-- TAB: Vakgebieden -->
+          <div class="fiche-tab" data-tab="vakken">
+            <div class="ftab-title">📚 Vakgebieden <span class="section-badge empty" id="badge_vakken">leeg</span></div>
+
+            <div class="field-with-note">
+              <label>Lezen</label>
+              <div class="grid grid-2">
+                <select id="m_reading" onchange="toggleAanpassingen('reading',this.value)">
+                  <option value="zwak">Zwak</option><option value="basis" selected>Basis</option><option value="sterk">Sterk</option>
+                </select>
+                <select id="m_avi">
+                  <option value="">AVI - niet ingevuld</option><option value="START">AVI START</option><option value="M3">AVI M3</option><option value="E3">AVI E3</option><option value="M4">AVI M4</option><option value="E4">AVI E4</option><option value="M5">AVI M5</option><option value="E5">AVI E5</option><option value="M6">AVI M6</option><option value="E6">AVI E6</option><option value="M7">AVI M7</option><option value="E7">AVI E7</option><option value="PLUS">AVI PLUS</option>
+                </select>
+              </div>
+              <div class="aanpassingen-blok" id="aanp_reading">
+                <div class="aanpassingen-blok-titel">⚙️ Aanpassingen / hulpmiddelen lezen</div>
+                <div class="aanpassingen-grid">
+                  <label class="aanp-row"><input type="checkbox" id="aanp_reading_verlengd"> Verlengde tijd</label>
+                  <label class="aanp-row"><input type="checkbox" id="aanp_reading_mondeling"> Mondeling i.p.v. schriftelijk</label>
+                  <label class="aanp-row"><input type="checkbox" id="aanp_reading_eigendoelen"> Eigen doelen / ander niveau</label>
+                  <label class="aanp-row"><input type="checkbox" id="aanp_reading_hulpkaarten"> Hulpkaarten / woordenlijst</label>
+                  <label class="aanp-row"><input type="checkbox" id="aanp_reading_toetsing"> Aangepaste toetsing</label>
+                  <label class="aanp-row"><input type="checkbox" id="aanp_reading_remediering"> Extra herhaling / remediëring</label>
+                </div>
+                <textarea id="aanp_reading_other" class="aanp-other" placeholder="Andere aanpassing voor lezen..."></textarea>
+              </div>
+              <textarea id="m_readingNote" class="note-input" placeholder="Notitie over lezen..."></textarea>
+            </div>
+
+            <div class="field-with-note">
+              <label>Spelling</label>
+              <select id="m_spelling" onchange="toggleAanpassingen('spelling',this.value)">
                 <option value="zwak">Zwak</option><option value="basis" selected>Basis</option><option value="sterk">Sterk</option>
               </select>
-              <select id="m_avi">
-                <option value="">AVI - niet ingevuld</option><option value="START">AVI START</option><option value="M3">AVI M3</option><option value="E3">AVI E3</option><option value="M4">AVI M4</option><option value="E4">AVI E4</option><option value="M5">AVI M5</option><option value="E5">AVI E5</option><option value="M6">AVI M6</option><option value="E6">AVI E6</option><option value="M7">AVI M7</option><option value="E7">AVI E7</option><option value="PLUS">AVI PLUS</option>
+              <div class="aanpassingen-blok" id="aanp_spelling">
+                <div class="aanpassingen-blok-titel">⚙️ Aanpassingen / hulpmiddelen spelling</div>
+                <div class="aanpassingen-grid">
+                  <label class="aanp-row"><input type="checkbox" id="aanp_spelling_verlengd"> Verlengde tijd</label>
+                  <label class="aanp-row"><input type="checkbox" id="aanp_spelling_mondeling"> Mondeling i.p.v. schriftelijk</label>
+                  <label class="aanp-row"><input type="checkbox" id="aanp_spelling_eigendoelen"> Eigen doelen / ander niveau</label>
+                  <label class="aanp-row"><input type="checkbox" id="aanp_spelling_hulpkaarten"> Hulpkaarten / woordenlijst</label>
+                  <label class="aanp-row"><input type="checkbox" id="aanp_spelling_toetsing"> Aangepaste toetsing</label>
+                  <label class="aanp-row"><input type="checkbox" id="aanp_spelling_remediering"> Extra herhaling / remediëring</label>
+                </div>
+                <textarea id="aanp_spelling_other" class="aanp-other" placeholder="Andere aanpassing voor spelling..."></textarea>
+              </div>
+              <textarea id="m_spellingNote" class="note-input" placeholder="Notitie over spelling..."></textarea>
+            </div>
+
+            <div class="field-with-note">
+              <label>Rekenen</label>
+              <select id="m_math" onchange="toggleAanpassingen('math',this.value)">
+                <option value="zwak">Zwak</option><option value="basis" selected>Basis</option><option value="sterk">Sterk</option>
               </select>
-            </div>
-            <div class="aanpassingen-blok" id="aanp_reading">
-              <div class="aanpassingen-blok-titel">⚙️ Aanpassingen / hulpmiddelen lezen</div>
-              <div class="aanpassingen-grid">
-                <label class="aanp-row"><input type="checkbox" id="aanp_reading_verlengd"> Verlengde tijd</label>
-                <label class="aanp-row"><input type="checkbox" id="aanp_reading_mondeling"> Mondeling i.p.v. schriftelijk</label>
-                <label class="aanp-row"><input type="checkbox" id="aanp_reading_eigendoelen"> Eigen doelen / ander niveau</label>
-                <label class="aanp-row"><input type="checkbox" id="aanp_reading_hulpkaarten"> Hulpkaarten / woordenlijst</label>
-                <label class="aanp-row"><input type="checkbox" id="aanp_reading_toetsing"> Aangepaste toetsing</label>
-                <label class="aanp-row"><input type="checkbox" id="aanp_reading_remediering"> Extra herhaling / remediëring</label>
+              <div class="aanpassingen-blok" id="aanp_math">
+                <div class="aanpassingen-blok-titel">⚙️ Aanpassingen / hulpmiddelen rekenen</div>
+                <div class="aanpassingen-grid">
+                  <label class="aanp-row"><input type="checkbox" id="aanp_math_verlengd"> Verlengde tijd</label>
+                  <label class="aanp-row"><input type="checkbox" id="aanp_math_mondeling"> Mondeling i.p.v. schriftelijk</label>
+                  <label class="aanp-row"><input type="checkbox" id="aanp_math_eigendoelen"> Eigen doelen / ander niveau</label>
+                  <label class="aanp-row"><input type="checkbox" id="aanp_math_hulpkaarten"> Hulpkaarten / woordenlijst</label>
+                  <label class="aanp-row"><input type="checkbox" id="aanp_math_toetsing"> Aangepaste toetsing</label>
+                  <label class="aanp-row"><input type="checkbox" id="aanp_math_remediering"> Extra herhaling / remediëring</label>
+                </div>
+                <textarea id="aanp_math_other" class="aanp-other" placeholder="Andere aanpassing voor rekenen..."></textarea>
               </div>
-              <textarea id="aanp_reading_other" class="aanp-other" placeholder="Andere aanpassing voor lezen..."></textarea>
+              <textarea id="m_mathNote" class="note-input" placeholder="Notitie over rekenen..."></textarea>
             </div>
-            <textarea id="m_readingNote" class="note-input" placeholder="Notitie over lezen (bv. struikelt over meerlettergrepige woorden, leest traag maar correct, ...)"></textarea>
-          </div>
-          <div class="field-with-note">
-            <label>Spelling</label>
-            <select id="m_spelling" onchange="toggleAanpassingen('spelling',this.value)">
-              <option value="zwak">Zwak</option><option value="basis" selected>Basis</option><option value="sterk">Sterk</option>
-            </select>
-            <div class="aanpassingen-blok" id="aanp_spelling">
-              <div class="aanpassingen-blok-titel">⚙️ Aanpassingen / hulpmiddelen spelling</div>
-              <div class="aanpassingen-grid">
-                <label class="aanp-row"><input type="checkbox" id="aanp_spelling_verlengd"> Verlengde tijd</label>
-                <label class="aanp-row"><input type="checkbox" id="aanp_spelling_mondeling"> Mondeling i.p.v. schriftelijk</label>
-                <label class="aanp-row"><input type="checkbox" id="aanp_spelling_eigendoelen"> Eigen doelen / ander niveau</label>
-                <label class="aanp-row"><input type="checkbox" id="aanp_spelling_hulpkaarten"> Hulpkaarten / woordenlijst</label>
-                <label class="aanp-row"><input type="checkbox" id="aanp_spelling_toetsing"> Aangepaste toetsing</label>
-                <label class="aanp-row"><input type="checkbox" id="aanp_spelling_remediering"> Extra herhaling / remediëring</label>
-              </div>
-              <textarea id="aanp_spelling_other" class="aanp-other" placeholder="Andere aanpassing voor spelling..."></textarea>
-            </div>
-            <textarea id="m_spellingNote" class="note-input" placeholder="Notitie over spelling (bv. moeite met open/gesloten lettergrepen, dt-regel, ...)"></textarea>
-          </div>
-          <div class="field-with-note">
-            <label>Rekenen</label>
-            <select id="m_math" onchange="toggleAanpassingen('math',this.value)">
-              <option value="zwak">Zwak</option><option value="basis" selected>Basis</option><option value="sterk">Sterk</option>
-            </select>
-            <div class="aanpassingen-blok" id="aanp_math">
-              <div class="aanpassingen-blok-titel">⚙️ Aanpassingen / hulpmiddelen rekenen</div>
-              <div class="aanpassingen-grid">
-                <label class="aanp-row"><input type="checkbox" id="aanp_math_verlengd"> Verlengde tijd</label>
-                <label class="aanp-row"><input type="checkbox" id="aanp_math_mondeling"> Mondeling i.p.v. schriftelijk</label>
-                <label class="aanp-row"><input type="checkbox" id="aanp_math_eigendoelen"> Eigen doelen / ander niveau</label>
-                <label class="aanp-row"><input type="checkbox" id="aanp_math_hulpkaarten"> Hulpkaarten / woordenlijst</label>
-                <label class="aanp-row"><input type="checkbox" id="aanp_math_toetsing"> Aangepaste toetsing</label>
-                <label class="aanp-row"><input type="checkbox" id="aanp_math_remediering"> Extra herhaling / remediëring</label>
-              </div>
-              <textarea id="aanp_math_other" class="aanp-other" placeholder="Andere aanpassing voor rekenen..."></textarea>
-            </div>
-            <textarea id="m_mathNote" class="note-input" placeholder="Notitie over rekenen (bv. tafels nog niet automatiseerd, sterk in vraagstukken, ...)"></textarea>
-          </div>
-          <div class="field-with-note">
-            <label>Handschrift</label>
-            <select id="m_writing" onchange="toggleAanpassingen('writing',this.value)">
-              <option value="zwak">Zwak</option><option value="basis" selected>Basis</option><option value="sterk">Sterk</option>
-            </select>
-            <div class="aanpassingen-blok" id="aanp_writing">
-              <div class="aanpassingen-blok-titel">⚙️ Aanpassingen / hulpmiddelen handschrift</div>
-              <div class="aanpassingen-grid">
-                <label class="aanp-row"><input type="checkbox" id="aanp_writing_verlengd"> Verlengde tijd</label>
-                <label class="aanp-row"><input type="checkbox" id="aanp_writing_mondeling"> Mondeling i.p.v. schriftelijk</label>
-                <label class="aanp-row"><input type="checkbox" id="aanp_writing_eigendoelen"> Eigen doelen / ander niveau</label>
-                <label class="aanp-row"><input type="checkbox" id="aanp_writing_hulpkaarten"> Hulpkaarten / woordenlijst</label>
-                <label class="aanp-row"><input type="checkbox" id="aanp_writing_toetsing"> Aangepaste toetsing</label>
-                <label class="aanp-row"><input type="checkbox" id="aanp_writing_remediering"> Extra herhaling / remediëring</label>
-              </div>
-              <textarea id="aanp_writing_other" class="aanp-other" placeholder="Andere aanpassing voor handschrift..."></textarea>
-            </div>
-            <textarea id="m_writingNote" class="note-input" placeholder="Notitie over handschrift (bv. linkshandig, schrijft nog in blokletters, ...)"></textarea>
-          </div>
-        </div>
-      </div>
 
-      <!-- INKLAPBAAR: Gedrag en concentratie -->
-      <div class="accordion" data-section="gedrag">
-        <button type="button" class="accordion-header" onclick="toggleAccordion('gedrag')">
-          <h3>🧠 Gedrag en concentratie <span class="section-badge empty" id="badge_gedrag">leeg</span></h3>
-          <span class="accordion-icon">▶</span>
-        </button>
-        <div class="accordion-body">
-          <div class="field-with-note">
-            <label>Concentratie</label>
-            <select id="m_focus">
-              <option value="ok">Geen opvallende zorg</option><option value="aandacht">Aandachtspunt</option><option value="probleem">Probleem</option>
-            </select>
-            <textarea id="m_focusNote" class="note-input" placeholder="Notitie over concentratie (bv. heeft korte taken nodig, werkt beter alleen, ...)"></textarea>
-          </div>
-          <div class="field-with-note">
-            <label>Gedrag</label>
-            <select id="m_behavior">
-              <option value="ok">Geen opvallende zorg</option><option value="aandacht">Aandachtspunt</option><option value="probleem">Probleem</option>
-            </select>
-            <textarea id="m_behaviorNote" class="note-input" placeholder="Notitie over gedrag (bv. impulsief, heeft duidelijke afspraken nodig, ...)"></textarea>
-          </div>
-        </div>
-      </div>
-
-      <!-- INKLAPBAAR: Zorg -->
-      <div class="accordion" data-section="zorg">
-        <button type="button" class="accordion-header" onclick="toggleAccordion('zorg')">
-          <h3>❤️ Zorg <span class="section-badge empty" id="badge_zorg">leeg</span></h3>
-          <span class="accordion-icon">▶</span>
-        </button>
-        <div class="accordion-body">
-          <div class="grid grid-3" style="margin-bottom:12px">
-            <div><label>Zorgniveau</label><select id="m_care">
-              <option value="laag">Laag</option><option value="midden">Midden</option><option value="hoog">Hoog</option>
-            </select></div>
-            <div><label>IAC</label><select id="m_iac"><option value="nee">Nee</option><option value="ja">Ja</option></select></div>
-            <div><label>Extra zorg</label><select id="m_extraCare"><option value="nee">Nee</option><option value="ja">Ja</option></select></div>
-          </div>
-          <label>Notitie over zorg</label>
-          <textarea id="m_careNote" placeholder="Bv. krijgt verlengde tijd, werkt op eigen niveau voor rekenen, IAC sinds 2024, ..."></textarea>
-          <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border)">
-            <label>Allergieën</label>
-            <textarea id="m_allergies" placeholder="Bv. notenallergie, lactose, pleisters, medicatie-allergie, ..."></textarea>
-            <label style="margin-top:10px">Medische zorg / afspraken</label>
-            <textarea id="m_medicalNote" placeholder="Bv. medicatie op school, diabetes, epilepsie, inhalator, doktersattest, afspraken met ouders, ..."></textarea>
-          </div>
-        </div>
-      </div>
-
-      <!-- INKLAPBAAR: Schoolloopbaan -->
-      <div class="accordion" data-section="loopbaan">
-        <button type="button" class="accordion-header" onclick="toggleAccordion('loopbaan')">
-          <h3>🎓 Schoolloopbaan <span class="section-badge empty" id="badge_loopbaan">leeg</span></h3>
-          <span class="accordion-icon">▶</span>
-        </button>
-        <div class="accordion-body">
-          <div class="checkbox-row" style="background:#fff0bd;border:1px solid #f0c866;margin-bottom:10px">
-            <input type="checkbox" id="m_stayingThisYear">
-            <label for="m_stayingThisYear" style="margin:0"><strong>Blijft zitten dit schooljaar</strong> — wordt niet overgedragen naar volgende leerkracht</label>
-          </div>
-          <div class="grid grid-2">
-            <div class="checkbox-row">
-              <input type="checkbox" id="m_repeated">
-              <label for="m_repeated" style="margin:0">Heeft eerder een leerjaar overgedaan</label>
+            <div class="field-with-note">
+              <label>Handschrift</label>
+              <select id="m_writing" onchange="toggleAanpassingen('writing',this.value)">
+                <option value="zwak">Zwak</option><option value="basis" selected>Basis</option><option value="sterk">Sterk</option>
+              </select>
+              <div class="aanpassingen-blok" id="aanp_writing">
+                <div class="aanpassingen-blok-titel">⚙️ Aanpassingen / hulpmiddelen handschrift</div>
+                <div class="aanpassingen-grid">
+                  <label class="aanp-row"><input type="checkbox" id="aanp_writing_verlengd"> Verlengde tijd</label>
+                  <label class="aanp-row"><input type="checkbox" id="aanp_writing_mondeling"> Mondeling i.p.v. schriftelijk</label>
+                  <label class="aanp-row"><input type="checkbox" id="aanp_writing_eigendoelen"> Eigen doelen / ander niveau</label>
+                  <label class="aanp-row"><input type="checkbox" id="aanp_writing_hulpkaarten"> Hulpkaarten / woordenlijst</label>
+                  <label class="aanp-row"><input type="checkbox" id="aanp_writing_toetsing"> Aangepaste toetsing</label>
+                  <label class="aanp-row"><input type="checkbox" id="aanp_writing_remediering"> Extra herhaling / remediëring</label>
+                </div>
+                <textarea id="aanp_writing_other" class="aanp-other" placeholder="Andere aanpassing voor handschrift..."></textarea>
+              </div>
+              <textarea id="m_writingNote" class="note-input" placeholder="Notitie over handschrift..."></textarea>
             </div>
-            <div id="m_repeatedYearWrap" style="display:none">
-              <label>Welk leerjaar? (meerdere mogelijk)</label>
-              <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:4px">
+          </div>
+
+          <!-- TAB: Gedrag -->
+          <div class="fiche-tab" data-tab="gedrag">
+            <div class="ftab-title">🧠 Gedrag en concentratie <span class="section-badge empty" id="badge_gedrag">leeg</span></div>
+            <div class="field-with-note">
+              <label>Concentratie</label>
+              <select id="m_focus">
+                <option value="ok">Geen opvallende zorg</option><option value="aandacht">Aandachtspunt</option><option value="probleem">Probleem</option>
+              </select>
+              <textarea id="m_focusNote" class="note-input" placeholder="Notitie over concentratie (bv. heeft korte taken nodig, werkt beter alleen, ...)"></textarea>
+            </div>
+            <div class="field-with-note">
+              <label>Gedrag</label>
+              <select id="m_behavior">
+                <option value="ok">Geen opvallende zorg</option><option value="aandacht">Aandachtspunt</option><option value="probleem">Probleem</option>
+              </select>
+              <textarea id="m_behaviorNote" class="note-input" placeholder="Notitie over gedrag (bv. impulsief, heeft duidelijke afspraken nodig, ...)"></textarea>
+            </div>
+          </div>
+
+          <!-- TAB: Zorg -->
+          <div class="fiche-tab" data-tab="zorg">
+            <div class="ftab-title">❤️ Zorg <span class="section-badge empty" id="badge_zorg">leeg</span></div>
+            <div class="grid grid-2" style="margin-bottom:14px">
+              <div><label>Zorgniveau</label><select id="m_care">
+                <option value="laag">Laag</option><option value="midden">Midden</option><option value="hoog">Hoog</option>
+              </select></div>
+              <div><label>IAC</label><select id="m_iac"><option value="nee">Nee</option><option value="ja">Ja</option></select></div>
+            </div>
+            <div class="field-with-note">
+              <label>Notitie over zorg</label>
+              <textarea id="m_careNote" placeholder="Bv. krijgt verlengde tijd, werkt op eigen niveau voor rekenen, IAC sinds 2024, ..."></textarea>
+            </div>
+            <div class="field-with-note">
+              <label>Allergieën</label>
+              <textarea id="m_allergies" placeholder="Bv. notenallergie, lactose, pleisters, medicatie-allergie, ..."></textarea>
+            </div>
+            <div class="field-with-note">
+              <label>Medische zorg / afspraken</label>
+              <textarea id="m_medicalNote" placeholder="Bv. medicatie op school, diabetes, epilepsie, inhalator, doktersattest, ..."></textarea>
+            </div>
+          </div>
+
+          <!-- TAB: Schoolloopbaan -->
+          <div class="fiche-tab" data-tab="loopbaan">
+            <div class="ftab-title">🎓 Schoolloopbaan <span class="section-badge empty" id="badge_loopbaan">leeg</span></div>
+            <div class="checkbox-row" style="background:#fff0bd;border:1px solid #f0c866;margin-bottom:14px">
+              <input type="checkbox" id="m_stayingThisYear">
+              <label for="m_stayingThisYear" style="margin:0"><strong>Blijft zitten dit schooljaar</strong> — wordt niet overgedragen naar volgende leerkracht</label>
+            </div>
+            <div class="grid grid-2" style="gap:10px">
+              <div class="checkbox-row">
+                <input type="checkbox" id="m_repeated">
+                <label for="m_repeated" style="margin:0">Heeft eerder een leerjaar overgedaan</label>
+              </div>
+              <div class="checkbox-row">
+                <input type="checkbox" id="m_newcomer">
+                <label for="m_newcomer" style="margin:0">Anderstalige nieuwkomer (OKAN/AN)</label>
+              </div>
+            </div>
+            <div id="m_repeatedYearWrap" style="display:none;margin-top:10px">
+              <label>Welk leerjaar overgedaan?</label>
+              <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:6px">
                 <label style="display:flex;align-items:center;gap:5px;font-weight:normal;font-size:13px;background:var(--soft);padding:4px 10px;border-radius:8px;cursor:pointer;margin:0"><input type="checkbox" name="repeatedYear" value="kleuter" style="width:auto;margin:0"> Kleuter</label>
                 <label style="display:flex;align-items:center;gap:5px;font-weight:normal;font-size:13px;background:var(--soft);padding:4px 10px;border-radius:8px;cursor:pointer;margin:0"><input type="checkbox" name="repeatedYear" value="1ste leerjaar" style="width:auto;margin:0"> 1ste</label>
                 <label style="display:flex;align-items:center;gap:5px;font-weight:normal;font-size:13px;background:var(--soft);padding:4px 10px;border-radius:8px;cursor:pointer;margin:0"><input type="checkbox" name="repeatedYear" value="2de leerjaar" style="width:auto;margin:0"> 2de</label>
@@ -797,103 +842,73 @@
                 <label style="display:flex;align-items:center;gap:5px;font-weight:normal;font-size:13px;background:var(--soft);padding:4px 10px;border-radius:8px;cursor:pointer;margin:0"><input type="checkbox" name="repeatedYear" value="6de leerjaar" style="width:auto;margin:0"> 6de</label>
               </div>
             </div>
-            <div class="checkbox-row">
-              <input type="checkbox" id="m_newcomer">
-              <label for="m_newcomer" style="margin:0">Anderstalige nieuwkomer (OKAN/AN)</label>
+          </div>
+
+          <!-- TAB: Therapieën -->
+          <div class="fiche-tab" data-tab="therapie">
+            <div class="ftab-title">💊 Therapieën en begeleiding <span class="section-badge empty" id="badge_therapie">leeg</span></div>
+            <div class="grid grid-3" style="gap:8px;margin-bottom:14px">
+              <div class="checkbox-row"><input type="checkbox" id="m_therapy_logo"><label for="m_therapy_logo" style="margin:0">Logopedie</label></div>
+              <div class="checkbox-row"><input type="checkbox" id="m_therapy_kine"><label for="m_therapy_kine" style="margin:0">Kinesitherapie</label></div>
+              <div class="checkbox-row"><input type="checkbox" id="m_therapy_gon"><label for="m_therapy_gon" style="margin:0">GON / ondersteuningsnetwerk</label></div>
+              <div class="checkbox-row"><input type="checkbox" id="m_therapy_clb"><label for="m_therapy_clb" style="margin:0">CLB-traject</label></div>
+              <div class="checkbox-row"><input type="checkbox" id="m_therapy_psy"><label for="m_therapy_psy" style="margin:0">Psycholoog</label></div>
+            </div>
+            <div class="field-with-note">
+              <label>Andere therapie of begeleiding</label>
+              <input id="m_therapy_other" placeholder="bv. ergotherapie, dyslexie-coaching, ...">
             </div>
           </div>
-        </div>
-      </div>
 
-      <!-- INKLAPBAAR: Therapieën -->
-      <div class="accordion" data-section="therapie">
-        <button type="button" class="accordion-header" onclick="toggleAccordion('therapie')">
-          <h3>💊 Therapieën en begeleiding <span class="section-badge empty" id="badge_therapie">leeg</span></h3>
-          <span class="accordion-icon">▶</span>
-        </button>
-        <div class="accordion-body">
-          <div class="grid grid-3">
-            <div class="checkbox-row"><input type="checkbox" id="m_therapy_logo"><label for="m_therapy_logo" style="margin:0">Logopedie</label></div>
-            <div class="checkbox-row"><input type="checkbox" id="m_therapy_kine"><label for="m_therapy_kine" style="margin:0">Kinesitherapie</label></div>
-            <div class="checkbox-row"><input type="checkbox" id="m_therapy_gon"><label for="m_therapy_gon" style="margin:0">GON / ondersteuningsnetwerk</label></div>
-            <div class="checkbox-row"><input type="checkbox" id="m_therapy_clb"><label for="m_therapy_clb" style="margin:0">CLB-traject</label></div>
-            <div class="checkbox-row"><input type="checkbox" id="m_therapy_psy"><label for="m_therapy_psy" style="margin:0">Psycholoog</label></div>
+          <!-- TAB: Sociaal -->
+          <div class="fiche-tab" data-tab="sociaal">
+            <div class="ftab-title">👥 Sociaal-emotioneel en relaties <span class="section-badge empty" id="badge_sociaal">leeg</span></div>
+            <p class="small" style="margin-bottom:12px">Voornaam volstaat als die uniek is in de klas.</p>
+            <div class="grid grid-2" style="margin-bottom:14px">
+              <div><label>Graag samen met</label><input id="m_friends" placeholder="bv. Noor, Tom"></div>
+              <div><label>Liever niet samen met</label><input id="m_avoid" placeholder="bv. Milan"></div>
+            </div>
+            <div class="field-with-note">
+              <label>Notitie sociaal-emotioneel</label>
+              <textarea id="m_socialNote" placeholder="Bv. thuissituatie (week-week regeling), is verlegen in groep, ..."></textarea>
+            </div>
           </div>
-          <div style="margin-top:10px">
-            <label>Andere therapie of begeleiding</label>
-            <input id="m_therapy_other" placeholder="bv. ergotherapie, dyslexie-coaching, ...">
+
+          <!-- TAB: Zwemmen -->
+          <div class="fiche-tab" data-tab="zwemmen">
+            <div class="ftab-title">🏊 Zwemmen <span class="section-badge empty" id="badge_zwemmen">leeg</span></div>
+            <label style="margin-bottom:10px;display:block">Kleur badmuts</label>
+            <div class="pill-row" style="margin-bottom:0;flex-wrap:wrap">
+              <label class="pill" id="pill_badmuts_geen" onclick="setBadmuts('')"><input type="radio" name="badmuts" value=""> — geen / onbekend</label>
+              <label class="pill" id="pill_badmuts_rood" onclick="setBadmuts('rood')" style="border-color:#e05555"><input type="radio" name="badmuts" value="rood"> 🔴 Rood</label>
+              <label class="pill" id="pill_badmuts_blauw_ondiep" onclick="setBadmuts('blauw_ondiep')" style="border-color:#5599dd"><input type="radio" name="badmuts" value="blauw_ondiep"> 🔵 Blauw ondiep</label>
+              <label class="pill" id="pill_badmuts_blauw_diep" onclick="setBadmuts('blauw_diep')" style="border-color:#1a4a9e"><input type="radio" name="badmuts" value="blauw_diep"> 🔵 Blauw diep</label>
+              <label class="pill" id="pill_badmuts_groen" onclick="setBadmuts('groen')" style="border-color:#3a9a5c"><input type="radio" name="badmuts" value="groen"> 🟢 Groen</label>
+            </div>
           </div>
-        </div>
-      </div>
 
-      <!-- INKLAPBAAR: Sociaal-emotioneel -->
-      <div class="accordion" data-section="sociaal">
-        <button type="button" class="accordion-header" onclick="toggleAccordion('sociaal')">
-          <h3>👥 Sociaal-emotioneel en relaties <span class="section-badge empty" id="badge_sociaal">leeg</span></h3>
-          <span class="accordion-icon">▶</span>
-        </button>
-        <div class="accordion-body">
-          <p class="small" style="margin-bottom:8px">Voornaam volstaat als die uniek is in de klas. Anders volledige naam gebruiken.</p>
-          <div class="grid grid-2" style="margin-bottom:12px">
-            <div><label>Graag samen met</label><input id="m_friends" placeholder="bv. Noor, Tom"></div>
-            <div><label>Liever niet samen met</label><input id="m_avoid" placeholder="bv. Milan"></div>
+          <!-- TAB: Algemene notitie -->
+          <div class="fiche-tab" data-tab="algemeen">
+            <div class="ftab-title">📝 Algemene notitie <span class="section-badge empty" id="badge_algemeen">leeg</span></div>
+            <p class="small" style="margin-bottom:10px">Voor info die nergens anders past.</p>
+            <textarea id="m_notes" style="min-height:120px" placeholder="Algemene info voor de volgende leerkracht."></textarea>
           </div>
-          <label>Notitie sociaal-emotioneel</label>
-          <textarea id="m_socialNote" placeholder="Bv. thuissituatie (week-week regeling), is verlegen in groep, kan moeilijk verlies aanvaarden, ..."></textarea>
-        </div>
-      </div>
 
-      <!-- INKLAPBAAR: Zwemmen -->
-      <div class="accordion" data-section="zwemmen">
-        <button type="button" class="accordion-header" onclick="toggleAccordion('zwemmen')">
-          <h3>🏊 Zwemmen <span class="section-badge empty" id="badge_zwemmen">leeg</span></h3>
-          <span class="accordion-icon">▶</span>
-        </button>
-        <div class="accordion-body">
-          <label>Kleur badmuts</label>
-          <div class="pill-row" style="margin-bottom:0">
-            <label class="pill" id="pill_badmuts_geen" onclick="setBadmuts('')">
-              <input type="radio" name="badmuts" value=""> — geen / onbekend
-            </label>
-            <label class="pill" id="pill_badmuts_rood" onclick="setBadmuts('rood')" style="border-color:#e05555">
-              <input type="radio" name="badmuts" value="rood"> 🔴 Rood
-            </label>
-            <label class="pill" id="pill_badmuts_blauw_ondiep" onclick="setBadmuts('blauw_ondiep')" style="border-color:#5599dd">
-              <input type="radio" name="badmuts" value="blauw_ondiep"> 🔵 Blauw ondiep
-            </label>
-            <label class="pill" id="pill_badmuts_blauw_diep" onclick="setBadmuts('blauw_diep')" style="border-color:#1a4a9e">
-              <input type="radio" name="badmuts" value="blauw_diep"> 🔵 Blauw diep
-            </label>
-            <label class="pill" id="pill_badmuts_groen" onclick="setBadmuts('groen')" style="border-color:#3a9a5c">
-              <input type="radio" name="badmuts" value="groen"> 🟢 Groen
-            </label>
-          </div>
-        </div>
-      </div>
+        </div><!-- einde fiche-tab-content -->
+      </div><!-- einde fiche-sidebar-layout -->
+    </div><!-- einde modal-body -->
 
-      <!-- INKLAPBAAR: Algemene notitie -->
-      <div class="accordion" data-section="algemeen">
-        <button type="button" class="accordion-header" onclick="toggleAccordion('algemeen')">
-          <h3>📝 Algemene notitie <span class="section-badge empty" id="badge_algemeen">leeg</span></h3>
-          <span class="accordion-icon">▶</span>
-        </button>
-        <div class="accordion-body">
-          <p class="small" style="margin-bottom:8px">Voor info die nergens anders past (bv. allergieën, medicatie, bijzondere afspraken, ...).</p>
-          <textarea id="m_notes" placeholder="Algemene info voor de volgende leerkracht."></textarea>
-        </div>
-      </div>
-
-    </div>
     <div class="modal-footer">
       <button class="danger" id="modalDeleteBtn">🗑️ Verwijderen</button>
       <div class="actions">
         <button class="ghost" id="modalCancelBtn">Annuleren</button>
+        <button id="modalSavePrevBtn" class="ghost">← Opslaan + vorige</button>
         <button id="modalSaveBtn">Opslaan</button>
-        <button id="modalSaveNextBtn" class="secondary">Opslaan → volgende</button>
+        <button id="modalSaveNextBtn" class="secondary">Opslaan + volgende →</button>
       </div>
     </div>
-  </div>
-</div>
+  </div><!-- einde modal -->
+</div><!-- einde modal-overlay -->
 
 <!-- Fiche-modal: compacte weergave per leerling -->
 <div class="modal-overlay fiche-modal" id="ficheModal">
@@ -1149,6 +1164,12 @@ function updateModeUI() {
   $('classOptionsPanel').style.display = isLevels ? 'none' : '';
 }
 
+// ---- Sidebar tab navigatie in modal ----
+function switchFicheTab(name) {
+  document.querySelectorAll('#studentModal .fiche-nav-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === name));
+  document.querySelectorAll('#studentModal .fiche-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === name));
+}
+
 // ---- Aanpassingen per vak ----
 const VAKKEN_AANP = ['reading','spelling','math','writing'];
 const AANP_KEYS = ['verlengd','mondeling','eigendoelen','hulpkaarten','toetsing','remediering'];
@@ -1278,14 +1299,16 @@ function updateSectionBadges(s) {
   // Update DOM
   Object.keys(badges).forEach(key => {
     const el = $('badge_' + key);
-    if (!el) return;
-    const count = badges[key];
-    if (count > 0) {
-      el.textContent = count;
-      el.className = 'section-badge';
-    } else {
-      el.textContent = 'leeg';
-      el.className = 'section-badge empty';
+    if (el) {
+      const count = badges[key];
+      if (count > 0) { el.textContent = count; el.className = 'section-badge'; }
+      else { el.textContent = 'leeg'; el.className = 'section-badge empty'; }
+    }
+    const fnav = $('fnav_' + key);
+    if (fnav) {
+      const count = badges[key];
+      fnav.textContent = count || '';
+      fnav.classList.toggle('heeft-data', count > 0);
     }
   });
 
@@ -1333,7 +1356,6 @@ function openModal(studentId = null) {
     // Zorg
     $('m_care').value = s.care || 'laag';
     $('m_iac').value = s.iac || 'nee';
-    $('m_extraCare').value = s.extraCare || 'nee';
     $('m_careNote').value = s.careNote || '';
     if ($('m_allergies')) $('m_allergies').value = s.allergies || '';
     if ($('m_medicalNote')) $('m_medicalNote').value = s.medicalNote || '';
@@ -1361,10 +1383,10 @@ function openModal(studentId = null) {
 
     updateRepeatedYearUI();
     const badges = updateSectionBadges(s);
-    // Open secties die info bevatten
-    Object.keys(badges).forEach(key => {
-      if (badges[key] > 0) setAccordionOpen(key, true);
-    });
+    // Open de eerste sectie met data, anders basis
+    const tabVolgorde = ['vakken','gedrag','zorg','loopbaan','therapie','sociaal','zwemmen','algemeen'];
+    const eersteMetData = tabVolgorde.find(k => badges[k] > 0);
+    switchFicheTab(eersteMetData || 'basis');
   } else {
     // Reset alles
     ['m_firstName','m_lastName','m_avi','m_friends','m_avoid','m_notes','m_therapy_other',
@@ -1379,7 +1401,7 @@ function openModal(studentId = null) {
     $('m_reading').value = 'basis'; $('m_spelling').value = 'basis';
     $('m_math').value = 'basis'; $('m_writing').value = 'basis';
     VAKKEN_AANP.forEach(vak => resetAanpassingen(vak));
-    $('m_care').value = 'laag'; $('m_iac').value = 'nee'; $('m_extraCare').value = 'nee';
+    $('m_care').value = 'laag'; $('m_iac').value = 'nee';
     $('m_focus').value = 'ok'; $('m_behavior').value = 'ok';
     $('m_updatedDate').value = todayISO();
     setBadmuts('');
@@ -1387,6 +1409,7 @@ function openModal(studentId = null) {
     updateSectionBadges({});
   }
   $('studentModal').classList.add('show');
+  switchFicheTab('basis');
   setTimeout(() => $('m_firstName').focus(), 50);
 }
 function closeModal() { $('studentModal').classList.remove('show'); }
@@ -1420,7 +1443,7 @@ function saveStudent() {
     focus: $('m_focus').value, focusNote: $('m_focusNote').value.trim(),
     behavior: $('m_behavior').value, behaviorNote: $('m_behaviorNote').value.trim(),
     // Zorg
-    care: $('m_care').value, iac: $('m_iac').value, extraCare: $('m_extraCare').value,
+    care: $('m_care').value, iac: $('m_iac').value, extraCare: $('m_care').value === 'hoog' ? 'ja' : 'nee',
     careNote: $('m_careNote').value.trim(),
     allergies: $('m_allergies') ? $('m_allergies').value.trim() : '',
     medicalNote: $('m_medicalNote') ? $('m_medicalNote').value.trim() : '',
@@ -1471,6 +1494,7 @@ $('modalCancelBtn').onclick = closeModal;
 $('modalSaveBtn').onclick = saveStudent;
 $('modalDeleteBtn').onclick = deleteStudent;
 $('modalSaveNextBtn').onclick = saveAndNext;
+$('modalSavePrevBtn').onclick = saveAndPrev;
 $('m_repeated').addEventListener('change', updateRepeatedYearUI);
 
 function getNextStudentId(currentId) {
@@ -1483,16 +1507,38 @@ function getNextStudentId(currentId) {
   return sorted[idx + 1].id;
 }
 
+function getPrevStudentId(currentId) {
+  const sorted = [...state.students].sort((a, b) => {
+    const lc = (a.lastName || '').localeCompare(b.lastName || '', 'nl');
+    return lc !== 0 ? lc : (a.firstName || '').localeCompare(b.firstName || '', 'nl');
+  });
+  const idx = sorted.findIndex(s => s.id === currentId);
+  if (idx === -1 || idx === 0) return sorted[sorted.length - 1]?.id || null;
+  return sorted[idx - 1].id;
+}
+
 function saveAndNext() {
   const currentId = $('editId').value;
-  if (!currentId) { saveStudent(); return; } // nieuwe leerling: gewoon opslaan
+  if (!currentId) { saveStudent(); return; }
   const firstName = $('m_firstName').value.trim();
   const lastName = $('m_lastName').value.trim();
   if (!firstName) { alert('Vul een voornaam in.'); $('m_firstName').focus(); return; }
   if (!lastName) { alert('Vul een achternaam in.'); $('m_lastName').focus(); return; }
   const nextId = getNextStudentId(currentId);
-  saveStudent(); // slaat op én sluit modal
+  saveStudent();
   if (nextId) openModal(nextId);
+}
+
+function saveAndPrev() {
+  const currentId = $('editId').value;
+  if (!currentId) { saveStudent(); return; }
+  const firstName = $('m_firstName').value.trim();
+  const lastName = $('m_lastName').value.trim();
+  if (!firstName) { alert('Vul een voornaam in.'); $('m_firstName').focus(); return; }
+  if (!lastName) { alert('Vul een achternaam in.'); $('m_lastName').focus(); return; }
+  const prevId = getPrevStudentId(currentId);
+  saveStudent();
+  if (prevId) openModal(prevId);
 }
 
 function setBadmuts(val) {
