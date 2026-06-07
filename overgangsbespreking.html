@@ -3136,11 +3136,21 @@ function openOverzichtKlasPdf() {
     groep('Blijven zitten - niet overdragen', zittenblijvers, {noteKey:'notes'})
   );
 
+  // pdf-zwemmen-kleurblokken-codex
   const BADMUTS_ORDER = ['rood','blauw_ondiep','blauw_diep','groen'];
   const BADMUTS_LABELS = {rood:'Rood', blauw_ondiep:'Blauw ondiep', blauw_diep:'Blauw diep', groen:'Groen'};
+  const BADMUTS_CLASS = {rood:'zwem-rood', blauw_ondiep:'zwem-blauw-ondiep', blauw_diep:'zwem-blauw-diep', groen:'zwem-groen'};
+  function zwemGroep(kleur) {
+    const lijst = sorteer(leerlingen.filter(x => x.badmuts === kleur));
+    const inhoud = lijst.length ? lijst.map(s => `<div class="zwem-leerling">${esc(s.name)}</div>`).join('') : '<p class="empty">Geen leerlingen.</p>';
+    return `<section class="zwem-blok ${BADMUTS_CLASS[kleur]}"><h4>${BADMUTS_LABELS[kleur]}</h4>${inhoud}</section>`;
+  }
+  const onbekendeZwemmers = sorteer(leerlingen.filter(x => !x.badmuts));
+  const onbekendZwemmen = `<section class="zwem-blok zwem-onbekend"><h4>Onbekend / nog in te vullen</h4>${
+    onbekendeZwemmers.length ? onbekendeZwemmers.map(s => `<div class="zwem-leerling">${esc(s.name)}</div>`).join('') : '<p class="empty">Geen leerlingen.</p>'
+  }</section>`;
   const zwemmen = onderdeel('Badmuts',
-    BADMUTS_ORDER.map(k => groep(BADMUTS_LABELS[k], leerlingen.filter(x => x.badmuts === k))).join('') +
-    groep('Onbekend / nog in te vullen', leerlingen.filter(x => !x.badmuts))
+    BADMUTS_ORDER.map(zwemGroep).join('') + onbekendZwemmen
   );
 
   const sociaal = onderdeel('Sociale relaties',
@@ -3187,6 +3197,14 @@ function openOverzichtKlasPdf() {
     .extra{color:#475569;font-size:12px}
     .note{grid-column:2;color:#7a5010;font-size:12px;font-style:italic;margin-top:-2px}
     .warn{color:#9a3412;font-weight:800}
+    .zwem-blok{margin:10px 12px 12px;border-radius:9px;border:1px solid #d7deea;overflow:hidden;break-inside:avoid;page-break-inside:avoid}
+    .zwem-blok h4{margin:0;padding:8px 10px;font-size:14px;font-weight:900;color:#111827;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    .zwem-leerling{padding:5px 10px;border-top:1px solid rgba(255,255,255,.75);font-weight:800;background:rgba(255,255,255,.52)}
+    .zwem-rood{background:#fee2e2;border-color:#fca5a5}.zwem-rood h4{background:#f87171;color:#7f1d1d}
+    .zwem-blauw-ondiep{background:#dbeafe;border-color:#93c5fd}.zwem-blauw-ondiep h4{background:#bfdbfe;color:#1e3a8a}
+    .zwem-blauw-diep{background:#dbeafe;border-color:#2563eb}.zwem-blauw-diep h4{background:#1d4ed8;color:#fff}
+    .zwem-groen{background:#dcfce7;border-color:#86efac}.zwem-groen h4{background:#86efac;color:#14532d}
+    .zwem-onbekend{background:#f8fafc;border-color:#cbd5e1}.zwem-onbekend h4{background:#e2e8f0;color:#334155}
     .empty{color:#65748b;font-style:italic;margin:3px 0 6px;font-size:12px}
     @media print{
       .toolbar{display:none}
