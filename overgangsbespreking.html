@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="nl">
 <head>
 <meta charset="UTF-8" />
@@ -131,8 +131,7 @@
   .section-badge.empty{background:var(--soft);color:var(--muted)}
   .field-with-note{margin-bottom:12px}
   .therapie-rij{background:var(--soft);border:1px solid var(--border);border-radius:10px;padding:10px 12px}
-  .therapie-adres{margin-top:8px}
-  .therapie-adres{margin-top:8px}margin-top:8px;padding:10px 12px;background:#fff8e6;border:1px solid #f0c866;border-radius:10px}
+  .therapie-adres{margin-top:8px;padding:10px 12px;background:#fff8e6;border:1px solid #f0c866;border-radius:10px}
   .aanpassingen-blok.zichtbaar{display:block}
   .aanpassingen-blok-titel{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:#92640a;margin-bottom:8px}
   .aanpassingen-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:5px}
@@ -1592,7 +1591,7 @@ function saveStudent() {
   } else {
     state.students.push({ id: uid(), ...data });
   }
-  markDirty(); closeModal(); renderStudents(); updateBadges();
+  markDirty(); renderStudents(); updateBadges();
 }
 function deleteStudent() {
   const id = $('editId').value;
@@ -1607,10 +1606,7 @@ $('addStudentBtn').onclick = () => openModal();
 if ($('importKlaslijstBtn')) $('importKlaslijstBtn').onclick = addStudentsFromClassList;
 $('modalClose').onclick = closeModal;
 $('modalCancelBtn').onclick = closeModal;
-$('modalSaveBtn').onclick = saveStudent;
 $('modalDeleteBtn').onclick = deleteStudent;
-$('modalSaveNextBtn').onclick = saveAndNext;
-$('modalSavePrevBtn').onclick = saveAndPrev;
 // fiche-opslaan-wacht-op-firebase-codex
 let ficheOpslaanBusy = false;
 
@@ -1662,15 +1658,12 @@ async function saveStudentAndWait(action) {
 
   setFicheOpslaanBusy(true);
   try {
-    const beforeCount = state.students.length;
-    saveStudent();
-    const afterCount = state.students.length;
-    if (afterCount === beforeCount && !currentId && !state.students.length) return false;
-
+    saveStudent(); // schrijft naar state + markDirty, closeModal() NIET meer
     await bewaarProjectStilInFirebase();
-
-    if (action === 'next' && nextId) openModal(nextId);
-    if (action === 'prev' && prevId) openModal(prevId);
+    // Pas ná Firebase: modal sluiten / volgende openen
+    if (action === 'next' && nextId) { openModal(nextId); }
+    else if (action === 'prev' && prevId) { openModal(prevId); }
+    else { closeModal(); }
     return true;
   } catch (err) {
     console.error('Fiche opslaan mislukt:', err);
