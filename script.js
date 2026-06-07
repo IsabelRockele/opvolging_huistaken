@@ -1,4 +1,4 @@
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+﻿import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, sendPasswordResetEmail, signOut, updatePassword } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import { getFirestore, doc, getDoc, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
@@ -20,7 +20,11 @@ export { db };
 
 // Als gebruiker al is ingelogd, blijf op de startpagina (index) zodat de klasagenda zichtbaar blijft.
 onAuthStateChanged(auth, (user) => {
-  if (!user) return;
+  if (!user) {
+    const authBox = document.getElementById('auth');
+    if (authBox) authBox.style.display = '';
+    return;
+  }
 
   const isIndex =
     location.pathname.endsWith('index.html') ||
@@ -163,9 +167,6 @@ window.login = function () {
   const email = document.getElementById("email").value;
   const password = document.getElementById("password").value;
   signInWithEmailAndPassword(auth, email, password)
-    .then((userCredential) => {
-      window.location.href = 'index.html';
-    })
     .catch((error) => {
       alert("Fout bij inloggen: " + error.message);
     });
