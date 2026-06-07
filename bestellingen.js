@@ -639,12 +639,20 @@ function normaliseerTeamData() {
   if (!teamData.bestellingenMeldingen.werkboekenStatusPerKlas) teamData.bestellingenMeldingen.werkboekenStatusPerKlas = {};
   klassenVoorMeldingen.forEach(klas => {
     if (!teamData.bestellingenMeldingen.werkboekenStatusPerKlas[klas]) {
-      teamData.bestellingenMeldingen.werkboekenStatusPerKlas[klas] = { inOrde: false, door: '', op: '' };
+      teamData.bestellingenMeldingen.werkboekenStatusPerKlas[klas] = { inOrde: false, door: '', op: '', besteld: false, besteldDoor: '', besteldOp: '', methodes: {}, aantallen: {}, geleverd: false, geleverdDoor: '', geleverdOp: '' };
     }
     const status = teamData.bestellingenMeldingen.werkboekenStatusPerKlas[klas];
     if (status.inOrde === undefined) status.inOrde = false;
     if (status.door === undefined) status.door = '';
     if (status.op === undefined) status.op = '';
+    if (status.besteld === undefined) status.besteld = false;
+    if (status.besteldDoor === undefined) status.besteldDoor = '';
+    if (status.besteldOp === undefined) status.besteldOp = '';
+    if (!status.methodes) status.methodes = {};
+    if (!status.aantallen) status.aantallen = {};
+    if (status.geleverd === undefined) status.geleverd = false;
+    if (status.geleverdDoor === undefined) status.geleverdDoor = '';
+    if (status.geleverdOp === undefined) status.geleverdOp = '';
   });
 
   // Aantal kinderen voor bestelling klasmateriaal (totaal van beide leerjaren) — apart aanpasbaar
@@ -843,61 +851,83 @@ function teamHeaderTekst() {
 
 let secretariaatStatusCache = {};
 let secretariaatStatusAanHetLaden = false;
+let secretariaatStatusGeladen = false;
+let secretariaatDetailKlas = '';
+
+function vandaagIso() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+function volgendSchooljaarBestellingen(jaar) {
+  const match = String(jaar || '').match(/^(\d{4})-(\d{4})$/);
+  if (!match) return '';
+  return (parseInt(match[1], 10) + 1) + '-' + (parseInt(match[2], 10) + 1);
+}
+
+function werkboekenCyclus() {
+  if (!teamData.bestellingenMeldingen) teamData.bestellingenMeldingen = {};
+  if (!teamData.bestellingenMeldingen.werkboekenCyclus) {
+    teamData.bestellingenMeldingen.werkboekenCyclus = {
+      schooljaar: teamData.instellingen?.schooljaar || '2026-2027',
+      deadlineDatum: teamData.bestellingenMeldingen.werkboekenAlgemeen?.datum || '',
+      tekst: teamData.bestellingenMeldingen.werkboekenAlgemeen?.tekst || '',
+      afgeslotenOp: ''
+    };
+  }
+  return teamData.bestellingenMeldingen.werkboekenCyclus;
+}
 
 function meldingVoorWerkboekenKlas(klas) {
-  if (!teamData || !teamData.bestellingenMeldingen) return { datum: '', tekst: '' };
-  return teamData.bestellingenMeldingen.werkboekenAlgemeen || { datum: '', tekst: '' };
+  const c = werkboekenCyclus();
+  return {
+    datum: c.deadlineDatum || '',
+    tekst: c.tekst || ''
+  };
 }
 
 function werkboekenStatusVoorKlas(klas) {
-  if (!teamData || !teamData.bestellingenMeldingen) return { inOrde: false, door: '', op: '' };
+  if (!teamData || !teamData.bestellingenMeldingen) return { inOrde: false, door: '', op: '', besteld: false, besteldDoor: '', besteldOp: '', methodes: {}, aantallen: {}, geleverd: false, geleverdDoor: '', geleverdOp: '' };
   const perKlas = teamData.bestellingenMeldingen.werkboekenStatusPerKlas || {};
-  return perKlas[klas] || { inOrde: false, door: '', op: '' };
+  return perKlas[klas] || { inOrde: false, door: '', op: '', besteld: false, besteldDoor: '', besteldOp: '', methodes: {}, aantallen: {}, geleverd: false, geleverdDoor: '', geleverdOp: '' };
 }
 
 function statusUitDocVoorKlas(groepId, klas) {
   const docData = secretariaatStatusCache[groepId];
   const status = docData?.bestellingenMeldingen?.werkboekenStatusPerKlas?.[klas];
-  return status || { inOrde: false, door: '', op: '' };
+  return status || { inOrde: false, door: '', op: '', besteld: false, besteldDoor: '', besteldOp: '', methodes: {}, aantallen: {}, geleverd: false, geleverdDoor: '', geleverdOp: '' };
+}
+
+function cyclusUitDoc(groepId) {
+  return secretariaatStatusCache[groepId]?.bestellingenMeldingen?.werkboekenCyclus || werkboekenCyclus();
 }
 
 function lyrecoMelding() {
-  if (!teamData || !teamData.bestellingenMeldingen) return { datum: '', tekst: '', leverdatum: '' };
-  const ly = teamData.bestellingenMeldingen.lyreco || {};
-  return { datum: ly.datum || '', tekst: ly.tekst || '', leverdatum: ly.leverdatum || '' };
+  if (!teamData.bestellingenMeldingen) teamData.bestellingenMeldingen = {};
+  if (!teamData.bestellingenMeldingen.lyreco) teamData.bestellingenMeldingen.lyreco = { datum: '', leverdatum: '', tekst: '' };
+  if (teamData.bestellingenMeldingen.lyreco.leverdatum === undefined) teamData.bestellingenMeldingen.lyreco.leverdatum = '';
+  return teamData.bestellingenMeldingen.lyreco;
 }
 
 function meldingRegelHtml(titel, melding) {
-  const datum = (melding && melding.datum) ? melding.datum : '';
-  const tekst = (melding && melding.tekst) ? melding.tekst : '';
-  const leverdatum = (melding && melding.leverdatum) ? melding.leverdatum : '';
-  if (!datum && !tekst && !leverdatum) return '';
+  if (!melding || (!melding.datum && !melding.tekst && !melding.leverdatum)) return '';
   return `
     <div class="bestellingen-melding">
       <strong>${escape(titel)}</strong>
-      ${datum ? `<span class="deadline-pill">invullen tegen ${escape(datum)}</span>` : ''}
-      ${leverdatum ? `<span class="deadline-pill lever">leverdatum ${escape(leverdatum)}</span>` : ''}
-      ${tekst ? `<span>${escape(tekst)}</span>` : ''}
+      ${melding.datum ? `<span class="deadline-pill">tegen ${escape(melding.datum)}</span>` : ''}
+      ${melding.leverdatum ? `<span class="deadline-pill lever">leverdatum ${escape(melding.leverdatum)}</span>` : ''}
+      ${melding.tekst ? `<span>${escape(melding.tekst)}</span>` : ''}
     </div>
   `;
 }
 
 function zorgMeldingContainers() {
-  const werkboekenPaneel = document.getElementById('paneel-werkboeken');
-  if (werkboekenPaneel && !document.getElementById('bestellingen-melding-werkboeken')) {
-    const div = document.createElement('div');
-    div.id = 'bestellingen-melding-werkboeken';
-    const klasBalk = werkboekenPaneel.querySelector('#klas-balk');
-    werkboekenPaneel.insertBefore(div, klasBalk || werkboekenPaneel.firstChild);
+  const paneelWerkboeken = document.getElementById('paneel-werkboeken');
+  if (paneelWerkboeken && !document.getElementById('bestellingen-melding-werkboeken')) {
+    paneelWerkboeken.insertAdjacentHTML('afterbegin', '<div id="bestellingen-melding-werkboeken"></div>');
   }
-
-  const lyrecoPaneel = document.getElementById('paneel-lyreco');
-  if (lyrecoPaneel && !document.getElementById('bestellingen-melding-lyreco')) {
-    const div = document.createElement('div');
-    div.id = 'bestellingen-melding-lyreco';
-    const eersteSub = lyrecoPaneel.querySelector('.sub');
-    if (eersteSub && eersteSub.nextSibling) lyrecoPaneel.insertBefore(div, eersteSub.nextSibling);
-    else lyrecoPaneel.insertBefore(div, lyrecoPaneel.firstChild);
+  const paneelLyreco = document.getElementById('paneel-lyreco');
+  if (paneelLyreco && !document.getElementById('bestellingen-melding-lyreco')) {
+    paneelLyreco.insertAdjacentHTML('afterbegin', '<div id="bestellingen-melding-lyreco"></div>');
   }
 }
 
@@ -922,10 +952,26 @@ async function laadSecretariaatStatusOverzicht() {
       }
     }));
     secretariaatStatusCache = Object.fromEntries(entries);
+    if (actieveGroep && teamData) secretariaatStatusCache[actieveGroep.id] = teamData;
+    secretariaatStatusGeladen = true;
   } finally {
     secretariaatStatusAanHetLaden = false;
   }
   renderBestellingenMeldingen();
+}
+
+function statusTekstVoorKlas(status) {
+  if (status.geleverd) return 'geleverd en nagekeken';
+  if (status.besteld) return 'bestelling geplaatst';
+  if (status.inOrde) return 'klaar om te bestellen';
+  return 'nog aanpassen';
+}
+
+function statusKlasseVoorKlas(status) {
+  if (status.geleverd) return 'klaar';
+  if (status.besteld) return 'besteld';
+  if (status.inOrde) return 'wacht';
+  return 'niet-klaar';
 }
 
 function renderWerkboekenStatusOverzicht() {
@@ -936,7 +982,7 @@ function renderWerkboekenStatusOverzicht() {
   const klassen = groepen.flatMap(groep => groep.klassen.map(klas => ({ groep, klas })));
   if (!klassen.length) return '';
 
-  if (secretariaat && !secretariaatStatusAanHetLaden) {
+  if (secretariaat && !secretariaatStatusAanHetLaden && !secretariaatStatusGeladen) {
     setTimeout(laadSecretariaatStatusOverzicht, 0);
   }
 
@@ -944,40 +990,338 @@ function renderWerkboekenStatusOverzicht() {
     <div class="status-overzicht schoolbreed">
       ${klassen.map(({ groep, klas }) => {
         const status = secretariaat ? statusUitDocVoorKlas(groep.id, klas) : werkboekenStatusVoorKlas(klas);
-        const ok = !!status.inOrde;
-        const actief = klas === actieveKlas ? ' actief' : '';
+        const klasse = statusKlasseVoorKlas(status);
+        const actief = klas === secretariaatDetailKlas ? ' actief' : '';
         return `
-          <button type="button" class="status-rij ${ok ? 'klaar' : 'niet-klaar'}${actief}" onclick="openWerkboekenKlas('${escape(klas)}')">
+          <div role="button" tabindex="0" class="status-rij klaskaart ${klasse}${actief}" data-open-klas="${escape(klas)}">
             <strong>${escape(klas)}</strong>
-            <span>${ok ? 'in orde' : 'nog niet in orde'}</span>
-            ${ok && status.op ? `<small>op ${escape(status.op)}${status.door ? ' door ' + escape(status.door) : ''}</small>` : ''}
-          </button>
+            <span>${escape(statusTekstVoorKlas(status))}</span>
+            ${status.besteld && status.besteldOp ? `<small>besteld op ${escape(status.besteldOp)}</small>` : ''}
+            ${!status.besteld && status.inOrde && status.op ? `<small>in orde op ${escape(status.op)}</small>` : ''}
+            ${status.geleverd && status.geleverdOp ? `<small>nagekeken op ${escape(status.geleverdOp)}</small>` : ''}
+          </div>
         `;
       }).join('')}
     </div>
   `;
 }
 
-window.openWerkboekenKlas = function (klas) {
+
+function secretariaatStatusVoorKlasZeker(klas) {
+  if (!teamData.bestellingenMeldingen) teamData.bestellingenMeldingen = {};
+  if (!teamData.bestellingenMeldingen.werkboekenStatusPerKlas) teamData.bestellingenMeldingen.werkboekenStatusPerKlas = {};
+  if (!teamData.bestellingenMeldingen.werkboekenStatusPerKlas[klas]) {
+    teamData.bestellingenMeldingen.werkboekenStatusPerKlas[klas] = {
+      inOrde: false,
+      door: '',
+      op: '',
+      besteld: false,
+      besteldDoor: '',
+      besteldOp: '',
+      methodes: {},
+      aantallen: {},
+      geleverd: false,
+      geleverdDoor: '',
+      geleverdOp: ''
+    };
+  }
+  const status = teamData.bestellingenMeldingen.werkboekenStatusPerKlas[klas];
+  if (!status.methodes) status.methodes = {};
+  if (!status.aantallen) status.aantallen = {};
+  return status;
+}
+
+function secretariaatBestelOverzichtVoorKlas(klas) {
+  const lj = leerjaarVoorKlas(klas);
+  const instellingen = teamData.instellingen?.[lj] || {};
+  const kinderen = parseInt(instellingen.kinderen) || 0;
+  const reserve = parseInt(instellingen.reserve) || 0;
+  const nodig = kinderen + reserve;
+  const methodes = teamData.werkboeken?.[lj] || [];
+  const status = werkboekenStatusVoorKlas(klas);
+  const methodeStatus = status.methodes || {};
+  const aantallen = status.aantallen || {};
+  let totaalVoorstel = 0;
+  let totaalBestellen = 0;
+  let totaalLk = 0;
+  let aantalMethodes = 0;
+  let besteldeMethodes = 0;
+
+  const rijen = [];
+  methodes.forEach(m => {
+    aantalMethodes++;
+    const methodeBesteld = !!methodeStatus[m.id]?.besteld;
+    if (methodeBesteld) besteldeMethodes++;
+    (Array.isArray(m.delen) ? m.delen : []).forEach(d => {
+      const stock = parseInt(d.stock) || 0;
+      const voorstel = Math.max(0, nodig - stock);
+      const key = m.id + '_' + d.id;
+      const aangepast = aantallen[key] !== undefined && aantallen[key] !== null && aantallen[key] !== '';
+      const bestellen = aangepast ? Math.max(0, parseInt(aantallen[key]) || 0) : voorstel;
+      totaalVoorstel += voorstel;
+      totaalBestellen += bestellen;
+      rijen.push({
+        type: 'werkboek',
+        methodeId: m.id,
+        methodeNaam: m.naam || 'Methode',
+        uitgever: m.uitgever || '',
+        key,
+        naam: d.naam || '',
+        stock,
+        nodig,
+        voorstel,
+        bestellen,
+        aangepast,
+        methodeBesteld
+      });
+    });
+    (Array.isArray(m.leerkrachtMateriaal) ? m.leerkrachtMateriaal : []).forEach(item => {
+      const aantal = parseInt(item.aantal) || 1;
+      const stock = parseInt(item.stock) || 0;
+      const voorstel = Math.max(0, aantal - stock);
+      const key = m.id + '_lk_' + item.id;
+      const aangepast = aantallen[key] !== undefined && aantallen[key] !== null && aantallen[key] !== '';
+      const bestellen = aangepast ? Math.max(0, parseInt(aantallen[key]) || 0) : voorstel;
+      totaalLk += bestellen;
+      rijen.push({
+        type: 'leerkracht',
+        methodeId: m.id,
+        methodeNaam: m.naam || 'Methode',
+        uitgever: m.uitgever || '',
+        key,
+        naam: item.naam || '',
+        stock,
+        nodig: aantal,
+        voorstel,
+        bestellen,
+        aangepast,
+        methodeBesteld
+      });
+    });
+  });
+
+  return {
+    lj,
+    kinderen,
+    reserve,
+    nodig,
+    methodes,
+    rijen,
+    totaalVoorstel,
+    totaalBestellen,
+    totaalLk,
+    aantalMethodes,
+    besteldeMethodes,
+    allesBesteld: aantalMethodes > 0 && besteldeMethodes === aantalMethodes
+  };
+}
+
+function renderLeerkrachtBestelInfo(klas) {
+  if (!teamData || !klas) return '';
+  const status = werkboekenStatusVoorKlas(klas);
+  const overzicht = secretariaatBestelOverzichtVoorKlas(klas);
+  const aangepast = overzicht.rijen.filter(r => r.aangepast && r.bestellen !== r.voorstel);
+  if (!status.besteld && !aangepast.length) return '';
+  return `
+    <div class="bestellingen-melding secretariaat-info">
+      ${status.besteld ? `<strong>Secretariaat heeft de werkboekenbestelling in orde gezet.</strong>` : `<strong>Secretariaat keek de aantallen na.</strong>`}
+      ${status.besteldOp ? `<span>Datum: ${escape(status.besteldOp)}</span>` : ''}
+      ${aangepast.length ? `
+        <span>Aangepaste aantallen:</span>
+        <ul>
+          ${aangepast.map(r => `<li>${escape(r.methodeNaam)} - ${escape(r.naam)}: ${r.voorstel} werd ${r.bestellen}</li>`).join('')}
+        </ul>
+      ` : ''}
+    </div>
+  `;
+}
+function renderSecretariaatWerkboekenSamenvatting(klas) {
+  if (!teamData || !klas) return '';
+  const overzicht = secretariaatBestelOverzichtVoorKlas(klas);
+  const status = werkboekenStatusVoorKlas(klas);
+  const perMethode = overzicht.methodes.map(m => {
+    const methodeRijen = overzicht.rijen.filter(r => r.methodeId === m.id);
+    const besteld = !!status.methodes?.[m.id]?.besteld;
+    const rijenHtml = methodeRijen.map(r => `
+      <tr>
+        <td>${escape(r.naam)}${r.type === 'leerkracht' ? ' <span class="muted">(leerkracht)</span>' : ''}</td>
+        <td class="getal">${r.stock}</td>
+        <td class="getal">${r.nodig}</td>
+        <td class="getal">${r.voorstel}</td>
+        <td class="getal">
+          <input class="secretariaat-aantal" type="number" min="0" value="${r.bestellen}" onchange="secretariaatAantalBijbestellenZetten('${escape(klas)}','${escape(r.key)}',this.value)">
+        </td>
+      </tr>
+    `).join('');
+    return `
+      <div class="secretariaat-methode ${besteld ? 'besteld' : ''}">
+        <div class="secretariaat-methode-kop">
+          <label class="detail-check">
+            <input type="checkbox" ${besteld ? 'checked' : ''} onchange="secretariaatMethodeBesteldZetten('${escape(klas)}','${escape(m.id)}',this.checked)">
+            ${escape(m.naam || 'Methode')}${m.uitgever ? ' (' + escape(m.uitgever) + ')' : ''}
+          </label>
+          <span>${besteld ? 'besteld' : 'nog te bestellen'}</span>
+        </div>
+        ${rijenHtml ? `
+          <div class="tabel-wrap">
+            <table class="vol secretariaat-overzicht-tabel">
+              <thead>
+                <tr>
+                  <th>Titel/deel</th>
+                  <th class="getal">Stock</th>
+                  <th class="getal">Nodig</th>
+                  <th class="getal">Voorstel</th>
+                  <th class="getal">Bestellen</th>
+                </tr>
+              </thead>
+              <tbody>${rijenHtml}</tbody>
+            </table>
+          </div>
+        ` : `<p class="detail-regel">Geen titels ingevuld bij deze methode.</p>`}
+      </div>
+    `;
+  }).join('');
+
+  return `
+    <div class="secretariaat-werkboeken-samenvatting">
+      <div class="samenvatting secretariaat-samenvatting">
+        <div>Kinderen: <strong>${overzicht.kinderen}</strong></div>
+        <div>Reserve: <strong>${overzicht.reserve}</strong></div>
+        <div>Totaal nodig per deel: <strong>${overzicht.nodig}</strong></div>
+        <div>Methodes besteld: <strong>${overzicht.besteldeMethodes}/${overzicht.aantalMethodes}</strong></div>
+        <div>Werkboeken bestellen: <strong>${overzicht.totaalBestellen}</strong></div>
+        ${overzicht.totaalLk > 0 ? `<div>Leerkrachtmateriaal: <strong>${overzicht.totaalLk}</strong></div>` : ''}
+      </div>
+      <div class="deadline-acties">
+        <button class="knop blauw" onclick="pdfSecretariaatWerkboekenKlas('${escape(klas)}')">PDF downloaden</button>
+      </div>
+      ${overzicht.methodes.length ? perMethode : `<p class="detail-regel rood">Er zijn nog geen werkboeken ingevuld voor deze klas.</p>`}
+    </div>
+  `;
+}
+
+function klasNavigatieInfo(klas) {
+  const klassen = alleKlassen();
+  const index = Math.max(0, klassen.indexOf(klas));
+  return {
+    klassen,
+    index,
+    vorige: klassen[(index - 1 + klassen.length) % klassen.length],
+    volgende: klassen[(index + 1) % klassen.length]
+  };
+}
+
+function springNaarWerkboekenBoven() {
+  setTimeout(() => {
+    const doel = document.getElementById('bestellingen-melding-werkboeken') || document.getElementById('paneel-werkboeken');
+    if (doel) doel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, 60);
+}
+function renderSecretariaatKlasDetail() {
+  if (!secretariaatDetailKlas) {
+    return '<div class="klas-detail leeg">Klik op een klas om de bestelling van die klas te openen.</div>';
+  }
+  const groep = groepVoorKlas(secretariaatDetailKlas);
+  if (!groep) return '';
+  const huidigeGroepActief = actieveGroep && actieveGroep.id === groep.id;
+  const status = huidigeGroepActief
+    ? werkboekenStatusVoorKlas(secretariaatDetailKlas)
+    : statusUitDocVoorKlas(groep.id, secretariaatDetailKlas);
+  const label = leerjaarNaamVoorKlas(secretariaatDetailKlas) || secretariaatDetailKlas;
+  const overzicht = secretariaatBestelOverzichtVoorKlas(secretariaatDetailKlas);
+  const nav = klasNavigatieInfo(secretariaatDetailKlas);
+  return `
+    <div class="klas-detail klasscherm">
+      <div class="klasscherm-balk">
+        <button type="button" class="knop grijs" onclick="sluitWerkboekenKlas()">Overzicht</button>
+        <div class="klasscherm-nav">
+          <button type="button" class="knop klein grijs" onclick="openWerkboekenKlas('${escape(nav.vorige)}')">Vorige klas</button>
+          <button type="button" class="knop klein blauw" onclick="openWerkboekenKlas('${escape(nav.volgende)}')">Volgende klas</button>
+        </div>
+      </div>
+      <div class="klasscherm-titel">
+        <div>
+          <h3>${escape(secretariaatDetailKlas)} - ${escape(label)}</h3>
+          <p>${escape(statusTekstVoorKlas(status))}</p>
+        </div>
+        <span>${nav.index + 1}/${nav.klassen.length}</span>
+      </div>
+      <label class="detail-check">
+        <input type="checkbox" ${status.besteld ? 'checked' : ''} ${!overzicht.allesBesteld ? 'disabled' : ''} onchange="werkboekenBestellingGeplaatstVoorKlas('${escape(secretariaatDetailKlas)}', this.checked)">
+        Bestelling in orde voor ${escape(secretariaatDetailKlas)}
+      </label>
+      ${status.inOrde ? `<span class="detail-regel">Leerkracht zette deze klas in orde${status.op ? ' op ' + escape(status.op) : ''}.</span>` : `<span class="detail-regel rood">Leerkracht zette deze klas nog niet in orde.</span>`}
+      ${!overzicht.allesBesteld ? `<span class="detail-regel rood">Nog niet alle methodes zijn als besteld aangevinkt.</span>` : `<span class="detail-regel">Alle methodes zijn aangevinkt. Je kan de klas op bestelling in orde zetten.</span>`}
+      ${status.geleverd ? `<span class="detail-regel">Geleverd en nagekeken${status.geleverdOp ? ' op ' + escape(status.geleverdOp) : ''}.</span>` : ''}
+      ${renderSecretariaatWerkboekenSamenvatting(secretariaatDetailKlas)}
+    </div>
+  `;
+}
+
+window.openWerkboekenKlas = async function (klas) {
   const groep = groepVoorKlas(klas);
   if (!groep) return;
-  if (!actieveGroep || groep.id !== actieveGroep.id) {
-    openBestellingenGroep(groep.id, klas);
+  secretariaatDetailKlas = klas;
+
+  const andereGroep = !actieveGroep || groep.id !== actieveGroep.id;
+  if (andereGroep) {
+    const wbBox = document.getElementById('bestellingen-melding-werkboeken');
+    if (wbBox) {
+      wbBox.innerHTML = '<div class="klas-detail klasscherm"><div class="klasscherm-balk"><button type="button" class="knop grijs" onclick="sluitWerkboekenKlas()">Overzicht</button></div><h3>' + escape(klas) + '</h3><p>Deze klas wordt geladen...</p></div>';
+    }
+    await openBestellingenGroep(groep.id, klas);
+    setTimeout(() => {
+      secretariaatDetailKlas = klas;
+      actieveKlas = klas;
+      huidigLeerjaar = leerjaarVoorKlas(klas);
+      if (teamData) renderBestellingenMeldingen();
+      springNaarWerkboekenBoven();
+    }, 250);
     return;
   }
+
   actieveKlas = klas;
   huidigLeerjaar = leerjaarVoorKlas(klas);
   const klasSelect = document.getElementById('bestellingen-klas-wissel');
   if (klasSelect) klasSelect.value = klas;
   allesRenderen();
+  springNaarWerkboekenBoven();
 };
 
+window.sluitWerkboekenKlas = function () {
+  secretariaatDetailKlas = '';
+  renderBestellingenMeldingen();
+  springNaarWerkboekenBoven();
+};
+
+
+function renderSecretariaatKlasNoodbediening() {
+  return `
+    <div class="secretariaat-noodbediening">
+      <label for="secretariaat-klas-direct">Klas openen</label>
+      <div class="secretariaat-noodbediening-rij">
+        <select id="secretariaat-klas-direct" data-secretariaat-deadline>
+          ${alleKlassen().map(klas => `<option value="${escape(klas)}">${escape(klas)}</option>`).join('')}
+        </select>
+        <button type="button" class="knop blauw" data-secretariaat-deadline onclick="secretariaatOpenKlasUitKeuze()">Klas openen</button>
+      </div>
+    </div>
+  `;
+}
+
+window.secretariaatOpenKlasUitKeuze = function () {
+  const select = document.getElementById('secretariaat-klas-direct');
+  const klas = select ? select.value : '';
+  if (!klas) return;
+  openWerkboekenKlas(klas);
+};
 function renderBestellingenMeldingen() {
   if (!teamData) return;
   zorgMeldingContainers();
 
   const wbBox = document.getElementById('bestellingen-melding-werkboeken');
   const lyBox = document.getElementById('bestellingen-melding-lyreco');
+  const cyclus = werkboekenCyclus();
   const wb = meldingVoorWerkboekenKlas(actieveKlas);
   const status = werkboekenStatusVoorKlas(actieveKlas);
   const ly = lyrecoMelding();
@@ -987,25 +1331,32 @@ function renderBestellingenMeldingen() {
 
   if (wbBox) {
     if (secretariaat) {
-      wbBox.innerHTML = `
-        <div class="deadline-paneel rustig">
-          <h3>Bestellingen opvolgen</h3>
+      if (secretariaatDetailKlas) {
+        wbBox.innerHTML = renderSecretariaatKlasDetail();
+      } else {
+        wbBox.innerHTML = `
+        <div class="deadline-paneel rustig secretariaat-start">
+          <h3>Werkboekenmelding maken</h3>
           <div class="deadline-grid compact">
             <div>
-              <label>Werkboeken: invullen tegen</label>
-              <input data-secretariaat-deadline type="date" id="deadline-wb-datum" value="${escape(wb.datum || '')}">
+              <label>Schooljaar werkboeken</label>
+              <input data-secretariaat-deadline type="text" id="deadline-wb-schooljaar" value="${escape(cyclus.schooljaar || '')}" placeholder="2026-2027">
             </div>
             <div>
+              <label>Werkboeken invullen tegen</label>
+              <input data-secretariaat-deadline type="text" inputmode="numeric" id="deadline-wb-datum" placeholder="jjjj-mm-dd" value="${escape(cyclus.deadlineDatum || '')}">
+            </div>
+            <div style="grid-column:1/-1;">
               <label>Melding werkboeken</label>
-              <input data-secretariaat-deadline type="text" id="deadline-wb-tekst" value="${escape(wb.tekst || '')}" placeholder="bv. Werkboeken nakijken en klaarzetten">
+              <input data-secretariaat-deadline type="text" id="deadline-wb-tekst" value="${escape(cyclus.tekst || '')}" placeholder="bv. Werkboeken nakijken en klaarzetten">
             </div>
             <div>
-              <label>Lyreco: invullen tegen</label>
-              <input data-secretariaat-deadline type="date" id="deadline-ly-datum" value="${escape(ly.datum || '')}">
+              <label>Lyreco invullen tegen</label>
+              <input data-secretariaat-deadline type="text" inputmode="numeric" id="deadline-ly-datum" placeholder="jjjj-mm-dd" value="${escape(ly.datum || '')}">
             </div>
             <div>
-              <label>Lyreco: leverdatum op bestelbon</label>
-              <input data-secretariaat-deadline type="date" id="deadline-ly-leverdatum" value="${escape(ly.leverdatum || '')}">
+              <label>Lyreco leverdatum op bestelbon</label>
+              <input data-secretariaat-deadline type="text" inputmode="numeric" id="deadline-ly-leverdatum" placeholder="jjjj-mm-dd" value="${escape(ly.leverdatum || '')}">
             </div>
             <div style="grid-column:1/-1;">
               <label>Melding bij Lyreco</label>
@@ -1013,17 +1364,22 @@ function renderBestellingenMeldingen() {
             </div>
           </div>
           <div class="deadline-acties">
-            <button data-secretariaat-deadline class="knop groen" onclick="bestellingenMeldingenOpslaan()">Meldingen bewaren</button>
+            <button data-secretariaat-deadline class="knop groen" onclick="bestellingenMeldingenOpslaan()">Melding bewaren</button>
+            <button data-secretariaat-deadline class="knop grijs" onclick="nieuwWerkboekenjaarStarten()">Nieuw werkboekenjaar starten</button>
           </div>
-          <h3 class="status-titel">Status per klas</h3>
-          <p class="status-hint">Klik op een klas om de werkboeken van die klas te bekijken.</p>
+          <h3 class="status-titel">Overzicht klassen</h3>
+          <p class="status-hint">Klik op een klas om de bestelling van die klas af te werken.</p>
           ${renderWerkboekenStatusOverzicht()}
         </div>
       `;
+      }
     } else {
       const meldingHtml = meldingRegelHtml('Werkboeken', wb);
+      const besteld = !!status.besteld;
       wbBox.innerHTML = `
         ${meldingHtml}
+        ${renderLeerkrachtBestelInfo(actieveKlas)}
+        ${besteld ? `<div class="bestellingen-melding"><strong>Bestelling geplaatst</strong><span>Controleer na levering of alles klopt.</span></div>` : ''}
         <div class="leerkracht-status ${status.inOrde ? 'klaar' : 'niet-klaar'}">
           <label>
             <input type="checkbox" ${status.inOrde ? 'checked' : ''} onchange="werkboekenInOrdeZetten(this.checked)">
@@ -1031,6 +1387,15 @@ function renderBestellingenMeldingen() {
           </label>
           ${status.inOrde ? `<span>Gemeld als in orde${status.op ? ' op ' + escape(status.op) : ''}.</span>` : `<span>Nog niet aangevinkt. Secretariaat ziet deze klas als niet klaar.</span>`}
         </div>
+        ${besteld ? `
+          <div class="leerkracht-status ${status.geleverd ? 'klaar' : 'besteld'}">
+            <label>
+              <input type="checkbox" ${status.geleverd ? 'checked' : ''} onchange="werkboekenGeleverdZetten(this.checked)">
+              Geleverd en nagekeken voor ${escape(actieveKlas)}
+            </label>
+            ${status.geleverd ? `<span>Geleverd en nagekeken${status.geleverdOp ? ' op ' + escape(status.geleverdOp) : ''}.</span>` : `<span>Wacht op levering of controle.</span>`}
+          </div>
+        ` : ''}
       `;
     }
   }
@@ -1046,9 +1411,15 @@ window.bestellingenMeldingenOpslaan = function () {
     : isSecretariaatGebruiker;
   if (!teamData || !secretariaat) return;
   if (!teamData.bestellingenMeldingen) teamData.bestellingenMeldingen = {};
-  teamData.bestellingenMeldingen.werkboekenAlgemeen = {
-    datum: document.getElementById('deadline-wb-datum')?.value || '',
+  teamData.bestellingenMeldingen.werkboekenCyclus = {
+    ...werkboekenCyclus(),
+    schooljaar: document.getElementById('deadline-wb-schooljaar')?.value.trim() || werkboekenCyclus().schooljaar || '',
+    deadlineDatum: document.getElementById('deadline-wb-datum')?.value || '',
     tekst: document.getElementById('deadline-wb-tekst')?.value.trim() || ''
+  };
+  teamData.bestellingenMeldingen.werkboekenAlgemeen = {
+    datum: teamData.bestellingenMeldingen.werkboekenCyclus.deadlineDatum,
+    tekst: teamData.bestellingenMeldingen.werkboekenCyclus.tekst
   };
   if (!teamData.bestellingenMeldingen.werkboekenStatusPerKlas) teamData.bestellingenMeldingen.werkboekenStatusPerKlas = {};
   teamData.bestellingenMeldingen.lyreco = {
@@ -1059,21 +1430,228 @@ window.bestellingenMeldingenOpslaan = function () {
   planBewaren();
   secretariaatStatusCache[actieveGroep?.id || ''] = teamData;
   renderBestellingenMeldingen();
-  alert('Meldingen zijn bewaard.');
+  alert('Melding is bewaard.');
+};
+
+window.werkboekenBestellingGeplaatstVoorKlas = function (klas, checked) {
+  const secretariaat = typeof isSecretariaatBestellingen === 'function'
+    ? isSecretariaatBestellingen()
+    : isSecretariaatGebruiker;
+  if (!teamData || !secretariaat) return;
+  const overzichtControle = secretariaatBestelOverzichtVoorKlas(klas);
+  if (checked && !overzichtControle.allesBesteld) {
+    alert('Nog niet alle methodes zijn als besteld aangevinkt.');
+    renderBestellingenMeldingen();
+    return;
+  }
+  const groep = groepVoorKlas(klas);
+  if (!groep) return;
+  if (!actieveGroep || actieveGroep.id !== groep.id) {
+    secretariaatDetailKlas = klas;
+    openBestellingenGroep(groep.id, klas);
+    setTimeout(() => werkboekenBestellingGeplaatstVoorKlas(klas, checked), 700);
+    return;
+  }
+  actieveKlas = klas;
+  huidigLeerjaar = leerjaarVoorKlas(klas);
+  if (!teamData.bestellingenMeldingen) teamData.bestellingenMeldingen = {};
+  if (!teamData.bestellingenMeldingen.werkboekenStatusPerKlas) teamData.bestellingenMeldingen.werkboekenStatusPerKlas = {};
+  const vorig = teamData.bestellingenMeldingen.werkboekenStatusPerKlas[klas] || {};
+  teamData.bestellingenMeldingen.werkboekenStatusPerKlas[klas] = {
+    ...vorig,
+    besteld: !!checked,
+    besteldDoor: checked ? (huidigeUser?.email || '') : '',
+    besteldOp: checked ? vandaagIso() : '',
+    geleverd: checked ? !!vorig.geleverd : false,
+    geleverdDoor: checked ? (vorig.geleverdDoor || '') : '',
+    geleverdOp: checked ? (vorig.geleverdOp || '') : ''
+  };
+  planBewaren();
+  secretariaatStatusCache[groep.id] = teamData;
+  renderBestellingenMeldingen();
+};
+
+
+window.secretariaatMethodeBesteldZetten = function (klas, methodeId, checked) {
+  const secretariaat = typeof isSecretariaatBestellingen === 'function'
+    ? isSecretariaatBestellingen()
+    : isSecretariaatGebruiker;
+  if (!teamData || !secretariaat) return;
+  const groep = groepVoorKlas(klas);
+  if (!groep) return;
+  if (!actieveGroep || actieveGroep.id !== groep.id) {
+    secretariaatDetailKlas = klas;
+    openBestellingenGroep(groep.id, klas);
+    setTimeout(() => secretariaatMethodeBesteldZetten(klas, methodeId, checked), 700);
+    return;
+  }
+  const status = secretariaatStatusVoorKlasZeker(klas);
+  status.methodes[methodeId] = {
+    besteld: !!checked,
+    door: checked ? (huidigeUser?.email || '') : '',
+    op: checked ? vandaagIso() : ''
+  };
+  if (!checked) {
+    status.besteld = false;
+    status.besteldDoor = '';
+    status.besteldOp = '';
+  }
+  planBewaren();
+  secretariaatStatusCache[groep.id] = teamData;
+  renderBestellingenMeldingen();
+};
+
+window.secretariaatAantalBijbestellenZetten = function (klas, key, waarde) {
+  const secretariaat = typeof isSecretariaatBestellingen === 'function'
+    ? isSecretariaatBestellingen()
+    : isSecretariaatGebruiker;
+  if (!teamData || !secretariaat) return;
+  const status = secretariaatStatusVoorKlasZeker(klas);
+  status.aantallen[key] = Math.max(0, parseInt(waarde) || 0);
+  planBewaren();
+  renderBestellingenMeldingen();
+};
+
+window.pdfSecretariaatWerkboekenKlas = function (klas) {
+  if (!teamData || !window.jspdf) return;
+  const overzicht = secretariaatBestelOverzichtVoorKlas(klas);
+  const status = werkboekenStatusVoorKlas(klas);
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+  const schooljaar = werkboekenCyclus().schooljaar || teamData.instellingen?.schooljaar || '';
+  doc.setFontSize(18);
+  doc.setFont(undefined, 'bold');
+  doc.text('Werkboeken bestelling ' + klas, 14, 18);
+  doc.setFontSize(10);
+  doc.setFont(undefined, 'normal');
+  doc.text('Schooljaar: ' + schooljaar, 14, 26);
+  doc.text('Kinderen: ' + overzicht.kinderen + '  Reserve: ' + overzicht.reserve + '  Nodig per deel: ' + overzicht.nodig, 14, 32);
+  doc.text('Status: ' + statusTekstVoorKlas(status), 14, 38);
+
+  const body = overzicht.rijen.map(r => [
+    r.methodeNaam,
+    r.naam + (r.type === 'leerkracht' ? ' (leerkracht)' : ''),
+    String(r.stock),
+    String(r.nodig),
+    String(r.voorstel),
+    String(r.bestellen),
+    r.aangepast && r.bestellen !== r.voorstel ? 'aangepast' : ''
+  ]);
+  doc.autoTable({
+    head: [['Methode', 'Titel/deel', 'Stock', 'Nodig', 'Voorstel', 'Bestellen', 'Opmerking']],
+    body,
+    startY: 44,
+    styles: { fontSize: 8, cellPadding: 2 },
+    headStyles: { fillColor: [74, 144, 226] }
+  });
+  const naam = ('werkboeken_' + klas + '_' + schooljaar + '.pdf').replace(/[^a-zA-Z0-9_.-]/g, '_');
+  doc.save(naam);
+};
+window.nieuwWerkboekenjaarStarten = function () {
+  const secretariaat = typeof isSecretariaatBestellingen === 'function'
+    ? isSecretariaatBestellingen()
+    : isSecretariaatGebruiker;
+  if (!teamData || !secretariaat) return;
+  const huidig = werkboekenCyclus().schooljaar || teamData.instellingen.schooljaar || '';
+  const voorstel = volgendSchooljaarBestellingen(huidig) || huidig;
+  const nieuw = prompt('Nieuw schooljaar voor werkboeken:', voorstel);
+  if (nieuw === null || !nieuw.trim()) return;
+  if (!confirm('Nieuw werkboekenjaar starten voor ' + nieuw.trim() + '?\n\nDe werkboekenlijsten blijven staan, maar meldingen en klasstatussen worden leeggemaakt.')) return;
+
+  if (!Array.isArray(teamData.bestellingenMeldingen.werkboekenCycliArchief)) teamData.bestellingenMeldingen.werkboekenCycliArchief = [];
+  teamData.bestellingenMeldingen.werkboekenCycliArchief.push({
+    cyclus: { ...werkboekenCyclus() },
+    statusPerKlas: JSON.parse(JSON.stringify(teamData.bestellingenMeldingen.werkboekenStatusPerKlas || {})),
+    afgeslotenOp: vandaagIso()
+  });
+
+  teamData.bestellingenMeldingen.werkboekenCyclus = {
+    schooljaar: nieuw.trim(),
+    deadlineDatum: '',
+    tekst: '',
+    afgeslotenOp: ''
+  };
+  teamData.bestellingenMeldingen.werkboekenAlgemeen = { datum: '', tekst: '' };
+  teamData.bestellingenMeldingen.werkboekenStatusPerKlas = {};
+  const klassen = actieveGroep ? actieveGroep.klassen : alleKlassen();
+  klassen.forEach(klas => {
+    teamData.bestellingenMeldingen.werkboekenStatusPerKlas[klas] = {
+      inOrde: false,
+      door: '',
+      op: '',
+      besteld: false,
+      besteldDoor: '',
+      besteldOp: '',
+      geleverd: false,
+      geleverdDoor: '',
+      geleverdOp: ''
+    };
+  });
+  secretariaatDetailKlas = '';
+  planBewaren();
+  secretariaatStatusCache = {};
+  secretariaatStatusGeladen = false;
+  renderBestellingenMeldingen();
 };
 
 window.werkboekenInOrdeZetten = function (checked) {
   if (!teamData || !actieveKlas) return;
   if (!teamData.bestellingenMeldingen) teamData.bestellingenMeldingen = {};
   if (!teamData.bestellingenMeldingen.werkboekenStatusPerKlas) teamData.bestellingenMeldingen.werkboekenStatusPerKlas = {};
+  const vorig = teamData.bestellingenMeldingen.werkboekenStatusPerKlas[actieveKlas] || {};
   teamData.bestellingenMeldingen.werkboekenStatusPerKlas[actieveKlas] = {
+    ...vorig,
     inOrde: !!checked,
     door: checked ? (huidigeUser?.email || '') : '',
-    op: checked ? new Date().toISOString().slice(0, 10) : ''
+    op: checked ? vandaagIso() : ''
   };
   planBewaren();
   renderBestellingenMeldingen();
 };
+
+window.werkboekenGeleverdZetten = function (checked) {
+  if (!teamData || !actieveKlas) return;
+  if (!teamData.bestellingenMeldingen) teamData.bestellingenMeldingen = {};
+  if (!teamData.bestellingenMeldingen.werkboekenStatusPerKlas) teamData.bestellingenMeldingen.werkboekenStatusPerKlas = {};
+  const vorig = teamData.bestellingenMeldingen.werkboekenStatusPerKlas[actieveKlas] || {};
+  teamData.bestellingenMeldingen.werkboekenStatusPerKlas[actieveKlas] = {
+    ...vorig,
+    geleverd: !!checked,
+    geleverdDoor: checked ? (huidigeUser?.email || '') : '',
+    geleverdOp: checked ? vandaagIso() : ''
+  };
+  planBewaren();
+  renderBestellingenMeldingen();
+};
+
+
+
+// Klaskaarten voor secretariaat: Ã©Ã©n centrale klik-afhandeling.
+document.addEventListener('click', event => {
+  const kaart = event.target.closest('[data-open-klas]');
+  if (!kaart) return;
+  event.preventDefault();
+  event.stopPropagation();
+  openWerkboekenKlas(kaart.dataset.openKlas);
+}, true);
+
+document.addEventListener('keydown', event => {
+  if (event.key !== 'Enter' && event.key !== ' ') return;
+  const kaart = event.target.closest('[data-open-klas]');
+  if (!kaart) return;
+  event.preventDefault();
+  event.stopPropagation();
+  openWerkboekenKlas(kaart.dataset.openKlas);
+}, true);
+const codexKlaskaartKlikHandler = true;
+
+// Datumvelden voor secretariaat blijven actief; de browser opent zelf het kalenderke.
+document.addEventListener('focusin', event => {
+  const input = event.target.closest('input[type="date"][data-secretariaat-deadline]');
+  if (!input) return;
+  input.disabled = false;
+});
+const codexSecretariaatDatumHelper = true;
 // ==============================================
 // TABS
 // ==============================================
@@ -1113,11 +1691,21 @@ function secretariaatKeuzeUiToepassen() {
   const keuze = document.getElementById('bestellingen-keuzes');
   if (keuze && isSecretariaatGebruiker) keuze.style.display = 'none';
 }
+
+function secretariaatWerkboekenOverzichtUiToepassen() {
+  const paneel = document.getElementById('paneel-werkboeken');
+  if (!paneel) return;
+  const secretariaat = typeof isSecretariaatBestellingen === 'function'
+    ? isSecretariaatBestellingen()
+    : isSecretariaatGebruiker;
+  paneel.classList.toggle('secretariaat-overzicht-only', !!secretariaat);
+}
 function allesRenderen() {
   if (actieveKlas) huidigLeerjaar = leerjaarVoorKlas(actieveKlas);
   renderBestellingenKeuzes();
   werkboekenPerKlasUiToepassen();
   secretariaatKeuzeUiToepassen();
+  secretariaatWerkboekenOverzichtUiToepassen();
   werkboekenLeerjaarKnoppenBijwerken();
   pasBestellingenRolToe();
   renderBestellingenMeldingen();
@@ -1201,17 +1789,23 @@ function pasBestellingenRolToe() {
 function pasSecretariaatReadonlyToe() {
   const paneel = document.getElementById('paneel-werkboeken');
   if (!paneel) return;
-  const readonly = isSecretariaatGebruiker;
-  paneel.querySelectorAll('input, select, textarea, button').forEach(el => {
-    el.disabled = readonly;
-  });
-  if (readonly) {
-    paneel.querySelectorAll('[data-secretariaat-deadline]').forEach(el => {
+
+  // Secretariaat ziet alleen de eigen overzichts- en detailkaarten.
+  // Daarom schakelen we niets meer uit: wat zichtbaar is, moet gewoon klikbaar zijn.
+  if (isSecretariaatGebruiker) {
+    paneel.querySelectorAll('input, select, textarea, button').forEach(el => {
       el.disabled = false;
     });
+    const toevoegen = paneel.querySelector('.methode-toevoegen');
+    if (toevoegen) toevoegen.style.display = 'none';
+    return;
   }
+
+  paneel.querySelectorAll('input, select, textarea, button').forEach(el => {
+    el.disabled = false;
+  });
   const toevoegen = paneel.querySelector('.methode-toevoegen');
-  if (toevoegen) toevoegen.style.display = readonly ? 'none' : '';
+  if (toevoegen) toevoegen.style.display = '';
 }
 // Stille variant van autoBestelToepassen: werkt alleen het data-model bij, geen DOM-mutaties.
 // Wordt gebruikt vóór een volledige render zodat we niet onnodig naar DOM-elementen zoeken die nog niet bestaan.
