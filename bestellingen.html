@@ -1410,6 +1410,223 @@
     background: var(--blauw-zacht);
     color: var(--tekst);
   }
+
+  /* codex-werkboeken-bestelcyclus */
+  .cyclus-balk {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin: -2px 0 12px;
+  }
+  .cyclus-pill {
+    display: inline-flex;
+    align-items: center;
+    padding: 5px 10px;
+    border-radius: 999px;
+    font-weight: 800;
+    background: var(--rood-licht);
+    color: var(--rood-zacht);
+  }
+  .cyclus-pill.besteld {
+    background: var(--blauw-zacht);
+    color: var(--tekst);
+  }
+  .status-rij.wacht {
+    border-color: var(--geel-zacht);
+    background: var(--geel-licht);
+  }
+  .status-rij.besteld,
+  .leerkracht-status.besteld {
+    border-color: #6f91a5;
+    background: #e1f0f4;
+  }
+
+  /* codex-secretariaat-klasdetail */
+  .secretariaat-start {
+    max-width: 980px;
+  }
+  .klas-detail {
+    margin-top: 14px;
+    padding: 14px;
+    border: 1.5px solid var(--rand-donker);
+    border-radius: 10px;
+    background: var(--wit);
+  }
+  .klas-detail.leeg {
+    color: var(--tekst-zacht);
+    background: var(--creme-warm);
+  }
+  .klas-detail h3 {
+    margin: 0 0 4px;
+  }
+  .klas-detail p {
+    margin: 0 0 10px;
+    color: var(--tekst-zacht);
+  }
+  .detail-check {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 800;
+    margin: 8px 0;
+  }
+  .detail-check input {
+    width: auto;
+  }
+  .detail-regel {
+    display: block;
+    margin-top: 4px;
+    color: var(--tekst-zacht);
+  }
+  .detail-regel.rood {
+    color: var(--rood-zacht);
+    font-weight: 800;
+  }
+
+  /* codex-secretariaat-overzicht-only */
+  #paneel-werkboeken.secretariaat-overzicht-only > :not(#bestellingen-melding-werkboeken) {
+    display: none !important;
+  }
+  #paneel-werkboeken.secretariaat-overzicht-only #bestellingen-melding-werkboeken {
+    display: block !important;
+  }
+
+  /* codex-secretariaat-werkboeken-samenvatting */
+  .secretariaat-werkboeken-samenvatting {
+    margin-top: 14px;
+  }
+  .secretariaat-samenvatting {
+    margin: 10px 0 14px;
+    grid-template-columns: repeat(auto-fit, minmax(145px, 1fr));
+  }
+  .secretariaat-methode {
+    border: 1px solid var(--rand);
+    border-radius: 8px;
+    padding: 10px;
+    margin-top: 10px;
+    background: var(--creme-warm);
+  }
+  .secretariaat-methode h4 {
+    margin: 0 0 8px;
+  }
+  .secretariaat-methode h4 span {
+    font-weight: 400;
+    color: var(--tekst-zacht);
+  }
+  .secretariaat-overzicht-tabel th,
+  .secretariaat-overzicht-tabel td {
+    padding: 7px 8px;
+  }
+  .secretariaat-lk {
+    margin-top: 8px;
+  }
+
+  /* codex-secretariaat-methode-bestelling */
+  .secretariaat-methode.besteld {
+    border-color: var(--groen-donker);
+    background: #e5f3e7;
+  }
+  .secretariaat-methode-kop {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    align-items: center;
+    margin-bottom: 8px;
+  }
+  .secretariaat-methode-kop span {
+    color: var(--tekst-zacht);
+    font-size: 0.9em;
+    font-weight: 800;
+  }
+  .secretariaat-aantal {
+    width: 74px;
+    text-align: center;
+    font-weight: 800;
+  }
+  .muted {
+    color: var(--tekst-zacht);
+    font-size: 0.9em;
+  }
+  .secretariaat-info ul {
+    margin: 6px 0 0 18px;
+  }
+
+  /* codex-secretariaat-klasscherm */
+  .klas-detail.klasscherm {
+    margin-top: 0;
+    max-width: 1120px;
+  }
+  .klasscherm-balk,
+  .klasscherm-titel {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  .klasscherm-balk {
+    margin-bottom: 12px;
+  }
+  .klasscherm-nav {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .klasscherm-titel {
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--rand);
+    margin-bottom: 10px;
+  }
+  .klasscherm-titel span {
+    font-weight: 800;
+    color: var(--tekst-zacht);
+  }
+
+  /* codex-klaskaarten-secretariaat */
+  .status-rij.klaskaart {
+    width: 100%;
+    text-align: left;
+    font-family: inherit;
+    cursor: pointer;
+    color: var(--tekst);
+    user-select: none;
+  }
+  .status-rij.klaskaart:focus {
+    outline: 3px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  /* codex-secretariaat-date-helper */
+  input[type="date"][data-secretariaat-deadline] {
+    cursor: pointer;
+    pointer-events: auto !important;
+  }
+
+  /* codex-secretariaat-noodbediening */
+  .secretariaat-noodbediening {
+    border: 1.5px solid var(--rand-donker);
+    border-radius: 8px;
+    padding: 12px;
+    background: var(--creme-warm);
+    margin: 12px 0 14px;
+  }
+  .secretariaat-noodbediening label {
+    font-weight: 800;
+    margin-bottom: 6px;
+    display: block;
+  }
+  .secretariaat-noodbediening-rij {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+  .secretariaat-noodbediening select {
+    min-width: 130px;
+  }
+  input[inputmode="numeric"][data-secretariaat-deadline] {
+    font-family: inherit;
+  }
 </style>
 </head>
 <body>
@@ -1908,7 +2125,7 @@
   </div>
 </div>
 
-<script type="module" src="bestellingen.js?v=10"></script>
+<script type="module" src="bestellingen.js?v=26"></script>
 
 </body>
 </html>
