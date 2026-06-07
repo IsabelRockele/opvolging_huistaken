@@ -2512,7 +2512,9 @@ function makeTransfer() {
     if (t.other) therapieList.push({ naam: t.other, adres:'' });
     if (x.repeated) loopbaanItems.push('Heeft een leerjaar overgedaan' + (() => { const j = Array.isArray(x.repeatedYear) ? x.repeatedYear.join(', ') : (x.repeatedYear || ''); return j ? ` (${j})` : ''; })());
     if (x.newcomer) loopbaanItems.push('Anderstalige nieuwkomer (OKAN/AN)');
-
+    if (x.magOpFoto) loopbaanItems.push('✅ Mag op foto');
+    else loopbaanItems.push('🚫 Mag NIET op foto');
+    if (Array.isArray(x.huiswerkklas) && x.huiswerkklas.length > 0) loopbaanItems.push('📚 Huiswerkklas: ' + x.huiswerkklas.join(', '));
     // Vakgebied-regels met optionele notities en aanpassingen
     const AANP_LABELS_PDF = {verlengd:'Verlengde tijd',mondeling:'Mondeling i.p.v. schriftelijk',eigendoelen:'Eigen doelen / ander niveau',hulpkaarten:'Hulpkaarten / woordenlijst',toetsing:'Aangepaste toetsing',remediering:'Extra herhaling / remediëring'};
     const vakRegel = (label, niveau, note, extra='', vakNaam='') => {
@@ -2729,6 +2731,9 @@ function openTransferWindow(mode) {
       const loopbaanItems = [];
       if (x.repeated) loopbaanItems.push('Heeft een leerjaar overgedaan' + (() => { const j = Array.isArray(x.repeatedYear) ? x.repeatedYear.join(', ') : (x.repeatedYear || ''); return j ? ` (${j})` : ''; })());
       if (x.newcomer) loopbaanItems.push('Anderstalige nieuwkomer (OKAN/AN)');
+      if (x.magOpFoto) loopbaanItems.push('✅ Mag op foto');
+      else loopbaanItems.push('🚫 Mag NIET op foto');
+      if (Array.isArray(x.huiswerkklas) && x.huiswerkklas.length > 0) loopbaanItems.push('📚 Huiswerkklas: ' + x.huiswerkklas.join(', '));
       const AANP_LABELS_PDF = {verlengd:'Verlengde tijd',mondeling:'Mondeling i.p.v. schriftelijk',eigendoelen:'Eigen doelen / ander niveau',hulpkaarten:'Hulpkaarten / woordenlijst',toetsing:'Aangepaste toetsing',remediering:'Extra herhaling / remediëring'};
       const vakRegel = (label, niveau, note, extra='', vakNaam='') => {
         let line = `<strong>${label}:</strong> ${esc(niveau)}${extra}`;
@@ -2879,6 +2884,9 @@ function openFicheModal(studentId) {
   const loopItems = [];
   if (s.repeated) { const j = Array.isArray(s.repeatedYear) ? s.repeatedYear.join(', ') : (s.repeatedYear||''); loopItems.push('Heeft leerjaar overgedaan' + (j ? ` (${j})` : '')); }
   if (s.newcomer) loopItems.push('Anderstalige nieuwkomer (AN/OKAN)');
+  if (s.magOpFoto) loopItems.push('✅ Mag op foto');
+  else loopItems.push('🚫 Mag NIET op foto');
+  if (Array.isArray(s.huiswerkklas) && s.huiswerkklas.length > 0) loopItems.push('📚 Huiswerkklas: ' + s.huiswerkklas.join(', '));
   if (loopItems.length) loopbaanInhoud = loopItems.map(x => `<p>• ${esc(x)}</p>`).join('');
 
   // Therapie
