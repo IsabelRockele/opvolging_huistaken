@@ -1,4 +1,4 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="nl">
 <head>
   <meta charset="utf-8">
@@ -137,6 +137,22 @@
 
     /* melding-balk */
     #messages .notice{margin-bottom:8px}
+    /* schoolbeheer-meldingenbeheer-codex */
+    .message-admin-layout{display:grid;grid-template-columns:minmax(280px,.9fr) minmax(320px,1.1fr);gap:16px;align-items:start;margin-top:10px}
+    .message-admin-card{border:1px solid var(--line);border-radius:16px;background:#fbfcfe;padding:16px}
+    .message-admin-card h3{margin-bottom:6px}
+    .message-list{display:flex;flex-direction:column;gap:10px}
+    .message-card{border:1px solid var(--line);border-radius:14px;background:#fff;padding:12px}
+    .message-card.late{border-color:#e25a5a;background:#fff2f2}
+    .message-card.archived{opacity:.72;background:#f4f6f9}
+    .message-card .bar{align-items:flex-start}
+    .message-actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+    .message-status{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+    .message-status span{border-radius:999px;background:#edf2f8;padding:4px 8px;font-size:12px}
+    .message-status span.done{background:#d8f5e9}
+    .message-status span.open{background:#fff5c8}
+    .message-status span.late{background:#ffd8d8}
+    @media(max-width:900px){.message-admin-layout{grid-template-columns:1fr}.message-actions{justify-content:flex-start}}
     /* codex-checkbox-centering-fix */
     th.check-col,
     td.check-col,
@@ -1059,17 +1075,67 @@
       if(tab==="werkboeken") renderWorkbooks();
     }
 
+    function messageIsLate(m){ return m.due && m.due < new Date().toISOString().slice(0,10) && !m.done && !m.archived; }
+    function messageKey(m){ return m.groupId || m.id; }
+
     function renderMessages(){
-      $("messages").innerHTML = (data.messages||[]).filter(m=>!m.archived).map(m=>`
-        <div class="notice"><div class="bar">
-          <strong>${esc(m.text)}</strong><span class="muted">tegen ${esc(m.due)}</span>
-          ${isSecretary()?`<span class="right muted">${m.done?"In orde":"Nog niet in orde"}</span><button class="small" onclick="archiveMsg('${m.id}')">Archiveren</button><button class="small pink" onclick="deleteMsg('${m.id}')">Verwijderen</button>`:
+      const activeMessages = (data.messages||[]).filter(m=>!m.archived);
+      $("messages").innerHTML = activeMessages.map(m=>`
+        <div class="notice ${messageIsLate(m)?"message-card late":""}"><div class="bar">
+          <div>
+            <strong>${esc(m.text)}</strong>
+            <span class="muted">tegen ${esc(m.due || "")}</span>
+            ${messageIsLate(m)?`<span class="tag pink">te laat</span>`:""}
+            ${m.done?`<span class="tag done">in orde</span>`:""}
+          </div>
+          ${isSecretary()?`<span class="right muted">${m.done?"In orde":"Nog niet in orde"}</span>`:
           `<label class="right"><input type="checkbox" ${m.done?"checked":""} onchange="doneMsg('${m.id}',this.checked)"> in orde</label>`}
         </div></div>`).join("");
     }
-    window.doneMsg = (id,checked) => { const m=data.messages.find(x=>x.id===id); if(m)m.done=checked; markDirty(); renderMessages(); };
-    window.archiveMsg = id => { const m=data.messages.find(x=>x.id===id); if(m)m.archived=true; markDirty(); renderMessages(); };
-    window.deleteMsg = id => { data.messages=data.messages.filter(x=>x.id!==id); markDirty(); renderMessages(); };
+    window.doneMsg = (id,checked) => {
+      const m=data.messages.find(x=>x.id===id);
+      if(m){ m.done=checked; m.doneAt=checked ? new Date().toISOString() : ""; }
+      markDirty();
+      renderMessages();
+    };
+    async function updateMessageInClasses(message, action){
+      const key = messageKey(message);
+      const fallbackText = message.text || "";
+      const fallbackDue = message.due || "";
+      for(const klas of allClasses){
+        const ref = classRef(klas);
+        const snap = await getDoc(ref);
+        if(!snap.exists()) continue;
+        const item = snap.data();
+        item.messages ||= [];
+        let changed = false;
+        item.messages = item.messages.filter(m => {
+          const same = messageKey(m) === key || (!message.groupId && m.text === fallbackText && m.due === fallbackDue);
+          if(!same) return true;
+          changed = true;
+          if(action === "delete") return false;
+          if(action === "archive") m.archived = true;
+          if(action === "restore") m.archived = false;
+          return true;
+        });
+        if(changed) await setDoc(ref,item);
+      }
+    }
+    window.archiveMsg = async id => {
+      const m=(data.messages||[]).find(x=>x.id===id);
+      if(!m || !isSecretary()) return;
+      await updateMessageInClasses(m, "archive");
+      renderMessages();
+      renderAdmin();
+    };
+    window.deleteMsg = async id => {
+      const m=(data.messages||[]).find(x=>x.id===id);
+      if(!m || !isSecretary()) return;
+      if(!confirm("Deze melding verwijderen bij alle klassen waar ze staat?")) return;
+      await updateMessageInClasses(m, "delete");
+      renderMessages();
+      renderAdmin();
+    };
 
     function renderAdmin(){
       $("content").innerHTML = `
@@ -1207,21 +1273,69 @@
     window.togglePurchase = (id,checked) => { if(!isSecretary())return; const p=data.aankopen.find(x=>x.id===id); if(p)p.processed=checked; markDirty(); renderPurchases(); };
 
     function renderMessageAdmin(){
-      $("adminBody").innerHTML = `<h3>Melding sturen</h3><p class="muted">Standaard staan alle klassen aangevinkt.</p><div class="row"><label>Tekst<input id="msgText" placeholder="Refterlijst invullen"></label><label>Tegen<input id="msgDue" type="date" value="${schooljaar.slice(0,4)}-09-25"></label></div><div class="class-picks" style="display:flex;gap:8px;flex-wrap:wrap;margin:12px 0">${allClasses.map(k=>`<label><input class="msgClass" type="checkbox" value="${esc(k)}" checked> ${esc(k)}</label>`).join("")}</div><button class="primary" onclick="addMessage()">Melding toevoegen</button>`;
+      $("adminBody").innerHTML = `
+        <div class="message-admin-layout">
+          <section class="message-admin-card">
+            <h3>Nieuwe melding maken</h3>
+            <p class="muted">Klik op Melding plaatsen om ze zichtbaar te maken bij de aangevinkte klassen.</p>
+            <div class="row">
+              <label>Tekst<input id="msgText" placeholder="Refterlijst invullen"></label>
+              <label>Tegen<input id="msgDue" type="date" value="${schooljaar.slice(0,4)}-09-25"></label>
+            </div>
+            <div class="class-picks" style="display:flex;gap:8px;flex-wrap:wrap;margin:12px 0">
+              ${allClasses.map(k=>`<label><input class="msgClass" type="checkbox" value="${esc(k)}" checked> ${esc(k)}</label>`).join("")}
+            </div>
+            <button class="primary" onclick="addMessage()">Melding plaatsen</button>
+          </section>
+          <section class="message-admin-card">
+            <h3>Actieve meldingen voor ${esc(activeClass)}</h3>
+            <p class="muted">Hier ziet secretariaat wat bij deze klas nog open staat. Verwijderen gebeurt meteen overal waar dezelfde melding staat.</p>
+            <div id="msgAdminList" class="message-list"></div>
+          </section>
+        </div>`;
+      renderMessageAdminList();
+    }
+    function renderMessageAdminList(){
+      const box = $("msgAdminList");
+      if(!box) return;
+      const list = (data.messages||[]).slice().sort((a,b)=>(a.archived===b.archived?0:a.archived?1:-1) || String(a.due||"").localeCompare(String(b.due||"")));
+      if(!list.length){
+        box.innerHTML = `<div class="empty">Nog geen meldingen voor ${esc(activeClass)}.</div>`;
+        return;
+      }
+      box.innerHTML = list.map(m => `
+        <div class="message-card ${messageIsLate(m)?"late":""} ${m.archived?"archived":""}">
+          <div class="bar">
+            <div>
+              <strong>${esc(m.text)}</strong>
+              <div class="muted">Tegen ${esc(m.due || "")}${m.archived ? " - archief" : ""}</div>
+            </div>
+            <div class="message-actions">
+              <button class="small" onclick="archiveMsg('${m.id}')">Archiveren</button>
+              <button class="small pink" onclick="deleteMsg('${m.id}')">Verwijderen</button>
+            </div>
+          </div>
+          <div class="message-status">
+            <span class="${m.done?"done":messageIsLate(m)?"late":"open"}">${esc(activeClass)} ${m.done?"in orde":messageIsLate(m)?"te laat":"open"}</span>
+          </div>
+        </div>`).join("");
     }
     window.addMessage = async () => {
       if(!isSecretary() || !$("msgText").value.trim()) return;
       const selected = [...document.querySelectorAll(".msgClass:checked")].map(x=>x.value);
+      if(!selected.length) return alert("Vink minstens een klas aan.");
+      const text = $("msgText").value.trim();
+      const due = $("msgDue").value;
+      const groupId = uid();
       for(const klas of selected){
         const ref = classRef(klas);
         const snap = await getDoc(ref);
         const item = snap.exists() ? snap.data() : emptyClassDoc(klas);
         item.messages ||= [];
-        item.messages.push({id:uid(),text:$("msgText").value.trim(),due:$("msgDue").value,done:false,archived:false});
+        item.messages.push({id:uid(),groupId,text,due,done:false,archived:false,createdAt:new Date().toISOString()});
         await setDoc(ref,item);
       }
-      if(selected.includes(activeClass)){ data.messages.push({id:uid(),text:$("msgText").value.trim(),due:$("msgDue").value,done:false,archived:false}); renderMessages(); }
-      alert("Melding toegevoegd.");
+      alert("Melding geplaatst.");
       renderAdmin();
     };
 
