@@ -2,7 +2,6 @@
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, sendPasswordResetEmail, signOut, updatePassword } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import { getFirestore, doc, getDoc, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-// De Firebase-configuratie van uw web-app
 const firebaseConfig = {
   apiKey: "AIzaSyA7KxXMvZ4dzBQDut3CMyWUblLte2tFzoQ",
   authDomain: "huiswerkapp-a311e.firebaseapp.com",
@@ -12,13 +11,11 @@ const firebaseConfig = {
   appId: "1:797169941164:web:511d9618079f1378d0fd09"
 };
 
-// Initialiseer Firebase
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 export { db };
 
-// Als gebruiker al is ingelogd, blijf op de startpagina (index) zodat de klasagenda zichtbaar blijft.
 onAuthStateChanged(auth, (user) => {
   if (!user) {
     const authBox = document.getElementById('auth');
@@ -42,7 +39,6 @@ onAuthStateChanged(auth, (user) => {
       if (authBox) authBox.style.display = 'none';
       toonSchooloverzichtKnopAlsNodig(user);
     } else {
-      // Fallback voor oudere index.html zonder de nieuwe kaart
       const authBox = document.getElementById('auth');
       if (authBox && !document.getElementById('naarDashboardLink')) {
         const p = document.createElement('p');
@@ -55,17 +51,8 @@ onAuthStateChanged(auth, (user) => {
   }
 });
 
-async function toonSchooloverzichtKnopAlsNodig(user) {
-  const huistakenKnop = document.getElementById('huistakenKeuzeKnop');
-  const overgangKnop = document.getElementById('overgangKeuzeKnop');
-  const schoolKnop = document.getElementById('schooloverzichtKnop');
-  const schoolbeheerKnop = document.getElementById('schoolbeheerKeuzeKnop');
-  const bestellingenKnop = document.getElementById('bestellingenKeuzeKnop');
-  if (schoolKnop) schoolKnop.style.display = 'none';
-  if (schoolbeheerKnop) schoolbeheerKnop.style.display = 'none';
-  if (bestellingenKnop) bestellingenKnop.style.display = 'none';
-  if (!user) return;
-
+// Past knoppen toe op basis van rol-data (gebruikt door cache én verse data)
+function pasKnoppenToe(huistakenKnop, overgangKnop, schoolbeheerKnop, bestellingenKnop, schoolKnop, isSchoolBreed, isSecretariaat, heeftKlasbeheer) {
   function vulTegel(tegel, href, icoon, titel, tekst) {
     if (!tegel) return;
     tegel.href = href;
@@ -78,6 +65,47 @@ async function toonSchooloverzichtKnopAlsNodig(user) {
       '<span class="portaal-open">Openen</span>';
   }
 
+  if (schoolKnop) schoolKnop.style.display = 'none';
+  if (schoolbeheerKnop) schoolbeheerKnop.style.display = (isSecretariaat || isSchoolBreed || heeftKlasbeheer) ? '' : 'none';
+  if (bestellingenKnop) bestellingenKnop.style.display = (isSecretariaat || heeftKlasbeheer) ? '' : 'none';
+
+  if (isSecretariaat) {
+    if (huistakenKnop) huistakenKnop.style.display = 'none';
+    if (overgangKnop) overgangKnop.style.display = 'none';
+    return;
+  }
+
+  if (isSchoolBreed) {
+    vulTegel(huistakenKnop, 'schooloverzicht.html?mode=huistaken', '&#128218;', 'Huistaken per klas', 'Kies eerst een klas en open daarna de huistakenopvolging van die klas.');
+    vulTegel(overgangKnop, 'schooloverzicht.html?mode=overgang', '&#128196;', 'Overgang per klas', 'Kies eerst een klas en bekijk of vul de overgangsbespreking aan.');
+  } else {
+    vulTegel(huistakenKnop, 'dashboard.html', '&#128230;', 'Huistaken opvolgen', 'Open de opvolging van je klas voor het afgeven van huistaken per leerling.');
+    vulTegel(overgangKnop, 'overgangsbespreking.html', '&#128196;', 'Overgangsbespreking', 'Werk leerlingenfiches bij en bereid de overdracht naar de volgende klas voor.');
+  }
+}
+
+async function toonSchooloverzichtKnopAlsNodig(user) {
+  const huistakenKnop = document.getElementById('huistakenKeuzeKnop');
+  const overgangKnop = document.getElementById('overgangKeuzeKnop');
+  const schoolKnop = document.getElementById('schooloverzichtKnop');
+  const schoolbeheerKnop = document.getElementById('schoolbeheerKeuzeKnop');
+  const bestellingenKnop = document.getElementById('bestellingenKeuzeKnop');
+  if (schoolKnop) schoolKnop.style.display = 'none';
+  if (schoolbeheerKnop) schoolbeheerKnop.style.display = 'none';
+  if (bestellingenKnop) bestellingenKnop.style.display = 'none';
+  if (!user) return;
+
+  // Toon meteen op basis van gecachte rol (vorige sessie) — geen wachttijd
+  const cacheKey = 'lindeRolCache_' + user.uid;
+  try {
+    const cached = JSON.parse(localStorage.getItem(cacheKey) || 'null');
+    if (cached) {
+      pasKnoppenToe(huistakenKnop, overgangKnop, schoolbeheerKnop, bestellingenKnop, schoolKnop,
+        cached.isSchoolBreed, cached.isSecretariaat, cached.heeftKlasbeheer);
+    }
+  } catch (e) { /* cache onleesbaar, gewoon doorgaan */ }
+
+  // Haal verse rol op van Firestore op de achtergrond en update + sla op in cache
   try {
     const rolRef = doc(db, "schoolrollen", user.uid);
     const rolSnap = await getDoc(rolRef);
@@ -94,56 +122,17 @@ async function toonSchooloverzichtKnopAlsNodig(user) {
       heeftKlasbeheer = snaps.some(snap => !snap.empty);
     }
 
-    if (schoolbeheerKnop && (isSecretariaat || isSchoolBreed || heeftKlasbeheer)) {
-      schoolbeheerKnop.style.display = '';
-    }
-    if (bestellingenKnop && (isSecretariaat || heeftKlasbeheer)) {
-      bestellingenKnop.style.display = '';
-    }
+    // Sla op in cache voor volgende keer
+    localStorage.setItem(cacheKey, JSON.stringify({ isSchoolBreed, isSecretariaat, heeftKlasbeheer }));
 
-    // Secretariaat ziet enkel schoolbeheer, geen huistaken of overgang
-    if (isSecretariaat) {
-      if (huistakenKnop) huistakenKnop.style.display = 'none';
-      if (overgangKnop) overgangKnop.style.display = 'none';
-      return;
-    }
+    // Update knoppen met verse data (corrigeert cache indien nodig)
+    pasKnoppenToe(huistakenKnop, overgangKnop, schoolbeheerKnop, bestellingenKnop, schoolKnop,
+      isSchoolBreed, isSecretariaat, heeftKlasbeheer);
 
-    if (isSchoolBreed) {
-      vulTegel(
-        huistakenKnop,
-        'schooloverzicht.html?mode=huistaken',
-        '&#128218;',
-        'Huistaken per klas',
-        'Kies eerst een klas en open daarna de huistakenopvolging van die klas.'
-      );
-      vulTegel(
-        overgangKnop,
-        'schooloverzicht.html?mode=overgang',
-        '&#128196;',
-        'Overgang per klas',
-        'Kies eerst een klas en bekijk of vul de overgangsbespreking aan.'
-      );
-    } else {
-      vulTegel(
-        huistakenKnop,
-        'dashboard.html',
-        '&#128230;',
-        'Huistaken opvolgen',
-        'Open de opvolging van je klas voor het afgeven van huistaken per leerling.'
-      );
-      vulTegel(
-        overgangKnop,
-        'overgangsbespreking.html',
-        '&#128196;',
-        'Overgangsbespreking',
-        'Werk leerlingenfiches bij en bereid de overdracht naar de volgende klas voor.'
-      );
-    }
   } catch (err) {
     console.error('Rol controleren mislukt:', err);
-    if (schoolKnop) schoolKnop.style.display = 'none';
     if (schoolbeheerKnop) schoolbeheerKnop.style.display = 'none';
-  if (bestellingenKnop) bestellingenKnop.style.display = 'none';
+    if (bestellingenKnop) bestellingenKnop.style.display = 'none';
   }
 }
 
@@ -187,21 +176,18 @@ window.wachtwoordVergeten = function () {
     });
 };
 
-// Wachtwoord wijzigen vanaf het startscherm
 window.wijzigWachtwoordVanStart = function () {
   const user = auth.currentUser;
   if (!user) {
     alert("Log eerst in om uw wachtwoord te wijzigen.");
     return;
   }
-
   const nieuwWachtwoord = prompt("Voer uw nieuwe wachtwoord in (minstens 6 tekens).");
   if (!nieuwWachtwoord) return;
   if (nieuwWachtwoord.length < 6) {
     alert("Het wachtwoord is te kort. Gebruik minstens 6 tekens.");
     return;
   }
-
   updatePassword(user, nieuwWachtwoord)
     .then(() => {
       alert("Wachtwoord is gewijzigd.");
@@ -215,7 +201,6 @@ window.wijzigWachtwoordVanStart = function () {
     });
 };
 
-// Service Worker Registratie
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('sw.js')
@@ -228,23 +213,18 @@ if ('serviceWorker' in navigator) {
   });
 }
 
-// Uitloggen vanaf de index-pagina (indien reeds ingelogd)
 window.uitloggenVanIndex = function () {
   signOut(auth)
     .then(() => {
-      // Verberg de ingelogd-kaart
       const kaart = document.getElementById('ingelogd-kaart');
       if (kaart) kaart.style.display = 'none';
-      // Verberg schoolknoppen
       const schoolKnop = document.getElementById('schooloverzichtKnop');
       const schoolbeheerKnop = document.getElementById('schoolbeheerKeuzeKnop');
-  const bestellingenKnop = document.getElementById('bestellingenKeuzeKnop');
+      const bestellingenKnop = document.getElementById('bestellingenKeuzeKnop');
       if (schoolKnop) schoolKnop.style.display = 'none';
       if (schoolbeheerKnop) schoolbeheerKnop.style.display = 'none';
-  if (bestellingenKnop) bestellingenKnop.style.display = 'none';
-      // Verwijder de body-klasse zodat #auth niet meer verborgen is via CSS
+      if (bestellingenKnop) bestellingenKnop.style.display = 'none';
       document.body.classList.remove('start-ingelogd');
-      // Toon het loginformulier terug
       const authBox = document.getElementById('auth');
       if (authBox) {
         authBox.style.display = '';
