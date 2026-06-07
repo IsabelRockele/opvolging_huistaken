@@ -1,4 +1,4 @@
-﻿import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, sendPasswordResetEmail, signOut, updatePassword } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import { getFirestore, doc, getDoc, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
@@ -90,7 +90,7 @@ async function toonSchooloverzichtKnopAlsNodig(user) {
       heeftKlasbeheer = snaps.some(snap => !snap.empty);
     }
 
-    if (schoolbeheerKnop && (isSecretariaat || heeftKlasbeheer)) {
+    if (schoolbeheerKnop && (isSecretariaat || isSchoolBreed || heeftKlasbeheer)) {
       schoolbeheerKnop.style.display = '';
     }
     if (bestellingenKnop && (isSecretariaat || heeftKlasbeheer)) {
