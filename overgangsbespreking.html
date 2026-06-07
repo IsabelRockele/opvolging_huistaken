@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="nl">
 <head>
 <meta charset="UTF-8" />
@@ -6,30 +6,52 @@
 <title>Overgangsbespreking</title>
 <style>
   :root{
-    --bg:#f7f8fb;--card:#fff;--border:#d9dee8;--text:#223044;--muted:#65748b;
-    --yellow:#f6d76b;--mint:#bfe8dc;--blue:#cfe8ff;--pink:#ffd6d6;--soft:#eef2f7;
-    --warn:#ffe3a3;--ok:#c9efd8;--danger:#f5c2c7;--shadow:0 8px 24px rgba(34,48,68,.08)
+    --bg:#f5f0e8;--card:#fff;--border:#d9cfc0;--text:#2c1f0e;--muted:#7a6a55;
+    --yellow:#f6d76b;--mint:#bfe8dc;--blue:#cfe8ff;--pink:#ffd6d6;--soft:#ede8df;
+    --brown:#4a3728;--brown-light:#6b4f3a;--header-bg:#6b5d52;
+    --warn:#ffe3a3;--ok:#c9efd8;--danger:#f5c2c7;--shadow:0 8px 24px rgba(34,48,68,.10)
   }
   *{box-sizing:border-box}
   body{margin:0;font-family:Arial,sans-serif;background:var(--bg);color:var(--text)}
-  header{background:white;border-bottom:1px solid var(--border);padding:14px 22px;position:sticky;top:0;z-index:5}
-  .header-top{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:12px}
-  .header-text h1{margin:0 0 4px;font-size:22px}
-  .header-text p{margin:0;color:var(--muted);font-size:13px}
+
+  /* ── HEADER ── */
+  header{background:linear-gradient(135deg,#6b5d52 0%,#8a7a6d 100%);border-bottom:none;padding:0;position:sticky;top:0;z-index:5}
+  .header-inner{display:flex;justify-content:space-between;align-items:center;gap:16px;padding:14px 22px;flex-wrap:wrap}
+  .header-logo{display:flex;align-items:center;gap:14px}
+  .header-logo img{width:52px;height:52px;border-radius:10px;object-fit:contain;background:#fff;padding:4px}
+  .header-text h1{margin:0 0 2px;font-size:22px;color:#fff;font-weight:900}
+  .header-text p{margin:0;color:rgba(255,255,255,.65);font-size:13px}
   .header-actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-  .save-status{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:700;padding:6px 10px;border-radius:10px;background:var(--soft);white-space:nowrap}
-  .save-status.dirty{background:var(--warn)}
-  .save-status.saved{background:var(--ok)}
-  .save-dot{width:9px;height:9px;border-radius:50%;background:#65748b}
+  .header-actions button{background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.25);font-size:13px;padding:7px 14px}
+  .header-actions button:hover{background:rgba(255,255,255,.25)}
+
+  /* ── SAVE STATUS ── */
+  .save-status{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:700;padding:6px 10px;border-radius:10px;background:rgba(255,255,255,.15);color:#fff;white-space:nowrap}
+  .save-status.dirty{background:var(--warn);color:var(--text)}
+  .save-status.saved{background:var(--ok);color:var(--text)}
+  .save-dot{width:9px;height:9px;border-radius:50%;background:rgba(255,255,255,.5)}
   .save-status.dirty .save-dot{background:#d97706;animation:pulse 1.5s infinite}
   .save-status.saved .save-dot{background:#15803d}
   @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
-  .tabs{display:flex;gap:4px;border-bottom:2px solid var(--border);margin:0 -22px;padding:0 22px}
-  .tab{background:transparent;border:0;padding:10px 18px;font-weight:700;font-size:14px;color:var(--muted);cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-2px;border-radius:0}
-  .tab:hover{color:var(--text)}
-  .tab.active{color:var(--text);border-bottom-color:var(--yellow)}
-  .tab-badge{display:inline-block;background:var(--soft);color:var(--text);padding:1px 8px;border-radius:10px;font-size:11px;margin-left:6px}
-  .tab.active .tab-badge{background:var(--yellow)}
+
+  /* ── TABS ── */
+  .tabs{display:flex;gap:0;border-bottom:none;margin:0;padding:0;background:#5a4d44;flex-wrap:wrap}
+  .tab{flex:1;min-width:130px;padding:11px 18px;font-weight:700;font-size:14px;cursor:pointer;border-radius:0;border:none;border-bottom:3px solid transparent;margin-bottom:0;font-family:inherit;transition:filter .15s}
+  .tab:hover{filter:brightness(.92)}
+
+  /* Eigen kleur per tab */
+  .tab[data-tab="students"]    {background:#fdf4dc;color:#7a5010;border-right:1px solid #d9cfc0}
+  .tab[data-tab="transfer"]    {background:#eaf4ec;color:#3d6b47;border-right:1px solid #d9cfc0}
+  .tab[data-tab="distribution"]{background:#edf0fa;color:#3d4f99;border-right:1px solid #d9cfc0}
+  .tab[data-tab="settings"]    {background:#faedf2;color:#7a2a4a}
+
+  .tab.active[data-tab="students"]    {background:#f5d58e;border-bottom-color:#b87a5e;color:#5c3010;font-weight:800}
+  .tab.active[data-tab="transfer"]    {background:#bfe8dc;border-bottom-color:#3d6b47;color:#1a4a28;font-weight:800}
+  .tab.active[data-tab="distribution"]{background:#c4c9e8;border-bottom-color:#3d4f99;color:#1a2a6a;font-weight:800}
+  .tab.active[data-tab="settings"]    {background:#f4c0d1;border-bottom-color:#8a2a4a;color:#4a0a28;font-weight:800}
+
+  .tab-badge{display:inline-block;background:rgba(0,0,0,.10);color:inherit;padding:1px 8px;border-radius:10px;font-size:11px;margin-left:6px}
+  .tab.active .tab-badge{background:rgba(0,0,0,.15)}
   main{padding:18px;max-width:1450px;margin:auto}
   .panel{background:var(--card);border:1px solid var(--border);border-radius:18px;padding:18px;box-shadow:var(--shadow);margin-bottom:16px}
   .tab-panel{display:none}
@@ -87,7 +109,9 @@
   .modal-overlay{position:fixed;inset:0;background:rgba(34,48,68,.55);display:none;align-items:flex-start;justify-content:center;z-index:100;padding:20px;overflow-y:auto}
   .modal-overlay.show{display:flex}
   .modal{background:#fff;border-radius:18px;width:100%;max-width:760px;box-shadow:0 20px 60px rgba(0,0,0,.25);margin:auto}
-  .modal-header{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;background:#fff;border-radius:18px 18px 0 0;z-index:1}
+  .modal-header{padding:16px 20px;border-bottom:1px solid rgba(255,255,255,.15);display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;background:linear-gradient(135deg,#6b5d52 0%,#8a7a6d 100%);border-radius:18px 18px 0 0;z-index:1}
+  .modal-header h2{color:#fff;margin:0;font-size:17px}
+  .modal-close{background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.2);padding:5px 10px;border-radius:8px;font-size:16px}
   .modal-header h2{margin:0;font-size:18px}
   .modal-close{background:transparent;font-size:22px;padding:4px 10px;border-radius:8px}
   .modal-close:hover{background:var(--soft)}
@@ -106,7 +130,9 @@
   .section-badge{display:inline-block;background:var(--mint);color:var(--text);padding:2px 8px;border-radius:10px;font-size:11px;font-weight:700;margin-left:4px}
   .section-badge.empty{background:var(--soft);color:var(--muted)}
   .field-with-note{margin-bottom:12px}
-  .aanpassingen-blok{display:none;margin-top:8px;padding:10px 12px;background:#fff8e6;border:1px solid #f0c866;border-radius:10px}
+  .therapie-rij{background:var(--soft);border:1px solid var(--border);border-radius:10px;padding:10px 12px}
+  .therapie-adres{margin-top:8px}
+  .therapie-adres{margin-top:8px}margin-top:8px;padding:10px 12px;background:#fff8e6;border:1px solid #f0c866;border-radius:10px}
   .aanpassingen-blok.zichtbaar{display:block}
   .aanpassingen-blok-titel{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:#92640a;margin-bottom:8px}
   .aanpassingen-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:5px}
@@ -310,15 +336,11 @@
 
   /* layout-rustiger-overgang-codex */
   header { padding: 12px 28px 0; }
-  .header-top { display:grid; grid-template-columns:minmax(260px,1fr) auto; align-items:start; margin-bottom:10px; }
-  .header-text h1 { font-size:24px; }
-  .header-actions { justify-content:flex-end; max-width:720px; }
+  .header-inner { padding: 14px 28px; }
+  .header-logo { gap: 16px; }
+  .header-actions { justify-content:flex-end; }
   #firebaseStatus { order:9; flex-basis:100%; text-align:right; }
   .tabs { gap:10px; border-bottom:0; padding:0 28px 10px; }
-  .tab { background:#eef2f7; border:1px solid #d9dee8; border-radius:14px; padding:12px 18px; font-size:15px; color:#223044; min-height:46px; }
-  .tab.active { background:var(--yellow); border-color:#e0bd45; box-shadow:0 8px 18px rgba(34,48,68,.10); }
-  .tab[data-tab="students"]::before { content:"\1F465  "; }
-  .tab[data-tab="transfer"]::before { content:"\1F4C4  "; }
   .tab[data-tab="settings"], .tab[data-tab="distribution"] { display:none !important; }
   main { max-width:1500px; padding:18px 24px 32px; }
   .panel { border-radius:12px; padding:18px 20px; }
@@ -326,11 +348,11 @@
   .schoolflow-actions { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:10px; }
   .schoolflow-actions button { min-height:38px; border-radius:999px; padding:8px 14px; font-size:13px; flex:0 0 auto; }
   .schoolflow-actions button::before { margin-right:4px; }
-  #sfCurrentBtn::before { content:"\1F3EB"; }
-  #sfShareBtn::before { content:"\1F4E4"; }
-  #sfIncomingBtn::before { content:"\1F4E5"; }
-  #sfOutgoingBtn::before { content:"\1F5C2"; }
-  #sfNewClassBtn::before { content:"\2728"; }
+  #sfCurrentBtn::before { content:"" }
+  #sfShareBtn::before { content:"" }
+  #sfIncomingBtn::before { content:"" }
+  #sfOutgoingBtn::before { content:"" }
+  #sfNewClassBtn::before { content:"" }
   .student-workbar { display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin:12px 0 14px; padding:10px; border:1px solid var(--border); border-radius:14px; background:#fbfcfe; }
   .student-workbar button { min-height:40px; border-radius:12px; }
   .student-workbar button.active { background:var(--yellow); }
@@ -413,7 +435,28 @@
   .fiche-tab textarea { min-height:70px; }
   .fiche-tab .note-input { min-height:58px; margin-top:6px; font-size:13px; }
 
-  /* ===== FICHE-MODAL ===== */
+  /* ===== OVERDRACHT LAYOUT B ===== */
+  .overdracht-layout-b{display:grid;grid-template-columns:210px 1fr;min-height:420px}
+  .overdracht-zijbalk{display:flex;flex-direction:column;border-right:1px solid var(--border);overflow-y:auto;gap:8px;padding:8px;background:var(--soft)}
+  .ozb-sectie{border-bottom:none;border-radius:10px;overflow:hidden;border:1px solid var(--border)}
+  .ozb-sectie.groen{background:#eaf4ec}
+  .ozb-sectie.geel{background:#fdf4dc}
+  .ozb-sectie.bruin{background:#f5ede0}
+  .ozb-sectie-titel{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.6px;padding:10px 14px 4px;color:var(--muted)}
+  .ozb-item{display:flex;align-items:center;justify-content:flex-start;gap:6px;width:100%;padding:9px 14px;background:transparent;border:none;border-left:3px solid transparent;font-size:13px;font-weight:700;color:var(--text);cursor:pointer;font-family:inherit;text-align:left}
+  .ozb-item:hover{filter:brightness(.95)}
+  .ozb-item.active{background:#fff;border-left-color:#6b5d52;font-weight:800}
+  .ozb-sectie.groen .ozb-item.active{border-left-color:#3d6b47;background:#fff}
+  .ozb-sectie.geel .ozb-item.active{border-left-color:#b87a5e;background:#fff}
+  .ozb-badge{background:#c0392b;color:#fff;border-radius:999px;padding:1px 6px;font-size:10px;font-weight:800;flex-shrink:0;margin-left:6px}
+  .overdracht-paneel{padding:20px 24px;background:#fff;overflow-y:auto}
+  .overdracht-paneel-leeg{color:var(--muted);font-size:13px;padding-top:20px}
+  .overdracht-paneel-titel{font-size:16px;font-weight:900;margin-bottom:14px;padding-bottom:10px;border-bottom:2px solid var(--border)}
+  /* Huidige klas weergave */
+  .sf-huidig-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:8px;margin-top:8px}
+  .sf-lln-kaart{background:var(--soft);border:1px solid var(--border);border-radius:10px;padding:10px 12px}
+  .sf-lln-naam{font-weight:800;font-size:13px;margin-bottom:3px}
+  .sf-lln-tags{display:flex;flex-wrap:wrap;gap:3px;margin-top:4px}
   .fiche-modal .modal {
     width:100%; max-width:860px;
     max-height:calc(100vh - 32px); height:auto;
@@ -423,7 +466,7 @@
   .fiche-modal .modal-body { flex:1 1 auto; min-height:0; overflow-y:auto; padding:0; display:block; }
 
   @media(max-width:900px) {
-    .header-top { grid-template-columns:1fr; }
+    .header-inner { flex-direction:column; align-items:flex-start; }
     .header-actions, #firebaseStatus { justify-content:flex-start; text-align:left; }
     .student-workbar .hint { width:100%; margin-left:0; }
     .student-table th { position:static; }
@@ -445,47 +488,39 @@
 <body>
 
 <header>
-  <div class="header-top">
-    <div class="header-text">
-      <h1>Overgangsbespreking</h1>
-      <p id="overgangSubtitel">Leerlingenfiches en overdracht voor de volgende leerkracht.</p>
+  <div class="header-inner">
+    <div class="header-logo">
+      <img src="afbeeldingen/schoollogo.png" alt="Logo GO! Basisschool De Linde">
+      <div class="header-text">
+        <h1>GO! Basisschool De Linde</h1>
+        <p id="overgangSubtitel">Overgangsbespreking — leerlingenfiches en overdracht</p>
+      </div>
     </div>
     <div class="header-actions">
-      
-      <button id="terugNaarStartBtn" type="button" class="ghost small" onclick="window.location.href='index.html'">&#127968; Keuzescherm</button>
-<div id="saveStatus" class="save-status">
+      <div id="saveStatus" class="save-status">
         <span class="save-dot"></span>
         <span id="saveStatusText">Nog niets opgeslagen</span>
       </div>
-      <div id="firebaseStatus" class="small" style="flex-basis:100%;color:var(--muted)">Firebase wordt gecontroleerd...</div>
       <button id="saveBtn" class="secondary small">💾 Opslaan</button>
-      <label class="ghost small" style="padding:6px 10px;border-radius:12px;cursor:pointer;font-weight:800;background:var(--soft);font-size:13px;margin:0">
+      <label style="padding:7px 14px;border-radius:12px;cursor:pointer;font-weight:800;font-size:13px;margin:0;background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.25)">
         📂 Importeren
         <input id="importFile" class="hidden" type="file" accept=".json,.txt,application/json,text/plain,*/*" onclick="this.value=''">
       </label>
-      <button id="exportJsonBtn" type="button" class="ghost small">&#128190; Exporteren JSON</button>
+      <button id="exportJsonBtn" type="button" style="background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.25);font-size:13px;padding:7px 14px">&#128190; Exporteren</button>
+      <button id="terugNaarStartBtn" type="button" onclick="window.location.href='index.html'" style="background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.35);color:#fff;border-radius:10px;padding:6px 14px;font-size:13px;cursor:pointer;font-weight:700">🏠 Keuzescherm</button>
+      <div id="firebaseStatus" class="small" style="flex-basis:100%;color:rgba(255,255,255,.5);font-size:11px">Firebase wordt gecontroleerd...</div>
     </div>
   </div>
   <nav class="tabs">
     <button class="tab" data-tab="settings">&#9881;&#65039; Instellingen</button>
     <button class="tab active" data-tab="students">&#128101; Leerlingenfiches <span class="tab-badge" id="studentsBadge">0</span></button>
     <button class="tab" data-tab="distribution">📋 Verdeling</button>
-    <button class="tab" data-tab="transfer">📄 Overdracht</button>
+    <button class="tab" data-tab="transfer">📄 Overdracht <span id="transferTabBadge" style="display:none;background:#c0392b;color:#fff;border-radius:999px;padding:1px 7px;font-size:11px;font-weight:800;margin-left:4px"></span></button>
   </nav>
 </header>
 
 
-<section id="schoolflowPanel" class="schoolflow-panel">
-  <div class="schoolflow-actions">
-    <button type="button" id="sfCurrentBtn" class="secondary">Mijn huidige werkklas</button>
-    <button type="button" id="sfShareBtn" class="ghost">Overdracht delen</button>
-    <button type="button" id="sfIncomingBtn" class="ghost">Overdrachten naar mij</button>
-    <button type="button" id="sfOutgoingBtn" class="ghost">Mijn doorgestuurde overdrachten</button>
-    <button type="button" id="sfNewClassBtn" class="danger">Nieuwe klas starten</button>
-  </div>
 
-  <div id="sfBox" class="schoolflow-box" aria-live="polite"></div>
-</section>
 <main>
 
   <div class="tab-panel" data-panel="settings">
@@ -572,18 +607,18 @@
       </div>
 
       <div class="student-workbar" id="studentWerkbarCodex">
-        <button type="button" id="toonKlaslijstWerkbladBtn">&#10133; Leerlingen toevoegen</button>
+        <button type="button" id="toonKlaslijstWerkbladBtn">📋 Klaslijst importeren</button>
         <button type="button" id="toonFichesWerkbladBtn" class="ghost active">&#128101; Leerlingenfiches</button>
         <span class="hint">Werk eerst je klaslijst bij, klik daarna op een leerling om de fiche te openen.</span>
       </div>
 
       <div class="klaslijst-box">
-        <label for="klaslijstInput">Klaslijst toevoegen</label>
+        <label for="klaslijstInput">Klaslijst importeren</label>
         <p class="small" style="margin:0 0 8px">Plak een lijst met 1 leerling per regel. Dit kan als "Voornaam Achternaam" of "Achternaam, Voornaam". Bestaande namen worden overgeslagen.</p>
         <div class="leerlingen-toolbar">
           <textarea id="klaslijstInput" placeholder="Peeters, Noor&#10;Janssens, Lina&#10;Milan Vermeulen"></textarea>
           <div class="actions" style="align-self:end">
-            <button id="importKlaslijstBtn" type="button" class="secondary">Klaslijst toevoegen</button>
+            <button id="importKlaslijstBtn" type="button" class="secondary">📋 Klaslijst importeren</button>
           </div>
         </div>
       </div>
@@ -607,14 +642,52 @@
   </div>
 
   <div class="tab-panel" data-panel="transfer">
-    <section class="panel">
-      <h2>Overdracht</h2>
-      <p class="help">Bekijk de samenvatting per onderwerp en deel de overdracht met de volgende leerkracht.</p>
-      <div id="transferOnline"></div>
-      <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border)">
-        <button id="transferBtn">&#128196; Volledig document openen (voor PDF)</button>
+    <section class="panel" style="padding:0;overflow:hidden">
+      <div class="overdracht-layout-b">
+
+        <!-- ZIJBALK -->
+        <nav class="overdracht-zijbalk" id="overdrachtZijbalk">
+
+          <!-- SECTIE 1: Overzicht klas -->
+          <div class="ozb-sectie groen">
+            <div class="ozb-sectie-titel">📋 Overzicht klas</div>
+            <div id="overdrachtChips"></div>
+          </div>
+
+          <!-- SECTIE 2: Overdracht uitwisselen -->
+          <div class="ozb-sectie geel">
+            <div class="ozb-sectie-titel">🔄 Overdracht</div>
+            <button type="button" class="ozb-item" id="sfCurrentBtn">🏫 Mijn huidige klas</button>
+            <button type="button" class="ozb-item" id="sfShareBtn">📤 Overdracht delen</button>
+            <button type="button" class="ozb-item ozb-notif" id="sfIncomingBtn">
+              📥 Naar mij ontvangen
+              <span class="ozb-badge" id="incomingBadge" style="display:none">!</span>
+            </button>
+            <button type="button" class="ozb-item" id="sfOutgoingBtn">📂 Doorgestuurde</button>
+            <div style="padding:8px 12px 4px">
+              <button type="button" id="sfNewClassBtn" style="width:100%;background:#fff8f8;color:#8a1a2a;border:1px solid #f5c2c7;border-radius:8px;padding:6px 10px;font-size:11px;font-weight:800;cursor:pointer;font-family:inherit">✨ Nieuwe lege klas starten</button>
+            </div>
+          </div>
+
+          <!-- PDF knoppen -->
+          <div class="ozb-sectie bruin">
+            <div class="ozb-sectie-titel">📄 PDF exporteren</div>
+            <button type="button" id="transferBtn" class="ozb-item">📋 Overzicht klas (PDF)</button>
+            <button type="button" id="transferFichesBtn" class="ozb-item">👤 Fiches per leerling (PDF)</button>
+          </div>
+
+        </nav>
+
+        <!-- HOOFDPANEEL -->
+        <div class="overdracht-paneel" id="overdrachtPaneel">
+          <div class="overdracht-paneel-leeg">← Klik links op een onderwerp</div>
+        </div>
+
       </div>
     </section>
+
+    <!-- sfBox buiten het raster zodat het breed kan renderen -->
+    <div id="sfBox" class="schoolflow-box" aria-live="polite" style="margin-top:12px"></div>
   </div>
 
 </main>
@@ -847,13 +920,36 @@
           <!-- TAB: Therapieën -->
           <div class="fiche-tab" data-tab="therapie">
             <div class="ftab-title">💊 Therapieën en begeleiding <span class="section-badge empty" id="badge_therapie">leeg</span></div>
-            <div class="grid grid-3" style="gap:8px;margin-bottom:14px">
-              <div class="checkbox-row"><input type="checkbox" id="m_therapy_logo"><label for="m_therapy_logo" style="margin:0">Logopedie</label></div>
-              <div class="checkbox-row"><input type="checkbox" id="m_therapy_kine"><label for="m_therapy_kine" style="margin:0">Kinesitherapie</label></div>
-              <div class="checkbox-row"><input type="checkbox" id="m_therapy_gon"><label for="m_therapy_gon" style="margin:0">GON / ondersteuningsnetwerk</label></div>
-              <div class="checkbox-row"><input type="checkbox" id="m_therapy_clb"><label for="m_therapy_clb" style="margin:0">CLB-traject</label></div>
-              <div class="checkbox-row"><input type="checkbox" id="m_therapy_psy"><label for="m_therapy_psy" style="margin:0">Psycholoog</label></div>
+
+            <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:14px">
+
+              <div class="therapie-rij">
+                <div class="checkbox-row"><input type="checkbox" id="m_therapy_logo" onchange="toggleTherapieAdres('logo',this.checked)"><label for="m_therapy_logo" style="margin:0">Logopedie</label></div>
+                <div id="adres_logo" class="therapie-adres" style="display:none"><input id="m_therapy_logo_adres" placeholder="Naam + adres of telefoonnummer logopedist..."></div>
+              </div>
+
+              <div class="therapie-rij">
+                <div class="checkbox-row"><input type="checkbox" id="m_therapy_kine" onchange="toggleTherapieAdres('kine',this.checked)"><label for="m_therapy_kine" style="margin:0">Kinesitherapie</label></div>
+                <div id="adres_kine" class="therapie-adres" style="display:none"><input id="m_therapy_kine_adres" placeholder="Naam + adres of telefoonnummer kinesist..."></div>
+              </div>
+
+              <div class="therapie-rij">
+                <div class="checkbox-row"><input type="checkbox" id="m_therapy_gon" onchange="toggleTherapieAdres('gon',this.checked)"><label for="m_therapy_gon" style="margin:0">GON / ondersteuningsnetwerk</label></div>
+                <div id="adres_gon" class="therapie-adres" style="display:none"><input id="m_therapy_gon_adres" placeholder="Naam begeleider + contactgegevens..."></div>
+              </div>
+
+              <div class="therapie-rij">
+                <div class="checkbox-row"><input type="checkbox" id="m_therapy_clb" onchange="toggleTherapieAdres('clb',this.checked)"><label for="m_therapy_clb" style="margin:0">CLB-traject</label></div>
+                <div id="adres_clb" class="therapie-adres" style="display:none"><input id="m_therapy_clb_adres" placeholder="CLB-medewerker + contactgegevens..."></div>
+              </div>
+
+              <div class="therapie-rij">
+                <div class="checkbox-row"><input type="checkbox" id="m_therapy_psy" onchange="toggleTherapieAdres('psy',this.checked)"><label for="m_therapy_psy" style="margin:0">Psycholoog</label></div>
+                <div id="adres_psy" class="therapie-adres" style="display:none"><input id="m_therapy_psy_adres" placeholder="Naam + adres of telefoonnummer psycholoog..."></div>
+              </div>
+
             </div>
+
             <div class="field-with-note">
               <label>Andere therapie of begeleiding</label>
               <input id="m_therapy_other" placeholder="bv. ergotherapie, dyslexie-coaching, ...">
@@ -1170,6 +1266,11 @@ function switchFicheTab(name) {
   document.querySelectorAll('#studentModal .fiche-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === name));
 }
 
+function toggleTherapieAdres(type, zichtbaar) {
+  const el = $('adres_' + type);
+  if (el) el.style.display = zichtbaar ? 'block' : 'none';
+}
+
 // ---- Aanpassingen per vak ----
 const VAKKEN_AANP = ['reading','spelling','math','writing'];
 const AANP_KEYS = ['verlengd','mondeling','eigendoelen','hulpkaarten','toetsing','remediering'];
@@ -1367,10 +1468,20 @@ function openModal(studentId = null) {
     $('m_stayingThisYear').checked = !!s.stayingThisYear;
     // Therapie
     $('m_therapy_logo').checked = !!(s.therapies && s.therapies.logo);
+    $('m_therapy_logo_adres').value = (s.therapies && s.therapies.logo_adres) || '';
+    toggleTherapieAdres('logo', !!(s.therapies && s.therapies.logo));
     $('m_therapy_kine').checked = !!(s.therapies && s.therapies.kine);
+    $('m_therapy_kine_adres').value = (s.therapies && s.therapies.kine_adres) || '';
+    toggleTherapieAdres('kine', !!(s.therapies && s.therapies.kine));
     $('m_therapy_gon').checked = !!(s.therapies && s.therapies.gon);
+    $('m_therapy_gon_adres').value = (s.therapies && s.therapies.gon_adres) || '';
+    toggleTherapieAdres('gon', !!(s.therapies && s.therapies.gon));
     $('m_therapy_clb').checked = !!(s.therapies && s.therapies.clb);
+    $('m_therapy_clb_adres').value = (s.therapies && s.therapies.clb_adres) || '';
+    toggleTherapieAdres('clb', !!(s.therapies && s.therapies.clb));
     $('m_therapy_psy').checked = !!(s.therapies && s.therapies.psy);
+    $('m_therapy_psy_adres').value = (s.therapies && s.therapies.psy_adres) || '';
+    toggleTherapieAdres('psy', !!(s.therapies && s.therapies.psy));
     $('m_therapy_other').value = (s.therapies && s.therapies.other) || '';
     // Sociaal
     $('m_friends').value = (s.friends || []).join(', ');
@@ -1455,10 +1566,15 @@ function saveStudent() {
     // Therapie
     therapies: {
       logo: $('m_therapy_logo').checked,
+      logo_adres: $('m_therapy_logo_adres').value.trim(),
       kine: $('m_therapy_kine').checked,
+      kine_adres: $('m_therapy_kine_adres').value.trim(),
       gon: $('m_therapy_gon').checked,
+      gon_adres: $('m_therapy_gon_adres').value.trim(),
       clb: $('m_therapy_clb').checked,
+      clb_adres: $('m_therapy_clb_adres').value.trim(),
       psy: $('m_therapy_psy').checked,
+      psy_adres: $('m_therapy_psy_adres').value.trim(),
       other: $('m_therapy_other').value.trim()
     },
     // Sociaal
@@ -1620,7 +1736,7 @@ function addStudentsFromClassList() {
       repeatedYear: [],
       newcomer: false,
       stayingThisYear: false,
-      therapies: { logo:false, kine:false, gon:false, clb:false, psy:false, other:'' },
+      therapies: { logo:false, logo_adres:'', kine:false, kine_adres:'', gon:false, gon_adres:'', clb:false, clb_adres:'', psy:false, psy_adres:'', other:'' },
       friends: [],
       avoid: [],
       socialNote: '',
@@ -1658,7 +1774,7 @@ function loadDemo() {
     readingNote: '', spellingNote: '', mathNote: '', writingNote: '',
     focusNote: '', behaviorNote: '', careNote: '', socialNote: '',
     friends: [], avoid: [], notes: '', updatedAt: todayISO(),
-    therapies: { logo:false, kine:false, gon:false, clb:false, psy:false, other:'' },
+    therapies: { logo:false, logo_adres:'', kine:false, kine_adres:'', gon:false, gon_adres:'', clb:false, clb_adres:'', psy:false, psy_adres:'', other:'' },
     repeated: false, repeatedYear: [], newcomer: false, stayingThisYear: false
   }));
   state.groups = []; state.locks = {};
@@ -2296,13 +2412,12 @@ function makeTransfer() {
   const fiches = sortedStudents.map(x => {
     const t = x.therapies || {};
     const therapieList = [];
-    if (t.logo) therapieList.push('logopedie');
-    if (t.kine) therapieList.push('kinesitherapie');
-    if (t.gon) therapieList.push('GON / ondersteuningsnetwerk');
-    if (t.clb) therapieList.push('CLB-traject');
-    if (t.psy) therapieList.push('psycholoog');
-    if (t.other) therapieList.push(t.other);
-    const loopbaanItems = [];
+    if (t.logo) therapieList.push({ naam:'Logopedie', adres: t.logo_adres||'' });
+    if (t.kine) therapieList.push({ naam:'Kinesitherapie', adres: t.kine_adres||'' });
+    if (t.gon) therapieList.push({ naam:'GON / ondersteuningsnetwerk', adres: t.gon_adres||'' });
+    if (t.clb) therapieList.push({ naam:'CLB-traject', adres: t.clb_adres||'' });
+    if (t.psy) therapieList.push({ naam:'Psycholoog', adres: t.psy_adres||'' });
+    if (t.other) therapieList.push({ naam: t.other, adres:'' });
     if (x.repeated) loopbaanItems.push('Heeft een leerjaar overgedaan' + (() => { const j = Array.isArray(x.repeatedYear) ? x.repeatedYear.join(', ') : (x.repeatedYear || ''); return j ? ` (${j})` : ''; })());
     if (x.newcomer) loopbaanItems.push('Anderstalige nieuwkomer (OKAN/AN)');
 
@@ -2347,7 +2462,7 @@ function makeTransfer() {
 
     ${loopbaanItems.length ? `<div class="fiche-block"><p class="fiche-block-title">Schoolloopbaan</p><p>${loopbaanItems.map(esc).join(' · ')}</p></div>` : ''}
 
-    ${therapieList.length ? `<div class="fiche-block"><p class="fiche-block-title">Therapieën / begeleiding</p><p>${therapieList.map(esc).join(', ')}</p></div>` : ''}
+    ${therapieList.length ? `<div class="fiche-block"><p class="fiche-block-title">Therapieën / begeleiding</p>${therapieList.map(item => `<p style="margin:2px 0">• ${esc(item.naam)}${item.adres ? `<span style="color:#475569;font-size:12px;display:block;margin-left:10px">📍 ${esc(item.adres)}</span>` : ''}</p>`).join('')}</div>` : ''}
 
     ${(x.friends.length || x.avoid.length || x.socialNote) ? `<div class="fiche-block">
       <p class="fiche-block-title">Sociaal-emotioneel</p>
@@ -2490,9 +2605,105 @@ function makeTransfer() {
       const onbekendBlok = onbekend.length ? `<h3>Onbekend / nog in te vullen</h3><p class="empty">${onbekend.map(x => esc(x.name)).join(', ')}</p>` : '';
       return `<div class="blok blok-zwemmen"><h2>🏊 Zwemgroepen (badmuts)</h2>${groepen}${onbekendBlok}</div>`;
     })()}
-    <h2>Fiches per leerling</h2>${fiches}
+    <h2 style="margin-top:20px;font-size:13px;color:#475569">💡 Tip: gebruik "Fiches per leerling (PDF)" voor de individuele leerlingfiches.</h2>
   <\/body><\/html>`);
   win.document.close();
+}
+
+function openTransferWindow(mode) {
+  readSettings();
+  const allStudents = state.students;
+  if (!allStudents.length) { alert('Voeg eerst leerlingen toe.'); return; }
+  const stayers = allStudents.filter(x => x.stayingThisYear);
+  const s = allStudents.filter(x => !x.stayingThisYear);
+  if (!s.length) { alert('Alle leerlingen zijn aangeduid als zittenblijver.'); return; }
+  if (mode === 'fiches') {
+    // Open nieuw venster met ALLEEN de fiches per leerling
+    const win = window.open('', '_blank');
+    const sortedStudents = [...s].sort((a, b) => {
+      const lc = (a.lastName || '').localeCompare(b.lastName || '', 'nl');
+      return lc !== 0 ? lc : (a.firstName || '').localeCompare(b.firstName || '', 'nl');
+    });
+    // Hergebruik fiches uit makeTransfer
+    const ficheHtml = sortedStudents.map(x => {
+      const t = x.therapies || {};
+      const therapieList = [];
+      if (t.logo) therapieList.push({ naam:'Logopedie', adres: t.logo_adres||'' });
+      if (t.kine) therapieList.push({ naam:'Kinesitherapie', adres: t.kine_adres||'' });
+      if (t.gon) therapieList.push({ naam:'GON / ondersteuningsnetwerk', adres: t.gon_adres||'' });
+      if (t.clb) therapieList.push({ naam:'CLB-traject', adres: t.clb_adres||'' });
+      if (t.psy) therapieList.push({ naam:'Psycholoog', adres: t.psy_adres||'' });
+      if (t.other) therapieList.push({ naam: t.other, adres:'' });
+      const loopbaanItems = [];
+      if (x.repeated) loopbaanItems.push('Heeft een leerjaar overgedaan' + (() => { const j = Array.isArray(x.repeatedYear) ? x.repeatedYear.join(', ') : (x.repeatedYear || ''); return j ? ` (${j})` : ''; })());
+      if (x.newcomer) loopbaanItems.push('Anderstalige nieuwkomer (OKAN/AN)');
+      const AANP_LABELS_PDF = {verlengd:'Verlengde tijd',mondeling:'Mondeling i.p.v. schriftelijk',eigendoelen:'Eigen doelen / ander niveau',hulpkaarten:'Hulpkaarten / woordenlijst',toetsing:'Aangepaste toetsing',remediering:'Extra herhaling / remediëring'};
+      const vakRegel = (label, niveau, note, extra='', vakNaam='') => {
+        let line = `<strong>${label}:</strong> ${esc(niveau)}${extra}`;
+        if (note) line += ` <span class="fiche-note">— ${esc(note)}</span>`;
+        if (vakNaam && niveau === 'zwak' && x.aanpassingen && x.aanpassingen[vakNaam]) {
+          const a = x.aanpassingen[vakNaam];
+          const tags = Object.keys(AANP_LABELS_PDF).filter(k => a[k]).map(k => AANP_LABELS_PDF[k]);
+          if (a.other) tags.push(a.other);
+          if (tags.length) line += ` <span class="fiche-note">⚙ ${tags.map(esc).join(', ')}</span>`;
+        }
+        return line;
+      };
+      return `<section class="fiche">
+      <h3>${esc(x.name)} ${genderBadge(x.gender)}</h3>
+      <p class="updated">Bijgewerkt: ${esc(x.updatedAt || '-')} · Niveau ${x.level}/5</p>
+      <div class="fiche-block"><p class="fiche-block-title">Vakgebieden</p>
+        <p>${vakRegel('Lezen', x.reading, x.readingNote, x.avi ? ' · AVI ' + esc(x.avi) : '', 'reading')}</p>
+        <p>${vakRegel('Spelling', x.spelling || 'basis', x.spellingNote, '', 'spelling')}</p>
+        <p>${vakRegel('Rekenen', x.math, x.mathNote, '', 'math')}</p>
+        <p>${vakRegel('Handschrift', x.writing || 'basis', x.writingNote, '', 'writing')}</p>
+      </div>
+      <div class="fiche-block"><p class="fiche-block-title">Gedrag en concentratie</p>
+        <p>${vakRegel('Concentratie', x.focus, x.focusNote)}</p>
+        <p>${vakRegel('Gedrag', x.behavior, x.behaviorNote)}</p>
+      </div>
+      ${(x.care !== 'laag' || x.iac === 'ja' || x.careNote) ? `<div class="fiche-block"><p class="fiche-block-title">Zorg</p>
+        <p><strong>Zorgniveau:</strong> ${esc(x.care)} · IAC: ${esc(x.iac)}</p>
+        ${x.careNote ? `<p class="fiche-note-block">${esc(x.careNote)}</p>` : ''}</div>` : ''}
+      ${loopbaanItems.length ? `<div class="fiche-block"><p class="fiche-block-title">Schoolloopbaan</p><p>${loopbaanItems.map(esc).join(' · ')}</p></div>` : ''}
+      ${therapieList.length ? `<div class="fiche-block"><p class="fiche-block-title">Therapieën</p>${therapieList.map(item => `<p style="margin:2px 0">• ${esc(item.naam)}${item.adres ? `<span style="color:#475569;font-size:12px;display:block;margin-left:10px">📍 ${esc(item.adres)}</span>` : ''}</p>`).join('')}</div>` : ''}
+      ${(x.friends.length || x.avoid.length || x.socialNote) ? `<div class="fiche-block"><p class="fiche-block-title">Sociaal-emotioneel</p>
+        ${x.friends.length ? `<p><strong>Graag samen met:</strong> ${x.friends.map(esc).join(', ')}</p>` : ''}
+        ${x.avoid.length ? `<p><strong>Liever niet samen met:</strong> ${x.avoid.map(esc).join(', ')}</p>` : ''}
+        ${x.socialNote ? `<p class="fiche-note-block">${esc(x.socialNote)}</p>` : ''}</div>` : ''}
+      ${x.notes ? `<div class="fiche-block"><p class="fiche-block-title">Algemene notitie</p><p class="fiche-note-block">${esc(x.notes)}</p></div>` : ''}
+      ${x.badmuts ? `<div class="fiche-block"><p class="fiche-block-title">Zwemmen</p><p>Badmuts: ${{'rood':'🔴 Rood','blauw_ondiep':'🔵 Blauw ondiep','blauw_diep':'🔵 Blauw diep','groen':'🟢 Groen'}[x.badmuts]||esc(x.badmuts)}</p></div>` : ''}
+    </section>`;
+    }).join('');
+    win.document.write(`<!DOCTYPE html><html lang="nl"><head><meta charset="UTF-8"><title>Fiches per leerling</title>
+    <style>
+      @page{margin:12mm 10mm}
+      body{font-family:Arial,sans-serif;padding:0 16px 16px;color:#223044;max-width:860px;margin:auto;line-height:1.5}
+      h1{margin:0 0 4px;font-size:22px;font-weight:900}
+      .meta{color:#65748b;font-size:13px;margin:0 0 16px}
+      .fiche{border:1px solid #dde2ec;border-radius:10px;padding:0 18px 14px;margin:0 0 16px;break-inside:avoid;page-break-inside:avoid;background:#fbfcfe}
+      .fiche h3{margin:0 -18px 10px;padding:8px 14px;background:#f1f5f9;border-bottom:2px solid #94a3b8;border-radius:8px 8px 0 0;font-size:14px;color:#0f172a;letter-spacing:0;text-transform:none;width:calc(100%+36px)}
+      .updated{color:#65748b;font-size:11px;margin:0 0 8px}
+      .fiche-block{margin:5px 0;padding:7px 10px;background:#fff;border-radius:6px;border:1px solid #eef2f7}
+      .fiche-block-title{font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:#65748b;font-weight:700;margin:0 0 3px}
+      .fiche-block p{margin:2px 0;font-size:13px;line-height:1.4}
+      .fiche-note{color:#475569;font-style:italic}
+      .fiche-note-block{background:#fef9e7;padding:5px 9px;border-radius:5px;border-left:3px solid #f6d76b;margin-top:3px;font-size:12px}
+      .gender-badge{font-size:11px;padding:2px 6px;border-radius:5px;font-weight:700}
+      .gender-badge.j{background:#cfe8ff;color:#1e40af} .gender-badge.m{background:#ffd6e8;color:#9d174d} .gender-badge.x,.gender-badge.dash{background:#e5e7eb;color:#4b5563}
+      button{padding:9px 14px;border:0;border-radius:10px;background:#f6d76b;font-weight:bold;cursor:pointer;margin-right:8px}
+      .toolbar{position:sticky;top:0;background:#fff;padding:10px 0;border-bottom:1px solid #eee;margin-bottom:16px;z-index:10}
+      @media print{.toolbar{display:none}.fiche{border-color:#ccc}}
+    <\/style><\/head><body>
+    <div class="toolbar"><button onclick="window.print()">🖨️ Afdrukken / bewaren als PDF</button></div>
+    <h1>Fiches per leerling</h1>
+    <p class="meta">Opgemaakt op ${new Date().toLocaleDateString('nl-BE')} · ${s.length} ${s.length === 1 ? 'leerling' : 'leerlingen'}</p>
+    ${ficheHtml}
+    <\/body><\/html>`);
+    win.document.close();
+  } else {
+    makeTransfer(); // overzicht klas = bestaande functie
+  }
 }
 
 function resetAll() {
@@ -2510,12 +2721,12 @@ function openFicheModal(studentId) {
 
   const t = s.therapies || {};
   const therapieList = [];
-  if (t.logo) therapieList.push('logopedie');
-  if (t.kine) therapieList.push('kinesitherapie');
-  if (t.gon) therapieList.push('GON');
-  if (t.clb) therapieList.push('CLB');
-  if (t.psy) therapieList.push('psycholoog');
-  if (t.other) therapieList.push(t.other);
+  if (t.logo) therapieList.push({ naam: 'Logopedie', adres: t.logo_adres || '' });
+  if (t.kine) therapieList.push({ naam: 'Kinesitherapie', adres: t.kine_adres || '' });
+  if (t.gon) therapieList.push({ naam: 'GON / ondersteuningsnetwerk', adres: t.gon_adres || '' });
+  if (t.clb) therapieList.push({ naam: 'CLB-traject', adres: t.clb_adres || '' });
+  if (t.psy) therapieList.push({ naam: 'Psycholoog', adres: t.psy_adres || '' });
+  if (t.other) therapieList.push({ naam: t.other, adres: '' });
 
   const BADMUTS_LABEL = {rood:'🔴 Rood',blauw_ondiep:'🔵 Blauw ondiep',blauw_diep:'🔵 Blauw diep',groen:'🟢 Groen'};
   const BADMUTS_CLASS = {rood:'rood',blauw_ondiep:'blauw',blauw_diep:'blauw',groen:'groen'};
@@ -2579,7 +2790,10 @@ function openFicheModal(studentId) {
   if (loopItems.length) loopbaanInhoud = loopItems.map(x => `<p>• ${esc(x)}</p>`).join('');
 
   // Therapie
-  const therapieInhoud = therapieList.length ? `<p>${therapieList.map(esc).join(', ')}</p>` : '';
+  const therapieInhoud = therapieList.length ? `<p>${therapieList.map(item => {
+    const adres = item.adres ? `<span class="fiche-notitie" style="font-size:12px;display:block;margin-left:8px;color:var(--muted)">📍 ${esc(item.adres)}</span>` : '';
+    return `<span style="display:block;margin-bottom:4px">• ${esc(item.naam)}${adres}</span>`;
+  }).join('')}</p>` : '';
 
   // Sociaal
   let sociaalInhoud = '';
@@ -2730,12 +2944,28 @@ function renderTransferOnline() {
   const psyKids = s.filter(x => x.therapies && x.therapies.psy);
   const otherKids = s.filter(x => x.therapies && x.therapies.other);
   const therapieCount = logoKids.length + kineKids.length + gonKids.length + clbKids.length + psyKids.length + otherKids.length;
+
+  // therapie-per-leerling-codex
+  function therapieSubsectie(titel, lijst, adresKey) {
+    if (!lijst.length) return `<div class="transfer-subsectie"><h4>${titel}</h4><p class="transfer-empty">Geen leerlingen.</p></div>`;
+    const sorted = [...lijst].sort((a,b) => (a.lastName||'').localeCompare(b.lastName||'','nl') || (a.firstName||'').localeCompare(b.firstName||'','nl'));
+    const inhoud = sorted.map(st => {
+      const adres = (st.therapies && st.therapies[adresKey]) ? String(st.therapies[adresKey]).trim() : '';
+      const extra = adres ? esc(adres) : '<span style="color:#9a3412;font-weight:700">geen gegevens ingevuld</span>';
+      return `<div class="transfer-leerling-row">
+        <span class="transfer-leerling-naam transfer-leerling-klik" onclick="openFicheModal('${st.id}')">${esc(st.name)}</span>
+        <span class="transfer-leerling-extra"> - ${extra}</span>
+      </div>`;
+    }).join('');
+    return `<div class="transfer-subsectie"><h4>${titel}</h4>${inhoud}</div>`;
+  }
+
   secties.push({ id:'therapie', emoji:'💊', titel:'Therapieën', kleur:'#e0e7ff', count: therapieCount,
-    inhoud: subsectie('Logopedie', logoKids)
-      + subsectie('Kinesitherapie', kineKids)
-      + subsectie('GON / ondersteuningsnetwerk', gonKids)
-      + subsectie('CLB-traject', clbKids)
-      + subsectie('Psycholoog', psyKids)
+    inhoud: therapieSubsectie('Logopedie', logoKids, 'logo_adres')
+      + therapieSubsectie('Kinesitherapie', kineKids, 'kine_adres')
+      + therapieSubsectie('GON / ondersteuningsnetwerk', gonKids, 'gon_adres')
+      + therapieSubsectie('CLB-traject', clbKids, 'clb_adres')
+      + therapieSubsectie('Psycholoog', psyKids, 'psy_adres')
       + (otherKids.length ? subsectie('Andere begeleiding', otherKids, {extra: x => x.therapies.other ? esc(x.therapies.other) : ''}) : '')
   });
 
@@ -2778,35 +3008,222 @@ function renderTransferOnline() {
     inhoud: sociaalInhoud
   });
 
-  // Render navigatieknoppen + blokken
-  let html = `<p class="help" style="margin-bottom:10px">Klik op een naam om de volledige fiche te bekijken. Klik op een knop om dat onderdeel te openen of te sluiten.</p>`;
-  html += `<div class="overdracht-nav">` + secties.map(sec =>
-    `<button class="on-btn" id="onbtn_${sec.id}" onclick="toggleTransferSectie('${sec.id}')">${sec.emoji} ${sec.titel}${sec.count > 0 ? ` <span style="font-size:11px;background:rgba(0,0,0,.12);padding:1px 7px;border-radius:8px;margin-left:4px">${sec.count}</span>` : ''}</button>`
-  ).join('') + `</div>`;
-
-  html += secties.map(sec =>
-    `<div class="transfer-blok transfer-sectie-wrap" id="tblok_${sec.id}">
-      <div class="transfer-blok-title" style="background:${sec.kleur}">${sec.emoji} ${sec.titel}</div>
-      ${sec.inhoud}
-    </div>`
+  // Render chips in zijbalk (sectie groen)
+  const chipsContainer = $('overdrachtChips') || container;
+  const chipsHtml = secties.map(sec =>
+    `<button class="ozb-item" id="onbtn_${sec.id}" onclick="toonOverdrachtSectie('${sec.id}')">${sec.emoji} ${sec.titel}${sec.count > 0 ? ` <span style="font-size:10px;background:rgba(0,0,0,.14);padding:1px 6px;border-radius:6px">${sec.count}</span>` : ''}</button>`
   ).join('');
+  chipsContainer.innerHTML = chipsHtml;
 
-  container.innerHTML = html;
+  // Sla secties op voor zijpaneel
+  window._overdrachtSecties = {};
+  secties.forEach(sec => { window._overdrachtSecties[sec.id] = sec; });
+
+  // Toon eerste sectie automatisch
+  if (secties.length) toonOverdrachtSectie(secties[0].id);
 }
 
-function toggleTransferSectie(id) {
-  const blok = document.getElementById('tblok_' + id);
+// overzicht-klas-pdf-codex
+function openOverzichtKlasPdf() {
+  readSettings();
+  const allStudents = state.students || [];
+  if (!allStudents.length) {
+    alert('Voeg eerst leerlingen toe.');
+    switchTab('students');
+    return;
+  }
+
+  const leerlingen = allStudents.filter(x => !x.stayingThisYear);
+  const zittenblijvers = allStudents.filter(x => x.stayingThisYear);
+  if (!leerlingen.length) {
+    alert('Alle leerlingen zijn aangeduid als blijft zitten. Er zijn geen leerlingen om over te dragen.');
+    return;
+  }
+
+  const win = window.open('', '_blank');
+  if (!win) {
+    alert('Het PDF-venster werd tegengehouden door de browser. Sta pop-ups toe voor deze pagina.');
+    return;
+  }
+
+  const sorteer = lijst => [...lijst].sort((a,b) => (a.lastName||'').localeCompare(b.lastName||'','nl') || (a.firstName||'').localeCompare(b.firstName||'','nl'));
+  const legeRegel = '<p class="empty">Geen leerlingen.</p>';
+  function leerlingRij(s, extra='', note='') {
+    const extraHtml = extra ? `<span class="extra">${extra}</span>` : '';
+    const noteHtml = note ? `<span class="note">${esc(note)}</span>` : '';
+    return `<div class="leerling-rij"><strong>${esc(s.name)}</strong>${extraHtml}${noteHtml}</div>`;
+  }
+  function groep(titel, lijst, opties={}) {
+    const sorted = sorteer(lijst);
+    const inhoud = sorted.length ? sorted.map(s => {
+      const extra = opties.extra ? opties.extra(s) : '';
+      const note = opties.noteKey && s[opties.noteKey] ? s[opties.noteKey] : '';
+      return leerlingRij(s, extra, note);
+    }).join('') : legeRegel;
+    return `<section class="groep"><h4>${titel}</h4>${inhoud}</section>`;
+  }
+  function onderdeel(titel, inhoud) {
+    return `<section class="onderdeel"><h3>${titel}</h3>${inhoud}</section>`;
+  }
+  function rubriek(titel, kleur, inhoud) {
+    return `<section class="rubriek"><h2 style="background:${kleur}">${titel}</h2>${inhoud}</section>`;
+  }
+
+  const nederlands =
+    onderdeel('Lezen',
+      groep('Sterke lezers', leerlingen.filter(x => x.reading === 'sterk'), {noteKey:'readingNote', extra:x => x.avi ? 'AVI ' + esc(x.avi) : ''}) +
+      groep('Zwakke lezers', leerlingen.filter(x => x.reading === 'zwak'), {noteKey:'readingNote', extra:x => x.avi ? 'AVI ' + esc(x.avi) : ''}) +
+      groep('Basis lezen met notitie', leerlingen.filter(x => x.reading === 'basis' && x.readingNote), {noteKey:'readingNote', extra:x => x.avi ? 'AVI ' + esc(x.avi) : ''})
+    ) +
+    onderdeel('Spelling',
+      groep('Sterke spellers', leerlingen.filter(x => x.spelling === 'sterk'), {noteKey:'spellingNote'}) +
+      groep('Zwakke spellers', leerlingen.filter(x => x.spelling === 'zwak'), {noteKey:'spellingNote'}) +
+      groep('Basis spelling met notitie', leerlingen.filter(x => x.spelling === 'basis' && x.spellingNote), {noteKey:'spellingNote'})
+    ) +
+    onderdeel('Handschrift',
+      groep('Sterk handschrift', leerlingen.filter(x => x.writing === 'sterk'), {noteKey:'writingNote'}) +
+      groep('Zwak handschrift', leerlingen.filter(x => x.writing === 'zwak'), {noteKey:'writingNote'}) +
+      groep('Basis handschrift met notitie', leerlingen.filter(x => x.writing === 'basis' && x.writingNote), {noteKey:'writingNote'})
+    );
+
+  const wiskunde = onderdeel('Rekenen',
+    groep('Sterke rekenaars', leerlingen.filter(x => x.math === 'sterk'), {noteKey:'mathNote'}) +
+    groep('Zwakke rekenaars', leerlingen.filter(x => x.math === 'zwak'), {noteKey:'mathNote'}) +
+    groep('Basis rekenen met notitie', leerlingen.filter(x => x.math === 'basis' && x.mathNote), {noteKey:'mathNote'})
+  );
+
+  const gedrag = onderdeel('Gedrag',
+      groep('Gedrag probleem', leerlingen.filter(x => x.behavior === 'probleem'), {noteKey:'behaviorNote'}) +
+      groep('Gedrag aandachtspunt', leerlingen.filter(x => x.behavior === 'aandacht'), {noteKey:'behaviorNote'})
+    ) +
+    onderdeel('Concentratie',
+      groep('Concentratie probleem', leerlingen.filter(x => x.focus === 'probleem'), {noteKey:'focusNote'}) +
+      groep('Concentratie aandachtspunt', leerlingen.filter(x => x.focus === 'aandacht'), {noteKey:'focusNote'})
+    );
+
+  const zorg = onderdeel('Zorgniveaus',
+      groep('IAC', leerlingen.filter(x => x.iac === 'ja'), {noteKey:'careNote'}) +
+      groep('Extra zorg', leerlingen.filter(x => x.extraCare === 'ja'), {noteKey:'careNote'}) +
+      groep('Hoge zorg', leerlingen.filter(x => x.care === 'hoog'), {noteKey:'careNote'}) +
+      groep('Middelhoge zorg', leerlingen.filter(x => x.care === 'midden'), {noteKey:'careNote'})
+    ) +
+    onderdeel('Medisch',
+      groep('Allergieen', leerlingen.filter(x => x.allergies), {extra:x => esc(x.allergies || '')}) +
+      groep('Medische zorg', leerlingen.filter(x => x.medicalNote), {extra:x => esc(x.medicalNote || '')})
+    );
+
+  function therapieGroep(titel, key, adresKey) {
+    return groep(titel, leerlingen.filter(x => x.therapies && x.therapies[key]), {
+      extra:x => {
+        const adres = x.therapies && x.therapies[adresKey] ? String(x.therapies[adresKey]).trim() : '';
+        return adres ? esc(adres) : '<span class="warn">geen gegevens ingevuld</span>';
+      }
+    });
+  }
+  const therapie = onderdeel('Begeleiding buiten de klas',
+    therapieGroep('Logopedie', 'logo', 'logo_adres') +
+    therapieGroep('Kinesitherapie', 'kine', 'kine_adres') +
+    therapieGroep('GON / ondersteuningsnetwerk', 'gon', 'gon_adres') +
+    therapieGroep('CLB-traject', 'clb', 'clb_adres') +
+    therapieGroep('Psycholoog', 'psy', 'psy_adres') +
+    groep('Andere therapie of begeleiding', leerlingen.filter(x => x.therapies && x.therapies.other), {extra:x => esc(x.therapies.other || '')})
+  );
+
+  const loopbaan = onderdeel('Schoolloopbaan',
+    groep('Heeft een leerjaar overgedaan', leerlingen.filter(x => x.repeated), {extra:x => Array.isArray(x.repeatedYear) ? esc(x.repeatedYear.join(', ')) : esc(x.repeatedYear || '')}) +
+    groep('Anderstalige nieuwkomers', leerlingen.filter(x => x.newcomer)) +
+    groep('Blijven zitten - niet overdragen', zittenblijvers, {noteKey:'notes'})
+  );
+
+  const BADMUTS_ORDER = ['rood','blauw_ondiep','blauw_diep','groen'];
+  const BADMUTS_LABELS = {rood:'Rood', blauw_ondiep:'Blauw ondiep', blauw_diep:'Blauw diep', groen:'Groen'};
+  const zwemmen = onderdeel('Badmuts',
+    BADMUTS_ORDER.map(k => groep(BADMUTS_LABELS[k], leerlingen.filter(x => x.badmuts === k))).join('') +
+    groep('Onbekend / nog in te vullen', leerlingen.filter(x => !x.badmuts))
+  );
+
+  const sociaal = onderdeel('Sociale relaties',
+    groep('Voorkeuren en aandachtspunten', leerlingen.filter(x => (x.friends && x.friends.length) || (x.avoid && x.avoid.length) || x.socialNote), {
+      extra:x => {
+        const delen = [];
+        if (x.friends && x.friends.length) delen.push('graag met: ' + x.friends.map(esc).join(', '));
+        if (x.avoid && x.avoid.length) delen.push('liever niet met: ' + x.avoid.map(esc).join(', '));
+        return delen.join(' | ');
+      },
+      noteKey:'socialNote'
+    })
+  );
+
+  const htmlSecties =
+    rubriek('Nederlands', '#dbeafe', nederlands) +
+    rubriek('Wiskunde', '#dcfce7', wiskunde) +
+    rubriek('Gedrag en concentratie', '#fef9c3', gedrag) +
+    rubriek('Zorg', '#fee2e2', zorg) +
+    rubriek('Therapieen en begeleiding', '#e0e7ff', therapie) +
+    rubriek('Schoolloopbaan', '#ffedd5', loopbaan) +
+    rubriek('Zwemmen', '#cffafe', zwemmen) +
+    rubriek('Sociaal-emotioneel', '#fce7f3', sociaal);
+
+  win.document.write(`<!DOCTYPE html><html lang="nl"><head><meta charset="UTF-8"><title>Overzicht klas</title>
+  <style>
+    @page{margin:12mm 10mm}
+    *{box-sizing:border-box}
+    body{font-family:Arial,sans-serif;color:#172033;max-width:900px;margin:auto;padding:0 14px 18px;line-height:1.35}
+    h1{margin:0 0 4px;font-size:22px}
+    .meta{color:#65748b;font-size:12px;margin:0 0 14px}
+    .toolbar{position:sticky;top:0;background:#fff;padding:8px 0;border-bottom:1px solid #e5e7eb;margin-bottom:12px;z-index:10}
+    button{padding:8px 13px;border:0;border-radius:10px;background:#f6d76b;font-weight:bold;cursor:pointer}
+    .rubriek{border:1px solid #d7deea;border-radius:10px;margin:16px 0 20px;background:#fff;overflow:visible;break-inside:auto;page-break-inside:auto}
+    .rubriek h2{margin:0;padding:10px 14px;border-radius:9px 9px 0 0;font-size:22px;font-weight:900;color:#10213f;page-break-after:avoid;break-after:avoid}
+    .onderdeel{margin:14px;padding:0 0 4px;border:1px solid #e5e7eb;border-radius:9px;background:#fbfcfe;break-inside:auto;page-break-inside:auto}
+    .onderdeel h3{margin:0;padding:8px 12px;background:#f8fafc;border-bottom:1px solid #e5e7eb;border-radius:8px 8px 0 0;font-size:16px;color:#26364f;page-break-after:avoid;break-after:avoid}
+    .groep{padding:8px 12px 6px;border-top:1px solid #eef2f7;break-inside:auto;page-break-inside:auto}
+    .groep:first-of-type{border-top:0}
+    .groep h4{margin:0 0 6px;font-size:13px;color:#111827;font-weight:900;page-break-after:avoid;break-after:avoid}
+    .leerling-rij{display:grid;grid-template-columns:minmax(160px,230px) 1fr;gap:10px;border-bottom:1px solid #f1f5f9;padding:4px 0;break-inside:avoid;page-break-inside:avoid}
+    .extra{color:#475569;font-size:12px}
+    .note{grid-column:2;color:#7a5010;font-size:12px;font-style:italic;margin-top:-2px}
+    .warn{color:#9a3412;font-weight:800}
+    .empty{color:#65748b;font-style:italic;margin:3px 0 6px;font-size:12px}
+    @media print{
+      .toolbar{display:none}
+      body{padding-top:0}
+      .leerling-rij{break-inside:avoid;page-break-inside:avoid}
+    }
+  <\/style><\/head><body>
+    <div class="toolbar"><button onclick="window.print()">Afdrukken / bewaren als PDF</button></div>
+    <h1>Overzicht klas</h1>
+    <p class="meta">Opgemaakt op ${new Date().toLocaleDateString('nl-BE')} - ${leerlingen.length} ${leerlingen.length === 1 ? 'leerling' : 'leerlingen'} over te dragen</p>
+    ${htmlSecties}
+  <\/body><\/html>`);
+  win.document.close();
+}
+function toonOverdrachtSectie(id) {
+  // Markeer actieve chip
+  document.querySelectorAll('.ozb-item').forEach(b => b.classList.remove('active'));
   const btn = document.getElementById('onbtn_' + id);
-  if (!blok) return;
-  const isOpen = blok.classList.contains('open');
-  blok.classList.toggle('open', !isOpen);
-  if (btn) btn.classList.toggle('active', !isOpen);
+  if (btn) btn.classList.add('active');
+  // Toon inhoud in zijpaneel
+  const paneel = $('overdrachtPaneel');
+  if (!paneel) return;
+  const sec = window._overdrachtSecties && window._overdrachtSecties[id];
+  if (!sec) return;
+  paneel.innerHTML = `<div class="overdracht-paneel-titel">${sec.emoji} ${sec.titel}</div>${sec.inhoud}`;
 }
 
 // Render online overdracht wanneer tab geopend wordt
 
 // schoolflow-main-js
 function sfBox(html) {
+  // Toon resultaat in het rechterpaneel
+  const paneel = $('overdrachtPaneel');
+  if (paneel) {
+    paneel.innerHTML = html;
+    // Deactiveer alle zijbalk-chips
+    document.querySelectorAll('.ozb-item').forEach(b => b.classList.remove('active'));
+    return;
+  }
+  // Fallback: oude sfBox div
   const box = $('sfBox');
   if (!box) return;
   box.innerHTML = html;
@@ -2815,7 +3232,7 @@ function sfBox(html) {
 
 function sfCloseBox() {
   const box = $('sfBox');
-  if (box) box.classList.remove('open');
+  if (box) { box.innerHTML = ''; box.classList.remove('open'); }
 }
 
 function sfSortedStudents(list) {
@@ -2943,7 +3360,7 @@ async function sfShowIncoming() {
     sfIncomingCache = await window.overgangSchool.listIncoming();
     const cards = sfIncomingCache.length
       ? sfIncomingCache.map(d => sfRenderDossierCard(d, 'incoming')).join('')
-      : '<p>Er staan nog geen overdrachten klaar voor jouw e-mailadres.</p>';
+      : `<div class="okbox" style="margin-top:8px">📭 Er staan nog geen overdrachten klaar voor jouw e-mailadres. Zodra een collega een overdracht naar jou stuurt, verschijnt die hier.</div>`;
     sfBox(`<h2>Overdrachten naar mij</h2><p class="help">Bekijk eerst rustig de overdracht. Neem ze pas over wanneer dit jouw nieuwe werkklas mag worden.</p><div class="schoolflow-list">${cards}</div>`);
   } catch (err) {
     sfBox(`<h2>Overdrachten naar mij</h2><div class="errorbox">Kon overdrachten niet laden: ${esc(err.message)}</div>`);
@@ -2960,7 +3377,7 @@ async function sfShowOutgoing() {
     sfOutgoingCache = await window.overgangSchool.listOutgoing();
     const cards = sfOutgoingCache.length
       ? sfOutgoingCache.map(d => sfRenderDossierCard(d, 'outgoing')).join('')
-      : '<p>Je hebt nog geen overdracht gedeeld.</p>';
+      : `<div class="okbox" style="margin-top:8px">📭 Je hebt nog geen overdracht gedeeld met een collega. Gebruik "Overdracht delen" om jouw leerlingenfiches door te sturen.</div>`;
     sfBox(`<h2>Mijn doorgestuurde overdrachten</h2><p class="help">Zolang je collega nog niet heeft overgenomen, kan die jouw gedeelde overdracht raadplegen.</p><div class="schoolflow-list">${cards}</div>`);
   } catch (err) {
     sfBox(`<h2>Mijn doorgestuurde overdrachten</h2><div class="errorbox">Kon overdrachten niet laden: ${esc(err.message)}</div>`);
@@ -3045,12 +3462,61 @@ async function sfStartNewClass() {
   sfCloseBox();
 }
 
+function sfShowCurrentClass() {
+  const students = state.students || [];
+  if (!students.length) {
+    sfBox('<h2>Mijn huidige klas</h2><p>Er zijn nog geen leerlingen in jouw werkklas. Voeg ze toe via het tabblad Leerlingenfiches.</p>');
+    return;
+  }
+  const sorted = [...students].sort((a,b) => (a.lastName||'').localeCompare(b.lastName||'','nl') || (a.firstName||'').localeCompare(b.firstName||'','nl'));
+  const stayers = sorted.filter(s => s.stayingThisYear);
+  const goers = sorted.filter(s => !s.stayingThisYear);
+  function kaart(s) {
+    const tags = [];
+    if (s.stayingThisYear) tags.push('<span class="mini-tag warn">blijft zitten</span>');
+    if (s.care === 'hoog' || s.iac === 'ja') tags.push('<span class="mini-tag care">zorg</span>');
+    if (s.reading === 'zwak' || s.spelling === 'zwak' || s.math === 'zwak') tags.push('<span class="mini-tag">zwak vak</span>');
+    return `<div class="sf-lln-kaart" style="cursor:pointer" onclick="openFicheModal('${s.id}')">
+      <div class="sf-lln-naam">${esc(s.name)}</div>
+      <div style="font-size:11px;color:var(--muted)">niveau ${s.level||3}/5${s.avi ? ' · AVI '+esc(s.avi) : ''}</div>
+      <div class="sf-lln-tags">${tags.join('')}</div>
+    </div>`;
+  }
+  let html = `<h2 style="margin:0 0 12px">🏫 Mijn huidige werkklas (${students.length} leerling${students.length!==1?'en':''})</h2>`;
+  if (goers.length) {
+    html += `<h3 style="font-size:13px;color:var(--muted);margin:0 0 8px">Gaan door naar volgend leerjaar (${goers.length})</h3>`;
+    html += `<div class="sf-huidig-grid">${goers.map(kaart).join('')}</div>`;
+  }
+  if (stayers.length) {
+    html += `<h3 style="font-size:13px;color:var(--muted);margin:16px 0 8px">Zittenblijvers — blijven bij jou (${stayers.length})</h3>`;
+    html += `<div class="sf-huidig-grid">${stayers.map(kaart).join('')}</div>`;
+  }
+  sfBox(html);
+}
+
+async function sfCheckIncomingBadge() {
+  if (!window.overgangSchool || typeof window.overgangSchool.listIncoming !== 'function') return;
+  try {
+    const list = await window.overgangSchool.listIncoming();
+    const badge = $('incomingBadge');
+    const tabBadge = $('transferTabBadge');
+    if (badge) { badge.style.display = list.length ? '' : 'none'; badge.textContent = list.length; }
+    if (tabBadge) { tabBadge.style.display = list.length ? '' : 'none'; tabBadge.textContent = list.length; }
+  } catch(e) { /* stil falen */ }
+}
+
 function sfInitSchoolflow() {
-  if ($('sfCurrentBtn')) $('sfCurrentBtn').onclick = () => sfCloseBox();
-  if ($('sfShareBtn')) $('sfShareBtn').onclick = () => sfShareTransfer();
-  if ($('sfIncomingBtn')) $('sfIncomingBtn').onclick = () => sfShowIncoming();
-  if ($('sfOutgoingBtn')) $('sfOutgoingBtn').onclick = () => sfShowOutgoing();
+  function activeerOzb(id) {
+    document.querySelectorAll('.ozb-item').forEach(b => b.classList.remove('active'));
+    const btn = $(id);
+    if (btn) btn.classList.add('active');
+  }
+  if ($('sfCurrentBtn')) $('sfCurrentBtn').onclick = () => { activeerOzb('sfCurrentBtn'); sfShowCurrentClass(); };
+  if ($('sfShareBtn')) $('sfShareBtn').onclick = () => { activeerOzb('sfShareBtn'); sfShareTransfer(); };
+  if ($('sfIncomingBtn')) $('sfIncomingBtn').onclick = () => { activeerOzb('sfIncomingBtn'); sfShowIncoming(); };
+  if ($('sfOutgoingBtn')) $('sfOutgoingBtn').onclick = () => { activeerOzb('sfOutgoingBtn'); sfShowOutgoing(); };
   if ($('sfNewClassBtn')) $('sfNewClassBtn').onclick = () => sfStartNewClass();
+  setTimeout(sfCheckIncomingBadge, 2000);
 }
 
 // We patchen de bestaande switchTab niet met override, maar koppelen de tabs opnieuw
@@ -3072,7 +3538,8 @@ if ($('autoBtn')) $('autoBtn').onclick = autoDistribute;
 $('saveBtn').onclick = () => saveJSON(false);
 if ($('saveBtn2')) $('saveBtn2').onclick = () => exportJSONOnly(false);
 if ($('saveVersionBtn')) $('saveVersionBtn').onclick = () => exportJSONOnly(true);
-if ($('transferBtn')) $('transferBtn').onclick = makeTransfer;
+if ($('transferBtn')) $('transferBtn').onclick = openOverzichtKlasPdf;
+if ($('transferFichesBtn')) $('transferFichesBtn').onclick = () => openTransferWindow('fiches');
 if ($('resetBtn')) $('resetBtn').onclick = resetAll;
 if ($('importFile')) $('importFile').onchange = loadJSON;
 if ($('exportJsonBtn')) $('exportJsonBtn').onclick = () => exportJSONOnly(false);
