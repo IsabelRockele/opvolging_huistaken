@@ -124,7 +124,7 @@
   header {
     background: linear-gradient(135deg, #6b5d52 0%, #8a7a6d 100%);
     color: var(--wit);
-    padding: 18px max(28px, calc((100% - 1300px) / 2 + 28px));
+    padding: 18px 28px;
     border-radius: 0;
     border: none;
     display: flex;
@@ -186,9 +186,8 @@
   /* TEAM-INFO BALK */
   .team-balk {
     background: var(--geel-licht);
-    border-left: none;
-    border-right: none;
-    padding: 10px max(28px, calc((100% - 1300px) / 2 + 28px));
+    border: none;
+    padding: 10px 28px;
     display: flex;
     align-items: center;
     gap: 14px;
@@ -209,9 +208,8 @@
   /* KLAS-INSTELLINGEN BOVENAAN */
   .klas-balk {
     background: var(--geel-licht);
-    border-left: none;
-    border-right: none;
-    padding: 14px max(28px, calc((100% - 1300px) / 2 + 28px));
+    border: none;
+    padding: 14px 28px;
     display: flex;
     align-items: center;
     gap: 20px;
@@ -256,10 +254,9 @@
   .tabs {
     display: flex;
     background: var(--wit);
-    border-left: none;
-    border-right: none;
+    border: none;
+    border-bottom: 1px solid var(--rand);
     flex-wrap: wrap;
-    padding: 0 max(0px, calc((100% - 1300px) / 2));
   }
 
   .tab {
@@ -268,7 +265,7 @@
     padding: 14px 20px;
     background: var(--wit);
     border: none;
-    border-bottom: 2px solid var(--rand-donker);
+    border-bottom: 3px solid transparent;
     cursor: pointer;
     font-size: 0.95em;
     font-weight: 600;
@@ -276,24 +273,34 @@
     font-family: inherit;
     transition: all 0.2s;
     border-right: 1px solid var(--rand);
+    margin-bottom: -1px;
   }
 
   .tab:last-child { border-right: none; }
-  .tab:hover { background: var(--creme-warm); color: var(--tekst); }
 
-  .tab.actief {
-    background: var(--geel-zacht);
-    color: var(--tekst);
-    border-bottom: 2px solid var(--geel-zacht);
-  }
+  /* Eigen kleur per tab */
+  .tab[data-tab="werkboeken"]          { background:#e8f4ec; color:#3d6b47 }
+  .tab[data-tab="lyreco"]              { background:#edf0fa; color:#3d4f99 }
+  .tab[data-tab="stock"]               { background:#fdf0e8; color:#7a3a1a }
+  .tab[data-tab="knutsel"]             { background:#faedf2; color:#7a2a4a }
+  .tab[data-tab="archief"]             { background:#f0e8f8; color:#5a2a7a }
+  .tab[data-tab="instellingen"]        { background:#fdf4dc; color:#7a5010 }
+
+  .tab:hover { filter: brightness(.94) }
+
+  .tab.actief[data-tab="werkboeken"]   { background:#bfe8dc; border-bottom-color:#3d6b47; color:#1a4a28; font-weight:800 }
+  .tab.actief[data-tab="lyreco"]       { background:#c4c9e8; border-bottom-color:#3d4f99; color:#1a2a6a; font-weight:800 }
+  .tab.actief[data-tab="stock"]        { background:#f5c4b3; border-bottom-color:#a0522d; color:#5c2010; font-weight:800 }
+  .tab.actief[data-tab="knutsel"]      { background:#f4c0d1; border-bottom-color:#8a2a4a; color:#4a0a28; font-weight:800 }
+  .tab.actief[data-tab="archief"]      { background:#dcc0f0; border-bottom-color:#5a2a7a; color:#3a0a5a; font-weight:800 }
+  .tab.actief[data-tab="instellingen"] { background:#f5d58e; border-bottom-color:#b87a5e; color:#5c3010; font-weight:800 }
 
   /* CONTENT */
   main {
     background: var(--wit);
-    padding: 28px max(28px, calc((100% - 1300px) / 2 + 28px));
+    padding: 28px;
     border-radius: 0;
     border: none;
-    border-top: 1px solid var(--rand);
     min-height: 500px;
   }
 
@@ -1681,7 +1688,7 @@
         <div class="ondertitel">Bestellingen — werkboeken, klasmateriaal &amp; knutselideetjes</div>
       </div>
       <div class="acties">
-        <button onclick="window.location.href='index.html'">← Keuzemenu</button>
+        <button onclick="window.location.href='index.html'" style="background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.35);color:#fff;border-radius:10px;padding:6px 14px;font-size:13px;cursor:pointer;font-weight:700;font-family:inherit">🏠 Keuzescherm</button>
       </div>
     </header>
 
