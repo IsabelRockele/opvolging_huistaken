@@ -1,4 +1,4 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="nl">
 <head>
   <meta charset="utf-8">
@@ -76,9 +76,7 @@
     #navAankopen .sb-icon{color:#c05a7a}
     #navAankopen.active{background:#f5d0dc;border-left-color:#8a2a4a}
 
-    #navWerkboeken{background:#e8f6f6;border-left-color:#4a9a9a;color:#1a5a5a}
-    #navWerkboeken .sb-icon{color:#4a9a9a}
-    #navWerkboeken.active{background:#cceaea;border-left-color:#2a6a6a}
+
     .sb-item .sb-icon{font-size:17px;width:20px;text-align:center;flex-shrink:0}
     .sb-divider{height:1px;background:var(--line);margin:4px 12px}
 
@@ -863,9 +861,7 @@
         <div class="sb-item" data-tab="aankopen" id="navAankopen">
           <span class="sb-icon">&#128717;</span> Aankopen
         </div>
-        <div class="sb-item secretary-only hidden" data-tab="werkboeken" id="navWerkboeken">
-          <span class="sb-icon">&#128218;</span> Werkboeken
-        </div>
+
       </div>
 
     </nav>
@@ -1093,7 +1089,7 @@
 
     function render(){
       if(!data) return;
-      if(!isSecretary() && ["administratie","werkboeken"].includes(tab)) tab = "klaslijst";
+      if(!isSecretary() && tab === "administratie") tab = "klaslijst";
       if(isSecretary() && tab === "klaslijst") tab = "administratie";
       setActiveNav(tab);
       renderMessages();
@@ -1102,7 +1098,6 @@
       if(tab==="refter") renderRefter();
       if(tab==="activiteiten") renderActivities();
       if(tab==="aankopen") renderPurchases();
-      if(tab==="werkboeken") renderWorkbooks();
     }
 
     function messageIsLate(m){ return m.due && m.due < new Date().toISOString().slice(0,10) && !m.done && !m.archived; }
