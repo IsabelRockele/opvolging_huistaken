@@ -1,4 +1,4 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="nl">
 <head>
   <meta charset="utf-8">
@@ -9,7 +9,7 @@
       --ink:#0b2341;--muted:#50658a;--line:#d7e0ec;--soft:#f4f7fb;
       --yellow:#ffdc63;--yellow-dark:#d5ad1f;--green:#bcebdc;--pink:#f6bec6;
       --blue:#e9f0f8;--white:#fff;--sidebar-bg:#f0f4f9;--sidebar-w:210px;
-      --header-h:56px;
+      --header-h:62px;
     }
     *{box-sizing:border-box}
     body{margin:0;font-family:Arial,Helvetica,sans-serif;color:var(--ink);background:#f6f8fc;display:flex;flex-direction:column;min-height:100vh}
@@ -17,7 +17,7 @@
     /* ── TOPBAR ── */
     #topbar{
       height:var(--header-h);display:flex;align-items:center;justify-content:space-between;
-      padding:0 20px;background:#153b63;color:#fff;flex-shrink:0;gap:12px;
+      padding:0 20px;background:linear-gradient(135deg,#6b5d52 0%,#8a7a6d 100%);color:#fff;flex-shrink:0;gap:12px;
     }
     #topbar .brand{font-size:16px;font-weight:800;white-space:nowrap}
     #topbar .meta{font-size:13px;opacity:.75;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -52,10 +52,33 @@
       font-size:14px;cursor:pointer;color:var(--ink);
       border-left:3px solid transparent;transition:background .12s;
     }
-    .sb-item:hover{background:#e4eaf3}
-    .sb-item.active{
-      background:#fff;border-left-color:#153b63;color:#153b63;font-weight:800;
-    }
+    .sb-item:hover{filter:brightness(.95)}
+    .sb-item.active{font-weight:800;filter:brightness(.92)}
+
+    /* Altijd zichtbare kleur per module */
+    #navAdministratie{background:#fdf0e8;border-left-color:#d4845a;color:#7a3a1a}
+    #navAdministratie .sb-icon{color:#d4845a}
+    #navAdministratie.active{background:#fae0cc;border-left-color:#a0522d}
+
+    #navKlaslijst{background:#eaf4ec;border-left-color:#5a8a63;color:#2d5c35}
+    #navKlaslijst .sb-icon{color:#5a8a63}
+    #navKlaslijst.active{background:#d4ecda;border-left-color:#3d6b47}
+
+    #navRefter{background:#fdf4e0;border-left-color:#d99040;color:#7a5010}
+    #navRefter .sb-icon{color:#d99040}
+    #navRefter.active{background:#fae8c0;border-left-color:#a06010}
+
+    #navActiviteiten{background:#edf0fa;border-left-color:#6b7abf;color:#3d4f99}
+    #navActiviteiten .sb-icon{color:#6b7abf}
+    #navActiviteiten.active{background:#d8ddf5;border-left-color:#3d4f99}
+
+    #navAankopen{background:#faedf2;border-left-color:#c05a7a;color:#7a2a4a}
+    #navAankopen .sb-icon{color:#c05a7a}
+    #navAankopen.active{background:#f5d0dc;border-left-color:#8a2a4a}
+
+    #navWerkboeken{background:#e8f6f6;border-left-color:#4a9a9a;color:#1a5a5a}
+    #navWerkboeken .sb-icon{color:#4a9a9a}
+    #navWerkboeken.active{background:#cceaea;border-left-color:#2a6a6a}
     .sb-item .sb-icon{font-size:17px;width:20px;text-align:center;flex-shrink:0}
     .sb-divider{height:1px;background:var(--line);margin:4px 12px}
 
@@ -66,7 +89,7 @@
       padding:5px 10px;border-radius:10px;border:1px solid var(--line);
       background:#fff;font-size:13px;font-weight:700;cursor:pointer;color:var(--ink);
     }
-    .sb-klas-btn.active{background:#153b63;color:#fff;border-color:#153b63}
+    .sb-klas-btn.active{background:#6b5d52;color:#fff;border-color:#6b5d52}
     .sb-klas-btn:hover:not(.active){background:#dde5f0}
 
     /* schooljaar input */
@@ -790,11 +813,15 @@
 
   <!-- TOPBAR -->
   <header id="topbar">
-    <span class="brand">Klaslijsten</span>
-    <span class="meta" id="topMeta">Laden...</span>
+    <img src="afbeeldingen/schoollogo.png" alt="Logo De Linde" onerror="this.style.display='none'" style="height:42px;width:42px;object-fit:contain;background:#fff;border-radius:8px;padding:3px;flex-shrink:0">
+    <div style="display:flex;flex-direction:column;gap:1px;min-width:0">
+      <span class="brand">GO! Basisschool De Linde</span>
+      <span class="meta">Klaslijsten &amp; schoolbeheer</span>
+    </div>
+    <span id="topMeta" class="meta" style="margin-left:8px">Laden...</span>
     <div class="tools no-print">
       <span class="pill-status" id="status">Laden...</span>
-      <button onclick="location.href='index.html'">&#127968; Keuzescherm</button>
+      <button onclick="location.href='index.html'" style="background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.35);color:#fff;border-radius:10px;padding:6px 14px;font-size:13px;cursor:pointer;font-weight:700">🏠 Keuzescherm</button>
       <button onclick="window.print()">Afdrukken</button>
       <button id="logoutBtn">Uitloggen</button>
     </div>
