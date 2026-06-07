@@ -1,4 +1,4 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="nl">
 <head>
   <meta charset="utf-8">
@@ -957,6 +957,9 @@
       $("status").classList.toggle("saved", saved);
     }
     function isSecretary(){ return role === "secretariaat"; }
+    // schoolbeheer-zorgleerkrachten-codex
+    function isSchoolBreedRole(){ return ["directie","zorgcoordinator","zorgleerkracht"].includes(role); }
+    function canOpenAllClasses(){ return isSecretary() || isSchoolBreedRole(); }
     function startDate(){ return `${schooljaar.slice(0,4)}-09-01`; }
     function endDate(){ return `${schooljaar.slice(5,9)}-06-30`; }
     function emptyClassDoc(klas){ return { schooljaar, klas, leerlingen:[], refter:{}, activiteiten:[], aankopen:[], vrijeDagen:[...standardFree], messages:[], processed:{refter:""}, bijgewerktOp:new Date().toISOString() }; }
@@ -971,7 +974,7 @@
     }
 
     function renderScope(){
-      $("topMeta").textContent = `${user.email} — ${isSecretary() ? "secretariaat" : "klasleerkracht"} — ${schooljaar}`;
+            $("topMeta").textContent = `${user.email} - ${isSecretary() ? "secretariaat" : isSchoolBreedRole() ? role : "klasleerkracht"} - ${schooljaar}`;
       document.querySelectorAll(".secretary-only").forEach(x => x.classList.toggle("hidden", !isSecretary()));
       document.querySelectorAll(".teacher-label").forEach(x => x.classList.toggle("hidden", isSecretary()));
       document.querySelectorAll(".secretary-label").forEach(x => x.classList.toggle("hidden", !isSecretary()));
@@ -980,7 +983,7 @@
     }
 
     function renderKlasPills(){
-      const lijst = isSecretary() ? allClasses : allowedClasses;
+      const lijst = canOpenAllClasses() ? allClasses : allowedClasses;
       $("klasPills").innerHTML = lijst.map(k =>
         `<button class="sb-klas-btn ${k===activeClass?"active":""}" onclick="openClass('${esc(k)}')">${esc(k)}</button>`
       ).join("");
@@ -998,7 +1001,7 @@
     }
 
     async function loadAllowedClasses(){
-      if(isSecretary()){
+      if(canOpenAllClasses()){
         await loadClassesFromFirebase();
         allowedClasses = [...allClasses];
         return;
