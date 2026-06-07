@@ -1611,6 +1611,82 @@ $('modalSaveBtn').onclick = saveStudent;
 $('modalDeleteBtn').onclick = deleteStudent;
 $('modalSaveNextBtn').onclick = saveAndNext;
 $('modalSavePrevBtn').onclick = saveAndPrev;
+// fiche-opslaan-wacht-op-firebase-codex
+let ficheOpslaanBusy = false;
+
+function setFicheOpslaanBusy(busy) {
+  ficheOpslaanBusy = busy;
+  ['modalSaveBtn','modalSaveNextBtn','modalSavePrevBtn','modalDeleteBtn','modalCancelBtn'].forEach(id => {
+    const btn = $(id);
+    if (btn) btn.disabled = busy;
+  });
+  if ($('modalSaveBtn')) $('modalSaveBtn').textContent = busy ? 'Opslaan...' : 'Opslaan';
+  if ($('modalSaveNextBtn')) $('modalSaveNextBtn').textContent = busy ? 'Opslaan...' : 'Opslaan + volgende ->';
+  if ($('modalSavePrevBtn')) $('modalSavePrevBtn').textContent = busy ? 'Opslaan...' : '<- Opslaan + vorige';
+}
+
+async function bewaarProjectStilInFirebase() {
+  if (!window.firebaseOvergang || typeof window.firebaseOvergang.saveProject !== 'function') {
+    if (typeof window.overgangRunAutosave === 'function') {
+      await window.overgangRunAutosave('fiche');
+      return;
+    }
+    throw new Error('Firebase is nog niet klaar. Probeer over enkele seconden opnieuw.');
+  }
+  if (typeof readSettings === 'function') readSettings();
+  const data = {
+    ...state,
+    savedAt: new Date().toISOString(),
+    appVersion: 'overdracht-fiche-save'
+  };
+  if (typeof setFirebaseStatus === 'function') setFirebaseStatus('Fiche opslaan in Firebase...');
+  await window.firebaseOvergang.saveProject(data);
+  if (typeof markClean === 'function') markClean();
+  if (typeof sfSyncSharedDossiersAfterSave === 'function') {
+    await sfSyncSharedDossiersAfterSave();
+  }
+  if (typeof setFirebaseStatus === 'function') {
+    setFirebaseStatus('Fiche opgeslagen om ' + new Date().toLocaleTimeString('nl-BE', { hour: '2-digit', minute: '2-digit' }) + '.');
+  }
+}
+
+async function saveStudentAndWait(action) {
+  if (ficheOpslaanBusy) return false;
+  const currentId = $('editId').value;
+  const nextId = action === 'next' && currentId ? getNextStudentId(currentId) : null;
+  const prevId = action === 'prev' && currentId ? getPrevStudentId(currentId) : null;
+  const firstName = $('m_firstName').value.trim();
+  const lastName = $('m_lastName').value.trim();
+  if (!firstName) { alert('Vul een voornaam in.'); $('m_firstName').focus(); return false; }
+  if (!lastName) { alert('Vul een achternaam in.'); $('m_lastName').focus(); return false; }
+
+  setFicheOpslaanBusy(true);
+  try {
+    const beforeCount = state.students.length;
+    saveStudent();
+    const afterCount = state.students.length;
+    if (afterCount === beforeCount && !currentId && !state.students.length) return false;
+
+    await bewaarProjectStilInFirebase();
+
+    if (action === 'next' && nextId) openModal(nextId);
+    if (action === 'prev' && prevId) openModal(prevId);
+    return true;
+  } catch (err) {
+    console.error('Fiche opslaan mislukt:', err);
+    if (typeof setFirebaseStatus === 'function') {
+      setFirebaseStatus('Fiche opslaan mislukt: ' + (err && err.message ? err.message : err));
+    }
+    alert('Deze fiche is nog niet zeker opgeslagen in Firebase.\n\n' + (err && err.message ? err.message : err));
+    return false;
+  } finally {
+    setFicheOpslaanBusy(false);
+  }
+}
+
+$('modalSaveBtn').onclick = () => saveStudentAndWait('close');
+$('modalSaveNextBtn').onclick = () => saveStudentAndWait('next');
+$('modalSavePrevBtn').onclick = () => saveStudentAndWait('prev');
 $('m_repeated').addEventListener('change', updateRepeatedYearUI);
 
 function getNextStudentId(currentId) {
