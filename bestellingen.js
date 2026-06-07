@@ -1344,7 +1344,7 @@ function renderBestellingenMeldingen() {
             </div>
             <div>
               <label>Werkboeken invullen tegen</label>
-              <input data-secretariaat-deadline type="text" inputmode="numeric" id="deadline-wb-datum" placeholder="jjjj-mm-dd" value="${escape(cyclus.deadlineDatum || '')}">
+              <input data-secretariaat-deadline type="date" id="deadline-wb-datum" value="${escape(cyclus.deadlineDatum || '')}">
             </div>
             <div style="grid-column:1/-1;">
               <label>Melding werkboeken</label>
@@ -1352,11 +1352,11 @@ function renderBestellingenMeldingen() {
             </div>
             <div>
               <label>Lyreco invullen tegen</label>
-              <input data-secretariaat-deadline type="text" inputmode="numeric" id="deadline-ly-datum" placeholder="jjjj-mm-dd" value="${escape(ly.datum || '')}">
+              <input data-secretariaat-deadline type="date" id="deadline-ly-datum" value="${escape(ly.datum || '')}">
             </div>
             <div>
               <label>Lyreco leverdatum op bestelbon</label>
-              <input data-secretariaat-deadline type="text" inputmode="numeric" id="deadline-ly-leverdatum" placeholder="jjjj-mm-dd" value="${escape(ly.leverdatum || '')}">
+              <input data-secretariaat-deadline type="date" id="deadline-ly-leverdatum" value="${escape(ly.leverdatum || '')}">
             </div>
             <div style="grid-column:1/-1;">
               <label>Melding bij Lyreco</label>
