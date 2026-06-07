@@ -3065,8 +3065,9 @@ function openOverzichtKlasPdf() {
   function onderdeel(titel, inhoud) {
     return `<section class="onderdeel"><h3>${titel}</h3>${inhoud}</section>`;
   }
-  function rubriek(titel, kleur, inhoud) {
-    return `<section class="rubriek"><h2 style="background:${kleur}">${titel}</h2>${inhoud}</section>`;
+  // pdf-kleuren-herstel-codex
+  function rubriek(titel, kleur, licht, inhoud) {
+    return `<section class="rubriek" style="--kleur:${kleur};--licht:${licht}"><h2>${titel}</h2>${inhoud}</section>`;
   }
 
   const nederlands =
@@ -3155,14 +3156,14 @@ function openOverzichtKlasPdf() {
   );
 
   const htmlSecties =
-    rubriek('Nederlands', '#dbeafe', nederlands) +
-    rubriek('Wiskunde', '#dcfce7', wiskunde) +
-    rubriek('Gedrag en concentratie', '#fef9c3', gedrag) +
-    rubriek('Zorg', '#fee2e2', zorg) +
-    rubriek('Therapieen en begeleiding', '#e0e7ff', therapie) +
-    rubriek('Schoolloopbaan', '#ffedd5', loopbaan) +
-    rubriek('Zwemmen', '#cffafe', zwemmen) +
-    rubriek('Sociaal-emotioneel', '#fce7f3', sociaal);
+    rubriek('Nederlands', '#b7d7ff', '#eaf3ff', nederlands) +
+    rubriek('Wiskunde', '#b9efcf', '#ecfdf3', wiskunde) +
+    rubriek('Gedrag en concentratie', '#fde68a', '#fff7d6', gedrag) +
+    rubriek('Zorg', '#fecaca', '#fff0f0', zorg) +
+    rubriek('Therapieen en begeleiding', '#c7d2fe', '#eef2ff', therapie) +
+    rubriek('Schoolloopbaan', '#fed7aa', '#fff3e6', loopbaan) +
+    rubriek('Zwemmen', '#a5f3fc', '#ecfeff', zwemmen) +
+    rubriek('Sociaal-emotioneel', '#fbcfe8', '#fff0f7', sociaal);
 
   win.document.write(`<!DOCTYPE html><html lang="nl"><head><meta charset="UTF-8"><title>Overzicht klas</title>
   <style>
@@ -3176,9 +3177,9 @@ function openOverzichtKlasPdf() {
     .rubriek{border:1px solid #d7deea;border-radius:10px;margin:16px 0 20px;background:#fff;overflow:visible;break-inside:auto;page-break-inside:auto;break-before:page;page-break-before:always}
     .rubriek:first-of-type{break-before:auto;page-break-before:auto}
     /* pdf-rubriek-nieuwe-pagina-codex */
-    .rubriek h2{margin:0;padding:10px 14px;border-radius:9px 9px 0 0;font-size:22px;font-weight:900;color:#10213f;page-break-after:avoid;break-after:avoid}
+    .rubriek h2{margin:0;padding:10px 14px;border-radius:9px 9px 0 0;font-size:22px;font-weight:900;color:#10213f;background:var(--kleur);page-break-after:avoid;break-after:avoid;-webkit-print-color-adjust:exact;print-color-adjust:exact}
     .onderdeel{margin:14px;padding:0 0 4px;border:1px solid #e5e7eb;border-radius:9px;background:#fbfcfe;break-inside:auto;page-break-inside:auto}
-    .onderdeel h3{margin:0;padding:8px 12px;background:#f8fafc;border-bottom:1px solid #e5e7eb;border-radius:8px 8px 0 0;font-size:16px;color:#26364f;page-break-after:avoid;break-after:avoid}
+    .onderdeel h3{margin:0;padding:8px 12px;background:var(--licht);border-bottom:1px solid #d7deea;border-radius:8px 8px 0 0;font-size:16px;color:#26364f;page-break-after:avoid;break-after:avoid;-webkit-print-color-adjust:exact;print-color-adjust:exact}
     .groep{padding:8px 12px 6px;border-top:1px solid #eef2f7;break-inside:auto;page-break-inside:auto}
     .groep:first-of-type{border-top:0}
     .groep h4{margin:0 0 6px;font-size:13px;color:#111827;font-weight:900;page-break-after:avoid;break-after:avoid}
