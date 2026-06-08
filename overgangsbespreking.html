@@ -1458,8 +1458,9 @@ function openModal(studentId = null) {
     $('m_mathNote').value = s.mathNote || '';
     $('m_writing').value = s.writing || 'basis';
     $('m_writingNote').value = s.writingNote || '';
-    // Aanpassingen per vak
+    // Aanpassingen per vak — eerst altijd resetten zodat vorige leerling niet doorbloedt
     VAKKEN_AANP.forEach(vak => {
+      resetAanpassingen(vak);
       const aanpData = s.aanpassingen && s.aanpassingen[vak] ? s.aanpassingen[vak] : null;
       writeAanpassingen(vak, aanpData);
       toggleAanpassingen(vak, s[vak === 'math' ? 'math' : vak === 'writing' ? 'writing' : vak] || 'basis');
