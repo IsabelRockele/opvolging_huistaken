@@ -1,0 +1,1262 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Oudercontact</title>
+<style>
+:root{
+  --bg:#f5f0e8;--card:#fff;--border:#d9cfc0;--text:#2c1f0e;--muted:#7a6a55;
+  --yellow:#f6d76b;--mint:#bfe8dc;--blue:#cfe8ff;--pink:#ffd6d6;--soft:#ede8df;
+  --brown:#4a3728;--header-bg:#6b5d52;
+  --warn:#ffe3a3;--ok:#c9efd8;--danger:#f5c2c7;--shadow:0 8px 24px rgba(34,48,68,.10);
+  --accent1:#e8f4fd;--accent2:#fef3c7;--accent3:#f0fdf4;--accent4:#fdf2f8;
+  --accent5:#fff7ed;--accent6:#f0f9ff;--accent7:#fefce8;--accent8:#faf5ff
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,sans-serif;background:var(--bg);color:var(--text)}
+
+header{background:linear-gradient(135deg,#6b5d52 0%,#8a7a6d 100%);padding:0;position:sticky;top:0;z-index:10}
+.header-inner{display:flex;justify-content:space-between;align-items:center;gap:16px;padding:14px 22px;flex-wrap:wrap}
+.header-logo{display:flex;align-items:center;gap:14px}
+.header-logo img{width:52px;height:52px;border-radius:10px;object-fit:contain;background:#fff;padding:4px}
+.header-text h1{margin:0 0 2px;font-size:22px;color:#fff;font-weight:900}
+.header-text p{margin:0;color:rgba(255,255,255,.65);font-size:13px}
+.header-actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.header-actions button{background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.25);font-size:13px;padding:7px 14px;border-radius:10px;cursor:pointer;font-family:inherit;font-weight:700}
+.header-actions button:hover{background:rgba(255,255,255,.25)}
+#firebaseStatus{color:rgba(255,255,255,.5);font-size:11px;flex-basis:100%;text-align:right}
+
+.save-status{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:700;padding:6px 10px;border-radius:10px;background:rgba(255,255,255,.15);color:#fff;white-space:nowrap}
+.save-status.dirty{background:var(--warn);color:var(--text)}
+.save-status.saved{background:var(--ok);color:var(--text)}
+.save-dot{width:9px;height:9px;border-radius:50%;background:rgba(255,255,255,.5)}
+.save-status.dirty .save-dot{background:#d97706;animation:pulse 1.5s infinite}
+.save-status.saved .save-dot{background:#15803d}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+
+main{padding:18px;max-width:1400px;margin:auto}
+.panel{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:18px;box-shadow:var(--shadow);margin-bottom:16px}
+h2{margin:0 0 12px;font-size:18px}
+h3{margin:0 0 8px;font-size:15px}
+label{display:block;font-weight:700;font-size:13px;margin-bottom:4px}
+input,select,textarea{font:inherit;width:100%;padding:9px 11px;border:1px solid var(--border);border-radius:10px;background:#fff;color:var(--text)}
+textarea{resize:vertical}
+button{font:inherit;border:0;border-radius:12px;padding:9px 14px;background:var(--yellow);font-weight:800;cursor:pointer;color:var(--text)}
+button:hover{filter:brightness(.96)}
+button.secondary{background:var(--mint)}
+button.ghost{background:var(--soft)}
+button.danger{background:var(--danger)}
+button.small{padding:5px 10px;font-size:12px}
+button:disabled{opacity:.5;cursor:not-allowed}
+.actions{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.hidden{display:none!important}
+.muted{color:var(--muted);font-size:13px}
+
+/* ── OUDERCONTACT LIJST ── */
+.oc-list{display:grid;gap:10px;margin-top:12px}
+.oc-card{background:#fff;border:1px solid var(--border);border-radius:12px;padding:14px 16px;display:flex;justify-content:space-between;align-items:center;gap:12px;cursor:pointer;transition:box-shadow .15s}
+.oc-card:hover{box-shadow:0 4px 16px rgba(34,48,68,.12)}
+.oc-card.active{border-color:#b87a5e;background:#fffdf7;box-shadow:0 4px 16px rgba(184,122,94,.15)}
+.oc-card-info h3{margin:0 0 3px;font-size:15px}
+.oc-card-meta{font-size:12px;color:var(--muted);display:flex;gap:10px;flex-wrap:wrap}
+.oc-card-actions{display:flex;gap:6px;flex-shrink:0}
+.oc-type-badge{display:inline-block;font-size:11px;font-weight:700;padding:2px 8px;border-radius:6px}
+.oc-type-badge.verplicht{background:#dbeafe;color:#1e40af}
+.oc-type-badge.uitnodiging{background:#fef9c3;color:#713f12}
+.oc-count-badge{display:inline-block;font-size:11px;padding:2px 7px;border-radius:6px;background:var(--soft);color:var(--muted);margin-left:6px}
+
+/* ── LEERLING LIJST SIDEBAR ── */
+.oc-werkruimte{display:grid;grid-template-columns:280px 1fr;gap:16px;align-items:start}
+.leerling-sidebar{background:#fff;border:1px solid var(--border);border-radius:14px;overflow:hidden;position:sticky;top:90px}
+.leerling-sidebar-header{padding:12px 14px;background:var(--soft);border-bottom:1px solid var(--border);font-weight:800;font-size:13px;display:flex;justify-content:space-between;align-items:center}
+.leerling-list{overflow-y:auto;max-height:calc(100vh - 220px)}
+.leerling-row{display:flex;align-items:center;gap:10px;padding:9px 14px;border-bottom:1px solid #f0f3f7;cursor:pointer;font-size:13px;transition:background .1s}
+.leerling-row:hover{background:#f5f8ff}
+.leerling-row.active{background:#fef9c3;font-weight:700;border-left:3px solid #d4a915}
+.leerling-row.active .lr-naam{color:#5c3010}
+.leerling-row:not(.active){border-left:3px solid transparent}
+.lr-tijd{font-size:11px;color:var(--muted);min-width:38px;font-weight:600}
+.lr-naam{flex:1;font-weight:600}
+.lr-status{width:8px;height:8px;border-radius:50%;background:#e5e7eb;flex-shrink:0}
+.lr-status.ingevuld{background:#22c55e}
+.lr-status.deels{background:#f59e0b}
+
+/* ── FICHE BEWERKEN ── */
+.fiche-bewerk{background:#fff;border:1px solid var(--border);border-radius:14px;overflow:hidden}
+.fiche-header{background:linear-gradient(135deg,#6b5d52,#8a7a6d);padding:16px 20px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.fiche-naam{font-size:20px;font-weight:900;color:#fff;display:flex;align-items:center;gap:10px}
+.fiche-tijd-input{background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.35);color:#fff;border-radius:8px;padding:5px 9px;font-size:13px;font-weight:700;width:90px}
+.fiche-tijd-input::placeholder{color:rgba(255,255,255,.55)}
+.fiche-nav-btns{display:flex;gap:6px}
+.fiche-nav-btns button{padding:6px 12px;font-size:13px;min-width:80px}
+
+.vak-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;padding:16px}
+.vak-grid.drie-vakken{grid-template-columns:repeat(3,1fr)}
+.rubriek-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;padding:0 16px 16px}
+.rubriek-grid-2{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;padding:0 16px 16px}
+
+.vak-card{border-radius:12px;overflow:hidden;border:1px solid var(--border)}
+.vak-card-header{padding:8px 12px;display:flex;align-items:center;gap:8px;font-weight:800;font-size:13px}
+.vak-card-header img{width:20px;height:20px;object-fit:contain}
+.vak-card-body{padding:8px 10px}
+.vak-card-body textarea{min-height:90px;border:1px solid #e5e7eb;border-radius:8px;font-size:13px;padding:7px 9px;background:#fafbfd}
+.vak-card-body textarea:focus{outline:none;border-color:#b87a5e;background:#fff}
+
+/* Vak kleuren */
+.vak-nl .vak-card-header{background:#dbeafe;color:#1e40af}
+.vak-nl .vak-card-body textarea:focus{border-color:#3b82f6}
+.vak-wis .vak-card-header{background:#fef9c3;color:#713f12}
+.vak-wis .vak-card-body textarea:focus{border-color:#eab308}
+.vak-wo .vak-card-header{background:#d1fae5;color:#065f46}
+.vak-wo .vak-card-body textarea:focus{border-color:#10b981}
+.vak-fr .vak-card-header{background:#fce7f3;color:#831843}
+.vak-fr .vak-card-body textarea:focus{border-color:#ec4899}
+
+/* Rubriek kleuren */
+.rub-huistaken .vak-card-header{background:#fff7ed;color:#c2410c}
+.rub-bezorgdheden .vak-card-header{background:#fef2f2;color:#991b1b}
+.rub-positief .vak-card-header{background:#f0fdf4;color:#15803d}
+.rub-vragen .vak-card-header{background:#eff6ff;color:#1d4ed8}
+.rub-ouders .vak-card-header{background:#faf5ff;color:#7e22ce}
+
+.fiche-actions{padding:12px 16px;border-top:1px solid var(--border);display:flex;gap:10px;flex-wrap:wrap;justify-content:space-between;background:#fafbfd;border-radius:0 0 14px 14px}
+
+/* ── NIEUW OC MODAL ── */
+.modal-overlay{position:fixed;inset:0;background:rgba(34,48,68,.55);display:none;align-items:center;justify-content:center;z-index:100;padding:20px}
+.modal-overlay.show{display:flex}
+.modal{background:#fff;border-radius:18px;width:100%;max-width:520px;box-shadow:0 20px 60px rgba(0,0,0,.25)}
+.modal-header{padding:16px 20px;background:linear-gradient(135deg,#6b5d52,#8a7a6d);border-radius:18px 18px 0 0;display:flex;justify-content:space-between;align-items:center}
+.modal-header h2{color:#fff;margin:0;font-size:17px}
+.modal-close{background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.2);padding:5px 10px;border-radius:8px;font-size:18px;cursor:pointer}
+.modal-body{padding:20px}
+.modal-footer{padding:14px 20px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:10px;background:#fafbfd;border-radius:0 0 18px 18px}
+.form-group{margin-bottom:14px}
+
+/* ── LEGE STAAT ── */
+.empty-state{text-align:center;padding:50px 20px;color:var(--muted)}
+.empty-state h3{color:var(--text);margin-bottom:8px;font-size:18px}
+.empty-state p{margin:0 0 16px;font-size:14px}
+
+/* ── KLASKIEZER ── */
+.klas-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px}
+.klas-card{background:#fff;border:1px solid var(--border);border-radius:14px;padding:16px 18px;cursor:pointer;display:flex;align-items:center;gap:12px;transition:box-shadow .15s,border-color .15s}
+.klas-card:hover{box-shadow:0 4px 18px rgba(34,48,68,.13);border-color:#b87a5e}
+.klas-card-naam{font-size:17px;font-weight:900;flex:1}
+.klas-card-meta{font-size:12px;color:var(--muted);margin-top:3px}
+.klas-card-pijl{font-size:20px;color:var(--muted);flex-shrink:0}
+.klas-card:hover .klas-card-pijl{color:#b87a5e}
+
+@media (max-width: 900px) {
+  .oc-werkruimte{grid-template-columns:1fr}
+  .leerling-sidebar{position:static}
+  .leerling-list{max-height:200px}
+  .vak-grid{grid-template-columns:repeat(2,1fr)}
+  .rubriek-grid{grid-template-columns:1fr}
+  .rubriek-grid-2{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <div class="header-logo">
+      <img src="afbeeldingen/schoollogo.png" onerror="this.style.display='none'" alt="logo"/>
+      <div class="header-text">
+        <h1>Oudercontact</h1>
+        <p id="headerSub">GO! Basisschool De Linde</p>
+      </div>
+    </div>
+    <div class="header-actions">
+      <div class="save-status" id="saveStatus">
+        <div class="save-dot"></div>
+        <span id="saveStatusText">Laden...</span>
+      </div>
+      <button type="button" onclick="window.location.href='index.html'" style="background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.35);color:#fff;border-radius:10px;padding:6px 14px;font-size:13px;cursor:pointer;font-weight:700">🏠 Keuzescherm</button>
+      <button id="headerNieuwBtn">＋ Nieuw oudercontact</button>
+      <button class="secondary" id="pdfBtn" style="display:none">⬇ PDF</button>
+    </div>
+    <div id="firebaseStatus"></div>
+  </div>
+</header>
+
+<main>
+  <!-- LIJST VAN OUDERCONTACTEN -->
+  <div id="ocLijstView">
+    <div class="panel">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:10px">
+        <h2 style="margin:0">📋 Oudercontacten <span id="schooljaarLabel" class="muted"></span></h2>
+      </div>
+      <p class="muted" style="margin-bottom:14px">Maak een nieuw oudercontact aan of open een bestaand om gesprekken voor te bereiden.</p>
+      <div id="ocLijst" class="oc-list">
+        <div class="empty-state">
+          <h3>Nog geen oudercontacten</h3>
+          <p>Klik op "Nieuw oudercontact" om te starten.</p>
+          <button id="emptyNieuwBtn">＋ Nieuw oudercontact aanmaken</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- KLASKIEZER (voor schoolbrede rollen) -->
+  <div id="klaskiezerView" class="hidden">
+    <div class="panel">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:6px;flex-wrap:wrap">
+        <h2 style="margin:0">🏫 Kies een klas</h2>
+        <span id="klaskiezerRolBadge" class="oc-type-badge verplicht"></span>
+      </div>
+      <p class="muted" style="margin-bottom:16px">Je bekijkt de oudercontacten als schoolbrede rol. Klik op een klas om die in te kijken (alleen lezen).</p>
+      <div id="klaskiezerLijst" class="klas-grid"></div>
+    </div>
+  </div>
+  <div id="ocWerkView" class="hidden">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:10px">
+      <div>
+        <button class="ghost small" id="terugBtn">← Terug naar overzicht</button>
+        <span style="margin-left:10px;font-weight:800;font-size:16px" id="ocWerkTitel"></span>
+        <span id="ocWerkTypeBadge" class="oc-type-badge" style="margin-left:8px"></span>
+      </div>
+      <div class="actions">
+        <button id="fransToggleBtn" onclick="toggleFrans()" style="background:#fce7f3;border:2px solid #f9a8d4;color:#831843;font-weight:800;font-size:13px;padding:6px 14px;border-radius:10px;cursor:pointer">🇫🇷 Frans: UIT</button>
+        <button class="ghost small readonly-hide" id="bewerkOcBtn">✏️ Bewerken</button>
+        <button class="secondary small" id="pdfBtnWerk">⬇ PDF huidig kind</button>
+        <button class="small" id="pdfAlleBtn">⬇ PDF alle kinderen</button>
+      </div>
+    </div>
+    <div class="oc-werkruimte">
+      <!-- SIDEBAR leerlingen -->
+      <div class="leerling-sidebar">
+        <div class="leerling-sidebar-header">
+          <span>Leerlingen</span>
+          <span id="sidebarCount" class="muted" style="font-weight:400;font-size:12px"></span>
+        </div>
+        <div class="leerling-list" id="leerlingList"></div>
+      </div>
+      <!-- FICHE -->
+      <div id="ficheContainer">
+        <div class="empty-state panel">
+          <h3>Selecteer een leerling</h3>
+          <p>Klik op een naam in de lijst om het gesprek voor te bereiden.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- NIEUW / BEWERKEN OC MODAL -->
+<div class="modal-overlay" id="ocModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="ocModalTitel">Nieuw oudercontact</h2>
+      <button class="modal-close" id="ocModalCloseBtn">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>Naam / omschrijving</label>
+        <input type="text" id="ocNaam" placeholder="bv. Oudercontact november 2025"/>
+      </div>
+      <div class="form-group">
+        <label>Datum</label>
+        <input type="date" id="ocDatum"/>
+      </div>
+      <div class="form-group">
+        <label>Type</label>
+        <select id="ocType">
+          <option value="verplicht">Verplicht (alle leerlingen)</option>
+          <option value="uitnodiging">Op uitnodiging</option>
+        </select>
+      </div>
+      <div id="ocUitnodigingWrap" class="hidden">
+        <div class="form-group">
+          <label>Uitgenodigde leerlingen</label>
+          <p class="muted" style="margin-bottom:8px">Vink aan wie uitgenodigd is voor dit oudercontact.</p>
+          <div id="uitnodigingCheckboxes" style="display:grid;grid-template-columns:repeat(2,1fr);gap:6px;max-height:220px;overflow-y:auto;border:1px solid var(--border);border-radius:10px;padding:10px"></div>
+        </div>
+        <div class="form-group">
+          <label>Extra leerling toevoegen <span class="muted" style="font-weight:400">(naam niet in lijst)</span></label>
+          <div style="display:flex;gap:8px">
+            <input type="text" id="extraNaamInput" placeholder="Voor- en achternaam" style="flex:1"/>
+            <button type="button" class="ghost small" onclick="voegExtraNaamToe()" style="white-space:nowrap;flex-shrink:0">+ Toevoegen</button>
+          </div>
+          <div id="extraNamenLijst" style="margin-top:8px;display:flex;flex-wrap:wrap;gap:6px"></div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="ghost" id="ocModalAnnuleerBtn">Annuleren</button>
+      <button id="ocModalVerwijderBtn" class="danger" style="display:none;margin-right:auto">Verwijderen</button>
+      <button id="ocModalOpslaanBtn">Opslaan</button>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+// ── FIREBASE ──
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getFirestore, doc, getDoc, getDocs, setDoc, collection, query, where, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyA7KxXMvZ4dzBQDut3CMyWUblLte2tFzoQ",
+  authDomain: "huiswerkapp-a311e.firebaseapp.com",
+  projectId: "huiswerkapp-a311e",
+  storageBucket: "huiswerkapp-a311e.appspot.com",
+  messagingSenderId: "797169941164",
+  appId: "1:797169941164:web:511d9618079f1378d0fd09"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+const schooljaar = (() => {
+  const now = new Date();
+  const y = now.getMonth() >= 7 ? now.getFullYear() : now.getFullYear() - 1;
+  return `${y}-${y+1}`;
+})();
+
+let currentUser = null;
+let currentRol = null;      // 'directie' | 'zorgcoordinator' | 'zorgleerkracht' | 'leerkracht' | null
+let isSchoolBreed = false;
+let isReadOnly = false;     // true wanneer schoolbreed een andere klas inkijkt
+const params = new URLSearchParams(window.location.search);
+let targetUid = params.get('beheerUid') || null;
+let beheerKlas = params.get('klas') || '';
+let beheerNaam = params.get('naam') || '';
+let activeKlasId = params.get('klasId') || '';
+let activeKlasNaam = beheerKlas || '';
+
+const ready = new Promise(resolve => {
+  onAuthStateChanged(auth, user => {
+    if (!user) { window.location.href = "index.html"; return; }
+    currentUser = user;
+    resolve(user);
+  });
+});
+
+function projectRef() {
+  return doc(db, "oudercontacten", schooljaar, "projecten", targetUid || currentUser.uid);
+}
+
+async function saveToFirebase() {
+  await ready;
+  await setDoc(projectRef(), {
+    ...state,
+    eigenaar_uid: targetUid || currentUser.uid,
+    eigenaar_email: currentUser.email || "",
+    klasId: activeKlasId || '',
+    klasNaam: activeKlasNaam || beheerKlas || '',
+    schooljaar,
+    bewaarTot: `${Number(schooljaar.slice(0,4))+2}-08-31`,
+    updatedAt: serverTimestamp()
+  }, { merge: true });
+}
+
+async function loadFromFirebase() {
+  await ready;
+  const snap = await getDoc(projectRef());
+  return snap.exists() ? snap.data() : null;
+}
+
+// ── STATE ──
+let state = {
+  oudercontacten: [],  // [{id, naam, datum, type, uitgenodigden:[], gesprekken:{leerlingId:{tijd,nl,wiskunde,wo,fr,huistaken,bezorgdheden,positief,vragen,ouderOpm}}}]
+  leerlingen: []       // [{id, naam}] — geladen uit overgangsbespreking Firestore
+};
+
+let huidigOcId = null;
+let huidigeLeerlingId = null;
+let metFrans = false;
+let isDirty = false;
+let saveTimer = null;
+
+function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
+function $(id) { return document.getElementById(id); }
+
+function markDirty() {
+  isDirty = true;
+  $('saveStatus').className = 'save-status dirty';
+  $('saveStatusText').textContent = 'Niet opgeslagen';
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(autoSave, 1800);
+}
+
+async function autoSave() {
+  if (!isDirty) return;
+  $('saveStatusText').textContent = 'Opslaan...';
+  try {
+    await saveToFirebase();
+    isDirty = false;
+    $('saveStatus').className = 'save-status saved';
+    $('saveStatusText').textContent = 'Opgeslagen ' + new Date().toLocaleTimeString('nl-BE',{hour:'2-digit',minute:'2-digit'});
+  } catch(e) {
+    $('saveStatusText').textContent = 'Fout bij opslaan';
+    console.error(e);
+  }
+}
+
+// ── TWEMOJI ICONEN (base64 via canvas) ──
+const ICON_URLS = {
+  nl:   'https://cdn.jsdelivr.net/gh/twitter/twemoji@latest/assets/72x72/1f4d6.png',
+  wis:  'https://cdn.jsdelivr.net/gh/twitter/twemoji@latest/assets/72x72/1f522.png',
+  wo:   'https://cdn.jsdelivr.net/gh/twitter/twemoji@latest/assets/72x72/1f30d.png',
+  fr:   'https://cdn.jsdelivr.net/gh/twitter/twemoji@latest/assets/72x72/1f1eb-1f1f7.png',
+  huis: 'https://cdn.jsdelivr.net/gh/twitter/twemoji@latest/assets/72x72/1f4da.png',
+  bez:  'https://cdn.jsdelivr.net/gh/twitter/twemoji@latest/assets/72x72/26a0.png',
+  pos:  'https://cdn.jsdelivr.net/gh/twitter/twemoji@latest/assets/72x72/2b50.png',
+  vra:  'https://cdn.jsdelivr.net/gh/twitter/twemoji@latest/assets/72x72/2753.png',
+  oud:  'https://cdn.jsdelivr.net/gh/twitter/twemoji@latest/assets/72x72/1f4ac.png',
+};
+const iconCache = {};
+
+async function loadIcon(key) {
+  if (iconCache[key]) return iconCache[key];
+  return new Promise(resolve => {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => {
+      const c = document.createElement('canvas');
+      c.width = c.height = 72;
+      c.getContext('2d').drawImage(img,0,0,72,72);
+      iconCache[key] = c.toDataURL('image/png');
+      resolve(iconCache[key]);
+    };
+    img.onerror = () => resolve(null);
+    img.src = ICON_URLS[key];
+  });
+}
+
+// Pre-load icons
+Object.keys(ICON_URLS).forEach(k => loadIcon(k));
+
+// ── LEERLINGEN LADEN UIT OVERGANGSBESPREKING ──
+async function laadLeerlingenUitOvergangsbespreking() {
+  try {
+    const ovRef = doc(db, "overgangsbesprekingen", schooljaar, "projecten", targetUid || currentUser.uid);
+    const snap = await getDoc(ovRef);
+    if (snap.exists()) {
+      const data = snap.data();
+      const studenten = data.students || [];
+      state.leerlingen = studenten
+        .map(s => ({ id: s.id, naam: s.name || `${s.firstName||''} ${s.lastName||''}`.trim() }))
+        .sort((a,b) => a.naam.localeCompare(b.naam, 'nl'));
+      $('firebaseStatus').textContent = `${state.leerlingen.length} leerlingen geladen uit overgangsbespreking`;
+    } else {
+      $('firebaseStatus').textContent = 'Geen leerlingenlijst gevonden — open eerst overgangsbespreking';
+    }
+  } catch(e) {
+    console.error('Fout leerlingen laden:', e);
+    $('firebaseStatus').textContent = 'Fout bij laden leerlingenlijst';
+  }
+}
+
+// ── ROL OPHALEN ──
+async function laadRol() {
+  try {
+    const snap = await getDoc(doc(db, 'schoolrollen', currentUser.uid));
+    if (snap.exists()) {
+      currentRol = snap.data().rol || null;
+      isSchoolBreed = ['directie','zorgcoordinator','zorgleerkracht'].includes(currentRol);
+    }
+  } catch(e) { console.error('Rol laden mislukt:', e); }
+}
+
+// ── ALLE KLASSEN LADEN (voor schoolbrede rollen) ──
+async function laadAlleKlassen() {
+  try {
+    const snap = await getDocs(collection(db, 'klasleerkrachten'));
+    const klassen = [];
+    snap.forEach(d => {
+      klassen.push({ id: d.id, ...d.data() });
+    });
+    klassen.sort((a,b) => (a.klasNaam||a.id).localeCompare(b.klasNaam||b.id,'nl'));
+    return klassen;
+  } catch(e) {
+    console.error('Klassen laden mislukt:', e);
+    $('klaskiezerLijst').innerHTML = `<p class="muted" style="color:red">Fout bij laden: ${e.message}</p>`;
+    return [];
+  }
+}
+
+// ── KLASKIEZER SCHERM ──
+
+async function bepaalEigenKlasVoorOudercontact() {
+  const email = (currentUser.email || '').toLowerCase();
+  const gevonden = [];
+  try {
+    const uidQuery = query(collection(db, "klasleerkrachten"), where("leerkracht_uids", "array-contains", currentUser.uid));
+    const emailQuery = query(collection(db, "klasleerkrachten"), where("leerkracht_emails", "array-contains", email));
+    const snaps = await Promise.all([getDocs(uidQuery), getDocs(emailQuery)]);
+    snaps.forEach(snap => snap.forEach(d => {
+      if (!gevonden.some(x => x.id === d.id)) gevonden.push({ id: d.id, ...d.data() });
+    }));
+  } catch(e) {
+    console.error('Eigen klas zoeken mislukt:', e);
+  }
+  gevonden.sort((a,b) => (a.klasNaam || a.id).localeCompare(b.klasNaam || b.id, 'nl'));
+  const eerste = gevonden[0];
+  if (!eerste) return;
+  activeKlasId = (eerste.klasId || eerste.id.replace(schooljaar + '_','')).trim();
+  activeKlasNaam = eerste.klasNaam || activeKlasId;
+  beheerKlas = activeKlasNaam;
+  const namen = Array.isArray(eerste.leerkracht_namen) ? eerste.leerkracht_namen.join(', ') : '';
+  beheerNaam = namen || currentUser.email || '';
+  $('headerSub').textContent = `${beheerNaam}${activeKlasNaam ? ' - ' + activeKlasNaam : ''}`;
+}
+async function toonKlaskiezer() {
+  $('ocLijstView').classList.add('hidden');
+  $('ocWerkView').classList.add('hidden');
+  $('klaskiezerView').classList.remove('hidden');
+  $('headerNieuwBtn').style.display = 'none';
+
+  const rolLabel = { directie:'Directie', zorgcoordinator:'Zorgcoördinator', zorgleerkracht:'Zorgleerkracht' }[currentRol] || currentRol;
+  $('klaskiezerRolBadge').textContent = rolLabel;
+
+  $('klaskiezerLijst').innerHTML = '<p class="muted">Klassen laden...</p>';
+  const klassen = await laadAlleKlassen();
+
+  if (!klassen.length) {
+    $('klaskiezerLijst').innerHTML = '<p class="muted">Geen klassen gevonden voor dit schooljaar.</p>';
+    return;
+  }
+
+  $('klaskiezerLijst').innerHTML = klassen.map(k => {
+    const klasId = (k.klasId || k.id.replace(schooljaar + '_','')).trim();
+    const naam = esc(k.klasNaam || klasId);
+    const leerkrachten = (k.leerkracht_namen || k.leerkracht_emails || []).join(', ');
+    const uidLijst = Array.isArray(k.leerkracht_uids) ? k.leerkracht_uids : [];
+    const projectUid = k.eigenaar_uid || uidLijst[0] || '';
+    return `<div class="klas-card" onclick="window.openKlasAlsSchoolBreed('${esc(projectUid)}','${esc(klasId)}','${naam}','${esc(leerkrachten)}')">
+      <div>
+        <div class="klas-card-naam">${naam}</div>
+        <div class="klas-card-meta">${leerkrachten ? esc(leerkrachten) : '<span class="muted">Geen leerkracht gekoppeld</span>'}</div>
+      </div>
+      <span class="klas-card-pijl">&rarr;</span>
+    </div>`;
+  }).join('');
+}
+
+window.openKlasAlsSchoolBreed = function(uid, klasId, klasNaam, leerkrachtNaam) {
+  if (!uid) { alert('Geen gebruikersaccount gekoppeld aan deze klas. Vraag secretariaat om de klasleerkracht te koppelen.'); return; }
+  targetUid = uid;
+  activeKlasId = klasId || klasNaam;
+  activeKlasNaam = klasNaam || klasId;
+  beheerKlas = activeKlasNaam;
+  beheerNaam = leerkrachtNaam;
+  isReadOnly = ['directie','zorgcoordinator'].includes(currentRol);
+  $('klaskiezerView').classList.add('hidden');
+  const label = isReadOnly ? '(alleen lezen)' : '';
+  $('headerSub').textContent = `${leerkrachtNaam || 'Klas'} - ${activeKlasNaam}${label ? ' ' + label : ''}`;
+  $('headerNieuwBtn').style.display = isReadOnly ? 'none' : '';
+  laadEnToonKlas();
+};
+
+async function laadEnToonKlas() {
+  $('saveStatusText').textContent = 'Laden...';
+  await laadLeerlingenUitOvergangsbespreking();
+  try {
+    const data = await loadFromFirebase();
+    if (data && data.oudercontacten) state.oudercontacten = data.oudercontacten || [];
+    else state.oudercontacten = [];
+
+    // Auto-fix: uitnodiging met lege uitgenodigden → alle leerlingen invullen en direct opslaan
+    let needsSave = false;
+    state.oudercontacten.forEach(oc => {
+      if (oc.type === 'uitnodiging' && (!oc.uitgenodigden || oc.uitgenodigden.length === 0)) {
+        oc.uitgenodigden = state.leerlingen.map(l => l.id);
+        needsSave = true;
+      }
+    });
+    if (needsSave) {
+      try {
+        await saveToFirebase();
+        console.log('Auto-fix uitgenodigden opgeslagen');
+      } catch(e) {
+        console.error('Auto-fix save mislukt:', e);
+        $('firebaseStatus').textContent = 'Auto-fix fout: ' + e.message;
+      }
+    }
+  } catch(e) { console.error(e); }
+  $('saveStatus').className = 'save-status';
+  $('saveStatusText').textContent = isReadOnly ? 'Alleen lezen' : 'Geladen';
+  $('ocLijstView').classList.remove('hidden');
+
+  // Verberg bewerkingsknoppen in readonly
+  if (isReadOnly) {
+    document.querySelectorAll('.readonly-hide').forEach(el => el.style.display = 'none');
+  }
+  renderOcLijst();
+}
+
+// ── INITIALISATIE ──
+async function init() {
+  $('saveStatusText').textContent = 'Laden...';
+  $('schooljaarLabel').textContent = schooljaar;
+
+  await ready;
+  await laadRol();
+
+  // Schoolbrede rol zonder beheerUid → klaskiezer tonen
+  if (isSchoolBreed && !targetUid) {
+    $('saveStatus').className = 'save-status';
+    $('saveStatusText').textContent = 'Kies een klas';
+    await toonKlaskiezer();
+    return;
+  }
+
+  // Normale leerkracht of schoolbreed via URL-parameter
+  if (beheerNaam) $('headerSub').textContent = beheerNaam + (beheerKlas ? ' · ' + beheerKlas : '');
+  if (!activeKlasId && !targetUid) await bepaalEigenKlasVoorOudercontact();
+  if (targetUid && targetUid !== currentUser.uid) isReadOnly = true;
+
+  await laadEnToonKlas();
+}
+
+// ── OC LIJST ──
+function renderOcLijst() {
+  const container = $('ocLijst');
+  if (!state.oudercontacten.length) {
+    container.innerHTML = `<div class="empty-state">
+      <h3>Nog geen oudercontacten</h3>
+      <p>Klik op "Nieuw oudercontact" om te starten.</p>
+      <button onclick="window.openNieuwOcModal()">＋ Nieuw oudercontact aanmaken</button>
+    </div>`;
+    return;
+  }
+  const sorted = [...state.oudercontacten].sort((a,b) => (b.datum||'').localeCompare(a.datum||''));
+  container.innerHTML = sorted.map(oc => {
+    const gesprekken = oc.gesprekken || {};
+    const ingevuld = Object.values(gesprekken).filter(g => heeftData(g)).length;
+    const leerlingen = oc.type === 'verplicht' ? state.leerlingen : state.leerlingen.filter(l => (oc.uitgenodigden||[]).includes(l.id));
+    const totaal = leerlingen.length;
+    return `<div class="oc-card" onclick="openOc('${oc.id}')">
+      <div class="oc-card-info">
+        <h3>${esc(oc.naam)} <span class="oc-type-badge ${oc.type}">${oc.type==='verplicht'?'Verplicht':'Op uitnodiging'}</span></h3>
+        <div class="oc-card-meta">
+          ${oc.datum ? `<span>📅 ${formatDatum(oc.datum)}</span>` : '<span class="muted">Geen datum</span>'}
+          <span>${totaal} leerling${totaal!==1?'en':''}</span>
+          ${ingevuld ? `<span style="color:#15803d">✓ ${ingevuld} voorbereid</span>` : ''}
+        </div>
+      </div>
+      <div class="oc-card-actions">
+        <button class="ghost small" onclick="event.stopPropagation();openBewerkenOcModalId('${oc.id}')" ${isReadOnly?'style="display:none"':''}>✏️</button>
+        <button class="secondary small" onclick="event.stopPropagation();openOc('${oc.id}')">Openen →</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function heeftData(g) {
+  if (!g) return false;
+  return ['nl','wiskunde','wo','fr','huistaken','bezorgdheden','positief','vragen','ouderOpm'].some(k => g[k]?.trim());
+}
+
+// ── OC OPENEN ──
+window.openOc = function(id) {
+  huidigOcId = id;
+  const oc = state.oudercontacten.find(o => o.id === id);
+  if (!oc) return;
+  $('ocLijstView').classList.add('hidden');
+  $('ocWerkView').classList.remove('hidden');
+  $('ocWerkTitel').textContent = oc.naam;
+  const badge = $('ocWerkTypeBadge');
+  badge.textContent = oc.type==='verplicht' ? 'Verplicht' : 'Op uitnodiging';
+  badge.className = `oc-type-badge ${oc.type}`;
+  metFrans = oc.metFrans || false;
+  const fransBtn = $('fransToggleBtn');
+  if (fransBtn) {
+    fransBtn.textContent = `🇫🇷 Frans: ${metFrans ? 'AAN' : 'UIT'}`;
+    fransBtn.style.background = metFrans ? '#fce7f3' : '#f3f4f6';
+    fransBtn.style.borderColor = metFrans ? '#f9a8d4' : '#d1d5db';
+    fransBtn.style.color = metFrans ? '#831843' : '#6b7280';
+  }
+  huidigeLeerlingId = null;
+  renderLeerlingenSidebar();
+  $('ficheContainer').innerHTML = `<div class="empty-state panel"><h3>Selecteer een leerling</h3><p>Klik op een naam in de lijst.</p></div>`;
+};
+
+window.naarOcLijst = function() {
+  $('ocLijstView').classList.remove('hidden');
+  $('ocWerkView').classList.add('hidden');
+  renderOcLijst();
+};
+
+// ── LEERLINGEN SIDEBAR ──
+function getLeerlingenVoorOc(oc) {
+  let lijst = oc.type === 'verplicht'
+    ? [...state.leerlingen]
+    : state.leerlingen.filter(l => (oc.uitgenodigden||[]).includes(l.id));
+
+  const gesprekken = oc.gesprekken || {};
+  // Sorteer: eerst met uur (op tijd), dan zonder (alfabetisch)
+  const metUur = lijst.filter(l => gesprekken[l.id]?.tijd).sort((a,b) => (gesprekken[a.id].tijd).localeCompare(gesprekken[b.id].tijd));
+  const zonderUur = lijst.filter(l => !gesprekken[l.id]?.tijd).sort((a,b) => a.naam.localeCompare(b.naam,'nl'));
+  return [...metUur, ...zonderUur];
+}
+
+function renderLeerlingenSidebar() {
+  const oc = state.oudercontacten.find(o => o.id === huidigOcId);
+  if (!oc) return;
+  const lijst = getLeerlingenVoorOc(oc);
+  $('sidebarCount').textContent = `${lijst.length} leerling${lijst.length!==1?'en':''}`;
+  const gesprekken = oc.gesprekken || {};
+  $('leerlingList').innerHTML = lijst.map(l => {
+    const g = gesprekken[l.id];
+    const heeft = heeftData(g);
+    const deels = g && Object.keys(g).filter(k=>k!=='tijd').some(k=>g[k]?.trim()) && !heeft;
+    const status = heeft ? 'ingevuld' : (deels ? 'deels' : '');
+    const tijd = g?.tijd || '';
+    const active = l.id === huidigeLeerlingId ? 'active' : '';
+    return `<div class="leerling-row ${active}" onclick="selecteerLeerling('${l.id}')">
+      <span class="lr-tijd">${tijd || '–'}</span>
+      <span class="lr-naam">${esc(l.naam)}</span>
+      <span class="lr-status ${status}"></span>
+    </div>`;
+  }).join('');
+}
+
+window.selecteerLeerling = function(id) {
+  saveFicheData(); // sla huidige op voor wisselen
+  huidigeLeerlingId = id;
+  renderLeerlingenSidebar();
+  renderFiche();
+};
+
+// ── FICHE RENDEREN ──
+function renderFiche() {
+  const oc = state.oudercontacten.find(o => o.id === huidigOcId);
+  if (!oc || !huidigeLeerlingId) return;
+  const leerling = state.leerlingen.find(l => l.id === huidigeLeerlingId);
+  if (!leerling) return;
+  const g = (oc.gesprekken || {})[huidigeLeerlingId] || {};
+  const lijst = getLeerlingenVoorOc(oc);
+  const idx = lijst.findIndex(l => l.id === huidigeLeerlingId);
+  const heeftVorige = idx > 0;
+  const heeftVolgende = idx < lijst.length - 1;
+  const vakGridClass = metFrans ? 'vak-grid' : 'vak-grid drie-vakken';
+
+  // Vorig oudercontact zoeken voor deze leerling
+  const vorigOc = state.oudercontacten
+    .filter(o => o.id !== huidigOcId && (o.gesprekken||{})[huidigeLeerlingId])
+    .sort((a,b) => (b.datum||'').localeCompare(a.datum||''))[0];
+  const vorigG = vorigOc ? (vorigOc.gesprekken||{})[huidigeLeerlingId] : null;
+
+  const vorigPanelHtml = vorigOc ? `
+    <div id="vorigPanel" style="margin:8px 16px 0;background:#fffbeb;border:1px solid #fde68a;border-radius:10px;overflow:hidden">
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 14px;background:#fef3c7;cursor:pointer" onclick="window.toggleVorigPanel()">
+        <span style="font-weight:700;font-size:13px;color:#92400e">📋 Vorig oudercontact: ${esc(vorigOc.naam)}${vorigOc.datum ? ' · '+formatDatum(vorigOc.datum) : ''}</span>
+        <span id="vorigPanelPijl" style="font-size:12px;color:#92400e;white-space:nowrap">▶ Tonen</span>
+      </div>
+      <div id="vorigPanelInhoud" style="display:none;padding:10px 14px">
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:6px">
+          ${['nl','wiskunde','wo'].map((k,i) => vorigG[k]?.trim() ? `<div style="background:#fff;border:1px solid #fde68a;border-radius:7px;padding:7px"><div style="font-weight:800;font-size:10px;color:#92400e;margin-bottom:3px;text-transform:uppercase">${['Nederlands','Wiskunde','WO'][i]}</div><div style="font-size:11px;color:#44403c;white-space:pre-wrap">${esc(vorigG[k])}</div></div>` : '').join('')}
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:6px">
+          ${['huistaken','bezorgdheden','positief'].map((k,i) => vorigG[k]?.trim() ? `<div style="background:#fff;border:1px solid #fde68a;border-radius:7px;padding:7px"><div style="font-weight:800;font-size:10px;color:#92400e;margin-bottom:3px;text-transform:uppercase">${['Huistaken','Werkpunten','Positief'][i]}</div><div style="font-size:11px;color:#44403c;white-space:pre-wrap">${esc(vorigG[k])}</div></div>` : '').join('')}
+        </div>
+        ${vorigG.vragen?.trim() ? `<div style="background:#fff;border:1px solid #fde68a;border-radius:7px;padding:7px;margin-bottom:6px"><div style="font-weight:800;font-size:10px;color:#92400e;margin-bottom:3px;text-transform:uppercase">Vragen / tips</div><div style="font-size:11px;color:#44403c;white-space:pre-wrap">${esc(vorigG.vragen)}</div></div>` : ''}
+        ${!isReadOnly ? `<button class="ghost small" onclick="window.neemVorigOver()" style="margin-top:2px;font-size:12px">↓ Overnemen als basis voor dit oudercontact</button>` : ''}
+      </div>
+    </div>` : '';
+
+  $('ficheContainer').innerHTML = `
+  <div class="fiche-bewerk">
+    <div class="fiche-header">
+      <div class="fiche-naam">
+        👤 ${esc(leerling.naam)}
+        <input type="time" class="fiche-tijd-input" id="f_tijd" value="${g.tijd||''}" placeholder="uur" oninput="onFicheChange()" title="Tijdstip gesprek"/>
+      </div>
+      <div class="fiche-nav-btns">
+        <button class="ghost small" onclick="navigeerLeerling(-1)" ${heeftVorige?'':'disabled'}>← Vorige</button>
+        <button class="ghost small" onclick="slaFicheOpEnNavigeer(1)" ${heeftVolgende?'':'disabled'}>Opslaan & volgende →</button>
+      </div>
+    </div>
+
+    ${vorigPanelHtml}
+
+    <div class="${vakGridClass}" style="padding-top:12px">
+      ${vakCard('nl','📖','Nederlands','vak-nl',g.nl||'')}
+      ${vakCard('wiskunde','🔢','Wiskunde','vak-wis',g.wiskunde||'')}
+      ${vakCard('wo','🌍','WO','vak-wo',g.wo||'')}
+      ${metFrans ? vakCard('fr','🇫🇷','Frans','vak-fr',g.fr||'') : ''}
+    </div>
+
+    <div class="rubriek-grid">
+      ${vakCard('huistaken','📚','Huistaken & lessen','rub-huistaken',g.huistaken||'')}
+      ${vakCard('bezorgdheden','⚠️','Werkpunten','rub-bezorgdheden',g.bezorgdheden||'')}
+      ${vakCard('positief','⭐','Positieve zaken','rub-positief',g.positief||'')}
+    </div>
+    <div class="rubriek-grid-2">
+      ${vakCard('vragen','❓','Vragen / tips','rub-vragen',g.vragen||'')}
+      ${vakCard('ouderOpm','💬','Opmerkingen ouders','rub-ouders',g.ouderOpm||'')}
+    </div>
+
+    <div class="fiche-actions">
+      <button class="ghost small" onclick="navigeerLeerling(-1)" ${heeftVorige?'':'disabled'}>← Vorige leerling</button>
+      <div class="actions">
+        <button class="secondary small" onclick="pdfHuidigKind()">⬇ PDF dit kind</button>
+        ${!isReadOnly ? `<button onclick="slaFicheOpEnNavigeer(0)">💾 Opslaan</button>` : ''}
+        <button onclick="slaFicheOpEnNavigeer(1)" ${heeftVolgende?'':'disabled'}>${isReadOnly ? 'Volgende →' : 'Opslaan & volgende →'}</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+window.toggleVorigPanel = function() {
+  const inhoud = $('vorigPanelInhoud');
+  const pijl = $('vorigPanelPijl');
+  if (!inhoud) return;
+  const open = inhoud.style.display !== 'none';
+  inhoud.style.display = open ? 'none' : 'block';
+  pijl.textContent = open ? '▶ Tonen' : '▼ Verbergen';
+};
+
+window.neemVorigOver = function() {
+  const vorigOc = state.oudercontacten
+    .filter(o => o.id !== huidigOcId && (o.gesprekken||{})[huidigeLeerlingId])
+    .sort((a,b) => (b.datum||'').localeCompare(a.datum||''))[0];
+  if (!vorigOc) return;
+  const vorigG = (vorigOc.gesprekken||{})[huidigeLeerlingId] || {};
+  const velden = ['nl','wiskunde','wo','fr','huistaken','bezorgdheden','positief','vragen'];
+  velden.forEach(k => {
+    const el = $('f_' + k);
+    if (el && vorigG[k]?.trim() && !el.value.trim()) el.value = vorigG[k];
+  });
+};
+
+function vakCard(id, emoji, label, cls, value) {
+  const minH = (id === 'ouderOpm' || id === 'vragen') ? '110px' : '90px';
+  const ro = isReadOnly ? 'readonly style="background:#f9f9f7;color:var(--muted)"' : '';
+  return `<div class="vak-card ${cls}">
+    <div class="vak-card-header"><span style="font-size:18px">${emoji}</span> ${label}</div>
+    <div class="vak-card-body"><textarea id="f_${id}" style="min-height:${minH}" oninput="onFicheChange()" ${ro}>${esc(value)}</textarea></div>
+  </div>`;
+}
+
+function onFicheChange() { /* live — opslaan via opslaan-knop of navigatie */ }
+
+function getFicheData() {
+  const val = id => $(id) ? $(id).value : '';
+  return {
+    tijd: val('f_tijd'),
+    nl: val('f_nl'),
+    wiskunde: val('f_wiskunde'),
+    wo: val('f_wo'),
+    fr: val('f_fr'),
+    huistaken: val('f_huistaken'),
+    bezorgdheden: val('f_bezorgdheden'),
+    positief: val('f_positief'),
+    vragen: val('f_vragen'),
+    ouderOpm: val('f_ouderOpm'),
+  };
+}
+
+function saveFicheData() {
+  if (isReadOnly) return;
+  if (!huidigOcId || !huidigeLeerlingId) return;
+  if (!$('f_nl')) return; // fiche niet open
+  const oc = state.oudercontacten.find(o => o.id === huidigOcId);
+  if (!oc) return;
+  if (!oc.gesprekken) oc.gesprekken = {};
+  oc.gesprekken[huidigeLeerlingId] = getFicheData();
+  markDirty();
+}
+
+window.slaFicheOpEnNavigeer = function(richting) {
+  saveFicheData();
+  renderLeerlingenSidebar();
+  if (richting === 0) {
+    autoSave();
+    return;
+  }
+  const oc = state.oudercontacten.find(o => o.id === huidigOcId);
+  const lijst = getLeerlingenVoorOc(oc);
+  const idx = lijst.findIndex(l => l.id === huidigeLeerlingId);
+  const nieuwIdx = idx + richting;
+  if (nieuwIdx >= 0 && nieuwIdx < lijst.length) {
+    huidigeLeerlingId = lijst[nieuwIdx].id;
+    renderLeerlingenSidebar();
+    renderFiche();
+  }
+  autoSave();
+};
+
+window.navigeerLeerling = function(richting) {
+  saveFicheData();
+  const oc = state.oudercontacten.find(o => o.id === huidigOcId);
+  const lijst = getLeerlingenVoorOc(oc);
+  const idx = lijst.findIndex(l => l.id === huidigeLeerlingId);
+  const nieuwIdx = idx + richting;
+  if (nieuwIdx >= 0 && nieuwIdx < lijst.length) {
+    huidigeLeerlingId = lijst[nieuwIdx].id;
+    renderLeerlingenSidebar();
+    renderFiche();
+  }
+};
+
+window.toggleFrans = function() {
+  metFrans = !metFrans;
+  const btn = $('fransToggleBtn');
+  if (btn) {
+    btn.textContent = `🇫🇷 Frans: ${metFrans ? 'AAN' : 'UIT'}`;
+    btn.style.background = metFrans ? '#fce7f3' : '#f3f4f6';
+    btn.style.borderColor = metFrans ? '#f9a8d4' : '#d1d5db';
+    btn.style.color = metFrans ? '#831843' : '#6b7280';
+  }
+  const oc = state.oudercontacten.find(o => o.id === huidigOcId);
+  if (oc) { oc.metFrans = metFrans; markDirty(); }
+  if (huidigeLeerlingId) renderFiche();
+};
+
+// ── NIEUW / BEWERKEN OC MODAL ──
+let bewerkOcId = null;
+
+window.openNieuwOcModal = function() {
+  bewerkOcId = null;
+  $('ocModalTitel').textContent = 'Nieuw oudercontact';
+  $('ocNaam').value = '';
+  $('ocDatum').value = new Date().toISOString().slice(0,10);
+  $('ocType').value = 'verplicht';
+  $('ocModalVerwijderBtn').style.display = 'none';
+  toggleUitnodigingCheckboxes('verplicht', [], []);
+  $('ocModal').classList.add('show');
+  setTimeout(() => $('ocNaam').focus(), 80);
+};
+
+window.openBewerkenOcModal = function() {
+  if (huidigOcId) openBewerkenOcModalId(huidigOcId);
+};
+
+window.openBewerkenOcModalId = function(id) {
+  const oc = state.oudercontacten.find(o => o.id === id);
+  if (!oc) return;
+  bewerkOcId = id;
+  $('ocModalTitel').textContent = 'Oudercontact bewerken';
+  $('ocNaam').value = oc.naam || '';
+  $('ocDatum').value = oc.datum || '';
+  $('ocType').value = oc.type || 'verplicht';
+  $('ocModalVerwijderBtn').style.display = '';
+  toggleUitnodigingCheckboxes(oc.type, oc.uitgenodigden || [], oc.extraNamen || []);
+  $('ocModal').classList.add('show');
+};
+
+$('ocType').addEventListener('change', e => toggleUitnodigingCheckboxes(e.target.value));
+
+let extraNamen = []; // tijdelijk tijdens modal
+
+window.voegExtraNaamToe = function() {
+  const input = $('extraNaamInput');
+  const naam = input.value.trim();
+  if (!naam) return;
+  if (extraNamen.includes(naam)) { input.value = ''; return; }
+  extraNamen.push(naam);
+  input.value = '';
+  renderExtraNamen();
+};
+
+window.verwijderExtraNaam = function(naam) {
+  extraNamen = extraNamen.filter(n => n !== naam);
+  renderExtraNamen();
+};
+
+function renderExtraNamen() {
+  const el = $('extraNamenLijst');
+  if (!el) return;
+  el.innerHTML = extraNamen.map(n =>
+    `<span style="display:inline-flex;align-items:center;gap:5px;background:#fef9c3;border:1px solid #fde68a;border-radius:8px;padding:3px 8px;font-size:12px;font-weight:700">
+      ${esc(n)}
+      <button type="button" onclick="window.verwijderExtraNaam('${esc(n)}')" style="background:none;border:none;cursor:pointer;font-size:14px;line-height:1;padding:0;color:#92400e">×</button>
+    </span>`
+  ).join('');
+}
+
+function toggleUitnodigingCheckboxes(type, geselecteerd = [], bestaandeExtra = []) {
+  const wrap = $('ocUitnodigingWrap');
+  if (type !== 'uitnodiging') { wrap.classList.add('hidden'); return; }
+  wrap.classList.remove('hidden');
+  extraNamen = [...bestaandeExtra];
+  $('uitnodigingCheckboxes').innerHTML = state.leerlingen.map(l =>
+    `<label style="display:flex;align-items:center;gap:7px;font-size:13px;font-weight:600;cursor:pointer;padding:5px 8px;border:1px solid var(--border);border-radius:8px">
+      <input type="checkbox" name="uitnodiging" value="${l.id}" style="width:auto" ${geselecteerd.includes(l.id)?'checked':''}/>
+      ${esc(l.naam)}
+    </label>`
+  ).join('');
+  renderExtraNamen();
+}
+
+window.sluitOcModal = function() { $('ocModal').classList.remove('show'); };
+
+window.slaOcOp = function() {
+  const naam = $('ocNaam').value.trim();
+  if (!naam) { alert('Geef een naam in.'); $('ocNaam').focus(); return; }
+  const type = $('ocType').value;
+  const uitgenodigden = type === 'uitnodiging'
+    ? [...document.querySelectorAll('input[name="uitnodiging"]:checked')].map(cb => cb.value)
+    : [];
+  // Extra namen omzetten naar tijdelijke leerling-objecten
+  const extraIds = extraNamen.map(n => {
+    const bestaand = state.leerlingen.find(l => l.naam === n);
+    if (bestaand) return bestaand.id;
+    const nieuwId = 'extra_' + n.toLowerCase().replace(/\s+/g,'_').replace(/[^a-z0-9_]/g,'');
+    if (!state.leerlingen.find(l => l.id === nieuwId)) {
+      state.leerlingen.push({ id: nieuwId, naam: n, isExtra: true });
+    }
+    return nieuwId;
+  });
+  const alleUitgenodigden = [...new Set([...uitgenodigden, ...extraIds])];
+
+  if (bewerkOcId) {
+    const oc = state.oudercontacten.find(o => o.id === bewerkOcId);
+    if (oc) { oc.naam = naam; oc.datum = $('ocDatum').value; oc.type = type; oc.uitgenodigden = alleUitgenodigden; oc.extraNamen = extraNamen; }
+  } else {
+    state.oudercontacten.push({ id: uid(), naam, datum: $('ocDatum').value, type, uitgenodigden: alleUitgenodigden, extraNamen, gesprekken: {}, metFrans: false });
+  }
+  markDirty(); autoSave();
+  sluitOcModal();
+  renderOcLijst();
+  if (huidigOcId) {
+    const oc = state.oudercontacten.find(o => o.id === huidigOcId);
+    if (oc) { $('ocWerkTitel').textContent = oc.naam; renderLeerlingenSidebar(); }
+  }
+};
+
+window.verwijderOc = function() {
+  if (!bewerkOcId) return;
+  const oc = state.oudercontacten.find(o => o.id === bewerkOcId);
+  if (!confirm(`"${oc?.naam}" verwijderen? Dit kan niet ongedaan worden.`)) return;
+  state.oudercontacten = state.oudercontacten.filter(o => o.id !== bewerkOcId);
+  markDirty(); autoSave();
+  sluitOcModal();
+  naarOcLijst();
+};
+
+// ── PDF ──
+async function maakPdf(leerlingen) {
+  const oc = state.oudercontacten.find(o => o.id === huidigOcId);
+  if (!oc) return;
+
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+
+  // ── Schoollogo laden ──
+  let logoData = null;
+  try {
+    const logoImg = new Image();
+    logoImg.crossOrigin = 'anonymous';
+    await new Promise((res) => {
+      logoImg.onload = () => {
+        const c = document.createElement('canvas');
+        c.width = c.height = 100;
+        c.getContext('2d').drawImage(logoImg, 0, 0, 100, 100);
+        logoData = c.toDataURL('image/png');
+        res();
+      };
+      logoImg.onerror = res;
+      logoImg.src = 'afbeeldingen/schoollogo.png';
+    });
+  } catch(e) {}
+
+  await Promise.all(Object.keys(ICON_URLS).map(k => loadIcon(k)));
+
+  const PW = 297, PH = 210;
+  const MARGIN = 10;
+  const HEADER_H = 24;
+
+  for (let li = 0; li < leerlingen.length; li++) {
+    if (li > 0) doc.addPage();
+    const leerling = leerlingen[li];
+    const g = (oc.gesprekken || {})[leerling.id] || {};
+
+    // ── Paginaheader: wit met groene rand ──
+    doc.setFillColor(255, 255, 255);
+    doc.setDrawColor(34, 139, 87);
+    doc.setLineWidth(0.8);
+    doc.roundedRect(MARGIN, MARGIN, PW - 2*MARGIN, HEADER_H, 4, 4, 'FD');
+
+    // Groene bovenbalk als accent
+    doc.setFillColor(34, 139, 87);
+    doc.roundedRect(MARGIN, MARGIN, PW - 2*MARGIN, 3, 2, 2, 'F');
+    doc.setFillColor(34, 139, 87);
+    doc.rect(MARGIN, MARGIN + 1, PW - 2*MARGIN, 2, 'F');
+
+    // Schoollogo links
+    if (logoData) {
+      try { doc.addImage(logoData, 'PNG', MARGIN + 4, MARGIN + 4, 16, 16); } catch(e) {}
+    }
+
+    // OC naam + datum links naast logo
+    doc.setTextColor(80, 80, 80);
+    doc.setFontSize(8);
+    doc.setFont('helvetica', 'normal');
+    doc.text(oc.naam + (oc.datum ? '  ·  ' + formatDatum(oc.datum) : ''), MARGIN + (logoData ? 23 : 5), MARGIN + 10);
+    doc.setFontSize(7);
+    doc.text(schooljaar, MARGIN + (logoData ? 23 : 5), MARGIN + 16);
+
+    // Naam leerling gecentreerd, groot en groen
+    doc.setTextColor(22, 101, 52);
+    doc.setFontSize(17);
+    doc.setFont('helvetica', 'bold');
+    doc.text(leerling.naam, PW / 2, MARGIN + 15, { align: 'center' });
+
+    // Tijdstip rechts
+    if (g.tijd) {
+      doc.setTextColor(80, 80, 80);
+      doc.setFontSize(9);
+      doc.setFont('helvetica', 'bold');
+      doc.text(g.tijd, PW - MARGIN - 5, MARGIN + 15, { align: 'right' });
+    }
+
+    const Y_START = MARGIN + HEADER_H + 4;
+    const vakken = [
+      { key: 'nl',       label: 'Nederlands', icon: 'nl',  kleur: [219,234,254], tekst: [30,64,175] },
+      { key: 'wiskunde', label: 'Wiskunde',   icon: 'wis', kleur: [254,249,195], tekst: [113,63,18] },
+      { key: 'wo',       label: 'WO',         icon: 'wo',  kleur: [209,250,229], tekst: [6,95,70]   },
+      ...(oc.metFrans ? [{ key: 'fr', label: 'Frans', icon: 'fr', kleur: [252,231,243], tekst: [131,24,67] }] : []),
+    ];
+    const nVak = vakken.length;
+    const VAK_W = (PW - 2*MARGIN) / nVak - 2;
+
+    // Bereken hoogte op basis van tekst
+    function berekenHoogte(tekst, breedte, minH = 30) {
+      if (!tekst || !tekst.trim()) return minH;
+      const { jsPDF: _ } = window.jspdf;
+      const regels = doc.splitTextToSize(tekst.trim(), breedte - 5);
+      const HEADER_H = 9;
+      const regelH = 4.2;
+      const berekend = HEADER_H + 4 + regels.length * regelH + 4;
+      return Math.max(minH, berekend);
+    }
+
+    const VAK_H = Math.max(...vakken.map(v => berekenHoogte(g[v.key]||'', VAK_W, 35)));
+
+    // Vakken rij
+    for (let i = 0; i < vakken.length; i++) {
+      const v = vakken[i];
+      const X = MARGIN + i * (VAK_W + 2);
+      tekenKader(doc, X, Y_START, VAK_W, VAK_H, v.label, v.kleur, v.tekst, g[v.key] || '', iconCache[v.icon]);
+    }
+
+    const Y2 = Y_START + VAK_H + 3;
+    const rubrieken3 = [
+      { key: 'huistaken',    label: 'Huistaken & lessen', icon: 'huis', kleur: [255,247,237], tekst: [194,65,12] },
+      { key: 'bezorgdheden', label: 'Werkpunten',         icon: 'bez',  kleur: [254,242,242], tekst: [153,27,27] },
+      { key: 'positief',     label: 'Positieve zaken',    icon: 'pos',  kleur: [240,253,244], tekst: [21,128,61] },
+    ];
+    const RUB3_W = (PW - 2*MARGIN) / 3 - 2;
+    const RUB3_H = Math.max(...rubrieken3.map(r => berekenHoogte(g[r.key]||'', RUB3_W, 28)));
+
+    for (let i = 0; i < rubrieken3.length; i++) {
+      const r = rubrieken3[i];
+      const X = MARGIN + i * (RUB3_W + 2);
+      tekenKader(doc, X, Y2, RUB3_W, RUB3_H, r.label, r.kleur, r.tekst, g[r.key] || '', iconCache[r.icon]);
+    }
+
+    const Y3 = Y2 + RUB3_H + 3;
+    const RUB2_W = (PW - 2*MARGIN) / 2 - 1;
+    const vragenH = Math.max(berekenHoogte(g.vragen||'', RUB2_W, 22), berekenHoogte(g.ouderOpm||'', RUB2_W, 22));
+    const maxVragenH = Math.min(vragenH, PH - Y3 - MARGIN); // nooit buiten pagina
+    tekenKader(doc, MARGIN, Y3, RUB2_W, maxVragenH, 'Vragen / tips', [239,246,255], [29,78,216], g.vragen || '', iconCache['vra']);
+    tekenKader(doc, MARGIN + RUB2_W + 2, Y3, RUB2_W, maxVragenH, 'Opmerkingen ouders', [250,245,255], [126,34,206], g.ouderOpm || '', iconCache['oud']);
+  }
+
+  const ocNaamVeilig = oc.naam.replace(/[^a-zA-Z0-9]/g, '_');
+  doc.save(`oudercontact_${ocNaamVeilig}.pdf`);
+}
+
+function tekenKader(doc, x, y, w, h, label, headerKleur, headerTekst, tekst, iconData) {
+  const HEADER_H = 9;
+  const R = 3;
+
+  // 1. Gekleurde header — afgeronde hoeken bovenaan
+  doc.setFillColor(...headerKleur);
+  doc.roundedRect(x, y, w, HEADER_H + R, R, R, 'F');
+
+  // 2. Witte inhoud — vul de rest, inclusief overlap met header-afronding
+  doc.setFillColor(255, 255, 255);
+  doc.rect(x, y + HEADER_H, w, h - HEADER_H, 'F');
+
+  // 3. Afgeronde witte hoeken onderaan
+  doc.roundedRect(x, y + h - R * 2, w, R * 2, R, R, 'F');
+
+  // 4. Groene rand over alles heen
+  doc.setDrawColor(34, 139, 87);
+  doc.setLineWidth(0.25);
+  doc.roundedRect(x, y, w, h, R, R, 'S');
+
+  // 5. Scheidingslijn header/inhoud
+  doc.setDrawColor(...headerKleur.map(v => Math.max(0, v - 40)));
+  doc.setLineWidth(0.2);
+  doc.line(x + 1, y + HEADER_H, x + w - 1, y + HEADER_H);
+
+  // Icoon
+  if (iconData) {
+    try { doc.addImage(iconData, 'PNG', x + 2.5, y + 1.5, 5.5, 5.5); } catch(e) {}
+  }
+
+  // Label
+  doc.setTextColor(...headerTekst);
+  doc.setFontSize(9.5);
+  doc.setFont('helvetica', 'bold');
+  doc.text(label, x + 10.5, y + 6.8);
+
+  // Tekst
+  if (tekst && tekst.trim()) {
+    doc.setTextColor(44, 31, 14);
+    doc.setFontSize(9.5);
+    doc.setFont('helvetica', 'normal');
+    const regels = doc.splitTextToSize(tekst.trim(), w - 5);
+    doc.text(regels, x + 2.5, y + HEADER_H + 4.5);
+  }
+}
+
+window.pdfHuidigKind = async function() {
+  if (!huidigeLeerlingId) { alert('Selecteer eerst een leerling.'); return; }
+  saveFicheData();
+  const leerling = state.leerlingen.find(l => l.id === huidigeLeerlingId);
+  if (leerling) await maakPdf([leerling]);
+};
+
+window.pdfAlleKinderen = async function() {
+  saveFicheData();
+  const oc = state.oudercontacten.find(o => o.id === huidigOcId);
+  if (!oc) return;
+  await maakPdf(getLeerlingenVoorOc(oc));
+};
+
+// ── HELPERS ──
+function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function formatDatum(d) { if (!d) return ''; const [y,m,day] = d.split('-'); return `${day}/${m}/${y}`; }
+
+// Expose voor dynamisch gegenereerde HTML (template strings)
+window.openNieuwOcModal = openNieuwOcModal;
+window.naarOcLijst = naarOcLijst;
+window.openOc = openOc;
+window.openBewerkenOcModalId = openBewerkenOcModalId;
+window.selecteerLeerling = selecteerLeerling;
+window.slaFicheOpEnNavigeer = slaFicheOpEnNavigeer;
+window.navigeerLeerling = navigeerLeerling;
+window.toggleFrans = toggleFrans;
+window.pdfHuidigKind = pdfHuidigKind;
+window.pdfAlleKinderen = pdfAlleKinderen;
+
+function koppelStatischeKnoppen() {
+  const bind = (id, fn) => { const el = $(id); if (el) el.addEventListener('click', fn); };
+  bind('headerNieuwBtn',    () => openNieuwOcModal());
+  bind('emptyNieuwBtn',     () => openNieuwOcModal());
+  bind('pdfBtn',            () => pdfHuidigKind());
+  bind('terugBtn',          () => naarOcLijst());
+  bind('bewerkOcBtn',       () => openBewerkenOcModal());
+  bind('pdfBtnWerk',        () => pdfHuidigKind());
+  bind('pdfAlleBtn',        () => pdfAlleKinderen());
+  bind('ocModalCloseBtn',   () => sluitOcModal());
+  bind('ocModalAnnuleerBtn',() => sluitOcModal());
+  bind('ocModalVerwijderBtn',()=> verwijderOc());
+  bind('ocModalOpslaanBtn', () => slaOcOp());
+}
+
+init().then(() => koppelStatischeKnoppen());
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+</body>
+</html>
