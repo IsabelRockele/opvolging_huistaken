@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="nl">
 <head>
   <meta charset="UTF-8" />
@@ -837,6 +837,32 @@
 
 
 
+    /* codex-oudercontact-5-tegels */
+  .portaal-keuzes{
+    grid-template-columns:repeat(5, minmax(210px, 1fr))!important;
+    gap:16px!important;
+  }
+  .portaal-tegel{
+    min-height:172px!important;
+    padding:18px 18px!important;
+  }
+  .portaal-title{
+    font-size:1.08em!important;
+    line-height:1.14!important;
+  }
+  .portaal-desc{
+    font-size:.9em!important;
+    line-height:1.35!important;
+  }
+  @media (max-width: 1450px){
+    .portaal-keuzes{grid-template-columns:repeat(3, minmax(230px, 1fr))!important;}
+  }
+  @media (max-width: 920px){
+    .portaal-keuzes{grid-template-columns:repeat(2, minmax(230px, 1fr))!important;}
+  }
+  @media (max-width: 640px){
+    .portaal-keuzes{grid-template-columns:1fr!important;}
+  }
   </style>
 </head>
 <body>
@@ -880,6 +906,12 @@
         <span class="portaal-tegel-icoon">&#128218;</span>
         <span class="portaal-title">Bestellingen</span>
         <span class="portaal-desc">Werkboeken, Lyreco, stock materiaal en knutselideetjes.</span>
+        <span class="portaal-open">Openen</span>
+      </a>
+      <a id="oudercontactKeuzeKnop" href="oudercontact.html" class="portaal-tegel zorg" target="_blank" rel="noopener" style="display:none">
+        <span class="portaal-tegel-icoon">&#128483;</span>
+        <span class="portaal-title">Oudercontact</span>
+        <span class="portaal-desc">Bereid gesprekken per leerling voor en maak een nette PDF voor ouders.</span>
         <span class="portaal-open">Openen</span>
       </a>
       <a id="schoolbeheerKeuzeKnop" href="schoolbeheer.html" class="portaal-tegel administratie" target="_blank" rel="noopener" style="display:none">
