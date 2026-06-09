@@ -1298,7 +1298,7 @@
               <h2>&#128179; Maximumfactuur</h2>
               <p class="muted">Activiteiten worden automatisch ingeladen. Voeg vaste posten toe (bv. digitale tools). Limiet: <strong>&euro;${limiet.kleuter} kleuter</strong> / <strong>&euro;${limiet.lager} lager</strong>.</p>
             </div>
-            ${canOpenAllClasses() ? `<button class="secondary no-print" onclick="mfAllesAfdrukken(${JSON.stringify(teladenKlassen)},${JSON.stringify(klassenData)})">&#128424; Alle klassen afdrukken</button>` : ""}
+            ${canOpenAllClasses() ? `<button class="secondary no-print" onclick="mfAllesAfdrukken()">&#128424; Alle klassen afdrukken</button>` : ""}
           </div>
           ${instHtml}
           ${tabsHtml}
@@ -1356,7 +1356,10 @@
       else alert("Data niet geladen. Probeer opnieuw.");
     };
 
-    window.mfAllesAfdrukken = function(klassen, klassenData) {
+    window.mfAllesAfdrukken = function() {
+      const klassen = window._mfKlassen;
+      const klassenData = window._mfKlassenData;
+      if (!klassen || !klassenData) { alert("Data niet geladen. Probeer opnieuw."); return; }
       mfDownloadPDF(klassen, klassenData);
     };
 
