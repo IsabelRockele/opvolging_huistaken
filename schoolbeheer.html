@@ -140,6 +140,14 @@
     .colleague{background:#fff5c8}
     .tag{display:inline-block;border-radius:999px;background:#edf2f8;padding:4px 8px;font-size:12px;margin-left:6px}
     .tag.green{background:#d8f5e9}.tag.done{background:#c9efd9}
+    .mf-klas { margin-bottom: 32px; }
+    .mf-klas-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:6px; }
+    .mf-klas-header h3 { margin:0; font-size:1.15rem; }
+    .mf-vaste-rij td { background:#fffbeb; }
+    tfoot tr td { padding: 10px 12px; }
+    .mf-tab-btn { padding:6px 16px; border:2px solid #d0d7de; border-radius:8px; background:#fff; cursor:pointer; font-weight:600; font-size:0.95rem; font-family:inherit; color:#444; }
+    .mf-tab-btn:hover { background:#f0f4f8; }
+    .mf-tab-active { background:#0a66c2 !important; color:#fff !important; border-color:#0a66c2 !important; }
     .teacher-lock{display:inline-block;margin-top:3px;font-size:13px}
     .status-dot{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:999px;font-weight:900}
     .status-dot.present{background:#dff7e8;color:#176f3b}
@@ -861,6 +869,9 @@
         <div class="sb-item" data-tab="aankopen" id="navAankopen">
           <span class="sb-icon">&#128717;</span> Aankopen
         </div>
+        <div class="sb-item" data-tab="maximumfactuur" id="navMaximumfactuur">
+          <span class="sb-icon">&#128179;</span> Maximumfactuur
+        </div>
 
       </div>
 
@@ -1098,7 +1109,476 @@
       if(tab==="refter") renderRefter();
       if(tab==="activiteiten") renderActivities();
       if(tab==="aankopen") renderPurchases();
+      if(tab==="maximumfactuur") renderMaximumfactuur();
     }
+
+    // ── MAXIMUMFACTUUR (code ook beschikbaar in maximumfactuur.js) ──
+    // Standaardlimieten - worden overschreven door Firestore-instellingen
+    const MF_LIMIET_STANDAARD = { lager: 105, kleuter: 55 };
+
+    function isKleuterklas(klas) {
+      // Klassen die beginnen met K (K1, K2, K3...) zijn kleuterklassen
+      return /^K/i.test(klas || "");
+    }
+
+    function mfLimietVoorKlas(klas) {
+      const l = mfLimiet();
+      return isKleuterklas(klas) ? l.kleuter : l.lager;
+    }
+
+    function mfLimiet() {
+      const inst = window._mfInstellingen || {};
+      return {
+        lager:   Number(inst.limLager   ?? MF_LIMIET_STANDAARD.lager),
+        kleuter: Number(inst.limKleuter ?? MF_LIMIET_STANDAARD.kleuter)
+      };
+    }
+
+    async function laadMfInstellingen() {
+      try {
+        const ref = doc(db, "schoolbeheer", schooljaar, "instellingen", "maximumfactuur");
+        const snap = await getDoc(ref);
+        window._mfInstellingen = snap.exists() ? snap.data() : {};
+      } catch(e) {
+        window._mfInstellingen = {};
+      }
+    }
+
+    async function slaaMfInstellingenOp(inst) {
+      try {
+        const ref = doc(db, "schoolbeheer", schooljaar, "instellingen", "maximumfactuur");
+        await setDoc(ref, { ...inst, bijgewerktOp: new Date().toISOString() });
+        window._mfInstellingen = inst;
+      } catch(e) {
+        alert("Kon instellingen niet bewaren: " + e.message);
+      }
+    }
+
+    async function renderMaximumfactuur() {
+      const el = $("content");
+      if (!data) return;
+      el.innerHTML = `<div class="panel"><h2>&#128179; Maximumfactuur</h2><p class="muted">Laden...</p></div>`;
+
+      // Laad instellingen (limieten) eerst
+      await laadMfInstellingen();
+      const limiet = mfLimiet();
+
+      // Secretariaat laadt alle klassen, leerkracht enkel eigen klas
+      const teladenKlassen = canOpenAllClasses()
+        ? [...allClasses]
+        : [activeClass];
+
+      // Haal data op voor elke klas
+      const klassenData = {};
+      await Promise.all(teladenKlassen.map(async klas => {
+        try {
+          const snap = await getDoc(classRef(klas));
+          klassenData[klas] = snap.exists() ? snap.data() : null;
+        } catch(e) {
+          klassenData[klas] = null;
+        }
+      }));
+
+      // Render
+      const sj = schooljaar || "";
+      const [sj1, sj2] = (sj || "-").split("-");
+      const periodeLabel = sj1 && sj2 ? `september ${sj1} tot en met juni ${sj2}` : "dit schooljaar";
+
+      function renderKlasFactuurHtml(klas, kd, sj, limiet) {
+        if (!kd) return `<div class="mf-klas"><h3>Klas ${esc(klas)}</h3><p class="muted">Geen data beschikbaar.</p></div>`;
+
+        const activiteiten = [...(kd.activiteiten || [])]
+          .filter(a => (a.naam || a.name) && Number(a.prijs || a.price || 0) > 0)
+          .sort((a, b) => (a.datum || a.date || "").localeCompare(b.datum || b.date || ""));
+        const vastePosten = kd.vastePosten || [];
+        const totaal = [...vastePosten, ...activiteiten].reduce((s, p) => s + Number(p.prijs || p.price || 0), 0);
+        const _lim = mfLimietVoorKlas(klas);
+        const resterend = _lim - totaal;
+        const over = totaal > _lim;
+
+        return `
+          <div class="mf-klas" id="mf-klas-${esc(klas)}">
+            <div class="mf-klas-header">
+              <h3>Klas ${esc(klas)}</h3>
+              <button class="secondary small no-print" onclick="mfAfdrukken('${esc(klas)}')">&#128196; PDF downloaden</button>
+            </div>
+            <p class="muted" style="margin-bottom:8px;font-size:13px">Overzicht activiteiten van ${esc(periodeLabel)}</p>
+            <div class="table-wrap">
+              <table>
+                <thead><tr>
+                  <th style="width:55%">Omschrijving</th>
+                  <th style="width:18%">Kostprijs</th>
+                  <th style="width:20%">Datum</th>
+                  <th style="width:7%" class="no-print"></th>
+                </tr></thead>
+                <tbody>
+                  ${vastePosten.map((p, i) => `
+                    <tr class="mf-vaste-rij">
+                      <td><em>${esc(p.naam)}</em></td>
+                      <td>&euro;&nbsp;${Number(p.prijs).toFixed(2)}</td>
+                      <td>${esc(p.datum || "Schooljaar " + sj)}</td>
+                      <td class="no-print">
+                        <button class="ghost small" style="color:#c0392b" onclick="mfVasteVerwijderen('${esc(klas)}',${i})" title="Verwijderen">&#10005;</button>
+                      </td>
+                    </tr>`).join("")}
+                  ${activiteiten.map(a => `
+                    <tr>
+                      <td>${esc(a.naam || a.name)}</td>
+                      <td>&euro;&nbsp;${Number(a.prijs || a.price || 0).toFixed(2)}</td>
+                      <td>${esc(a.datum || a.date || "")}</td>
+                      <td class="no-print"></td>
+                    </tr>`).join("")}
+                  ${vastePosten.length === 0 && activiteiten.length === 0
+                    ? `<tr><td colspan="4" style="color:#9ca3af;text-align:center;padding:16px">Nog geen posten voor deze klas.</td></tr>`
+                    : ""}
+                </tbody>
+                <tfoot>
+                  <tr style="background:${over ? "#fde8e8" : "#edfbea"}">
+                    <td><strong>Totaal aan uitgaven</strong></td>
+                    <td><strong>&euro;&nbsp;${totaal.toFixed(2)}</strong></td>
+                    <td colspan="2">
+                      ${over
+                        ? `<span class="tag" style="background:#c0392b;color:#fff">&#9888; Limiet overschreden met &euro;${Math.abs(resterend).toFixed(2)}</span>`
+                        : `<span class="tag" style="background:#27ae60;color:#fff">Nog &euro;${resterend.toFixed(2)} beschikbaar</span>`}
+                    </td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+            <div class="no-print" style="background:#f8f9fa;border:1px solid #e5e7eb;border-radius:10px;padding:14px;margin-top:10px">
+              <p style="font-weight:700;margin:0 0 8px">Vaste post toevoegen</p>
+              <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end">
+                <input type="text" id="mfNaam-${esc(klas)}" placeholder="Omschrijving (bv. Digitale tools)" style="flex:2;min-width:160px">
+                <input type="number" id="mfPrijs-${esc(klas)}" placeholder="Prijs (€)" step="0.01" min="0" style="flex:0.8;min-width:90px">
+                <input type="text" id="mfDatum-${esc(klas)}" placeholder="Datum / periode" style="flex:1.2;min-width:120px">
+                <button class="primary small" onclick="mfVasteToevoegen('${esc(klas)}')">+ Toevoegen</button>
+              </div>
+            </div>
+          </div>`;
+      }
+
+      // Instellingen-sectie (alleen secretariaat)
+      const instHtml = isSecretary() ? `
+        <div class="mf-instellingen no-print" style="background:#f0f4ff;border:1.5px solid #c7d2fe;border-radius:10px;padding:14px 18px;margin-bottom:20px">
+          <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
+            <div>
+              <strong style="font-size:1rem">&#9881; Maximumfactuur limieten</strong>
+              <span class="muted" style="margin-left:8px;font-size:13px">Gelden voor het volledige schooljaar</span>
+            </div>
+            <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end">
+              <label style="display:flex;flex-direction:column;gap:3px;font-size:13px">
+                Kleuter (&euro;)
+                <input type="number" id="mfLimKleuter" value="${limiet.kleuter}" min="0" step="0.50" style="width:90px">
+              </label>
+              <label style="display:flex;flex-direction:column;gap:3px;font-size:13px">
+                Lager onderwijs (&euro;)
+                <input type="number" id="mfLimLager" value="${limiet.lager}" min="0" step="0.50" style="width:110px">
+              </label>
+              <button class="primary small" onclick="mfSlaLimietenOp()">Bewaren</button>
+            </div>
+          </div>
+        </div>` : "";
+
+      // Bepaal actieve klas voor tabweergave
+      if (!window._mfActieveKlas || !teladenKlassen.includes(window._mfActieveKlas)) {
+        window._mfActieveKlas = teladenKlassen[0];
+      }
+      const aktKlas = window._mfActieveKlas;
+
+      // Tabbladenrij
+      const tabsHtml = canOpenAllClasses() ? `
+        <div class="mf-tabs no-print" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px">
+          ${teladenKlassen.map(k => `<button class="mf-tab-btn ${k === aktKlas ? 'mf-tab-active' : ''}" onclick="mfWisselKlas('${esc(k)}')">${esc(k)}</button>`).join("")}
+        </div>` : "";
+
+      el.innerHTML = `
+        <div class="panel">
+          <div class="bar">
+            <div>
+              <h2>&#128179; Maximumfactuur</h2>
+              <p class="muted">Activiteiten worden automatisch ingeladen. Voeg vaste posten toe (bv. digitale tools). Limiet: <strong>&euro;${limiet.kleuter} kleuter</strong> / <strong>&euro;${limiet.lager} lager</strong>.</p>
+            </div>
+            ${canOpenAllClasses() ? `<button class="secondary no-print" onclick="mfAllesAfdrukken(${JSON.stringify(teladenKlassen)},${JSON.stringify(klassenData)})">&#128424; Alle klassen afdrukken</button>` : ""}
+          </div>
+          ${instHtml}
+          ${tabsHtml}
+          ${renderKlasFactuurHtml(aktKlas, klassenData[aktKlas], schooljaar, limiet)}
+        </div>`;
+
+      window._mfKlassenData = klassenData;
+      window._mfKlassen = teladenKlassen;
+
+
+    }
+
+    window.mfVasteToevoegen = async function(klas) {
+      const naam = document.getElementById(`mfNaam-${klas}`)?.value?.trim();
+      const prijs = Number(document.getElementById(`mfPrijs-${klas}`)?.value || 0);
+      const datum = document.getElementById(`mfDatum-${klas}`)?.value?.trim();
+      if (!naam) return alert("Vul een omschrijving in.");
+      const snap = await getDoc(classRef(klas));
+      const kd = snap.exists() ? snap.data() : {};
+      if (!Array.isArray(kd.vastePosten)) kd.vastePosten = [];
+      kd.vastePosten.push({ naam, prijs, datum: datum || "" });
+      kd.bijgewerktOp = new Date().toISOString();
+      await setDoc(classRef(klas), kd);
+      renderMaximumfactuur();
+    };
+
+    window.mfVasteVerwijderen = async function(klas, index) {
+      if (!confirm("Vaste post verwijderen?")) return;
+      const snap = await getDoc(classRef(klas));
+      if (!snap.exists()) return;
+      const kd = snap.data();
+      if (!Array.isArray(kd.vastePosten)) return;
+      kd.vastePosten.splice(index, 1);
+      kd.bijgewerktOp = new Date().toISOString();
+      await setDoc(classRef(klas), kd);
+      renderMaximumfactuur();
+    };
+
+    window.mfWisselKlas = function(klas) {
+      window._mfActieveKlas = klas;
+      renderMaximumfactuur();
+    };
+
+    window.mfSlaLimietenOp = async function() {
+      const kleuter = Number(document.getElementById("mfLimKleuter")?.value ?? 55);
+      const lager   = Number(document.getElementById("mfLimLager")?.value   ?? 105);
+      if (isNaN(kleuter) || isNaN(lager) || kleuter < 0 || lager < 0) return alert("Vul geldige bedragen in.");
+      await slaaMfInstellingenOp({ limKleuter: kleuter, limLager: lager });
+      renderMaximumfactuur();
+    };
+
+    window.mfAfdrukken = function(klas) {
+      const kd = window._mfKlassenData?.[klas];
+      if (kd) mfDownloadPDF([klas], { [klas]: kd });
+      else alert("Data niet geladen. Probeer opnieuw.");
+    };
+
+    window.mfAllesAfdrukken = function(klassen, klassenData) {
+      mfDownloadPDF(klassen, klassenData);
+    };
+
+    async function mfDownloadPDF(klassen, klassenData) {
+      // Controleer of jsPDF beschikbaar is
+      if (typeof window.jspdf === "undefined") {
+        alert("PDF-library niet geladen. Zorg dat jspdf.umd.min.js in dezelfde map staat als schoolbeheer.html.");
+        return;
+      }
+      const { jsPDF } = window.jspdf;
+
+      const sj = schooljaar || "";
+      const delen = (sj || "-").split("-");
+      const sj1 = delen[0] || "", sj2 = delen[1] || "";
+      const periodeLabel = (sj1 && sj2) ? ("september " + sj1 + " tot en met juni " + sj2) : "dit schooljaar";
+      const limiet = mfLimiet();
+      const logoUrl = "afbeeldingen/schoollogo.png";
+
+      // Logo ophalen als base64
+      var logoBase64 = null;
+      try {
+        var resp = await fetch(logoUrl);
+        if (resp.ok) {
+          var buf = await resp.arrayBuffer();
+          var bytes = new Uint8Array(buf);
+          var binary = "";
+          bytes.forEach(function(b) { binary += String.fromCharCode(b); });
+          logoBase64 = "data:image/png;base64," + btoa(binary);
+        }
+      } catch(e) {}
+
+      function prijsStr(bedrag) {
+        return "\u20ac " + Number(bedrag).toFixed(2).replace(".", ",");
+      }
+
+      var doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+      var BLAUW = [26, 82, 118];
+      var LICHTBLAUW = [213, 232, 240];
+      var GRIJS = [248, 249, 250];
+      var GEEL = [255, 251, 235];
+      var GROEN_BG = [240, 250, 240];
+      var ROOD_BG = [253, 232, 232];
+      var pageW = 210, pageH = 297;
+      var marginL = 15, marginR = 15, contentW = pageW - marginL - marginR;
+
+      klassen.forEach(function(klas, klasIdx) {
+        if (klasIdx > 0) doc.addPage();
+
+        var kd = klassenData[klas] || {};
+        var activiteiten = (kd.activiteiten || []).filter(function(a) {
+          return (a.naam || a.name) && Number(a.prijs || a.price || 0) > 0;
+        }).sort(function(a, b) {
+          return (a.datum || a.date || "").localeCompare(b.datum || b.date || "");
+        });
+        var vastePosten = kd.vastePosten || [];
+        var totaal = 0;
+        vastePosten.forEach(function(p) { totaal += Number(p.prijs || 0); });
+        activiteiten.forEach(function(a) { totaal += Number(a.prijs || a.price || 0); });
+        var totaalStr = Number(totaal).toFixed(2).replace(".", ",");
+        var lim = mfLimietVoorKlas(klas);
+        var resterend = lim - totaal;
+        var over = totaal > lim;
+
+        var y = 30;
+
+        // Logo (verhouding bewaren: max breedte 35mm, max hoogte 16mm)
+        if (logoBase64) {
+          try {
+            var imgProps = doc.getImageProperties(logoBase64);
+            var logoMaxW = 35, logoMaxH = 16;
+            var ratio = Math.min(logoMaxW / imgProps.width, logoMaxH / imgProps.height);
+            var logoW = imgProps.width * ratio, logoH = imgProps.height * ratio;
+            doc.addImage(logoBase64, "PNG", marginL, y - logoH, logoW, logoH, "", "FAST");
+          } catch(e) {}
+        }
+
+        // Klas badge (blauw blok rechts)
+        doc.setFillColor(BLAUW[0], BLAUW[1], BLAUW[2]);
+        doc.roundedRect(pageW - marginR - 42, y - 14, 42, 14, 2, 2, "F");
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(13);
+        doc.setFont("helvetica", "bold");
+        doc.text("Klas: " + klas, pageW - marginR - 21, y - 6, { align: "center" });
+
+        // Blauwe lijn
+        y += 7;
+        doc.setDrawColor(BLAUW[0], BLAUW[1], BLAUW[2]);
+        doc.setLineWidth(0.8);
+        doc.line(marginL, y, pageW - marginR, y);
+        y += 7;
+
+        // Periode
+        doc.setTextColor(0, 0, 0);
+        doc.setFontSize(11);
+        doc.setFont("helvetica", "bold");
+        doc.text("Overzicht activiteiten van " + periodeLabel, marginL, y);
+        y += 6;
+
+        // Limiet tekst
+        doc.setFontSize(9);
+        doc.setFont("helvetica", "normal");
+        doc.setTextColor(100, 100, 100);
+        doc.text("De maximumfactuur bedraagt \u20ac" + limiet.kleuter + " voor kleuters en \u20ac" + limiet.lager + " voor de lagere school.", marginL, y);
+        y += 8;
+
+        // Tabel header
+        var col1 = contentW * 0.55, col2 = contentW * 0.22, col3 = contentW * 0.23;
+        doc.setFillColor(BLAUW[0], BLAUW[1], BLAUW[2]);
+        doc.rect(marginL, y, contentW, 8, "F");
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(9);
+        doc.setFont("helvetica", "bold");
+        doc.text("GEGEVENS", marginL + 2, y + 5.5);
+        doc.text("KOSTPRIJS", marginL + col1 + 2, y + 5.5);
+        doc.text("DATUM", marginL + col1 + col2 + 2, y + 5.5);
+        y += 8;
+
+        // Tabel rijen
+        doc.setFont("helvetica", "normal");
+        doc.setTextColor(30, 30, 30);
+        var rijH = 7;
+        var rijIdx = 0;
+
+        function tekenRij(omschrijving, prijs, datum, isVaste) {
+          var bg = isVaste ? GEEL : (rijIdx % 2 === 0 ? [255,255,255] : GRIJS);
+          doc.setFillColor(bg[0], bg[1], bg[2]);
+          doc.rect(marginL, y, contentW, rijH, "F");
+          doc.setDrawColor(220, 220, 220);
+          doc.setLineWidth(0.2);
+          doc.line(marginL, y + rijH, marginL + contentW, y + rijH);
+          doc.setFontSize(9);
+          if (isVaste) {
+            doc.setFont("helvetica", "italic");
+          } else {
+            doc.setFont("helvetica", "normal");
+          }
+          doc.setTextColor(30, 30, 30);
+          // Omschrijving - afkappen als te lang
+          var maxOmschr = Math.floor(col1 / 2.2);
+          var tekst = omschrijving.length > maxOmschr ? omschrijving.substring(0, maxOmschr - 2) + "..." : omschrijving;
+          doc.text(tekst, marginL + 2, y + 4.8);
+          doc.setFont("helvetica", "normal");
+          doc.text(prijs, marginL + col1 + 2, y + 4.8);
+          doc.text(datum, marginL + col1 + col2 + 2, y + 4.8);
+          y += rijH;
+          rijIdx++;
+        }
+
+        vastePosten.forEach(function(p) {
+          tekenRij(p.naam || "", prijsStr(p.prijs || 0), p.datum || "Schooljaar " + sj, true);
+        });
+        activiteiten.forEach(function(a) {
+          tekenRij(a.naam || a.name || "", prijsStr(a.prijs || a.price || 0), a.datum || a.date || "", false);
+        });
+        // 2 lege rijen
+        tekenRij("", "", "", false);
+        tekenRij("", "", "", false);
+
+        // Totaal rij
+        var totaalBg = over ? ROOD_BG : GROEN_BG;
+        doc.setFillColor(totaalBg[0], totaalBg[1], totaalBg[2]);
+        doc.rect(marginL, y, contentW, 9, "F");
+        doc.setDrawColor(BLAUW[0], BLAUW[1], BLAUW[2]);
+        doc.setLineWidth(0.5);
+        doc.line(marginL, y, marginL + contentW, y);
+        doc.setFontSize(10);
+        doc.setFont("helvetica", "bold");
+        doc.setTextColor(30, 30, 30);
+        doc.text("Totaal aan uitgaven", marginL + 2, y + 6);
+        doc.text(totaalStr + " euro", marginL + col1 + 2, y + 6);
+        // Badge
+        if (over) {
+          doc.setFillColor(231, 76, 60);
+          doc.roundedRect(marginL + col1 + col2 + 1, y + 1, col3 - 2, 7, 2, 2, "F");
+          doc.setTextColor(255, 255, 255);
+          doc.setFontSize(7.5);
+          doc.text("Overschreden \u20ac" + Math.abs(resterend).toFixed(2).replace(".",","), marginL + col1 + col2 + col3/2, y + 5.5, { align: "center" });
+        } else {
+          doc.setFillColor(46, 204, 113);
+          doc.roundedRect(marginL + col1 + col2 + 1, y + 1, col3 - 2, 7, 2, 2, "F");
+          doc.setTextColor(255, 255, 255);
+          doc.setFontSize(7.5);
+          doc.text("Nog \u20ac" + resterend.toFixed(2).replace(".",",") + " beschikbaar", marginL + col1 + col2 + col3/2, y + 5.5, { align: "center" });
+        }
+        y += 13;
+
+        // Voetnoot
+        doc.setFillColor(248, 249, 250);
+        doc.setDrawColor(BLAUW[0], BLAUW[1], BLAUW[2]);
+        doc.setLineWidth(0.6);
+        doc.rect(marginL, y, contentW, 16, "F");
+        doc.line(marginL, y, marginL, y + 16); // blauwe linkerlijn dik
+        doc.setLineWidth(2);
+        doc.line(marginL, y, marginL, y + 16);
+        doc.setLineWidth(0.2);
+        doc.setFontSize(8.5);
+        doc.setTextColor(80, 80, 80);
+        var x1 = marginL + 4;
+        // Schrijf zin 1 in 3 stukken zodat "niet" vet kan zijn zonder getTextWidth problemen
+        doc.setFont("helvetica", "normal");
+        doc.text("Dit bedrag is reeds gefactureerd geweest en dient dus NIET opnieuw betaald te worden.", x1, y + 5);
+        // Regel 2
+        doc.text("Bij afwezigheid werd het bedrag van de activiteit niet aangerekend.", x1, y + 11);
+        y += 18;
+
+        // Footer
+        doc.setDrawColor(200, 200, 200);
+        doc.setLineWidth(0.3);
+        doc.line(marginL, pageH - 12, pageW - marginR, pageH - 12);
+        doc.setFontSize(8);
+        doc.setTextColor(150, 150, 150);
+        doc.setFont("helvetica", "normal");
+        doc.text("Lindestraat 123A  \u2022  2880 Bornem  \u2022  tel. 03 897 98 16  \u2022  info@bsdelinde.net  \u2022  www.bsdelinde.net", pageW / 2, pageH - 7, { align: "center" });
+      });
+
+      var bestandsnaam = klassen.length === 1
+        ? "maximumfactuur_" + klassen[0] + "_" + sj + ".pdf"
+        : "maximumfactuur_alle_klassen_" + sj + ".pdf";
+      doc.save(bestandsnaam);
+    }
+
+    // ── EINDE MAXIMUMFACTUUR ───────────────────────────────────
 
     function messageIsLate(m){ return m.due && m.due < new Date().toISOString().slice(0,10) && !m.done && !m.archived; }
     function messageKey(m){ return m.groupId || m.id; }
@@ -1679,5 +2159,7 @@
     installScrollMirrors();
   });
   </script>
+  <!-- jsPDF voor PDF-download -->
+  <script src="jspdf.umd.min.js"></script>
 </body>
 </html>
