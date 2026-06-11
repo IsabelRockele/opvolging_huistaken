@@ -483,6 +483,7 @@
     if (sub && klas) sub.textContent = `Beheer voor klas ${klas}${naam ? ' - ' + naam : ''}`;
   });
 </script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 </head>
 <body>
 
@@ -1027,6 +1028,7 @@
     </div>
     <div class="modal-body" style="padding:0" id="ficheModalBody"></div>
     <div class="modal-footer" style="justify-content:flex-end">
+      <button class="ghost small" id="fichePdfBtn" title="Deze fiche meteen downloaden als PDF">📥 Download PDF</button>
       <button class="ghost small" id="ficheEditBtn">✏️ Bewerken</button>
       <button class="modal-close ghost small" onclick="closeFicheModal()">Sluiten</button>
     </div>
@@ -1626,6 +1628,17 @@ function deleteStudent() {
   markDirty(); closeModal(); renderStudents(); updateBadges();
 }
 
+// verwijder-leerling-rij-codex: verwijderen rechtstreeks vanuit het overzicht
+window.verwijderLeerlingRij = function(id) {
+  const lln = state.students.find(s => s.id === id);
+  if (!lln) return;
+  if (!confirm(`${lln.name} verwijderen uit de lijst?`)) return;
+  state.students = state.students.filter(s => s.id !== id);
+  state.groups.forEach(g => g.ids = g.ids.filter(x => x !== id));
+  delete state.locks[id];
+  markDirty(); renderStudents(); updateBadges();
+};
+
 $('addStudentBtn').onclick = () => openModal();
 if ($('importKlaslijstBtn')) $('importKlaslijstBtn').onclick = addStudentsFromClassList;
 $('modalClose').onclick = closeModal;
@@ -2099,7 +2112,7 @@ function renderStudents() {
         <td style="cursor:pointer" onclick="openFicheModal('${s.id}')" title="Klik voor fiche · dubbelklik om te bewerken" ondblclick="openModal('${s.id}')">${displayName} ${genderBadge(s.gender)} <span style="font-size:11px;color:var(--muted);margin-left:4px" title="Klik voor fiche">🔍</span></td>
         <td onclick="openFicheModal('${s.id}')" style="cursor:pointer">${s.level}/5</td>
         <td onclick="openFicheModal('${s.id}')" style="cursor:pointer">${esc(s.reading)} ${s.avi ? '· AVI ' + esc(s.avi) : ''}<br><span class="small">spelling ${esc(s.spelling || 'basis')} · rekenen ${esc(s.math)} · handschrift ${esc(s.writing || 'basis')}</span></td>
-        <td>${tags.join(' ') || '<span class="small">—</span>'} <button class="ghost small" style="padding:3px 8px;font-size:11px;float:right" onclick="openModal('${s.id}')">✏️</button></td>
+        <td>${tags.join(' ') || '<span class="small">—</span>'} <button class="ghost small" style="padding:3px 8px;font-size:11px;float:right" onclick="event.stopPropagation();verwijderLeerlingRij('${s.id}')" title="Leerling verwijderen">🗑️</button> <button class="ghost small" style="padding:3px 8px;font-size:11px;float:right;margin-right:4px" onclick="openModal('${s.id}')" title="Bewerken">✏️</button> <button class="ghost small" style="padding:3px 8px;font-size:11px;float:right;margin-right:4px;font-weight:700" onclick="event.stopPropagation();downloadFichePdfEnkel('${s.id}')" title="Fiche van deze leerling downloaden als PDF">📥 PDF</button></td>
       </tr>`;
     }).join('')}</tbody></table>`;
 }
@@ -2713,14 +2726,18 @@ function openTransferWindow(mode) {
   const s = allStudents.filter(x => !x.stayingThisYear);
   if (!s.length) { alert('Alle leerlingen zijn aangeduid als zittenblijver.'); return; }
   if (mode === 'fiches') {
-    // Open nieuw venster met ALLEEN de fiches per leerling
-    const win = window.open('', '_blank');
     const sortedStudents = [...s].sort((a, b) => {
       const lc = (a.lastName || '').localeCompare(b.lastName || '', 'nl');
       return lc !== 0 ? lc : (a.firstName || '').localeCompare(b.firstName || '', 'nl');
     });
-    // Hergebruik fiches uit makeTransfer
-    const ficheHtml = sortedStudents.map(x => {
+    openFichesPdfVenster(sortedStudents, 'Fiches per leerling');
+  } else {
+    makeTransfer(); // overzicht klas = bestaande functie
+  }
+}
+
+// fiche-pdf-per-leerling-codex: bouwt de HTML van 1 leerlingfiche (hergebruikt voor bulk en per kind)
+function bouwFichePdfHtml(x) {
       const t = x.therapies || {};
       const therapieList = [];
       if (t.logo) therapieList.push({ naam:'Logopedie', adres: t.logo_adres||'' });
@@ -2743,7 +2760,7 @@ function openTransferWindow(mode) {
           const a = x.aanpassingen[vakNaam];
           const tags = Object.keys(AANP_LABELS_PDF).filter(k => a[k]).map(k => AANP_LABELS_PDF[k]);
           if (a.other) tags.push(a.other);
-          if (tags.length) line += ` <span class="fiche-note">⚙ ${tags.map(esc).join(', ')}</span>`;
+          if (tags.length) line += ` <span class="fiche-aanp">⚙ ${tags.map(esc).join(', ')}</span>`;
         }
         return line;
       };
@@ -2772,8 +2789,14 @@ function openTransferWindow(mode) {
       ${x.notes ? `<div class="fiche-block"><p class="fiche-block-title">Algemene notitie</p><p class="fiche-note-block">${esc(x.notes)}</p></div>` : ''}
       ${x.badmuts ? `<div class="fiche-block"><p class="fiche-block-title">Zwemmen</p><p>Badmuts: ${{'rood':'🔴 Rood','blauw_ondiep':'🔵 Blauw ondiep','blauw_diep':'🔵 Blauw diep','groen':'🟢 Groen'}[x.badmuts]||esc(x.badmuts)}</p></div>` : ''}
     </section>`;
-    }).join('');
-    win.document.write(`<!DOCTYPE html><html lang="nl"><head><meta charset="UTF-8"><title>Fiches per leerling</title>
+}
+
+// fiche-pdf-venster-codex: opent printvenster met 1 of meerdere fiches
+function openFichesPdfVenster(lijst, titel) {
+  const win = window.open('', '_blank');
+  if (!win) { alert('Het PDF-venster werd tegengehouden door de browser. Sta pop-ups toe voor deze pagina.'); return; }
+  const ficheHtml = lijst.map(bouwFichePdfHtml).join('');
+  win.document.write(`<!DOCTYPE html><html lang="nl"><head><meta charset="UTF-8"><title>${titel}</title>
     <style>
       @page{margin:12mm 10mm}
       body{font-family:Arial,sans-serif;padding:0 16px 16px;color:#223044;max-width:860px;margin:auto;line-height:1.5}
@@ -2786,6 +2809,7 @@ function openTransferWindow(mode) {
       .fiche-block-title{font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:#65748b;font-weight:700;margin:0 0 3px}
       .fiche-block p{margin:2px 0;font-size:13px;line-height:1.4}
       .fiche-note{color:#475569;font-style:italic}
+      .fiche-aanp{display:block;color:#475569;font-style:italic;margin-top:2px}
       .fiche-note-block{background:#fef9e7;padding:5px 9px;border-radius:5px;border-left:3px solid #f6d76b;margin-top:3px;font-size:12px}
       .gender-badge{font-size:11px;padding:2px 6px;border-radius:5px;font-weight:700}
       .gender-badge.j{background:#cfe8ff;color:#1e40af} .gender-badge.m{background:#ffd6e8;color:#9d174d} .gender-badge.x,.gender-badge.dash{background:#e5e7eb;color:#4b5563}
@@ -2794,15 +2818,64 @@ function openTransferWindow(mode) {
       @media print{.toolbar{display:none}.fiche{border-color:#ccc}}
     <\/style><\/head><body>
     <div class="toolbar"><button onclick="window.print()">🖨️ Afdrukken / bewaren als PDF</button></div>
-    <h1>Fiches per leerling</h1>
-    <p class="meta">Opgemaakt op ${new Date().toLocaleDateString('nl-BE')} · ${s.length} ${s.length === 1 ? 'leerling' : 'leerlingen'}</p>
+    <h1>${titel}</h1>
+    <p class="meta">Opgemaakt op ${new Date().toLocaleDateString('nl-BE')} · ${lijst.length} ${lijst.length === 1 ? 'leerling' : 'leerlingen'}</p>
     ${ficheHtml}
     <\/body><\/html>`);
-    win.document.close();
-  } else {
-    makeTransfer(); // overzicht klas = bestaande functie
-  }
+  win.document.close();
 }
+
+// fiche-pdf-download-codex: downloadt de fiche van 1 leerling meteen als PDF (geen printvenster)
+const FICHE_DOWNLOAD_CSS = `
+  #fichePdfTmpWrap{font-family:Arial,sans-serif;color:#223044;line-height:1.5;background:#fff;padding:4px}
+  #fichePdfTmpWrap .meta{color:#65748b;font-size:13px;margin:0 0 14px}
+  #fichePdfTmpWrap .fiche{border:1px solid #dde2ec;border-radius:10px;padding:0 18px 18px;background:#fbfcfe}
+  #fichePdfTmpWrap .fiche h3{margin:0 -18px 14px;padding:8px 14px;background:#f1f5f9;border-bottom:2px solid #94a3b8;border-radius:8px 8px 0 0;font-size:14px;color:#0f172a;width:calc(100% + 36px)}
+  #fichePdfTmpWrap .updated{color:#65748b;font-size:11px;margin:0 0 12px}
+  #fichePdfTmpWrap .fiche-block{margin:10px 0;padding:10px 13px;background:#fff;border-radius:6px;border:1px solid #eef2f7}
+  #fichePdfTmpWrap .fiche-block-title{font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:#65748b;font-weight:700;margin:0 0 6px}
+  #fichePdfTmpWrap .fiche-block p{margin:4px 0;font-size:13px;line-height:1.6}
+  #fichePdfTmpWrap .fiche-note{color:#475569;font-style:italic}
+  #fichePdfTmpWrap .fiche-aanp{display:block;color:#475569;font-style:italic;margin-top:3px}
+  #fichePdfTmpWrap .fiche-note-block{background:#fef9e7;padding:5px 9px;border-radius:5px;border-left:3px solid #f6d76b;margin-top:3px;font-size:12px}
+  #fichePdfTmpWrap .gender-badge{font-size:11px;padding:2px 6px;border-radius:5px;font-weight:700}
+  #fichePdfTmpWrap .gender-badge.j{background:#cfe8ff;color:#1e40af}
+  #fichePdfTmpWrap .gender-badge.m{background:#ffd6e8;color:#9d174d}
+  #fichePdfTmpWrap .gender-badge.x,#fichePdfTmpWrap .gender-badge.dash{background:#e5e7eb;color:#4b5563}
+`;
+
+window.downloadFichePdfEnkel = async function(studentId) {
+  const lln = state.students.find(x => x.id === studentId);
+  if (!lln) return;
+  if (typeof html2pdf === 'undefined') {
+    alert('De PDF-bibliotheek kon niet geladen worden. Controleer je internetverbinding en herlaad de pagina.');
+    return;
+  }
+  if (typeof setFirebaseStatus === 'function') setFirebaseStatus(`PDF maken van ${lln.name}...`);
+  const houder = document.createElement('div');
+  houder.style.cssText = 'position:absolute;left:0;top:0;width:760px;background:#fff;z-index:-99999';
+  // emoji-overlap-fix-codex: emoji's krijgen een eigen inline-block zodat html2canvas de regelbreedte juist meet
+  const ficheHtmlVeilig = bouwFichePdfHtml(lln).replace(/(\p{Extended_Pictographic}(?:\uFE0F)?)/gu, '<span style="display:inline-block">$1</span>');
+  houder.innerHTML = `<style>${FICHE_DOWNLOAD_CSS}</style><div id="fichePdfTmpWrap"><p class="meta">Leerlingfiche · opgemaakt op ${new Date().toLocaleDateString('nl-BE')}</p>${ficheHtmlVeilig}</div>`;
+  document.body.appendChild(houder);
+  const veiligeNaam = (lln.name || 'leerling').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-zA-Z0-9 _-]/g, '').trim().replace(/\s+/g, '_') || 'leerling';
+  try {
+    await html2pdf().set({
+      margin: [12, 10, 14, 10],
+      filename: `Fiche_${veiligeNaam}.pdf`,
+      image: { type: 'jpeg', quality: 0.95 },
+      html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff', scrollX: 0, scrollY: 0 },
+      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+      pagebreak: { mode: ['css', 'legacy'], avoid: ['.fiche-block', '.fiche h3'] }
+    }).from(houder.querySelector('#fichePdfTmpWrap')).save();
+    if (typeof setFirebaseStatus === 'function') setFirebaseStatus(`PDF gedownload: Fiche_${veiligeNaam}.pdf`);
+  } catch (e) {
+    console.error('PDF-download mislukt', e);
+    alert('De PDF kon niet gemaakt worden. Probeer het opnieuw.');
+  } finally {
+    houder.remove();
+  }
+};
 
 function resetAll() {
   if (!confirm('Alles wissen? Sla eerst een JSON op als je dit later nog nodig hebt.')) return;
@@ -2816,6 +2889,7 @@ function openFicheModal(studentId) {
   if (!s) return;
   $('ficheModalTitle').textContent = s.name;
   $('ficheEditBtn').onclick = () => { closeFicheModal(); openModal(studentId); };
+  if ($('fichePdfBtn')) $('fichePdfBtn').onclick = () => downloadFichePdfEnkel(studentId); // fiche-pdf-download-codex
 
   const t = s.therapies || {};
   const therapieList = [];
