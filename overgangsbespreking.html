@@ -1039,7 +1039,7 @@
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-import { getFirestore, doc, getDoc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getFirestore, collection, doc, getDoc, getDocs, query, setDoc, serverTimestamp, where } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyA7KxXMvZ4dzBQDut3CMyWUblLte2tFzoQ",
@@ -1097,6 +1097,25 @@ window.firebaseOvergang = {
     await ready;
     const snap = await getDoc(projectRef());
     return snap.exists() ? snap.data() : null;
+  },
+  async loadSchoolbeheerLeerlingen() {
+    await ready;
+    let klas = beheerKlasLabel;
+    if (!klas) {
+      const email = (currentUser.email || '').toLowerCase();
+      const uidQuery = query(collection(db, "klasleerkrachten"), where("leerkracht_uids", "array-contains", currentUser.uid));
+      const emailQuery = query(collection(db, "klasleerkrachten"), where("leerkracht_emails", "array-contains", email));
+      const snaps = await Promise.all([getDocs(uidQuery), getDocs(emailQuery)]);
+      const gevonden = [];
+      snaps.forEach(snap => snap.forEach(d => {
+        const item = d.data();
+        if (String(item.schooljaar || schooljaar) === schooljaar && item.klas) gevonden.push(String(item.klas).trim());
+      }));
+      klas = gevonden.sort((a, b) => a.localeCompare(b, 'nl', { numeric: true }))[0] || '';
+    }
+    if (!klas) return { klas: '', leerlingen: [] };
+    const snap = await getDoc(doc(db, "schoolbeheer", schooljaar, "klassen", klas));
+    return { klas, leerlingen: snap.exists() ? (snap.data().leerlingen || []) : [] };
   }
 };
 window.dispatchEvent(new Event('firebaseOvergangReady'));
@@ -1793,6 +1812,84 @@ function normalizeNameFromLine(line) {
   return { firstName: parts.join(' '), lastName };
 }
 
+function studentNameKey(firstName, lastName) {
+  return `${(firstName || '').trim().toLowerCase()}|${(lastName || '').trim().toLowerCase()}`;
+}
+
+function schoolbeheerNaamNaarRij(s) {
+  const firstName = (s.firstName || s.first || s.voornaam || '').trim();
+  const lastName = (s.lastName || s.last || s.achternaam || '').trim();
+  if (firstName || lastName) return { firstName, lastName };
+  return normalizeNameFromLine(s.name || s.naam || s.fullName || s.volledigeNaam || '');
+}
+
+function nieuweLegeStudent(row, source = '') {
+  return {
+    id: uid(),
+    firstName: row.firstName,
+    lastName: row.lastName,
+    name: `${row.firstName} ${row.lastName}`.trim(),
+    gender: '-',
+    level: 3,
+    updatedAt: todayISO(),
+    reading: 'basis',
+    avi: '',
+    readingNote: '',
+    spelling: 'basis',
+    spellingNote: '',
+    math: 'basis',
+    mathNote: '',
+    writing: 'basis',
+    writingNote: '',
+    aanpassingen: { reading:{}, spelling:{}, math:{}, writing:{} },
+    focus: 'ok',
+    focusNote: '',
+    behavior: 'ok',
+    behaviorNote: '',
+    care: 'laag',
+    iac: 'nee',
+    gok: 'nee',
+    extraCare: 'nee',
+    careNote: '',
+    allergies: '',
+    medicalNote: '',
+    repeated: false,
+    repeatedYear: [],
+    newcomer: false,
+    stayingThisYear: false,
+    therapies: { logo:false, logo_adres:'', kine:false, kine_adres:'', gon:false, gon_adres:'', clb:false, clb_adres:'', psy:false, psy_adres:'', other:'' },
+    friends: [],
+    avoid: [],
+    socialNote: '',
+    notes: '',
+    badmuts: '',
+    source
+  };
+}
+
+async function vulOntbrekendeLeerlingenUitSchoolbeheer() {
+  const bron = await window.firebaseOvergang.loadSchoolbeheerLeerlingen();
+  const klas = bron.klas || '';
+  if (!klas) return { added: 0, klas: '' };
+
+  const rows = (bron.leerlingen || [])
+    .map(schoolbeheerNaamNaarRij)
+    .filter(row => row && (row.firstName || row.lastName));
+  const existing = new Set(state.students.map(s => studentNameKey(s.firstName, s.lastName)));
+  let added = 0;
+  rows.forEach(row => {
+    const key = studentNameKey(row.firstName, row.lastName);
+    if (existing.has(key)) return;
+    existing.add(key);
+    state.students.push(nieuweLegeStudent(row, 'schoolbeheer'));
+    added++;
+  });
+  if (added) {
+    state.students.sort((a, b) => (a.lastName || '').localeCompare(b.lastName || '', 'nl') || (a.firstName || '').localeCompare(b.firstName || '', 'nl'));
+  }
+  return { added, klas };
+}
+
 function addStudentsFromClassList() {
   const input = $('klaslijstInput');
   if (!input) return;
@@ -1802,57 +1899,18 @@ function addStudentsFromClassList() {
     return;
   }
 
-  const existing = new Set(state.students.map(s => `${(s.firstName || '').trim().toLowerCase()}|${(s.lastName || '').trim().toLowerCase()}`));
+  const existing = new Set(state.students.map(s => studentNameKey(s.firstName, s.lastName)));
   let added = 0;
   let skipped = 0;
 
   rows.forEach(row => {
-    const key = `${row.firstName.toLowerCase()}|${row.lastName.toLowerCase()}`;
+    const key = studentNameKey(row.firstName, row.lastName);
     if (existing.has(key)) {
       skipped++;
       return;
     }
     existing.add(key);
-    state.students.push({
-      id: uid(),
-      firstName: row.firstName,
-      lastName: row.lastName,
-      name: `${row.firstName} ${row.lastName}`.trim(),
-      gender: '-',
-      level: 3,
-      updatedAt: todayISO(),
-      reading: 'basis',
-      avi: '',
-      readingNote: '',
-      spelling: 'basis',
-      spellingNote: '',
-      math: 'basis',
-      mathNote: '',
-      writing: 'basis',
-      writingNote: '',
-      aanpassingen: { reading:{}, spelling:{}, math:{}, writing:{} },
-      focus: 'ok',
-      focusNote: '',
-      behavior: 'ok',
-      behaviorNote: '',
-      care: 'laag',
-      iac: 'nee',
-      gok: 'nee',
-      extraCare: 'nee',
-      careNote: '',
-      allergies: '',
-      medicalNote: '',
-      repeated: false,
-      repeatedYear: [],
-      newcomer: false,
-      stayingThisYear: false,
-      therapies: { logo:false, logo_adres:'', kine:false, kine_adres:'', gon:false, gon_adres:'', clb:false, clb_adres:'', psy:false, psy_adres:'', other:'' },
-      friends: [],
-      avoid: [],
-      socialNote: '',
-      notes: '',
-      badmuts: ''
-    });
+    state.students.push(nieuweLegeStudent(row));
     added++;
   });
 
@@ -2237,9 +2295,13 @@ function setupDrag() {
   });
 }
 
-async function saveJSON(asNewVersion = false) {
+function collectProjectData() {
   readSettings();
-  const data = { ...state, savedAt: new Date().toISOString(), appVersion: 'overdracht-2.1' };
+  return { ...state, savedAt: new Date().toISOString(), appVersion: 'overdracht-2.1' };
+}
+
+async function saveJSON(asNewVersion = false) {
+  const data = collectProjectData();
   if (window.firebaseOvergang) {
     try {
       await window.firebaseOvergang.saveProject(data);
@@ -2411,20 +2473,34 @@ async function loadFirebaseProjectOnStart() {
   try {
     const data = await window.firebaseOvergang.loadProject();
     if (!data) {
-      setFirebaseStatus('Geen opgeslagen Firebase-versie gevonden voor deze login.');
+      const sync = await vulOntbrekendeLeerlingenUitSchoolbeheer();
+      if (sync.added) {
+        if (state.projectName === 'Nieuwe verdeling' && sync.klas) state.projectName = sync.klas;
+        writeSettings();
+        renderStudents();
+        updateBadges();
+        await window.firebaseOvergang.saveProject(collectProjectData());
+        markClean();
+        setFirebaseStatus(`Nieuwe overgang gestart vanuit klaslijst ${sync.klas}: ${sync.added} leerling${sync.added === 1 ? '' : 'en'} toegevoegd.`);
+      } else {
+        setFirebaseStatus(sync.klas ? `Geen opgeslagen overgang gevonden. Klaslijst ${sync.klas} bevat geen nieuwe namen.` : 'Geen opgeslagen overgang gevonden en geen klas gekoppeld.');
+      }
       return;
     }
     if (!applyProjectData(data)) {
       setFirebaseStatus('Firebase-versie gevonden, maar er stonden nog geen leerlingen in.');
-      return;
     }
+    const sync = await vulOntbrekendeLeerlingenUitSchoolbeheer();
     writeSettings();
     renderStudents();
     if (typeof renderGroups === 'function') renderGroups();
     updateBadges();
+    if (sync.added) {
+      await window.firebaseOvergang.saveProject(collectProjectData());
+    }
     markClean();
     const aantal = state.students.length;
-    setFirebaseStatus(`Firebase geladen: ${aantal} leerling${aantal === 1 ? '' : 'en'}.`);
+    setFirebaseStatus(`Firebase geladen: ${aantal} leerling${aantal === 1 ? '' : 'en'}${sync.added ? `, ${sync.added} nieuwe naam/namen uit klaslijst toegevoegd` : ''}.`);
   } catch (err) {
     console.error('Firebase laden mislukt:', err);
     setFirebaseStatus('Firebase laden mislukt: ' + err.message);
