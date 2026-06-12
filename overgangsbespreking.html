@@ -871,6 +871,7 @@
                 <option value="laag">Laag</option><option value="midden">Midden</option><option value="hoog">Hoog</option>
               </select></div>
               <div><label>IAC</label><select id="m_iac"><option value="nee">Nee</option><option value="ja">Ja</option></select></div>
+              <div><label>GOK</label><select id="m_gok"><option value="nee">Nee</option><option value="ja">Ja</option></select></div>
             </div>
             <div class="field-with-note">
               <label>Notitie over zorg</label>
@@ -1378,6 +1379,7 @@ function updateSectionBadges(s) {
   let zorgCount = 0;
   if (s.care && s.care !== 'laag') zorgCount++;
   if (s.iac === 'ja') zorgCount++;
+  if (s.gok === 'ja') zorgCount++;
   if (s.extraCare === 'ja') zorgCount++;
   if (s.careNote) zorgCount++;
   if (s.allergies) zorgCount++;
@@ -1475,6 +1477,7 @@ function openModal(studentId = null) {
     // Zorg
     $('m_care').value = s.care || 'laag';
     $('m_iac').value = s.iac || 'nee';
+    $('m_gok').value = s.gok || 'nee';
     $('m_careNote').value = s.careNote || '';
     if ($('m_allergies')) $('m_allergies').value = s.allergies || '';
     if ($('m_medicalNote')) $('m_medicalNote').value = s.medicalNote || '';
@@ -1535,7 +1538,7 @@ function openModal(studentId = null) {
     $('m_reading').value = 'basis'; $('m_spelling').value = 'basis';
     $('m_math').value = 'basis'; $('m_writing').value = 'basis';
     VAKKEN_AANP.forEach(vak => resetAanpassingen(vak));
-    $('m_care').value = 'laag'; $('m_iac').value = 'nee';
+    $('m_care').value = 'laag'; $('m_iac').value = 'nee'; $('m_gok').value = 'nee';
     $('m_focus').value = 'ok'; $('m_behavior').value = 'ok';
     $('m_updatedDate').value = todayISO();
     setBadmuts('');
@@ -1577,7 +1580,7 @@ function saveStudent() {
     focus: $('m_focus').value, focusNote: $('m_focusNote').value.trim(),
     behavior: $('m_behavior').value, behaviorNote: $('m_behaviorNote').value.trim(),
     // Zorg
-    care: $('m_care').value, iac: $('m_iac').value, extraCare: $('m_care').value === 'hoog' ? 'ja' : 'nee',
+    care: $('m_care').value, iac: $('m_iac').value, gok: $('m_gok').value, extraCare: $('m_care').value === 'hoog' ? 'ja' : 'nee',
     careNote: $('m_careNote').value.trim(),
     allergies: $('m_allergies') ? $('m_allergies').value.trim() : '',
     medicalNote: $('m_medicalNote') ? $('m_medicalNote').value.trim() : '',
@@ -1834,6 +1837,7 @@ function addStudentsFromClassList() {
       behaviorNote: '',
       care: 'laag',
       iac: 'nee',
+      gok: 'nee',
       extraCare: 'nee',
       careNote: '',
       allergies: '',
@@ -2090,6 +2094,7 @@ function renderStudents() {
       const tags = [];
       if (s.stayingThisYear) tags.push('<span class="mini-tag" style="background:#fde68a;color:#92400e;font-weight:700">blijft zitten</span>');
       if (s.iac === 'ja') tags.push('<span class="mini-tag warn">IAC</span>');
+      if (s.gok === 'ja') tags.push('<span class="mini-tag">GOK</span>');
       if (s.extraCare === 'ja') tags.push('<span class="mini-tag warn">extra zorg</span>');
       if (s.care === 'hoog') tags.push('<span class="mini-tag care">hoge zorg</span>');
       if (s.allergies) tags.push('<span class="mini-tag warn">allergie</span>');
@@ -2142,6 +2147,7 @@ function renderGroups() {
         const isLocked = !!state.locks[s.id];
         const tags = [`<span class="mini-tag">N${s.level}</span>`];
         if (s.iac === 'ja') tags.push('<span class="mini-tag warn">IAC</span>');
+        if (s.gok === 'ja') tags.push('<span class="mini-tag">GOK</span>');
         if (s.care === 'hoog') tags.push('<span class="mini-tag care">zorg</span>');
         return `<div class="student-card" draggable="true" data-id="${s.id}" ondblclick="openModal('${s.id}')">
           <div class="student-card-name">
@@ -2562,9 +2568,9 @@ function makeTransfer() {
       <p>${vakRegel('Gedrag', x.behavior, x.behaviorNote)}</p>
     </div>
 
-    ${(x.care !== 'laag' || x.iac === 'ja' || x.extraCare === 'ja' || x.careNote) ? `<div class="fiche-block">
+    ${(x.care !== 'laag' || x.iac === 'ja' || x.gok === 'ja' || x.extraCare === 'ja' || x.careNote) ? `<div class="fiche-block">
       <p class="fiche-block-title">Zorg</p>
-      <p><strong>Zorgniveau:</strong> ${esc(x.care)} · IAC: ${esc(x.iac)} · extra zorg: ${esc(x.extraCare)}</p>
+      <p><strong>Zorgniveau:</strong> ${esc(x.care)} · IAC: ${esc(x.iac)} · GOK: ${esc(x.gok || 'nee')} · extra zorg: ${esc(x.extraCare)}</p>
       ${x.careNote ? `<p class="fiche-note-block">${esc(x.careNote)}</p>` : ''}
     </div>` : ''}
 
@@ -2673,6 +2679,7 @@ function makeTransfer() {
     </div>
     <div class="blok blok-zorg"><h2>❤️ Zorg en aandachtspunten</h2>
       <h3>IAC</h3>${names(s.filter(x => x.iac === 'ja'), {noteKey:'careNote'})}
+      <h3>GOK</h3>${names(s.filter(x => x.gok === 'ja'), {noteKey:'careNote'})}
       <h3>Extra zorg / hoge zorg</h3>${names(s.filter(x => x.extraCare === 'ja' || x.care === 'hoog'), {noteKey:'careNote'})}
       <h3>Concentratie</h3>${names(s.filter(x => x.focus !== 'ok'), {noteKey:'focusNote'})}
       <h3>Gedrag</h3>${names(s.filter(x => x.behavior !== 'ok'), {noteKey:'behaviorNote'})}
@@ -2777,8 +2784,8 @@ function bouwFichePdfHtml(x) {
         <p>${vakRegel('Concentratie', x.focus, x.focusNote)}</p>
         <p>${vakRegel('Gedrag', x.behavior, x.behaviorNote)}</p>
       </div>
-      ${(x.care !== 'laag' || x.iac === 'ja' || x.careNote) ? `<div class="fiche-block"><p class="fiche-block-title">Zorg</p>
-        <p><strong>Zorgniveau:</strong> ${esc(x.care)} · IAC: ${esc(x.iac)}</p>
+      ${(x.care !== 'laag' || x.iac === 'ja' || x.gok === 'ja' || x.careNote) ? `<div class="fiche-block"><p class="fiche-block-title">Zorg</p>
+        <p><strong>Zorgniveau:</strong> ${esc(x.care)} · IAC: ${esc(x.iac)} · GOK: ${esc(x.gok || 'nee')}</p>
         ${x.careNote ? `<p class="fiche-note-block">${esc(x.careNote)}</p>` : ''}</div>` : ''}
       ${loopbaanItems.length ? `<div class="fiche-block"><p class="fiche-block-title">Schoolloopbaan</p><p>${loopbaanItems.map(esc).join(' · ')}</p></div>` : ''}
       ${therapieList.length ? `<div class="fiche-block"><p class="fiche-block-title">Therapieën</p>${therapieList.map(item => `<p style="margin:2px 0">• ${esc(item.naam)}${item.adres ? `<span style="color:#475569;font-size:12px;display:block;margin-left:10px">📍 ${esc(item.adres)}</span>` : ''}</p>`).join('')}</div>` : ''}
@@ -2947,9 +2954,10 @@ function openFicheModal(studentId) {
 
   // Zorg
   let zorgInhoud = '';
-  if (s.care !== 'laag' || s.iac === 'ja' || s.extraCare === 'ja' || s.careNote) {
+  if (s.care !== 'laag' || s.iac === 'ja' || s.gok === 'ja' || s.extraCare === 'ja' || s.careNote) {
     const items = [`zorgniveau: ${esc(s.care)}`];
     if (s.iac === 'ja') items.push('IAC');
+    if (s.gok === 'ja') items.push('GOK');
     if (s.extraCare === 'ja') items.push('extra zorg');
     zorgInhoud = `<p>${items.join(' · ')}</p>${s.careNote ? `<p><span class="fiche-notitie">${esc(s.careNote)}</span></p>` : ''}`;
   }
@@ -2985,6 +2993,7 @@ function openFicheModal(studentId) {
   // Tags in header
   const headerTags = [];
   if (s.iac === 'ja') headerTags.push(`<span class="fiche-tag rood">IAC</span>`);
+  if (s.gok === 'ja') headerTags.push(`<span class="fiche-tag blauw">GOK</span>`);
   if (s.extraCare === 'ja') headerTags.push(`<span class="fiche-tag geel">extra zorg</span>`);
   if (s.care === 'hoog') headerTags.push(`<span class="fiche-tag rood">hoge zorg</span>`);
   if (s.behavior === 'probleem') headerTags.push(`<span class="fiche-tag rood">gedrag</span>`);
@@ -3100,10 +3109,12 @@ function renderTransferOnline() {
   const medischeKids = s.filter(x => x.medicalNote);
   const zorgMid = s.filter(x => x.care === 'midden');
   const iacJa = s.filter(x => x.iac === 'ja');
+  const gokJa = s.filter(x => x.gok === 'ja');
   const extraZorg = s.filter(x => x.extraCare === 'ja');
-  const zorgCount = zorgHoog.length + zorgMid.length + iacJa.length + extraZorg.length + allergieKids.length + medischeKids.length;
+  const zorgCount = zorgHoog.length + zorgMid.length + iacJa.length + gokJa.length + extraZorg.length + allergieKids.length + medischeKids.length;
   secties.push({ id:'zorg', emoji:'❤️', titel:'Zorg', kleur:'#fee2e2', count: zorgCount,
     inhoud: subsectie('IAC', iacJa, {noteKey:'careNote'})
+      + subsectie('GOK', gokJa, {noteKey:'careNote'})
       + subsectie('Extra zorg', extraZorg, {noteKey:'careNote'})
       + subsectie('Hoge zorg', zorgHoog, {noteKey:'careNote'})
       + subsectie('Middelhoge zorg', zorgMid, {noteKey:'careNote'})
@@ -3298,6 +3309,7 @@ function openOverzichtKlasPdf() {
 
   const zorg = onderdeel('Zorgniveaus',
       groep('IAC', leerlingen.filter(x => x.iac === 'ja'), {noteKey:'careNote'}) +
+      groep('GOK', leerlingen.filter(x => x.gok === 'ja'), {noteKey:'careNote'}) +
       groep('Extra zorg', leerlingen.filter(x => x.extraCare === 'ja'), {noteKey:'careNote'}) +
       groep('Hoge zorg', leerlingen.filter(x => x.care === 'hoog'), {noteKey:'careNote'}) +
       groep('Middelhoge zorg', leerlingen.filter(x => x.care === 'midden'), {noteKey:'careNote'})
@@ -3629,6 +3641,7 @@ function sfPreviewDossier(id, mode) {
     <td>${esc(s.reading || 'basis')} / ${esc(s.math || 'basis')}</td>
     <td>${[
       s.iac === 'ja' ? 'IAC' : '',
+      s.gok === 'ja' ? 'GOK' : '',
       s.extraCare === 'ja' ? 'extra zorg' : '',
       s.care === 'hoog' ? 'hoge zorg' : '',
       s.allergies ? 'allergie' : '',
