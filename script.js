@@ -52,7 +52,7 @@ onAuthStateChanged(auth, (user) => {
 });
 
 // Past knoppen toe op basis van rol-data (gebruikt door cache én verse data)
-function pasKnoppenToe(huistakenKnop, overgangKnop, schoolbeheerKnop, bestellingenKnop, oudercontactKnop, schoolKnop, isSchoolBreed, isSecretariaat, heeftKlasbeheer) {
+function pasKnoppenToe(huistakenKnop, overgangKnop, schoolbeheerKnop, bestellingenKnop, oudercontactKnop, schoolKnop, groeigroepenKnop, isSchoolBreed, isSecretariaat, heeftKlasbeheer) {
   function vulTegel(tegel, href, icoon, titel, tekst) {
     if (!tegel) return;
     tegel.href = href;
@@ -66,6 +66,7 @@ function pasKnoppenToe(huistakenKnop, overgangKnop, schoolbeheerKnop, bestelling
   }
 
   if (schoolKnop) schoolKnop.style.display = 'none';
+  if (groeigroepenKnop) groeigroepenKnop.style.display = isSchoolBreed ? '' : 'none';
   if (oudercontactKnop) oudercontactKnop.style.display = (isSchoolBreed || heeftKlasbeheer) ? '' : 'none';
   if (schoolbeheerKnop) schoolbeheerKnop.style.display = (isSecretariaat || isSchoolBreed || heeftKlasbeheer) ? '' : 'none';
   if (bestellingenKnop) bestellingenKnop.style.display = (isSecretariaat || heeftKlasbeheer) ? '' : 'none';
@@ -92,10 +93,12 @@ async function toonSchooloverzichtKnopAlsNodig(user) {
   const schoolbeheerKnop = document.getElementById('schoolbeheerKeuzeKnop');
   const bestellingenKnop = document.getElementById('bestellingenKeuzeKnop');
   const oudercontactKnop = document.getElementById('oudercontactKeuzeKnop');
+  const groeigroepenKnop = document.getElementById('groeigroepenKeuzeKnop');
   if (schoolKnop) schoolKnop.style.display = 'none';
   if (schoolbeheerKnop) schoolbeheerKnop.style.display = 'none';
   if (bestellingenKnop) bestellingenKnop.style.display = 'none';
   if (oudercontactKnop) oudercontactKnop.style.display = 'none';
+  if (groeigroepenKnop) groeigroepenKnop.style.display = 'none';
   if (!user) return;
 
   // Toon meteen op basis van gecachte rol (vorige sessie) — geen wachttijd
@@ -103,7 +106,7 @@ async function toonSchooloverzichtKnopAlsNodig(user) {
   try {
     const cached = JSON.parse(localStorage.getItem(cacheKey) || 'null');
     if (cached) {
-      pasKnoppenToe(huistakenKnop, overgangKnop, schoolbeheerKnop, bestellingenKnop, oudercontactKnop, schoolKnop,
+      pasKnoppenToe(huistakenKnop, overgangKnop, schoolbeheerKnop, bestellingenKnop, oudercontactKnop, schoolKnop, groeigroepenKnop,
         cached.isSchoolBreed, cached.isSecretariaat, cached.heeftKlasbeheer);
     }
   } catch (e) { /* cache onleesbaar, gewoon doorgaan */ }
@@ -129,7 +132,7 @@ async function toonSchooloverzichtKnopAlsNodig(user) {
     localStorage.setItem(cacheKey, JSON.stringify({ isSchoolBreed, isSecretariaat, heeftKlasbeheer }));
 
     // Update knoppen met verse data (corrigeert cache indien nodig)
-    pasKnoppenToe(huistakenKnop, overgangKnop, schoolbeheerKnop, bestellingenKnop, oudercontactKnop, schoolKnop,
+    pasKnoppenToe(huistakenKnop, overgangKnop, schoolbeheerKnop, bestellingenKnop, oudercontactKnop, schoolKnop, groeigroepenKnop,
       isSchoolBreed, isSecretariaat, heeftKlasbeheer);
 
   } catch (err) {
@@ -225,10 +228,12 @@ window.uitloggenVanIndex = function () {
       const schoolbeheerKnop = document.getElementById('schoolbeheerKeuzeKnop');
       const bestellingenKnop = document.getElementById('bestellingenKeuzeKnop');
       const oudercontactKnop = document.getElementById('oudercontactKeuzeKnop');
+      const groeigroepenKnop = document.getElementById('groeigroepenKeuzeKnop');
       if (schoolKnop) schoolKnop.style.display = 'none';
       if (schoolbeheerKnop) schoolbeheerKnop.style.display = 'none';
       if (bestellingenKnop) bestellingenKnop.style.display = 'none';
       if (oudercontactKnop) oudercontactKnop.style.display = 'none';
+      if (groeigroepenKnop) groeigroepenKnop.style.display = 'none';
       document.body.classList.remove('start-ingelogd');
       const authBox = document.getElementById('auth');
       if (authBox) {
