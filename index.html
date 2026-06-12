@@ -733,10 +733,20 @@
       font-weight: 800;
     }
 
-    .portaal-tegel.zorg .portaal-open {
-      background: var(--groen-zacht);
-      border-color: var(--groen-donker);
-    }
+  .portaal-tegel.zorg .portaal-open {
+    background: var(--groen-zacht);
+    border-color: var(--groen-donker);
+  }
+  .portaal-tegel.groeigroepen .portaal-tegel-icoon {
+    background: #eef4e6;
+  }
+  .portaal-tegel.groeigroepen:hover {
+    border-color: #6f9f62;
+  }
+  .portaal-tegel.groeigroepen .portaal-open {
+    background: #d8edcf;
+    border-color: #6f9f62;
+  }
 
     #auth {
       border-radius: 14px;
@@ -839,7 +849,7 @@
 
     /* codex-oudercontact-5-tegels */
   .portaal-keuzes{
-    grid-template-columns:repeat(5, minmax(210px, 1fr))!important;
+    grid-template-columns:repeat(6, minmax(190px, 1fr))!important;
     gap:16px!important;
   }
   .portaal-tegel{
@@ -912,6 +922,12 @@
         <span class="portaal-tegel-icoon">&#128483;</span>
         <span class="portaal-title">Oudercontact</span>
         <span class="portaal-desc">Bereid gesprekken per leerling voor en maak een nette PDF voor ouders.</span>
+        <span class="portaal-open">Openen</span>
+      </a>
+      <a id="groeigroepenKeuzeKnop" href="groeigroepen.html" class="portaal-tegel groeigroepen" target="_blank" rel="noopener" style="display:none">
+        <span class="portaal-tegel-icoon">&#127793;</span>
+        <span class="portaal-title">Groeigroepen</span>
+        <span class="portaal-desc">Maak zorggroepjes met kinderen uit verschillende klassen, noteer groei en maak aangepaste rapporten.</span>
         <span class="portaal-open">Openen</span>
       </a>
       <a id="schoolbeheerKeuzeKnop" href="schoolbeheer.html" class="portaal-tegel administratie" target="_blank" rel="noopener" style="display:none">
