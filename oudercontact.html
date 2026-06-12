@@ -373,6 +373,28 @@ let saveTimer = null;
 
 function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
 function $(id) { return document.getElementById(id); }
+function naamKey(naam) { return String(naam || '').replace(/\s+/g, ' ').trim().toLowerCase(); }
+function leerlingNaamSchoolbeheer(s) {
+  const first = (s.firstName || s.first || s.voornaam || '').trim();
+  const last = (s.lastName || s.last || s.achternaam || '').trim();
+  const direct = (s.naam || s.name || s.fullName || s.volledigeNaam || '').trim();
+  if (first || last) return `${first} ${last}`.trim();
+  return direct;
+}
+function voegLeerlingenZonderDubbelToe(nieuweLeerlingen) {
+  const bestaande = new Set(state.leerlingen.map(l => naamKey(l.naam)));
+  let added = 0;
+  nieuweLeerlingen.forEach(l => {
+    const naam = String(l.naam || '').trim();
+    const key = naamKey(naam);
+    if (!naam || bestaande.has(key)) return;
+    bestaande.add(key);
+    state.leerlingen.push(l);
+    added++;
+  });
+  state.leerlingen.sort((a, b) => a.naam.localeCompare(b.naam, 'nl'));
+  return added;
+}
 
 function markDirty() {
   isDirty = true;
@@ -438,12 +460,13 @@ async function laadLeerlingenUitOvergangsbespreking() {
     if (snap.exists()) {
       const data = snap.data();
       const studenten = data.students || [];
-      state.leerlingen = studenten
+      const leerlingen = studenten
         .map(s => ({ id: s.id, naam: s.name || `${s.firstName||''} ${s.lastName||''}`.trim() }))
         .sort((a,b) => a.naam.localeCompare(b.naam, 'nl'));
-      $('firebaseStatus').textContent = `${state.leerlingen.length} leerlingen geladen uit overgangsbespreking`;
+      const added = voegLeerlingenZonderDubbelToe(leerlingen);
+      $('firebaseStatus').textContent = `${state.leerlingen.length} leerlingen beschikbaar (${added} uit overgang toegevoegd)`;
     } else {
-      $('firebaseStatus').textContent = 'Geen leerlingenlijst gevonden — open eerst overgangsbespreking';
+      $('firebaseStatus').textContent = 'Geen overgangslijst gevonden; klaslijst wordt gecontroleerd';
     }
   } catch(e) {
     console.error('Fout leerlingen laden:', e);
@@ -451,6 +474,24 @@ async function laadLeerlingenUitOvergangsbespreking() {
   }
 }
 
+async function laadLeerlingenUitSchoolbeheer() {
+  const klas = activeKlasId || beheerKlas || activeKlasNaam;
+  if (!klas) return 0;
+  try {
+    const snap = await getDoc(doc(db, "schoolbeheer", schooljaar, "klassen", klas));
+    if (!snap.exists()) return 0;
+    const leerlingen = (snap.data().leerlingen || [])
+      .map(s => {
+        const naam = leerlingNaamSchoolbeheer(s);
+        return naam ? { id: `schoolbeheer_${klas}_${s.id || naamKey(naam)}`, naam, schoolbeheerId: s.id || '' } : null;
+      })
+      .filter(Boolean);
+    return voegLeerlingenZonderDubbelToe(leerlingen);
+  } catch(e) {
+    console.error('Schoolbeheer-leerlingen laden mislukt:', e);
+    return 0;
+  }
+}
 // ── ROL OPHALEN ──
 async function laadRol() {
   try {
@@ -554,9 +595,11 @@ window.openKlasAlsSchoolBreed = function(uid, klasId, klasNaam, leerkrachtNaam) 
 
 async function laadEnToonKlas() {
   $('saveStatusText').textContent = 'Laden...';
-  await laadLeerlingenUitOvergangsbespreking();
   try {
     const data = await loadFromFirebase();
+    state.leerlingen = Array.isArray(data?.leerlingen) ? [...data.leerlingen] : [];
+    await laadLeerlingenUitOvergangsbespreking();
+    const schoolbeheerAdded = await laadLeerlingenUitSchoolbeheer();
     if (data && data.oudercontacten) state.oudercontacten = data.oudercontacten || [];
     else state.oudercontacten = [];
 
@@ -568,6 +611,7 @@ async function laadEnToonKlas() {
         needsSave = true;
       }
     });
+    if (schoolbeheerAdded && !isReadOnly) needsSave = true;
     if (needsSave) {
       try {
         await saveToFirebase();
