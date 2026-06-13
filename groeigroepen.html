@@ -87,6 +87,11 @@ label{display:block;font-weight:800;font-size:12px;color:#44515f;margin:8px 0 4p
 .copy-list input,.copy-options input{width:auto}
 .copy-options{display:flex;gap:12px;flex-wrap:wrap;margin-top:8px}
 .stars{color:#d49a16;letter-spacing:1px;font-weight:900}
+.eindejaar-kaart{border:1px solid #bdd9b6;background:#f5fbf3;border-radius:12px;padding:12px;margin:0 0 14px}
+.eindejaar-kaart h3{margin:0 0 6px;color:#315b2b}
+.eindejaar-kaart ol{margin:8px 0 0 20px;padding:0;color:#44515f;font-size:13px;line-height:1.5}
+.eindejaar-kaart li{margin:3px 0}
+.eindejaar-kaart .waarom{background:#fff;border-left:4px solid var(--green);border-radius:8px;padding:8px 10px;margin-top:10px;color:#44515f;font-size:13px}
 .hidden{display:none!important}
 @media(max-width:980px){main{grid-template-columns:1fr}.eval-row,.grid2,.domain-grid,.rapport-row,.report-info,.report-header{grid-template-columns:1fr}.report-preview{padding:22px 18px;min-height:auto}}
 @media print{body{background:#fff}header,.sidebar,.tabs,.no-print,.editor{display:none!important}main{display:block;width:auto;margin:0}.panel{box-shadow:none;border:0}.report-preview{border:0;padding:0}}
@@ -324,6 +329,7 @@ const today=()=>new Date().toISOString().slice(0,10);
 let user=null, role="", groups=[], active=null, classes={}, tab="basis";
 let rapHoofdtab="groep"; // welke rapport-hoofdtab actief is: 'groep' of 'kind'
 let ptPeriodeFilter="";
+const BEWAAR_JAREN_GROEIGROEP_LOGBOEK = 6; // Aanpasbaar: groeigroep-logboeken bewaren tot eind augustus na dit aantal schooljaren.
 
 function huidigSchooljaar(){
   const now=new Date();
@@ -336,10 +342,13 @@ function volgendSchooljaar(jaar=year()){
   const m=String(jaar).match(/^(\d{4})-(\d{4})$/);
   return m ? `${Number(m[1])+1}-${Number(m[2])+1}` : jaar;
 }
+function bewaarTotVoorSchooljaar(jaar=year(), extraJaren=BEWAAR_JAREN_GROEIGROEP_LOGBOEK){
+  return `${Number(String(jaar).slice(0,4)) + extraJaren}-08-31`;
+}
 function groupRef(id){return doc(db,"zorggroepen",id);}
-function emptyGroup(){return{id:"zg_"+uid(),schooljaar:year(),naam:"Nieuwe groeigroep",domeinen:["lezen"],begeleiders:"",doelen:"",leerlingen:[],logboek:[],toetsen:[],rapporten:{},createdAt:new Date().toISOString()};}
+function emptyGroup(){return{id:"zg_"+uid(),schooljaar:year(),naam:"Nieuwe groeigroep",domeinen:["lezen"],begeleiders:"",doelen:"",leerlingen:[],logboek:[],toetsen:[],rapporten:{},bewaarTot:bewaarTotVoorSchooljaar(),bewaardoor:"logboek zorgtraject",bewaartermijnJaren:BEWAAR_JAREN_GROEIGROEP_LOGBOEK,createdAt:new Date().toISOString()};}
 function setStatus(text){$("status").textContent=text;}
-function normalizeGroup(g){g.leerlingen=Array.isArray(g.leerlingen)?g.leerlingen.map(verrijkLeerling):[];g.logboek=Array.isArray(g.logboek)?g.logboek:[];g.toetsen=Array.isArray(g.toetsen)?g.toetsen:[];g.domeinen=Array.isArray(g.domeinen)?g.domeinen:[];g.rapporten=g.rapporten||{};g.rapportPeriodes=g.rapportPeriodes||{};return g;}
+function normalizeGroup(g){g.leerlingen=Array.isArray(g.leerlingen)?g.leerlingen.map(verrijkLeerling):[];g.logboek=Array.isArray(g.logboek)?g.logboek:[];g.toetsen=Array.isArray(g.toetsen)?g.toetsen:[];g.domeinen=Array.isArray(g.domeinen)?g.domeinen:[];g.rapporten=g.rapporten||{};g.rapportPeriodes=g.rapportPeriodes||{};g.bewaarTot=g.bewaarTot||bewaarTotVoorSchooljaar(g.schooljaar||year());g.bewaartermijnJaren=g.bewaartermijnJaren||BEWAAR_JAREN_GROEIGROEP_LOGBOEK;g.bewaardoor=g.bewaardoor||"logboek zorgtraject";return g;}
 function huidigeRapportPeriode(){
   return ($("rapportPeriode")?.value || active?.rapportGroep?.periode || ptPeriodeFilter || "").trim();
 }
@@ -443,6 +452,17 @@ function renderWorkspace(){
 }
 function renderBasis(){
   $("tab-basis").innerHTML=`
+    <div class="eindejaar-kaart">
+      <h3>Einde schooljaar: wat moet ik doen?</h3>
+      <ol>
+        <li>Wacht tot het secretariaat de klaslijsten van volgend schooljaar heeft klaargezet.</li>
+        <li>Klik daarna bij deze groep op <strong>Naar volgend schooljaar</strong>.</li>
+        <li>Controleer of alle leerlingen teruggevonden zijn in hun nieuwe klas.</li>
+        <li>Pas de leerlingenlijst aan als iemand niet meer in deze groeigroep zit.</li>
+        <li>Start in het nieuwe schooljaar met een leeg puntenboek en nieuwe rapporten.</li>
+      </ol>
+      <div class="waarom"><strong>Waarom?</strong> Het logboek blijft mee bewaard zodat je weet waar het kind stond. Puntenboek en rapporten starten opnieuw leeg, want die horen bij één schooljaar.</div>
+    </div>
     <div class="editor">
       <div class="grid2">
         <div><label>Naam groeigroep</label><input id="gNaam" value="${esc(active.naam)}"></div>
@@ -1266,6 +1286,9 @@ async function saveGroup(){
 async function persistActiveGroup(doneText){
   if(!active)return;
   active.schooljaar=year();
+  active.bewaarTot=bewaarTotVoorSchooljaar(year());
+  active.bewaartermijnJaren=BEWAAR_JAREN_GROEIGROEP_LOGBOEK;
+  active.bewaardoor="logboek zorgtraject";
   try{
     await setDoc(groupRef(active.id),{...active,updatedAt:serverTimestamp(),updatedBy:user.email||user.uid},{merge:true});
     const tekst=doneText||("Bewaard om "+new Date().toLocaleTimeString("nl-BE",{hour:"2-digit",minute:"2-digit"}));
@@ -1323,6 +1346,9 @@ async function carryActiveGroupToNextYear(){
     rapporten:{},
     rapportPeriodes:{},
     rapportGroep:{},
+    bewaarTot:bewaarTotVoorSchooljaar(volgend),
+    bewaartermijnJaren:BEWAAR_JAREN_GROEIGROEP_LOGBOEK,
+    bewaardoor:"logboek zorgtraject",
     createdAt:new Date().toISOString(),
     updatedAt:new Date().toISOString(),
     updatedBy:user.email||user.uid
