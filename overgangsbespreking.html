@@ -363,6 +363,14 @@
   .student-table { border-radius:10px; }
   .student-table th, .student-table td { padding:9px 12px; }
   .student-table th { position:static; top:auto; z-index:auto; }
+  .zorggroep-overzicht{border:1px solid #b8d7b1;background:#f5fbf3;border-radius:12px;padding:12px;margin-bottom:14px}
+  .zorggroep-overzicht h4{margin:0 0 8px;font-size:14px;color:#315b2b}
+  .zorggroep-card{background:#fff;border:1px solid #d8ead4;border-radius:10px;padding:10px;margin-top:8px}
+  .zorggroep-card strong{display:block;margin-bottom:4px}
+  .zorggroep-meta{font-size:12px;color:#667085;margin-bottom:6px}
+  .zorggroep-mini{font-size:12px;color:#334155;line-height:1.45}
+  .zorggroep-mini ul{margin:4px 0 0 18px;padding:0}
+  .zorggroep-empty{color:#667085;font-size:13px;margin:0}
 
   /* ===== MODAL: BEWERKEN ===== */
   .modal-overlay { padding:16px; align-items:flex-start !important; justify-content:center; }
@@ -866,6 +874,10 @@
           <!-- TAB: Zorg -->
           <div class="fiche-tab" data-tab="zorg">
             <div class="ftab-title">❤️ Zorg <span class="section-badge empty" id="badge_zorg">leeg</span></div>
+            <div id="m_zorggroepenOverzicht" class="zorggroep-overzicht">
+              <h4>Groeigroepen</h4>
+              <p class="zorggroep-empty">Nog geen groeigroepinformatie geladen.</p>
+            </div>
             <div class="grid grid-2" style="margin-bottom:14px">
               <div><label>Zorgniveau</label><select id="m_care">
                 <option value="laag">Laag</option><option value="midden">Midden</option><option value="hoog">Hoog</option>
@@ -1116,6 +1128,22 @@ window.firebaseOvergang = {
     if (!klas) return { klas: '', leerlingen: [] };
     const snap = await getDoc(doc(db, "schoolbeheer", schooljaar, "klassen", klas));
     return { klas, leerlingen: snap.exists() ? (snap.data().leerlingen || []) : [] };
+  },
+  async loadZorggroepen() {
+    await ready;
+    const m = String(schooljaar).match(/^(\d{4})-(\d{4})$/);
+    const jaren = m
+      ? [`${Number(m[1]) - 1}-${Number(m[2]) - 1}`, schooljaar, `${Number(m[1]) + 1}-${Number(m[2]) + 1}`]
+      : [schooljaar];
+    const snaps = await Promise.all(jaren.map(j => getDocs(query(collection(db, "zorggroepen"), where("schooljaar", "==", j)))));
+    const seen = new Set();
+    const groepen = [];
+    snaps.forEach(snap => snap.forEach(d => {
+      if (seen.has(d.id)) return;
+      seen.add(d.id);
+      groepen.push({ id: d.id, ...d.data() });
+    }));
+    return groepen;
   }
 };
 window.dispatchEvent(new Event('firebaseOvergangReady'));
@@ -1231,6 +1259,15 @@ const state = {
   students: [], groups: [], locks: {}
 };
 let isDirty = false, lastSaveTime = null, activeTab = 'settings';
+let zorggroepen = [];
+let zorggroepenPerLeerling = new Map();
+let zorggroepenLaadFout = null;
+const ZORGGROEP_DOMEINNAMEN = {
+  lezen: 'Lezen', spelling: 'Spelling', spreken: 'Spreken', luisteren: 'Luisteren',
+  woordenschat: 'Woordenschat', schrijven: 'Schrijven',
+  getallen: 'Getallen', hoofdrekenen: 'Hoofdrekenen', cijferen: 'Cijferen',
+  meten: 'Meten en metend rekenen', meetkunde: 'Meetkunde', wo: 'Wereldorientatie'
+};
 
 const $ = id => document.getElementById(id);
 const uid = () => Math.random().toString(36).slice(2,10) + Date.now().toString(36).slice(-4);
@@ -1403,6 +1440,7 @@ function updateSectionBadges(s) {
   if (s.careNote) zorgCount++;
   if (s.allergies) zorgCount++;
   if (s.medicalNote) zorgCount++;
+  zorgCount += zorggroepenVoorStudent(s).length;
   badges.zorg = zorgCount;
 
   // Loopbaan
@@ -1500,6 +1538,7 @@ function openModal(studentId = null) {
     $('m_careNote').value = s.careNote || '';
     if ($('m_allergies')) $('m_allergies').value = s.allergies || '';
     if ($('m_medicalNote')) $('m_medicalNote').value = s.medicalNote || '';
+    renderZorggroepenVoorFiche(s);
     // Loopbaan
     $('m_repeated').checked = !!s.repeated;
     const ryVals = Array.isArray(s.repeatedYear) ? s.repeatedYear : (s.repeatedYear ? [s.repeatedYear] : []);
@@ -1560,6 +1599,7 @@ function openModal(studentId = null) {
     $('m_care').value = 'laag'; $('m_iac').value = 'nee'; $('m_gok').value = 'nee';
     $('m_focus').value = 'ok'; $('m_behavior').value = 'ok';
     $('m_updatedDate').value = todayISO();
+    if ($('m_zorggroepenOverzicht')) $('m_zorggroepenOverzicht').innerHTML = `<h4>Groeigroepen</h4><p class="zorggroep-empty">Sla de leerling eerst op om groeigroepen te koppelen.</p>`;
     setBadmuts('');
     updateRepeatedYearUI();
     updateSectionBadges({});
@@ -1814,6 +1854,127 @@ function normalizeNameFromLine(line) {
 
 function studentNameKey(firstName, lastName) {
   return `${(firstName || '').trim().toLowerCase()}|${(lastName || '').trim().toLowerCase()}`;
+}
+
+function naamZoekKey(value) {
+  return String(value || '')
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, ' ')
+    .trim()
+    .replace(/\s+/g, ' ');
+}
+
+function studentNameKeys(firstName, lastName) {
+  const f = naamZoekKey(firstName);
+  const l = naamZoekKey(lastName);
+  const keys = new Set([`${f}|${l}`]);
+  if (f && l) keys.add(`${l}|${f}`);
+  if (f || l) keys.add(`${f} ${l}`.trim());
+  if (f && l) keys.add(`${l} ${f}`.trim());
+  return [...keys].filter(k => k !== '|');
+}
+
+function studentNameKeyFromAny(s) {
+  const first = (s.firstName || s.first || s.voornaam || '').trim();
+  const last = (s.lastName || s.last || s.achternaam || '').trim();
+  if (first || last) return studentNameKey(naamZoekKey(first), naamZoekKey(last));
+  const naam = String(s.name || s.naam || s.fullName || s.volledigeNaam || '').replace(/\s+/g, ' ').trim();
+  if (!naam) return '';
+  if (naam.includes(',')) {
+    const parts = naam.split(',').map(x => x.trim()).filter(Boolean);
+    return studentNameKey(naamZoekKey(parts.slice(1).join(' ')), naamZoekKey(parts[0]));
+  }
+  const parts = naam.split(' ');
+  if (parts.length === 1) return studentNameKey(naamZoekKey(parts[0]), '');
+  const lastPart = parts.pop();
+  return studentNameKey(naamZoekKey(parts.join(' ')), naamZoekKey(lastPart));
+}
+
+function buildZorggroepenIndex(list = zorggroepen) {
+  zorggroepenPerLeerling = new Map();
+  (list || []).forEach(groep => {
+    (groep.leerlingen || []).forEach(leerling => {
+      const key = studentNameKeyFromAny(leerling);
+      if (!key) return;
+      const [a, b] = key.split('|');
+      studentNameKeys(a, b).forEach(k => {
+        if (!zorggroepenPerLeerling.has(k)) zorggroepenPerLeerling.set(k, []);
+        zorggroepenPerLeerling.get(k).push(groep);
+      });
+    });
+  });
+}
+
+function zorggroepenVoorStudent(s) {
+  const gevonden = [];
+  const seen = new Set();
+  studentNameKeys(s.firstName, s.lastName).forEach(key => {
+    (zorggroepenPerLeerling.get(key) || []).forEach(g => {
+      if (seen.has(g.id)) return;
+      seen.add(g.id);
+      gevonden.push(g);
+    });
+  });
+  return gevonden;
+}
+
+function zorggroepDomeinNamen(groep) {
+  const domeinen = groep.rapportGroep?.domeinen?.length ? groep.rapportGroep.domeinen : (groep.domeinen || []);
+  return domeinen.map(id => ZORGGROEP_DOMEINNAMEN[id] || id).filter(Boolean);
+}
+
+function laatsteZorggroepLog(groep, leerlingKey) {
+  const logs = (groep.logboek || []).slice().sort((a, b) => String(b.datum || '').localeCompare(String(a.datum || '')));
+  return logs.filter(l => !leerlingKey || l.evaluaties?.[leerlingKey] || !l.evaluaties).slice(0, 2);
+}
+
+function zorggroepLeerlingKey(groep, overgangStudent) {
+  const wanted = new Set(studentNameKeys(overgangStudent.firstName, overgangStudent.lastName));
+  const match = (groep.leerlingen || []).find(l => wanted.has(studentNameKeyFromAny(l)));
+  return match ? `${match.klas}__${match.leerlingId}` : '';
+}
+
+function renderZorggroepenVoorFiche(s) {
+  const el = $('m_zorggroepenOverzicht');
+  if (!el) return;
+  if (zorggroepenLaadFout) {
+    el.innerHTML = `<h4>Groeigroepen</h4><p class="zorggroep-empty">Groeigroepen konden niet geladen worden. Waarschijnlijk mag deze rol ze nog niet lezen in Firebase-regels.</p>`;
+    return;
+  }
+  const groepen = zorggroepenVoorStudent(s);
+  if (!groepen.length) {
+    el.innerHTML = `<h4>Groeigroepen</h4><p class="zorggroep-empty">Deze leerling staat momenteel niet in een groeigroep.</p>`;
+    return;
+  }
+  el.innerHTML = `<h4>Groeigroepen</h4>${groepen.map(groep => {
+    const leerlingKey = zorggroepLeerlingKey(groep, s);
+    const domeinen = zorggroepDomeinNamen(groep);
+    const logs = laatsteZorggroepLog(groep, leerlingKey);
+    const toetsen = (groep.toetsen || []).filter(t => !leerlingKey || t.resultaten?.[leerlingKey] != null || t.studentKey === leerlingKey);
+    const rapportPeriode = groep.rapportGroep?.periode || '';
+    return `<div class="zorggroep-card">
+      <strong>${esc(groep.naam || 'Groeigroep')}</strong>
+      <div class="zorggroep-meta">${esc([groep.begeleiders, domeinen.join(', '), rapportPeriode].filter(Boolean).join(' · '))}</div>
+      <div class="zorggroep-mini">
+        ${groep.rapportGroep?.traject ? `<div><b>Zo werkten ze:</b> ${esc(groep.rapportGroep.traject)}</div>` : ''}
+        ${groep.rapportGroep?.volgendeStap ? `<div><b>Volgende stap:</b> ${esc(groep.rapportGroep.volgendeStap)}</div>` : ''}
+        ${toetsen.length ? `<div><b>Puntenboek:</b> ${toetsen.length} toetsmoment(en)</div>` : ''}
+        ${logs.length ? `<div><b>Laatste logboek:</b><ul>${logs.map(l => `<li>${esc(l.datum || '')} ${esc(l.titel || 'Notitie')}</li>`).join('')}</ul></div>` : '<div><b>Logboek:</b> nog geen notities</div>'}
+      </div>
+    </div>`;
+  }).join('')}`;
+}
+
+function zorggroepenKorteHtml(s) {
+  const groepen = zorggroepenVoorStudent(s);
+  if (!groepen.length) return '';
+  return `<div class="fiche-block"><p class="fiche-block-title">Groeigroepen</p>${groepen.map(g => {
+    const domeinen = zorggroepDomeinNamen(g).join(', ');
+    const periode = g.rapportGroep?.periode || '';
+    const traject = g.rapportGroep?.traject || '';
+    return `<p><strong>${esc(g.naam || 'Groeigroep')}</strong>${domeinen ? ` · ${esc(domeinen)}` : ''}${periode ? ` · ${esc(periode)}` : ''}</p>${traject ? `<p class="fiche-note-block">${esc(traject)}</p>` : ''}`;
+  }).join('')}</div>`;
 }
 
 function schoolbeheerNaamNaarRij(s) {
@@ -2146,7 +2307,10 @@ function renderStudents() {
   const dupWarning = duplicates.length
     ? `<div class="warning" style="margin-bottom:12px">⚠️ Dubbele voornamen: <strong>${duplicates.map(esc).join(', ')}</strong>. Bij "graag/liever niet samen met" moet je voor deze leerlingen de volledige naam gebruiken.</div>`
     : '';
-  c.innerHTML = dupWarning + `<table class="student-table">
+  const zorgWarning = zorggroepenLaadFout
+    ? `<div class="warning" style="margin-bottom:12px">Groeigroepen konden niet geladen worden. Controleer de Firebase-regels voor leesrechten.</div>`
+    : '';
+  c.innerHTML = dupWarning + zorgWarning + `<table class="student-table">
     <thead><tr><th>Naam</th><th>Niveau</th><th>Lezen / Rekenen</th><th>Aandacht</th></tr></thead>
     <tbody>${sorted.map(s => {
       const tags = [];
@@ -2157,6 +2321,8 @@ function renderStudents() {
       if (s.care === 'hoog') tags.push('<span class="mini-tag care">hoge zorg</span>');
       if (s.allergies) tags.push('<span class="mini-tag warn">allergie</span>');
       if (s.medicalNote) tags.push('<span class="mini-tag warn">medisch</span>');
+      const zgs = zorggroepenVoorStudent(s);
+      if (zgs.length) tags.push(`<span class="mini-tag care">groeigroep: ${esc(zgs.map(g => g.naam || 'Groeigroep').join(', '))}</span>`);
       if (s.behavior === 'probleem') tags.push('<span class="mini-tag warn">gedrag</span>');
       if (s.focus === 'probleem') tags.push('<span class="mini-tag warn">concentratie</span>');
       if (s.newcomer) tags.push('<span class="mini-tag">AN</span>');
@@ -2471,7 +2637,20 @@ async function loadFirebaseProjectOnStart() {
   }
   setFirebaseStatus('Firebase wordt gecontroleerd...');
   try {
-    const data = await window.firebaseOvergang.loadProject();
+    const [data, zorgResult] = await Promise.all([
+      window.firebaseOvergang.loadProject(),
+      window.firebaseOvergang.loadZorggroepen().catch(err => ({ __zorggroepenError: err }))
+    ]);
+    if (Array.isArray(zorgResult)) {
+      zorggroepen = zorgResult;
+      zorggroepenLaadFout = null;
+      buildZorggroepenIndex(zorggroepen);
+    } else {
+      zorggroepen = [];
+      zorggroepenLaadFout = zorgResult.__zorggroepenError || new Error('Groeigroepen konden niet geladen worden.');
+      buildZorggroepenIndex([]);
+      console.warn('Groeigroepen konden niet geladen worden voor overgangsbespreking', zorgResult.__zorggroepenError);
+    }
     if (!data) {
       const sync = await vulOntbrekendeLeerlingenUitSchoolbeheer();
       if (sync.added) {
@@ -2481,9 +2660,9 @@ async function loadFirebaseProjectOnStart() {
         updateBadges();
         await window.firebaseOvergang.saveProject(collectProjectData());
         markClean();
-        setFirebaseStatus(`Nieuwe overgang gestart vanuit klaslijst ${sync.klas}: ${sync.added} leerling${sync.added === 1 ? '' : 'en'} toegevoegd.`);
+        setFirebaseStatus(`Nieuwe overgang gestart vanuit klaslijst ${sync.klas}: ${sync.added} leerling${sync.added === 1 ? '' : 'en'} toegevoegd.${Array.isArray(zorgResult) ? ` ${zorggroepen.length} groeigroep(en) gekoppeld.` : ' Groeigroepen konden niet geladen worden.'}`);
       } else {
-        setFirebaseStatus(sync.klas ? `Geen opgeslagen overgang gevonden. Klaslijst ${sync.klas} bevat geen nieuwe namen.` : 'Geen opgeslagen overgang gevonden en geen klas gekoppeld.');
+        setFirebaseStatus(sync.klas ? `Geen opgeslagen overgang gevonden. Klaslijst ${sync.klas} bevat geen nieuwe namen.${Array.isArray(zorgResult) ? ` ${zorggroepen.length} groeigroep(en) gekoppeld.` : ' Groeigroepen konden niet geladen worden.'}` : 'Geen opgeslagen overgang gevonden en geen klas gekoppeld.');
       }
       return;
     }
@@ -2500,7 +2679,7 @@ async function loadFirebaseProjectOnStart() {
     }
     markClean();
     const aantal = state.students.length;
-    setFirebaseStatus(`Firebase geladen: ${aantal} leerling${aantal === 1 ? '' : 'en'}${sync.added ? `, ${sync.added} nieuwe naam/namen uit klaslijst toegevoegd` : ''}.`);
+    setFirebaseStatus(`Firebase geladen: ${aantal} leerling${aantal === 1 ? '' : 'en'}${sync.added ? `, ${sync.added} nieuwe naam/namen uit klaslijst toegevoegd` : ''}.${Array.isArray(zorgResult) ? ` ${zorggroepen.length} groeigroep(en) gekoppeld.` : ' Groeigroepen konden niet geladen worden.'}`);
   } catch (err) {
     console.error('Firebase laden mislukt:', err);
     setFirebaseStatus('Firebase laden mislukt: ' + err.message);
@@ -2863,6 +3042,7 @@ function bouwFichePdfHtml(x) {
       ${(x.care !== 'laag' || x.iac === 'ja' || x.gok === 'ja' || x.careNote) ? `<div class="fiche-block"><p class="fiche-block-title">Zorg</p>
         <p><strong>Zorgniveau:</strong> ${esc(x.care)} · IAC: ${esc(x.iac)} · GOK: ${esc(x.gok || 'nee')}</p>
         ${x.careNote ? `<p class="fiche-note-block">${esc(x.careNote)}</p>` : ''}</div>` : ''}
+      ${zorggroepenKorteHtml(x)}
       ${loopbaanItems.length ? `<div class="fiche-block"><p class="fiche-block-title">Schoolloopbaan</p><p>${loopbaanItems.map(esc).join(' · ')}</p></div>` : ''}
       ${therapieList.length ? `<div class="fiche-block"><p class="fiche-block-title">Therapieën</p>${therapieList.map(item => `<p style="margin:2px 0">• ${esc(item.naam)}${item.adres ? `<span style="color:#475569;font-size:12px;display:block;margin-left:10px">📍 ${esc(item.adres)}</span>` : ''}</p>`).join('')}</div>` : ''}
       ${(x.friends.length || x.avoid.length || x.socialNote) ? `<div class="fiche-block"><p class="fiche-block-title">Sociaal-emotioneel</p>
@@ -3037,6 +3217,8 @@ function openFicheModal(studentId) {
     if (s.extraCare === 'ja') items.push('extra zorg');
     zorgInhoud = `<p>${items.join(' · ')}</p>${s.careNote ? `<p><span class="fiche-notitie">${esc(s.careNote)}</span></p>` : ''}`;
   }
+  const zgKort = zorggroepenKorteHtml(s);
+  if (zgKort) zorgInhoud += zgKort;
 
   // Loopbaan
   let loopbaanInhoud = '';
@@ -3077,6 +3259,8 @@ function openFicheModal(studentId) {
   if (s.newcomer) headerTags.push(`<span class="fiche-tag grijs">AN</span>`);
   if (s.repeated) headerTags.push(`<span class="fiche-tag grijs">bis</span>`);
   if (s.stayingThisYear) headerTags.push(`<span class="fiche-tag geel">blijft zitten</span>`);
+  const headerZorggroepen = zorggroepenVoorStudent(s);
+  headerZorggroepen.forEach(g => headerTags.push(`<span class="fiche-tag groen">groeigroep: ${esc(g.naam || 'Groeigroep')}</span>`));
 
   $('ficheModalBody').innerHTML = `
     <div class="fiche-view">
@@ -3187,9 +3371,11 @@ function renderTransferOnline() {
   const iacJa = s.filter(x => x.iac === 'ja');
   const gokJa = s.filter(x => x.gok === 'ja');
   const extraZorg = s.filter(x => x.extraCare === 'ja');
-  const zorgCount = zorgHoog.length + zorgMid.length + iacJa.length + gokJa.length + extraZorg.length + allergieKids.length + medischeKids.length;
+  const groeigroepKids = s.filter(x => zorggroepenVoorStudent(x).length);
+  const zorgCount = zorgHoog.length + zorgMid.length + iacJa.length + gokJa.length + extraZorg.length + allergieKids.length + medischeKids.length + groeigroepKids.length;
   secties.push({ id:'zorg', emoji:'❤️', titel:'Zorg', kleur:'#fee2e2', count: zorgCount,
-    inhoud: subsectie('IAC', iacJa, {noteKey:'careNote'})
+    inhoud: subsectie('Groeigroepen', groeigroepKids, {extra: x => zorggroepenVoorStudent(x).map(g => esc(g.naam || 'Groeigroep')).join(' · ')})
+      + subsectie('IAC', iacJa, {noteKey:'careNote'})
       + subsectie('GOK', gokJa, {noteKey:'careNote'})
       + subsectie('Extra zorg', extraZorg, {noteKey:'careNote'})
       + subsectie('Hoge zorg', zorgHoog, {noteKey:'careNote'})
@@ -3384,6 +3570,7 @@ function openOverzichtKlasPdf() {
     );
 
   const zorg = onderdeel('Zorgniveaus',
+      groep('Groeigroepen', leerlingen.filter(x => zorggroepenVoorStudent(x).length), {extra:x => zorggroepenVoorStudent(x).map(g => esc(g.naam || 'Groeigroep')).join(' · ')}) +
       groep('IAC', leerlingen.filter(x => x.iac === 'ja'), {noteKey:'careNote'}) +
       groep('GOK', leerlingen.filter(x => x.gok === 'ja'), {noteKey:'careNote'}) +
       groep('Extra zorg', leerlingen.filter(x => x.extraCare === 'ja'), {noteKey:'careNote'}) +
