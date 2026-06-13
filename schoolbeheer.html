@@ -973,9 +973,13 @@
     // schoolbeheer-zorgleerkrachten-codex
     function isSchoolBreedRole(){ return ["directie","zorgcoordinator","zorgleerkracht"].includes(role); }
     function canOpenAllClasses(){ return isSecretary() || isSchoolBreedRole(); }
+    const BEWAAR_JAREN_SCHOOLBEHEER = 2; // Aanpasbaar: klaslijsten, refter, activiteiten en aankopen bewaren tot eind augustus na dit aantal schooljaren.
     function startDate(){ return `${schooljaar.slice(0,4)}-09-01`; }
     function endDate(){ return `${schooljaar.slice(5,9)}-06-30`; }
-    function emptyClassDoc(klas){ return { schooljaar, klas, leerlingen:[], refter:{}, activiteiten:[], aankopen:[], vrijeDagen:[...standardFree], messages:[], processed:{refter:""}, bijgewerktOp:new Date().toISOString() }; }
+    function bewaarTotVoorSchooljaar(jaar=schooljaar, extraJaren=BEWAAR_JAREN_SCHOOLBEHEER){
+      return `${Number(String(jaar).slice(0,4)) + extraJaren}-08-31`;
+    }
+    function emptyClassDoc(klas){ return { schooljaar, klas, leerlingen:[], refter:{}, activiteiten:[], aankopen:[], vrijeDagen:[...standardFree], messages:[], processed:{refter:""}, bewaarTot:bewaarTotVoorSchooljaar(), bewaartermijnJaren:BEWAAR_JAREN_SCHOOLBEHEER, bijgewerktOp:new Date().toISOString() }; }
     function classRef(klas=activeClass){ return doc(db, "schoolbeheer", schooljaar, "klassen", klas); }
     function schooljaarOffset(jaar, offset){
       const start = Number(String(jaar || schooljaar).slice(0,4)) + offset;
@@ -1154,10 +1158,12 @@
       data.vrijeDagen ||= [...standardFree];
       data.messages ||= [];
       data.processed ||= {refter:""};
+      data.bewaarTot ||= bewaarTotVoorSchooljaar();
+      data.bewaartermijnJaren ||= BEWAAR_JAREN_SCHOOLBEHEER;
     }
 
     function markDirty(){ setStatus("Wijzigingen..."); clearTimeout(saveTimer); saveTimer = setTimeout(saveNow, 600); }
-    async function saveNow(){ if(!data) return; data.bijgewerktOp = new Date().toISOString(); await setDoc(classRef(), data); setStatus("Bewaard", true); }
+    async function saveNow(){ if(!data) return; data.bewaarTot = bewaarTotVoorSchooljaar(); data.bewaartermijnJaren = BEWAAR_JAREN_SCHOOLBEHEER; data.bijgewerktOp = new Date().toISOString(); await setDoc(classRef(), data); setStatus("Bewaard", true); }
 
     function render(){
       if(!data) return;
@@ -1999,6 +2005,7 @@
       const item=snap.exists()?snap.data():emptyClassDoc(klas);
       item.schooljaar=doelSchooljaar; item.klas=klas;
       item.leerlingen||=[]; item.refter||={}; item.activiteiten||=[]; item.aankopen||=[]; item.vrijeDagen||=[...standardFree]; item.messages||=[]; item.processed||={refter:""};
+      item.bewaarTot=bewaarTotVoorSchooljaar(doelSchooljaar); item.bewaartermijnJaren=BEWAAR_JAREN_SCHOOLBEHEER;
       leerlingen.forEach(s=>{ const nieuw=studentVoorNieuwSchooljaar(s,doelSchooljaar); if(!item.leerlingen.some(b=>name(b).toLowerCase()===name(nieuw).toLowerCase())) item.leerlingen.push(nieuw); });
       item.leerlingen.sort((a,b)=>name(a).localeCompare(name(b),"nl"));
       item.bijgewerktOp=new Date().toISOString();
