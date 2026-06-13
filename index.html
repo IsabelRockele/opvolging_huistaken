@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="nl">
 <head>
   <meta charset="UTF-8" />
@@ -207,11 +207,13 @@
       margin: 0 0 18px 0;
     }
 
-    .link-tegels {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-      gap: 12px;
-    }
+   .link-tegels {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(230px, 1fr));
+  gap: 16px;
+  max-width: 600px;
+  margin: 0 auto;
+}
 
     .tegel {
       display: flex;
@@ -427,11 +429,15 @@
       width: 100%;
     }
 
-    .publieke-links {
-      grid-area: agenda;
-      max-width: none;
-      margin: 0;
-    }
+  .publieke-links {
+  grid-area: agenda;
+  max-width: none;
+  margin: 0;
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  padding: 0;
+}
 
     .ingelogd-tekst strong {
       font-size: 1.35em;
@@ -873,6 +879,7 @@
   @media (max-width: 640px){
     .portaal-keuzes{grid-template-columns:1fr!important;}
   }
+
   </style>
 </head>
 <body>
@@ -960,23 +967,35 @@
   </div>
 
   <!-- Publieke snelkoppelingen naar klasagenda (geen login vereist) -->
-  <section class="publieke-links" aria-labelledby="publiek-kop">
-    <h2 id="publiek-kop">&#128197; Klasagenda zonder inloggen</h2>
-    <p class="uitleg">De agenda's zijn vrij te openen. Inloggen is enkel nodig voor het opvolgen van huistaken, overgangsbesprekingen en schoolbeheer.</p>
+  <section class="publieke-links">
 
-    <div class="link-tegels">
-      <a class="tegel" href="klasagenda.html" target="_blank" rel="noopener">
-        <div class="tegel-icoon">&#128216;</div><div class="tegel-tekst"><strong>Klasagenda</strong>
-          <span>Eerste, tweede en derde graad</span>
-        </div>
-      </a>
-      <a class="tegel" href="klasagendav2.html" target="_blank" rel="noopener">
-        <div class="tegel-icoon">&#128217;</div><div class="tegel-tekst"><strong>Klasagenda <span class="nieuw-badge">NIEUW</span></strong>
-          <span>Nieuwe versie - probeer & test</span>
-        </div>
-      </a>
-    </div>
-  </section>
+  <div class="link-tegels">
+
+    <a class="portaal-tegel administratie" href="klasagenda.html" target="_blank" rel="noopener">
+      <span class="portaal-tegel-icoon">📘</span>
+      <span class="portaal-title">Klasagenda</span>
+      <span class="portaal-desc">
+        Eerste, tweede en derde graad.
+      </span>
+      <span class="portaal-open">Openen</span>
+    </a>
+
+    <a class="portaal-tegel administratie" href="klasagendav2.html" target="_blank" rel="noopener">
+      <span class="portaal-tegel-icoon">📕</span>
+      <span class="portaal-title">Klasagenda nieuw</span>
+      <span class="portaal-desc">
+        Nieuwe versie - probeer & test.
+      </span>
+      <span class="portaal-open">Openen</span>
+    </a>
+
+  </div>
+
+  <p class="uitleg" style="margin-top:12px;">
+    Deze agenda's zijn vrij toegankelijk en vereisen geen login.
+  </p>
+
+</section>
   </main>  <script>
     function toggleWachtwoordZichtbaar() {
       const veld = document.getElementById('password');
