@@ -879,7 +879,28 @@
   @media (max-width: 640px){
     .portaal-keuzes{grid-template-columns:1fr!important;}
   }
+/* Veilige centrering: alleen wanneer de kaart zichtbaar is */
+#ingelogd-kaart.startportaal:not([style*="display:none"]) .portaal-keuzes {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  justify-content: center !important;
+  gap: 16px !important;
+}
 
+#ingelogd-kaart.startportaal:not([style*="display:none"]) .portaal-tegel {
+  flex: 0 0 255px !important;
+  width: 255px !important;
+}
+/* Breedte geven zonder de kaart zichtbaar te forceren */
+#ingelogd-kaart.startportaal {
+  width: 100% !important;
+  max-width: none !important;
+  margin: 0 auto !important;
+}
+
+#ingelogd-kaart.startportaal .portaal-keuzes {
+  width: 100% !important;
+}
   </style>
 </head>
 <body>
