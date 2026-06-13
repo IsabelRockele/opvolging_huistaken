@@ -218,7 +218,7 @@ button:disabled{opacity:.5;cursor:not-allowed}
         <span id="ocWerkTypeBadge" class="oc-type-badge" style="margin-left:8px"></span>
       </div>
       <div class="actions">
-        <button id="fransToggleBtn" onclick="toggleFrans()" style="background:#fce7f3;border:2px solid #f9a8d4;color:#831843;font-weight:800;font-size:13px;padding:6px 14px;border-radius:10px;cursor:pointer">🇫🇷 Frans: UIT</button>
+        <button id="fransToggleBtn" onclick="toggleFrans()" style="background:#fce7f3;border:2px solid #f9a8d4;color:#831843;font-weight:800;font-size:13px;padding:6px 14px;border-radius:10px;cursor:pointer;display:inline-flex;align-items:center;gap:6px"><img src="https://cdn.jsdelivr.net/gh/twitter/twemoji@latest/assets/72x72/1f1eb-1f1f7.png" style="width:18px;height:18px;vertical-align:middle"> Frans: UIT</button>
         <button class="ghost small readonly-hide" id="bewerkOcBtn">✏️ Bewerken</button>
         <button class="secondary small" id="pdfBtnWerk">⬇ PDF huidig kind</button>
         <button class="small" id="pdfAlleBtn">⬇ PDF alle kinderen</button>
@@ -716,7 +716,7 @@ window.openOc = function(id) {
   metFrans = oc.metFrans || false;
   const fransBtn = $('fransToggleBtn');
   if (fransBtn) {
-    fransBtn.textContent = `🇫🇷 Frans: ${metFrans ? 'AAN' : 'UIT'}`;
+    fransBtn.innerHTML = `<img src="https://cdn.jsdelivr.net/gh/twitter/twemoji@latest/assets/72x72/1f1eb-1f1f7.png" style="width:18px;height:18px;vertical-align:middle"> Frans: ${metFrans ? 'AAN' : 'UIT'}`;
     fransBtn.style.background = metFrans ? '#fce7f3' : '#f3f4f6';
     fransBtn.style.borderColor = metFrans ? '#f9a8d4' : '#d1d5db';
     fransBtn.style.color = metFrans ? '#831843' : '#6b7280';
@@ -829,7 +829,7 @@ function renderFiche() {
       ${vakCard('nl','📖','Nederlands','vak-nl',g.nl||'')}
       ${vakCard('wiskunde','🔢','Wiskunde','vak-wis',g.wiskunde||'')}
       ${vakCard('wo','🌍','WO','vak-wo',g.wo||'')}
-      ${metFrans ? vakCard('fr','🇫🇷','Frans','vak-fr',g.fr||'') : ''}
+      ${metFrans ? vakCard('fr','<img src="https://cdn.jsdelivr.net/gh/twitter/twemoji@latest/assets/72x72/1f1eb-1f1f7.png" style="width:18px;height:18px;vertical-align:middle">','Frans','vak-fr',g.fr||'') : ''}
     </div>
 
     <div class="rubriek-grid">
@@ -879,7 +879,7 @@ function vakCard(id, emoji, label, cls, value) {
   const minH = (id === 'ouderOpm' || id === 'vragen') ? '110px' : '90px';
   const ro = isReadOnly ? 'readonly style="background:#f9f9f7;color:var(--muted)"' : '';
   return `<div class="vak-card ${cls}">
-    <div class="vak-card-header"><span style="font-size:18px">${emoji}</span> ${label}</div>
+    <div class="vak-card-header"><span style="font-size:18px;display:inline-flex;align-items:center">${emoji}</span> ${label}</div>
     <div class="vak-card-body"><textarea id="f_${id}" style="min-height:${minH}" oninput="onFicheChange()" ${ro}>${esc(value)}</textarea></div>
   </div>`;
 }
@@ -949,7 +949,7 @@ window.toggleFrans = function() {
   metFrans = !metFrans;
   const btn = $('fransToggleBtn');
   if (btn) {
-    btn.textContent = `🇫🇷 Frans: ${metFrans ? 'AAN' : 'UIT'}`;
+    btn.innerHTML = `<img src="https://cdn.jsdelivr.net/gh/twitter/twemoji@latest/assets/72x72/1f1eb-1f1f7.png" style="width:18px;height:18px;vertical-align:middle"> Frans: ${metFrans ? 'AAN' : 'UIT'}`;
     btn.style.background = metFrans ? '#fce7f3' : '#f3f4f6';
     btn.style.borderColor = metFrans ? '#f9a8d4' : '#d1d5db';
     btn.style.color = metFrans ? '#831843' : '#6b7280';
