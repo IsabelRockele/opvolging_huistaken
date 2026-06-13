@@ -315,6 +315,11 @@ const schooljaar = (() => {
   const y = now.getMonth() >= 7 ? now.getFullYear() : now.getFullYear() - 1;
   return `${y}-${y+1}`;
 })();
+const BEWAAR_JAREN_OUDERCONTACT = 2; // Aanpasbaar: oudercontacten bewaren tot eind augustus na dit aantal schooljaren.
+
+function bewaarTotVoorSchooljaar(jaar=schooljaar, extraJaren=BEWAAR_JAREN_OUDERCONTACT) {
+  return `${Number(String(jaar).slice(0,4)) + extraJaren}-08-31`;
+}
 
 let currentUser = null;
 let currentRol = null;      // 'directie' | 'zorgcoordinator' | 'zorgleerkracht' | 'leerkracht' | null
@@ -348,7 +353,8 @@ async function saveToFirebase() {
     klasId: activeKlasId || '',
     klasNaam: activeKlasNaam || beheerKlas || '',
     schooljaar,
-    bewaarTot: `${Number(schooljaar.slice(0,4))+2}-08-31`,
+    bewaarTot: bewaarTotVoorSchooljaar(),
+    bewaartermijnJaren: BEWAAR_JAREN_OUDERCONTACT,
     updatedAt: serverTimestamp()
   }, { merge: true });
 }
