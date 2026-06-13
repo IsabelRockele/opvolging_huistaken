@@ -156,6 +156,27 @@ label{display:block;font-weight:800;font-size:12px;color:#44515f;margin:8px 0 4p
 .rap-hoofdtab{flex:1;border:1.5px solid var(--line);background:#f5f3ee;color:var(--muted);padding:12px 16px;border-radius:10px;cursor:pointer;font-weight:800;font-size:14.5px;font-family:inherit;text-align:center}
 .rap-hoofdtab:hover{background:#ece9e2}
 .rap-hoofdtab.actief{background:var(--green2);color:var(--text);border-color:var(--green)}
+/* puntenboek (puntenboek-codex) */
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+@media(max-width:700px){.grid3{grid-template-columns:1fr}}
+.pt-invoer-rij{display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid #eef1f5}
+.pt-invoer-rij:last-child{border-bottom:none}
+.pt-naam{flex:1;font-weight:600;font-size:14px}
+.pt-blok{margin-bottom:18px;border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.pt-blok-kop{background:#f5f3ee;padding:10px 14px;font-weight:800;font-size:14.5px}
+.pt-tabel-wrap{overflow-x:auto}
+.pt-tabel{border-collapse:collapse;width:100%;font-size:13px;min-width:480px}
+.pt-tabel th,.pt-tabel td{padding:7px 10px;text-align:center;border-bottom:1px solid #eef1f5;border-right:1px solid #f3f5f8}
+.pt-tabel th{background:#fbfcfb;font-size:11px;color:var(--muted);font-weight:800;vertical-align:top}
+.pt-sub{font-weight:600;color:#9aa3ad;font-size:10px}
+.pt-naam-cel{text-align:left;font-weight:700;white-space:nowrap}
+.pt-tabel th.pt-naam-cel{background:#fbfcfb}
+.pt-gem{font-weight:800;color:#3c4a5c;background:#fafbfc}
+.pt-ster{white-space:nowrap;background:#fffdf5}
+.pt-leeg{color:#cbd2da}
+.pt-x{border:none;background:none;color:#c46;cursor:pointer;font-size:14px;font-weight:800;padding:0 2px;margin-left:2px}
+.pt-x:hover{color:#a02}
+.pt-ster-toon{padding:6px 0 4px;font-size:14px}
 </style>
 </head>
 <body>
@@ -302,6 +323,7 @@ function verrijkLeerling(s){
 const today=()=>new Date().toISOString().slice(0,10);
 let user=null, role="", groups=[], active=null, classes={}, tab="basis";
 let rapHoofdtab="groep"; // welke rapport-hoofdtab actief is: 'groep' of 'kind'
+let ptPeriodeFilter="";
 
 function year(){return ($("schooljaar").value||"2026-2027").trim();}
 function volgendSchooljaar(jaar=year()){
@@ -311,7 +333,34 @@ function volgendSchooljaar(jaar=year()){
 function groupRef(id){return doc(db,"zorggroepen",id);}
 function emptyGroup(){return{id:"zg_"+uid(),schooljaar:year(),naam:"Nieuwe groeigroep",domeinen:["lezen"],begeleiders:"",doelen:"",leerlingen:[],logboek:[],toetsen:[],rapporten:{},createdAt:new Date().toISOString()};}
 function setStatus(text){$("status").textContent=text;}
-function normalizeGroup(g){g.leerlingen=Array.isArray(g.leerlingen)?g.leerlingen.map(verrijkLeerling):[];g.logboek=Array.isArray(g.logboek)?g.logboek:[];g.toetsen=Array.isArray(g.toetsen)?g.toetsen:[];g.domeinen=Array.isArray(g.domeinen)?g.domeinen:[];g.rapporten=g.rapporten||{};return g;}
+function normalizeGroup(g){g.leerlingen=Array.isArray(g.leerlingen)?g.leerlingen.map(verrijkLeerling):[];g.logboek=Array.isArray(g.logboek)?g.logboek:[];g.toetsen=Array.isArray(g.toetsen)?g.toetsen:[];g.domeinen=Array.isArray(g.domeinen)?g.domeinen:[];g.rapporten=g.rapporten||{};g.rapportPeriodes=g.rapportPeriodes||{};return g;}
+function huidigeRapportPeriode(){
+  return ($("rapportPeriode")?.value || active?.rapportGroep?.periode || ptPeriodeFilter || "").trim();
+}
+function puntenboekPeriodes(){
+  const set=new Set((active?.toetsen||[]).map(t=>String(t.periode||"").trim()).filter(Boolean));
+  if(active?.rapportGroep?.periode) set.add(String(active.rapportGroep.periode).trim());
+  return [...set].sort((a,b)=>a.localeCompare(b,"nl",{numeric:true}));
+}
+function actievePuntenboekPeriode(){
+  const uitSelect=$("ptFilterPeriode")?.value;
+  if(uitSelect!==undefined) ptPeriodeFilter=uitSelect;
+  return (ptPeriodeFilter || active?.rapportGroep?.periode || puntenboekPeriodes()[0] || "").trim();
+}
+function toetsHoortBijPeriode(toets, periode=actievePuntenboekPeriode()){
+  return !periode || String(toets.periode||"").trim()===periode;
+}
+function rapportPeriodeKey(p){return String(p||"").trim();}
+function bewaarHuidigeRapportPeriode(){
+  const key=rapportPeriodeKey(active?.rapportGroep?.periode);
+  if(!active||!key) return;
+  active.rapportPeriodes=active.rapportPeriodes||{};
+  active.rapportPeriodes[key]={
+    rapportGroep:JSON.parse(JSON.stringify(active.rapportGroep||{})),
+    rapporten:JSON.parse(JSON.stringify(active.rapporten||{})),
+    updatedAt:new Date().toISOString()
+  };
+}
 
 async function loadRole(){
   const snap=await getDoc(doc(db,"schoolrollen",user.uid));
@@ -488,23 +537,177 @@ function renderLogItem(l){
     }).join("")}</div>`:""}</article>`;
 }
 function renderToetsen(){
+  const domeinen=DOMAINEN;
+  const nederlands=domeinen.filter(d=>d.groep==="Nederlands");
+  const wiskunde=domeinen.filter(d=>d.groep==="Wiskunde");
+  const wo=domeinen.filter(d=>d.groep==="WO");
+  const optGroep=(label,lijst)=>`<optgroup label="${label}">${lijst.map(d=>`<option value="${esc(d.id)}">${esc(d.naam)}</option>`).join("")}</optgroup>`;
   $("tab-toetsen").innerHTML=`
-    <div class="editor panel" style="box-shadow:none;background:#fbfcfb;margin-bottom:12px">
-      <h3>Toetsje of momentopname</h3>
-      <div class="grid2"><div><label>Leerling</label><select id="testStudent">${active.leerlingen.map(s=>`<option value="${esc(studentKey(s))}">${esc(studentNaam(s))} (${esc(s.klas)})</option>`).join("")}</select></div><div><label>Datum</label><input id="testDatum" type="date" value="${today()}"></div></div>
-      <div class="grid2"><div><label>Wat werd bekeken?</label><input id="testTitel" placeholder="bv. dictee MKM-woorden"></div><div><label>Resultaat</label><input id="testResultaat" placeholder="8/10, smiley, 6 van 8 juist..."></div></div>
-      <label>Opmerking</label><textarea id="testOpm"></textarea>
-      <button class="secondary" onclick="window.ggAddTest()">Toetsje bewaren</button>
+    <div class="editor panel" style="box-shadow:none;background:#fbfcfb;margin-bottom:14px">
+      <h3>\ud83d\udcd2 Nieuwe toets toevoegen</h3>
+      <div class="grid2">
+        <div><label>Vak en onderdeel</label><select id="ptOnderdeel">${optGroep("Nederlands",nederlands)}${optGroep("Wiskunde",wiskunde)}${optGroep("WO",wo)}</select></div>
+        <div><label>Welke toets?</label><input id="ptTitel" placeholder="bv. dictee MKM-woorden"></div>
+      </div>
+      <div class="grid2">
+        <div><label>Rapportperiode</label><input id="ptPeriode" value="${esc(active.rapportGroep?.periode||'')}" placeholder="bv. Rapportperiode 1"></div>
+        <div><label>Datum</label><input id="ptDatum" type="date" value="${today()}"></div>
+      </div>
+      <div class="grid3">
+        <div><label>Invoer</label><select id="ptType" onchange="window.ggPtTypeWissel()"><option value="punten">Punten</option><option value="sterren">Sterren</option></select></div>
+        <div id="ptMaxWrap"><label>Op hoeveel? (max)</label><input id="ptMax" type="number" min="1" value="10" placeholder="10, 20, 25..." oninput="document.querySelectorAll('#ptMaxToon').forEach(e=>e.textContent=this.value)"></div>
+        <div><label>Gewicht <span class="muted" style="font-weight:400">(hoe zwaar telt mee)</span></label><input id="ptGewicht" type="number" min="0.5" step="0.5" value="1"></div>
+      </div>
+      <div id="ptInvoer"></div>
+      <button class="secondary" style="margin-top:10px" onclick="window.ggPtBewaarToets()">Toets bewaren in puntenboek</button>
     </div>
-    ${active.toetsen.length?active.toetsen.slice().sort((a,b)=>(b.datum||"").localeCompare(a.datum||"")).map(t=>`
-      <article class="test-item"><span class="tag blue">${esc(t.datum)}</span> <span class="tag">${esc(studentByKey(t.studentKey)?.naam||t.studentKey)}</span><h3>${esc(t.titel)}</h3><p><strong>${esc(t.resultaat||"")}</strong></p><p>${esc(t.opmerking||"")}</p></article>`).join(""):`<div class="empty">Nog geen toetsjes.</div>`}`;
+    <h3 style="margin:6px 2px">\ud83d\udcd3 Puntenboek</h3>
+    <div class="muted" style="margin:0 2px 10px">De sterren onderaan worden automatisch berekend en op het groeirapport gezet: punten worden eerst een percentage, alles wordt gewogen gemiddeld, en dat bepaalt de ster (0\u201349%=\u2b50, 50\u201369%=\u2b50\u2b50, 70\u201389%=\u2b50\u2b50\u2b50, 90\u2013100%=\u2b50\u2b50\u2b50\u2b50).</div>
+    <div class="row" style="margin:0 2px 12px">
+      <label style="margin:0;min-width:220px">Puntenboek bekijken voor
+        <select id="ptFilterPeriode" onchange="ptPeriodeFilter=this.value;renderPtOverzicht()">
+          ${puntenboekPeriodes().map(p=>`<option value="${esc(p)}" ${(ptPeriodeFilter||active.rapportGroep?.periode)===p?"selected":""}>${esc(p)}</option>`).join("")}
+        </select>
+      </label>
+      <button class="ghost" onclick="window.ggDownloadPuntenboekPdf()">Puntenboek PDF</button>
+    </div>
+    <div id="ptOverzicht"></div>`;
+  setTimeout(()=>{ renderPtInvoer(); renderPtOverzicht(); },0);
 }
+
+// Toon de invulrij(en) voor de nieuwe toets: alle leerlingen onder elkaar
+function renderPtInvoer(){
+  const el=$("ptInvoer"); if(!el) return;
+  const type=$("ptType")?.value||"punten";
+  if(!active.leerlingen.length){ el.innerHTML=`<div class="muted" style="margin-top:8px">Voeg eerst leerlingen toe aan deze groeigroep.</div>`; return; }
+  el.innerHTML=`<div class="pt-invoer-lijst" style="margin-top:10px">${active.leerlingen.map(s=>{
+    const k=studentKey(s);
+    const veld=type==="sterren"
+      ? `<select data-ptscore="${esc(k)}"><option value="">\u2013</option><option value="1">\u2b50</option><option value="2">\u2b50\u2b50</option><option value="3">\u2b50\u2b50\u2b50</option><option value="4">\u2b50\u2b50\u2b50\u2b50</option></select>`
+      : `<input data-ptscore="${esc(k)}" type="number" step="0.5" min="0" placeholder="score" style="width:90px"> <span class="muted">/ <span id="ptMaxToon">${esc($("ptMax")?.value||"10")}</span></span>`;
+    return `<div class="pt-invoer-rij"><span class="pt-naam">${esc(studentNaam(s))}</span> ${veld}</div>`;
+  }).join("")}</div>`;
+}
+window.ggPtTypeWissel=function(){
+  const type=$("ptType")?.value||"punten";
+  $("ptMaxWrap").style.display = type==="sterren" ? "none" : "block";
+  renderPtInvoer();
+};
+
+window.ggPtBewaarToets=async function(){
+  const domein=$("ptOnderdeel")?.value;
+  const titel=$("ptTitel")?.value.trim();
+  const type=$("ptType")?.value||"punten";
+  const max=type==="punten"?(Number($("ptMax")?.value)||10):null;
+  const gewicht=Number($("ptGewicht")?.value)||1;
+  if(!titel) return alert("Geef eerst een naam aan de toets, bijvoorbeeld 'dictee MKM-woorden'.");
+  const resultaten={};
+  let iets=false;
+  active.leerlingen.forEach(s=>{
+    const k=studentKey(s);
+    const v=document.querySelector(`[data-ptscore="${CSS.escape(k)}"]`)?.value;
+    if(v!==""&&v!=null){ resultaten[k]=v; iets=true; }
+  });
+  if(!iets) return alert("Vul minstens bij \u00e9\u00e9n kind een resultaat in.");
+  active.toetsen.push({
+    id:uid(), domein, titel, type, max, gewicht,
+    periode:$("ptPeriode")?.value||"", datum:$("ptDatum")?.value||today(),
+    resultaten, auteur:user.email||""
+  });
+  ptPeriodeFilter=($("ptPeriode")?.value||"").trim();
+  await saveGroup();
+  // formulier leegmaken voor de volgende toets
+  if($("ptTitel")) $("ptTitel").value="";
+  renderToetsen();
+};
+
+window.ggPtVerwijderToets=async function(id){
+  if(!confirm("Deze toets uit het puntenboek verwijderen?")) return;
+  active.toetsen=(active.toetsen||[]).filter(t=>t.id!==id);
+  await saveGroup();
+  renderToetsen();
+};
+
+// Het puntenboek-overzicht: per onderdeel een tabel met kinderen x toetsen + gemiddelde + ster
+function renderPtOverzicht(){
+  const el=$("ptOverzicht"); if(!el) return;
+  const periode=actievePuntenboekPeriode();
+  const toetsen=(active.toetsen||[]).filter(t=>toetsHoortBijPeriode(t,periode));
+  if(!toetsen.length){ el.innerHTML=`<div class="empty">Nog geen toetsen in het puntenboek${periode?` voor ${esc(periode)}`:""}.</div>`; return; }
+  // groepeer toetsen per onderdeel
+  const perDomein={};
+  toetsen.forEach(t=>{ (perDomein[t.domein]=perDomein[t.domein]||[]).push(t); });
+  const volgorde=DOMAINEN.map(d=>d.id).filter(id=>perDomein[id]);
+  el.innerHTML=volgorde.map(domId=>{
+    const lijst=perDomein[domId].slice().sort((a,b)=>(a.datum||"").localeCompare(b.datum||""));
+    const def=DOMAINEN.find(d=>d.id===domId)||{};
+    const kop=lijst.map(t=>`<th title="${esc(t.titel)}">${esc(t.titel)}<br><span class="pt-sub">${t.type==="sterren"?"\u2b50":("/"+t.max)} \u00d7${t.gewicht}</span> <button class="pt-x" onclick="window.ggPtVerwijderToets('${t.id}')" title="Toets verwijderen">\u00d7</button></th>`).join("");
+    const rijen=active.leerlingen.map(s=>{
+      const k=studentKey(s);
+      const cellen=lijst.map(t=>{
+        const r=t.resultaten?.[k];
+        if(r==null||r==="") return `<td class="pt-leeg">\u2013</td>`;
+        return `<td>${t.type==="sterren"?("\u2b50".repeat(Number(r))):esc(r)}</td>`;
+      }).join("");
+      const gem=gemiddeldPercentVoorOnderdeel(domId,k,periode);
+      const ster=sterrenUitPuntenboek(domId,k,periode);
+      const gemToon=gem==null?"\u2013":(Math.round(gem)+"%");
+      return `<tr><td class="pt-naam-cel">${esc(studentNaam(s))}</td>${cellen}<td class="pt-gem">${gemToon}</td><td class="pt-ster">${sterrenHtml(ster)}</td></tr>`;
+    }).join("");
+    return `<div class="pt-blok">
+      <div class="pt-blok-kop">${domainEmoji(domId)} ${esc(def.naam||domId)} <span class="muted" style="font-weight:400">(${esc(def.groep||"")})</span></div>
+      <div class="pt-tabel-wrap"><table class="pt-tabel">
+        <tr><th class="pt-naam-cel">Leerling</th>${kop}<th class="pt-gem">Gemiddelde</th><th class="pt-ster">Op rapport</th></tr>
+        ${rijen}
+      </table></div>
+    </div>`;
+  }).join("");
+}
+window.ggDownloadPuntenboekPdf=async function(){
+  const periode=actievePuntenboekPeriode();
+  const bron=$("ptOverzicht");
+  if(!bron||!bron.textContent.trim()) return alert("Er is nog geen puntenboek om te downloaden.");
+  if(typeof html2pdf==="undefined") return alert("PDF maken lukt niet omdat de PDF-bibliotheek niet geladen is.");
+  const houder=document.createElement("div");
+  houder.style.cssText="position:absolute;left:0;top:0;width:980px;background:#fff;z-index:-99999;padding:22px;font-family:Arial,sans-serif;color:#26313d";
+  houder.innerHTML=`
+    <h1 style="margin:0 0 4px;font-size:22px">Puntenboek groeigroep</h1>
+    <p style="margin:0 0 12px;color:#667085">${esc(active.naam||"Groeigroep")} · ${esc(periode||"Alle periodes")} · ${esc(year())}</p>
+    ${bron.innerHTML}
+  `;
+  houder.querySelectorAll("button").forEach(b=>b.remove());
+  document.body.appendChild(houder);
+  const bestandsnaam=`Puntenboek_${veiligeBestandsnaam(active.naam)}_${veiligeBestandsnaam(periode||year())}.pdf`;
+  try{
+    await html2pdf().set({
+      margin:[10,8,12,8],
+      filename:bestandsnaam,
+      image:{type:"jpeg",quality:0.95},
+      html2canvas:{scale:2,useCORS:true,backgroundColor:"#ffffff",scrollX:0,scrollY:0},
+      jsPDF:{unit:"mm",format:"a4",orientation:"landscape"},
+      pagebreak:{mode:["css","legacy"],avoid:[".pt-blok","tr"]}
+    }).from(houder).save();
+    setStatus(`Puntenboek gedownload: ${bestandsnaam}`);
+  }finally{
+    houder.remove();
+  }
+};
 function renderRapport(){
+  const rapportPeriodes=[...new Set([...Object.keys(active.rapportPeriodes||{}),...puntenboekPeriodes(),active.rapportGroep?.periode].filter(Boolean))].sort((a,b)=>a.localeCompare(b,"nl",{numeric:true}));
   $("tab-rapport").innerHTML=active.leerlingen.length?`
     <div class="editor no-print">
       <div class="grid2" style="gap:10px">
         <div><label>Welke rapportperiode?</label><input id="rapportPeriode" value="${esc(active.rapportGroep?.periode||'')}" placeholder="bv. Rapportperiode 1"></div>
         <div><label>Van \u2013 tot (maanden)</label><input id="rapportPeriodeMaanden" value="${esc(active.rapportGroep?.periodeMaanden||'')}" placeholder="bv. sept \u2013 dec 2026"></div>
+      </div>
+      <div class="row" style="margin:10px 0">
+        <label style="margin:0;min-width:260px">Vorige/nieuwe rapportperiode openen
+          <select onchange="window.ggOpenRapportPeriode(this.value)">
+            <option value="">Kies periode...</option>
+            ${rapportPeriodes.map(p=>`<option value="${esc(p)}" ${active.rapportGroep?.periode===p?"selected":""}>${esc(p)}</option>`).join("")}
+          </select>
+        </label>
+        <button class="ghost" onclick="window.ggOpenRapportPeriode(prompt('Naam nieuwe rapportperiode, bv. Rapportperiode 2','Rapportperiode 2'))">Nieuwe rapportperiode</button>
       </div>
 
       <div class="rap-hoofdtabs">
@@ -559,9 +762,12 @@ window.ggRapHoofdtab=function(welke){
 };
 // of een kind al sterren of woordjes heeft (voor het vinkje op de tab)
 function heeftRapportInhoud(key){
+  // toetsen in het puntenboek tellen ook als 'ingevuld'
+  const heeftToets=(active.toetsen||[]).some(t=>t.resultaten?.[key]!=null&&t.resultaten?.[key]!=="");
+  if(heeftToets) return true;
   const r=active.rapporten?.[key];
   if(!r||!r.domeinen) return false;
-  return Object.values(r.domeinen).some(d=>d&&(d.score||(d.tekst&&d.tekst.trim())));
+  return Object.values(r.domeinen).some(d=>d&&(d.tekst&&d.tekst.trim()));
 }
 function rapportGroepDomeinen(){
   return active.rapportGroep?.domeinen?.length ? active.rapportGroep.domeinen : [...(active.domeinen||[])];
@@ -591,6 +797,22 @@ function collectRapportGroup(){
     volgendeStap:$("rapportGroepVolgende")?.value||""
   };
 }
+window.ggOpenRapportPeriode=function(periode){
+  if(!periode) return;
+  if($("rapportStudentEditor")?.children.length) collectCurrentChildReport();
+  else collectRapportGroup();
+  bewaarHuidigeRapportPeriode();
+  const opgeslagen=active.rapportPeriodes?.[periode];
+  if(opgeslagen){
+    active.rapportGroep=JSON.parse(JSON.stringify(opgeslagen.rapportGroep||{}));
+    active.rapporten=JSON.parse(JSON.stringify(opgeslagen.rapporten||{}));
+  }else{
+    active.rapportGroep={...(active.rapportGroep||{}),periode,domeinen:rapportGroepDomeinen(),doelen:{...(active.rapportGroep?.doelen||{})},traject:"",volgendeStap:""};
+    active.rapporten={};
+  }
+  ptPeriodeFilter=periode;
+  renderRapport();
+};
 function studentReport(key){
   if(!active.rapporten[key]) active.rapporten[key]={};
   const report=active.rapporten[key];
@@ -615,36 +837,25 @@ function renderRapportStudent(){
   const report=studentReport(key);
   const domains=actieveRapportDomeinenVoorStudent(key);
   const idx=active.leerlingen.findIndex(x=>studentKey(x)===key);
+  const periode=huidigeRapportPeriode();
   $("rapportStudentEditor").innerHTML=`
       <div class="rapport-row" data-student="${esc(key)}">
         <div>
           <div class="rapport-row-head">${esc(studentNaam(s))}</div>
           <div class="muted">${esc(s.klas)} - ${idx+1} van ${active.leerlingen.length}</div>
-          <label style="margin-top:10px">Neem over van</label>
-          <div class="row">
-            <select id="copyReportSource">
-              <option value="">Kies leerling...</option>
-              ${active.leerlingen.filter(x=>studentKey(x)!==key).map(x=>`<option value="${esc(studentKey(x))}">${esc(studentNaam(x))}</option>`).join("")}
-            </select>
-            <button class="ghost small" onclick="window.ggCopyPersonalReport()">Neem over</button>
-          </div>
-          <button class="ghost small" style="margin-top:8px" onclick="window.ggFillReportScoresFromLog()">Voorstel uit logboek</button>
         </div>
         <div class="rapport-domain-list">
           ${domains.map(id=>{
             const r=report.domeinen[id]||{};
             const doel=active.rapportGroep?.doelen?.[id]||"";
+            const pct=gemiddeldPercentVoorOnderdeel(id,key,periode);
+            const ster=sterrenUitPuntenboek(id,key,periode);
+            const aantalToetsen=(active.toetsen||[]).filter(t=>toetsHoortBijPeriode(t,periode)&&t.domein===id&&t.resultaten?.[key]!=null&&t.resultaten?.[key]!=="").length;
             return `<div class="rapport-domain-card">
-              <div class="rapport-cell-title">${esc(domainName(id))}</div>
+              <div class="rapport-cell-title">${domainEmoji(id)} ${esc(domainName(id))}</div>
               ${doel?`<div class="muted" style="margin-bottom:6px">${esc(doel)}</div>`:""}
-              <label>Sterren voor ${esc(domainName(id))}</label>
-              <select data-score="${esc(key)}|${esc(id)}">
-                <option value="">Niet ingevuld</option>
-                <option value="1" ${String(r.score)==="1"?"selected":""}>\u2b50 lukt nog niet alleen</option>
-                <option value="2" ${String(r.score)==="2"?"selected":""}>\u2b50\u2b50 lukt met hulp</option>
-                <option value="3" ${String(r.score)==="3"?"selected":""}>\u2b50\u2b50\u2b50 lukt bijna zelfstandig</option>
-                <option value="4" ${String(r.score)==="4"?"selected":""}>\u2b50\u2b50\u2b50\u2b50 lukt zelfstandig</option>
-              </select>
+              <label>Sterren (automatisch uit het puntenboek)</label>
+              <div class="pt-ster-toon">${aantalToetsen?`${sterrenHtml(ster)} <span class="muted">${Math.round(pct)}% gemiddeld over ${aantalToetsen} toets${aantalToetsen>1?'en':''}</span>`:`<span class="muted">Nog geen toetsen voor ${esc(domainName(id))} \u2014 voeg ze toe bij het tabblad Toetsjes.</span>`}</div>
               <label>Persoonlijk woordje bij ${esc(domainName(id))}</label>
               <textarea data-text="${esc(key)}|${esc(id)}" placeholder="Wat geldt specifiek voor dit kind bij ${esc(domainName(id))}?">${esc(r.tekst||"")}</textarea>
             </div>`;
@@ -682,7 +893,8 @@ function collectCurrentChildReport(){
   if(vk) next.volgendeStapKind=vk.value||"";
   DOMAINEN.forEach(d=>{
     const extra=document.querySelector(`[data-extra="${key}|${d.id}"]`)?.checked||false;
-    const score=document.querySelector(`[data-score="${key}|${d.id}"]`)?.value??next.domeinen[d.id]?.score??"";
+    // score-uit-puntenboek-codex: ster wordt berekend, niet meer handmatig gekozen
+    const score=sterrenUitPuntenboek(d.id,key)||"";
     const tekst=document.querySelector(`[data-text="${key}|${d.id}"]`)?.value??next.domeinen[d.id]?.tekst??"";
     next.domeinen[d.id]={...(next.domeinen[d.id]||{}),actiefExtra:extra,score,tekst};
   });
@@ -743,8 +955,9 @@ function renderReportPreview(key,report){
     <div class="report-legend">Legende: ${sterrenHtml(1)} ${STERREN_LEGENDE[1]} \u00b7 ${sterrenHtml(2)} ${STERREN_LEGENDE[2]} \u00b7 ${sterrenHtml(3)} ${STERREN_LEGENDE[3]} \u00b7 ${sterrenHtml(4)} ${STERREN_LEGENDE[4]}.</div>
     ${domeinen.length?domeinen.map(id=>{
       const d=report.domeinen?.[id]||{};
+      const ster=sterrenUitPuntenboek(id,key);
       return `<div class="report-domain-preview">
-        <div class="report-domain-head"><span>${domainEmoji(id)} ${esc(domainName(id))}</span><span class="report-domain-score">${sterrenHtml(d.score)}</span></div>
+        <div class="report-domain-head"><span>${domainEmoji(id)} ${esc(domainName(id))}</span><span class="report-domain-score">${sterrenHtml(ster)}</span></div>
         ${doelen[id]?`<div class="muted">${esc(doelen[id])}</div>`:""}
         ${d.tekst?`<p>${esc(d.tekst)}</p>`:""}
       </div>`;
@@ -770,6 +983,52 @@ function sterrenHtml(n){
   return h;
 }
 const STERREN_LEGENDE=["","lukt nog niet alleen","lukt met hulp","lukt bijna zelfstandig","lukt zelfstandig"];
+
+// ===== Puntenboek-omrekening (puntenboek-codex) =====
+// percentage -> sterren volgens de afgesproken grenzen
+function percentNaarSterren(p){
+  if(p==null||isNaN(p)) return 0;
+  if(p>=90) return 4;
+  if(p>=70) return 3;
+  if(p>=50) return 2;
+  return 1;
+}
+// een sterren-toets telt mee als dit vaste percentage (midden van elke klasse)
+function sterrenNaarPercent(s){
+  return ({1:25,2:55,3:75,4:95})[Number(s)] ?? null;
+}
+// zet 1 toetsresultaat van 1 kind om naar een percentage (punten of sterren)
+function toetsResultaatPercent(toets, leerlingKey){
+  const r=toets.resultaten?.[leerlingKey];
+  if(r==null||r==="") return null;
+  if(toets.type==="sterren"){
+    return sterrenNaarPercent(r);
+  }
+  // punten: score / max * 100
+  const score=Number(r);
+  const max=Number(toets.max)||10;
+  if(isNaN(score)||max<=0) return null;
+  return Math.max(0,Math.min(100,(score/max)*100));
+}
+// gewogen gemiddelde-percentage van alle toetsen van 1 onderdeel voor 1 kind
+function gemiddeldPercentVoorOnderdeel(domeinId, leerlingKey, periode=huidigeRapportPeriode()){
+  let somGewicht=0, somGewogen=0;
+  (active.toetsen||[]).forEach(t=>{
+    if(t.domein!==domeinId) return;
+    if(!toetsHoortBijPeriode(t,periode)) return;
+    const p=toetsResultaatPercent(t, leerlingKey);
+    if(p==null) return;
+    const g=Number(t.gewicht)||1;
+    somGewogen+=p*g; somGewicht+=g;
+  });
+  if(somGewicht===0) return null;
+  return somGewogen/somGewicht;
+}
+// eindster van 1 onderdeel voor 1 kind op basis van het puntenboek
+function sterrenUitPuntenboek(domeinId, leerlingKey, periode=huidigeRapportPeriode()){
+  const p=gemiddeldPercentVoorOnderdeel(domeinId, leerlingKey, periode);
+  return p==null?0:percentNaarSterren(p);
+}
 function studentByKey(key){return active?.leerlingen.find(s=>studentKey(s)===key);}
 function veiligeBestandsnaam(text){
   return String(text||"rapport").normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9_-]+/gi,"_").replace(/^_+|_+$/g,"")||"rapport";
@@ -791,20 +1050,8 @@ async function imageAsDataUrl(url){
 // Bouwt een nette HTML-fiche en laat html2pdf die omzetten. Twemoji zet alle
 // emoji's om naar afbeeldingen, zodat pictogrammen overal correct verschijnen
 // en nooit vreemde tekens worden.
-function bouwGroeirapportHtml({s,groep,doelen,domeinen,report,logoUrl}){
+function bouwGroeirapportHtml({s,groep,doelen,domeinen,report,logoUrl,leerlingKey}){
   const schoolnaam=esc(active?.rapportSchoolnaam||"GO! Basisschool De Linde");
-  const rijen=domeinen.map(id=>{
-    const d=report.domeinen?.[id]||{};
-    const def=DOMAINEN.find(x=>x.id===id)||{};
-    const klasse=def.groep==="Nederlands"?"nl":def.groep==="Wiskunde"?"wis":"wo";
-    return `<tr class="${klasse}">
-      <td class="gr-dom"><span class="pic">${domainEmoji(id)}</span><span class="nm">${esc(domainName(id))}</span></td>
-      <td class="gr-doel">${esc(doelen[id]||"")}</td>
-      <td class="gr-sterren">${sterrenHtml(d.score)}</td>
-      <td class="gr-woordje">${esc(d.tekst||"")}</td>
-    </tr>`;
-  }).join("");
-
   // domeinen groeperen per hoofdgroep met een tussentitel
   const groepenVolgorde=["Nederlands","Wiskunde","WO"];
   const blokken=groepenVolgorde.map(gnaam=>{
@@ -814,10 +1061,11 @@ function bouwGroeirapportHtml({s,groep,doelen,domeinen,report,logoUrl}){
     const label=gnaam==="WO"?"Wereldori\u00ebntatie":gnaam;
     const trs=ids.map(id=>{
       const d=report.domeinen?.[id]||{};
+      const ster=leerlingKey?sterrenUitPuntenboek(id,leerlingKey):(Number(d.score)||0);
       return `<tr class="${klasse}">
         <td class="gr-dom"><span class="pic">${domainEmoji(id)}</span><span class="nm">${esc(domainName(id))}</span></td>
         <td class="gr-doel">${esc(doelen[id]||"")}</td>
-        <td class="gr-sterren">${sterrenHtml(d.score)}</td>
+        <td class="gr-sterren">${sterrenHtml(ster)}</td>
         <td class="gr-woordje">${esc(d.tekst||"")}</td>
       </tr>`;
     }).join("");
@@ -879,7 +1127,7 @@ async function downloadCurrentReportPdf(){
 
   setStatus(`Groeirapport maken van ${s?.naam||"leerling"}...`);
   const logoUrl=active?.rapportLogoDataUrl||await imageAsDataUrl("afbeeldingen/schoollogo.png");
-  const html=bouwGroeirapportHtml({s,groep,doelen,domeinen,report,logoUrl});
+  const html=bouwGroeirapportHtml({s,groep,doelen,domeinen,report,logoUrl,leerlingKey:key});
 
   // off-screen renderen, achter de pagina (z-index negatief) zodat capture-coordinaten kloppen
   const houder=document.createElement("div");
@@ -1040,10 +1288,6 @@ window.ggAddLog=async()=>{
   active.logboek.push({id:uid(),datum:$("logDatum").value||today(),titel:$("logTitel").value||"Notitie",tekst:$("logTekst").value||"",domeinen,auteur:user.email||"",evaluaties:evals});
   await saveGroup();tab="logboek";renderWorkspace();
 };
-window.ggAddTest=async()=>{
-  active.toetsen.push({id:uid(),studentKey:$("testStudent").value,datum:$("testDatum").value||today(),titel:$("testTitel").value||"Momentopname",resultaat:$("testResultaat").value||"",opmerking:$("testOpm").value||"",auteur:user.email||""});
-  await saveGroup();tab="toetsen";renderWorkspace();
-};
 window.ggRenderRapportStudent=()=>renderRapportStudent();
 // groepsdoelen verversen bij aan/uitvinken onderdeel (in de groep-tab, geen kind-editor)
 window.ggRenderRapportGroepDoelen=()=>{
@@ -1053,6 +1297,7 @@ window.ggRenderRapportGroepDoelen=()=>{
 };
 window.ggSaveReport=async()=>{
   collectCurrentChildReport();
+  bewaarHuidigeRapportPeriode();
   const key=currentReportKey();
   renderReportPreview(key,active.rapporten[key]);
   // tab-vinkje van dit kind bijwerken zonder de hele tab te herbouwen
@@ -1062,6 +1307,7 @@ window.ggSaveReport=async()=>{
 };
 window.ggSaveAndNextReport=async()=>{
   collectCurrentChildReport();
+  bewaarHuidigeRapportPeriode();
   const key=currentReportKey();
   const idx=active.leerlingen.findIndex(s=>studentKey(s)===key);
   await saveGroup();
