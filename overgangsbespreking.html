@@ -1079,6 +1079,12 @@ const schooljaar = (() => {
   const y = now.getMonth() >= 7 ? now.getFullYear() : now.getFullYear() - 1;
   return `${y}-${y + 1}`;
 })();
+const BEWAAR_JAREN_OVERGANG = 5; // Aanpasbaar: overgangsfiches bewaren tot eind augustus na dit aantal schooljaren.
+const BEWAAR_JAREN_SCHOOLBEHEER = 2; // Aanpasbaar: klaslijsten/refter/activiteiten/aankopen bewaren tot eind augustus na dit aantal schooljaren.
+
+function bewaarTotVoorSchooljaar(jaar, extraJaren) {
+  return `${Number(String(jaar).slice(0, 4)) + extraJaren}-08-31`;
+}
 
 let currentUser = null;
 const overgangParams = new URLSearchParams(window.location.search);
@@ -1131,7 +1137,8 @@ window.firebaseOvergang = {
       eigenaar_uid: targetOvergangUserId || currentUser.uid,
       eigenaar_email: currentUser.email || "",
       schooljaar,
-      bewaarTot: `${Number(schooljaar.slice(0, 4)) + 5}-08-31`,
+      bewaarTot: bewaarTotVoorSchooljaar(schooljaar, BEWAAR_JAREN_OVERGANG),
+      bewaartermijnJaren: BEWAAR_JAREN_OVERGANG,
       updatedAt: serverTimestamp()
     }, { merge: true });
   },
@@ -1157,6 +1164,8 @@ window.firebaseOvergang = {
     item.schooljaar = schooljaar;
     item.klas = klas;
     item.leerlingen ||= [];
+    item.bewaarTot = bewaarTotVoorSchooljaar(schooljaar, BEWAAR_JAREN_SCHOOLBEHEER);
+    item.bewaartermijnJaren = BEWAAR_JAREN_SCHOOLBEHEER;
     const existing = new Set(item.leerlingen.map(schoolbeheerNameKey));
     let added = 0;
     let skipped = 0;
