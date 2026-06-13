@@ -4,7 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Groeigroepen</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@twemoji/api@15.1.0/dist/twemoji.min.js"></script>
 <style>
 :root{--bg:#f7f4ee;--panel:#fff;--text:#26313d;--muted:#667085;--line:#d8ded8;--green:#6f9f62;--green2:#e9f4e6;--blue:#426fae;--blue2:#e9eef8;--yellow:#f6d76b;--warn:#fff1c7;--danger:#f5c2c7;--shadow:0 8px 24px rgba(38,49,61,.08)}
 *{box-sizing:border-box}
@@ -89,6 +90,72 @@ label{display:block;font-weight:800;font-size:12px;color:#44515f;margin:8px 0 4p
 .hidden{display:none!important}
 @media(max-width:980px){main{grid-template-columns:1fr}.eval-row,.grid2,.domain-grid,.rapport-row,.report-info,.report-header{grid-template-columns:1fr}.report-preview{padding:22px 18px;min-height:auto}}
 @media print{body{background:#fff}header,.sidebar,.tabs,.no-print,.editor{display:none!important}main{display:block;width:auto;margin:0}.panel{box-shadow:none;border:0}.report-preview{border:0;padding:0}}
+.ster{display:inline-block}
+/* ---- Groeirapport PDF-fiche (groeirapport-pdf-codex) ---- */
+#grpdfWrap{font-family:'Nunito','Segoe UI',Arial,sans-serif;color:#26313d;line-height:1.5;background:#fff;width:720px;max-width:720px}
+#grpdfWrap img.emoji{height:1em;width:1em;vertical-align:-0.15em;margin:0 .03em}
+#grpdfWrap .gr-hoofding{display:flex;align-items:center;gap:18px;border-bottom:3px solid #5f8f3e;padding-bottom:12px}
+#grpdfWrap .gr-logo{width:84px;height:84px;flex:0 0 84px;object-fit:contain}
+#grpdfWrap .gr-logo-leeg{width:84px;height:84px;flex:0 0 84px;border:2px dashed #b5c49d;border-radius:12px;background:#eef4e6;display:flex;align-items:center;justify-content:center;text-align:center;color:#76945a;font-size:10px;font-weight:700;padding:5px}
+#grpdfWrap .gr-school{font-size:12px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#5f8f3e;margin:0}
+#grpdfWrap .gr-hoofding h1{margin:2px 0 3px;font-size:25px;font-weight:800}
+#grpdfWrap .gr-sub{margin:0;color:#64748b;font-size:12.5px;font-style:italic}
+#grpdfWrap .gr-kind{display:grid;grid-template-columns:1.5fr 0.7fr 1.4fr 1.3fr;margin:14px 0 4px;border:1px solid #dfe5ec;border-radius:10px;overflow:hidden}
+#grpdfWrap .gr-kind div{padding:8px 11px;border-right:1px solid #dfe5ec;min-width:0}
+#grpdfWrap .gr-kind div:last-child{border-right:none}
+#grpdfWrap .gr-kind .lab{display:block;font-size:9px;text-transform:uppercase;letter-spacing:.05em;color:#64748b;font-weight:800;margin-bottom:1px}
+#grpdfWrap .gr-kind .waarde{font-size:13px;font-weight:700;overflow-wrap:break-word}
+#grpdfWrap .gr-kind .waarde-sub{font-size:11.5px;font-weight:600;color:#64748b}
+#grpdfWrap .gr-legende{display:flex;gap:16px;flex-wrap:wrap;font-size:10.5px;color:#64748b;margin:8px 2px 14px;align-items:center}
+#grpdfWrap .gr-legende b{display:inline-flex;align-items:center}
+#grpdfWrap .gr-legende .ster{font-size:11px}
+#grpdfWrap h2.gr-domein{display:flex;align-items:center;gap:10px;font-size:14px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;margin:18px 0 8px;color:#26313d}
+#grpdfWrap h2.gr-domein .bol{width:10px;height:10px;border-radius:50%;flex:0 0 10px;background:#94a3b8}
+#grpdfWrap h2.gr-domein.nl .bol{background:#426fae}
+#grpdfWrap h2.gr-domein.wis .bol{background:#5f8f3e}
+#grpdfWrap h2.gr-domein.wo .bol{background:#c98a2b}
+#grpdfWrap h2.gr-domein .rest{flex:1;height:1px;background:#dfe5ec}
+#grpdfWrap table.gr-eval{width:100%;border-collapse:collapse;font-size:12.5px}
+#grpdfWrap table.gr-eval th{text-align:left;font-size:9px;text-transform:uppercase;letter-spacing:.06em;color:#64748b;font-weight:800;padding:0 9px 5px;border-bottom:1.5px solid #dfe5ec}
+#grpdfWrap table.gr-eval td{padding:8px 9px;border-bottom:1px solid #edf1f5;vertical-align:middle}
+#grpdfWrap table.gr-eval tr:last-child td{border-bottom:none}
+#grpdfWrap td.gr-dom{width:150px;font-weight:800}
+#grpdfWrap td.gr-dom .pic{font-size:20px;margin-right:7px;vertical-align:middle}
+#grpdfWrap td.gr-dom .nm{vertical-align:middle}
+#grpdfWrap td.gr-doel{width:200px;color:#3c4a5c;font-style:italic;font-size:12px}
+#grpdfWrap td.gr-sterren{width:96px;white-space:nowrap}
+#grpdfWrap td.gr-sterren .ster{font-size:16px;letter-spacing:2px}
+#grpdfWrap td.gr-woordje{color:#3c4a5c}
+#grpdfWrap tr.nl td.gr-dom{border-left:3px solid #426fae;background:#e9eef8}
+#grpdfWrap tr.wis td.gr-dom{border-left:3px solid #5f8f3e;background:#e9f4e6}
+#grpdfWrap tr.wo td.gr-dom{border-left:3px solid #c98a2b;background:#fbf0dc}
+#grpdfWrap .gr-traject{background:#fef9e7;border-left:4px solid #f6d76b;border-radius:8px;padding:11px 15px;margin:14px 0 6px;font-size:12.5px}
+#grpdfWrap .gr-volgende{background:#eef4e6;border-left:4px solid #8fbf6f}
+#grpdfWrap .gr-traject .kop{font-size:10px;text-transform:uppercase;letter-spacing:.07em;font-weight:800;color:#8a6d1f;margin:0 0 5px}
+#grpdfWrap .gr-volgende .kop{color:#4f7a33}
+#grpdfWrap .gr-traject p{margin:4px 0;line-height:1.55}
+#grpdfWrap .gr-handtekeningen{display:grid;grid-template-columns:1fr 1fr 1fr;gap:22px;margin-top:30px}
+#grpdfWrap .gr-handtekeningen .vak{border-top:1.5px solid #26313d;padding-top:6px;font-size:11px;color:#64748b}
+#grpdfWrap .gr-handtekeningen .vak b{display:block;color:#26313d;font-size:12px}
+/* leerling-tabs in rapport (rapport-leerlingtabs-codex) */
+.lln-tabs{display:flex;flex-wrap:wrap;gap:6px;margin:14px 0 4px;border-bottom:2px solid var(--line);padding-bottom:0}
+.lln-tab{border:1px solid var(--line);border-bottom:none;background:#f1efe9;color:var(--muted);padding:8px 14px;border-radius:8px 8px 0 0;cursor:pointer;font-weight:700;font-size:13px;font-family:inherit}
+.lln-tab:hover{background:#e9e6df}
+.lln-tab.actief{background:#fff;color:var(--text);border-color:var(--green);border-bottom:2px solid #fff;margin-bottom:-2px;box-shadow:0 -2px 6px rgba(38,49,61,.05)}
+.lln-tab .vink{color:var(--green);margin-left:4px}
+.algemeen-blok{background:#fbfcfb;border:1px solid var(--line);border-radius:12px;margin-bottom:4px}
+.algemeen-blok summary{cursor:pointer;padding:12px 16px;font-weight:800;list-style:none;display:flex;align-items:center;gap:8px}
+.algemeen-blok summary::-webkit-details-marker{display:none}
+.algemeen-blok summary::before{content:"\25b6";font-size:11px;color:var(--muted);transition:transform .15s}
+.algemeen-blok[open] summary::before{transform:rotate(90deg)}
+.algemeen-blok .blok-inhoud{padding:0 16px 14px}
+.rapport-split{display:grid;grid-template-columns:1fr 1fr;gap:18px;align-items:start}
+@media(max-width:1100px){.rapport-split{grid-template-columns:1fr}}
+/* twee hoofdtabs in rapport (rapport-hoofdtabs-codex) */
+.rap-hoofdtabs{display:flex;gap:8px;margin:16px 0 14px}
+.rap-hoofdtab{flex:1;border:1.5px solid var(--line);background:#f5f3ee;color:var(--muted);padding:12px 16px;border-radius:10px;cursor:pointer;font-weight:800;font-size:14.5px;font-family:inherit;text-align:center}
+.rap-hoofdtab:hover{background:#ece9e2}
+.rap-hoofdtab.actief{background:var(--green2);color:var(--text);border-color:var(--green)}
 </style>
 </head>
 <body>
@@ -156,10 +223,42 @@ const db=getFirestore(app);
 const allowedRoles=["directie","zorgcoordinator","zorgleerkracht"];
 const DEFAULT_CLASSES=["1A","2A","3A","4A","5A","6A"];
 const DOMAINEN=[
-  {id:"lezen",groep:"Nederlands",naam:"Lezen"},{id:"spelling",groep:"Nederlands",naam:"Spelling"},{id:"spreken",groep:"Nederlands",naam:"Spreken"},{id:"luisteren",groep:"Nederlands",naam:"Luisteren"},{id:"woordenschat",groep:"Nederlands",naam:"Woordenschat"},{id:"schrijven",groep:"Nederlands",naam:"Schrijven"},
-  {id:"getallen",groep:"Wiskunde",naam:"Getallen"},{id:"hoofdrekenen",groep:"Wiskunde",naam:"Hoofdrekenen"},{id:"cijferen",groep:"Wiskunde",naam:"Cijferen"},{id:"meten",groep:"Wiskunde",naam:"Meten en metend rekenen"},{id:"meetkunde",groep:"Wiskunde",naam:"Meetkunde"},
-  {id:"wo",groep:"WO",naam:"Wereldorientatie"}
+  {id:"lezen",groep:"Nederlands",naam:"Lezen",emoji:"\ud83d\udcd6"},{id:"spelling",groep:"Nederlands",naam:"Spelling",emoji:"\ud83d\udd24"},{id:"spreken",groep:"Nederlands",naam:"Spreken",emoji:"\ud83d\udde3\ufe0f"},{id:"luisteren",groep:"Nederlands",naam:"Luisteren",emoji:"\ud83d\udc42"},{id:"woordenschat",groep:"Nederlands",naam:"Woordenschat",emoji:"\ud83d\udcad"},{id:"schrijven",groep:"Nederlands",naam:"Schrijven",emoji:"\u270d\ufe0f"},
+  {id:"getallen",groep:"Wiskunde",naam:"Getallen",emoji:"\ud83d\udd22"},{id:"hoofdrekenen",groep:"Wiskunde",naam:"Hoofdrekenen",emoji:"\ud83e\udde0"},{id:"cijferen",groep:"Wiskunde",naam:"Cijferen",emoji:"\u2795"},{id:"meten",groep:"Wiskunde",naam:"Meten en metend rekenen",emoji:"\ud83d\udccf"},{id:"meetkunde",groep:"Wiskunde",naam:"Meetkunde",emoji:"\ud83d\udcd0"},
+  {id:"wo",groep:"WO",naam:"Wereldori\u00ebntatie",emoji:"\ud83c\udf0d"}
 ];
+function domainEmoji(id){return DOMAINEN.find(d=>d.id===id)?.emoji||"\u2b50";}
+
+// begeleiders-naam-codex: zet een ingevulde naam of e-mailadres om naar "juf Lotte"-vorm
+function mooiBegeleider(ruw){
+  let v=String(ruw||"").trim();
+  if(!v) return "";
+  if(v.includes("@")) v=v.split("@")[0];          // e-mail -> deel voor @
+  v=v.replace(/[._]+/g," ").trim();                // lotte.debruyn -> lotte debruyn
+  // bestaande aanspreking (juf/meester/...) eraf halen, we zetten ze zelf terug
+  let titel="juf";
+  const m=v.match(/^(juf|meester|mr|meneer|mevr|mevrouw|dhr)\b\.?\s*/i);
+  if(m){ const t=m[1].toLowerCase(); titel=(t==="meester"||t==="mr"||t==="meneer"||t==="dhr")?"meester":"juf"; v=v.slice(m[0].length).trim(); }
+  const voornaam=(v.split(" ")[0]||"").trim();
+  if(!voornaam) return "";
+  const net=voornaam.charAt(0).toUpperCase()+voornaam.slice(1).toLowerCase();
+  return `${titel} ${net}`;                        // bv. "juf Lotte" of "meester Tom"
+}
+
+// verzamelt alle begeleiders: handmatig veld + iedereen die in het logboek schreef
+function alleBegeleiders(groep){
+  const set=new Map();
+  String(groep?.begeleiders||"").split(/[,;]+/).map(x=>x.trim()).filter(Boolean).forEach(x=>{
+    const m=mooiBegeleider(x); if(m) set.set(m.toLowerCase(),m);
+  });
+  (groep?.logboek||[]).forEach(l=>{
+    const m=mooiBegeleider(l.auteur); if(m) set.set(m.toLowerCase(),m);
+  });
+  (groep?.toetsen||[]).forEach(t=>{
+    const m=mooiBegeleider(t.auteur); if(m) set.set(m.toLowerCase(),m);
+  });
+  return [...set.values()].join(", ");
+}
 const $=id=>document.getElementById(id);
 const esc=v=>String(v??"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;");
 const uid=()=>Math.random().toString(36).slice(2,9)+Date.now().toString(36).slice(-4);
@@ -202,6 +301,7 @@ function verrijkLeerling(s){
 }
 const today=()=>new Date().toISOString().slice(0,10);
 let user=null, role="", groups=[], active=null, classes={}, tab="basis";
+let rapHoofdtab="groep"; // welke rapport-hoofdtab actief is: 'groep' of 'kind'
 
 function year(){return ($("schooljaar").value||"2026-2027").trim();}
 function volgendSchooljaar(jaar=year()){
@@ -209,7 +309,7 @@ function volgendSchooljaar(jaar=year()){
   return m ? `${Number(m[1])+1}-${Number(m[2])+1}` : jaar;
 }
 function groupRef(id){return doc(db,"zorggroepen",id);}
-function emptyGroup(){return{id:"zg_"+uid(),schooljaar:year(),naam:"Nieuwe groeigroep",domeinen:["lezen"],begeleiders:user?.email||"",doelen:"",leerlingen:[],logboek:[],toetsen:[],rapporten:{},createdAt:new Date().toISOString()};}
+function emptyGroup(){return{id:"zg_"+uid(),schooljaar:year(),naam:"Nieuwe groeigroep",domeinen:["lezen"],begeleiders:"",doelen:"",leerlingen:[],logboek:[],toetsen:[],rapporten:{},createdAt:new Date().toISOString()};}
 function setStatus(text){$("status").textContent=text;}
 function normalizeGroup(g){g.leerlingen=Array.isArray(g.leerlingen)?g.leerlingen.map(verrijkLeerling):[];g.logboek=Array.isArray(g.logboek)?g.logboek:[];g.toetsen=Array.isArray(g.toetsen)?g.toetsen:[];g.domeinen=Array.isArray(g.domeinen)?g.domeinen:[];g.rapporten=g.rapporten||{};return g;}
 
@@ -291,7 +391,7 @@ function renderBasis(){
     <div class="editor">
       <div class="grid2">
         <div><label>Naam groeigroep</label><input id="gNaam" value="${esc(active.naam)}"></div>
-        <div><label>Begeleiders</label><input id="gBegeleiders" value="${esc(active.begeleiders)}" placeholder="juf An, juf Els..."></div>
+        <div><label>Begeleiders (juffen/meesters van dit groepje)</label><input id="gBegeleiders" value="${esc(active.begeleiders)}" placeholder="bv. juf Lotte, juf An"></div>
       </div>
       <label>Doelen en aanpak</label><textarea id="gDoelen" placeholder="Waar werken jullie aan? Wat is de aanpak?">${esc(active.doelen)}</textarea>
       <label>Domeinen die bij deze groep horen</label>
@@ -378,7 +478,7 @@ window.ggRenderLogEvaluaties=function(){
   if(!el)return;
   el.innerHTML=active.leerlingen.map(s=>evalRow(s)).join("")||`<div class="empty">Voeg eerst leerlingen toe aan deze groeigroep.</div>`;
 };
-function scoreInput(id){return`<select id="${esc(id)}"><option value="">Niet ingevuld</option><option value="1">Nog veel hulp nodig</option><option value="2">Op weg</option><option value="3">Goed bezig</option><option value="4">Sterk</option></select>`;}
+function scoreInput(id){return`<select id="${esc(id)}"><option value="">Niet ingevuld</option><option value="1">\u2b50 lukt nog niet alleen</option><option value="2">\u2b50\u2b50 lukt met hulp</option><option value="3">\u2b50\u2b50\u2b50 lukt bijna zelfstandig</option><option value="4">\u2b50\u2b50\u2b50\u2b50 lukt zelfstandig</option></select>`;}
 function renderLogItem(l){
   return`<article class="log-item"><div class="log-meta"><span class="tag blue">${esc(l.datum)}</span><span class="tag">${esc(l.auteur||"")}</span></div><h3>${esc(l.titel||"Notitie")}</h3><p>${esc(l.tekst||"").replaceAll("\n","<br>")}</p>
     ${l.domeinen?.length?`<div class="tags">${l.domeinen.map(id=>`<span class="tag blue">${esc(domainName(id))}</span>`).join("")}</div>`:""}
@@ -402,36 +502,66 @@ function renderToetsen(){
 function renderRapport(){
   $("tab-rapport").innerHTML=active.leerlingen.length?`
     <div class="editor no-print">
-      <div class="grid2">
-        <div><label>Periode</label><input id="rapportPeriode" value="${esc(active.rapportGroep?.periode||'Rapportperiode 1')}"></div>
-        <div><label>Leerling</label><select id="rapportStudent" onchange="window.ggOpenReportStudent(this.value)">${active.leerlingen.map(s=>`<option value="${esc(studentKey(s))}" ${active.rapportActieveLeerling===studentKey(s)?"selected":""}>${esc(studentNaam(s))} (${esc(s.klas)})</option>`).join("")}</select></div>
+      <div class="grid2" style="gap:10px">
+        <div><label>Welke rapportperiode?</label><input id="rapportPeriode" value="${esc(active.rapportGroep?.periode||'')}" placeholder="bv. Rapportperiode 1"></div>
+        <div><label>Van \u2013 tot (maanden)</label><input id="rapportPeriodeMaanden" value="${esc(active.rapportGroep?.periodeMaanden||'')}" placeholder="bv. sept \u2013 dec 2026"></div>
       </div>
-      <div class="rapport-extra">
-        <h3>Voor de hele groeigroep</h3>
-        <div class="muted">Deze onderdelen, doelen en aanpak gelden voor alle kinderen in deze groep. Per kind vul je hieronder alleen sterren en het persoonlijke woordje aan.</div>
-        <label>Onderdelen van deze groep</label>
-        <div class="rapport-extra-list">${DOMAINEN.map(d=>`
-          <label><input type="checkbox" class="rapport-group-domain" value="${esc(d.id)}" ${rapportGroepDomeinen().includes(d.id)?"checked":""} onchange="window.ggRenderRapportStudent()"> ${esc(d.groep)} - ${esc(d.naam)}</label>
-        `).join("")}</div>
-        <div id="rapportGroepDoelen" class="domain-grid" style="margin-top:10px"></div>
-        <label>Zo werkten we deze periode</label><textarea id="rapportGroepTraject">${esc(active.rapportGroep?.traject||'')}</textarea>
-        <label>Volgende periode</label><textarea id="rapportGroepVolgende">${esc(active.rapportGroep?.volgendeStap||'')}</textarea>
+
+      <div class="rap-hoofdtabs">
+        <button class="rap-hoofdtab ${rapHoofdtab==='groep'?'actief':''}" onclick="window.ggRapHoofdtab('groep')">\ud83d\udc65 Voor de hele groeigroep</button>
+        <button class="rap-hoofdtab ${rapHoofdtab==='kind'?'actief':''}" onclick="window.ggRapHoofdtab('kind')">\ud83e\uddd2 Groeirapport per kind</button>
       </div>
-      <div class="row" style="margin:10px 0">
-        <button class="ghost" onclick="window.ggRapportVorige()">Vorige leerling</button>
-        <button class="secondary" onclick="window.ggSaveReport()">Bewaren</button>
-        <button class="secondary" onclick="window.ggSaveAndNextReport()">Bewaren en volgende leerling</button>
-        <button onclick="window.ggDownloadReportPdf()">PDF downloaden</button>
+
+      <div id="rapDeelGroep" style="display:${rapHoofdtab==='groep'?'block':'none'}">
+        <div class="blok-inhoud" style="padding:0">
+          <div class="muted" style="margin-bottom:8px">Deze onderdelen, doelen en aanpak gelden voor alle kinderen in deze groep. Bij "Groeirapport per kind" vul je per kind alleen de sterren en het persoonlijke woordje aan.</div>
+          <label>Onderdelen van deze groep</label>
+          <div class="rapport-extra-list">${DOMAINEN.map(d=>`
+            <label><input type="checkbox" class="rapport-group-domain" value="${esc(d.id)}" ${rapportGroepDomeinen().includes(d.id)?"checked":""} onchange="window.ggRenderRapportGroepDoelen()"> ${esc(d.groep)} - ${esc(d.naam)}</label>
+          `).join("")}</div>
+          <div id="rapportGroepDoelen" class="domain-grid" style="margin-top:10px"></div>
+          <label>Zo werkten we deze periode</label><textarea id="rapportGroepTraject">${esc(active.rapportGroep?.traject||'')}</textarea>
+          <label>Volgende periode</label><textarea id="rapportGroepVolgende">${esc(active.rapportGroep?.volgendeStap||'')}</textarea>
+        </div>
       </div>
-      <div id="rapportStudentEditor"></div>
-    </div>
-    <div id="rapportPreview"></div>`:`<div class="empty">Voeg eerst leerlingen toe aan deze groeigroep.</div>`;
+
+      <div id="rapDeelKind" style="display:${rapHoofdtab==='kind'?'block':'none'}">
+        <div class="lln-tabs" id="llnTabs">${active.leerlingen.map(s=>{
+          const k=studentKey(s);
+          const ingevuld=heeftRapportInhoud(k);
+          return `<button class="lln-tab ${active.rapportActieveLeerling===k?'actief':''}" data-llnkey="${esc(k)}" onclick="window.ggOpenReportStudent('${esc(k)}')">${esc(studentNaam(s).split(',')[1]?.trim()||studentNaam(s))}${ingevuld?'<span class="vink">\u2713</span>':''}</button>`;
+        }).join("")}</div>
+        <div class="row" style="margin:10px 0">
+          <button class="ghost" onclick="window.ggRapportVorige()">\u2190 Vorige</button>
+          <button class="ghost" onclick="window.ggSaveAndNextReport()">Volgende \u2192</button>
+          <button class="secondary" onclick="window.ggSaveReport()">Bewaren</button>
+          <button onclick="window.ggDownloadReportPdf()">\ud83d\udce5 PDF downloaden</button>
+        </div>
+        <div class="rapport-split">
+          <div id="rapportStudentEditor"></div>
+          <div id="rapportPreview"></div>
+        </div>
+      </div>
+    </div>`:`<div class="empty">Voeg eerst leerlingen toe aan deze groeigroep.</div>`;
   if(active.leerlingen.length)setTimeout(()=>{
     if(!active.rapportActieveLeerling||!studentByKey(active.rapportActieveLeerling)) active.rapportActieveLeerling=studentKey(active.leerlingen[0]);
-    if($("rapportStudent")) $("rapportStudent").value=active.rapportActieveLeerling;
     renderRapportGroepDoelen();
-    renderRapportStudent();
+    if(rapHoofdtab==='kind') renderRapportStudent();
   },0);
+}
+// wisselen tussen de twee rapport-hoofdtabs
+window.ggRapHoofdtab=function(welke){
+  // bij weggaan van een tab eerst bewaren wat ingevuld is (zonder Firestore-rondreis)
+  if(rapHoofdtab==='groep') collectRapportGroup();
+  else if($("rapportStudentEditor")?.children.length) collectCurrentChildReport();
+  rapHoofdtab=welke;
+  renderRapport();
+};
+// of een kind al sterren of woordjes heeft (voor het vinkje op de tab)
+function heeftRapportInhoud(key){
+  const r=active.rapporten?.[key];
+  if(!r||!r.domeinen) return false;
+  return Object.values(r.domeinen).some(d=>d&&(d.score||(d.tekst&&d.tekst.trim())));
 }
 function rapportGroepDomeinen(){
   return active.rapportGroep?.domeinen?.length ? active.rapportGroep.domeinen : [...(active.domeinen||[])];
@@ -453,7 +583,8 @@ function collectRapportGroup(){
   const doelen={};
   domeinen.forEach(id=>{doelen[id]=document.querySelector(`[data-group-goal="${id}"]`)?.value||"";});
   active.rapportGroep={
-    periode:$("rapportPeriode")?.value||"Rapportperiode 1",
+    periode:$("rapportPeriode")?.value||"",
+    periodeMaanden:$("rapportPeriodeMaanden")?.value||"",
     domeinen,
     doelen,
     traject:$("rapportGroepTraject")?.value||"",
@@ -472,7 +603,7 @@ function actieveRapportDomeinenVoorStudent(key){
   return [...groupDomains,...extra];
 }
 function currentReportKey(){
-  return $("rapportStudent")?.value||active.rapportActieveLeerling||studentKey(active.leerlingen[0]);
+  return active.rapportActieveLeerling||(active.leerlingen[0]&&studentKey(active.leerlingen[0]));
 }
 function renderRapportStudent(){
   if($("rapportStudentEditor")?.children.length) collectCurrentChildReport();
@@ -509,10 +640,10 @@ function renderRapportStudent(){
               <label>Sterren voor ${esc(domainName(id))}</label>
               <select data-score="${esc(key)}|${esc(id)}">
                 <option value="">Niet ingevuld</option>
-                <option value="1" ${String(r.score)==="1"?"selected":""}>Nog veel hulp nodig</option>
-                <option value="2" ${String(r.score)==="2"?"selected":""}>Op weg</option>
-                <option value="3" ${String(r.score)==="3"?"selected":""}>Goed bezig</option>
-                <option value="4" ${String(r.score)==="4"?"selected":""}>Sterk</option>
+                <option value="1" ${String(r.score)==="1"?"selected":""}>\u2b50 lukt nog niet alleen</option>
+                <option value="2" ${String(r.score)==="2"?"selected":""}>\u2b50\u2b50 lukt met hulp</option>
+                <option value="3" ${String(r.score)==="3"?"selected":""}>\u2b50\u2b50\u2b50 lukt bijna zelfstandig</option>
+                <option value="4" ${String(r.score)==="4"?"selected":""}>\u2b50\u2b50\u2b50\u2b50 lukt zelfstandig</option>
               </select>
               <label>Persoonlijk woordje bij ${esc(domainName(id))}</label>
               <textarea data-text="${esc(key)}|${esc(id)}" placeholder="Wat geldt specifiek voor dit kind bij ${esc(domainName(id))}?">${esc(r.tekst||"")}</textarea>
@@ -525,6 +656,14 @@ function renderRapportStudent(){
               return `<label><input type="checkbox" data-extra="${esc(key)}|${esc(d.id)}" ${r.actiefExtra?"checked":""} onchange="window.ggRenderRapportStudent()"> ${esc(d.naam)}</label>`;
             }).join("")}</div>
           </details>
+          <div class="rapport-domain-card" style="margin-top:10px;background:#fbfcfb">
+            <div class="rapport-cell-title">\ud83d\udcdd Voor dit kind apart (optioneel)</div>
+            <div class="muted" style="margin-bottom:6px">Laat leeg om de algemene tekst van de groep te gebruiken. Vul je hier iets in, dan komt dat voor dit kind op het rapport in plaats van de groepstekst.</div>
+            <label>Zo werkten we deze periode \u2014 voor ${esc(studentNaam(s).split(',')[0])}</label>
+            <textarea data-trajectkind="${esc(key)}" placeholder="${esc(active.rapportGroep?.traject||'')}">${esc(report.trajectKind||"")}</textarea>
+            <label>Volgende periode \u2014 voor ${esc(studentNaam(s).split(',')[0])}</label>
+            <textarea data-volgendekind="${esc(key)}" placeholder="${esc(active.rapportGroep?.volgendeStap||'')}">${esc(report.volgendeStapKind||"")}</textarea>
+          </div>
         </div>
       </div>`;
   renderReportPreview(key,active.rapporten[key]);
@@ -536,6 +675,11 @@ function collectCurrentChildReport(){
   active.rapportActieveLeerling=key;
   const current=studentReport(key);
   const next={...current,domeinen:{...(current.domeinen||{})},updatedAt:new Date().toISOString()};
+  // per-kind-traject-codex: eigen tekst per kind (leeg = groepstekst gebruiken)
+  const tk=document.querySelector(`[data-trajectkind="${key}"]`);
+  const vk=document.querySelector(`[data-volgendekind="${key}"]`);
+  if(tk) next.trajectKind=tk.value||"";
+  if(vk) next.volgendeStapKind=vk.value||"";
   DOMAINEN.forEach(d=>{
     const extra=document.querySelector(`[data-extra="${key}|${d.id}"]`)?.checked||false;
     const score=document.querySelector(`[data-score="${key}|${d.id}"]`)?.value??next.domeinen[d.id]?.score??"";
@@ -547,6 +691,8 @@ function collectCurrentChildReport(){
 window.ggOpenReportStudent=function(key){
   collectCurrentChildReport();
   active.rapportActieveLeerling=key;
+  // actieve leerling-tab markeren
+  document.querySelectorAll(".lln-tab").forEach(b=>b.classList.toggle("actief",b.dataset.llnkey===key));
   renderRapportStudent();
 };
 window.ggCopyPersonalReport=function(){
@@ -584,34 +730,46 @@ function renderReportPreview(key,report){
     <div class="report-header">
       <img class="report-logo" src="afbeeldingen/schoollogo.png" alt="Schoollogo" onerror="this.style.display='none'">
       <div>
-        <h3>Aangepast rapport</h3>
-        <div class="muted">${esc(groep.periode||$("rapportPeriode")?.value||"")}</div>
+        <h3>Groeirapport</h3>
+        <div class="muted">${esc([groep.periode,groep.periodeMaanden].filter(Boolean).join(" \u00b7 ")||$("rapportPeriode")?.value||"")}</div>
       </div>
     </div>
     <div class="report-info">
       <div>Naam: ${esc(s?.naam||"Leerling")}</div>
-      <div>Zorggroep: ${esc(active.naam||"")}</div>
+      <div>Groeigroep: ${esc(active.naam||"")}</div>
       <div>Klas: ${esc(s?.klas||"")}</div>
-      <div>Periode: ${esc(groep.periode||$("rapportPeriode")?.value||"")}</div>
+      <div>Periode: ${esc([groep.periode,groep.periodeMaanden].filter(Boolean).join(" \u00b7 ")||$("rapportPeriode")?.value||"")}</div>
     </div>
-    <div class="report-legend">Legende: *... = nog veel hulp nodig, **.. = op weg, ***. = goed bezig, **** = sterk.</div>
+    <div class="report-legend">Legende: ${sterrenHtml(1)} ${STERREN_LEGENDE[1]} \u00b7 ${sterrenHtml(2)} ${STERREN_LEGENDE[2]} \u00b7 ${sterrenHtml(3)} ${STERREN_LEGENDE[3]} \u00b7 ${sterrenHtml(4)} ${STERREN_LEGENDE[4]}.</div>
     ${domeinen.length?domeinen.map(id=>{
       const d=report.domeinen?.[id]||{};
       return `<div class="report-domain-preview">
-        <div class="report-domain-head"><span>${esc(domainName(id))}</span><span class="report-domain-score">${esc(sterrenLabel(d.score))}</span></div>
+        <div class="report-domain-head"><span>${domainEmoji(id)} ${esc(domainName(id))}</span><span class="report-domain-score">${sterrenHtml(d.score)}</span></div>
         ${doelen[id]?`<div class="muted">${esc(doelen[id])}</div>`:""}
         ${d.tekst?`<p>${esc(d.tekst)}</p>`:""}
       </div>`;
     }).join(""):`<p class="muted">Nog geen onderdelen aangevinkt.</p>`}
     <div class="report-section-title">Zo werkten we deze periode</div>
-    <div class="report-section-text">${esc(groep.traject||"")}</div>
+    <div class="report-section-text">${esc(report?.trajectKind||groep.traject||"")}</div>
     <div class="report-section-title">Volgende periode</div>
-    <div class="report-section-text">${esc(groep.volgendeStap||"")}</div>
+    <div class="report-section-text">${esc(report?.volgendeStapKind||groep.volgendeStap||"")}</div>
     <div class="report-signatures"><div>Handtekening leerkracht</div><div>Handtekening ouders</div></div>
   </div>`;
 }
-function stars(n){n=Number(n)||0;return "****".slice(0,n)+"....".slice(0,4-n);}
-function sterrenLabel(n){n=Number(n)||0;return n ? "*".repeat(n)+".".repeat(4-n) : "....";}
+function stars(n){n=Number(n)||0;return "\u2b50".repeat(n)+"\u2606".repeat(Math.max(0,4-n));}
+function sterrenLabel(n){n=Number(n)||0;return n ? "\u2b50".repeat(n)+"\u2606".repeat(4-n) : "\u2606\u2606\u2606\u2606";}
+function sterrenHtml(n){
+  n=Number(n)||0;
+  // sterren-svg-codex: inline SVG i.p.v. emoji, zodat lege sterren ook in de PDF grijs blijven
+  let h='';
+  for(let i=1;i<=4;i++){
+    const vol=i<=n;
+    const kleur=vol?'#f5b301':'#d4d9e0';
+    h+=`<svg class="ster ${vol?'vol':'leeg'}" width="17" height="17" viewBox="0 0 24 24" style="vertical-align:-3px;margin:0 1px" xmlns="http://www.w3.org/2000/svg"><path fill="${kleur}" d="M12 2.3l2.95 5.98 6.6.96-4.77 4.65 1.13 6.57L12 17.35l-5.91 3.11 1.13-6.57L2.45 9.24l6.6-.96z"/></svg>`;
+  }
+  return h;
+}
+const STERREN_LEGENDE=["","lukt nog niet alleen","lukt met hulp","lukt bijna zelfstandig","lukt zelfstandig"];
 function studentByKey(key){return active?.leerlingen.find(s=>studentKey(s)===key);}
 function veiligeBestandsnaam(text){
   return String(text||"rapport").normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9_-]+/gi,"_").replace(/^_+|_+$/g,"")||"rapport";
@@ -629,18 +787,86 @@ async function imageAsDataUrl(url){
     });
   }catch(e){return "";}
 }
-function pdfText(doc,text,x,y,maxWidth,lineHeight=5){
-  const lines=doc.splitTextToSize(String(text||""),maxWidth);
-  doc.text(lines,x,y);
-  return y+(lines.length*lineHeight);
+// ===== Groeirapport-PDF via html2pdf + Twemoji (groeirapport-pdf-codex) =====
+// Bouwt een nette HTML-fiche en laat html2pdf die omzetten. Twemoji zet alle
+// emoji's om naar afbeeldingen, zodat pictogrammen overal correct verschijnen
+// en nooit vreemde tekens worden.
+function bouwGroeirapportHtml({s,groep,doelen,domeinen,report,logoUrl}){
+  const schoolnaam=esc(active?.rapportSchoolnaam||"GO! Basisschool De Linde");
+  const rijen=domeinen.map(id=>{
+    const d=report.domeinen?.[id]||{};
+    const def=DOMAINEN.find(x=>x.id===id)||{};
+    const klasse=def.groep==="Nederlands"?"nl":def.groep==="Wiskunde"?"wis":"wo";
+    return `<tr class="${klasse}">
+      <td class="gr-dom"><span class="pic">${domainEmoji(id)}</span><span class="nm">${esc(domainName(id))}</span></td>
+      <td class="gr-doel">${esc(doelen[id]||"")}</td>
+      <td class="gr-sterren">${sterrenHtml(d.score)}</td>
+      <td class="gr-woordje">${esc(d.tekst||"")}</td>
+    </tr>`;
+  }).join("");
+
+  // domeinen groeperen per hoofdgroep met een tussentitel
+  const groepenVolgorde=["Nederlands","Wiskunde","WO"];
+  const blokken=groepenVolgorde.map(gnaam=>{
+    const ids=domeinen.filter(id=>(DOMAINEN.find(x=>x.id===id)||{}).groep===gnaam);
+    if(!ids.length) return "";
+    const klasse=gnaam==="Nederlands"?"nl":gnaam==="Wiskunde"?"wis":"wo";
+    const label=gnaam==="WO"?"Wereldori\u00ebntatie":gnaam;
+    const trs=ids.map(id=>{
+      const d=report.domeinen?.[id]||{};
+      return `<tr class="${klasse}">
+        <td class="gr-dom"><span class="pic">${domainEmoji(id)}</span><span class="nm">${esc(domainName(id))}</span></td>
+        <td class="gr-doel">${esc(doelen[id]||"")}</td>
+        <td class="gr-sterren">${sterrenHtml(d.score)}</td>
+        <td class="gr-woordje">${esc(d.tekst||"")}</td>
+      </tr>`;
+    }).join("");
+    return `<h2 class="gr-domein ${klasse}"><span class="bol"></span>${esc(label)}<span class="rest"></span></h2>
+      <table class="gr-eval"><tr><th>Onderdeel</th><th>Waar werkten we aan</th><th>Evaluatie</th><th>Woordje van de juf</th></tr>${trs}</table>`;
+  }).join("");
+
+  const logoHtml=logoUrl
+    ? `<img class="gr-logo" src="${logoUrl}" alt="Schoollogo">`
+    : `<div class="gr-logo-leeg">Logo<br>school</div>`;
+
+  return `<div id="grpdfWrap">
+    <div class="gr-hoofding">
+      ${logoHtml}
+      <div>
+        <p class="gr-school">${schoolnaam}</p>
+        <h1>Groeirapport</h1>
+        <p class="gr-sub">Bijlage bij het rapport \u00b7 dit kind werkt voor de onderstaande onderdelen op eigen niveau</p>
+      </div>
+    </div>
+    <div class="gr-kind">
+      <div><span class="lab">Naam</span><span class="waarde">${esc(s?.naam||"Leerling")}</span></div>
+      <div><span class="lab">Klas</span><span class="waarde">${esc(s?.klas||"")}</span></div>
+      <div><span class="lab">Groeigroep</span><span class="waarde">${esc(active?.naam||"")}</span></div>
+      <div><span class="lab">Periode</span><span class="waarde">${esc(groep.periode||"")}${groep.periodeMaanden?`<br><span class="waarde-sub">${esc(groep.periodeMaanden)}</span>`:""}</span></div>
+    </div>
+    <div class="gr-legende">
+      <span><b>${sterrenHtml(1)}</b> ${STERREN_LEGENDE[1]}</span>
+      <span><b>${sterrenHtml(2)}</b> ${STERREN_LEGENDE[2]}</span>
+      <span><b>${sterrenHtml(3)}</b> ${STERREN_LEGENDE[3]}</span>
+      <span><b>${sterrenHtml(4)}</b> ${STERREN_LEGENDE[4]}</span>
+    </div>
+    ${blokken||`<p class="gr-sub">Nog geen onderdelen aangevinkt.</p>`}
+    <div class="gr-traject">
+      <p class="kop">Zo werkten we deze periode</p>
+      <p>${esc(report?.trajectKind||groep.traject||"")}</p>
+    </div>
+    <div class="gr-traject gr-volgende">
+      <p class="kop">Volgende periode \u2014 hier werken we verder aan</p>
+      <p>${esc(report?.volgendeStapKind||groep.volgendeStap||"")}</p>
+    </div>
+    <div class="gr-handtekeningen">
+      <div class="vak"><b>Groeileerkracht</b>${esc(alleBegeleiders(active)||"")}</div>
+      <div class="vak"><b>Directie</b>&nbsp;</div>
+      <div class="vak"><b>Handtekening ouders</b>&nbsp;</div>
+    </div>
+  </div>`;
 }
-function pdfSectionTitle(doc,title,x,y){
-  doc.setFont("helvetica","bold");
-  doc.setTextColor(38,49,61);
-  doc.text(title,x,y);
-  doc.setFont("helvetica","normal");
-  return y+6;
-}
+
 async function downloadCurrentReportPdf(){
   collectCurrentChildReport();
   const key=currentReportKey();
@@ -649,79 +875,47 @@ async function downloadCurrentReportPdf(){
   const groep=active.rapportGroep||{};
   const doelen=groep.doelen||{};
   const domeinen=actieveRapportDomeinenVoorStudent(key);
-  const jsPdf=window.jspdf?.jsPDF;
-  if(!jsPdf) return alert("PDF maken lukt niet omdat de PDF-bibliotheek niet geladen is.");
+  if(typeof html2pdf==="undefined") return alert("PDF maken lukt niet omdat de PDF-bibliotheek niet geladen is. Controleer je internetverbinding en herlaad de pagina.");
 
-  const doc=new jsPdf({unit:"mm",format:"a4"});
-  const pageW=doc.internal.pageSize.getWidth();
-  const pageH=doc.internal.pageSize.getHeight();
-  const margin=18;
-  let y=18;
-  const logo=await imageAsDataUrl("afbeeldingen/schoollogo.png");
-  if(logo) doc.addImage(logo,"PNG",margin,y,24,24);
-  doc.setFont("helvetica","bold");
-  doc.setFontSize(22);
-  doc.setTextColor(111,159,98);
-  doc.text("Aangepast rapport",logo?48:margin,y+9);
-  doc.setFontSize(10);
-  doc.setFont("helvetica","normal");
-  doc.setTextColor(102,112,133);
-  doc.text(groep.periode||"Rapportperiode",logo?48:margin,y+17);
-  y+=34;
+  setStatus(`Groeirapport maken van ${s?.naam||"leerling"}...`);
+  const logoUrl=active?.rapportLogoDataUrl||await imageAsDataUrl("afbeeldingen/schoollogo.png");
+  const html=bouwGroeirapportHtml({s,groep,doelen,domeinen,report,logoUrl});
 
-  doc.setDrawColor(216,222,216);
-  doc.setFillColor(248,250,252);
-  doc.roundedRect(margin,y,pageW-(margin*2),24,2,2,"FD");
-  doc.setFont("helvetica","bold");
-  doc.setTextColor(38,49,61);
-  doc.text(`Naam: ${s?.naam||"Leerling"}`,margin+5,y+8);
-  doc.text(`Klas: ${s?.klas||""}`,margin+5,y+16);
-  doc.text(`Zorggroep: ${active.naam||""}`,pageW/2,y+8);
-  doc.text(`Periode: ${groep.periode||""}`,pageW/2,y+16);
-  y+=34;
+  // off-screen renderen, achter de pagina (z-index negatief) zodat capture-coordinaten kloppen
+  const houder=document.createElement("div");
+  houder.style.cssText="position:absolute;left:0;top:0;width:720px;background:#fff;z-index:-99999";
+  houder.innerHTML=html;
+  document.body.appendChild(houder);
 
-  doc.setFontSize(9);
-  doc.setTextColor(102,112,133);
-  y=pdfText(doc,"Legende: *... = nog veel hulp nodig, **.. = op weg, ***. = goed bezig, **** = sterk.",margin,y,pageW-(margin*2),4)+4;
-  doc.setFontSize(11);
+  // Twemoji: alle emoji's -> afbeeldingen (emoji-proof, geen vreemde tekens)
+  try{ if(window.twemoji) twemoji.parse(houder,{folder:"72x72",ext:".png"}); }catch(e){}
+  // wachten tot de Twemoji-afbeeldingen geladen zijn voor we de foto nemen
+  await new Promise(res=>{
+    const imgs=[...houder.querySelectorAll("img")];
+    if(!imgs.length) return res();
+    let n=imgs.length;
+    const klaar=()=>{ if(--n<=0) res(); };
+    imgs.forEach(img=>{ if(img.complete) klaar(); else { img.onload=klaar; img.onerror=klaar; } });
+    setTimeout(res,3000); // veiligheidsnet
+  });
 
-  for(const id of domeinen){
-    const d=report.domeinen?.[id]||{};
-    const goalLines=doelen[id]?doc.splitTextToSize(String(doelen[id]),pageW-(margin*2)-10):[];
-    const textLines=d.tekst?doc.splitTextToSize(String(d.tekst),pageW-(margin*2)-10):[];
-    const cardH=Math.max(28,16+(goalLines.length*4)+(textLines.length*4));
-    if(y>pageH-cardH-45){doc.addPage();y=18;}
-    doc.setDrawColor(216,222,216);
-    doc.setFillColor(255,255,255);
-    doc.roundedRect(margin,y,pageW-(margin*2),cardH,2,2,"FD");
-    let cardY=y+8;
-    doc.setFont("helvetica","bold");
-    doc.setTextColor(38,49,61);
-    doc.text(domainName(id),margin+5,cardY);
-    doc.setTextColor(212,154,22);
-    doc.text(sterrenLabel(d.score),pageW-margin-26,cardY);
-    cardY+=6;
-    doc.setFont("helvetica","normal");
-    doc.setTextColor(102,112,133);
-    if(goalLines.length){doc.text(goalLines,margin+5,cardY);cardY+=goalLines.length*4;}
-    doc.setTextColor(38,49,61);
-    if(textLines.length){doc.text(textLines,margin+5,cardY+2);}
-    y+=cardH+4;
+  const bestandsnaam=`Groeirapport_${veiligeBestandsnaam(s?.naam)}_${veiligeBestandsnaam(groep.periode)}.pdf`;
+  try{
+    await html2pdf().set({
+      margin:[12,10,14,10],
+      filename:bestandsnaam,
+      image:{type:"jpeg",quality:0.96},
+      html2canvas:{scale:2,useCORS:true,backgroundColor:"#ffffff",scrollX:0,scrollY:0},
+      jsPDF:{unit:"mm",format:"a4",orientation:"portrait"},
+      pagebreak:{mode:["css","legacy"],avoid:["tr","h2.gr-domein",".gr-traject",".gr-kind"]}
+    }).from(houder.querySelector("#grpdfWrap")).save();
+    setStatus(`Groeirapport gedownload: ${bestandsnaam}`);
+  }catch(e){
+    console.error("PDF mislukt",e);
+    alert("Het groeirapport kon niet gemaakt worden. Probeer het opnieuw.");
+  }finally{
+    houder.remove();
   }
-
-  if(y>pageH-65){doc.addPage();y=18;}
-  y=pdfSectionTitle(doc,"Zo werkten we deze periode",margin,y);
-  y=pdfText(doc,groep.traject||"",margin,y,pageW-(margin*2),5)+5;
-  y=pdfSectionTitle(doc,"Volgende periode",margin,y);
-  y=pdfText(doc,groep.volgendeStap||"",margin,y,pageW-(margin*2),5)+10;
-  doc.setDrawColor(216,222,216);
-  doc.line(margin,y,pageW-margin,y);
-  doc.setFontSize(9);
-  doc.setTextColor(102,112,133);
-  doc.text("Handtekening leerkracht",margin,y+10);
-  doc.text("Handtekening ouders",pageW/2,y+10);
-
-  doc.save(`Aangepast_rapport_${veiligeBestandsnaam(s?.naam)}_${veiligeBestandsnaam(groep.periode)}.pdf`);
 }
 function collectBasis(){
   active.naam=$("gNaam")?.value.trim()||active.naam;
@@ -734,8 +928,13 @@ async function saveGroup(){
   if(tab==="basis")collectBasis();
   try{
     await persistActiveGroup();
+    // active-behoud-codex: NIET active vervangen door de Firestore-versie hier,
+    // want serverTimestamp() maakt die kortstondig verouderd en wist net-ingetypte velden.
+    // We verversen enkel de groepenlijst op de achtergrond.
+    const id=active.id;
     await loadGroups();
-    active=groups.find(g=>g.id===active.id)||active;
+    const vers=groups.find(g=>g.id===id);
+    if(vers){ vers.rapportGroep=active.rapportGroep; vers.rapporten=active.rapporten; active=vers; }
     renderWorkspace();
   }catch(e){
     throw e;
@@ -845,10 +1044,20 @@ window.ggAddTest=async()=>{
   active.toetsen.push({id:uid(),studentKey:$("testStudent").value,datum:$("testDatum").value||today(),titel:$("testTitel").value||"Momentopname",resultaat:$("testResultaat").value||"",opmerking:$("testOpm").value||"",auteur:user.email||""});
   await saveGroup();tab="toetsen";renderWorkspace();
 };
+window.ggRenderRapportStudent=()=>renderRapportStudent();
+// groepsdoelen verversen bij aan/uitvinken onderdeel (in de groep-tab, geen kind-editor)
+window.ggRenderRapportGroepDoelen=()=>{
+  // bewaar de huidige doel-teksten + aangevinkte onderdelen in active.rapportGroep
+  collectRapportGroup();
+  renderRapportGroepDoelen();
+};
 window.ggSaveReport=async()=>{
   collectCurrentChildReport();
   const key=currentReportKey();
   renderReportPreview(key,active.rapporten[key]);
+  // tab-vinkje van dit kind bijwerken zonder de hele tab te herbouwen
+  const tabBtn=document.querySelector(`.lln-tab[data-llnkey="${CSS.escape(key)}"]`);
+  if(tabBtn&&heeftRapportInhoud(key)&&!tabBtn.querySelector(".vink")) tabBtn.insertAdjacentHTML("beforeend",'<span class="vink">\u2713</span>');
   await saveGroup();
 };
 window.ggSaveAndNextReport=async()=>{
@@ -857,17 +1066,16 @@ window.ggSaveAndNextReport=async()=>{
   const idx=active.leerlingen.findIndex(s=>studentKey(s)===key);
   await saveGroup();
   const next=active.leerlingen[Math.min(idx+1,active.leerlingen.length-1)]||active.leerlingen[0];
-  active.rapportActieveLeerling=studentKey(next);
-  tab="rapport";
-  renderWorkspace();
+  renderRapport(); // herbouwt tabs incl. nieuw \u2713 op het zojuist ingevulde kind
+  window.ggOpenReportStudent(studentKey(next));
 };
 window.ggRapportVorige=()=>{
   collectCurrentChildReport();
   const key=currentReportKey();
   const idx=active.leerlingen.findIndex(s=>studentKey(s)===key);
   const prev=active.leerlingen[Math.max(idx-1,0)]||active.leerlingen[0];
-  active.rapportActieveLeerling=studentKey(prev);
   renderRapport();
+  window.ggOpenReportStudent(studentKey(prev));
 };
 window.ggDownloadReportPdf=async()=>{
   await window.ggSaveReport();
