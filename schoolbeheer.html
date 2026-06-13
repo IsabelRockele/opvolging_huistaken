@@ -840,7 +840,7 @@
 
       <div class="sb-schooljaar no-print">
         <label>Schooljaar</label>
-        <input id="schooljaarInput" value="2026-2027">
+        <input id="schooljaarInput">
       </div>
 
       <div class="sb-divider" style="margin-top:10px"></div>
@@ -908,9 +908,15 @@
     const esc = v => String(v ?? "").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;");
     const uid = () => Math.random().toString(36).slice(2,9) + Date.now().toString(36).slice(-4);
     const $ = id => document.getElementById(id);
+    function huidigSchooljaar(){
+      const now = new Date();
+      const start = now.getMonth() >= 7 ? now.getFullYear() : now.getFullYear() - 1;
+      return `${start}-${start + 1}`;
+    }
     let user = null, role = "", allowedClasses = [], allClasses = [...DEFAULT_CLASSES],
-        activeClass = "", schooljaar = "2026-2027", data = null, unsub = null,
+        activeClass = "", schooljaar = huidigSchooljaar(), data = null, unsub = null,
         tab = "administratie", adminPanel = "klaslijsten", classListMode = "", saveTimer = null;
+    $("schooljaarInput").value = schooljaar;
 
     const standardFree = [
       {naam:"Herfstvakantie",start:"2026-11-02",end:"2026-11-08"},
@@ -971,6 +977,10 @@
     function endDate(){ return `${schooljaar.slice(5,9)}-06-30`; }
     function emptyClassDoc(klas){ return { schooljaar, klas, leerlingen:[], refter:{}, activiteiten:[], aankopen:[], vrijeDagen:[...standardFree], messages:[], processed:{refter:""}, bijgewerktOp:new Date().toISOString() }; }
     function classRef(klas=activeClass){ return doc(db, "schoolbeheer", schooljaar, "klassen", klas); }
+    function schooljaarOffset(jaar, offset){
+      const start = Number(String(jaar || schooljaar).slice(0,4)) + offset;
+      return `${start}-${start + 1}`;
+    }
     function name(s){ const last = s.last || s.lastName || ""; const first = s.first || s.firstName || ""; return `${last}, ${first}`.replace(/^, /,"").replace(/, $/,""); }
     function activeStudents(date=`${schooljaar.slice(0,4)}-09-15`){ return (data?.leerlingen||[]).filter(s => (!s.start || s.start <= date) && (!s.end || s.end >= date)).sort((a,b)=>name(a).localeCompare(name(b),"nl")); }
 
@@ -1037,7 +1047,7 @@
         if(!snap.exists()){
           data = null;
           $("messages").innerHTML = "";
-          $("content").innerHTML = `<div class="panel"><h2>Klas nog niet gestart</h2><p class="muted">${isSecretary() ? "Ga naar Administratie > Klaslijsten en gebruik Klassen beheren om de klas te starten." : "Secretariaat moet deze klas eerst starten."}</p></div>`;
+          toonKlasNietGestart(activeClass);
           setStatus("Nog niet gestart");
           return;
         }
@@ -1054,6 +1064,57 @@
         $("content").innerHTML = `<div class="panel"><h2>Laden mislukt</h2><p class="muted">${esc(err.message)}</p></div>`;
         setStatus("Fout");
       });
+    };
+
+    async function toonKlasNietGestart(klas){
+      const vorige = schooljaarOffset(schooljaar, -1);
+      const volgende = schooljaarOffset(schooljaar, 1);
+      const kandidaten = [];
+      for (const jaar of [vorige, volgende]) {
+        const snap = await getDoc(doc(db, "schoolbeheer", jaar, "klassen", klas));
+        if (snap.exists()) kandidaten.push({ jaar, data: snap.data(), aantal: (snap.data().leerlingen || []).length });
+      }
+      $("content").innerHTML = `<div class="panel">
+        <h2>Klas nog niet gestart</h2>
+        <p class="muted">${isSecretary() ? "Deze klas bestaat nog niet in " + esc(schooljaar) + "." : "Secretariaat moet deze klas eerst starten."}</p>
+        ${kandidaten.length ? `<div class="notice" style="margin-top:14px">
+          <strong>Ik vond ${esc(klas)} wel in een ander schooljaar.</strong>
+          <p class="muted">Waarschijnlijk staat je huidige klaslijst nog onder het verkeerde schooljaar. Je kan de klaslijst veilig kopieren naar ${esc(schooljaar)}. Bestaande gegevens in het andere schooljaar blijven staan.</p>
+          <div class="row">${kandidaten.map(k => `<button class="green" onclick="kopieerKlasUitAnderSchooljaar('${esc(k.jaar)}','${esc(klas)}')">Kopieer uit ${esc(k.jaar)} (${k.aantal} leerlingen)</button>`).join("")}</div>
+        </div>` : `<p class="muted">${isSecretary() ? "Ga naar Administratie > Klaslijsten en gebruik Klassen beheren om de klas te starten." : ""}</p>`}
+      </div>`;
+    }
+
+    window.kopieerKlasUitAnderSchooljaar = async function(bronJaar, klas){
+      if(!isSecretary()) return alert("Alleen secretariaat kan een klaslijst herstellen.");
+      const bronSnap = await getDoc(doc(db, "schoolbeheer", bronJaar, "klassen", klas));
+      if(!bronSnap.exists()) return alert(`Geen klas ${klas} gevonden in ${bronJaar}.`);
+      const doelRef = doc(db, "schoolbeheer", schooljaar, "klassen", klas);
+      const doelSnap = await getDoc(doelRef);
+      if(doelSnap.exists()) return alert(`${klas} bestaat intussen al in ${schooljaar}. Herlaad de klas.`);
+      const bron = bronSnap.data();
+      const doel = emptyClassDoc(klas);
+      doel.leerlingen = (bron.leerlingen || []).map(s => ({
+        ...s,
+        id: uid(),
+        start: startDate(),
+        end: endDate()
+      }));
+      doel.gekopieerdVanSchooljaar = bronJaar;
+      doel.bijgewerktOp = new Date().toISOString();
+      await setDoc(doelRef, doel);
+      alert(`${klas} is gekopieerd van ${bronJaar} naar ${schooljaar}.`);
+      await openClass(klas);
+    };
+
+    window.herstelLeerlingDatumsHuidigSchooljaar = async function(){
+      if(!isSecretary() || !data) return;
+      const ok = confirm(`Start- en einddatums van alle leerlingen in ${activeClass} aanpassen naar ${schooljaar}?`);
+      if(!ok) return;
+      data.leerlingen = (data.leerlingen || []).map(s => ({...s, start:startDate(), end:endDate()}));
+      await saveNow();
+      render();
+      alert(`Leerlingdatums hersteld naar ${schooljaar}.`);
     };
 
     async function startClass(){
@@ -1588,7 +1649,8 @@
 
     function renderMessages(){
       const activeMessages = (data.messages||[]).filter(m=>!m.archived);
-      $("messages").innerHTML = activeMessages.map(m=>`
+      const herstel = datumHerstelNotice();
+      $("messages").innerHTML = herstel + activeMessages.map(m=>`
         <div class="notice ${messageIsLate(m)?"message-card late":""}"><div class="bar">
           <div>
             <strong>${esc(m.text)}</strong>
@@ -1666,6 +1728,16 @@
       $("adminBody").innerHTML = `${classListContent()}`;
     }
 
+    function datumHerstelNotice(){
+      const totaal=(data?.leerlingen||[]).length;
+      const actief=activeStudents().length;
+      if(!totaal || actief) return "";
+      return `<div class="notice" style="margin-bottom:12px">
+        <strong>Er staan ${totaal} leerling(en) in deze klas, maar geen enkele is actief in ${esc(schooljaar)}.</strong>
+        <p class="muted">Dit gebeurt wanneer een klaslijst uit een ander schooljaar is gekopieerd met oude start- en einddatums.</p>
+        ${isSecretary()?`<button class="green" onclick="herstelLeerlingDatumsHuidigSchooljaar()">Datums herstellen naar ${esc(schooljaar)}</button>`:""}
+      </div>`;
+    }
     function renderClassList(){ $("content").innerHTML = `<div class="panel"><h2>Klaslijst <span class="muted" style="font-weight:400">${esc(activeClass)}</span></h2>${classListContent()}</div>`; }
 
             function classListContent(){
@@ -1740,13 +1812,17 @@
     window.updateStudent = (id,field,value) => { const s=data.leerlingen.find(x=>x.id===id); if(s){ s[field]=value; markDirty(); } };
     window.toggleColleague = (id,checked) => { const s=data.leerlingen.find(x=>x.id===id); if(s)s.colleague=checked; markDirty(); };
     window.leaveStudent = id => { const d=prompt("Uitschrijfdatum?",`${schooljaar.slice(0,4)}-09-30`); if(!d)return; const s=data.leerlingen.find(x=>x.id===id); if(s)s.end=d; markDirty(); render(); };
+    function formatDate(value){
+      const match = String(value || "").match(/^(\d{4})-(\d{2})-(\d{2})$/);
+      return match ? `${match[3]}/${match[2]}/${match[1]}` : esc(value || "");
+    }
     function studentTable(){
       return `<div class="table-wrap"><table><thead><tr><th>Achternaam</th><th>Voornaam</th><th class="check-col">Kind collega</th><th>Start</th><th>Einde</th><th></th></tr></thead><tbody>${activeStudents().map(s=>`<tr class="${s.colleague?"colleague":""}">
         <td><input class="name-input" value="${esc(s.last||"")}" onchange="updateStudent('${s.id}','last',this.value)"></td>
         <td><input class="name-input" value="${esc(s.first||"")}" onchange="updateStudent('${s.id}','first',this.value)"></td>
         <td class="check-col"><input type="checkbox" ${s.colleague?"checked":""} onchange="toggleColleague('${s.id}',this.checked)"></td>
-        <td>${s.start===startDate()?"standaard":`<input type="date" value="${esc(s.start||startDate())}" onchange="updateStudent('${s.id}','start',this.value)">`}</td>
-        <td>${s.end===endDate()?"standaard":`<input type="date" value="${esc(s.end||endDate())}" onchange="updateStudent('${s.id}','end',this.value)">`}</td>
+        <td><input type="date" value="${esc(s.start||startDate())}" onchange="updateStudent('${s.id}','start',this.value)" title="Startdatum: ${formatDate(s.start||startDate())}"></td>
+        <td><input type="date" value="${esc(s.end||endDate())}" onchange="updateStudent('${s.id}','end',this.value)" title="Einddatum: ${formatDate(s.end||endDate())}"></td>
         <td><button class="small pink" onclick="leaveStudent('${s.id}')">uitschrijven</button></td>
       </tr>`).join("")}</tbody></table></div>`;
     }
