@@ -70,6 +70,8 @@ function pasKnoppenToe(huistakenKnop, overgangKnop, schoolbeheerKnop, bestelling
   if (oudercontactKnop) oudercontactKnop.style.display = (isSchoolBreed || heeftKlasbeheer) ? '' : 'none';
   if (schoolbeheerKnop) schoolbeheerKnop.style.display = (isSecretariaat || isSchoolBreed || heeftKlasbeheer) ? '' : 'none';
   if (bestellingenKnop) bestellingenKnop.style.display = (isSecretariaat || heeftKlasbeheer) ? '' : 'none';
+  const publiekeAgendaLinks = document.getElementById('publiekeAgendaLinks');
+  if (publiekeAgendaLinks) publiekeAgendaLinks.style.display = isSecretariaat ? 'none' : '';
 
   if (isSecretariaat) {
     if (huistakenKnop) huistakenKnop.style.display = 'none';
@@ -229,11 +231,13 @@ window.uitloggenVanIndex = function () {
       const bestellingenKnop = document.getElementById('bestellingenKeuzeKnop');
       const oudercontactKnop = document.getElementById('oudercontactKeuzeKnop');
       const groeigroepenKnop = document.getElementById('groeigroepenKeuzeKnop');
+      const publiekeAgendaLinks = document.getElementById('publiekeAgendaLinks');
       if (schoolKnop) schoolKnop.style.display = 'none';
       if (schoolbeheerKnop) schoolbeheerKnop.style.display = 'none';
       if (bestellingenKnop) bestellingenKnop.style.display = 'none';
       if (oudercontactKnop) oudercontactKnop.style.display = 'none';
       if (groeigroepenKnop) groeigroepenKnop.style.display = 'none';
+      if (publiekeAgendaLinks) publiekeAgendaLinks.style.display = '';
       document.body.classList.remove('start-ingelogd');
       const authBox = document.getElementById('auth');
       if (authBox) {
