@@ -365,6 +365,14 @@
   .student-table th { position:static; top:auto; z-index:auto; }
   .zorggroep-overzicht{border:1px solid #b8d7b1;background:#f5fbf3;border-radius:12px;padding:12px;margin-bottom:14px}
   .zorggroep-overzicht h4{margin:0 0 8px;font-size:14px;color:#315b2b}
+  .zorggroep-kopregel{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:4px}
+  .zorggroep-aantal{font-size:12px;font-weight:800;color:#315b2b;background:#d8f1e5;border-radius:999px;padding:3px 9px}
+  .zorggroep-details{border:1px solid #b8d7b1;background:#fff;border-radius:10px;margin-top:8px;overflow:hidden}
+  .zorggroep-details summary{cursor:pointer;list-style:none;padding:10px 12px;font-weight:800;display:flex;align-items:center;justify-content:space-between;gap:10px}
+  .zorggroep-details summary::-webkit-details-marker{display:none}
+  .zorggroep-details summary::after{content:"Openen";font-size:12px;color:#315b2b;background:#e7f6ee;border-radius:999px;padding:3px 8px;white-space:nowrap}
+  .zorggroep-details[open] summary::after{content:"Sluiten"}
+  .zorggroep-details-body{border-top:1px solid #dcebd7;padding:10px 12px}
   .zorggroep-card{background:#fff;border:1px solid #d8ead4;border-radius:10px;padding:10px;margin-top:8px}
   .zorggroep-card strong{display:block;margin-bottom:4px}
   .zorggroep-meta{font-size:12px;color:#667085;margin-bottom:6px}
@@ -1092,6 +1100,28 @@ function projectRef() {
   return doc(db, "overgangsbesprekingen", schooljaar, "projecten", targetOvergangUserId || currentUser.uid);
 }
 
+async function bepaalSchoolbeheerKlas() {
+  await ready;
+  let klas = beheerKlasLabel;
+  if (!klas) {
+    const email = (currentUser.email || '').toLowerCase();
+    const uidQuery = query(collection(db, "klasleerkrachten"), where("leerkracht_uids", "array-contains", currentUser.uid));
+    const emailQuery = query(collection(db, "klasleerkrachten"), where("leerkracht_emails", "array-contains", email));
+    const snaps = await Promise.all([getDocs(uidQuery), getDocs(emailQuery)]);
+    const gevonden = [];
+    snaps.forEach(snap => snap.forEach(d => {
+      const item = d.data();
+      if (String(item.schooljaar || schooljaar) === schooljaar && item.klas) gevonden.push(String(item.klas).trim());
+    }));
+    klas = gevonden.sort((a, b) => a.localeCompare(b, 'nl', { numeric: true }))[0] || '';
+  }
+  return klas;
+}
+
+function schoolbeheerNameKey(s) {
+  return `${String(s.first || s.firstName || '').trim().toLowerCase()} ${String(s.last || s.lastName || '').trim().toLowerCase()}`.replace(/\s+/g, ' ').trim();
+}
+
 window.firebaseOvergang = {
   ready,
   async saveProject(data) {
@@ -1112,22 +1142,47 @@ window.firebaseOvergang = {
   },
   async loadSchoolbeheerLeerlingen() {
     await ready;
-    let klas = beheerKlasLabel;
-    if (!klas) {
-      const email = (currentUser.email || '').toLowerCase();
-      const uidQuery = query(collection(db, "klasleerkrachten"), where("leerkracht_uids", "array-contains", currentUser.uid));
-      const emailQuery = query(collection(db, "klasleerkrachten"), where("leerkracht_emails", "array-contains", email));
-      const snaps = await Promise.all([getDocs(uidQuery), getDocs(emailQuery)]);
-      const gevonden = [];
-      snaps.forEach(snap => snap.forEach(d => {
-        const item = d.data();
-        if (String(item.schooljaar || schooljaar) === schooljaar && item.klas) gevonden.push(String(item.klas).trim());
-      }));
-      klas = gevonden.sort((a, b) => a.localeCompare(b, 'nl', { numeric: true }))[0] || '';
-    }
+    const klas = await bepaalSchoolbeheerKlas();
     if (!klas) return { klas: '', leerlingen: [] };
     const snap = await getDoc(doc(db, "schoolbeheer", schooljaar, "klassen", klas));
     return { klas, leerlingen: snap.exists() ? (snap.data().leerlingen || []) : [] };
+  },
+  async addSchoolbeheerLeerlingen(rows) {
+    await ready;
+    const klas = await bepaalSchoolbeheerKlas();
+    if (!klas || !Array.isArray(rows) || !rows.length) return { klas, added: 0, skipped: 0 };
+    const ref = doc(db, "schoolbeheer", schooljaar, "klassen", klas);
+    const snap = await getDoc(ref);
+    const item = snap.exists() ? snap.data() : { schooljaar, klas, leerlingen: [], refter: {}, activiteiten: [], aankopen: [], vrijeDagen: [], messages: [], processed: {} };
+    item.schooljaar = schooljaar;
+    item.klas = klas;
+    item.leerlingen ||= [];
+    const existing = new Set(item.leerlingen.map(schoolbeheerNameKey));
+    let added = 0;
+    let skipped = 0;
+    rows.forEach(row => {
+      const first = String(row.firstName || row.first || '').trim();
+      const last = String(row.lastName || row.last || '').trim();
+      const key = schoolbeheerNameKey({ first, last });
+      if (!first || !last || existing.has(key)) {
+        skipped++;
+        return;
+      }
+      existing.add(key);
+      item.leerlingen.push({
+        id: (crypto && crypto.randomUUID) ? crypto.randomUUID() : `${Date.now()}_${Math.random().toString(36).slice(2)}`,
+        first,
+        last,
+        colleague: false,
+        start: `${schooljaar.slice(0, 4)}-09-01`,
+        end: `${schooljaar.slice(5, 9)}-06-30`
+      });
+      added++;
+    });
+    item.leerlingen.sort((a, b) => schoolbeheerNameKey(a).localeCompare(schoolbeheerNameKey(b), 'nl'));
+    item.bijgewerktOp = new Date().toISOString();
+    await setDoc(ref, item, { merge: true });
+    return { klas, added, skipped };
   },
   async loadZorggroepen() {
     await ready;
@@ -1748,6 +1803,7 @@ async function bewaarProjectStilInFirebase() {
 async function saveStudentAndWait(action) {
   if (ficheOpslaanBusy) return false;
   const currentId = $('editId').value;
+  const isNewStudent = !currentId;
   const nextId = action === 'next' && currentId ? getNextStudentId(currentId) : null;
   const prevId = action === 'prev' && currentId ? getPrevStudentId(currentId) : null;
   const firstName = $('m_firstName').value.trim();
@@ -1758,6 +1814,7 @@ async function saveStudentAndWait(action) {
   setFicheOpslaanBusy(true);
   try {
     saveStudent(); // schrijft naar state + markDirty, closeModal() NIET meer
+    if (isNewStudent) await syncNieuweLeerlingenNaarSchoolbeheer([{ firstName, lastName }]);
     await bewaarProjectStilInFirebase();
     // Pas ná Firebase: modal sluiten / volgende openen
     if (action === 'next' && nextId) { openModal(nextId); }
@@ -1947,22 +2004,33 @@ function renderZorggroepenVoorFiche(s) {
     el.innerHTML = `<h4>Groeigroepen</h4><p class="zorggroep-empty">Deze leerling staat momenteel niet in een groeigroep.</p>`;
     return;
   }
-  el.innerHTML = `<h4>Groeigroepen</h4>${groepen.map(groep => {
+  el.innerHTML = zorggroepenDetailsHtml(s, true);
+}
+
+function zorggroepenDetailsHtml(s, metTitel = false) {
+  const groepen = zorggroepenVoorStudent(s);
+  if (!groepen.length) return '';
+  return `${metTitel ? `<div class="zorggroep-kopregel"><h4>Groeigroepen</h4><span class="zorggroep-aantal">${groepen.length} gekoppeld</span></div>` : `<p class="fiche-block-title">Groeigroepen</p><p><span class="zorggroep-aantal">${groepen.length} gekoppeld</span></p>`}${groepen.map(groep => {
     const leerlingKey = zorggroepLeerlingKey(groep, s);
     const domeinen = zorggroepDomeinNamen(groep);
     const logs = laatsteZorggroepLog(groep, leerlingKey);
     const toetsen = (groep.toetsen || []).filter(t => !leerlingKey || t.resultaten?.[leerlingKey] != null || t.studentKey === leerlingKey);
     const rapportPeriode = groep.rapportGroep?.periode || '';
-    return `<div class="zorggroep-card">
-      <strong>${esc(groep.naam || 'Groeigroep')}</strong>
-      <div class="zorggroep-meta">${esc([groep.begeleiders, domeinen.join(', '), rapportPeriode].filter(Boolean).join(' · '))}</div>
-      <div class="zorggroep-mini">
+    return `<details class="zorggroep-details">
+      <summary>
+        <span>${esc(groep.naam || 'Groeigroep')}</span>
+        <span class="zorggroep-meta">${esc([domeinen.join(', '), rapportPeriode].filter(Boolean).join(' · '))}</span>
+      </summary>
+      <div class="zorggroep-details-body">
+        ${groep.begeleiders ? `<div class="zorggroep-meta"><b>Begeleider(s):</b> ${esc(groep.begeleiders)}</div>` : ''}
+        <div class="zorggroep-mini">
         ${groep.rapportGroep?.traject ? `<div><b>Zo werkten ze:</b> ${esc(groep.rapportGroep.traject)}</div>` : ''}
         ${groep.rapportGroep?.volgendeStap ? `<div><b>Volgende stap:</b> ${esc(groep.rapportGroep.volgendeStap)}</div>` : ''}
         ${toetsen.length ? `<div><b>Puntenboek:</b> ${toetsen.length} toetsmoment(en)</div>` : ''}
         ${logs.length ? `<div><b>Laatste logboek:</b><ul>${logs.map(l => `<li>${esc(l.datum || '')} ${esc(l.titel || 'Notitie')}</li>`).join('')}</ul></div>` : '<div><b>Logboek:</b> nog geen notities</div>'}
+        </div>
       </div>
-    </div>`;
+    </details>`;
   }).join('')}`;
 }
 
@@ -2028,6 +2096,23 @@ function nieuweLegeStudent(row, source = '') {
   };
 }
 
+async function syncNieuweLeerlingenNaarSchoolbeheer(rows) {
+  if (!window.firebaseOvergang || typeof window.firebaseOvergang.addSchoolbeheerLeerlingen !== 'function') return null;
+  try {
+    const result = await window.firebaseOvergang.addSchoolbeheerLeerlingen(rows);
+    if (result?.added && typeof setFirebaseStatus === 'function') {
+      setFirebaseStatus(`${result.added} nieuwe leerling${result.added === 1 ? '' : 'en'} ook toegevoegd aan klaslijst ${result.klas}.`);
+    }
+    return result;
+  } catch (err) {
+    console.warn('Klaslijst bijwerken mislukt:', err);
+    if (typeof setFirebaseStatus === 'function') {
+      setFirebaseStatus('Fiche bewaard, maar de centrale klaslijst kon niet automatisch bijgewerkt worden.');
+    }
+    return null;
+  }
+}
+
 async function vulOntbrekendeLeerlingenUitSchoolbeheer() {
   const bron = await window.firebaseOvergang.loadSchoolbeheerLeerlingen();
   const klas = bron.klas || '';
@@ -2051,7 +2136,7 @@ async function vulOntbrekendeLeerlingenUitSchoolbeheer() {
   return { added, klas };
 }
 
-function addStudentsFromClassList() {
+async function addStudentsFromClassList() {
   const input = $('klaslijstInput');
   if (!input) return;
   const rows = input.value.split(/\r?\n/).map(normalizeNameFromLine).filter(Boolean);
@@ -2063,6 +2148,7 @@ function addStudentsFromClassList() {
   const existing = new Set(state.students.map(s => studentNameKey(s.firstName, s.lastName)));
   let added = 0;
   let skipped = 0;
+  const addedRows = [];
 
   rows.forEach(row => {
     const key = studentNameKey(row.firstName, row.lastName);
@@ -2072,9 +2158,11 @@ function addStudentsFromClassList() {
     }
     existing.add(key);
     state.students.push(nieuweLegeStudent(row));
+    addedRows.push(row);
     added++;
   });
 
+  await syncNieuweLeerlingenNaarSchoolbeheer(addedRows);
   input.value = '';
   markDirty();
   renderStudents();
@@ -3217,8 +3305,8 @@ function openFicheModal(studentId) {
     if (s.extraCare === 'ja') items.push('extra zorg');
     zorgInhoud = `<p>${items.join(' · ')}</p>${s.careNote ? `<p><span class="fiche-notitie">${esc(s.careNote)}</span></p>` : ''}`;
   }
-  const zgKort = zorggroepenKorteHtml(s);
-  if (zgKort) zorgInhoud += zgKort;
+  const zgDetails = zorggroepenDetailsHtml(s);
+  if (zgDetails) zorgInhoud += `<div class="fiche-block">${zgDetails}</div>`;
 
   // Loopbaan
   let loopbaanInhoud = '';
