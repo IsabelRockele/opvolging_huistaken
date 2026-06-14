@@ -370,6 +370,7 @@ let state = {
   oudercontacten: [],  // [{id, naam, datum, type, uitgenodigden:[], gesprekken:{leerlingId:{tijd,nl,wiskunde,wo,fr,huistaken,bezorgdheden,positief,vragen,ouderOpm}}}]
   leerlingen: []       // [{id, naam}] — geladen uit overgangsbespreking Firestore
 };
+let huistakenSignalen = {};
 
 let huidigOcId = null;
 let huidigeLeerlingId = null;
@@ -498,6 +499,24 @@ async function laadLeerlingenUitSchoolbeheer() {
     return 0;
   }
 }
+async function laadHuistakenSignalen() {
+  try {
+    const snap = await getDoc(doc(db, "leerkrachten", targetUid || currentUser.uid));
+    huistakenSignalen = snap.exists() ? (snap.data().huistakenSignalen || {}) : {};
+  } catch(e) {
+    console.warn('Huistaken-signalen laden mislukt:', e);
+    huistakenSignalen = {};
+  }
+}
+function huistaakSignaalVoorLeerling(leerling) {
+  return huistakenSignalen[naamKey(leerling?.naam || '')] || null;
+}
+function tekstMetHuistaakSignaal(leerling, bestaandeTekst = '') {
+  const eigenTekst = String(bestaandeTekst || '').trim();
+  const signaal = huistaakSignaalVoorLeerling(leerling);
+  if (!signaal?.melding) return eigenTekst;
+  return eigenTekst ? `${signaal.melding}\n\n${eigenTekst}` : signaal.melding;
+}
 // ── ROL OPHALEN ──
 async function laadRol() {
   try {
@@ -606,6 +625,7 @@ async function laadEnToonKlas() {
     state.leerlingen = Array.isArray(data?.leerlingen) ? [...data.leerlingen] : [];
     await laadLeerlingenUitOvergangsbespreking();
     const schoolbeheerAdded = await laadLeerlingenUitSchoolbeheer();
+    await laadHuistakenSignalen();
     if (data && data.oudercontacten) state.oudercontacten = data.oudercontacten || [];
     else state.oudercontacten = [];
 
@@ -807,8 +827,9 @@ function renderFiche() {
         </div>
         ${vorigG.vragen?.trim() ? `<div style="background:#fff;border:1px solid #fde68a;border-radius:7px;padding:7px;margin-bottom:6px"><div style="font-weight:800;font-size:10px;color:#92400e;margin-bottom:3px;text-transform:uppercase">Vragen / tips</div><div style="font-size:11px;color:#44403c;white-space:pre-wrap">${esc(vorigG.vragen)}</div></div>` : ''}
         ${!isReadOnly ? `<button class="ghost small" onclick="window.neemVorigOver()" style="margin-top:2px;font-size:12px">↓ Overnemen als basis voor dit oudercontact</button>` : ''}
-      </div>
+  </div>
     </div>` : '';
+  const huistakenTekst = tekstMetHuistaakSignaal(leerling, g.huistaken || '');
 
   $('ficheContainer').innerHTML = `
   <div class="fiche-bewerk">
@@ -822,7 +843,6 @@ function renderFiche() {
         <button class="ghost small" onclick="slaFicheOpEnNavigeer(1)" ${heeftVolgende?'':'disabled'}>Opslaan & volgende →</button>
       </div>
     </div>
-
     ${vorigPanelHtml}
 
     <div class="${vakGridClass}" style="padding-top:12px">
@@ -833,7 +853,7 @@ function renderFiche() {
     </div>
 
     <div class="rubriek-grid">
-      ${vakCard('huistaken','📚','Huistaken & lessen','rub-huistaken',g.huistaken||'')}
+      ${vakCard('huistaken','📚','Huistaken & lessen','rub-huistaken',huistakenTekst)}
       ${vakCard('bezorgdheden','⚠️','Werkpunten','rub-bezorgdheden',g.bezorgdheden||'')}
       ${vakCard('positief','⭐','Positieve zaken','rub-positief',g.positief||'')}
     </div>
@@ -1188,18 +1208,19 @@ async function maakPdf(leerlingen) {
     }
 
     const Y2 = Y_START + VAK_H + 3;
+    const huistakenTekstPdf = tekstMetHuistaakSignaal(leerling, g.huistaken || '');
     const rubrieken3 = [
       { key: 'huistaken',    label: 'Huistaken & lessen', icon: 'huis', kleur: [255,247,237], tekst: [194,65,12] },
       { key: 'bezorgdheden', label: 'Werkpunten',         icon: 'bez',  kleur: [254,242,242], tekst: [153,27,27] },
       { key: 'positief',     label: 'Positieve zaken',    icon: 'pos',  kleur: [240,253,244], tekst: [21,128,61] },
     ];
     const RUB3_W = (PW - 2*MARGIN) / 3 - 2;
-    const RUB3_H = Math.max(...rubrieken3.map(r => berekenHoogte(g[r.key]||'', RUB3_W, 28)));
+    const RUB3_H = Math.max(...rubrieken3.map(r => berekenHoogte(r.key === 'huistaken' ? huistakenTekstPdf : (g[r.key]||''), RUB3_W, 28)));
 
     for (let i = 0; i < rubrieken3.length; i++) {
       const r = rubrieken3[i];
       const X = MARGIN + i * (RUB3_W + 2);
-      tekenKader(doc, X, Y2, RUB3_W, RUB3_H, r.label, r.kleur, r.tekst, g[r.key] || '', iconCache[r.icon]);
+      tekenKader(doc, X, Y2, RUB3_W, RUB3_H, r.label, r.kleur, r.tekst, r.key === 'huistaken' ? huistakenTekstPdf : (g[r.key] || ''), iconCache[r.icon]);
     }
 
     const Y3 = Y2 + RUB3_H + 3;
