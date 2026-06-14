@@ -380,6 +380,46 @@
       font-family: inherit;
     }
 
+    /* KLASSENNAVIGATIE (zorg/directie) */
+    #klassennavigatie {
+      display: none;
+      max-width: 1300px;
+      margin: 0 auto 16px auto;
+    }
+    .klasnav-balk {
+      background: var(--wit);
+      border: 2px solid var(--rand-donker);
+      border-radius: 14px;
+      padding: 12px 18px;
+      box-shadow: 0 3px 10px var(--schaduw);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .klasnav-label {
+      font-weight: 700;
+      font-size: 0.9em;
+      color: var(--tekst-zacht);
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .klasnav-knoppen { display: flex; gap: 8px; flex-wrap: wrap; }
+    .klasnav-knop {
+      padding: 6px 14px;
+      font-size: 0.88em;
+      font-weight: 700;
+      border-radius: 9px;
+      border: 1.5px solid var(--rand-donker);
+      background: var(--geel-licht);
+      color: var(--tekst);
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.15s;
+    }
+    .klasnav-knop:hover { background: var(--geel-zacht); transform: translateY(-1px); }
+    .klasnav-knop.actief { background: var(--accent); color: white; border-color: var(--accent-donker); }
+
     @media (max-width: 600px) {
       body { padding: 12px; }
       .header { padding: 16px 20px; }
@@ -405,6 +445,14 @@
       <button onclick="window.location.href='index.html'">🏠 Home</button>
       <button id="wijzigWachtwoordBtn">🔐 Wachtwoord wijzigen</button>
       <button id="logoutBtn">🚪 Uitloggen</button>
+    </div>
+  </div>
+
+  <!-- KLASSENNAVIGATIE voor zorg/directie-rollen -->
+  <div id="klassennavigatie">
+    <div class="klasnav-balk">
+      <span class="klasnav-label">📋 Klas bekijken:</span>
+      <div id="klassennavigatie-knoppen" class="klasnav-knoppen"></div>
     </div>
   </div>
 
