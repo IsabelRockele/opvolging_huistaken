@@ -1,7 +1,7 @@
 ﻿// Importeer Firebase services
 import { getAuth, onAuthStateChanged, signOut, updatePassword } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import {
-  getFirestore, doc, onSnapshot, setDoc, updateDoc, getDoc,
+  getFirestore, doc, onSnapshot, setDoc, updateDoc, getDoc, getDocs, collection, query, where,
   arrayUnion, arrayRemove, deleteField
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
@@ -13,12 +13,20 @@ let currentUser;
 let targetUserId = null;
 let beheerKlasLabel = '';
 let beheerNaamLabel = '';
+let beheerKlasId = '';
+let schoolbeheerSyncGedaan = false;
 // AANGEPAST: huidigeModus NIET meer uit localStorage lezen, zodat je bij elke keer naar
 // het dashboard terugkeert eerst het keuzescherm ziet (Per Week / Per Dag / Gedrag / Klasbeheer).
 // De keuze blijft wel behouden binnen de huidige sessie, via het gebruik van setModus() hieronder.
 let huidigeModus = null;
 let klasOverzichtChartInstance = null; // Voor de klasoverzicht-grafiek
 let kolomMigratieUitgevoerd = false;   // voorkomt herhaalde migraties in één sessie
+const schooljaar = (() => {
+  const now = new Date();
+  const start = now.getMonth() >= 7 ? now.getFullYear() : now.getFullYear() - 1;
+  return `${start}-${start + 1}`;
+})();
+const schooljaarKey = schooljaar.replace(/[^a-z0-9]+/gi, "_");
 
 let leerkrachtData = {
   leerlingen: [],
@@ -40,6 +48,14 @@ const chartKleuren = {
   "geen": "#f0f0f0"
 };
 const dagNamen = ['zo', 'ma', 'di', 'wo', 'do', 'vr', 'za'];
+function naamKey(naam){ return String(naam || '').replace(/\s+/g, ' ').trim().toLowerCase(); }
+function leerlingNaamSchoolbeheer(s) {
+  const first = (s.firstName || s.first || s.voornaam || '').trim();
+  const last = (s.lastName || s.last || s.achternaam || '').trim();
+  const direct = (s.naam || s.name || s.fullName || s.volledigeNaam || '').trim();
+  if (first || last) return `${first} ${last}`.trim();
+  return direct;
+}
 
 // --- HELPERS VOOR DOCREF & BASISDOC ---
 const getDocRef = () => doc(db, "leerkrachten", targetUserId || currentUser.uid);
@@ -48,15 +64,20 @@ const getDocRef = () => doc(db, "leerkrachten", targetUserId || currentUser.uid)
 async function ensureLeerkrachtDocExists() {
   const ref = getDocRef();
   const snap = await getDoc(ref);
-  if (!snap.exists()) {
-    await setDoc(ref, {
+  await setDoc(ref, {
+    eigenaar_uid: currentUser.uid,
+    eigenaar_email: currentUser.email || "",
+    klas: beheerKlasId || beheerKlasLabel || "",
+    klasNaam: beheerKlasLabel || beheerKlasId || "",
+    schooljaar,
+    ...(snap.exists() ? {} : {
       weekKolommen: { 1: [], 2: [], 3: [] },
       dagKolommen:  { 1: [], 2: [], 3: [] },
       weekDatums:   {},
       huistakenWeek: {},
       huistakenDag:  {}
-    }, { merge: true });
-  }
+    })
+  }, { merge: true });
 }
 
 /** Robuuste uitleesfuncties die zowel array- als object-vorm aankunnen */
@@ -105,6 +126,58 @@ function updateBeheerHeader() {
   }
 }
 
+async function bepaalDashboardKlas() {
+  if (beheerKlasId || beheerKlasLabel) return beheerKlasId || beheerKlasLabel;
+  const email = (currentUser.email || '').toLowerCase();
+  const gevonden = [];
+  try {
+    const uidQuery = query(collection(db, "klasleerkrachten"), where("leerkracht_uids", "array-contains", targetUserId || currentUser.uid));
+    const emailQuery = query(collection(db, "klasleerkrachten"), where("leerkracht_emails", "array-contains", email));
+    const snaps = await Promise.all([getDocs(uidQuery), getDocs(emailQuery)]);
+    snaps.forEach(snap => snap.forEach(d => {
+      const item = d.data();
+      if (String(item.schooljaar || schooljaar) === schooljaar && item.klas) {
+        gevonden.push(String(item.klas).trim());
+      }
+    }));
+  } catch (err) {
+    console.warn("Klas zoeken voor dashboard mislukt", err);
+  }
+  gevonden.sort((a,b)=>a.localeCompare(b,'nl',{numeric:true}));
+  beheerKlasId = gevonden[0] || '';
+  return beheerKlasId;
+}
+
+async function laadLeerlingenUitSchoolbeheerVoorDashboard() {
+  const klas = await bepaalDashboardKlas();
+  if (!klas) return 0;
+  try {
+    const snap = await getDoc(doc(db, "schoolbeheer", schooljaar, "klassen", klas));
+    if (!snap.exists()) return 0;
+    const bestaande = new Set((leerkrachtData.leerlingen || []).map(l => naamKey(l.naam)));
+    const nieuwe = [];
+    (snap.data().leerlingen || []).forEach(s => {
+      const naam = leerlingNaamSchoolbeheer(s);
+      const key = naamKey(naam);
+      if (!naam || bestaande.has(key)) return;
+      bestaande.add(key);
+      nieuwe.push({
+        id: `schoolbeheer_${klas}_${s.id || key.replace(/[^a-z0-9]+/g, "_")}`,
+        naam,
+        schoolbeheerId: s.id || '',
+        startDatum: s.start || `${schooljaar.slice(0,4)}-09-01`,
+        eindDatum: s.end || `${schooljaar.slice(5,9)}-06-30`
+      });
+    });
+    if (!nieuwe.length) return 0;
+    const leerlingen = [...leerkrachtData.leerlingen, ...nieuwe].sort((a,b)=>a.naam.localeCompare(b.naam,'nl'));
+    await setDoc(getDocRef(), { leerlingen, schooljaar, klas: klas || '' }, { merge: true });
+    return nieuwe.length;
+  } catch (err) {
+    console.warn("Leerlingen uit schoolbeheer laden voor dashboard mislukt", err);
+    return 0;
+  }
+}
 
 // --- INIT & AUTH ---
 document.addEventListener('DOMContentLoaded', () => {
@@ -114,6 +187,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const params = new URLSearchParams(window.location.search);
       targetUserId = params.get('beheerUid') || currentUser.uid;
       beheerKlasLabel = params.get('klas') || '';
+      beheerKlasId = params.get('klasId') || beheerKlasLabel || '';
       beheerNaamLabel = params.get('naam') || '';
       if (targetUserId === currentUser.uid) await ensureLeerkrachtDocExists();
       updateBeheerHeader();   // verzeker dat basisdoc bestaat (klaslijst blijft ongewijzigd)
@@ -143,7 +217,13 @@ function setupEventListeners() {
     });
   }
   document.getElementById('addLeerlingBtn').addEventListener('click', voegLeerlingToe);
-  document.getElementById('rapportperiode').addEventListener('change', renderHoofdweergave);
+  const periodeSelect = document.getElementById('rapportperiode');
+  const bewaardePeriode = localStorage.getItem(`dashboardRapportperiode_${targetUserId || currentUser?.uid || "eigen"}`);
+  if (bewaardePeriode && [...periodeSelect.options].some(o => o.value === bewaardePeriode)) periodeSelect.value = bewaardePeriode;
+  periodeSelect.addEventListener('change', () => {
+    localStorage.setItem(`dashboardRapportperiode_${targetUserId || currentUser?.uid || "eigen"}`, periodeSelect.value);
+    renderHoofdweergave();
+  });
   document.getElementById('toonOverzichtBtn').addEventListener('click', toonKlasOverzicht);
   document.getElementById('printOverzichtBtn').addEventListener('click', () => window.print());
   document.getElementById('printAlleLeerlingenBtn').addEventListener('click', genereerBulkPdf);
@@ -164,6 +244,11 @@ function koppelDataEnRender() {
     };
     await migrateKolommenIfNeeded(data);
     initializeerDataStructuur();
+    if (!schoolbeheerSyncGedaan) {
+      schoolbeheerSyncGedaan = true;
+      await laadLeerlingenUitSchoolbeheerVoorDashboard();
+    }
+    await bewaarHuistakenSignalenAlsGewijzigd(data.huistakenSignalen || {});
     updateUIModus();
   });
 }
@@ -246,6 +331,10 @@ function renderTabelWeek() {
       if (leerling.startWeek && weekNum < leerling.startWeek) {
         return `<td><div class="status-cel niet-aanwezig">Niet aanwezig</div></td>`;
       }
+      const datum = leerkrachtData.weekDatums[periode]?.[weekNum] || '';
+      if (leerlingNietAanwezigOpDatum(leerling, datum)) {
+        return `<td><div class="status-cel niet-aanwezig">Niet aanwezig</div></td>`;
+      }
       const data = weekData[weekNum] || { status: 'op tijd', opmerking: '' };
       return `<td>${createStatusCelHTML(leerling.id, periode, weekNum, data, 'week')}</td>`;
     }).join('');
@@ -291,6 +380,9 @@ function renderTabelDag() {
         if (leerling.startDatum && datum < leerling.startDatum) {
           return `<td><div class="status-cel niet-aanwezig">Niet aanwezig</div></td>`;
         }
+        if (leerlingNietAanwezigOpDatum(leerling, datum)) {
+          return `<td><div class="status-cel niet-aanwezig">Niet aanwezig</div></td>`;
+        }
         const data = dagData[datum] || { status: 'op tijd', opmerking: '' };
         return `<td>${createStatusCelHTML(leerling.id, periode, datum, data, 'dag')}</td>`;
       }).join('');
@@ -317,6 +409,12 @@ function renderTabelDag() {
 }
 
 // --- HULP FUNCTIES ---
+function leerlingNietAanwezigOpDatum(leerling, datum) {
+  if (!datum) return false;
+  if (leerling.startDatum && datum < leerling.startDatum) return true;
+  if (leerling.eindDatum && datum > leerling.eindDatum) return true;
+  return false;
+}
 function createLeerlingCelHTML(leerling) {
   return `<td><div class="leerling-cel">
     <span class="leerling-naam" title="${leerling.naam}"><a href="leerling.html?naam=${encodeURIComponent(leerling.naam)}">${leerling.naam}</a></span>
@@ -346,6 +444,61 @@ function createStatusCelHTML(leerlingId, periode, identifier, data, modus) {
 // --- DATA MANIPULATIE ---
 async function sendUpdate(payload) {
   await setDoc(getDocRef(), payload, { merge: true });
+  await bewaarHuistakenSignalen();
+}
+
+function berekenHuistakenSignalen() {
+  const signalen = {};
+  const probleemStatussen = ["te laat", "onvolledig", "niet gemaakt"];
+  const MIN_PROBLEMEN_PER_PERIODE = 2;
+  (leerkrachtData.leerlingen || []).forEach(leerling => {
+    const perPeriode = {};
+    for (const [bronNaam, bron] of Object.entries({week: leerkrachtData.huistakenWeek || {}, dag: leerkrachtData.huistakenDag || {}})) {
+      const leerlingData = bron[leerling.id] || {};
+      Object.entries(leerlingData).forEach(([periode, periodeData]) => {
+        perPeriode[periode] ||= { totaal: 0, statussen: new Set(), bron: new Set() };
+        Object.values(periodeData || {}).forEach(cel => {
+          if (cel?.status && probleemStatussen.includes(cel.status)) {
+            perPeriode[periode].totaal++;
+            perPeriode[periode].statussen.add(cel.status);
+            perPeriode[periode].bron.add(bronNaam);
+          }
+        });
+      });
+    }
+    const probleemPeriodes = Object.entries(perPeriode)
+      .filter(([,info]) => info.totaal >= MIN_PROBLEMEN_PER_PERIODE)
+      .map(([periode, info]) => ({ periode, totaal: info.totaal, statussen: [...info.statussen] }))
+      .sort((a,b)=>String(a.periode).localeCompare(String(b.periode), 'nl', { numeric: true }));
+    if (probleemPeriodes.length >= 2) {
+      signalen[naamKey(leerling.naam)] = {
+        leerlingId: leerling.id,
+        naam: leerling.naam,
+        melding: "Deze leerling was doorheen het schooljaar regelmatig niet volledig in orde met huistaken en/of lessen. Blijft een aandachtspunt voor opvolging.",
+        probleemPeriodes,
+        schooljaar
+      };
+    }
+  });
+  return signalen;
+}
+
+async function bewaarHuistakenSignalen() {
+  try {
+    await setDoc(getDocRef(), { huistakenSignalen: berekenHuistakenSignalen(), huistakenSignalenSchooljaar: schooljaar }, { merge: true });
+  } catch (err) {
+    console.warn("Huistaken-signalen bewaren mislukt", err);
+  }
+}
+
+async function bewaarHuistakenSignalenAlsGewijzigd(bestaandeSignalen) {
+  const nieuweSignalen = berekenHuistakenSignalen();
+  if (JSON.stringify(nieuweSignalen) === JSON.stringify(bestaandeSignalen || {})) return;
+  try {
+    await setDoc(getDocRef(), { huistakenSignalen: nieuweSignalen, huistakenSignalenSchooljaar: schooljaar }, { merge: true });
+  } catch (err) {
+    console.warn("Huistaken-signalen bijwerken mislukt", err);
+  }
 }
 
 window.updateStatus = async (params, nieuweStatus) => {
@@ -467,6 +620,10 @@ window.voegLeerlingToe = async () => {
     const input = document.getElementById('nieuweLeerlingNaam');
     const naam = (input.value || '').trim();
     if (!naam) { alert('Geef een naam op.'); return; }
+    if (leerkrachtData.leerlingen.some(l => naamKey(l.naam) === naamKey(naam))) {
+      alert('Deze naam staat al in de lijst.');
+      return;
+    }
 
     const nieuweLeerling = { id: `id_${Date.now()}`, naam };
 
@@ -492,25 +649,38 @@ window.voegLeerlingToe = async () => {
 
 window.verwijderLeerling = async (leerlingId) => {
   const leerling = leerkrachtData.leerlingen.find(l => l.id === leerlingId);
-  if (!leerling || !confirm(`Zeker dat u ${leerling.naam} wilt verwijderen?`)) return;
+  if (!leerling) return;
+  const vandaag = new Date().toISOString().split('T')[0];
+  const eindDatum = prompt(`Vanaf welke datum is ${leerling.naam} niet meer in de klas?\n\nDe historiek blijft bewaard.`, leerling.eindDatum || vandaag);
+  if (!eindDatum) return;
 
-  const updates = {
-    leerlingen: arrayRemove(leerling),
-    [`huistakenWeek.${leerlingId}`]: deleteField(),
-    [`huistakenDag.${leerlingId}`]: deleteField()
-  };
-  await updateDoc(getDocRef(), updates);
+  const leerlingen = leerkrachtData.leerlingen.map(l => l.id === leerlingId ? { ...l, eindDatum } : l);
+  await setDoc(getDocRef(), { leerlingen }, { merge: true });
 };
 
 // --- AUTH & BEHEER FUNCTIES ---
 async function startNieuwSchooljaar() {
-  if (prompt("OPGELET: U staat op het punt alle leerlingen- en huistaakdata te verwijderen. Kolommen blijven bewaard. Typ 'RESET' om te bevestigen.") !== 'RESET') return;
-  await updateDoc(getDocRef(), {
+  const bevestiging = prompt(`Nieuw schooljaar starten voor ${schooljaar}?\n\nDe huidige dashboardgegevens worden bewaard in archiefHuistaken.${schooljaarKey}. Daarna haalt dashboard de klaslijst uit schoolbeheer.\n\nTyp NIEUW SCHOOLJAAR om te bevestigen.`);
+  if (bevestiging !== 'NIEUW SCHOOLJAAR') return;
+  const archief = {
+    leerlingen: leerkrachtData.leerlingen || [],
+    weekKolommen: leerkrachtData.weekKolommen || {},
+    dagKolommen: leerkrachtData.dagKolommen || {},
+    weekDatums: leerkrachtData.weekDatums || {},
+    huistakenWeek: leerkrachtData.huistakenWeek || {},
+    huistakenDag: leerkrachtData.huistakenDag || {},
+    bewaardOp: new Date().toISOString()
+  };
+  await setDoc(getDocRef(), {
+    archiefHuistaken: { [schooljaarKey]: archief },
     leerlingen: [],
     huistakenWeek: {},
-    huistakenDag: {}
-  });
-  alert("Alle leerlingen en hun huistaakdata zijn verwijderd. U kunt een nieuwe klaslijst ingeven.");
+    huistakenDag: {},
+    schooljaar
+  }, { merge: true });
+  schoolbeheerSyncGedaan = false;
+  const toegevoegd = await laadLeerlingenUitSchoolbeheerVoorDashboard();
+  alert(`Nieuw schooljaar gestart. ${toegevoegd} leerling(en) uit schoolbeheer toegevoegd. Het oude dashboard staat in het archiefveld en is niet gewist.`);
 }
 
 function wijzigWachtwoord() {
