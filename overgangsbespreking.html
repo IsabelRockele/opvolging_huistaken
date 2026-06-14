@@ -1147,6 +1147,11 @@ window.firebaseOvergang = {
     const snap = await getDoc(projectRef());
     return snap.exists() ? snap.data() : null;
   },
+  async loadHuistakenSignalen() {
+    await ready;
+    const snap = await getDoc(doc(db, "leerkrachten", targetOvergangUserId || currentUser.uid));
+    return snap.exists() ? (snap.data().huistakenSignalen || {}) : {};
+  },
   async loadSchoolbeheerLeerlingen() {
     await ready;
     const klas = await bepaalSchoolbeheerKlas();
@@ -1326,6 +1331,7 @@ let isDirty = false, lastSaveTime = null, activeTab = 'settings';
 let zorggroepen = [];
 let zorggroepenPerLeerling = new Map();
 let zorggroepenLaadFout = null;
+let huistakenSignalen = {};
 const ZORGGROEP_DOMEINNAMEN = {
   lezen: 'Lezen', spelling: 'Spelling', spreken: 'Spreken', luisteren: 'Luisteren',
   woordenschat: 'Woordenschat', schrijven: 'Schrijven',
@@ -1985,6 +1991,16 @@ function zorggroepenVoorStudent(s) {
   return gevonden;
 }
 
+function huistaakSignaalVoorStudent(s) {
+  const keys = studentNameKeys(s.firstName, s.lastName).map(k => k.replace('|', ' '));
+  keys.push(naamZoekKey(s.name || `${s.firstName || ''} ${s.lastName || ''}`));
+  for (const key of keys) {
+    const hit = huistakenSignalen[key] || huistakenSignalen[String(key || '').toLowerCase()];
+    if (hit) return hit;
+  }
+  return null;
+}
+
 function zorggroepDomeinNamen(groep) {
   const domeinen = groep.rapportGroep?.domeinen?.length ? groep.rapportGroep.domeinen : (groep.domeinen || []);
   return domeinen.map(id => ZORGGROEP_DOMEINNAMEN[id] || id).filter(Boolean);
@@ -2004,16 +2020,17 @@ function zorggroepLeerlingKey(groep, overgangStudent) {
 function renderZorggroepenVoorFiche(s) {
   const el = $('m_zorggroepenOverzicht');
   if (!el) return;
+  const huiswerkSignaal = huistaakSignaalVoorStudent(s);
   if (zorggroepenLaadFout) {
-    el.innerHTML = `<h4>Groeigroepen</h4><p class="zorggroep-empty">Groeigroepen konden niet geladen worden. Waarschijnlijk mag deze rol ze nog niet lezen in Firebase-regels.</p>`;
+    el.innerHTML = `${huiswerkSignaal ? `<div class="zorggroep-overzicht" style="margin-bottom:8px"><h4>Huistaken</h4><p class="zorggroep-empty">${esc(huiswerkSignaal.melding || '')}</p></div>` : ''}<h4>Groeigroepen</h4><p class="zorggroep-empty">Groeigroepen konden niet geladen worden. Waarschijnlijk mag deze rol ze nog niet lezen in Firebase-regels.</p>`;
     return;
   }
   const groepen = zorggroepenVoorStudent(s);
   if (!groepen.length) {
-    el.innerHTML = `<h4>Groeigroepen</h4><p class="zorggroep-empty">Deze leerling staat momenteel niet in een groeigroep.</p>`;
+    el.innerHTML = `${huiswerkSignaal ? `<div class="zorggroep-overzicht" style="margin-bottom:8px"><h4>Huistaken</h4><p class="zorggroep-empty">${esc(huiswerkSignaal.melding || '')}</p></div>` : ''}<h4>Groeigroepen</h4><p class="zorggroep-empty">Deze leerling staat momenteel niet in een groeigroep.</p>`;
     return;
   }
-  el.innerHTML = zorggroepenDetailsHtml(s, true);
+  el.innerHTML = `${huiswerkSignaal ? `<div class="zorggroep-overzicht" style="margin-bottom:8px"><h4>Huistaken</h4><p class="zorggroep-empty">${esc(huiswerkSignaal.melding || '')}</p></div>` : ''}${zorggroepenDetailsHtml(s, true)}`;
 }
 
 function zorggroepenDetailsHtml(s, metTitel = false) {
@@ -2734,10 +2751,12 @@ async function loadFirebaseProjectOnStart() {
   }
   setFirebaseStatus('Firebase wordt gecontroleerd...');
   try {
-    const [data, zorgResult] = await Promise.all([
+    const [data, zorgResult, huiswerkResult] = await Promise.all([
       window.firebaseOvergang.loadProject(),
-      window.firebaseOvergang.loadZorggroepen().catch(err => ({ __zorggroepenError: err }))
+      window.firebaseOvergang.loadZorggroepen().catch(err => ({ __zorggroepenError: err })),
+      window.firebaseOvergang.loadHuistakenSignalen().catch(() => ({}))
     ]);
+    huistakenSignalen = huiswerkResult || {};
     if (Array.isArray(zorgResult)) {
       zorggroepen = zorgResult;
       zorggroepenLaadFout = null;
@@ -3111,6 +3130,7 @@ function bouwFichePdfHtml(x) {
       if (x.magOpFoto) loopbaanItems.push('✅ Mag op foto');
       else loopbaanItems.push('🚫 Mag NIET op foto');
       if (Array.isArray(x.huiswerkklas) && x.huiswerkklas.length > 0) loopbaanItems.push('📚 Huiswerkklas: ' + x.huiswerkklas.join(', '));
+      const huiswerkSignaal = huistaakSignaalVoorStudent(x);
       const AANP_LABELS_PDF = {verlengd:'Verlengde tijd',mondeling:'Mondeling i.p.v. schriftelijk',eigendoelen:'Eigen doelen / ander niveau',hulpkaarten:'Hulpkaarten / woordenlijst',toetsing:'Aangepaste toetsing',remediering:'Extra herhaling / remediëring'};
       const vakRegel = (label, niveau, note, extra='', vakNaam='') => {
         let line = `<strong>${label}:</strong> ${esc(niveau)}${extra}`;
@@ -3139,6 +3159,7 @@ function bouwFichePdfHtml(x) {
       ${(x.care !== 'laag' || x.iac === 'ja' || x.gok === 'ja' || x.careNote) ? `<div class="fiche-block"><p class="fiche-block-title">Zorg</p>
         <p><strong>Zorgniveau:</strong> ${esc(x.care)} · IAC: ${esc(x.iac)} · GOK: ${esc(x.gok || 'nee')}</p>
         ${x.careNote ? `<p class="fiche-note-block">${esc(x.careNote)}</p>` : ''}</div>` : ''}
+      ${huiswerkSignaal ? `<div class="fiche-block"><p class="fiche-block-title">Huistaken</p><p class="fiche-note-block">${esc(huiswerkSignaal.melding || '')}</p></div>` : ''}
       ${zorggroepenKorteHtml(x)}
       ${loopbaanItems.length ? `<div class="fiche-block"><p class="fiche-block-title">Schoolloopbaan</p><p>${loopbaanItems.map(esc).join(' · ')}</p></div>` : ''}
       ${therapieList.length ? `<div class="fiche-block"><p class="fiche-block-title">Therapieën</p>${therapieList.map(item => `<p style="margin:2px 0">• ${esc(item.naam)}${item.adres ? `<span style="color:#475569;font-size:12px;display:block;margin-left:10px">📍 ${esc(item.adres)}</span>` : ''}</p>`).join('')}</div>` : ''}
@@ -3314,6 +3335,8 @@ function openFicheModal(studentId) {
     if (s.extraCare === 'ja') items.push('extra zorg');
     zorgInhoud = `<p>${items.join(' · ')}</p>${s.careNote ? `<p><span class="fiche-notitie">${esc(s.careNote)}</span></p>` : ''}`;
   }
+  const huiswerkSignaal = huistaakSignaalVoorStudent(s);
+  if (huiswerkSignaal) zorgInhoud += `<div class="fiche-block"><p class="fiche-block-title">Huistaken</p><p>${esc(huiswerkSignaal.melding || '')}</p></div>`;
   const zgDetails = zorggroepenDetailsHtml(s);
   if (zgDetails) zorgInhoud += `<div class="fiche-block">${zgDetails}</div>`;
 
