@@ -126,6 +126,62 @@ function updateBeheerHeader() {
   }
 }
 
+
+// --- KLASSENNAVIGATIE voor zorg/directie-rollen ---
+async function laadKlassenNavigatie() {
+  try {
+    // Controleer eerst of deze gebruiker een schoolbrede rol heeft
+    const rolSnap = await getDoc(doc(db, "schoolrollen", currentUser.uid));
+    const rol = rolSnap.exists() ? String(rolSnap.data().rol || '').toLowerCase() : '';
+    const isSchoolBreed = ['directie', 'zorgcoordinator', 'zorgleerkracht'].includes(rol);
+    if (!isSchoolBreed) return;  // Gewone leerkracht: geen navigatiebalk
+
+    // Haal alle klassen op uit klasleerkrachten
+    const snap = await getDocs(collection(db, 'klasleerkrachten'));
+    const klassen = [];
+    snap.forEach(d => {
+      const data = d.data();
+      // Filter op huidig schooljaar
+      if (data.actief === false) return;
+      const klasId = (data.klas || '').trim();
+      const uid = Array.isArray(data.leerkracht_uids) ? data.leerkracht_uids[0] : null;
+      const naam = data.klasNaam || klasId;
+      if (klasId && uid) klassen.push({ klasId, uid, naam });
+    });
+
+    if (klassen.length < 2) return;
+    klassen.sort((a, b) => a.klasId.localeCompare(b.klasId, 'nl', { numeric: true }));
+
+    const nav = document.getElementById('klassennavigatie');
+    const knoppen = document.getElementById('klassennavigatie-knoppen');
+    if (!nav || !knoppen) return;
+
+    knoppen.innerHTML = '';
+    // Actieve klas = beheerKlasId uit URL, of als we onze eigen klas bekijken: leeg
+    const actieveKlas = beheerKlasId || beheerKlasLabel;
+
+    klassen.forEach(({ klasId, uid, naam }) => {
+      const btn = document.createElement('button');
+      btn.className = 'klasnav-knop' + (klasId === actieveKlas ? ' actief' : '');
+      btn.textContent = naam;
+      btn.title = `Ga naar klas ${naam}`;
+      btn.addEventListener('click', () => {
+        const p = new URLSearchParams(window.location.search);
+        p.set('beheerUid', uid);
+        p.set('klas', klasId);
+        p.set('klasId', klasId);
+        p.delete('naam');
+        window.location.href = `dashboard.html?${p.toString()}`;
+      });
+      knoppen.appendChild(btn);
+    });
+
+    nav.style.display = 'block';
+  } catch (err) {
+    console.warn('Klassennavigatie laden mislukt:', err);
+  }
+}
+
 async function bepaalDashboardKlas() {
   if (beheerKlasId || beheerKlasLabel) return beheerKlasId || beheerKlasLabel;
   const email = (currentUser.email || '').toLowerCase();
@@ -191,6 +247,7 @@ document.addEventListener('DOMContentLoaded', () => {
       beheerNaamLabel = params.get('naam') || '';
       if (targetUserId === currentUser.uid) await ensureLeerkrachtDocExists();
       updateBeheerHeader();   // verzeker dat basisdoc bestaat (klaslijst blijft ongewijzigd)
+      await laadKlassenNavigatie();
       setupEventListeners();
       koppelDataEnRender();
     } else {
