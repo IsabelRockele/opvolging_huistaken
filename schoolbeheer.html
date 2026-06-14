@@ -1076,11 +1076,19 @@
       const kandidaten = [];
       for (const jaar of [vorige, volgende]) {
         const snap = await getDoc(doc(db, "schoolbeheer", jaar, "klassen", klas));
-        if (snap.exists()) kandidaten.push({ jaar, data: snap.data(), aantal: (snap.data().leerlingen || []).length });
+        if (snap.exists()) {
+          const aantal = (snap.data().leerlingen || []).length;
+          if (aantal > 0) kandidaten.push({ jaar, data: snap.data(), aantal });
+        }
       }
       $("content").innerHTML = `<div class="panel">
         <h2>Klas nog niet gestart</h2>
         <p class="muted">${isSecretary() ? "Deze klas bestaat nog niet in " + esc(schooljaar) + "." : "Secretariaat moet deze klas eerst starten."}</p>
+        ${isSecretary()?`<div class="notice" style="margin-top:14px">
+          <strong>Staat deze klas al in dashboard?</strong>
+          <p class="muted">Je kan ${esc(klas)} voor ${esc(schooljaar)} starten met de namen die de klasleerkracht al in dashboard gebruikt. Er wordt een nieuwe klaslijst gemaakt; er wordt niets uit dashboard gewist.</p>
+          <button class="green" onclick="startKlasUitDashboard('${esc(klas)}')">Start ${esc(klas)} met namen uit dashboard</button>
+        </div>`:""}
         ${kandidaten.length ? `<div class="notice" style="margin-top:14px">
           <strong>Ik vond ${esc(klas)} wel in een ander schooljaar.</strong>
           <p class="muted">Waarschijnlijk staat je huidige klaslijst nog onder het verkeerde schooljaar. Je kan de klaslijst veilig kopieren naar ${esc(schooljaar)}. Bestaande gegevens in het andere schooljaar blijven staan.</p>
@@ -1748,10 +1756,12 @@
 
             function classListContent(){
       const canManageClasses = isSecretary();
+      const canImportDashboard = isSchoolBreedRole() || isSecretary();
       const toolButtons = `
         <div class="class-actions no-print">
           <button class="${classListMode==="plakken"?"primary":""}" onclick="openClassListTool('plakken')">Klaslijst plakken</button>
           <button class="${classListMode==="nieuw"?"primary":""}" onclick="openClassListTool('nieuw')">Nieuwe leerling</button>
+          ${canImportDashboard ? `<button class="${classListMode==="dashboard"?"primary":""}" onclick="openClassListTool('dashboard')">Namen uit dashboard aanvullen</button>` : ""}
           ${canManageClasses ? `<button class="${classListMode==="beheer"?"primary":""}" onclick="openClassListTool('beheer')">Klassen beheren</button>` : ""}
           <span class="hint">Kies alleen wat je nu nodig hebt.</span>
         </div>`;
@@ -1776,6 +1786,14 @@
             <label class="check-label"><input id="newColleague" type="checkbox"> <span>kind van collega, gratis refter</span></label>
             <button class="green" onclick="addStudent()">Leerling toevoegen</button>
           </div>
+        </section>`;
+      }
+      if(classListMode === "dashboard" && canImportDashboard){
+        toolPanel = `<section class="class-tool-panel no-print">
+          <div class="bar"><div><h3>Namen uit dashboard aanvullen</h3><p class="muted small">Voor ${esc(schooljaar)}: haalt de namen op die leerkrachten al in dashboard gebruiken en voegt alleen ontbrekende namen toe aan deze klaslijst. Bestaande gegevens worden niet overschreven.</p></div><button class="small white right" onclick="openClassListTool('')">Sluiten</button></div>
+          <div class="notice"><strong>Veilig voor lopend schooljaar.</strong><p class="muted">Dit vult de centrale klaslijst aan. Daarna gebruiken overgangsbespreking en oudercontacten deze namen vanzelf.</p></div>
+          <button class="green" onclick="vulKlaslijstAanUitDashboard()">Ontbrekende namen toevoegen aan ${esc(activeClass)}</button>
+          <div id="dashboardImportResult" class="muted" style="margin-top:10px"></div>
         </section>`;
       }
       if(classListMode === "beheer" && canManageClasses){
@@ -1815,6 +1833,128 @@
     window.importNames = () => { $("pasteNames").value.split(/\r?\n/).map(parseName).filter(Boolean).forEach(n=>addStudentObj(n.last,n.first,false,startDate())); markDirty(); render(); };
     window.addStudent = () => { addStudentObj($("newLast").value,$("newFirst").value,$("newColleague").checked,$("newStart").value||startDate()); markDirty(); render(); };
     function addStudentObj(last,first,colleague,start){ if(!last||!first)return; if(data.leerlingen.some(s=>(s.last||"").toLowerCase()===last.toLowerCase()&&(s.first||"").toLowerCase()===first.toLowerCase()))return; data.leerlingen.push({id:uid(),last,first,colleague,start,end:endDate()}); }
+    function classNameKey(first,last){
+      return `${String(first||"").trim().toLowerCase()} ${String(last||"").trim().toLowerCase()}`.replace(/\s+/g," ").trim();
+    }
+    function schoolbeheerRijUitDashboardNaam(naam){
+      const parsed=parseName(String(naam||""));
+      if(!parsed) return null;
+      return {first:parsed.first||"",last:parsed.last||""};
+    }
+    async function dashboardLeerlingenVoorKlasUitLeerkrachten(){
+      const klasDocId=`${schooljaar}_${activeClass}`;
+      const rechtstreeks=await getDoc(doc(db,"klasleerkrachten",klasDocId));
+      const koppelingen=[];
+      if(rechtstreeks.exists()) koppelingen.push(rechtstreeks.data());
+      if(!koppelingen.length){
+        const snap=await getDocs(query(collection(db,"klasleerkrachten"),where("klas","==",activeClass)));
+        snap.forEach(d=>{
+          const item=d.data();
+          if(String(item.schooljaar||schooljaar)===schooljaar) koppelingen.push(item);
+        });
+      }
+      const uids=[...new Set(koppelingen.flatMap(k=>Array.isArray(k.leerkracht_uids)?k.leerkracht_uids:[]).filter(Boolean))];
+      const namen=[];
+      const bronnen=[];
+      for(const uidValue of uids){
+        const snap=await getDoc(doc(db,"leerkrachten",uidValue));
+        if(!snap.exists()) continue;
+        bronnen.push(uidValue);
+        (snap.data().leerlingen||[]).forEach(l=>{
+          const naam=String(l.naam||"").trim();
+          if(naam) namen.push({naam,uid:uidValue});
+        });
+      }
+      try{
+        const klasQuery=await getDocs(query(collection(db,"leerkrachten"),where("klas","==",activeClass)));
+        klasQuery.forEach(d=>{
+          if(bronnen.includes(d.id)) return;
+          const item=d.data();
+          if(item.schooljaar && String(item.schooljaar)!==schooljaar) return;
+          bronnen.push(d.id);
+          (item.leerlingen||[]).forEach(l=>{
+            const naam=String(l.naam||"").trim();
+            if(naam) namen.push({naam,uid:d.id});
+          });
+        });
+      }catch(e){
+        console.warn("Dashboard zoeken op klasveld lukte niet", e);
+      }
+      return {namen,koppelingen,uids,bronnen};
+    }
+    function voegDashboardNamenToeAanKlasData(targetData,dashboardNamen){
+      const bestaande=new Set((targetData.leerlingen||[]).map(s=>classNameKey(s.first||s.firstName,s.last||s.lastName)));
+      let added=0, skipped=0;
+      dashboardNamen.forEach(item=>{
+        const row=schoolbeheerRijUitDashboardNaam(item.naam);
+        if(!row||(!row.first&&!row.last)){ skipped++; return; }
+        const key=classNameKey(row.first,row.last);
+        if(!key||bestaande.has(key)){ skipped++; return; }
+        bestaande.add(key);
+        targetData.leerlingen.push({id:uid(),first:row.first,last:row.last,colleague:false,start:startDate(),end:endDate(),bron:"dashboard"});
+        added++;
+      });
+      targetData.leerlingen.sort((a,b)=>name(a).localeCompare(name(b),"nl"));
+      return {added,skipped};
+    }
+    window.startKlasUitDashboard = async function(klas){
+      if(!isSecretary()) return alert("Alleen secretariaat kan een nieuwe klaslijst starten.");
+      if(!confirm(`${klas} starten in ${schooljaar} met namen uit dashboard?\n\nEr wordt niets overschreven of gewist.`)) return;
+      try{
+        activeClass=klas;
+        const ref=doc(db,"schoolbeheer",schooljaar,"klassen",klas);
+        const bestaand=await getDoc(ref);
+        if(bestaand.exists()) return alert(`${klas} bestaat intussen al in ${schooljaar}. Herlaad de klas.`);
+        const dashboardInfo=await dashboardLeerlingenVoorKlasUitLeerkrachten();
+        const dashboardNamen=dashboardInfo.namen||[];
+        if(!dashboardNamen.length){
+          const reden = !dashboardInfo.koppelingen?.length
+            ? "Geen klasleerkracht-koppeling gevonden voor deze klas."
+            : !dashboardInfo.uids?.length
+              ? "De klasleerkracht-koppeling heeft geen gebruikers-ID. Koppel de leerkracht opnieuw bij 'Klasleerkrachten voorbereiden'."
+              : "Er zijn wel leerkrachten gekoppeld, maar hun dashboard bevat nog geen namen of is nog niet opnieuw geopend sinds de laatste update.";
+          alert(`Geen dashboardnamen gevonden voor ${klas}.\n\n${reden}`);
+          return;
+        }
+        const nieuw=emptyClassDoc(klas);
+        const result=voegDashboardNamenToeAanKlasData(nieuw,dashboardNamen);
+        nieuw.bijgewerktOp=new Date().toISOString();
+        await setDoc(ref,nieuw);
+        alert(`${klas} is gestart in ${schooljaar}.\n${result.added} naam/namen toegevoegd uit dashboard.${result.added===0 ? "\n\nGeen namen gevonden? Controleer of de klasleerkracht gekoppeld is en of secretariaat leesrecht heeft op leerkrachten/{uid}." : ""}`);
+        await openClass(klas);
+      }catch(err){
+        console.error(err);
+        alert("Klas starten vanuit dashboard lukte niet.\n\nWaarschijnlijk heeft secretariaat nog geen leesrecht op leerkrachten/{uid}. Pas de Firebase-regel aan zoals besproken en probeer opnieuw.");
+      }
+    };
+    window.vulKlaslijstAanUitDashboard = async function(){
+      if(!canOpenAllClasses()) return alert("Deze aanvulling kan alleen met secretariaat of een schoolbrede rol.");
+      if(!data) return;
+      const result=$("dashboardImportResult");
+      if(result) result.textContent="Dashboardnamen zoeken...";
+      try{
+        const dashboardInfo=await dashboardLeerlingenVoorKlasUitLeerkrachten();
+        const dashboardNamen=dashboardInfo.namen||[];
+        if(!dashboardNamen.length){
+          const reden = !dashboardInfo.koppelingen?.length
+            ? "Geen klasleerkracht-koppeling gevonden voor deze klas."
+            : !dashboardInfo.uids?.length
+              ? "De klasleerkracht-koppeling heeft geen gebruikers-ID. Koppel de leerkracht opnieuw bij 'Klasleerkrachten voorbereiden'."
+              : "Er zijn wel leerkrachten gekoppeld, maar hun dashboard bevat nog geen namen of is nog niet opnieuw geopend sinds de laatste update.";
+          alert(`Geen dashboardnamen gevonden voor ${activeClass}.\n\n${reden}`);
+          if(result) result.textContent="Geen dashboardnamen gevonden.";
+          return;
+        }
+        const {added,skipped}=voegDashboardNamenToeAanKlasData(data,dashboardNamen);
+        await saveNow();
+        render();
+        alert(`${added} naam/namen toegevoegd uit dashboard. ${skipped} overgeslagen omdat ze al bestonden of leeg waren.`);
+      }catch(err){
+        console.error(err);
+        alert("Dashboardnamen ophalen lukte niet. Waarschijnlijk heeft deze rol nog geen leesrecht op leerkrachten/{uid}, of er is geen klasleerkracht gekoppeld.\n\nVoor secretariaat moet in Firebase bij match /leerkrachten/{userId} ook isSecretariaat() read-toegang krijgen.");
+        if(result) result.textContent="Ophalen mislukt.";
+      }
+    };
     window.updateStudent = (id,field,value) => { const s=data.leerlingen.find(x=>x.id===id); if(s){ s[field]=value; markDirty(); } };
     window.toggleColleague = (id,checked) => { const s=data.leerlingen.find(x=>x.id===id); if(s)s.colleague=checked; markDirty(); };
     window.leaveStudent = id => { const d=prompt("Uitschrijfdatum?",`${schooljaar.slice(0,4)}-09-30`); if(!d)return; const s=data.leerlingen.find(x=>x.id===id); if(s)s.end=d; markDirty(); render(); };
