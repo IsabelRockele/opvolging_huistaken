@@ -524,6 +524,7 @@
       </label>
       <button id="exportJsonBtn" type="button" style="background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.25);font-size:13px;padding:7px 14px">&#128190; Exporteren</button>
       <button id="terugNaarStartBtn" type="button" onclick="window.location.href='index.html'" style="background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.35);color:#fff;border-radius:10px;padding:6px 14px;font-size:13px;cursor:pointer;font-weight:700">🏠 Keuzescherm</button>
+      <button id="andereOvergangKlasBtn" type="button" style="display:none;background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.35);color:#fff;border-radius:10px;padding:6px 14px;font-size:13px;cursor:pointer;font-weight:700">Andere klas</button>
       <div id="firebaseStatus" class="small" style="flex-basis:100%;color:rgba(255,255,255,.5);font-size:11px">Firebase wordt gecontroleerd...</div>
     </div>
   </div>
@@ -1091,6 +1092,7 @@ const overgangParams = new URLSearchParams(window.location.search);
 let targetOvergangUserId = overgangParams.get('beheerUid') || null;
 let beheerKlasLabel = overgangParams.get('klas') || '';
 let beheerNaamLabel = overgangParams.get('naam') || '';
+let klasProjectMode = overgangParams.get('klasProject') === '1';
 const ready = new Promise(resolve => {
   onAuthStateChanged(auth, user => {
     if (!user) {
@@ -1102,7 +1104,103 @@ const ready = new Promise(resolve => {
   });
 });
 
+const schoolbredeRollenOvergang = ["directie", "zorgcoordinator", "zorgleerkracht"];
+const ovEsc = v => String(v ?? "").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;");
+async function huidigeOvergangRol() {
+  await ready;
+  try {
+    const snap = await getDoc(doc(db, "schoolrollen", currentUser.uid));
+    return snap.exists() ? String(snap.data().rol || "").toLowerCase() : "";
+  } catch(e) {
+    console.warn("Rol laden mislukt", e);
+    return "";
+  }
+}
+async function laadOvergangKlassen() {
+  const klaslijstSnap = await getDocs(collection(db, "schoolbeheer", schooljaar, "klassen"));
+  const koppelingSnap = await getDocs(collection(db, "klasleerkrachten"));
+  const koppelingen = new Map();
+  koppelingSnap.forEach(d => {
+    const item = { id: d.id, ...d.data() };
+    if (String(item.schooljaar || schooljaar) !== schooljaar) return;
+    const klasId = String(item.klasId || item.klas || d.id.replace(schooljaar + "_","")).trim();
+    if (klasId) koppelingen.set(klasId, item);
+  });
+  const klassen = [];
+  klaslijstSnap.forEach(d => {
+    const item = d.data() || {};
+    const koppeling = koppelingen.get(d.id) || {};
+    klassen.push({
+      ...item,
+      ...koppeling,
+      id: d.id,
+      klasId: d.id,
+      klasNaam: koppeling.klasNaam || item.klasNaam || item.klas || d.id,
+      leerlingAantal: Array.isArray(item.leerlingen) ? item.leerlingen.length : 0
+    });
+  });
+  klassen.sort((a,b)=>(a.klasNaam || a.klas || a.id).localeCompare(b.klasNaam || b.klas || b.id, "nl", { numeric:true }));
+  return klassen;
+}
+function sluitOvergangKlaskiezer() {
+  document.getElementById("overgangKlasKiezerOverlay")?.remove();
+}
+window.openOvergangKlasKiezer = async function() {
+  const rol = await huidigeOvergangRol();
+  if (!schoolbredeRollenOvergang.includes(rol)) return;
+  const bestaand = document.getElementById("overgangKlasKiezerOverlay");
+  if (bestaand) bestaand.remove();
+  const overlay = document.createElement("div");
+  overlay.id = "overgangKlasKiezerOverlay";
+  overlay.style.cssText = "position:fixed;inset:0;background:rgba(34,48,68,.55);z-index:9999;padding:24px;overflow:auto";
+  overlay.innerHTML = `<div style="background:#fff;border-radius:18px;max-width:980px;margin:30px auto;padding:20px;box-shadow:0 20px 60px rgba(0,0,0,.25)">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:14px">
+      <div><h2 style="margin:0 0 4px">Andere klas openen</h2><p class="help" style="margin:0">Kies een klas om de overgangsbespreking van die klas te bekijken.</p></div>
+      <button type="button" class="ghost" onclick="sluitOvergangKlaskiezer()">Sluiten</button>
+    </div>
+    <div id="overgangKlasKiezerLijst" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:10px"><p>Klassen laden...</p></div>
+  </div>`;
+  document.body.appendChild(overlay);
+  const lijst = document.getElementById("overgangKlasKiezerLijst");
+  try {
+    const klassen = await laadOvergangKlassen();
+    if (!klassen.length) {
+      lijst.innerHTML = `<div class="warning">Geen klassen gevonden voor ${ovEsc(schooljaar)}.</div>`;
+      return;
+    }
+    lijst.innerHTML = klassen.map(k => {
+      const klasId = String(k.klasId || k.klas || k.id.replace(schooljaar + "_","")).trim();
+      const klasNaam = k.klasNaam || klasId;
+      const leerkrachten = Array.isArray(k.leerkracht_namen) ? k.leerkracht_namen.join(", ") : (Array.isArray(k.leerkracht_emails) ? k.leerkracht_emails.join(", ") : "");
+      const uids = Array.isArray(k.leerkracht_uids) ? k.leerkracht_uids : [];
+      const uid = k.eigenaar_uid || uids[0] || "";
+      const url = uid
+        ? `overgangsbespreking.html?beheerUid=${encodeURIComponent(uid)}&klas=${encodeURIComponent(klasId)}&naam=${encodeURIComponent(leerkrachten || klasNaam)}`
+        : `overgangsbespreking.html?klasProject=1&klas=${encodeURIComponent(klasId)}&naam=${encodeURIComponent(klasNaam)}`;
+      return `<button type="button" style="text-align:left;background:#fff;border:1px solid #d9cfc0;border-radius:14px;padding:14px;display:block;color:#2c1f0e" onclick="window.location.href='${url}'">
+        <strong style="display:block;font-size:17px">${ovEsc(klasNaam)}</strong>
+        <span style="display:block;color:#7a6a55;font-size:12px;margin-top:4px">${k.leerlingAantal ? `${k.leerlingAantal} leerling(en)` : "Klaslijst"}${leerkrachten ? ` · ${ovEsc(leerkrachten)}` : " · geen leerkracht gekoppeld"}</span>
+      </button>`;
+    }).join("");
+  } catch(e) {
+    lijst.innerHTML = `<div class="errorbox">Klassen laden lukte niet: ${ovEsc(e.message)}</div>`;
+  }
+};
+window.sluitOvergangKlaskiezer = sluitOvergangKlaskiezer;
+ready.then(async () => {
+  const rol = await huidigeOvergangRol();
+  const btn = document.getElementById("andereOvergangKlasBtn");
+  if (btn && schoolbredeRollenOvergang.includes(rol)) {
+    btn.style.display = "";
+    btn.onclick = () => window.openOvergangKlasKiezer();
+  }
+});
+
 function projectRef() {
+  if (klasProjectMode && beheerKlasLabel) {
+    const klasKey = String(beheerKlasLabel).replace(/[^a-z0-9_-]+/gi, "_");
+    return doc(db, "overgangsbesprekingen", schooljaar, "projecten", `klas_${klasKey}`);
+  }
   return doc(db, "overgangsbesprekingen", schooljaar, "projecten", targetOvergangUserId || currentUser.uid);
 }
 
@@ -1136,6 +1234,8 @@ window.firebaseOvergang = {
       ...data,
       eigenaar_uid: targetOvergangUserId || currentUser.uid,
       eigenaar_email: currentUser.email || "",
+      klasProject: klasProjectMode || false,
+      klas: beheerKlasLabel || "",
       schooljaar,
       bewaarTot: bewaarTotVoorSchooljaar(schooljaar, BEWAAR_JAREN_OVERGANG),
       bewaartermijnJaren: BEWAAR_JAREN_OVERGANG,
