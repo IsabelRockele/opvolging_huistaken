@@ -174,6 +174,7 @@ button:disabled{opacity:.5;cursor:not-allowed}
         <span id="saveStatusText">Laden...</span>
       </div>
       <button type="button" onclick="window.location.href='index.html'" style="background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.35);color:#fff;border-radius:10px;padding:6px 14px;font-size:13px;cursor:pointer;font-weight:700">🏠 Keuzescherm</button>
+      <button type="button" id="andereKlasBtn" style="display:none">Andere klas</button>
       <button id="headerNieuwBtn">＋ Nieuw oudercontact</button>
       <button class="secondary" id="pdfBtn" style="display:none">⬇ PDF</button>
     </div>
@@ -329,6 +330,7 @@ const params = new URLSearchParams(window.location.search);
 let targetUid = params.get('beheerUid') || null;
 let beheerKlas = params.get('klas') || '';
 let beheerNaam = params.get('naam') || '';
+let klasProjectMode = params.get('klasProject') === '1';
 let activeKlasId = params.get('klasId') || '';
 let activeKlasNaam = beheerKlas || '';
 
@@ -341,6 +343,10 @@ const ready = new Promise(resolve => {
 });
 
 function projectRef() {
+  if (klasProjectMode && (activeKlasId || beheerKlas || activeKlasNaam)) {
+    const klasKey = String(activeKlasId || beheerKlas || activeKlasNaam).replace(/[^a-z0-9_-]+/gi, "_");
+    return doc(db, "oudercontacten", schooljaar, "projecten", `klas_${klasKey}`);
+  }
   return doc(db, "oudercontacten", schooljaar, "projecten", targetUid || currentUser.uid);
 }
 
@@ -350,6 +356,7 @@ async function saveToFirebase() {
     ...state,
     eigenaar_uid: targetUid || currentUser.uid,
     eigenaar_email: currentUser.email || "",
+    klasProject: klasProjectMode || false,
     klasId: activeKlasId || '',
     klasNaam: activeKlasNaam || beheerKlas || '',
     schooljaar,
@@ -531,10 +538,27 @@ async function laadRol() {
 // ── ALLE KLASSEN LADEN (voor schoolbrede rollen) ──
 async function laadAlleKlassen() {
   try {
-    const snap = await getDocs(collection(db, 'klasleerkrachten'));
+    const klaslijstSnap = await getDocs(collection(db, "schoolbeheer", schooljaar, "klassen"));
+    const koppelingSnap = await getDocs(collection(db, 'klasleerkrachten'));
+    const koppelingen = new Map();
+    koppelingSnap.forEach(d => {
+      const item = { id: d.id, ...d.data() };
+      if (String(item.schooljaar || schooljaar) !== schooljaar) return;
+      const klasId = String(item.klasId || item.klas || d.id.replace(schooljaar + '_','')).trim();
+      if (klasId) koppelingen.set(klasId, item);
+    });
     const klassen = [];
-    snap.forEach(d => {
-      klassen.push({ id: d.id, ...d.data() });
+    klaslijstSnap.forEach(d => {
+      const item = d.data() || {};
+      const koppeling = koppelingen.get(d.id) || {};
+      klassen.push({
+        ...item,
+        ...koppeling,
+        id: d.id,
+        klasId: d.id,
+        klasNaam: koppeling.klasNaam || item.klasNaam || item.klas || d.id,
+        leerlingAantal: Array.isArray(item.leerlingen) ? item.leerlingen.length : 0
+      });
     });
     klassen.sort((a,b) => (a.klasNaam||a.id).localeCompare(b.klasNaam||b.id,'nl'));
     return klassen;
@@ -575,6 +599,7 @@ async function toonKlaskiezer() {
   $('ocWerkView').classList.add('hidden');
   $('klaskiezerView').classList.remove('hidden');
   $('headerNieuwBtn').style.display = 'none';
+  if ($('andereKlasBtn')) $('andereKlasBtn').style.display = isSchoolBreed ? '' : 'none';
 
   const rolLabel = { directie:'Directie', zorgcoordinator:'Zorgcoördinator', zorgleerkracht:'Zorgleerkracht' }[currentRol] || currentRol;
   $('klaskiezerRolBadge').textContent = rolLabel;
@@ -596,7 +621,7 @@ async function toonKlaskiezer() {
     return `<div class="klas-card" onclick="window.openKlasAlsSchoolBreed('${esc(projectUid)}','${esc(klasId)}','${naam}','${esc(leerkrachten)}')">
       <div>
         <div class="klas-card-naam">${naam}</div>
-        <div class="klas-card-meta">${leerkrachten ? esc(leerkrachten) : '<span class="muted">Geen leerkracht gekoppeld</span>'}</div>
+        <div class="klas-card-meta">${k.leerlingAantal ? `${k.leerlingAantal} leerling(en)` : 'Klaslijst'}${leerkrachten ? ` · ${esc(leerkrachten)}` : ' · geen leerkracht gekoppeld'}</div>
       </div>
       <span class="klas-card-pijl">&rarr;</span>
     </div>`;
@@ -604,17 +629,18 @@ async function toonKlaskiezer() {
 }
 
 window.openKlasAlsSchoolBreed = function(uid, klasId, klasNaam, leerkrachtNaam) {
-  if (!uid) { alert('Geen gebruikersaccount gekoppeld aan deze klas. Vraag secretariaat om de klasleerkracht te koppelen.'); return; }
-  targetUid = uid;
+  targetUid = uid || null;
+  klasProjectMode = !uid;
   activeKlasId = klasId || klasNaam;
   activeKlasNaam = klasNaam || klasId;
   beheerKlas = activeKlasNaam;
-  beheerNaam = leerkrachtNaam;
+  beheerNaam = leerkrachtNaam || (klasProjectMode ? 'Klaslijst zonder gekoppelde leerkracht' : '');
   isReadOnly = ['directie','zorgcoordinator'].includes(currentRol);
   $('klaskiezerView').classList.add('hidden');
   const label = isReadOnly ? '(alleen lezen)' : '';
-  $('headerSub').textContent = `${leerkrachtNaam || 'Klas'} - ${activeKlasNaam}${label ? ' ' + label : ''}`;
+  $('headerSub').textContent = `${beheerNaam || 'Klas'} - ${activeKlasNaam}${label ? ' ' + label : ''}`;
   $('headerNieuwBtn').style.display = isReadOnly ? 'none' : '';
+  if ($('andereKlasBtn')) $('andereKlasBtn').style.display = isSchoolBreed ? '' : 'none';
   laadEnToonKlas();
 };
 
@@ -666,6 +692,7 @@ async function init() {
 
   await ready;
   await laadRol();
+  if ($('andereKlasBtn')) $('andereKlasBtn').onclick = () => toonKlaskiezer();
 
   // Schoolbrede rol zonder beheerUid → klaskiezer tonen
   if (isSchoolBreed && !targetUid) {
@@ -679,6 +706,7 @@ async function init() {
   if (beheerNaam) $('headerSub').textContent = beheerNaam + (beheerKlas ? ' · ' + beheerKlas : '');
   if (!activeKlasId && !targetUid) await bepaalEigenKlasVoorOudercontact();
   if (targetUid && targetUid !== currentUser.uid) isReadOnly = true;
+  if ($('andereKlasBtn')) $('andereKlasBtn').style.display = isSchoolBreed ? '' : 'none';
 
   await laadEnToonKlas();
 }
