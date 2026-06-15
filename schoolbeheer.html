@@ -4,6 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Klaslijsten</title>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <style>
     :root{
       --ink:#0b2341;--muted:#50658a;--line:#d7e0ec;--soft:#f4f7fb;
@@ -1761,6 +1762,7 @@
         <div class="class-actions no-print">
           <button class="${classListMode==="plakken"?"primary":""}" onclick="openClassListTool('plakken')">Klaslijst plakken</button>
           <button class="${classListMode==="nieuw"?"primary":""}" onclick="openClassListTool('nieuw')">Nieuwe leerling</button>
+          ${canManageClasses ? `<button class="${classListMode==="excel"?"primary":""}" onclick="openClassListTool('excel')">Excel importeren</button>` : ""}
           ${canImportDashboard ? `<button class="${classListMode==="dashboard"?"primary":""}" onclick="openClassListTool('dashboard')">Namen uit dashboard aanvullen</button>` : ""}
           ${canManageClasses ? `<button class="${classListMode==="beheer"?"primary":""}" onclick="openClassListTool('beheer')">Klassen beheren</button>` : ""}
           <span class="hint">Kies alleen wat je nu nodig hebt.</span>
@@ -1786,6 +1788,17 @@
             <label class="check-label"><input id="newColleague" type="checkbox"> <span>kind van collega, gratis refter</span></label>
             <button class="green" onclick="addStudent()">Leerling toevoegen</button>
           </div>
+        </section>`;
+      }
+      if(classListMode === "excel" && canManageClasses){
+        toolPanel = `<section class="class-tool-panel no-print">
+          <div class="bar"><div><h3>Excel of CSV importeren</h3><p class="muted small">Voor ${esc(activeClass)} in ${esc(schooljaar)}. Gebruik kolommen Voornaam + Achternaam, of één kolom Naam. Staat er een kolom Klas in het bestand, dan worden alleen rijen voor ${esc(activeClass)} meegenomen.</p></div><button class="small white right" onclick="openClassListTool('')">Sluiten</button></div>
+          <div class="notice"><strong>Veilig aanvullen.</strong><p class="muted">Bestaande leerlingen en ingevulde gegevens blijven staan. Alleen namen die nog niet in deze klaslijst staan worden toegevoegd.</p></div>
+          <div class="row">
+            <label>Excel- of CSV-bestand<input id="excelKlasFile" type="file" accept=".xlsx,.xls,.csv"></label>
+            <button class="green" onclick="importExcelKlaslijst()">Namen uit bestand toevoegen</button>
+          </div>
+          <div id="excelImportResult" class="muted" style="margin-top:10px"></div>
         </section>`;
       }
       if(classListMode === "dashboard" && canImportDashboard){
@@ -1833,6 +1846,61 @@
     window.importNames = () => { $("pasteNames").value.split(/\r?\n/).map(parseName).filter(Boolean).forEach(n=>addStudentObj(n.last,n.first,false,startDate())); markDirty(); render(); };
     window.addStudent = () => { addStudentObj($("newLast").value,$("newFirst").value,$("newColleague").checked,$("newStart").value||startDate()); markDirty(); render(); };
     function addStudentObj(last,first,colleague,start){ if(!last||!first)return; if(data.leerlingen.some(s=>(s.last||"").toLowerCase()===last.toLowerCase()&&(s.first||"").toLowerCase()===first.toLowerCase()))return; data.leerlingen.push({id:uid(),last,first,colleague,start,end:endDate()}); }
+    function normaliseerKolomNaam(value){
+      return String(value||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().replace(/[^a-z0-9]+/g,"");
+    }
+    function waardeUitExcelRij(row, kolommen){
+      const gezocht=new Set(kolommen.map(normaliseerKolomNaam));
+      for(const [key,value] of Object.entries(row||{})){
+        if(gezocht.has(normaliseerKolomNaam(key))) return String(value||"").trim();
+      }
+      return "";
+    }
+    function excelRijNaarNaam(row){
+      const klas=waardeUitExcelRij(row,["klas","klasgroep","groep","class"]);
+      if(klas && klas.toUpperCase()!==activeClass.toUpperCase()) return null;
+      const first=waardeUitExcelRij(row,["voornaam","roepnaam","first","firstname"]);
+      const last=waardeUitExcelRij(row,["achternaam","familienaam","naamfamilie","last","lastname"]);
+      if(first || last) return {first,last};
+      const full=waardeUitExcelRij(row,["naam","leerling","leerlingnaam","volledigenaam","naam leerling"]);
+      const parsed=parseName(full);
+      return parsed ? {first:parsed.first,last:parsed.last} : null;
+    }
+    async function leesExcelRijen(file){
+      if(typeof XLSX==="undefined") throw new Error("De Excel-lezer is niet geladen. Controleer de internetverbinding en herlaad de pagina.");
+      const buffer=await file.arrayBuffer();
+      const workbook=XLSX.read(buffer,{type:"array"});
+      const sheetName=workbook.SheetNames[0];
+      if(!sheetName) return [];
+      return XLSX.utils.sheet_to_json(workbook.Sheets[sheetName],{defval:""});
+    }
+    window.importExcelKlaslijst = async function(){
+      if(!isSecretary()) return alert("Alleen secretariaat kan Excelbestanden importeren.");
+      if(!data) return;
+      const file=$("excelKlasFile")?.files?.[0];
+      if(!file) return alert("Kies eerst een Excel- of CSV-bestand.");
+      const result=$("excelImportResult");
+      if(result) result.textContent="Bestand lezen...";
+      try{
+        const rows=await leesExcelRijen(file);
+        let added=0,skipped=0;
+        rows.forEach(row=>{
+          const item=excelRijNaarNaam(row);
+          if(!item || (!item.first && !item.last)){ skipped++; return; }
+          const before=data.leerlingen.length;
+          addStudentObj(item.last,item.first,false,startDate());
+          if(data.leerlingen.length>before) added++; else skipped++;
+        });
+        data.leerlingen.sort((a,b)=>name(a).localeCompare(name(b),"nl"));
+        await saveNow();
+        render();
+        alert(`${added} leerling(en) toegevoegd uit ${file.name}. ${skipped} rij(en) overgeslagen omdat ze leeg waren, bij een andere klas hoorden of al bestonden.`);
+      }catch(err){
+        console.error(err);
+        if(result) result.textContent="Import mislukt.";
+        alert(`Excel importeren lukte niet.\n\n${err.message||err}`);
+      }
+    };
     function classNameKey(first,last){
       return `${String(first||"").trim().toLowerCase()} ${String(last||"").trim().toLowerCase()}`.replace(/\s+/g," ").trim();
     }
