@@ -970,9 +970,10 @@
       $("status").textContent = text;
       $("status").classList.toggle("saved", saved);
     }
-    function isSecretary(){ return role === "secretariaat"; }
+    function isBeheerder(){ return role === "beheerder"; }
+    function isSecretary(){ return role === "secretariaat" || isBeheerder(); }
     // schoolbeheer-zorgleerkrachten-codex
-    function isSchoolBreedRole(){ return ["directie","zorgcoordinator","zorgleerkracht"].includes(role); }
+    function isSchoolBreedRole(){ return isBeheerder() || ["directie","zorgcoordinator","zorgleerkracht"].includes(role); }
     function canOpenAllClasses(){ return isSecretary() || isSchoolBreedRole(); }
     const BEWAAR_JAREN_SCHOOLBEHEER = 2; // Aanpasbaar: klaslijsten, refter, activiteiten en aankopen bewaren tot eind augustus na dit aantal schooljaren.
     function startDate(){ return `${schooljaar.slice(0,4)}-09-01`; }
@@ -996,7 +997,7 @@
     }
 
     function renderScope(){
-            $("topMeta").textContent = `${user.email} - ${isSecretary() ? "secretariaat" : isSchoolBreedRole() ? role : "klasleerkracht"} - ${schooljaar}`;
+            $("topMeta").textContent = `${user.email} - ${isBeheerder() ? "beheerder" : isSecretary() ? "secretariaat" : isSchoolBreedRole() ? role : "klasleerkracht"} - ${schooljaar}`;
       document.querySelectorAll(".secretary-only").forEach(x => x.classList.toggle("hidden", !isSecretary()));
       document.querySelectorAll(".teacher-label").forEach(x => x.classList.toggle("hidden", isSecretary()));
       document.querySelectorAll(".secretary-label").forEach(x => x.classList.toggle("hidden", !isSecretary()));
@@ -1728,13 +1729,14 @@
           <h2>Administratie <span class="muted" style="font-weight:400;font-size:16px">— ${esc(activeClass)}</span></h2>
           <p class="muted">Klaslijsten, vrije dagen, meldingen en overgang naar volgend schooljaar.</p>
           <div class="subnav no-print">
-            ${["klaslijsten","vrije dagen","meldingen","nieuw schooljaar"].map(p=>`<button class="${adminPanel===p?"active":""}" onclick="openAdmin('${p}')">${p[0].toUpperCase()+p.slice(1)}</button>`).join("")}
+            ${["klaslijsten","vrije dagen","meldingen",...(isSecretary()?["klasleerkrachten"]:[]),"nieuw schooljaar"].map(p=>`<button class="${adminPanel===p?"active":""}" onclick="openAdmin('${p}')">${p[0].toUpperCase()+p.slice(1)}</button>`).join("")}
           </div>
           <div id="adminBody"></div>
         </div>`;
       if(adminPanel==="klaslijsten") renderAdminClasslists();
       if(adminPanel==="vrije dagen") renderFreeDays(true);
       if(adminPanel==="meldingen") renderMessageAdmin();
+      if(adminPanel==="klasleerkrachten") renderLeerkrachtenHuidigSchooljaar();
       if(adminPanel==="nieuw schooljaar") renderNewYearHome();
     }
     window.openAdmin = p => { adminPanel = p; renderAdmin(); };
@@ -2247,11 +2249,97 @@
     function tekstNaarLijst(value){
       return String(value || "").split(",").map(x => x.trim()).filter(Boolean);
     }
+    function normaliseerKlasId(klas){
+      return String(klas || "").trim().toUpperCase();
+    }
     async function leerkrachtKoppelingVoor(jaar, klas){
       const ref = doc(db, "klasleerkrachten", `${jaar}_${klas}`);
       const snap = await getDoc(ref);
       return snap.exists() ? snap.data() : null;
     }
+    async function leerlingAantalVoorKlas(jaar, klas){
+      const snap = await getDoc(doc(db, "schoolbeheer", jaar, "klassen", klas));
+      return snap.exists() && Array.isArray(snap.data().leerlingen) ? snap.data().leerlingen.length : 0;
+    }
+    async function renderLeerkrachtenHuidigSchooljaar(){
+      if(!isSecretary()) return;
+      $("adminBody").innerHTML = `<section class="notice"><h3>Klasleerkrachten koppelen</h3><p class="muted">Even laden...</p></section>`;
+      await loadClassesFromFirebase();
+      const rijen = [];
+      for(const klas of allClasses){
+        const [koppeling, aantal] = await Promise.all([
+          leerkrachtKoppelingVoor(schooljaar, klas),
+          leerlingAantalVoorKlas(schooljaar, klas)
+        ]);
+        rijen.push({klas,koppeling,aantal});
+      }
+      $("adminBody").innerHTML = `<section class="notice">
+        <h3>Klasleerkrachten koppelen - ${esc(schooljaar)}</h3>
+        <p class="muted">Vul per klas de naam en het e-mailadres van de klasleerkracht in. Het e-mailadres is het belangrijkste: de leerkracht krijgt die klas zodra hij/zij met datzelfde e-mailadres inlogt. Een gebruikers-ID is niet nodig.</p>
+      </section>
+      <section class="panel" style="box-shadow:none">
+        <div class="bar" style="margin-bottom:12px">
+          <div>
+            <h3>Huidige klas-leerkrachtkoppelingen</h3>
+            <p class="muted">Gebruik komma's voor duo-banen, bijvoorbeeld: juf Sara, juf Noor.</p>
+          </div>
+          <button class="green right" onclick="bewaarAlleLeerkrachtKoppelingen()">Alles bewaren</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Klas</th><th>Leerlingen</th><th>Naam/namen leerkracht</th><th>E-mailadres(sen)</th><th></th></tr></thead>
+            <tbody>${rijen.map(({klas,koppeling,aantal})=>`
+              <tr>
+                <td><strong>${esc(klas)}</strong></td>
+                <td>${aantal ? `${aantal} leerling(en)` : `<span class="muted">geen klaslijst</span>`}</td>
+                <td><input data-koppel-klas="${esc(klas)}" data-koppel-field="namen" value="${esc(lijstNaarTekst(koppeling?.leerkracht_namen))}" placeholder="juf Isabel"></td>
+                <td><input data-koppel-klas="${esc(klas)}" data-koppel-field="emails" value="${esc(lijstNaarTekst(koppeling?.leerkracht_emails))}" placeholder="naam@bsdelinde.net"></td>
+                <td><button class="small green" onclick="bewaarLeerkrachtKoppeling('${esc(klas)}')">Bewaar</button></td>
+              </tr>`).join("")}</tbody>
+          </table>
+        </div>
+        <div class="notice" style="margin-top:12px">
+          <strong>Voor secretariaat:</strong>
+          <p class="muted">Als er nog geen leerkracht gekoppeld is, kunnen overgangsbespreking en oudercontacten nu toch als klasdossier openen. Koppelen blijft wel nodig zodat de klasleerkracht later automatisch haar/zijn eigen klas ziet.</p>
+        </div>
+      </section>`;
+    }
+    window.bewaarLeerkrachtKoppeling = async function(klas){
+      if(!isSecretary()) return alert("Alleen secretariaat kan klasleerkrachten koppelen.");
+      const cleanKlas = normaliseerKlasId(klas);
+      const namen = tekstNaarLijst(document.querySelector(`input[data-koppel-klas="${CSS.escape(cleanKlas)}"][data-koppel-field="namen"]`)?.value);
+      const emails = tekstNaarLijst(document.querySelector(`input[data-koppel-klas="${CSS.escape(cleanKlas)}"][data-koppel-field="emails"]`)?.value).map(x=>x.toLowerCase());
+      if(!emails.length) return alert(`Vul minstens één e-mailadres in voor ${cleanKlas}.`);
+      if(emails.some(e=>!e.includes("@"))) return alert("Controleer de e-mailadressen. Er ontbreekt ergens een @.");
+      const bestaand = await leerkrachtKoppelingVoor(schooljaar, cleanKlas);
+      await setDoc(doc(db, "klasleerkrachten", `${schooljaar}_${cleanKlas}`), {
+        actief: true,
+        schooljaar,
+        klas: cleanKlas,
+        klasId: cleanKlas,
+        klasNaam: cleanKlas,
+        leerjaar: cleanKlas,
+        hoofdleerkracht_email: emails[0] || "",
+        leerkracht_emails: emails,
+        leerkracht_namen: namen,
+        leerkracht_uids: Array.isArray(bestaand?.leerkracht_uids) ? bestaand.leerkracht_uids : [],
+        bijgewerktOp: new Date().toISOString(),
+        bijgewerktDoor: user.email || user.uid
+      }, { merge: true });
+      setStatus(`${cleanKlas} gekoppeld`, true);
+    };
+    window.bewaarAlleLeerkrachtKoppelingen = async function(){
+      if(!isSecretary()) return alert("Alleen secretariaat kan klasleerkrachten koppelen.");
+      let aantal = 0;
+      for(const klas of allClasses){
+        const emails = tekstNaarLijst(document.querySelector(`input[data-koppel-klas="${CSS.escape(klas)}"][data-koppel-field="emails"]`)?.value);
+        if(!emails.length) continue;
+        await window.bewaarLeerkrachtKoppeling(klas);
+        aantal++;
+      }
+      alert(`${aantal} klas-leerkrachtkoppeling(en) bewaard voor ${schooljaar}.`);
+      renderLeerkrachtenHuidigSchooljaar();
+    };
     async function renderLeerkrachtenVolgendJaar(){
       const box = $("leerkrachtenVolgendJaar");
       if(!box || !isSecretary()) return;
