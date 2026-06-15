@@ -67,7 +67,7 @@ label{display:block;font-weight:800;font-size:12px;color:#44515f;margin:8px 0 4p
 .report-legend{font-size:12px;color:#536681;font-weight:800;margin-bottom:26px}
 .report-domain-preview{border:1px solid var(--line);border-radius:8px;min-height:108px;padding:16px 18px;margin-bottom:8px;background:#fff}
 .report-domain-head{display:flex;justify-content:space-between;gap:14px;font-weight:900;font-size:16px;margin-bottom:8px}
-.report-domain-score{color:#d49a16;letter-spacing:1px}
+.report-domain-score{display:inline-flex;align-items:center}
 .report-section-title{font-size:16px;font-weight:900;margin:22px 0 8px}
 .report-section-text{min-height:44px;white-space:pre-wrap}
 .report-signatures{display:grid;grid-template-columns:1fr 1fr;gap:50px;border-top:1px solid var(--line);margin-top:70px;padding-top:26px;color:#536681;font-size:12px}
@@ -86,7 +86,7 @@ label{display:block;font-weight:800;font-size:12px;color:#44515f;margin:8px 0 4p
 .copy-list label{display:flex;align-items:center;gap:7px;margin:0;background:#fff;border:1px solid var(--line);border-radius:9px;padding:7px 9px;font-weight:700;color:var(--text)}
 .copy-list input,.copy-options input{width:auto}
 .copy-options{display:flex;gap:12px;flex-wrap:wrap;margin-top:8px}
-.stars{color:#d49a16;letter-spacing:1px;font-weight:900}
+.stars{display:inline-flex;align-items:center;font-weight:900}
 .eindejaar-kaart{border:1px solid #bdd9b6;background:#f5fbf3;border-radius:12px;padding:12px;margin:0 0 14px}
 .eindejaar-kaart h3{margin:0 0 6px;color:#315b2b}
 .eindejaar-kaart ol{margin:8px 0 0 20px;padding:0;color:#44515f;font-size:13px;line-height:1.5}
@@ -96,6 +96,7 @@ label{display:block;font-weight:800;font-size:12px;color:#44515f;margin:8px 0 4p
 @media(max-width:980px){main{grid-template-columns:1fr}.eval-row,.grid2,.domain-grid,.rapport-row,.report-info,.report-header{grid-template-columns:1fr}.report-preview{padding:22px 18px;min-height:auto}}
 @media print{body{background:#fff}header,.sidebar,.tabs,.no-print,.editor{display:none!important}main{display:block;width:auto;margin:0}.panel{box-shadow:none;border:0}.report-preview{border:0;padding:0}}
 .ster{display:inline-block}
+.donut-score{vertical-align:-4px;margin:0 2px}
 /* ---- Groeirapport PDF-fiche (groeirapport-pdf-codex) ---- */
 #grpdfWrap{font-family:'Nunito','Segoe UI',Arial,sans-serif;color:#26313d;line-height:1.5;background:#fff;width:720px;max-width:720px}
 #grpdfWrap img.emoji{height:1em;width:1em;vertical-align:-0.15em;margin:0 .03em}
@@ -182,6 +183,54 @@ label{display:block;font-weight:800;font-size:12px;color:#44515f;margin:8px 0 4p
 .pt-x{border:none;background:none;color:#c46;cursor:pointer;font-size:14px;font-weight:800;padding:0 2px;margin-left:2px}
 .pt-x:hover{color:#a02}
 .pt-ster-toon{padding:6px 0 4px;font-size:14px}
+/* groeiplan per groeigroep */
+.plan-uitleg{border:1px solid #bdd9b6;background:#f5fbf3;border-radius:12px;padding:12px;margin-bottom:12px}
+.plan-uitleg strong{color:#315b2b}
+.plan-veld{margin-bottom:10px}
+.plan-week{border:1px solid var(--line);border-radius:12px;background:#fbfcfb;margin:10px 0;overflow:hidden}
+.plan-week-kop{display:grid;grid-template-columns:120px 1fr 150px auto;gap:8px;align-items:end;background:#e4f4dc;padding:10px}
+.plan-week-body{display:grid;grid-template-columns:1fr 1.35fr;gap:10px;padding:10px}
+.plan-week-body textarea{min-height:92px}
+.plan-leerlingen{display:grid;gap:7px}
+.plan-leerling{display:grid;grid-template-columns:1fr 190px;gap:8px;align-items:center;border:1px solid var(--line);border-radius:10px;background:#fff;padding:8px}
+.plan-leerling strong{font-size:13px}
+.plan-history{border:1px solid var(--line);border-radius:12px;background:#fff;padding:10px;margin-top:10px}
+.plan-history-item{border-bottom:1px solid #edf1f5;padding:7px 0;font-size:13px}
+.plan-history-item:last-child{border-bottom:none}
+#groeiplanPdf{font-family:Arial,sans-serif;color:#17212b;width:690px;background:#fff;line-height:1.42}
+#groeiplanPdf .gp-cover{border:1.5px solid #7da96f;background:#edf9e9;border-radius:10px;padding:16px 18px;margin-bottom:12px}
+#groeiplanPdf .gp-title{display:grid;grid-template-columns:88px 1fr;gap:16px;align-items:center;margin-bottom:12px}
+#groeiplanPdf .gp-title img{width:76px;height:76px;object-fit:contain;background:#fff;border-radius:8px;padding:5px}
+#groeiplanPdf h1{font-size:34px;letter-spacing:.5px;margin:0;color:#162315}
+#groeiplanPdf .gp-sub{font-size:12px;color:#476044;margin-top:4px}
+#groeiplanPdf .gp-meta{display:grid;grid-template-columns:1fr 1fr;gap:7px 12px;font-size:13px}
+#groeiplanPdf .gp-meta div{background:#fff;border:1px solid #c8dfbf;border-radius:8px;padding:7px 9px}
+#groeiplanPdf .gp-label{font-size:10px;text-transform:uppercase;letter-spacing:.06em;font-weight:800;color:#5c7254;display:block;margin-bottom:2px}
+#groeiplanPdf .gp-section{border:1px solid #d6e3d0;border-radius:10px;margin:10px 0;background:#fff;overflow:hidden}
+#groeiplanPdf .gp-section h2{margin:0;background:#d9f2cf;border-bottom:1px solid #c5ddb9;padding:8px 11px;font-size:14px;text-transform:uppercase;letter-spacing:.03em;color:#152515;break-after:avoid;page-break-after:avoid}
+#groeiplanPdf .gp-keep{break-inside:avoid-page;page-break-inside:avoid}
+#groeiplanPdf .gp-kop-met-start{break-inside:avoid-page;page-break-inside:avoid}
+#groeiplanPdf .gp-section-body{padding:10px 12px;font-size:13px;white-space:pre-wrap;min-height:28px}
+#groeiplanPdf .gp-leerlingen{display:grid;grid-template-columns:1fr 1fr;gap:7px;padding:10px 12px}
+#groeiplanPdf .gp-leerling{border:1px solid #e1e9de;border-radius:8px;padding:7px 9px;background:#fbfdf9;break-inside:avoid-page;page-break-inside:avoid}
+#groeiplanPdf .gp-leerling strong{display:block;font-size:13px}
+#groeiplanPdf .gp-chip{display:inline-block;background:#edf2f7;border-radius:999px;padding:2px 7px;font-size:10px;font-weight:800;margin-top:4px;color:#415066}
+#groeiplanPdf .gp-chip.actief{background:#d9f2cf;color:#315b2b}
+#groeiplanPdf .gp-chip.afbouw{background:#fff1c7;color:#7a5010}
+#groeiplanPdf .gp-chip.klas,#groeiplanPdf .gp-chip.opvolgen{background:#dbeafe;color:#1e40af}
+#groeiplanPdf .gp-weken{display:grid;gap:9px;padding:10px 12px}
+#groeiplanPdf .gp-week-card{border:1px solid #d6e3d0;border-radius:9px;background:#fff;overflow:hidden}
+#groeiplanPdf .gp-week-head{display:grid;grid-template-columns:90px 1fr 72px;gap:8px;align-items:center;background:#f2faee;border-bottom:1px solid #d6e3d0;padding:7px 9px;font-size:12px;break-after:avoid;page-break-after:avoid}
+#groeiplanPdf .gp-week-name{font-weight:900;color:#315b2b}
+#groeiplanPdf .gp-week-status{text-align:center;font-weight:900;border-radius:999px;background:#edf2f7;padding:3px 7px}
+#groeiplanPdf .gp-week-grid{display:grid;grid-template-columns:1fr 1fr;gap:0;border-top:0}
+#groeiplanPdf .gp-week-cell{padding:8px 9px;font-size:12.5px;border-right:1px solid #e1e9de;white-space:pre-wrap}
+#groeiplanPdf .gp-week-cell:last-child{border-right:0}
+#groeiplanPdf .gp-week-note{border-top:1px solid #e1e9de;padding:8px 9px;font-size:12.5px;white-space:pre-wrap;background:#fffdf4}
+#groeiplanPdf .gp-history{padding:10px 12px;display:grid;gap:6px}
+#groeiplanPdf .gp-history-item{border-left:3px solid #7da96f;background:#fbfdf9;border-radius:0 8px 8px 0;padding:7px 9px;font-size:12.5px;break-inside:avoid-page;page-break-inside:avoid}
+#groeiplanPdf .gp-inspectie{font-size:11.5px;color:#40513d;background:#f7fbf5;border-top:1px solid #d6e3d0;padding:9px 12px}
+#groeiplanPdf .gp-empty{color:#667085;font-style:italic}
 </style>
 </head>
 <body>
@@ -224,12 +273,14 @@ label{display:block;font-weight:800;font-size:12px;color:#44515f;margin:8px 0 4p
       <div class="tabs no-print">
         <button class="tab active" data-tab="basis">Basis</button>
         <button class="tab" data-tab="leerlingen">Leerlingen</button>
+        <button class="tab" data-tab="groeiplan">Groeiplan</button>
         <button class="tab" data-tab="logboek">Logboek</button>
         <button class="tab" data-tab="toetsen">Toetsjes</button>
         <button class="tab" data-tab="rapport">Rapport</button>
       </div>
       <div id="tab-basis" class="tabPanel"></div>
       <div id="tab-leerlingen" class="tabPanel hidden"></div>
+      <div id="tab-groeiplan" class="tabPanel hidden"></div>
       <div id="tab-logboek" class="tabPanel hidden"></div>
       <div id="tab-toetsen" class="tabPanel hidden"></div>
       <div id="tab-rapport" class="tabPanel hidden"></div>
@@ -246,7 +297,7 @@ const firebaseConfig={apiKey:"AIzaSyA7KxXMvZ4dzBQDut3CMyWUblLte2tFzoQ",authDomai
 const app=getApps().length?getApp():initializeApp(firebaseConfig);
 const auth=getAuth(app);
 const db=getFirestore(app);
-const allowedRoles=["directie","zorgcoordinator","zorgleerkracht"];
+const allowedRoles=["directie","zorgcoordinator","zorgleerkracht","beheerder"];
 const DEFAULT_CLASSES=["1A","2A","3A","4A","5A","6A"];
 const DOMAINEN=[
   {id:"lezen",groep:"Nederlands",naam:"Lezen",emoji:"\ud83d\udcd6"},{id:"spelling",groep:"Nederlands",naam:"Spelling",emoji:"\ud83d\udd24"},{id:"spreken",groep:"Nederlands",naam:"Spreken",emoji:"\ud83d\udde3\ufe0f"},{id:"luisteren",groep:"Nederlands",naam:"Luisteren",emoji:"\ud83d\udc42"},{id:"woordenschat",groep:"Nederlands",naam:"Woordenschat",emoji:"\ud83d\udcad"},{id:"schrijven",groep:"Nederlands",naam:"Schrijven",emoji:"\u270d\ufe0f"},
@@ -346,9 +397,33 @@ function bewaarTotVoorSchooljaar(jaar=year(), extraJaren=BEWAAR_JAREN_GROEIGROEP
   return `${Number(String(jaar).slice(0,4)) + extraJaren}-08-31`;
 }
 function groupRef(id){return doc(db,"zorggroepen",id);}
-function emptyGroup(){return{id:"zg_"+uid(),schooljaar:year(),naam:"Nieuwe groeigroep",domeinen:["lezen"],begeleiders:"",doelen:"",leerlingen:[],logboek:[],toetsen:[],rapporten:{},bewaarTot:bewaarTotVoorSchooljaar(),bewaardoor:"logboek zorgtraject",bewaartermijnJaren:BEWAAR_JAREN_GROEIGROEP_LOGBOEK,createdAt:new Date().toISOString()};}
+function emptyGroeiplan(){
+  return {
+    vak:"",
+    domein:"",
+    klas:"",
+    groep:"",
+    onderwerp:"",
+    minimumdoelen:"",
+    probleem:"",
+    uitval:"",
+    beoogdeEffecten:"",
+    leerlingStatus:{},
+    weken:[],
+    wijzigingen:[],
+    updatedAt:""
+  };
+}
+function normalizeGroeiplan(plan){
+  const p={...emptyGroeiplan(),...(plan||{})};
+  p.leerlingStatus=p.leerlingStatus||{};
+  p.weken=Array.isArray(p.weken)?p.weken:[];
+  p.wijzigingen=Array.isArray(p.wijzigingen)?p.wijzigingen:[];
+  return p;
+}
+function emptyGroup(){return{id:"zg_"+uid(),schooljaar:year(),naam:"Nieuwe groeigroep",domeinen:["lezen"],begeleiders:"",doelen:"",leerlingen:[],logboek:[],toetsen:[],rapporten:{},groeiplan:emptyGroeiplan(),bewaarTot:bewaarTotVoorSchooljaar(),bewaardoor:"logboek zorgtraject",bewaartermijnJaren:BEWAAR_JAREN_GROEIGROEP_LOGBOEK,createdAt:new Date().toISOString()};}
 function setStatus(text){$("status").textContent=text;}
-function normalizeGroup(g){g.leerlingen=Array.isArray(g.leerlingen)?g.leerlingen.map(verrijkLeerling):[];g.logboek=Array.isArray(g.logboek)?g.logboek:[];g.toetsen=Array.isArray(g.toetsen)?g.toetsen:[];g.domeinen=Array.isArray(g.domeinen)?g.domeinen:[];g.rapporten=g.rapporten||{};g.rapportPeriodes=g.rapportPeriodes||{};g.bewaarTot=g.bewaarTot||bewaarTotVoorSchooljaar(g.schooljaar||year());g.bewaartermijnJaren=g.bewaartermijnJaren||BEWAAR_JAREN_GROEIGROEP_LOGBOEK;g.bewaardoor=g.bewaardoor||"logboek zorgtraject";return g;}
+function normalizeGroup(g){g.leerlingen=Array.isArray(g.leerlingen)?g.leerlingen.map(verrijkLeerling):[];g.logboek=Array.isArray(g.logboek)?g.logboek:[];g.toetsen=Array.isArray(g.toetsen)?g.toetsen:[];g.domeinen=Array.isArray(g.domeinen)?g.domeinen:[];g.rapporten=g.rapporten||{};g.rapportPeriodes=g.rapportPeriodes||{};g.groeiplan=normalizeGroeiplan(g.groeiplan);g.bewaarTot=g.bewaarTot||bewaarTotVoorSchooljaar(g.schooljaar||year());g.bewaartermijnJaren=g.bewaartermijnJaren||BEWAAR_JAREN_GROEIGROEP_LOGBOEK;g.bewaardoor=g.bewaardoor||"logboek zorgtraject";return g;}
 function huidigeRapportPeriode(){
   return ($("rapportPeriode")?.value || active?.rapportGroep?.periode || ptPeriodeFilter || "").trim();
 }
@@ -380,7 +455,7 @@ function bewaarHuidigeRapportPeriode(){
 async function loadRole(){
   const snap=await getDoc(doc(db,"schoolrollen",user.uid));
   role=snap.exists()?String(snap.data().rol||"").toLowerCase():"";
-  if(!allowedRoles.includes(role)) throw new Error("Dit scherm is alleen voor zorgleerkrachten, zorgcoordinator en directie.");
+  if(!allowedRoles.includes(role)) throw new Error("Dit scherm is alleen voor zorgleerkrachten, zorgcoordinator, directie en beheerder.");
 }
 async function loadClasses(){
   const snap=await getDocs(collection(db,"schoolbeheer",year(),"klassen"));
@@ -432,6 +507,10 @@ function switchTab(next){
     collectBasis();
     persistActiveGroup("Basis bewaard").catch(()=>{});
   }
+  if(active&&tab==="groeiplan"){
+    collectGroeiplan();
+    persistActiveGroup("Groeiplan bewaard").catch(()=>{});
+  }
   tab=next;
   document.querySelectorAll(".tab").forEach(b=>b.classList.toggle("active",b.dataset.tab===tab));
   document.querySelectorAll(".tabPanel").forEach(p=>p.classList.add("hidden"));
@@ -446,10 +525,246 @@ function renderWorkspace(){
   $("groupTitle").textContent=active.naam||"Groeigroep";
   $("groupMeta").textContent=`${active.leerlingen.length} leerling(en) - ${active.begeleiders||"geen begeleider ingevuld"}`;
   document.querySelectorAll(".tab").forEach(b=>b.classList.toggle("active",b.dataset.tab===tab));
-  renderBasis();renderLeerlingen();renderLogboek();renderToetsen();renderRapport();
+  renderBasis();renderLeerlingen();renderGroeiplan();renderLogboek();renderToetsen();renderRapport();
   document.querySelectorAll(".tabPanel").forEach(p=>p.classList.add("hidden"));
   $(`tab-${tab}`).classList.remove("hidden");
 }
+
+function groeiplanStatusLabel(value){
+  return ({
+    actief:"in groeigroep",
+    afbouw:"bouwt af",
+    klas:"terug aangesloten in klas",
+    opvolgen:"opvolgen in klas"
+  })[value||"actief"]||"in groeigroep";
+}
+function renderGroeiplan(){
+  const plan=active.groeiplan=normalizeGroeiplan(active.groeiplan);
+  $("tab-groeiplan").innerHTML=`
+    <div class="plan-uitleg">
+      <strong>Groeidocument per groepje.</strong>
+      <div class="muted">Dit plan toont voor inspectie duidelijk: waarom dit groepje bestaat, wat jullie doen, welke leerlingen meedoen, wanneer er bijgestuurd werd en wie terug in de klas kan aansluiten.</div>
+    </div>
+    <div class="editor">
+      <div class="row" style="justify-content:flex-end;margin-bottom:10px">
+        <button class="secondary" onclick="window.ggBewaarGroeiplan()">Groeiplan bewaren</button>
+        <button onclick="window.ggDownloadGroeiplanPdf()">PDF groeiplan</button>
+      </div>
+      <div class="grid2">
+        <label>Vak<input id="planVak" value="${esc(plan.vak)}" placeholder="bv. Nederlands"></label>
+        <label>Domein<input id="planDomein" value="${esc(plan.domein||active.domeinen.map(domainName).join(', '))}" placeholder="bv. lezen, spelling"></label>
+        <label>Klas<input id="planKlas" value="${esc(plan.klas||[...new Set(active.leerlingen.map(s=>s.klas))].join(', '))}" placeholder="bv. 2A"></label>
+        <label>Groep<input id="planGroep" value="${esc(plan.groep||active.naam)}" placeholder="Naam groeigroep"></label>
+      </div>
+      <label class="plan-veld">Onderwerp<textarea id="planOnderwerp" placeholder="Waarover gaat dit groeiplan?">${esc(plan.onderwerp)}</textarea></label>
+      <label class="plan-veld">Minimumdoelen<textarea id="planMinimumdoelen" placeholder="Welke minimumdoelen moeten bereikt worden?">${esc(plan.minimumdoelen)}</textarea></label>
+      <label class="plan-veld">Probleem / diagnose<textarea id="planProbleem" placeholder="Wat lukt nog niet? Wat merken we op?">${esc(plan.probleem)}</textarea></label>
+      <label class="plan-veld">Uitval / oorzaak<textarea id="planUitval" placeholder="Didactische oorzaken, kindeigen oorzaken, observaties...">${esc(plan.uitval)}</textarea></label>
+      <label class="plan-veld">Beoogde effecten<textarea id="planEffecten" placeholder="Wat willen we zien veranderen?">${esc(plan.beoogdeEffecten)}</textarea></label>
+
+      <h3>Leerlingen en status</h3>
+      <div class="plan-leerlingen">
+        ${active.leerlingen.length?active.leerlingen.map(s=>{
+          const key=studentKey(s);
+          const status=plan.leerlingStatus?.[key]||"actief";
+          return `<div class="plan-leerling">
+            <div><strong>${esc(studentNaam(s))}</strong><div class="muted">${esc(s.klas||"")}</div></div>
+            <select data-plan-status="${esc(key)}">
+              <option value="actief" ${status==="actief"?"selected":""}>in groeigroep</option>
+              <option value="afbouw" ${status==="afbouw"?"selected":""}>bouwt af</option>
+              <option value="klas" ${status==="klas"?"selected":""}>terug aangesloten in klas</option>
+              <option value="opvolgen" ${status==="opvolgen"?"selected":""}>opvolgen in klas</option>
+            </select>
+          </div>`;
+        }).join(""):`<div class="empty">Voeg eerst leerlingen toe aan deze groeigroep.</div>`}
+      </div>
+
+      <div class="row" style="justify-content:space-between;margin-top:16px">
+        <h3 style="margin:0">Opvolging per week</h3>
+        <button class="ghost" onclick="window.ggPlanWeekToevoegen()">Week toevoegen</button>
+      </div>
+      <div id="planWeken">
+        ${plan.weken.length?plan.weken.map(renderGroeiplanWeek).join(""):`<div class="empty">Nog geen weken ingevuld. Voeg week 1 toe zodra de begeleiding start.</div>`}
+      </div>
+
+      <div class="plan-history">
+        <h3>Wijzigingen en beslissingen</h3>
+        <div class="row">
+          <input id="planWijzigingTekst" placeholder="bv. 12/11: Lana sluit terug aan in de klas voor spelling, nog opvolgen in dictee.">
+          <button class="ghost" onclick="window.ggPlanWijzigingToevoegen()">Wijziging toevoegen</button>
+        </div>
+        ${(plan.wijzigingen||[]).length?plan.wijzigingen.slice().reverse().map(w=>`<div class="plan-history-item"><strong>${esc(w.datum||"")}</strong> ${esc(w.tekst||"")}</div>`).join(""):`<p class="muted" style="margin-top:8px">Nog geen wijzigingen genoteerd.</p>`}
+      </div>
+    </div>`;
+}
+function renderGroeiplanWeek(w){
+  return `<section class="plan-week" data-plan-week="${esc(w.id)}">
+    <div class="plan-week-kop">
+      <label>Week<input data-plan-weekveld="week" value="${esc(w.week||"")}"></label>
+      <label>Focus / cluster<input data-plan-weekveld="clusters" value="${esc(w.clusters||"")}" placeholder="bv. MKM-woorden, splitsingen..."></label>
+      <label>OK/NOK<select data-plan-weekveld="status"><option value="" ${!w.status?"selected":""}>nog bezig</option><option value="OK" ${w.status==="OK"?"selected":""}>OK</option><option value="NOK" ${w.status==="NOK"?"selected":""}>NOK</option></select></label>
+      <button class="ghost small" onclick="window.ggPlanWeekVerwijder('${esc(w.id)}')">Verwijderen</button>
+    </div>
+    <div class="plan-week-body">
+      <label>Acties: wie doet wat?<textarea data-plan-weekveld="acties">${esc(w.acties||"")}</textarea></label>
+      <label>Opmerkingen deze week<textarea data-plan-weekveld="opmerkingen">${esc(w.opmerkingen||"")}</textarea></label>
+    </div>
+  </section>`;
+}
+function collectGroeiplan(){
+  if(!active) return;
+  const current=active.groeiplan=normalizeGroeiplan(active.groeiplan);
+  current.vak=$("planVak")?.value.trim()||"";
+  current.domein=$("planDomein")?.value.trim()||"";
+  current.klas=$("planKlas")?.value.trim()||"";
+  current.groep=$("planGroep")?.value.trim()||"";
+  current.onderwerp=$("planOnderwerp")?.value.trim()||"";
+  current.minimumdoelen=$("planMinimumdoelen")?.value.trim()||"";
+  current.probleem=$("planProbleem")?.value.trim()||"";
+  current.uitval=$("planUitval")?.value.trim()||"";
+  current.beoogdeEffecten=$("planEffecten")?.value.trim()||"";
+  current.leerlingStatus={};
+  document.querySelectorAll("[data-plan-status]").forEach(sel=>{current.leerlingStatus[sel.dataset.planStatus]=sel.value||"actief";});
+  current.weken=[...document.querySelectorAll("[data-plan-week]")].map(section=>{
+    const veld=naam=>section.querySelector(`[data-plan-weekveld="${naam}"]`)?.value||"";
+    return {
+      id:section.dataset.planWeek||uid(),
+      week:veld("week"),
+      clusters:veld("clusters"),
+      acties:veld("acties"),
+      opmerkingen:veld("opmerkingen"),
+      status:veld("status")
+    };
+  });
+  current.updatedAt=new Date().toISOString();
+}
+window.ggBewaarGroeiplan=async()=>{
+  collectGroeiplan();
+  await saveGroup();
+};
+window.ggPlanWeekToevoegen=()=>{
+  collectGroeiplan();
+  const nr=(active.groeiplan.weken||[]).length+1;
+  active.groeiplan.weken.push({id:uid(),week:`Week ${nr}`,clusters:"",acties:"",opmerkingen:"",status:""});
+  renderGroeiplan();
+};
+window.ggPlanWeekVerwijder=id=>{
+  collectGroeiplan();
+  active.groeiplan.weken=(active.groeiplan.weken||[]).filter(w=>w.id!==id);
+  renderGroeiplan();
+};
+window.ggPlanWijzigingToevoegen=async()=>{
+  collectGroeiplan();
+  const tekst=$("planWijzigingTekst")?.value.trim();
+  if(!tekst) return alert("Schrijf eerst kort wat er gewijzigd of beslist is.");
+  active.groeiplan.wijzigingen.push({id:uid(),datum:today(),tekst,auteur:user.email||""});
+  await saveGroup();
+  tab="groeiplan";
+  renderWorkspace();
+};
+function tekstblok(value){
+  return String(value||"").split(/\r?\n/).map(esc).join("<br>");
+}
+function bouwGroeiplanPdfHtml(logoUrl){
+  const plan=normalizeGroeiplan(active.groeiplan);
+  const leerlingen=active.leerlingen||[];
+  const logo=logoUrl?`<img src="${logoUrl}" alt="Schoollogo">`:`<div style="padding:12px;font-weight:800">GO! Basisschool<br>De Linde</div>`;
+  const leerlingCards=leerlingen.length?leerlingen.map(s=>{
+    const key=studentKey(s);
+    const status=plan.leerlingStatus?.[key]||"actief";
+    return `<div class="gp-leerling">
+      <strong>${esc(studentNaam(s))}</strong>
+      <span class="gp-label">Klas</span>${esc(s.klas||"")}
+      <br><span class="gp-chip ${esc(status)}">${esc(groeiplanStatusLabel(status))}</span>
+    </div>`;
+  }).join(""):`<div class="gp-empty">Nog geen leerlingen gekoppeld aan deze groeigroep.</div>`;
+  const weekHtml=w=>`
+    <article class="gp-week-card">
+      <div class="gp-week-head">
+        <div class="gp-week-name">${esc(w.week||"Week")}</div>
+        <div><span class="gp-label">Cluster / focus</span>${esc(w.clusters||"-")}</div>
+        <div class="gp-week-status">${esc(w.status||"bezig")}</div>
+      </div>
+      <div class="gp-week-grid">
+        <div class="gp-week-cell"><span class="gp-label">Acties: wie doet wat?</span>${tekstblok(w.acties)||'<span class="gp-empty">Nog niet ingevuld.</span>'}</div>
+        <div class="gp-week-cell"><span class="gp-label">Leerlingen in dit groeiplan</span>${leerlingen.map(s=>{
+          const key=studentKey(s);
+          const status=plan.leerlingStatus?.[key]||"actief";
+          return `${esc(studentNaam(s))} (${esc(s.klas||"")}) - ${esc(groeiplanStatusLabel(status))}`;
+        }).join("<br>") || '<span class="gp-empty">Geen leerlingen.</span>'}</div>
+      </div>
+      <div class="gp-week-note"><span class="gp-label">Opmerkingen deze week</span>${tekstblok(w.opmerkingen)||'<span class="gp-empty">Geen opmerkingen.</span>'}</div>
+    </article>`;
+  const weekLijst=(plan.weken||[]).map(weekHtml);
+  const weken=weekLijst.length
+    ? `<div class="gp-kop-met-start"><h2>Opvolging en acties</h2><div class="gp-weken">${weekLijst[0]}</div></div>${weekLijst.length>1?`<div class="gp-weken">${weekLijst.slice(1).join("")}</div>`:""}`
+    : `<div class="gp-kop-met-start"><h2>Opvolging en acties</h2><div class="gp-weken"><div class="gp-empty">Nog geen weekopvolging ingevuld.</div></div></div>`;
+  const wijzigingen=(plan.wijzigingen||[]).length?plan.wijzigingen.map(w=>`<div class="gp-history-item"><strong>${esc(w.datum||"")}</strong><br>${esc(w.tekst||"")}</div>`).join(""):`<div class="gp-empty">Nog geen wijzigingen genoteerd.</div>`;
+  const section=(titel,inhoud)=>`<section class="gp-section gp-keep"><h2>${esc(titel)}</h2><div class="gp-section-body">${tekstblok(inhoud)||'<span class="gp-empty">Nog niet ingevuld.</span>'}</div></section>`;
+  return `<div id="groeiplanPdf">
+    <div class="gp-cover">
+      <div class="gp-title">
+        ${logo}
+        <div>
+          <h1>Groeiplan</h1>
+          <div class="gp-sub">Groeidocument per groeigroep - ${esc(year())}</div>
+        </div>
+      </div>
+      <div class="gp-meta">
+        <div><span class="gp-label">Vak</span>${esc(plan.vak||"-")}</div>
+        <div><span class="gp-label">Domein</span>${esc(plan.domein||active.domeinen.map(domainName).join(", ")||"-")}</div>
+        <div><span class="gp-label">Klas(sen)</span>${esc(plan.klas||[...new Set(leerlingen.map(s=>s.klas).filter(Boolean))].join(", ")||"-")}</div>
+        <div><span class="gp-label">Groep</span>${esc(plan.groep||active.naam||"-")}</div>
+        <div><span class="gp-label">Begeleider(s)</span>${esc(alleBegeleiders(active)||active.begeleiders||"-")}</div>
+        <div><span class="gp-label">Laatst bijgewerkt</span>${plan.updatedAt?new Date(plan.updatedAt).toLocaleDateString("nl-BE"):"-"}</div>
+      </div>
+    </div>
+    <section class="gp-section gp-keep">
+      <h2>Leerlingen in dit groeiplan</h2>
+      <div class="gp-leerlingen">${leerlingCards}</div>
+      <div class="gp-inspectie">De status toont of een leerling nog actief deelneemt, afbouwt, terug aansluit in de klas of verder in de klas opgevolgd wordt.</div>
+    </section>
+    ${section("Onderwerp",plan.onderwerp)}
+    ${section("Minimumdoelen",plan.minimumdoelen)}
+    ${section("Probleem / diagnose",plan.probleem)}
+    ${section("Uitval / oorzaak",plan.uitval)}
+    ${section("Beoogde effecten",plan.beoogdeEffecten)}
+    <section class="gp-section">
+      ${weken}
+    </section>
+    <section class="gp-section gp-keep">
+      <h2>Wijzigingen, afbouw en terug aansluiten in de klas</h2>
+      <div class="gp-history">${wijzigingen}</div>
+    </section>
+    <section class="gp-section gp-keep">
+      <h2>Visueel spoor voor inspectie</h2>
+      <div class="gp-section-body">Dit document is een groeidocument per groeigroep. Het toont startinformatie, betrokken leerlingen met klas en status, acties per week, bijsturingen en beslissingen rond afbouw of terug aansluiten in de klas.</div>
+    </section>
+  </div>`;
+}
+window.ggDownloadGroeiplanPdf=async()=>{
+  collectGroeiplan();
+  if(typeof html2pdf==="undefined") return alert("PDF maken lukt niet omdat de PDF-bibliotheek niet geladen is.");
+  const logoUrl=await imageAsDataUrl("afbeeldingen/schoollogo.png");
+  const houder=document.createElement("div");
+  houder.style.cssText="position:absolute;left:0;top:0;width:690px;background:#fff;z-index:-99999";
+  houder.innerHTML=bouwGroeiplanPdfHtml(logoUrl);
+  document.body.appendChild(houder);
+  const bestandsnaam=`Groeiplan_${veiligeBestandsnaam(active.naam)}_${veiligeBestandsnaam(year())}.pdf`;
+  try{
+    await html2pdf().set({
+      margin:[10,10,10,10],
+      filename:bestandsnaam,
+      image:{type:"jpeg",quality:0.96},
+      html2canvas:{scale:2,useCORS:true,backgroundColor:"#ffffff",scrollX:0,scrollY:0},
+      jsPDF:{unit:"mm",format:"a4",orientation:"portrait"},
+      pagebreak:{mode:["css","legacy"],avoid:[".gp-cover",".gp-keep",".gp-kop-met-start",".gp-leerling",".gp-history-item"]}
+    }).from(houder.querySelector("#groeiplanPdf")).save();
+    setStatus(`Groeiplan gedownload: ${bestandsnaam}`);
+  }finally{
+    houder.remove();
+  }
+};
 function renderBasis(){
   $("tab-basis").innerHTML=`
     <div class="eindejaar-kaart">
@@ -649,7 +964,7 @@ function renderToetsen(){
         <div><label>Datum</label><input id="ptDatum" type="date" value="${today()}"></div>
       </div>
       <div class="grid3">
-        <div><label>Invoer</label><select id="ptType" onchange="window.ggPtTypeWissel()"><option value="punten">Punten</option><option value="sterren">Sterren</option></select></div>
+        <div><label>Invoer</label><select id="ptType" onchange="window.ggPtTypeWissel()"><option value="punten">Punten</option><option value="sterren">Bollen</option></select></div>
         <div id="ptMaxWrap"><label>Op hoeveel? (max)</label><input id="ptMax" type="number" min="1" value="10" placeholder="10, 20, 25..." oninput="document.querySelectorAll('#ptMaxToon').forEach(e=>e.textContent=this.value)"></div>
         <div><label>Gewicht <span class="muted" style="font-weight:400">(hoe zwaar telt mee)</span></label><input id="ptGewicht" type="number" min="0.5" step="0.5" value="1"></div>
       </div>
@@ -657,7 +972,7 @@ function renderToetsen(){
       <button class="secondary" style="margin-top:10px" onclick="window.ggPtBewaarToets()">Toets bewaren in puntenboek</button>
     </div>
     <h3 style="margin:6px 2px">\ud83d\udcd3 Puntenboek</h3>
-    <div class="muted" style="margin:0 2px 10px">De sterren onderaan worden automatisch berekend en op het groeirapport gezet: punten worden eerst een percentage, alles wordt gewogen gemiddeld, en dat bepaalt de ster (0\u201349%=\u2b50, 50\u201369%=\u2b50\u2b50, 70\u201389%=\u2b50\u2b50\u2b50, 90\u2013100%=\u2b50\u2b50\u2b50\u2b50).</div>
+    <div class="muted" style="margin:0 2px 10px">De bollen onderaan worden automatisch berekend en op het groeirapport gezet: punten worden eerst een percentage, alles wordt gewogen gemiddeld, en dat bepaalt de bol (0\u201349%=rood, 50\u201369%=geel, 70\u201389%=groen, 90\u2013100%=blauw).</div>
     <div class="row" style="margin:0 2px 12px">
       <label style="margin:0;min-width:220px">Puntenboek bekijken voor
         <select id="ptFilterPeriode" onchange="ptPeriodeFilter=this.value;renderPtOverzicht()">
@@ -678,7 +993,7 @@ function renderPtInvoer(){
   el.innerHTML=`<div class="pt-invoer-lijst" style="margin-top:10px">${active.leerlingen.map(s=>{
     const k=studentKey(s);
     const veld=type==="sterren"
-      ? `<select data-ptscore="${esc(k)}"><option value="">\u2013</option><option value="1">\u2b50</option><option value="2">\u2b50\u2b50</option><option value="3">\u2b50\u2b50\u2b50</option><option value="4">\u2b50\u2b50\u2b50\u2b50</option></select>`
+      ? `<select data-ptscore="${esc(k)}"><option value="">\u2013</option><option value="1">rode bol</option><option value="2">gele bol</option><option value="3">groene bol</option><option value="4">blauwe bol</option></select>`
       : `<input data-ptscore="${esc(k)}" type="number" step="0.5" min="0" placeholder="score" style="width:90px"> <span class="muted">/ <span id="ptMaxToon">${esc($("ptMax")?.value||"10")}</span></span>`;
     return `<div class="pt-invoer-rij"><span class="pt-naam">${esc(studentNaam(s))}</span> ${veld}</div>`;
   }).join("")}</div>`;
@@ -736,13 +1051,13 @@ function renderPtOverzicht(){
   el.innerHTML=volgorde.map(domId=>{
     const lijst=perDomein[domId].slice().sort((a,b)=>(a.datum||"").localeCompare(b.datum||""));
     const def=DOMAINEN.find(d=>d.id===domId)||{};
-    const kop=lijst.map(t=>`<th title="${esc(t.titel)}">${esc(t.titel)}<br><span class="pt-sub">${t.type==="sterren"?"\u2b50":("/"+t.max)} \u00d7${t.gewicht}</span> <button class="pt-x" onclick="window.ggPtVerwijderToets('${t.id}')" title="Toets verwijderen">\u00d7</button></th>`).join("");
+    const kop=lijst.map(t=>`<th title="${esc(t.titel)}">${esc(t.titel)}<br><span class="pt-sub">${t.type==="sterren"?"bol":("/"+t.max)} \u00d7${t.gewicht}</span> <button class="pt-x" onclick="window.ggPtVerwijderToets('${t.id}')" title="Toets verwijderen">\u00d7</button></th>`).join("");
     const rijen=active.leerlingen.map(s=>{
       const k=studentKey(s);
       const cellen=lijst.map(t=>{
         const r=t.resultaten?.[k];
         if(r==null||r==="") return `<td class="pt-leeg">\u2013</td>`;
-        return `<td>${t.type==="sterren"?("\u2b50".repeat(Number(r))):esc(r)}</td>`;
+        return `<td>${t.type==="sterren"?sterrenHtml(r):esc(r)}</td>`;
       }).join("");
       const gem=gemiddeldPercentVoorOnderdeel(domId,k,periode);
       const ster=sterrenUitPuntenboek(domId,k,periode);
@@ -812,7 +1127,7 @@ function renderRapport(){
 
       <div id="rapDeelGroep" style="display:${rapHoofdtab==='groep'?'block':'none'}">
         <div class="blok-inhoud" style="padding:0">
-          <div class="muted" style="margin-bottom:8px">Deze onderdelen, doelen en aanpak gelden voor alle kinderen in deze groep. Bij "Groeirapport per kind" vul je per kind alleen de sterren en het persoonlijke woordje aan.</div>
+          <div class="muted" style="margin-bottom:8px">Deze onderdelen, doelen en aanpak gelden voor alle kinderen in deze groep. Bij "Groeirapport per kind" vul je per kind alleen de bollen en het persoonlijke woordje aan.</div>
           <label>Onderdelen van deze groep</label>
           <div class="rapport-extra-list">${DOMAINEN.map(d=>`
             <label><input type="checkbox" class="rapport-group-domain" value="${esc(d.id)}" ${rapportGroepDomeinen().includes(d.id)?"checked":""} onchange="window.ggRenderRapportGroepDoelen()"> ${esc(d.groep)} - ${esc(d.naam)}</label>
@@ -949,7 +1264,7 @@ function renderRapportStudent(){
             return `<div class="rapport-domain-card">
               <div class="rapport-cell-title">${domainEmoji(id)} ${esc(domainName(id))}</div>
               ${doel?`<div class="muted" style="margin-bottom:6px">${esc(doel)}</div>`:""}
-              <label>Sterren (automatisch uit het puntenboek)</label>
+              <label>Bol (automatisch uit het puntenboek)</label>
               <div class="pt-ster-toon">${aantalToetsen?`${sterrenHtml(ster)} <span class="muted">${Math.round(pct)}% gemiddeld over ${aantalToetsen} toets${aantalToetsen>1?'en':''}</span>`:`<span class="muted">Nog geen toetsen voor ${esc(domainName(id))} \u2014 voeg ze toe bij het tabblad Toetsjes.</span>`}</div>
               <label>Persoonlijk woordje bij ${esc(domainName(id))}</label>
               <textarea data-text="${esc(key)}|${esc(id)}" placeholder="Wat geldt specifiek voor dit kind bij ${esc(domainName(id))}?">${esc(r.tekst||"")}</textarea>
@@ -1064,18 +1379,27 @@ function renderReportPreview(key,report){
     <div class="report-signatures"><div>Handtekening leerkracht</div><div>Handtekening ouders</div></div>
   </div>`;
 }
-function stars(n){n=Number(n)||0;return "\u2b50".repeat(n)+"\u2606".repeat(Math.max(0,4-n));}
-function sterrenLabel(n){n=Number(n)||0;return n ? "\u2b50".repeat(n)+"\u2606".repeat(4-n) : "\u2606\u2606\u2606\u2606";}
+function scoreKleur(n){
+  return ({1:"#ff3b3f",2:"#ffd84d",3:"#42d34f",4:"#08a9d6"})[Number(n)]||"#cfd6df";
+}
+function scoreZachteKleur(n){
+  return ({1:"#ffd0d1",2:"#fff0a8",3:"#c9f5cf",4:"#bfeef8"})[Number(n)]||"#e7ebf0";
+}
+function scoreNaam(n){
+  return ({1:"rode bol",2:"gele bol",3:"groene bol",4:"blauwe bol"})[Number(n)]||"geen bol";
+}
+function stars(n){return scoreNaam(n);}
+function sterrenLabel(n){return scoreNaam(n);}
 function sterrenHtml(n){
   n=Number(n)||0;
-  // sterren-svg-codex: inline SVG i.p.v. emoji, zodat lege sterren ook in de PDF grijs blijven
-  let h='';
-  for(let i=1;i<=4;i++){
-    const vol=i<=n;
-    const kleur=vol?'#f5b301':'#d4d9e0';
-    h+=`<svg class="ster ${vol?'vol':'leeg'}" width="17" height="17" viewBox="0 0 24 24" style="vertical-align:-3px;margin:0 1px" xmlns="http://www.w3.org/2000/svg"><path fill="${kleur}" d="M12 2.3l2.95 5.98 6.6.96-4.77 4.65 1.13 6.57L12 17.35l-5.91 3.11 1.13-6.57L2.45 9.24l6.6-.96z"/></svg>`;
-  }
-  return h;
+  const kleur=scoreKleur(n);
+  const zacht=scoreZachteKleur(n);
+  const titel=scoreNaam(n);
+  return `<svg class="ster donut-score score-${n}" width="20" height="20" viewBox="0 0 24 24" role="img" aria-label="${esc(titel)}" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="12" cy="12" r="7.5" fill="#fff" stroke="${zacht}" stroke-width="6"/>
+    <circle cx="12" cy="12" r="7.5" fill="none" stroke="${kleur}" stroke-width="6" stroke-linecap="round" stroke-dasharray="${n?38:0} 48" transform="rotate(-90 12 12)"/>
+    <circle cx="12" cy="12" r="3.1" fill="#fff"/>
+  </svg>`;
 }
 const STERREN_LEGENDE=["","lukt nog niet alleen","lukt met hulp","lukt bijna zelfstandig","lukt zelfstandig"];
 
@@ -1269,6 +1593,7 @@ function collectBasis(){
 async function saveGroup(){
   if(!active)return;
   if(tab==="basis")collectBasis();
+  if(tab==="groeiplan")collectGroeiplan();
   try{
     await persistActiveGroup();
     // active-behoud-codex: NIET active vervangen door de Firestore-versie hier,
@@ -1334,6 +1659,12 @@ async function carryActiveGroupToNextYear(){
     Object.entries(obj||{}).forEach(([key,value])=>{next[keyMap[key]||key]=value;});
     return next;
   };
+  const groeiplanCopy=normalizeGroeiplan(active.groeiplan);
+  groeiplanCopy.leerlingStatus=remapObjectKeys(groeiplanCopy.leerlingStatus);
+  groeiplanCopy.wijzigingen=[
+    ...(groeiplanCopy.wijzigingen||[]),
+    {id:uid(),datum:today(),tekst:`Groeigroep overgenomen van ${huidig} naar ${volgend}. Puntenboek en rapporten starten opnieuw leeg; groeiplan en logboek blijven als voorgeschiedenis bewaard.`,auteur:user.email||""}
+  ];
   const copied={
     ...active,
     id:"zg_"+uid(),
@@ -1342,6 +1673,7 @@ async function carryActiveGroupToNextYear(){
     overgenomenVanSchooljaar:huidig,
     leerlingen,
     logboek:(active.logboek||[]).map(item=>({...item,evaluaties:remapObjectKeys(item.evaluaties)})),
+    groeiplan:groeiplanCopy,
     toetsen:[],
     rapporten:{},
     rapportPeriodes:{},
