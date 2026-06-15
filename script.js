@@ -1,4 +1,4 @@
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+﻿import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, sendPasswordResetEmail, signOut, updatePassword } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import { getFirestore, doc, getDoc, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
@@ -88,6 +88,67 @@ function pasKnoppenToe(huistakenKnop, overgangKnop, schoolbeheerKnop, bestelling
   }
 }
 
+// Toont rolwissel-paneel voor beheerder (alleen zichtbaar voor jou)
+function toonBeheerderRolwissel(user) {
+  // Verwijder eerder paneel als het er al is (bij herlaad)
+  const bestaand = document.getElementById('beheerder-rolwissel');
+  if (bestaand) bestaand.remove();
+
+  const simuleerSleutel = 'lindeSimuleerRol_' + user.uid;
+  const huidigeSimulatie = localStorage.getItem(simuleerSleutel) || 'beheerder';
+
+  const rollen = [
+    { id: 'beheerder',     label: '🛠 Beheerder' },
+    { id: 'klasleerkracht', label: '👩‍🏫 Klasleerkracht' },
+    { id: 'zorgleerkracht', label: '💛 Zorgleerkracht' },
+    { id: 'secretariaat',   label: '📋 Secretariaat' },
+  ];
+
+  const paneel = document.createElement('div');
+  paneel.id = 'beheerder-rolwissel';
+  paneel.style.cssText = [
+    'position:fixed', 'bottom:16px', 'right:16px', 'z-index:9999',
+    'background:#1e293b', 'color:#f1f5f9', 'border-radius:12px',
+    'padding:12px 16px', 'font-family:sans-serif', 'font-size:13px',
+    'box-shadow:0 4px 20px rgba(0,0,0,0.4)', 'display:flex',
+    'flex-direction:column', 'gap:8px', 'min-width:200px'
+  ].join(';');
+
+  const titel = document.createElement('div');
+  titel.textContent = 'Rol simuleren';
+  titel.style.cssText = 'font-weight:600; font-size:11px; text-transform:uppercase; letter-spacing:0.05em; color:#94a3b8;';
+  paneel.appendChild(titel);
+
+  rollen.forEach(({ id, label }) => {
+    const knop = document.createElement('button');
+    knop.textContent = label;
+    const actief = id === huidigeSimulatie;
+    knop.style.cssText = [
+      'border:none', 'border-radius:8px', 'padding:7px 12px',
+      'font-size:13px', 'cursor:pointer', 'text-align:left',
+      actief
+        ? 'background:#3b82f6; color:#fff; font-weight:600;'
+        : 'background:#334155; color:#cbd5e1;'
+    ].join(';');
+    knop.onclick = () => {
+      localStorage.setItem(simuleerSleutel, id);
+      location.reload();
+    };
+    paneel.appendChild(knop);
+  });
+
+  document.body.appendChild(paneel);
+}
+
+// Zet gesimuleerde rol om naar isSchoolBreed / isSecretariaat / heeftKlasbeheer
+function gesimuleerdePaspoorten(gesimuleerdRol) {
+  return {
+    isSchoolBreed:  ['beheerder', 'zorgleerkracht'].includes(gesimuleerdRol),
+    isSecretariaat: ['beheerder', 'secretariaat'].includes(gesimuleerdRol),
+    heeftKlasbeheer: gesimuleerdRol === 'klasleerkracht',
+  };
+}
+
 async function toonSchooloverzichtKnopAlsNodig(user) {
   const huistakenKnop = document.getElementById('huistakenKeuzeKnop');
   const overgangKnop = document.getElementById('overgangKeuzeKnop');
@@ -118,6 +179,19 @@ async function toonSchooloverzichtKnopAlsNodig(user) {
     const rolRef = doc(db, "schoolrollen", user.uid);
     const rolSnap = await getDoc(rolRef);
     const rol = rolSnap.exists() ? String(rolSnap.data().rol || '').toLowerCase() : '';
+    const isBeheerder = rol === 'beheerder';
+
+    // ── Beheerder: toon rolwissel-paneel en pas gesimuleerde rol toe ──
+    if (isBeheerder) {
+      toonBeheerderRolwissel(user);
+      const simuleerSleutel = 'lindeSimuleerRol_' + user.uid;
+      const gesimuleerdRol = localStorage.getItem(simuleerSleutel) || 'beheerder';
+      const { isSchoolBreed, isSecretariaat, heeftKlasbeheer } = gesimuleerdePaspoorten(gesimuleerdRol);
+      pasKnoppenToe(huistakenKnop, overgangKnop, schoolbeheerKnop, bestellingenKnop, oudercontactKnop, schoolKnop, groeigroepenKnop,
+        isSchoolBreed, isSecretariaat, heeftKlasbeheer);
+      return;
+    }
+
     const isSchoolBreed = ['directie', 'zorgcoordinator', 'zorgleerkracht'].includes(rol);
     const isSecretariaat = rol === 'secretariaat';
 
