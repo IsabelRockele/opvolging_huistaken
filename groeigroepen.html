@@ -298,7 +298,7 @@ const app=getApps().length?getApp():initializeApp(firebaseConfig);
 const auth=getAuth(app);
 const db=getFirestore(app);
 const allowedRoles=["directie","zorgcoordinator","zorgleerkracht","beheerder"];
-const DEFAULT_CLASSES=["1A","2A","3A","4A","5A","6A"];
+const DEFAULT_CLASSES=["K1","K2","K3","1A","2A","3A","4A","5A","6A"];
 const DOMAINEN=[
   {id:"lezen",groep:"Nederlands",naam:"Lezen",emoji:"\ud83d\udcd6"},{id:"spelling",groep:"Nederlands",naam:"Spelling",emoji:"\ud83d\udd24"},{id:"spreken",groep:"Nederlands",naam:"Spreken",emoji:"\ud83d\udde3\ufe0f"},{id:"luisteren",groep:"Nederlands",naam:"Luisteren",emoji:"\ud83d\udc42"},{id:"woordenschat",groep:"Nederlands",naam:"Woordenschat",emoji:"\ud83d\udcad"},{id:"schrijven",groep:"Nederlands",naam:"Schrijven",emoji:"\u270d\ufe0f"},
   {id:"getallen",groep:"Wiskunde",naam:"Getallen",emoji:"\ud83d\udd22"},{id:"hoofdrekenen",groep:"Wiskunde",naam:"Hoofdrekenen",emoji:"\ud83e\udde0"},{id:"cijferen",groep:"Wiskunde",naam:"Cijferen",emoji:"\u2795"},{id:"meten",groep:"Wiskunde",naam:"Meten en metend rekenen",emoji:"\ud83d\udccf"},{id:"meetkunde",groep:"Wiskunde",naam:"Meetkunde",emoji:"\ud83d\udcd0"},
