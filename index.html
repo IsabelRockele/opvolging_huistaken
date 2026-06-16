@@ -879,17 +879,30 @@
   @media (max-width: 640px){
     .portaal-keuzes{grid-template-columns:1fr!important;}
   }
-/* Veilige centrering: alleen wanneer de kaart zichtbaar is */
+/* Veilige, evenwichtige schikking voor het keuzescherm */
 #ingelogd-kaart.startportaal:not([style*="display:none"]) .portaal-keuzes {
-  display: flex !important;
-  flex-wrap: wrap !important;
-  justify-content: center !important;
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(260px, 1fr)) !important;
   gap: 16px !important;
+  max-width: 1040px !important;
+  margin: 0 auto !important;
 }
 
 #ingelogd-kaart.startportaal:not([style*="display:none"]) .portaal-tegel {
-  flex: 0 0 255px !important;
-  width: 255px !important;
+  width: auto !important;
+  min-height: 178px !important;
+}
+
+@media (max-width: 980px) {
+  #ingelogd-kaart.startportaal:not([style*="display:none"]) .portaal-keuzes {
+    grid-template-columns: repeat(2, minmax(240px, 1fr)) !important;
+  }
+}
+
+@media (max-width: 640px) {
+  #ingelogd-kaart.startportaal:not([style*="display:none"]) .portaal-keuzes {
+    grid-template-columns: 1fr !important;
+  }
 }
 /* Breedte geven zonder de kaart zichtbaar te forceren */
 #ingelogd-kaart.startportaal {
@@ -950,6 +963,12 @@
         <span class="portaal-tegel-icoon">&#128483;</span>
         <span class="portaal-title">Oudercontact</span>
         <span class="portaal-desc">Bereid gesprekken per leerling voor en maak een nette PDF voor ouders.</span>
+        <span class="portaal-open">Openen</span>
+      </a>
+      <a id="zorgoverlegKeuzeKnop" href="zorgoverleg.html" class="portaal-tegel zorg" target="_blank" rel="noopener" style="display:none">
+        <span class="portaal-tegel-icoon">&#128172;</span>
+        <span class="portaal-title">Zorgoverleg</span>
+        <span class="portaal-desc">Noteer maandelijks zorg, acties en evaluatie per klas en download een PDF.</span>
         <span class="portaal-open">Openen</span>
       </a>
       <a id="groeigroepenKeuzeKnop" href="groeigroepen.html" class="portaal-tegel groeigroepen" target="_blank" rel="noopener" style="display:none">
@@ -1018,6 +1037,8 @@
 
 </section>
   </main>  <script>
+    window.name = 'linde_keuzescherm';
+
     function toggleWachtwoordZichtbaar() {
       const veld = document.getElementById('password');
       if (!veld) return;
