@@ -1,0 +1,254 @@
+<!doctype html>
+<html lang="nl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Zorgoverleg</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <style>
+    :root{--bg:#f5f0e8;--card:#fff;--line:#d9cfc0;--text:#2c1f0e;--muted:#756855;--yellow:#f6d76b;--mint:#bfe8dc;--soft:#ede8df;--danger:#f5c2c7;--green:#dff3d8;--shadow:0 8px 24px rgba(34,48,68,.10)}
+    *{box-sizing:border-box} body{margin:0;font-family:Arial,sans-serif;background:var(--bg);color:var(--text)}
+    header{background:linear-gradient(135deg,#6b5d52,#8a7a6d);color:#fff;padding:14px 22px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+    .brand{display:flex;align-items:center;gap:13px}.brand img{width:52px;height:52px;border-radius:10px;background:#fff;padding:4px;object-fit:contain}
+    h1{font-size:22px;margin:0}.sub{font-size:13px;opacity:.75;margin-top:2px}
+    button,a.button{border:0;border-radius:12px;background:var(--yellow);color:var(--text);font-weight:800;padding:9px 14px;cursor:pointer;text-decoration:none;font:inherit}
+    button.ghost,a.ghost{background:rgba(255,255,255,.16);color:#fff;border:1px solid rgba(255,255,255,.3)} button.secondary{background:var(--mint)} button.white{background:#fff;border:1px solid var(--line)} button.small{font-size:12px;padding:6px 9px}
+    main{max-width:1500px;margin:18px auto;padding:0 18px}.panel{background:#fff;border:1px solid var(--line);border-radius:16px;padding:18px;box-shadow:var(--shadow);margin-bottom:14px}
+    .bar{display:flex;align-items:end;gap:10px;flex-wrap:wrap}.right{margin-left:auto}.muted{color:var(--muted);font-size:13px;line-height:1.45}
+    label{display:block;font-weight:800;font-size:12px;color:#4b3b2d;margin-bottom:4px} input,select,textarea{font:inherit;width:100%;border:1px solid var(--line);border-radius:10px;padding:8px 10px;background:#fff}
+    textarea{min-height:62px;resize:vertical}.toolbar{display:grid;grid-template-columns:150px 180px 1fr auto auto;gap:10px;align-items:end}
+    .leerling-card{border:1px solid var(--line);border-radius:14px;overflow:hidden;background:#fff;margin-bottom:12px}
+    .leerling-head{background:#f7faf5;border:0;padding:10px 12px;display:flex;justify-content:space-between;gap:10px;align-items:center;width:100%;text-align:left;color:var(--text)}
+    .leerling-card.open .leerling-head{border-bottom:1px solid var(--line)}
+    .leerling-head strong{font-size:15px}.badge{display:inline-block;border-radius:999px;background:var(--green);padding:3px 8px;font-size:11px;font-weight:800;color:#315b2b}
+    .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;padding:12px}.grid2{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;padding:0 12px 12px}
+    .student-actions{display:flex;justify-content:flex-end;gap:10px;flex-wrap:wrap;border-top:1px solid var(--line);background:#fbfaf7;padding:12px}
+    .group-action{display:grid;grid-template-columns:1fr 1.3fr 1.3fr auto;gap:10px;align-items:start;border-top:1px solid var(--line);padding:12px 0}
+    .student-picks{display:flex;flex-wrap:wrap;gap:6px;max-height:150px;overflow:auto;padding:7px;border:1px solid var(--line);border-radius:10px;background:#fbfaf7}
+    .student-pick{display:inline-flex;align-items:center;gap:5px;border:1px solid #d8cfbf;border-radius:999px;padding:4px 8px;background:#fff;font-size:12px;font-weight:700;color:#4b3b2d}
+    .group-summary{margin:0 12px 12px;border:1px solid #cddfbe;border-radius:12px;background:#f7fcf4;padding:10px 12px}
+    .group-summary h3{font-size:13px;margin:0 0 7px;color:#315b2b}
+    .group-summary-item{border-top:1px solid #e1ecd9;padding-top:7px;margin-top:7px;font-size:13px;line-height:1.45}
+    .group-panel{background:#eef8e9;border-color:#93c47d}
+    .group-toggle{width:100%;display:flex;align-items:center;justify-content:space-between;gap:12px;text-align:left;background:#d9f2cf;border:1px solid #93c47d;color:#23451f;border-radius:12px;padding:12px 14px}
+    .group-toggle strong{font-size:16px}
+    .group-toggle span{display:block;font-size:12px;font-weight:600;color:#4f6e45;margin-top:2px}
+    .group-body{display:none;margin-top:12px}
+    .group-panel.open .group-body{display:block}
+    .group-arrow{font-size:18px;font-weight:900}
+    .previous{margin-top:5px;border-left:3px solid #d8c99d;background:#fff8dd;border-radius:8px;padding:6px 8px;color:#6b5b38;font-size:11px;font-weight:600;white-space:pre-wrap}
+    .previous strong{display:block;color:#5a4a27;margin-bottom:2px}
+    .notice{background:#fff8d6;border:1px solid #f2c94c;border-radius:12px;padding:12px;margin-bottom:12px}
+    .empty{text-align:center;color:var(--muted);padding:34px}
+    #pdfWrap{width:640px;background:#fff;color:#18212b;font-family:Arial,sans-serif;line-height:1.55;padding:0;overflow:visible}
+    #pdfWrap .pdf-cover{border:1.5px solid #8fb67f;background:#edf9e9;border-radius:10px;padding:18px 20px;margin-bottom:16px;break-inside:avoid;page-break-inside:avoid}
+    #pdfWrap .pdf-title{display:grid;grid-template-columns:80px 1fr;gap:14px;align-items:center} #pdfWrap img{width:68px;height:68px;object-fit:contain;background:#fff;border-radius:8px;padding:4px}
+    #pdfWrap h1{font-size:28px;margin:0;color:#182515} #pdfWrap .pdf-meta{font-size:12px;color:#4d6545;margin-top:4px}
+    #pdfWrap .pdf-student{border:1px solid #d6e3d0;border-radius:9px;margin:14px 0;overflow:visible}
+    #pdfWrap .pdf-student h2{margin:0;background:#d9f2cf;padding:11px 13px;font-size:15px;break-after:avoid;page-break-after:avoid}
+    #pdfWrap .pdf-row{display:grid;grid-template-columns:145px minmax(0,1fr);border-top:1px solid #e1e9de;break-inside:auto;page-break-inside:auto}
+    #pdfWrap .pdf-label{background:#f4fbf0;padding:12px 12px;font-size:10px;text-transform:uppercase;letter-spacing:.05em;font-weight:800;color:#5c7254;border-right:1px solid #e1e9de;break-after:avoid;page-break-after:avoid}
+    #pdfWrap .pdf-value{padding:12px 14px;font-size:12.5px;white-space:pre-wrap;min-height:42px;overflow-wrap:anywhere}
+    @media(max-width:900px){.toolbar,.grid,.grid2,.group-action{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+<header>
+  <div class="brand"><img src="afbeeldingen/schoollogo.png" alt="logo" onerror="this.style.display='none'"><div><h1>Zorgoverleg</h1><div id="status" class="sub">Laden...</div></div></div>
+  <div class="bar"><a class="button ghost" href="index.html">Keuzescherm</a><button id="logoutBtn" class="ghost">Uitloggen</button></div>
+</header>
+<main>
+  <section class="panel">
+    <div class="toolbar">
+      <label>Klas<select id="klasSelect"></select></label>
+      <label>Maand<select id="maandSelect"></select></label>
+      <label>Titel overleg<input id="titelInput" placeholder="bv. Zorgoverleg oktober"></label>
+      <button class="secondary" id="saveBtn">Bewaren</button>
+      <button id="pdfBtn">PDF leerling</button>
+    </div>
+  </section>
+  <section class="notice">
+    <strong>Werking:</strong>
+    <span class="muted">Elke maand vul je per leerling kort aan hoe het loopt, welke acties afgesproken zijn en wat de evaluatie is. Kinderen met een gelijkaardige zorg kan je aanduiden bij "Samen nemen / groepje".</span>
+  </section>
+  <section class="panel group-panel" id="groupPanel">
+    <button type="button" class="group-toggle" id="groupToggle">
+      <div>
+        <strong>Gezamenlijke acties in deze klas</strong>
+        <span>Open dit alleen wanneer je kinderen samen neemt rond dezelfde zorg of actie.</span>
+      </div>
+      <div class="group-arrow" id="groupArrow">+</div>
+    </button>
+    <div class="group-body">
+      <div class="bar">
+        <div class="muted">Noteer waarvoor de actie dient, klik de leerlingen aan en vul de afspraak of evaluatie aan.</div>
+        <button class="white right" id="addGroupActionBtn">Actie toevoegen</button>
+      </div>
+      <div id="groupActions"></div>
+    </div>
+  </section>
+  <section id="students"></section>
+</main>
+<script type="module">
+import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getFirestore, doc, getDoc, setDoc, collection, getDocs, query, where, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+const firebaseConfig={apiKey:"AIzaSyA7KxXMvZ4dzBQDut3CMyWUblLte2tFzoQ",authDomain:"huiswerkapp-a311e.firebaseapp.com",projectId:"huiswerkapp-a311e",storageBucket:"huiswerkapp-a311e.appspot.com",messagingSenderId:"797169941164",appId:"1:797169941164:web:511d9618079f1378d0fd09"};
+const app=getApps().length?getApp():initializeApp(firebaseConfig), auth=getAuth(app), db=getFirestore(app);
+const DEFAULT_CLASSES=["K1","K2","K3","1A","2A","3A","4A","5A","6A"], $=id=>document.getElementById(id);
+const esc=v=>String(v??"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;");
+let user=null, role="", schooljaar=huidigSchooljaar(), classes=[], activeKlas="", maand="", leerlingen=[], data={entries:{},groupActions:[]}, previousData={entries:{},groupActions:[]}, activeStudentIndex=-1;
+function huidigSchooljaar(){const n=new Date(), y=n.getMonth()>=7?n.getFullYear():n.getFullYear()-1;return `${y}-${y+1}`;}
+function schoolMonths(){const s=Number(schooljaar.slice(0,4)), e=Number(schooljaar.slice(5,9));return [`${s}-09`,`${s}-10`,`${s}-11`,`${s}-12`,`${e}-01`,`${e}-02`,`${e}-03`,`${e}-04`,`${e}-05`,`${e}-06`];}
+function previousMonthId(){const months=schoolMonths(), i=months.indexOf(maand);return i>0?months[i-1]:"";}
+function naam(s){const first=s.first||s.firstName||"", last=s.last||s.lastName||"";return `${last}, ${first}`.replace(/^, /,"").replace(/, $/,"")||s.naam||"";}
+function key(s){return String(s.id||naam(s)).replace(/[^a-z0-9_-]+/gi,"_");}
+function isBreed(){return ["directie","zorgcoordinator","zorgleerkracht","beheerder"].includes(role);}
+function isSecretariaat(){return ["secretariaat","beheerder"].includes(role);}
+async function loadRole(){
+  const snap=await getDoc(doc(db,"schoolrollen",user.uid));
+  role=snap.exists()?String(snap.data().rol||"").toLowerCase():"";
+  if(role==="beheerder"){
+    const simulated=localStorage.getItem("lindeSimuleerRol_"+user.uid);
+    if(["klasleerkracht","zorgleerkracht","secretariaat","beheerder"].includes(simulated)){
+      role=simulated;
+    }
+  }
+}
+async function loadClasses(){
+  if(isBreed()||isSecretariaat()){const snap=await getDocs(collection(db,"schoolbeheer",schooljaar,"klassen"));classes=[...new Set([...DEFAULT_CLASSES,...snap.docs.map(d=>d.id)])].sort((a,b)=>a.localeCompare(b,"nl",{numeric:true}));return;}
+  const email=(user.email||"").toLowerCase(), found=new Set();
+  const snaps=await Promise.all([getDocs(query(collection(db,"klasleerkrachten"),where("leerkracht_uids","array-contains",user.uid))),getDocs(query(collection(db,"klasleerkrachten"),where("leerkracht_emails","array-contains",email)))]);
+  snaps.forEach(s=>s.forEach(d=>{const item=d.data(); if(String(item.schooljaar||schooljaar)===schooljaar) found.add(String(item.klas||item.klasId||"").trim());}));
+  classes=[...found].filter(Boolean).sort((a,b)=>a.localeCompare(b,"nl",{numeric:true}));
+}
+function overlegRef(){return doc(db,"zorgoverleggen",schooljaar,"klassen",activeKlas,"maanden",maand);}
+function overlegRefFor(monthId){return doc(db,"zorgoverleggen",schooljaar,"klassen",activeKlas,"maanden",monthId);}
+async function openOverleg(){
+  activeKlas=$("klasSelect").value; maand=$("maandSelect").value; $("status").textContent=`${activeKlas} - ${maand}`;
+  const klasSnap=await getDoc(doc(db,"schoolbeheer",schooljaar,"klassen",activeKlas));
+  leerlingen=klasSnap.exists()?((klasSnap.data().leerlingen||[]).slice().sort((a,b)=>naam(a).localeCompare(naam(b),"nl"))):[];
+  activeStudentIndex=-1;
+  const snap=await getDoc(overlegRef());
+  const prevMonth=previousMonthId();
+  const prevSnap=prevMonth?await getDoc(overlegRefFor(prevMonth)):null;
+  data=snap.exists()?snap.data():{titel:`Zorgoverleg ${maand}`,entries:{},groupActions:[]};
+  previousData=prevSnap?.exists()?prevSnap.data():{entries:{},groupActions:[]};
+  data.entries=data.entries||{}; data.groupActions=data.groupActions||[];
+  previousData.entries=previousData.entries||{}; previousData.groupActions=previousData.groupActions||[];
+  $("titelInput").value=data.titel||`Zorgoverleg ${maand}`;
+  renderGroupActions();
+  render();
+}
+function vorigBlok(value){return value?`<div class="previous"><strong>Vorige maand</strong>${esc(value)}</div>`:"";}
+function veld(id,label,val,type="textarea",prev=""){return `<label>${label}${type==="input"?`<input data-field="${id}" value="${esc(val||"")}">`:`<textarea data-field="${id}">${esc(val||"")}</textarea>`}${prev&&String(prev)!==String(val||"")?vorigBlok(prev):""}</label>`;}
+function studentPicker(item){
+  const selected=new Set(item.studentKeys||[]);
+  return `<div class="student-picks">${leerlingen.map(s=>{const k=key(s);return `<label class="student-pick"><input type="checkbox" data-student-pick="${esc(k)}" ${selected.has(k)?"checked":""}>${esc(naam(s))}</label>`;}).join("")}</div>`;
+}
+function renderGroupActions(){
+  const list=data.groupActions?.length?data.groupActions:[{groep:"",studentKeys:[],studentNames:[],actie:"",evaluatie:""}];
+  data.groupActions=list;
+  const hasFilledGroup=list.some(item=>Object.values(item).some(v=>Array.isArray(v)?v.length:String(v||"").trim()));
+  if(hasFilledGroup)$("groupPanel")?.classList.add("open");
+  if($("groupArrow"))$("groupArrow").textContent=$("groupPanel")?.classList.contains("open")?"-":"+";
+  $("groupActions").innerHTML=list.map((item,i)=>`<div class="group-action" data-group-index="${i}"><label>Waarvoor?<input data-group-field="groep" value="${esc(item.groep||"")}" placeholder="bv. lezen, werkhouding, spelling"></label><label>Leerlingen aanklikken${studentPicker(item)}${previousData.groupActions?.[i]?.studentNames?.length?vorigBlok(previousData.groupActions[i].studentNames.join(", ")):""}</label><label>Actie<textarea data-group-field="actie" placeholder="Wat spreken we af?">${esc(item.actie||"")}</textarea>${previousData.groupActions?.[i]?.actie&&previousData.groupActions[i].actie!==item.actie?vorigBlok(previousData.groupActions[i].actie):""}</label><label>Evaluatie<textarea data-group-field="evaluatie" placeholder="Wat is veranderd?">${esc(item.evaluatie||"")}</textarea>${previousData.groupActions?.[i]?.evaluatie&&previousData.groupActions[i].evaluatie!==item.evaluatie?vorigBlok(previousData.groupActions[i].evaluatie):""}</label><button class="white small" data-remove-group="${i}" type="button">Weg</button></div>`).join("");
+  document.querySelectorAll("[data-remove-group]").forEach(btn=>btn.onclick=()=>{collectGroupActions();data.groupActions.splice(Number(btn.dataset.removeGroup),1);renderGroupActions();});
+}
+function toggleGroupPanel(){
+  $("groupPanel")?.classList.toggle("open");
+  if($("groupArrow"))$("groupArrow").textContent=$("groupPanel")?.classList.contains("open")?"-":"+";
+}
+function collectGroupActions(){
+  data.groupActions=[];
+  document.querySelectorAll("[data-group-index]").forEach(row=>{
+    const item={studentKeys:[],studentNames:[]};
+    row.querySelectorAll("[data-group-field]").forEach(el=>item[el.dataset.groupField]=el.value||"");
+    row.querySelectorAll("[data-student-pick]:checked").forEach(el=>{
+      const student=leerlingen.find(s=>key(s)===el.dataset.studentPick);
+      if(student){item.studentKeys.push(el.dataset.studentPick);item.studentNames.push(naam(student));}
+    });
+    if(Object.values(item).some(v=>String(v||"").trim())) data.groupActions.push(item);
+  });
+}
+function groupsForStudent(studentKey){
+  return (data.groupActions||[]).filter(g=>(g.studentKeys||[]).includes(studentKey));
+}
+function groupSummary(studentKey){
+  const groups=groupsForStudent(studentKey);
+  if(!groups.length)return "";
+  return `<div class="group-summary"><h3>Gezamenlijke acties waar deze leerling in zit</h3>${groups.map(g=>`<div class="group-summary-item"><strong>${esc(g.groep||"Groepsactie")}</strong><br>${esc(g.actie||"Geen actie ingevuld.")}${g.evaluatie?`<br><em>Evaluatie: ${esc(g.evaluatie)}</em>`:""}</div>`).join("")}</div>`;
+}
+function render(){
+  if(!leerlingen.length){$("students").innerHTML=`<div class="panel empty">Geen leerlingen in ${esc(activeKlas)}. Voeg eerst de klaslijst toe in Schoolbeheer.</div>`;return;}
+  $("students").innerHTML=leerlingen.map((s,i)=>{const k=key(s), e=data.entries?.[k]||{}, p=previousData.entries?.[k]||{}, open=i===activeStudentIndex;return `<article class="leerling-card ${open?"open":""}" data-student="${esc(k)}"><button type="button" class="leerling-head" data-index="${i}"><strong>${esc(naam(s))}</strong><span class="badge">${open?"open":activeKlas}</span></button>${open?`${groupSummary(k)}<div class="grid">${veld("werkhouding","Werkhouding",e.werkhouding,"textarea",p.werkhouding)}${veld("nederlands","Nederlands",e.nederlands,"textarea",p.nederlands)}${veld("wiskunde","Wiskunde",e.wiskunde,"textarea",p.wiskunde)}${veld("wo","WO",e.wo,"textarea",p.wo)}${veld("frans","Frans",e.frans,"textarea",p.frans)}${veld("hulpmiddelen","Hulpmiddelen",e.hulpmiddelen,"textarea",p.hulpmiddelen)}${veld("bezorgdheden","Bezorgdheden",e.bezorgdheden,"textarea",p.bezorgdheden)}${veld("groepje","Extra individueel groepje / afspraak",e.groepje,"textarea",p.groepje)}</div><div class="grid2">${veld("acties","Individuele acties / wie doet wat?",e.acties,"textarea",p.acties)}${veld("evaluatie","Evaluatie / verbetering / nieuwe afspraak",e.evaluatie,"textarea",p.evaluatie)}${veld("oudersClb","Ouders / CLB nodig?",e.oudersClb,"textarea",p.oudersClb)}${veld("notitie","Extra notitie",e.notitie,"textarea",p.notitie)}</div><div class="student-actions"><button class="white" data-nav="close">Sluiten</button><button class="white" data-nav="prev" ${i===0?"disabled":""}>Vorige leerling</button><button id="studentPdfBtn" class="white">PDF deze leerling</button><button class="secondary" data-nav="saveNext">${i===leerlingen.length-1?"Bewaren":"Opslaan + volgende leerling"}</button></div>`:""}</article>`;}).join("");
+  document.querySelectorAll("[data-index]").forEach(btn=>btn.onclick=()=>openStudent(Number(btn.dataset.index)));
+  document.querySelectorAll("[data-nav='close']").forEach(btn=>btn.onclick=()=>{collectCurrent();activeStudentIndex=-1;render();});
+  document.querySelectorAll("[data-nav='prev']").forEach(btn=>btn.onclick=()=>goToStudent(activeStudentIndex-1));
+  document.querySelectorAll("[data-nav='saveNext']").forEach(btn=>btn.onclick=()=>saveAndGoNext());
+  const studentPdfBtn=$("studentPdfBtn"); if(studentPdfBtn)studentPdfBtn.onclick=pdf;
+}
+function collectCurrent(){
+  data.titel=$("titelInput").value||`Zorgoverleg ${maand}`;
+  const card=document.querySelector(".leerling-card.open[data-student]");
+  if(!card)return;
+  const item={};
+  card.querySelectorAll("[data-field]").forEach(el=>item[el.dataset.field]=el.value||"");
+  data.entries={...(data.entries||{}),[card.dataset.student]:item};
+}
+function openStudent(index){
+  if(index<0||index>=leerlingen.length)return;
+  collectCurrent();
+  activeStudentIndex=activeStudentIndex===index?-1:index;
+  render();
+  const open=document.querySelector(".leerling-card.open");
+  if(open)open.scrollIntoView({behavior:"smooth",block:"start"});
+}
+function goToStudent(index){
+  if(index<0||index>=leerlingen.length)return;
+  collectCurrent();
+  activeStudentIndex=index;
+  render();
+  const open=document.querySelector(".leerling-card.open");
+  if(open)open.scrollIntoView({behavior:"smooth",block:"center"});
+}
+function collect(){collectCurrent();collectGroupActions();}
+async function save(){collect();await setDoc(overlegRef(),{...data,schooljaar,klas:activeKlas,maand,updatedAt:serverTimestamp(),updatedBy:user.email||user.uid},{merge:true});$("status").textContent="Bewaard";}
+async function saveAndGoNext(){
+  const next=activeStudentIndex+1;
+  collect();
+  if(next<leerlingen.length)goToStudent(next);
+  $("status").textContent="Bewaren...";
+  try{
+    await setDoc(overlegRef(),{...data,schooljaar,klas:activeKlas,maand,updatedAt:serverTimestamp(),updatedBy:user.email||user.uid},{merge:true});
+    $("status").textContent="Bewaard";
+  }catch(err){
+    $("status").textContent="Bewaren mislukt";
+    alert("Bewaren lukte niet: " + err.message);
+  }
+}
+function cell(label,value){return `<div class="pdf-row"><div class="pdf-label">${esc(label)}</div><div class="pdf-value">${esc(value&&String(value).trim()?value:"-")}</div></div>`;}
+function safeFileName(value){return String(value||"leerling").replace(/[^a-z0-9_-]+/gi,"_").replace(/^_+|_+$/g,"");}
+function matchingGroups(studentKey, studentName){
+  const last=studentName.split(",")[0].trim().toLowerCase();
+  return (data.groupActions||[]).filter(g=>{
+    if((g.studentKeys||[]).includes(studentKey))return true;
+    const names=String(g.leerlingen||"").toLowerCase();
+    return names && last && names.includes(last);
+  }).filter(g=>Object.values(g).some(v=>String(v||"").trim()));
+}
+async function pdf(){
+  collect();
+  if(activeStudentIndex<0||!leerlingen[activeStudentIndex]){alert("Klik eerst een leerling open. Dan kan je de PDF van die leerling maken.");return;}
+  const student=leerlingen[activeStudentIndex], studentKey=key(student), studentName=naam(student), e=data.entries[studentKey]||{};
+  const logo=await fetch("afbeeldingen/schoollogo.png").then(r=>r.blob()).then(b=>new Promise(res=>{const fr=new FileReader();fr.onload=()=>res(fr.result);fr.readAsDataURL(b);})).catch(()=>"");
+  const groups=matchingGroups(studentKey, studentName).map(g=>`<section class="pdf-student"><h2>Gezamenlijke klasactie</h2>${cell("Waarvoor?",g.groep)}${cell("Leerlingen",g.studentNames?.length?g.studentNames.join(", "):g.leerlingen)}${cell("Actie",g.actie)}${cell("Evaluatie",g.evaluatie)}</section>`).join("");
+  const html=`<div id="pdfWrap"><div class="pdf-cover"><div class="pdf-title">${logo?`<img src="${logo}">`:""}<div><h1>${esc(data.titel||"Zorgoverleg")}</h1><div class="pdf-meta">${esc(studentName)} - ${esc(activeKlas)} - ${esc(maand)} - ${esc(schooljaar)}</div></div></div></div><section class="pdf-student"><h2>${esc(studentName)} <span style="font-weight:400;color:#5c7254">(${esc(activeKlas)})</span></h2>${cell("Werkhouding",e.werkhouding)}${cell("Nederlands",e.nederlands)}${cell("Wiskunde",e.wiskunde)}${cell("WO",e.wo)}${cell("Frans",e.frans)}${cell("Hulpmiddelen",e.hulpmiddelen)}${cell("Bezorgdheden",e.bezorgdheden)}${cell("Samen nemen / groepje",e.groepje)}${cell("Acties",e.acties)}${cell("Evaluatie",e.evaluatie)}${cell("Ouders / CLB",e.oudersClb)}${cell("Extra notitie",e.notitie)}</section>${groups}</div>`;
+  const holder=document.createElement("div");holder.style.cssText="position:absolute;left:-10000px;top:0;width:640px;background:#fff";holder.innerHTML=html;document.body.appendChild(holder);
+  await html2pdf().set({margin:[14,16,14,16],filename:`Zorgoverleg_${safeFileName(studentName)}_${activeKlas}_${maand}.pdf`,image:{type:"jpeg",quality:.96},html2canvas:{scale:2,useCORS:true,backgroundColor:"#fff",scrollX:0,scrollY:0},jsPDF:{unit:"mm",format:"a4",orientation:"portrait"},pagebreak:{mode:["css","legacy"],avoid:[".pdf-cover"]}}).from(holder.querySelector("#pdfWrap")).save();
+  holder.remove();
+}
+onAuthStateChanged(auth,async u=>{if(!u){location.href="index.html";return;}user=u;await loadRole();await loadClasses();$("klasSelect").innerHTML=classes.map(k=>`<option>${esc(k)}</option>`).join("");$("maandSelect").innerHTML=schoolMonths().map(m=>`<option>${esc(m)}</option>`).join("");$("maandSelect").value=schoolMonths().find(m=>m===new Date().toISOString().slice(0,7))||schoolMonths()[0];$("klasSelect").onchange=openOverleg;$("maandSelect").onchange=openOverleg;$("saveBtn").onclick=save;$("pdfBtn").onclick=pdf;$("groupToggle").onclick=toggleGroupPanel;$("addGroupActionBtn").onclick=()=>{collectGroupActions();data.groupActions.push({groep:"",studentKeys:[],studentNames:[],actie:"",evaluatie:""});$("groupPanel")?.classList.add("open");renderGroupActions();};$("logoutBtn").onclick=()=>signOut(auth).then(()=>location.href="index.html");if(classes.length)openOverleg();else $("students").innerHTML=`<div class="panel empty">Je account is nog niet gekoppeld aan een klas.</div>`;});
+</script>
+</body>
+</html>
