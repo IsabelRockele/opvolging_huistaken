@@ -905,7 +905,7 @@
     const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db = getFirestore(app);
-    const DEFAULT_CLASSES = ["1A","2A","3A","4A","5A","6A"];
+    const DEFAULT_CLASSES = ["K1","K2","K3","1A","2A","3A","4A","5A","6A"];
     const esc = v => String(v ?? "").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;");
     const uid = () => Math.random().toString(36).slice(2,9) + Date.now().toString(36).slice(-4);
     const $ = id => document.getElementById(id);
@@ -2165,7 +2165,7 @@
       renderNewYearHome();
     }
     window.terugNaarNieuwSchooljaarHome = terugNaarNieuwSchooljaarHome;
-    function volgendeKlasVoor(klas){ const map={"1A":"2A","2A":"3A","3A":"4A","4A":"5A","5A":"6A","6A":"uit school"}; return map[klas]||""; }
+    function volgendeKlasVoor(klas){ const map={"K1":"K2","K2":"K3","K3":"1A","1A":"2A","2A":"3A","3A":"4A","4A":"5A","5A":"6A","6A":"uit school"}; return map[klas]||""; }
     async function laadLeerlingenVoorKlas(klas){
       if(klas===activeClass&&data?.leerlingen?.length) return [...data.leerlingen].sort((a,b)=>name(a).localeCompare(name(b),"nl"));
       const snap=await getDoc(classRef(klas));
