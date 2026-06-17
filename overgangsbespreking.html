@@ -156,6 +156,7 @@
     .tabs{overflow-x:auto;white-space:nowrap;flex-wrap:nowrap}
     .tab{padding:10px 14px}
     .student-table th:nth-child(4),.student-table td:nth-child(4){display:none}
+    .student-table th:nth-child(5),.student-table td:nth-child(5){white-space:normal}
     .modal-footer{flex-direction:column-reverse}
     .modal-footer button{width:100%}
   }
@@ -246,6 +247,12 @@
   .student-table th:nth-child(2),
   .student-table td:nth-child(2) {
     width: 95px;
+  }
+
+  .student-table th:nth-child(5),
+  .student-table td:nth-child(5) {
+    width: 1%;
+    white-space: nowrap;
   }
 
   @media(max-width:760px) {
@@ -892,7 +899,20 @@
                 <option value="laag">Laag</option><option value="midden">Midden</option><option value="hoog">Hoog</option>
               </select></div>
               <div><label>IAC</label><select id="m_iac"><option value="nee">Nee</option><option value="ja">Ja</option></select></div>
-              <div><label>GOK</label><select id="m_gok"><option value="nee">Nee</option><option value="ja">Ja</option></select></div>
+              <div><label>GOK</label><select id="m_gok" onchange="toggleGokKenmerken(this.value==='ja')"><option value="nee">Nee</option><option value="ja">Ja</option></select></div>
+            </div>
+            <div id="m_gokKenmerkenWrap" style="display:none;margin-bottom:14px;background:#eef6ff;border:1px solid #bcd9f7;border-radius:8px;padding:12px">
+              <label style="margin-bottom:8px">GOK-kenmerken (officiële SES-indicatoren basisonderwijs)</label>
+              <div style="display:flex;flex-direction:column;gap:6px">
+                <label style="display:flex;align-items:flex-start;gap:7px;font-weight:normal;font-size:13px;margin:0;cursor:pointer"><input type="checkbox" name="gokKenmerk" value="diploma_moeder" style="width:auto;margin:2px 0 0 0"> Moeder heeft geen diploma secundair onderwijs</label>
+                <label style="display:flex;align-items:flex-start;gap:7px;font-weight:normal;font-size:13px;margin:0;cursor:pointer"><input type="checkbox" name="gokKenmerk" value="thuistaal" style="width:auto;margin:2px 0 0 0"> Thuistaal is niet het Nederlands</label>
+                <label style="display:flex;align-items:flex-start;gap:7px;font-weight:normal;font-size:13px;margin:0;cursor:pointer"><input type="checkbox" name="gokKenmerk" value="schooltoelage" style="width:auto;margin:2px 0 0 0"> Gezin ontvangt schooltoelage / participatietoelage</label>
+              </div>
+              <p class="small" style="margin:8px 0 0;color:var(--muted)">Let op: thuistaal telt enkel mee in combinatie met minstens één ander kenmerk.</p>
+              <div class="field-with-note" style="margin-top:8px">
+                <label>Extra toelichting GOK (optioneel)</label>
+                <textarea id="m_gokNote" placeholder="Bv. eigen schoolinterne vaststelling, bijkomende context, ..."></textarea>
+              </div>
             </div>
             <div class="field-with-note">
               <label>Notitie over zorg</label>
@@ -905,6 +925,11 @@
             <div class="field-with-note">
               <label>Medische zorg / afspraken</label>
               <textarea id="m_medicalNote" placeholder="Bv. medicatie op school, diabetes, epilepsie, inhalator, doktersattest, ..."></textarea>
+            </div>
+            <div class="field-with-note" style="margin-top:14px;border-top:1px solid var(--border);padding-top:14px">
+              <label style="margin-bottom:8px">Testmomenten (CLB / IQ-test / diagnostiek)</label>
+              <div id="m_testmomentenLijst"></div>
+              <button type="button" class="ghost small" onclick="addTestmoment()" style="margin-top:6px">+ Testmoment toevoegen</button>
             </div>
           </div>
 
@@ -1241,6 +1266,10 @@ window.firebaseOvergang = {
       bewaartermijnJaren: BEWAAR_JAREN_OVERGANG,
       updatedAt: serverTimestamp()
     }, { merge: true });
+    if (Array.isArray(data.students) && data.students.length) {
+      try { await window.firebaseOvergang.syncZorgvelden(data.students); }
+      catch (syncErr) { console.error('Sync zorgvelden naar schoolbeheer mislukt:', syncErr); }
+    }
   },
   async loadProject() {
     await ready;
@@ -1297,6 +1326,32 @@ window.firebaseOvergang = {
     item.bijgewerktOp = new Date().toISOString();
     await setDoc(ref, item, { merge: true });
     return { klas, added, skipped };
+  },
+  async syncZorgvelden(students) {
+    await ready;
+    const klas = await bepaalSchoolbeheerKlas();
+    if (!klas || !Array.isArray(students) || !students.length) return { klas, updated: 0 };
+    const ref = doc(db, "schoolbeheer", schooljaar, "klassen", klas);
+    const snap = await getDoc(ref);
+    if (!snap.exists()) return { klas, updated: 0 };
+    const item = snap.data();
+    item.leerlingen ||= [];
+    let updated = 0;
+    students.forEach(s => {
+      const key = schoolbeheerNameKey({ first: s.firstName, last: s.lastName });
+      const target = item.leerlingen.find(l => schoolbeheerNameKey(l) === key);
+      if (!target) return;
+      target.gok = s.gok || 'nee';
+      target.gokKenmerken = Array.isArray(s.gokKenmerken) ? s.gokKenmerken : [];
+      target.gokNote = s.gokNote || '';
+      target.testmomenten = Array.isArray(s.testmomenten) ? s.testmomenten : [];
+      updated++;
+    });
+    if (updated > 0) {
+      item.bijgewerktOp = new Date().toISOString();
+      await setDoc(ref, item, { merge: true });
+    }
+    return { klas, updated };
   },
   async loadZorggroepen() {
     await ready;
@@ -1571,6 +1626,76 @@ function closeAllAccordions() {
 }
 
 // Bepaalt of een sectie data bevat en update badge
+const GOK_KENMERK_LABELS = {
+  diploma_moeder: 'Moeder geen diploma secundair onderwijs',
+  thuistaal: 'Thuistaal niet Nederlands',
+  schooltoelage: 'Schooltoelage / participatietoelage'
+};
+function gokKenmerkenTekst(x) {
+  if (x.gok !== 'ja') return '';
+  const labels = (Array.isArray(x.gokKenmerken) ? x.gokKenmerken : []).map(k => GOK_KENMERK_LABELS[k] || k);
+  let txt = labels.length ? labels.join(', ') : 'geen kenmerken aangeduid';
+  if (x.gokNote) txt += ` (${x.gokNote})`;
+  return txt;
+}
+function testmomentenTekst(x) {
+  const list = Array.isArray(x.testmomenten) ? x.testmomenten : [];
+  if (!list.length) return '';
+  return list.map(t => {
+    const delen = [t.leerjaar, t.type, t.iq ? `IQ ${t.iq}` : '', t.note].filter(Boolean);
+    return delen.join(' · ');
+  }).join('<br>');
+}
+function toggleGokKenmerken(show) {
+  const wrap = $('m_gokKenmerkenWrap');
+  if (wrap) wrap.style.display = show ? '' : 'none';
+}
+let testmomentTeller = 0;
+function testmomentRijHtml(t, idx) {
+  const id = 'tm_' + (t._uid || idx);
+  return `<div class="testmoment-rij" data-tm-index="${idx}" style="display:grid;grid-template-columns:1.2fr 1.4fr 0.8fr auto;gap:8px;align-items:start;background:var(--soft);border-radius:8px;padding:8px;margin-bottom:6px">
+    <div><label style="font-size:11px">Leerjaar / klas</label><select data-tm-field="leerjaar">
+      <option value="">Kies...</option>
+      ${['Peuterklas','K1','K2','K3','1ste leerjaar','2de leerjaar','3de leerjaar','4de leerjaar','5de leerjaar','6de leerjaar'].map(j => `<option value="${esc(j)}" ${t.leerjaar === j ? 'selected' : ''}>${esc(j)}</option>`).join('')}
+    </select></div>
+    <div><label style="font-size:11px">Soort verslag / test</label><select data-tm-field="type">
+      <option value="">Kies...</option>
+      ${['CLB-verslag','IQ-test','Logopedisch onderzoek','Psychomotorisch onderzoek','Diagnose (bv. dyslexie, dyscalculie, ADHD, ASS)','Multidisciplinair verslag','Andere'].map(opt => `<option value="${esc(opt)}" ${t.type === opt ? 'selected' : ''}>${esc(opt)}</option>`).join('')}
+    </select></div>
+    <div><label style="font-size:11px">IQ (optioneel)</label><input data-tm-field="iq" type="text" inputmode="numeric" value="${esc(t.iq || '')}" placeholder="bv. 95"></div>
+    <button type="button" class="ghost small" style="margin-top:18px" onclick="removeTestmoment(${idx})">Weg</button>
+    <div style="grid-column:1/-1"><label style="font-size:11px">Toelichting (optioneel)</label><input data-tm-field="note" type="text" value="${esc(t.note || '')}" placeholder="bv. afgenomen door CLB-medewerker, datum, opmerking..."></div>
+  </div>`;
+}
+function renderTestmomenten(list) {
+  const wrap = $('m_testmomentenLijst');
+  if (!wrap) return;
+  if (!list.length) {
+    wrap.innerHTML = `<p class="small" style="margin:0">Nog geen testmomenten geregistreerd.</p>`;
+    return;
+  }
+  wrap.innerHTML = list.map((t, idx) => testmomentRijHtml(t, idx)).join('');
+}
+function readTestmomenten() {
+  const rows = document.querySelectorAll('#m_testmomentenLijst [data-tm-index]');
+  const result = [];
+  rows.forEach(row => {
+    const item = {};
+    row.querySelectorAll('[data-tm-field]').forEach(el => item[el.dataset.tmField] = el.value.trim());
+    if (Object.values(item).some(v => v)) result.push(item);
+  });
+  return result;
+}
+function addTestmoment() {
+  const current = readTestmomenten();
+  current.push({ leerjaar: '', type: '', iq: '', note: '' });
+  renderTestmomenten(current);
+}
+function removeTestmoment(idx) {
+  const current = readTestmomenten();
+  current.splice(idx, 1);
+  renderTestmomenten(current);
+}
 function updateSectionBadges(s) {
   const badges = {};
 
@@ -1606,6 +1731,9 @@ function updateSectionBadges(s) {
   if (s.care && s.care !== 'laag') zorgCount++;
   if (s.iac === 'ja') zorgCount++;
   if (s.gok === 'ja') zorgCount++;
+  if (Array.isArray(s.gokKenmerken) && s.gokKenmerken.length) zorgCount += s.gokKenmerken.length;
+  if (s.gokNote) zorgCount++;
+  if (Array.isArray(s.testmomenten) && s.testmomenten.length) zorgCount += s.testmomenten.length;
   if (s.extraCare === 'ja') zorgCount++;
   if (s.careNote) zorgCount++;
   if (s.allergies) zorgCount++;
@@ -1705,9 +1833,15 @@ function openModal(studentId = null) {
     $('m_care').value = s.care || 'laag';
     $('m_iac').value = s.iac || 'nee';
     $('m_gok').value = s.gok || 'nee';
+    document.querySelectorAll('input[name="gokKenmerk"]').forEach(cb => {
+      cb.checked = Array.isArray(s.gokKenmerken) && s.gokKenmerken.includes(cb.value);
+    });
+    if ($('m_gokNote')) $('m_gokNote').value = s.gokNote || '';
+    toggleGokKenmerken(s.gok === 'ja');
     $('m_careNote').value = s.careNote || '';
     if ($('m_allergies')) $('m_allergies').value = s.allergies || '';
     if ($('m_medicalNote')) $('m_medicalNote').value = s.medicalNote || '';
+    renderTestmomenten(Array.isArray(s.testmomenten) ? s.testmomenten : []);
     renderZorggroepenVoorFiche(s);
     // Loopbaan
     $('m_repeated').checked = !!s.repeated;
@@ -1767,6 +1901,10 @@ function openModal(studentId = null) {
     $('m_math').value = 'basis'; $('m_writing').value = 'basis';
     VAKKEN_AANP.forEach(vak => resetAanpassingen(vak));
     $('m_care').value = 'laag'; $('m_iac').value = 'nee'; $('m_gok').value = 'nee';
+    document.querySelectorAll('input[name="gokKenmerk"]').forEach(cb => { cb.checked = false; });
+    if ($('m_gokNote')) $('m_gokNote').value = '';
+    toggleGokKenmerken(false);
+    renderTestmomenten([]);
     $('m_focus').value = 'ok'; $('m_behavior').value = 'ok';
     $('m_updatedDate').value = todayISO();
     if ($('m_zorggroepenOverzicht')) $('m_zorggroepenOverzicht').innerHTML = `<h4>Groeigroepen</h4><p class="zorggroep-empty">Sla de leerling eerst op om groeigroepen te koppelen.</p>`;
@@ -1810,6 +1948,9 @@ function saveStudent() {
     behavior: $('m_behavior').value, behaviorNote: $('m_behaviorNote').value.trim(),
     // Zorg
     care: $('m_care').value, iac: $('m_iac').value, gok: $('m_gok').value, extraCare: $('m_care').value === 'hoog' ? 'ja' : 'nee',
+    gokKenmerken: [...document.querySelectorAll('input[name="gokKenmerk"]:checked')].map(cb => cb.value),
+    gokNote: $('m_gokNote') ? $('m_gokNote').value.trim() : '',
+    testmomenten: readTestmomenten(),
     careNote: $('m_careNote').value.trim(),
     allergies: $('m_allergies') ? $('m_allergies').value.trim() : '',
     medicalNote: $('m_medicalNote') ? $('m_medicalNote').value.trim() : '',
@@ -2525,7 +2666,7 @@ function renderStudents() {
     ? `<div class="warning" style="margin-bottom:12px">Groeigroepen konden niet geladen worden. Controleer de Firebase-regels voor leesrechten.</div>`
     : '';
   c.innerHTML = dupWarning + zorgWarning + `<table class="student-table">
-    <thead><tr><th>Naam</th><th>Niveau</th><th>Lezen / Rekenen</th><th>Aandacht</th></tr></thead>
+    <thead><tr><th>Naam</th><th>Niveau</th><th>Lezen / Rekenen</th><th>Aandacht</th><th></th></tr></thead>
     <tbody>${sorted.map(s => {
       const tags = [];
       if (s.stayingThisYear) tags.push('<span class="mini-tag" style="background:#fde68a;color:#92400e;font-weight:700">blijft zitten</span>');
@@ -2555,7 +2696,8 @@ function renderStudents() {
         <td style="cursor:pointer" onclick="openFicheModal('${s.id}')" title="Klik voor fiche · dubbelklik om te bewerken" ondblclick="openModal('${s.id}')">${displayName} ${genderBadge(s.gender)} <span style="font-size:11px;color:var(--muted);margin-left:4px" title="Klik voor fiche">🔍</span></td>
         <td onclick="openFicheModal('${s.id}')" style="cursor:pointer">${s.level}/5</td>
         <td onclick="openFicheModal('${s.id}')" style="cursor:pointer">${esc(s.reading)} ${s.avi ? '· AVI ' + esc(s.avi) : ''}<br><span class="small">spelling ${esc(s.spelling || 'basis')} · rekenen ${esc(s.math)} · handschrift ${esc(s.writing || 'basis')}</span></td>
-        <td>${tags.join(' ') || '<span class="small">—</span>'} <button class="ghost small" style="padding:3px 8px;font-size:11px;float:right" onclick="event.stopPropagation();verwijderLeerlingRij('${s.id}')" title="Leerling verwijderen">🗑️</button> <button class="ghost small" style="padding:3px 8px;font-size:11px;float:right;margin-right:4px" onclick="openModal('${s.id}')" title="Bewerken">✏️</button> <button class="ghost small" style="padding:3px 8px;font-size:11px;float:right;margin-right:4px;font-weight:700" onclick="event.stopPropagation();downloadFichePdfEnkel('${s.id}')" title="Fiche van deze leerling downloaden als PDF">📥 PDF</button></td>
+        <td style="vertical-align:top"><div style="display:flex;flex-wrap:wrap;gap:4px">${tags.join(' ') || '<span class="small">—</span>'}</div></td>
+        <td style="white-space:nowrap;vertical-align:top"><button class="ghost small" style="padding:3px 8px;font-size:11px" onclick="event.stopPropagation();downloadFichePdfEnkel('${s.id}')" title="Fiche van deze leerling downloaden als PDF">📥 PDF</button> <button class="ghost small" style="padding:3px 8px;font-size:11px" onclick="openModal('${s.id}')" title="Bewerken">✏️</button> <button class="ghost small" style="padding:3px 8px;font-size:11px" onclick="event.stopPropagation();verwijderLeerlingRij('${s.id}')" title="Leerling verwijderen">🗑️</button></td>
       </tr>`;
     }).join('')}</tbody></table>`;
 }
@@ -3042,6 +3184,8 @@ function makeTransfer() {
     ${(x.care !== 'laag' || x.iac === 'ja' || x.gok === 'ja' || x.extraCare === 'ja' || x.careNote) ? `<div class="fiche-block">
       <p class="fiche-block-title">Zorg</p>
       <p><strong>Zorgniveau:</strong> ${esc(x.care)} · IAC: ${esc(x.iac)} · GOK: ${esc(x.gok || 'nee')} · extra zorg: ${esc(x.extraCare)}</p>
+      ${x.gok === 'ja' ? `<p style="margin:4px 0"><strong>GOK-kenmerken:</strong> ${gokKenmerkenTekst(x)}</p>` : ''}
+      ${testmomentenTekst(x) ? `<p style="margin:4px 0"><strong>Testmomenten:</strong><br>${testmomentenTekst(x)}</p>` : ''}
       ${x.careNote ? `<p class="fiche-note-block">${esc(x.careNote)}</p>` : ''}
     </div>` : ''}
 
@@ -3258,6 +3402,8 @@ function bouwFichePdfHtml(x) {
       </div>
       ${(x.care !== 'laag' || x.iac === 'ja' || x.gok === 'ja' || x.careNote) ? `<div class="fiche-block"><p class="fiche-block-title">Zorg</p>
         <p><strong>Zorgniveau:</strong> ${esc(x.care)} · IAC: ${esc(x.iac)} · GOK: ${esc(x.gok || 'nee')}</p>
+        ${x.gok === 'ja' ? `<p style="margin:4px 0"><strong>GOK-kenmerken:</strong> ${gokKenmerkenTekst(x)}</p>` : ''}
+        ${testmomentenTekst(x) ? `<p style="margin:4px 0"><strong>Testmomenten:</strong><br>${testmomentenTekst(x)}</p>` : ''}
         ${x.careNote ? `<p class="fiche-note-block">${esc(x.careNote)}</p>` : ''}</div>` : ''}
       ${huiswerkSignaal ? `<div class="fiche-block"><p class="fiche-block-title">Huistaken</p><p class="fiche-note-block">${esc(huiswerkSignaal.melding || '')}</p></div>` : ''}
       ${zorggroepenKorteHtml(x)}
@@ -3433,8 +3579,11 @@ function openFicheModal(studentId) {
     if (s.iac === 'ja') items.push('IAC');
     if (s.gok === 'ja') items.push('GOK');
     if (s.extraCare === 'ja') items.push('extra zorg');
-    zorgInhoud = `<p>${items.join(' · ')}</p>${s.careNote ? `<p><span class="fiche-notitie">${esc(s.careNote)}</span></p>` : ''}`;
+    zorgInhoud = `<p>${items.join(' · ')}</p>`;
+    if (s.gok === 'ja') zorgInhoud += `<p><strong>GOK-kenmerken:</strong> ${gokKenmerkenTekst(s)}</p>`;
+    if (s.careNote) zorgInhoud += `<p><span class="fiche-notitie">${esc(s.careNote)}</span></p>`;
   }
+  if (testmomentenTekst(s)) zorgInhoud += `<p><strong>Testmomenten:</strong><br>${testmomentenTekst(s)}</p>`;
   const huiswerkSignaal = huistaakSignaalVoorStudent(s);
   if (huiswerkSignaal) zorgInhoud += `<div class="fiche-block"><p class="fiche-block-title">Huistaken</p><p>${esc(huiswerkSignaal.melding || '')}</p></div>`;
   const zgDetails = zorggroepenDetailsHtml(s);
