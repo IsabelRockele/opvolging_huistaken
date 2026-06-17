@@ -40,6 +40,12 @@
     .previous strong{display:block;color:#5a4a27;margin-bottom:2px}
     .notice{background:#fff8d6;border:1px solid #f2c94c;border-radius:12px;padding:12px;margin-bottom:12px}
     .empty{text-align:center;color:var(--muted);padding:34px}
+    .leerling-info{margin:0 12px 12px;border:1px solid #d8c9a8;border-radius:12px;background:#fdf7ea;padding:10px 12px}
+    .leerling-info h4{margin:0 0 6px;font-size:12px;text-transform:uppercase;letter-spacing:.04em;color:#8a6d2f}
+    .leerling-info-row{font-size:12.5px;line-height:1.5;margin:2px 0}
+    .leerling-info-row strong{color:#4b3b2d}
+    .leerling-info .gok-tag{display:inline-block;background:#e4ecf9;color:#2c4a7c;border-radius:999px;padding:1px 8px;font-size:11px;font-weight:800;margin-right:4px}
+    .leerling-info .geen{color:var(--muted);font-style:italic}
     #pdfWrap{width:640px;background:#fff;color:#18212b;font-family:Arial,sans-serif;line-height:1.55;padding:0;overflow:visible}
     #pdfWrap .pdf-cover{border:1.5px solid #8fb67f;background:#edf9e9;border-radius:10px;padding:18px 20px;margin-bottom:16px;break-inside:avoid;page-break-inside:avoid}
     #pdfWrap .pdf-title{display:grid;grid-template-columns:80px 1fr;gap:14px;align-items:center} #pdfWrap img{width:68px;height:68px;object-fit:contain;background:#fff;border-radius:8px;padding:4px}
@@ -49,6 +55,8 @@
     #pdfWrap .pdf-row{display:grid;grid-template-columns:145px minmax(0,1fr);border-top:1px solid #e1e9de;break-inside:auto;page-break-inside:auto}
     #pdfWrap .pdf-label{background:#f4fbf0;padding:12px 12px;font-size:10px;text-transform:uppercase;letter-spacing:.05em;font-weight:800;color:#5c7254;border-right:1px solid #e1e9de;break-after:avoid;page-break-after:avoid}
     #pdfWrap .pdf-value{padding:12px 14px;font-size:12.5px;white-space:pre-wrap;min-height:42px;overflow-wrap:anywhere}
+    #pdfWrap .pdf-info-block{border:1px solid #e2d3ab;background:#fdf7ea;border-radius:8px;padding:10px 12px;margin-bottom:10px;font-size:12px;line-height:1.5}
+    #pdfWrap .pdf-info-block strong{color:#4b3b2d}
     @media(max-width:900px){.toolbar,.grid,.grid2,.group-action{grid-template-columns:1fr}}
   </style>
 </head>
@@ -105,6 +113,28 @@ function naam(s){const first=s.first||s.firstName||"", last=s.last||s.lastName||
 function key(s){return String(s.id||naam(s)).replace(/[^a-z0-9_-]+/gi,"_");}
 function isBreed(){return ["directie","zorgcoordinator","zorgleerkracht","beheerder"].includes(role);}
 function isSecretariaat(){return ["secretariaat","beheerder"].includes(role);}
+const GOK_KENMERK_LABELS={diploma_moeder:"Moeder geen diploma secundair onderwijs",thuistaal:"Thuistaal niet Nederlands",schooltoelage:"Schooltoelage / participatietoelage"};
+function gokKenmerkenTekst(s){
+  const labels=(Array.isArray(s.gokKenmerken)?s.gokKenmerken:[]).map(k=>GOK_KENMERK_LABELS[k]||k);
+  let txt=labels.length?labels.join(", "):"geen kenmerken aangeduid";
+  if(s.gokNote) txt+=` (${s.gokNote})`;
+  return txt;
+}
+function testmomentenTekst(s){
+  const list=Array.isArray(s.testmomenten)?s.testmomenten:[];
+  if(!list.length)return "";
+  return list.map(t=>[t.leerjaar,t.type,t.iq?`IQ ${t.iq}`:"",t.note].filter(Boolean).join(" · ")).join("<br>");
+}
+function leerlingInfoBlok(s){
+  const isGok=s.gok==="ja";
+  const tm=testmomentenTekst(s);
+  if(!isGok && !tm) return "";
+  return `<div class="leerling-info">
+    <h4>Vaste zorginfo (uit overgangsbespreking)</h4>
+    ${isGok?`<div class="leerling-info-row"><span class="gok-tag">GOK</span>${esc(gokKenmerkenTekst(s))}</div>`:""}
+    ${tm?`<div class="leerling-info-row"><strong>Testmomenten:</strong><br>${tm}</div>`:`<div class="leerling-info-row geen">Geen testmomenten geregistreerd.</div>`}
+  </div>`;
+}
 async function loadRole(){
   const snap=await getDoc(doc(db,"schoolrollen",user.uid));
   role=snap.exists()?String(snap.data().rol||"").toLowerCase():"";
@@ -181,7 +211,7 @@ function groupSummary(studentKey){
 }
 function render(){
   if(!leerlingen.length){$("students").innerHTML=`<div class="panel empty">Geen leerlingen in ${esc(activeKlas)}. Voeg eerst de klaslijst toe in Schoolbeheer.</div>`;return;}
-  $("students").innerHTML=leerlingen.map((s,i)=>{const k=key(s), e=data.entries?.[k]||{}, p=previousData.entries?.[k]||{}, open=i===activeStudentIndex;return `<article class="leerling-card ${open?"open":""}" data-student="${esc(k)}"><button type="button" class="leerling-head" data-index="${i}"><strong>${esc(naam(s))}</strong><span class="badge">${open?"open":activeKlas}</span></button>${open?`${groupSummary(k)}<div class="grid">${veld("werkhouding","Werkhouding",e.werkhouding,"textarea",p.werkhouding)}${veld("nederlands","Nederlands",e.nederlands,"textarea",p.nederlands)}${veld("wiskunde","Wiskunde",e.wiskunde,"textarea",p.wiskunde)}${veld("wo","WO",e.wo,"textarea",p.wo)}${veld("frans","Frans",e.frans,"textarea",p.frans)}${veld("hulpmiddelen","Hulpmiddelen",e.hulpmiddelen,"textarea",p.hulpmiddelen)}${veld("bezorgdheden","Bezorgdheden",e.bezorgdheden,"textarea",p.bezorgdheden)}${veld("groepje","Extra individueel groepje / afspraak",e.groepje,"textarea",p.groepje)}</div><div class="grid2">${veld("acties","Individuele acties / wie doet wat?",e.acties,"textarea",p.acties)}${veld("evaluatie","Evaluatie / verbetering / nieuwe afspraak",e.evaluatie,"textarea",p.evaluatie)}${veld("oudersClb","Ouders / CLB nodig?",e.oudersClb,"textarea",p.oudersClb)}${veld("notitie","Extra notitie",e.notitie,"textarea",p.notitie)}</div><div class="student-actions"><button class="white" data-nav="close">Sluiten</button><button class="white" data-nav="prev" ${i===0?"disabled":""}>Vorige leerling</button><button id="studentPdfBtn" class="white">PDF deze leerling</button><button class="secondary" data-nav="saveNext">${i===leerlingen.length-1?"Bewaren":"Opslaan + volgende leerling"}</button></div>`:""}</article>`;}).join("");
+  $("students").innerHTML=leerlingen.map((s,i)=>{const k=key(s), e=data.entries?.[k]||{}, p=previousData.entries?.[k]||{}, open=i===activeStudentIndex;return `<article class="leerling-card ${open?"open":""}" data-student="${esc(k)}"><button type="button" class="leerling-head" data-index="${i}"><strong>${esc(naam(s))}</strong><span class="badge">${open?"open":activeKlas}</span></button>${open?`${leerlingInfoBlok(s)}${groupSummary(k)}<div class="grid">${veld("werkhouding","Werkhouding",e.werkhouding,"textarea",p.werkhouding)}${veld("nederlands","Nederlands",e.nederlands,"textarea",p.nederlands)}${veld("wiskunde","Wiskunde",e.wiskunde,"textarea",p.wiskunde)}${veld("wo","WO",e.wo,"textarea",p.wo)}${veld("frans","Frans",e.frans,"textarea",p.frans)}${veld("hulpmiddelen","Hulpmiddelen",e.hulpmiddelen,"textarea",p.hulpmiddelen)}${veld("bezorgdheden","Bezorgdheden",e.bezorgdheden,"textarea",p.bezorgdheden)}${veld("groepje","Extra individueel groepje / afspraak",e.groepje,"textarea",p.groepje)}</div><div class="grid2">${veld("acties","Individuele acties / wie doet wat?",e.acties,"textarea",p.acties)}${veld("evaluatie","Evaluatie / verbetering / nieuwe afspraak",e.evaluatie,"textarea",p.evaluatie)}${veld("oudersClb","Ouders / CLB nodig?",e.oudersClb,"textarea",p.oudersClb)}${veld("notitie","Extra notitie",e.notitie,"textarea",p.notitie)}</div><div class="student-actions"><button class="white" data-nav="close">Sluiten</button><button class="white" data-nav="prev" ${i===0?"disabled":""}>Vorige leerling</button><button id="studentPdfBtn" class="white">PDF deze leerling</button><button class="secondary" data-nav="saveNext">${i===leerlingen.length-1?"Bewaren":"Opslaan + volgende leerling"}</button></div>`:""}</article>`;}).join("");
   document.querySelectorAll("[data-index]").forEach(btn=>btn.onclick=()=>openStudent(Number(btn.dataset.index)));
   document.querySelectorAll("[data-nav='close']").forEach(btn=>btn.onclick=()=>{collectCurrent();activeStudentIndex=-1;render();});
   document.querySelectorAll("[data-nav='prev']").forEach(btn=>btn.onclick=()=>goToStudent(activeStudentIndex-1));
@@ -243,7 +273,9 @@ async function pdf(){
   const student=leerlingen[activeStudentIndex], studentKey=key(student), studentName=naam(student), e=data.entries[studentKey]||{};
   const logo=await fetch("afbeeldingen/schoollogo.png").then(r=>r.blob()).then(b=>new Promise(res=>{const fr=new FileReader();fr.onload=()=>res(fr.result);fr.readAsDataURL(b);})).catch(()=>"");
   const groups=matchingGroups(studentKey, studentName).map(g=>`<section class="pdf-student"><h2>Gezamenlijke klasactie</h2>${cell("Waarvoor?",g.groep)}${cell("Leerlingen",g.studentNames?.length?g.studentNames.join(", "):g.leerlingen)}${cell("Actie",g.actie)}${cell("Evaluatie",g.evaluatie)}</section>`).join("");
-  const html=`<div id="pdfWrap"><div class="pdf-cover"><div class="pdf-title">${logo?`<img src="${logo}">`:""}<div><h1>${esc(data.titel||"Zorgoverleg")}</h1><div class="pdf-meta">${esc(studentName)} - ${esc(activeKlas)} - ${esc(maand)} - ${esc(schooljaar)}</div></div></div></div><section class="pdf-student"><h2>${esc(studentName)} <span style="font-weight:400;color:#5c7254">(${esc(activeKlas)})</span></h2>${cell("Werkhouding",e.werkhouding)}${cell("Nederlands",e.nederlands)}${cell("Wiskunde",e.wiskunde)}${cell("WO",e.wo)}${cell("Frans",e.frans)}${cell("Hulpmiddelen",e.hulpmiddelen)}${cell("Bezorgdheden",e.bezorgdheden)}${cell("Samen nemen / groepje",e.groepje)}${cell("Acties",e.acties)}${cell("Evaluatie",e.evaluatie)}${cell("Ouders / CLB",e.oudersClb)}${cell("Extra notitie",e.notitie)}</section>${groups}</div>`;
+  const isGok=student.gok==="ja", tmTekst=testmomentenTekst(student);
+  const infoPdf=(isGok||tmTekst)?`<div class="pdf-info-block"><strong>Vaste zorginfo:</strong><br>${isGok?`GOK: ${esc(gokKenmerkenTekst(student))}<br>`:""}${tmTekst?`Testmomenten:<br>${tmTekst}`:""}</div>`:"";
+  const html=`<div id="pdfWrap"><div class="pdf-cover"><div class="pdf-title">${logo?`<img src="${logo}">`:""}<div><h1>${esc(data.titel||"Zorgoverleg")}</h1><div class="pdf-meta">${esc(studentName)} - ${esc(activeKlas)} - ${esc(maand)} - ${esc(schooljaar)}</div></div></div></div>${infoPdf}<section class="pdf-student"><h2>${esc(studentName)} <span style="font-weight:400;color:#5c7254">(${esc(activeKlas)})</span></h2>${cell("Werkhouding",e.werkhouding)}${cell("Nederlands",e.nederlands)}${cell("Wiskunde",e.wiskunde)}${cell("WO",e.wo)}${cell("Frans",e.frans)}${cell("Hulpmiddelen",e.hulpmiddelen)}${cell("Bezorgdheden",e.bezorgdheden)}${cell("Samen nemen / groepje",e.groepje)}${cell("Acties",e.acties)}${cell("Evaluatie",e.evaluatie)}${cell("Ouders / CLB",e.oudersClb)}${cell("Extra notitie",e.notitie)}</section>${groups}</div>`;
   const holder=document.createElement("div");holder.style.cssText="position:absolute;left:-10000px;top:0;width:640px;background:#fff";holder.innerHTML=html;document.body.appendChild(holder);
   await html2pdf().set({margin:[14,16,14,16],filename:`Zorgoverleg_${safeFileName(studentName)}_${activeKlas}_${maand}.pdf`,image:{type:"jpeg",quality:.96},html2canvas:{scale:2,useCORS:true,backgroundColor:"#fff",scrollX:0,scrollY:0},jsPDF:{unit:"mm",format:"a4",orientation:"portrait"},pagebreak:{mode:["css","legacy"],avoid:[".pdf-cover"]}}).from(holder.querySelector("#pdfWrap")).save();
   holder.remove();
