@@ -141,6 +141,9 @@
     .colleague{background:#fff5c8}
     .tag{display:inline-block;border-radius:999px;background:#edf2f8;padding:4px 8px;font-size:12px;margin-left:6px}
     .tag.green{background:#d8f5e9}.tag.done{background:#c9efd9}
+    .th-sub{display:block;margin-top:3px;font-size:10px;font-weight:600;text-transform:none;letter-spacing:0;color:var(--muted)}
+    .homework-cell{min-width:170px;text-align:left!important}
+    .homework-cell label{display:flex;align-items:center;gap:8px;margin:4px 0;font-size:12px;font-weight:800;color:var(--ink)}
     .mf-klas { margin-bottom: 32px; }
     .mf-klas-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:6px; }
     .mf-klas-header h3 { margin:0; font-size:1.15rem; }
@@ -789,6 +792,8 @@
       left: 0;
       z-index: 2;
       background: #fff;
+      min-width: 250px;
+      width: 250px;
     }
     .table-wrap table thead tr th:first-child{
       z-index: 4;
@@ -916,6 +921,7 @@
     }
     let user = null, role = "", allowedClasses = [], allClasses = [...DEFAULT_CLASSES],
         activeClass = "", schooljaar = huidigSchooljaar(), data = null, unsub = null,
+        activityMonth = "", purchaseMonth = "",
         tab = "administratie", adminPanel = "klaslijsten", classListMode = "", saveTimer = null;
     $("schooljaarInput").value = schooljaar;
 
@@ -1015,6 +1021,12 @@
     async function loadRole(){
       const snap = await getDoc(doc(db, "schoolrollen", user.uid));
       role = snap.exists() ? String(snap.data().rol || "").trim().toLowerCase() : "";
+      if(role === "beheerder"){
+        const simulated = localStorage.getItem("lindeSimuleerRol_" + user.uid);
+        if(["klasleerkracht","zorgleerkracht","secretariaat","beheerder"].includes(simulated)){
+          role = simulated;
+        }
+      }
     }
 
     async function loadClassesFromFirebase(){
@@ -2027,16 +2039,19 @@
     };
     window.updateStudent = (id,field,value) => { const s=data.leerlingen.find(x=>x.id===id); if(s){ s[field]=value; markDirty(); } };
     window.toggleColleague = (id,checked) => { const s=data.leerlingen.find(x=>x.id===id); if(s)s.colleague=checked; markDirty(); };
+    window.toggleHomeworkClass = (id,checked) => { const s=data.leerlingen.find(x=>x.id===id); if(s){ s.homeworkClass=checked; if(!checked)s.homeworkClassFree=false; markDirty(); render(); } };
+    window.toggleHomeworkClassFree = (id,checked) => { const s=data.leerlingen.find(x=>x.id===id); if(s){ s.homeworkClassFree=checked; if(checked)s.homeworkClass=true; markDirty(); render(); } };
     window.leaveStudent = id => { const d=prompt("Uitschrijfdatum?",`${schooljaar.slice(0,4)}-09-30`); if(!d)return; const s=data.leerlingen.find(x=>x.id===id); if(s)s.end=d; markDirty(); render(); };
     function formatDate(value){
       const match = String(value || "").match(/^(\d{4})-(\d{2})-(\d{2})$/);
       return match ? `${match[3]}/${match[2]}/${match[1]}` : esc(value || "");
     }
     function studentTable(){
-      return `<div class="table-wrap"><table><thead><tr><th>Achternaam</th><th>Voornaam</th><th class="check-col">Kind collega</th><th>Start</th><th>Einde</th><th></th></tr></thead><tbody>${activeStudents().map(s=>`<tr class="${s.colleague?"colleague":""}">
+      return `<div class="table-wrap"><table><thead><tr><th>Achternaam</th><th>Voornaam</th><th class="check-col">Kind collega</th><th class="homework-cell">Huiswerkklas<span class="th-sub">deelname en betaling</span></th><th>Start</th><th>Einde</th><th></th></tr></thead><tbody>${activeStudents().map(s=>`<tr class="${s.colleague?"colleague":""}">
         <td><input class="name-input" value="${esc(s.last||"")}" onchange="updateStudent('${s.id}','last',this.value)"></td>
         <td><input class="name-input" value="${esc(s.first||"")}" onchange="updateStudent('${s.id}','first',this.value)"></td>
         <td class="check-col"><input type="checkbox" ${s.colleague?"checked":""} onchange="toggleColleague('${s.id}',this.checked)"></td>
+        <td class="homework-cell"><label><input type="checkbox" ${s.homeworkClass?"checked":""} onchange="toggleHomeworkClass('${s.id}',this.checked)"> komt naar huiswerkklas</label><label><input type="checkbox" ${s.homeworkClassFree?"checked":""} onchange="toggleHomeworkClassFree('${s.id}',this.checked)"> gratis via schooladvies</label></td>
         <td><input type="date" value="${esc(s.start||startDate())}" onchange="updateStudent('${s.id}','start',this.value)" title="Startdatum: ${formatDate(s.start||startDate())}"></td>
         <td><input type="date" value="${esc(s.end||endDate())}" onchange="updateStudent('${s.id}','end',this.value)" title="Einddatum: ${formatDate(s.end||endDate())}"></td>
         <td><button class="small pink" onclick="leaveStudent('${s.id}')">uitschrijven</button></td>
@@ -2057,19 +2072,23 @@
     window.toggleRefter = (month,sid,date,checked) => { const m=data.refter[month] ||= {}; m[sid] ||= {}; m[sid][date]=checked; markDirty(); };
 
     function renderActivities(){
-      $("content").innerHTML = `<div class="panel"><div class="bar"><div><h2>Activiteiten <span class="muted" style="font-weight:400">${esc(activeClass)}</span></h2><p class="muted">${isSecretary()?"Secretariaat kijkt na: groen is aanwezig, rood is afwezig.":"Voeg activiteiten toe en vink afwezigen aan."}</p></div>${screenTools("activiteiten")}</div>${helpPanel("activiteiten")}${!isSecretary()?`<div class="row no-print"><label>Activiteit<input id="actName"></label><label>Datum<input id="actDate" type="date" value="${schooljaar.slice(0,4)}-09-20"></label><label>Prijs<input id="actPrice" type="number" value="0"></label><button class="primary" onclick="addActivity()">Activiteit toevoegen</button></div>`:""}${activitiesTable()}</div>`;
+      activityMonth = $("actMonth")?.value || activityMonth || schoolMonths()[0];
+      $("content").innerHTML = `<div class="panel"><div class="bar"><div><h2>Activiteiten <span class="muted" style="font-weight:400">${esc(activeClass)}</span></h2><p class="muted">${isSecretary()?"Secretariaat kijkt na: groen is aanwezig, rood is afwezig.":"Voeg activiteiten toe en vink afwezigen aan."}</p></div><label class="right no-print" style="max-width:180px">Maand<input id="actMonth" type="month" value="${activityMonth}" onchange="wisselActiviteitenMaand(this.value)"></label>${screenTools("activiteiten")}</div>${helpPanel("activiteiten")}${!isSecretary()?`<div class="row no-print"><label>Activiteit<input id="actName"></label><label>Datum<input id="actDate" type="date" value="${activityMonth}-01"></label><label>Prijs<input id="actPrice" type="number" value="0"></label><button class="primary" onclick="addActivity()">Activiteit toevoegen</button></div>`:""}${activitiesTable()}</div>`;
     }
-    function activitiesTable(){ const list=data.activiteiten, students=activeStudents(); return list.length ? `<div class="table-wrap" style="margin-top:14px"><table><thead><tr><th>Leerling</th>${list.map(a=>`<th>${esc(a.name)}<br><span class="muted">${a.date} - &euro;${Number(a.price||0).toFixed(2)}</span>${a.processed?'<br><span class="tag done">verwerkt</span>':''}${isSecretary()?`<br><button class="small" onclick="toggleActProcessed('${a.id}')">${a.processed?'heropen':'verwerk'}</button>`:""}</th>`).join("")}</tr></thead><tbody>${students.map(s=>`<tr><td><strong>${esc(name(s))}</strong></td>${list.map(a=>{const absent=!!a.absent?.[s.id]; if(isSecretary())return`<td class="activity-col ${a.processed?"locked":""}">${absent?'<span class="status-dot absent">&#10006;</span>':'<span class="status-dot present">&#10003;</span>'}</td>`; return`<td class="activity-col ${a.processed?"locked":""}"><input class="absence-check" type="checkbox" ${absent?"checked":""} ${a.processed?"disabled":""} onchange="toggleActAbsent('${a.id}','${s.id}',this.checked)">${a.processed?'<span class="teacher-lock"> &#128274;</span>':''}</td>`}).join("")}</tr>`).join("")}</tbody></table></div>` : `<div class="notice">Nog geen activiteiten ingevoerd.</div>`; }
+    function activitiesTable(){ const list=data.activiteiten.filter(a => String(a.date||"").slice(0,7) === activityMonth), students=activeStudents(`${activityMonth}-15`); return list.length ? `<div class="table-wrap" style="margin-top:14px"><table><thead><tr><th>Leerling</th>${list.map(a=>`<th>${esc(a.name)}<br><span class="muted">${a.date} - &euro;${Number(a.price||0).toFixed(2)}</span>${a.processed?'<br><span class="tag done">verwerkt</span>':''}${isSecretary()?`<br><button class="small" onclick="toggleActProcessed('${a.id}')">${a.processed?'heropen':'verwerk'}</button>`:""}</th>`).join("")}</tr></thead><tbody>${students.map(s=>`<tr><td><strong>${esc(name(s))}</strong></td>${list.map(a=>{const absent=!!a.absent?.[s.id]; if(isSecretary())return`<td class="activity-col ${a.processed?"locked":""}">${absent?'<span class="status-dot absent">&#10006;</span>':'<span class="status-dot present">&#10003;</span>'}</td>`; return`<td class="activity-col ${a.processed?"locked":""}"><input class="absence-check" type="checkbox" ${absent?"checked":""} ${a.processed?"disabled":""} onchange="toggleActAbsent('${a.id}','${s.id}',this.checked)">${a.processed?'<span class="teacher-lock"> &#128274;</span>':''}</td>`}).join("")}</tr>`).join("")}</tbody></table></div>` : `<div class="notice">Nog geen activiteiten ingevoerd voor deze maand.${!isSecretary()?" Gebruik hierboven 'Activiteit toevoegen'.":""}</div>`; }
+    window.wisselActiviteitenMaand = value => { activityMonth = value; renderActivities(); };
     window.addActivity = () => { if(isSecretary())return; if(!$("actName").value.trim())return; data.activiteiten.push({id:uid(),name:$("actName").value.trim(),date:$("actDate").value,price:Number($("actPrice").value||0),absent:{},processed:false}); markDirty(); renderActivities(); };
     window.toggleActProcessed = id => { if(!isSecretary())return; const a=data.activiteiten.find(x=>x.id===id); if(a)a.processed=!a.processed; markDirty(); renderActivities(); };
     window.toggleActAbsent = (aid,sid,checked) => { const a=data.activiteiten.find(x=>x.id===aid); a.absent ||= {}; a.absent[sid]=checked; markDirty(); };
 
     function renderPurchases(){
-      const students=activeStudents();
-      $("content").innerHTML = `<div class="panel"><div class="bar"><div><h2>Aankopen <span class="muted" style="font-weight:400">${esc(activeClass)}</span></h2><p class="muted">${isSecretary()?"Secretariaat kijkt na en vinkt verwerkt aan.":"Voeg aankopen toe wanneer een kind iets koopt."}</p></div>${screenTools("aankopen")}</div>${helpPanel("aankopen")}${!isSecretary()?`<div class="row no-print"><label>Leerling<select id="buyStudent">${students.map(s=>`<option value="${s.id}">${esc(name(s))}</option>`).join("")}</select></label><label>Aankoop<select id="buyType" onchange="buyPrice.value=this.value==='turnshirt'?8:1"><option value="badmuts">Badmuts</option><option value="turnshirt">Turn t-shirt</option><option value="ander">Andere</option></select></label><label>Prijs<input id="buyPrice" type="number" value="1"></label><label>Datum<input id="buyDate" type="date" value="${schooljaar.slice(0,4)}-09-20"></label><button class="primary" onclick="addPurchase()">Aankoop toevoegen</button></div>`:""}${purchaseTable()}</div>`;
+      purchaseMonth = $("buyMonth")?.value || purchaseMonth || schoolMonths()[0];
+      const students=activeStudents(`${purchaseMonth}-15`);
+      $("content").innerHTML = `<div class="panel"><div class="bar"><div><h2>Aankopen <span class="muted" style="font-weight:400">${esc(activeClass)}</span></h2><p class="muted">${isSecretary()?"Secretariaat kijkt na en vinkt verwerkt aan.":"Voeg aankopen toe wanneer een kind iets koopt."}</p></div><label class="right no-print" style="max-width:180px">Maand<input id="buyMonth" type="month" value="${purchaseMonth}" onchange="wisselAankopenMaand(this.value)"></label>${screenTools("aankopen")}</div>${helpPanel("aankopen")}${!isSecretary()?`<div class="row no-print"><label>Leerling<select id="buyStudent">${students.map(s=>`<option value="${s.id}">${esc(name(s))}</option>`).join("")}</select></label><label>Aankoop<select id="buyType" onchange="buyPrice.value=this.value==='turnshirt'?8:1"><option value="badmuts">Badmuts - &euro;1</option><option value="turnshirt">Turn t-shirt - &euro;8</option><option value="ander">Andere</option></select></label><label>Prijs<input id="buyPrice" type="number" value="1"></label><label>Datum<input id="buyDate" type="date" value="${purchaseMonth}-01"></label><button class="primary" onclick="addPurchase()">Aankoop toevoegen</button></div>`:""}${purchaseTable()}</div>`;
     }
     window.addPurchase = () => { if(isSecretary())return; data.aankopen.push({id:uid(),studentId:$("buyStudent").value,type:$("buyType").value,price:Number($("buyPrice").value||0),date:$("buyDate").value,processed:false}); markDirty(); renderPurchases(); };
-    function purchaseTable(){ const students=Object.fromEntries(data.leerlingen.map(s=>[s.id,name(s)])); return data.aankopen.length ? `<div class="table-wrap" style="margin-top:14px"><table><thead><tr><th>Leerling</th><th>Aankoop</th><th>Datum</th><th>Prijs</th><th>Verwerkt</th></tr></thead><tbody>${data.aankopen.map(p=>`<tr class="${p.processed?"locked":""}"><td>${esc(students[p.studentId]||"")}</td><td>${esc(p.type)}</td><td>${esc(p.date)}</td><td>&euro;${Number(p.price||0).toFixed(2)}</td><td>${isSecretary()?`<input type="checkbox" ${p.processed?"checked":""} onchange="togglePurchase('${p.id}',this.checked)">`:p.processed?"ja":"nee"}</td></tr>`).join("")}</tbody></table></div>` : `<div class="notice">Nog geen aankopen ingevoerd.</div>`; }
+    function purchaseTable(){ const students=Object.fromEntries(data.leerlingen.map(s=>[s.id,name(s)])), list=data.aankopen.filter(p => String(p.date||"").slice(0,7) === purchaseMonth); return list.length ? `<div class="table-wrap" style="margin-top:14px"><table><thead><tr><th>Leerling</th><th>Aankoop</th><th>Datum</th><th>Prijs</th><th>Verwerkt</th></tr></thead><tbody>${list.map(p=>`<tr class="${p.processed?"locked":""}"><td>${esc(students[p.studentId]||"")}</td><td>${esc(p.type)}</td><td>${esc(p.date)}</td><td>&euro;${Number(p.price||0).toFixed(2)}</td><td>${isSecretary()?`<input type="checkbox" ${p.processed?"checked":""} onchange="togglePurchase('${p.id}',this.checked)">`:p.processed?"ja":"nee"}</td></tr>`).join("")}</tbody></table></div>` : `<div class="notice">Nog geen aankopen ingevoerd voor deze maand.${!isSecretary()?" Gebruik hierboven 'Aankoop toevoegen'.":""}</div>`; }
+    window.wisselAankopenMaand = value => { purchaseMonth = value; renderPurchases(); };
     window.togglePurchase = (id,checked) => { if(!isSecretary())return; const p=data.aankopen.find(x=>x.id===id); if(p)p.processed=checked; markDirty(); renderPurchases(); };
 
     function renderMessageAdmin(){
