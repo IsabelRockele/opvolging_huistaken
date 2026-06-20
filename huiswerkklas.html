@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="nl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Huiswerkklas</title>
+  <style>
+    :root{--bg:#f5f0e8;--card:#fff;--line:#d9cfc0;--text:#2c1f0e;--muted:#756855;--yellow:#f6d76b;--mint:#bfe8dc;--soft:#eef7ff;--brown:#6b5d52;--green:#dff3d8;--shadow:0 8px 24px rgba(34,48,68,.10)}
+    *{box-sizing:border-box}
+    body{margin:0;font-family:Arial,sans-serif;background:var(--bg);color:var(--text)}
+    header{background:linear-gradient(135deg,#6b5d52,#8a7a6d);color:#fff;padding:14px 22px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+    .brand{display:flex;align-items:center;gap:13px}.brand img{width:52px;height:52px;border-radius:10px;background:#fff;padding:4px;object-fit:contain}
+    h1{font-size:22px;margin:0}.sub{font-size:13px;opacity:.78;margin-top:2px}
+    main{max-width:1300px;margin:18px auto;padding:0 18px}
+    .panel{background:#fff;border:1px solid var(--line);border-radius:16px;padding:18px;box-shadow:var(--shadow);margin-bottom:14px}
+    .bar{display:flex;align-items:end;gap:10px;flex-wrap:wrap}.right{margin-left:auto}
+    button,a.button{border:0;border-radius:12px;background:var(--yellow);color:var(--text);font-weight:800;padding:9px 14px;cursor:pointer;text-decoration:none;font:inherit}
+    button.ghost,a.ghost{background:rgba(255,255,255,.16);color:#fff;border:1px solid rgba(255,255,255,.3)}
+    button.secondary{background:var(--mint)} button.white{background:#fff;border:1px solid var(--line)}
+    label{display:block;font-weight:800;font-size:12px;color:#4b3b2d;margin-bottom:4px}
+    input,select{font:inherit;width:100%;border:1px solid var(--line);border-radius:10px;padding:8px 10px;background:#fff}
+    input[type="checkbox"]{width:19px;height:19px;accent-color:#2f8f67}
+    .toolbar{display:grid;grid-template-columns:180px 170px 190px auto auto;gap:10px;align-items:end}
+    .muted{color:var(--muted);font-size:13px;line-height:1.45}.notice{background:#fff8d6;border:1px solid #f2c94c;border-radius:12px;padding:12px;margin-bottom:12px}
+    .two{display:grid;grid-template-columns:minmax(300px,.9fr) minmax(420px,1.1fr);gap:14px;align-items:start}
+    .class-block{border:1px solid var(--line);border-radius:14px;overflow:hidden;margin:12px 0;background:#fff}
+    .class-title{display:flex;align-items:center;gap:10px;background:#eef3f9;padding:10px 12px;font-weight:900}
+    .class-stripe{width:8px;align-self:stretch;border-radius:999px;background:#93c47d}
+    .student-row{display:grid;grid-template-columns:28px 1fr;gap:10px;align-items:center;padding:9px 12px;border-top:1px solid #eee5d8}
+    .student-row strong{white-space:normal}
+    .attendance-row{display:grid;grid-template-columns:12px 88px 1fr 34px;gap:9px;align-items:center;padding:9px 12px;border-top:1px solid #eee5d8}
+    .attendance-row .stripe{width:8px;height:100%;min-height:28px;border-radius:999px}
+    .empty{text-align:center;color:var(--muted);padding:24px}
+    .tag{display:inline-flex;border-radius:999px;background:var(--green);padding:3px 8px;font-size:12px;font-weight:800;color:#315b2b}
+    .table-wrap{overflow:auto;border:1px solid var(--line);border-radius:14px;background:#fff;margin-top:12px}
+    table{border-collapse:collapse;width:100%;min-width:980px}
+    th,td{border-bottom:1px solid var(--line);padding:9px 10px;text-align:left;vertical-align:middle}
+    th{background:#eef3f9;color:#536985;text-transform:uppercase;font-size:12px;letter-spacing:.03em;position:sticky;top:0;z-index:3}
+    th.name-col,td.name-col{min-width:260px;position:sticky;left:0;background:#fff;z-index:2}
+    th.name-col{background:#eef3f9;z-index:4}
+    th.date-col,td.date-col{text-align:center;min-width:86px}
+    .free-row td{background:#fff6db}
+    .class-chip{display:inline-flex;align-items:center;gap:6px;border-radius:999px;background:#edf2f8;padding:4px 8px;font-weight:900}
+    .stripe-dot{width:7px;height:22px;border-radius:999px;display:inline-block}
+    .pay-badge{display:inline-block;margin-left:8px;border-radius:999px;background:#ffe0a3;color:#5f3d00;padding:3px 8px;font-size:11px;font-weight:800}
+    .lock-note{display:block;font-size:11px;color:#756855;margin-top:3px;text-transform:none;letter-spacing:0}
+    @media(max-width:900px){.toolbar,.two{grid-template-columns:1fr}.right{margin-left:0}.attendance-row{grid-template-columns:10px 60px 1fr 32px}}
+  </style>
+</head>
+<body>
+<header>
+  <div class="brand"><img src="afbeeldingen/schoollogo.png" alt="logo" onerror="this.style.display='none'"><div><h1>Huiswerkklas</h1><div id="status" class="sub">Laden...</div></div></div>
+  <div class="bar"><a class="button ghost" href="index.html">Keuzescherm</a><button id="logoutBtn" class="ghost">Uitloggen</button></div>
+</header>
+<main>
+  <section class="panel">
+    <div class="toolbar">
+      <label>Schooljaar<input id="schooljaarInput"></label>
+      <label>Maand<input id="monthInput" type="month"></label>
+      <label>Datum toevoegen<input id="dateInput" type="date"></label>
+      <button class="secondary" id="saveBtn">Bewaren</button>
+      <button class="white" id="addDateBtn">Datum toevoegen</button>
+    </div>
+  </section>
+  <section class="notice">
+    <strong>Werking:</strong>
+    <span class="muted">Klasleerkrachten duiden in Klaslijsten bij hun eigen klas aan welke kinderen naar de huiswerkklas gaan. Hier verschijnen alleen die kinderen. De begeleider voegt bovenaan de datum toe en vinkt de aanwezigen aan.</span>
+  </section>
+  <section class="panel">
+    <div class="bar">
+      <div>
+        <h2>Huiswerkklas per maand</h2>
+        <p class="muted">Alleen kinderen die in Klaslijsten aangeduid zijn voor de huiswerkklas verschijnen hier. Kinderen met schooladvies staan als gratis gemarkeerd.</p>
+      </div>
+      <span class="tag right" id="countTag">0 leerlingen</span>
+    </div>
+    <div id="homeworkTable"></div>
+  </section>
+</main>
+<script type="module">
+import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getFirestore, doc, getDoc, setDoc, collection, getDocs, query, where, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+const firebaseConfig={apiKey:"AIzaSyA7KxXMvZ4dzBQDut3CMyWUblLte2tFzoQ",authDomain:"huiswerkapp-a311e.firebaseapp.com",projectId:"huiswerkapp-a311e",storageBucket:"huiswerkapp-a311e.appspot.com",messagingSenderId:"797169941164",appId:"1:797169941164:web:511d9618079f1378d0fd09"};
+const app=getApps().length?getApp():initializeApp(firebaseConfig), auth=getAuth(app), db=getFirestore(app);
+const DEFAULT_CLASSES=["K1","K2","K3","1A","2A","3A","4A","5A","6A"], COLORS=["#93c47d","#6fa8dc","#ffd966","#e6a5c8","#b4a7d6","#76a5af","#f6b26b","#8fce00","#c27ba0"];
+const $=id=>document.getElementById(id), esc=v=>String(v??"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;");
+let user=null, role="", schooljaar=currentSchooljaar(), month=currentMonth(), date=todayIso(), ownClasses=[], allClasses=[], classStudents={}, hw={enrolled:{},attendance:{}};
+function currentSchooljaar(){const n=new Date(), y=n.getMonth()>=7?n.getFullYear():n.getFullYear()-1;return `${y}-${y+1}`;}
+function currentMonth(){return new Date().toISOString().slice(0,7);}
+function todayIso(){return new Date().toISOString().slice(0,10);}
+function name(s){const first=s.first||s.firstName||"", last=s.last||s.lastName||"";return `${last}, ${first}`.replace(/^, /,"").replace(/, $/,"")||s.naam||"";}
+function studentKey(klas,s){return `${klas}_${String(s.id||name(s)).replace(/[^a-z0-9_-]+/gi,"_")}`;}
+function isSchoolBreed(){return ["directie","zorgcoordinator","zorgleerkracht","beheerder"].includes(role);}
+function isSecretariaat(){return ["secretariaat","beheerder"].includes(role);}
+function colorForClass(klas){const i=Math.max(0,DEFAULT_CLASSES.indexOf(klas));return COLORS[i%COLORS.length];}
+function monthRef(){return doc(db,"huiswerkklas",schooljaar,"maanden",month);}
+function activeStudents(list,dateForCheck=`${month}-15`){return (list||[]).filter(s=>(!s.start||s.start<=dateForCheck)&&(!s.end||s.end>=dateForCheck)).sort((a,b)=>name(a).localeCompare(name(b),"nl"));}
+async function loadRole(){
+  const snap=await getDoc(doc(db,"schoolrollen",user.uid));
+  role=snap.exists()?String(snap.data().rol||"").toLowerCase():"";
+  if(role==="beheerder"){
+    const simulated=localStorage.getItem("lindeSimuleerRol_"+user.uid);
+    if(["klasleerkracht","zorgleerkracht","secretariaat","beheerder"].includes(simulated))role=simulated;
+  }
+}
+async function loadClasses(){
+  const email=(user.email||"").toLowerCase(), found=new Set();
+  const snaps=await Promise.all([
+    getDocs(query(collection(db,"klasleerkrachten"),where("leerkracht_uids","array-contains",user.uid))),
+    getDocs(query(collection(db,"klasleerkrachten"),where("leerkracht_emails","array-contains",email)))
+  ]);
+  snaps.forEach(s=>s.forEach(d=>{const item=d.data(); if(String(item.schooljaar||schooljaar)===schooljaar)found.add(String(item.klas||item.klasId||"").trim());}));
+  ownClasses=[...found].filter(Boolean).sort((a,b)=>a.localeCompare(b,"nl",{numeric:true}));
+  const snap=await getDocs(collection(db,"schoolbeheer",schooljaar,"klassen"));
+  allClasses=[...new Set([...DEFAULT_CLASSES,...snap.docs.map(d=>d.id)])].sort((a,b)=>a.localeCompare(b,"nl",{numeric:true}));
+}
+async function loadData(){
+  schooljaar=$("schooljaarInput").value||schooljaar; month=$("monthInput").value||month; date=$("dateInput").value||date;
+  await loadClasses();
+  classStudents={};
+  await Promise.all(allClasses.map(async klas=>{
+    const snap=await getDoc(doc(db,"schoolbeheer",schooljaar,"klassen",klas));
+    classStudents[klas]=snap.exists()?activeStudents(snap.data().leerlingen||[]):[];
+  }));
+  const hwSnap=await getDoc(monthRef());
+  hw=hwSnap.exists()?hwSnap.data():{enrolled:{},attendance:{},dates:[],processedDates:{}};
+  hw.enrolled||={}; hw.attendance||={}; hw.dates||=[]; hw.processedDates||={};
+  render();
+}
+function localRows(){
+  const rows=[];
+  allClasses.forEach(klas=>(classStudents[klas]||[]).forEach(s=>{
+    const key=studentKey(klas,s), existing=hw.enrolled[key]||{};
+    if(s.homeworkClass || existing.active){
+      rows.push({key,klas,name:name(s),local:ownClasses.includes(klas),active:true,free:!!(s.homeworkClassFree||existing.free)});
+    }
+  }));
+  Object.entries(hw.enrolled||{}).forEach(([key,v])=>{
+    if(v?.active!==false && !rows.some(r=>r.key===key))rows.push({key,klas:v.klas||"",name:v.name||"",local:false,active:true,free:!!v.free});
+  });
+  return rows.sort((a,b)=>(a.klas||"").localeCompare(b.klas||"","nl",{numeric:true})||(a.name||"").localeCompare(b.name||"","nl"));
+}
+function enrolledList(){
+  return Object.entries(hw.enrolled||{}).filter(([,v])=>v&&v.active!==false).map(([key,v])=>({key,...v})).sort((a,b)=>(a.klas||"").localeCompare(b.klas||"","nl",{numeric:true})||(a.name||"").localeCompare(b.name||"","nl"));
+}
+function renderTable(){
+  const rows=localRows(), dates=[...(hw.dates||[])].sort();
+  const enrolledCount=rows.filter(r=>r.active).length;
+  $("countTag").textContent=`${enrolledCount} leerling${enrolledCount===1?"":"en"}`;
+  if(!rows.length){$("homeworkTable").innerHTML=`<div class="empty">Geen leerlingen gevonden.</div>`;return;}
+  $("homeworkTable").innerHTML=`<div class="table-wrap"><table><thead><tr><th>Klas</th><th class="name-col">Leerling</th>${dates.map(d=>`<th class="date-col">${esc(d.slice(8,10)+"/"+d.slice(5,7))}${isSecretariaat()?`<label class="lock-note"><input type="checkbox" data-lock-date="${esc(d)}" ${hw.processedDates?.[d]?"checked":""}> verwerkt</label>`:hw.processedDates?.[d]?`<span class="lock-note">verwerkt</span>`:""}</th>`).join("")}</tr></thead><tbody>${rows.map(r=>`<tr class="${r.free?"free-row":""}"><td><span class="class-chip"><span class="stripe-dot" style="background:${colorForClass(r.klas)}"></span>${esc(r.klas)}</span></td><td class="name-col"><strong>${esc(r.name)}</strong>${r.free?'<span class="pay-badge">gratis</span>':''}</td>${dates.map(d=>{const locked=!!hw.processedDates?.[d]&&!isSecretariaat();return `<td class="date-col"><input type="checkbox" data-present="${esc(r.key)}" data-date="${esc(d)}" ${hw.attendance?.[d]?.[r.key]?"checked":""} ${locked?"disabled":""}></td>`;}).join("")}</tr>`).join("")}</tbody></table></div>`;
+}
+function render(){ $("status").textContent=`${schooljaar} - ${month}`; renderTable(); }
+function collect(){
+  localRows().forEach(r=>{hw.enrolled[r.key]={active:true,klas:r.klas,name:r.name,free:r.free};});
+  document.querySelectorAll("[data-present]").forEach(ch=>{const d=ch.dataset.date;hw.attendance[d]||={};hw.attendance[d][ch.dataset.present]=ch.checked;});
+  document.querySelectorAll("[data-lock-date]").forEach(ch=>{hw.processedDates[ch.dataset.lockDate]=ch.checked;});
+}
+async function save(){
+  collect();
+  await setDoc(monthRef(),{...hw,schooljaar,month,updatedAt:serverTimestamp(),updatedBy:user.email||user.uid},{merge:true});
+  $("status").textContent="Bewaard";
+  render();
+}
+function addDate(){
+  collect();
+  const d=$("dateInput").value;
+  if(!d)return alert("Kies eerst een datum.");
+  if(d.slice(0,7)!==month)return alert("Kies een datum binnen de geselecteerde maand.");
+  hw.dates=[...new Set([...(hw.dates||[]),d])].sort();
+  render();
+}
+onAuthStateChanged(auth,async u=>{
+  if(!u){location.href="index.html";return;}
+  user=u; $("schooljaarInput").value=schooljaar; $("monthInput").value=month; $("dateInput").value=date;
+  await loadRole();
+  $("saveBtn").onclick=save;
+  $("addDateBtn").onclick=addDate;
+  $("schooljaarInput").onchange=loadData; $("monthInput").onchange=loadData; $("dateInput").onchange=()=>{date=$("dateInput").value;};
+  $("logoutBtn").onclick=()=>signOut(auth).then(()=>location.href="index.html");
+  await loadData();
+});
+</script>
+</body>
+</html>
