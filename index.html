@@ -882,15 +882,21 @@
 /* Veilige, evenwichtige schikking voor het keuzescherm */
 #ingelogd-kaart.startportaal:not([style*="display:none"]) .portaal-keuzes {
   display: grid !important;
-  grid-template-columns: repeat(3, minmax(260px, 1fr)) !important;
+  grid-template-columns: repeat(4, minmax(230px, 1fr)) !important;
   gap: 16px !important;
-  max-width: 1040px !important;
+  max-width: 1220px !important;
   margin: 0 auto !important;
 }
 
 #ingelogd-kaart.startportaal:not([style*="display:none"]) .portaal-tegel {
   width: auto !important;
-  min-height: 178px !important;
+  min-height: 170px !important;
+}
+
+@media (max-width: 1220px) {
+  #ingelogd-kaart.startportaal:not([style*="display:none"]) .portaal-keuzes {
+    grid-template-columns: repeat(3, minmax(240px, 1fr)) !important;
+  }
 }
 
 @media (max-width: 980px) {
@@ -969,6 +975,12 @@
         <span class="portaal-tegel-icoon">&#128172;</span>
         <span class="portaal-title">Zorgoverleg</span>
         <span class="portaal-desc">Noteer maandelijks zorg, acties en evaluatie per klas en download een PDF.</span>
+        <span class="portaal-open">Openen</span>
+      </a>
+      <a id="huiswerkklasKeuzeKnop" href="huiswerkklas.html" class="portaal-tegel administratie" target="_blank" rel="noopener" style="display:none">
+        <span class="portaal-tegel-icoon">&#9997;</span>
+        <span class="portaal-title">Huiswerkklas</span>
+        <span class="portaal-desc">Duid deelnemers aan en vink per dinsdag of donderdag de aanwezigen af.</span>
         <span class="portaal-open">Openen</span>
       </a>
       <a id="groeigroepenKeuzeKnop" href="groeigroepen.html" class="portaal-tegel groeigroepen" target="_blank" rel="noopener" style="display:none">
