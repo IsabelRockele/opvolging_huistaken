@@ -2039,8 +2039,30 @@
     };
     window.updateStudent = (id,field,value) => { const s=data.leerlingen.find(x=>x.id===id); if(s){ s[field]=value; markDirty(); } };
     window.toggleColleague = (id,checked) => { const s=data.leerlingen.find(x=>x.id===id); if(s)s.colleague=checked; markDirty(); };
-    window.toggleHomeworkClass = (id,checked) => { const s=data.leerlingen.find(x=>x.id===id); if(s){ s.homeworkClass=checked; if(!checked)s.homeworkClassFree=false; markDirty(); render(); } };
-    window.toggleHomeworkClassFree = (id,checked) => { const s=data.leerlingen.find(x=>x.id===id); if(s){ s.homeworkClassFree=checked; if(checked)s.homeworkClass=true; markDirty(); render(); } };
+    window.toggleHomeworkClass = (id,checked,el) => {
+      const s=data.leerlingen.find(x=>x.id===id);
+      if(s){
+        s.homeworkClass=checked;
+        if(!checked){
+          s.homeworkClassFree=false;
+          const free=el?.closest(".homework-cell")?.querySelector("[data-homework-free]");
+          if(free) free.checked=false;
+        }
+        markDirty();
+      }
+    };
+    window.toggleHomeworkClassFree = (id,checked,el) => {
+      const s=data.leerlingen.find(x=>x.id===id);
+      if(s){
+        s.homeworkClassFree=checked;
+        if(checked){
+          s.homeworkClass=true;
+          const main=el?.closest(".homework-cell")?.querySelector("[data-homework-main]");
+          if(main) main.checked=true;
+        }
+        markDirty();
+      }
+    };
     window.leaveStudent = id => { const d=prompt("Uitschrijfdatum?",`${schooljaar.slice(0,4)}-09-30`); if(!d)return; const s=data.leerlingen.find(x=>x.id===id); if(s)s.end=d; markDirty(); render(); };
     function formatDate(value){
       const match = String(value || "").match(/^(\d{4})-(\d{2})-(\d{2})$/);
@@ -2051,7 +2073,7 @@
         <td><input class="name-input" value="${esc(s.last||"")}" onchange="updateStudent('${s.id}','last',this.value)"></td>
         <td><input class="name-input" value="${esc(s.first||"")}" onchange="updateStudent('${s.id}','first',this.value)"></td>
         <td class="check-col"><input type="checkbox" ${s.colleague?"checked":""} onchange="toggleColleague('${s.id}',this.checked)"></td>
-        <td class="homework-cell"><label><input type="checkbox" ${s.homeworkClass?"checked":""} onchange="toggleHomeworkClass('${s.id}',this.checked)"> komt naar huiswerkklas</label><label><input type="checkbox" ${s.homeworkClassFree?"checked":""} onchange="toggleHomeworkClassFree('${s.id}',this.checked)"> gratis via schooladvies</label></td>
+        <td class="homework-cell"><label><input data-homework-main type="checkbox" ${s.homeworkClass?"checked":""} onchange="toggleHomeworkClass('${s.id}',this.checked,this)"> komt naar huiswerkklas</label><label><input data-homework-free type="checkbox" ${s.homeworkClassFree?"checked":""} onchange="toggleHomeworkClassFree('${s.id}',this.checked,this)"> gratis via schooladvies</label></td>
         <td><input type="date" value="${esc(s.start||startDate())}" onchange="updateStudent('${s.id}','start',this.value)" title="Startdatum: ${formatDate(s.start||startDate())}"></td>
         <td><input type="date" value="${esc(s.end||endDate())}" onchange="updateStudent('${s.id}','end',this.value)" title="Einddatum: ${formatDate(s.end||endDate())}"></td>
         <td><button class="small pink" onclick="leaveStudent('${s.id}')">uitschrijven</button></td>
