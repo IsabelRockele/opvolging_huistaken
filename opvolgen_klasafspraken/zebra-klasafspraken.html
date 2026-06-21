@@ -13,7 +13,7 @@ body { font-family: 'Segoe UI', Arial, sans-serif; min-height: 100vh; }
   min-height: 100vh;
   background: #FDFAF6;
   display: grid;
-  grid-template-columns: 260px 1fr;
+  grid-template-columns: 280px 1fr;
   grid-template-rows: 100vh;
 }
 .setup-zijbalk {
@@ -21,23 +21,26 @@ body { font-family: 'Segoe UI', Arial, sans-serif; min-height: 100vh; }
   display: flex; flex-direction: column;
   border-right: 1px solid #E8D5B0;
   height: 100vh;
+  min-width: 280px;
   overflow: hidden;
 }
 .zijbalk-scroll {
-  flex: 1; overflow-y: auto; padding: 32px 24px 16px;
+  flex: 1; overflow-y: auto; overflow-x: hidden; padding: 24px 18px 12px;
 }
 .zijbalk-footer {
-  padding: 16px 24px 24px; flex-shrink: 0;
+  padding: 14px 18px 18px; flex-shrink: 0;
   border-top: 1px solid rgba(176,128,80,0.2);
 }
 .setup-zijbalk .logo { font-size: 32px; margin-bottom: 8px; }
+.setup-zijbalk .logo img { width: 48px; height: 48px; display: block; object-fit: contain; }
 .setup-zijbalk h1 { font-size: 20px; font-weight: 800; color: #C0610A; margin-bottom: 4px; line-height: 1.2; }
-.setup-zijbalk .subtitel { font-size: 12px; color: #B08050; margin-bottom: 28px; }
-.zijbalk-tip { background: rgba(255,255,255,0.6); border-radius: 10px; padding: 12px; font-size: 12px; color: #8B6040; line-height: 1.5; margin-bottom: 12px; }
+.setup-zijbalk .subtitel { font-size: 12px; color: #B08050; margin-bottom: 18px; }
+.zijbalk-tip { background: rgba(255,255,255,0.58); border-radius: 10px; padding: 10px; font-size: 12px; color: #8B6040; line-height: 1.35; margin-bottom: 8px; }
+.zijbalk-tip:nth-of-type(n+4) { display:none; }
 .zijbalk-tip strong { color: #C0610A; display: block; margin-bottom: 3px; }
 .tip-voorbeeld-btn { display:block; width:100%; background:rgba(230,126,34,0.15); border:1px solid rgba(230,126,34,0.3); color:#C0610A; border-radius:8px; padding:7px 10px; font-size:11px; font-weight:700; cursor:pointer; margin-top:8px; font-family:inherit; transition:all .15s; }
 .tip-voorbeeld-btn:hover { background:rgba(230,126,34,0.28); }
-.menu-btn { display:block; width:100%; text-align:center; text-decoration:none; background:rgba(255,255,255,0.72); border:1px solid rgba(176,128,80,0.35); color:#8B6040; border-radius:10px; padding:9px 12px; font-size:13px; font-weight:800; font-family:inherit; margin-bottom:12px; }
+.menu-btn { display:block; width:100%; text-align:center; text-decoration:none; background:rgba(255,255,255,0.72); border:1px solid rgba(176,128,80,0.35); color:#8B6040; border-radius:10px; padding:9px 12px; font-size:13px; font-weight:800; font-family:inherit; margin-bottom:12px; white-space:normal; }
 .menu-btn:hover { background:#fff; color:#C0610A; }
 .start-btn {
   background: #E67E22; color: white; border: none; border-radius: 12px;
@@ -50,21 +53,57 @@ body { font-family: 'Segoe UI', Arial, sans-serif; min-height: 100vh; }
 
 .setup-inhoud {
   overflow-y: auto; padding: 28px 36px;
+  background:
+    radial-gradient(circle at top right, rgba(255,226,169,.36), transparent 34%),
+    linear-gradient(180deg, #FFFCF7 0%, #FDF6EC 100%);
+}
+.setup-hero {
+  background: linear-gradient(135deg, #FFF7E8 0%, #FFFFFF 62%, #F4FFF8 100%);
+  border: 1.5px solid #E8D5B0;
+  border-radius: 18px;
+  padding: 16px 20px;
+  margin-bottom: 18px;
+  box-shadow: 0 8px 24px rgba(176,128,80,.10);
+}
+.setup-hero h2 {
+  margin: 0 0 6px;
+  color: #8B4E12;
+  font-size: 24px;
+  line-height: 1.15;
+}
+.setup-hero p {
+  margin: 0;
+  color: #7B654C;
+  font-size: 14px;
+  line-height: 1.45;
 }
 .setup-grid {
   display: grid;
-  grid-template-columns: 1.6fr 1fr;
-  gap: 36px;
+  grid-template-columns: minmax(420px, 1.35fr) minmax(330px, .85fr);
+  gap: 18px;
   align-items: start;
 }
 .setup-kolom-breed { min-width: 0; }
 .setup-kolom-smal { min-width: 0; }
-.setup-sectie { margin-bottom: 22px; }
+.setup-sectie {
+  margin-bottom: 16px;
+  background: rgba(255,255,255,.86);
+  border: 1.5px solid #EADBC3;
+  border-radius: 16px;
+  padding: 14px;
+  box-shadow: 0 4px 14px rgba(176,128,80,.08);
+}
 .s-label { font-size: 11px; font-weight: 700; color: #B08050; text-transform: uppercase; letter-spacing: 1px; display: block; margin-bottom: 8px; }
 .s-input { width: 100%; border: 1.5px solid #E8D5B0; border-radius: 10px; padding: 10px 13px; font-size: 14px; font-family: inherit; color: #333; transition: border-color .2s; background: white; }
 .s-input:focus { outline: none; border-color: #E67E22; background: #FFFAF5; }
 textarea.s-input { min-height: 140px; resize: vertical; }
-.s-input-namen { min-height: 260px; font-size: 13px; }
+.s-input-namen { display:none; }
+.veld-hint { font-size: 12px; color:#8B6040; line-height:1.4; margin-top:8px; }
+.namen-preview { display:flex; flex-wrap:wrap; gap:7px; max-height:180px; overflow:auto; padding:2px 2px 4px; }
+.naam-chip { display:inline-flex; align-items:center; gap:7px; border:1px solid #EADBC3; border-radius:999px; background:#FFF8EF; padding:6px 8px 6px 11px; color:#3f3429; font-size:13px; font-weight:700; }
+.naam-chip button { border:0; width:20px; height:20px; border-radius:999px; background:#FDE8E8; color:#B94B4B; font-weight:900; cursor:pointer; line-height:1; }
+.naam-chip button:hover { background:#FAD1D1; }
+.namen-leeg { color:#B08050; font-size:13px; padding:10px 0; }
 .afsp-rij { display: flex; align-items: center; gap: 8px; padding: 9px 12px; border: 1.5px solid #EEE; border-radius: 10px; margin-bottom: 5px; cursor: pointer; transition: all .15s; background: white; }
 .afsp-rij:hover { border-color: #E67E22; background: #FFFAF5; }
 .afsp-rij.actief { border-color: #E67E22; background: #FFF3E0; }
@@ -106,16 +145,22 @@ textarea.s-input { min-height: 140px; resize: vertical; }
 /* GRID VAN KAARTJES */
 .kinderen-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
-  gap: 12px; padding: 16px;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 16px; padding: 20px;
+}
+@media (max-width: 900px) {
+  .kinderen-grid { grid-template-columns: repeat(3, 1fr); }
+}
+@media (max-width: 600px) {
+  .kinderen-grid { grid-template-columns: repeat(2, 1fr); }
 }
 
 /* ══ KIND KAARTJE ══ */
 .kind-kaart {
-  background: white;
-  border-radius: 16px;
-  padding: 14px 12px 12px;
-  box-shadow: 0 3px 12px rgba(0,0,0,0.10);
+  background: linear-gradient(180deg, #ffffff 0%, #fffdf8 100%);
+  border-radius: 18px;
+  padding: 18px 14px 16px;
+  box-shadow: 0 5px 16px rgba(116,84,45,0.12);
   cursor: pointer;
   transition: transform .15s, box-shadow .15s;
   border: 2.5px solid transparent;
@@ -123,52 +168,52 @@ textarea.s-input { min-height: 140px; resize: vertical; }
   overflow: hidden;
   user-select: none;
 }
-.kind-kaart:hover { transform: translateY(-3px); box-shadow: 0 8px 24px rgba(0,0,0,0.15); }
+.kind-kaart:hover { transform: translateY(-3px); box-shadow: 0 10px 24px rgba(116,84,45,0.18); }
 .kind-kaart:active { transform: scale(0.97); }
 
 /* Schaalbare groottes op basis van klasgrootte */
-.grid-xl .kind-kaart { padding: 16px 16px 14px; }
+.grid-xl .kind-kaart { padding: 18px 16px 16px; }
 .grid-xl .k-naam { font-size: 18px; }
-.grid-xl .zebra-pad-wrap { height: 44px; margin-bottom: 8px; }
-.grid-xl .zebra-op-pad { font-size: 30px; bottom: 8px; }
+.grid-xl .zebra-pad-wrap { height: 62px; margin-bottom: 10px; }
+.grid-xl .zebra-op-pad { width: 56px; height: 56px; bottom: 8px; margin-left: -28px; }
 .grid-xl .pad-label { font-size: 11px; }
-.grid-xl .pad-vakje { height: 10px; }
+.grid-xl .pad-vakje { height: 12px; }
 .grid-xl .k-status { font-size: 13px; }
 .grid-xl .k-actie { font-size: 16px; padding: 5px 9px; }
 .grid-xl .medaille-ster { font-size: 24px; }
 
-.grid-lg .kind-kaart { padding: 14px 13px 12px; }
-.grid-lg .k-naam { font-size: 16px; }
-.grid-lg .zebra-pad-wrap { height: 38px; margin-bottom: 7px; }
-.grid-lg .zebra-op-pad { font-size: 26px; bottom: 7px; }
-.grid-lg .pad-vakje { height: 9px; }
+.grid-lg .kind-kaart { padding: 16px 13px 14px; }
+.grid-lg .k-naam { font-size: 17px; }
+.grid-lg .zebra-pad-wrap { height: 54px; margin-bottom: 9px; }
+.grid-lg .zebra-op-pad { width: 48px; height: 48px; bottom: 7px; margin-left: -24px; }
+.grid-lg .pad-vakje { height: 11px; }
 .grid-lg .k-status { font-size: 11px; }
 .grid-lg .k-actie { font-size: 14px; padding: 4px 8px; }
 .grid-lg .medaille-ster { font-size: 20px; }
 
-.grid-md .kind-kaart { padding: 12px 11px 10px; }
-.grid-md .k-naam { font-size: 14px; }
-.grid-md .zebra-pad-wrap { height: 34px; margin-bottom: 6px; }
-.grid-md .zebra-op-pad { font-size: 23px; bottom: 7px; }
+.grid-md .kind-kaart { padding: 14px 11px 12px; }
+.grid-md .k-naam { font-size: 16px; }
+.grid-md .zebra-pad-wrap { height: 48px; margin-bottom: 8px; }
+.grid-md .zebra-op-pad { width: 42px; height: 42px; bottom: 7px; margin-left: -21px; }
 .kind-kaart.medaille {
-  border-color: #FFD700;
+  border-color: #FFD700 !important;
   background: linear-gradient(135deg, #FFFDE7, #FFF8E1);
   box-shadow: 0 4px 20px rgba(255,215,0,0.4);
   cursor: default;
 }
 .kind-kaart.ziek {
   opacity: 0.5; cursor: default;
-  border-color: #eee;
+  border-color: #eee !important;
 }
 .kind-kaart.ziek:hover { transform: none; }
 
 /* Naam + acties op 1 rij */
 .k-top-rij {
   display: flex; align-items: center; justify-content: space-between;
-  gap: 6px; margin-bottom: 10px;
+  gap: 8px; margin-bottom: 12px;
 }
 .k-naam {
-  font-size: 13px; font-weight: 800; color: #333;
+  font-size: 16px; font-weight: 900; color: #2f2b28;
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
   flex: 1; min-width: 0;
 }
@@ -190,8 +235,8 @@ textarea.s-input { min-height: 140px; resize: vertical; }
 /* Zebra pad — vakjes, zebra wordt via JS exact gepositioneerd */
 .zebra-pad-wrap {
   position: relative;
-  margin-bottom: 6px;
-  height: 34px;
+  margin-bottom: 8px;
+  height: 42px;
 }
 .zebra-pad {
   display: flex; gap: 3px; align-items: flex-end;
@@ -206,6 +251,18 @@ textarea.s-input { min-height: 140px; resize: vertical; }
 .pad-vakje.gedaan-goud { background: linear-gradient(135deg, #FFD700, #FFA500); }
 .pad-vakje.afwezig-vakje { background: linear-gradient(135deg, #F7DC6F, #F4D03F); }
 .pad-vakje.start-vakje { background: transparent; }
+
+/* Pastelpalet: cyclisch per kaartje (rand) en per dagvakje (vulkleur), herhaalt elke 5 */
+.kind-kaart.pk-0 { border-color: #F3C7D8; background:linear-gradient(180deg,#fff 0%,#fff8fb 100%); }
+.kind-kaart.pk-1 { border-color: #B9E3CB; background:linear-gradient(180deg,#fff 0%,#f7fff9 100%); }
+.kind-kaart.pk-2 { border-color: #FCDDA0; background:linear-gradient(180deg,#fff 0%,#fffaf0 100%); }
+.kind-kaart.pk-3 { border-color: #C3D6F2; background:linear-gradient(180deg,#fff 0%,#f7fbff 100%); }
+.kind-kaart.pk-4 { border-color: #DCC9EF; background:linear-gradient(180deg,#fff 0%,#fcf8ff 100%); }
+.pad-vakje.pv-0.gedaan { background: #FFC4DB; }
+.pad-vakje.pv-1.gedaan { background: #A8E4C4; }
+.pad-vakje.pv-2.gedaan { background: #FFD699; }
+.pad-vakje.pv-3.gedaan { background: #AFC8F2; }
+.pad-vakje.pv-4.gedaan { background: #D8C2EE; }
 
 .pad-labels {
   position: relative;
@@ -229,12 +286,15 @@ textarea.s-input { min-height: 140px; resize: vertical; }
 /* Zebra emoji op het pad */
 .zebra-op-pad {
   position: absolute;
-  font-size: 22px;
-  bottom: 8px;
+  width: 34px;
+  height: 34px;
+  bottom: 5px;
+  margin-left: -17px;
   transition: left .45s cubic-bezier(0.34, 1.56, 0.64, 1);
   filter: drop-shadow(0 2px 3px rgba(0,0,0,0.25));
   line-height: 1;
 }
+.zebra-op-pad img { width: 100%; height: 100%; display: block; object-fit: contain; }
 .zebra-op-pad.spring {
   animation: zebra-spring .4s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
@@ -336,6 +396,7 @@ textarea.s-input { min-height: 140px; resize: vertical; }
 }
 .evalblad-header { text-align:center; margin-bottom:26px; border-bottom:2px dashed #F0D9B5; padding-bottom:20px; }
 .evalblad-header .eb-logo { font-size:44px; }
+.evalblad-header .eb-logo img { width: 60px; height: 60px; display: block; margin: 0 auto; object-fit: contain; }
 .evalblad-header h2 { font-size:26px; color:#E67E22; margin:6px 0; }
 .evalblad-header .eb-naam { font-size:32px; font-weight:800; color:#1A0A00; margin-top:10px; }
 .evalblad-header .eb-periode { font-size:15px; color:#999; }
@@ -348,9 +409,9 @@ textarea.s-input { min-height: 140px; resize: vertical; }
 .evalblad-handtekening .lijn { border-top:1.5px solid #ccc; margin-top:50px; padding-top:6px; font-size:12px; color:#999; }
 
 /* ══ MAAND ══ */
-#maand { display: none; min-height: 100vh; background: #FDF6EC; padding: 20px; }
+#maand { display: none; min-height: 100vh; background: linear-gradient(180deg,#FFF9EF,#FDF6EC); padding: 24px; }
 .maand-header { display: flex; align-items: center; gap: 14px; margin-bottom: 18px; }
-.maand-header h2 { font-size: 20px; font-weight: 800; color: #E67E22; }
+.maand-header h2 { font-size: 24px; font-weight: 900; color: #E67E22; }
 .terug-btn { background: white; border: 2px solid #E67E22; color: #E67E22; border-radius: 10px; padding: 8px 16px; font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit; }
 .m-tabel { width: 100%; border-collapse: collapse; background: white; border-radius: 14px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,.08); font-size: 13px; }
 .m-tabel th { background: #FFF3E0; color: #E67E22; padding: 11px 13px; text-align: left; font-weight: 800; border-bottom: 2px solid #F0D9B5; }
@@ -364,6 +425,26 @@ textarea.s-input { min-height: 140px; resize: vertical; }
 .chip-brons  { background: #FDE8D8; color: #A0522D; border: 1px solid #DDA070; }
 .chip-aanm   { background: #EBF5FB; color: #2E86C1; border: 1px solid #AED6F1; }
 .chip-geen   { background: #f8f8f8; color: #bbb;    border: 1px solid #eee; }
+.maand-grid { display:grid; grid-template-columns:repeat(3,minmax(330px,1fr)); gap:16px; align-items:start; max-width:1680px; }
+.maand-kolom { background:white; border:1.5px solid #EADBC3; border-radius:16px; overflow:hidden; box-shadow:0 5px 18px rgba(176,128,80,.10); }
+.maand-kop, .maand-rij { display:grid; grid-template-columns:minmax(124px,.85fr) 214px 42px; align-items:center; gap:5px; }
+.maand-kop { background:#FFF3E0; color:#C0610A; font-size:10px; font-weight:900; letter-spacing:.05em; text-transform:uppercase; padding:10px 12px; border-bottom:1px solid #F0D9B5; }
+.maand-rij { min-height:50px; padding:8px 12px; border-bottom:1px solid #F7EBDD; font-size:13px; }
+.maand-rij:last-child { border-bottom:none; }
+.maand-rij:hover { background:#FFFDF8; }
+.maand-kind { font-weight:900; color:#1F1A16; line-height:1.25; }
+.week-medailles { display:grid; grid-template-columns:repeat(4,50px); gap:4px; justify-content:start; }
+.week-medaille { width:50px; height:50px; display:grid; place-items:center; border-radius:999px; background:#F8F6F2; border:1px solid #ECE5DB; color:#C9C0B4; font-size:13px; font-weight:900; }
+.week-medaille img { width:49px; height:49px; object-fit:contain; display:block; filter:drop-shadow(0 2px 3px rgba(0,0,0,.22)); }
+.maand-totaal { font-weight:900; color:#1F1A16; text-align:center; }
+.maand-diploma { display:none; }
+.maand-kop .diploma-kop { display:none; }
+@media (max-width: 1350px) {
+  .maand-grid { grid-template-columns:repeat(2,minmax(360px,1fr)); }
+}
+@media (max-width: 900px) {
+  .maand-grid { grid-template-columns:1fr; }
+}
 
 /* ══ AFDRUK ══ */
 #afdruk { background: #f5f0e8; }
@@ -394,7 +475,7 @@ textarea.s-input { min-height: 140px; resize: vertical; }
 
   <div class="setup-zijbalk">
     <div class="zijbalk-scroll">
-      <div class="logo">🦓</div>
+      <div class="logo"><img src="afbeeldingen/zebra.png" alt="zebra"></div>
       <h1>Zebra Klasafspraken</h1>
       <p class="subtitel">Juf Zisa</p>
       <a class="menu-btn" href="../index.html">Keuzescherm</a>
@@ -432,6 +513,10 @@ textarea.s-input { min-height: 140px; resize: vertical; }
   </div>
 
   <div class="setup-inhoud">
+    <div class="setup-hero">
+      <h2>Klaar voor de klasafspraak?</h2>
+      <p>Kies de afspraak, controleer je namen en start daarna het spel. De namen komen uit je klaslijst; wat je hier verwijdert blijft alleen in deze klasafspraken-tool weg.</p>
+    </div>
     <div class="setup-grid">
 
       <div class="setup-kolom-breed">
@@ -449,6 +534,8 @@ textarea.s-input { min-height: 140px; resize: vertical; }
         <div class="setup-sectie">
           <span class="s-label">Namen van de kinderen</span>
           <textarea class="s-input s-input-namen" id="namenInput" placeholder="Anna&#10;Bram&#10;Charlotte&#10;..."></textarea>
+          <div id="setupNamenLijst" class="namen-preview"></div>
+          <div class="veld-hint">Deze lijst komt uit schoolbeheer. Verwijder je hier een naam, dan verandert er niets aan de echte klaslijst.</div>
         </div>
 
         <div class="setup-sectie">
@@ -549,14 +636,7 @@ textarea.s-input { min-height: 140px; resize: vertical; }
     <button class="terug-btn" onclick="naarSpel()">← Terug</button>
     <h2>📊 Maandoverzicht</h2>
   </div>
-  <div style="overflow-x:auto">
-    <table class="m-tabel">
-      <thead><tr>
-        <th>Kind</th><th>Week 1</th><th>Week 2</th><th>Week 3</th><th>Week 4</th><th>Totaal</th><th>Diploma</th>
-      </tr></thead>
-      <tbody id="maandBody"></tbody>
-    </table>
-  </div>
+  <div id="maandBody" class="maand-grid"></div>
 </div>
 
 <!-- ══ AFDRUK ══ -->
@@ -598,7 +678,7 @@ textarea.s-input { min-height: 140px; resize: vertical; }
   <div class="ov-kaart" style="max-width:380px;width:90%">
     <div style="font-size:28px;margin-bottom:8px">🔄</div>
     <div class="ov-klein">Nieuwe afspraak starten?</div>
-    <div class="ov-tekst-klein">Alle medailles en voortgang worden gewist. Namen blijven bewaard. Je kiest daarna een nieuwe afspraak in de instellingen.</div>
+    <div class="ov-tekst-klein">Deze afspraak wordt bewaard voor het evaluatieblad. Daarna starten week 1, de zebra's en het maandoverzicht opnieuw leeg voor de nieuwe afspraak.</div>
     <div class="ov-btn-rij">
       <button class="btn-rood" onclick="bevestigNieuweAfspraak()">Ja, nieuwe afspraak</button>
       <button class="btn-grijs" onclick="sluitOv('nieuweAfspraakOv')">Annuleer</button>
@@ -635,7 +715,7 @@ textarea.s-input { min-height: 140px; resize: vertical; }
 <div class="overlay" id="resetOv">
   <div class="ov-kaart">
     <div class="ov-klein">↺ Nieuwe week starten?</div>
-    <div class="ov-tekst-klein">De voortgang van deze week wordt gewist.<br>Medailles van vorige weken blijven bewaard.</div>
+    <div class="ov-tekst-klein">Alle zebra's gaan terug naar start voor de volgende week.<br>Behaalde medailles blijven in het maandoverzicht staan.</div>
     <div class="ov-btn-rij">
       <button class="btn-rood" onclick="bevestigReset()">Ja, nieuwe week</button>
       <button class="btn-grijs" onclick="sluitOv('resetOv')">Annuleer</button>
@@ -646,7 +726,7 @@ textarea.s-input { min-height: 140px; resize: vertical; }
 <div class="confetti-wrap" id="confettiWrap"></div>
 
 <script>
-const SK = { namen:'zisa_n', afspraken:'zisa_a', actief:'zisa_act', week:'zisa_w', voortgang:'zisa_vg', medailles:'zisa_med', periodes:'zisa_per', actiefPeriode:'zisa_actper', archief:'zisa_arch', schooldagen:'zisa_schooldagen' };
+const SK = { namen:'zisa_n', afspraken:'zisa_a', actief:'zisa_act', week:'zisa_w', voortgang:'zisa_vg', weekVoortgang:'zisa_week_vg', medailles:'zisa_med', periodes:'zisa_per', actiefPeriode:'zisa_actper', archief:'zisa_arch', schooldagen:'zisa_schooldagen', verwijderdeNamen:'zisa_verwijderde_namen' };
 const STD = [
   'Ik kom in stilte de klas binnen',
   'Ik werk in stilte tijdens zelfstandig werk',
@@ -656,12 +736,13 @@ const STD = [
 ];
 const STD_PERIODES = ['Periode 1', 'Periode 2', 'Periode 3'];
 
-let namen = [], afspraken = [...STD], actief = STD[0], weekNr = 1, vg = {}, med = {};
+let namen = [], afspraken = [...STD], actief = STD[0], weekNr = 1, vg = {}, weekVoortgang = {}, med = {};
 let periodes = [...STD_PERIODES], actiefPeriode = STD_PERIODES[0];
 let schooldagen = 5; // aantal schooldagen deze week (3, 4 of 5)
 // archief: [{ afspraak, periode, medailles: {naam: [b,b,b,b]}, datum }]
 let archief = [];
 let evalDataPerPeriode = {};
+let verwijderdeNamen = [];
 const TEST_EMAILS = ['isabel.rockele@bsdelinde.net'];
 const BEWAAR_JAREN_KLASAFSPRAKEN = 1;
 let remote = { enabled:false, db:null, user:null, schooljaar:null, klas:null, ref:null, saveTimer:null, loaded:false };
@@ -697,6 +778,67 @@ function planRemoteSave() {
   remote.saveTimer = setTimeout(slaRemoteOp, 500);
 }
 
+function bewaarVerwijderdeNamenLokaal() {
+  try { localStorage.setItem(SK.verwijderdeNamen, JSON.stringify(verwijderdeNamen)); } catch(e) {}
+}
+
+function kopieerData(data) {
+  return JSON.parse(JSON.stringify(data || {}));
+}
+
+function maakLegeVoortgang() {
+  const leeg = {};
+  namen.forEach(naam => {
+    leeg[naam] = { dagen: new Array(schooldagen).fill(null), medaille: false };
+  });
+  return leeg;
+}
+
+function bewaarHuidigeWeekVoortgang() {
+  weekVoortgang[String(weekNr)] = kopieerData(vg);
+}
+
+function laadVoortgangVoorWeek(n) {
+  const weekHeeftMedaille = namen.some(naam => !!(med[naam] && med[naam][n - 1]));
+  const opgeslagen = weekHeeftMedaille ? weekVoortgang[String(n)] : null;
+  vg = opgeslagen ? kopieerData(opgeslagen) : maakLegeVoortgang();
+  namen.forEach(naam => {
+    if (!vg[naam] || !Array.isArray(vg[naam].dagen)) {
+      vg[naam] = { dagen: new Array(schooldagen).fill(null), medaille: false };
+    }
+  });
+  weekVoortgang[String(n)] = kopieerData(vg);
+}
+
+function escapeHtml(tekst) {
+  return String(tekst ?? '').replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;');
+}
+
+function escapeJsString(tekst) {
+  return String(tekst ?? '').replaceAll('\\', '\\\\').replaceAll("'", "\\'");
+}
+
+function syncNamenInput() {
+  const input = document.getElementById('namenInput');
+  if (input) input.value = namen.join('\n');
+  tekenSetupNamen();
+}
+
+function tekenSetupNamen() {
+  const lijst = document.getElementById('setupNamenLijst');
+  if (!lijst) return;
+  if (!namen.length) {
+    lijst.innerHTML = '<div class="namen-leeg">Nog geen namen geladen.</div>';
+    return;
+  }
+  lijst.innerHTML = namen.map(naam => `
+    <span class="naam-chip">
+      ${escapeHtml(naam)}
+      <button type="button" title="Alleen hier verwijderen" onclick="verwijderKind('${escapeJsString(naam)}')">x</button>
+    </span>
+  `).join('');
+}
+
 async function slaRemoteOp() {
   if (!remote.enabled || !remote.ref || !remote.loaded) return;
   try {
@@ -709,12 +851,14 @@ async function slaRemoteOp() {
       actief,
       weekNr,
       voortgang: vg,
+      weekVoortgang,
       medailles: med,
       periodes,
       actiefPeriode,
       schooldagen,
       archief,
       evalDataPerPeriode,
+      verwijderdeNamen,
       bewaarTot: bewaarTotVoorSchooljaar(remote.schooljaar),
       bewaartermijnJaren: BEWAAR_JAREN_KLASAFSPRAKEN,
       bijgewerktOp: serverTimestamp(),
@@ -788,16 +932,19 @@ async function laadKlasafsprakenVoorGebruiker(user) {
     actief = data.actief || actief;
     weekNr = Number(data.weekNr || weekNr) || 1;
     vg = data.voortgang || data.vg || vg;
+    weekVoortgang = data.weekVoortgang || weekVoortgang;
     med = data.medailles || data.med || med;
     periodes = Array.isArray(data.periodes) && data.periodes.length ? data.periodes : periodes;
     actiefPeriode = data.actiefPeriode || actiefPeriode;
     schooldagen = Number(data.schooldagen || schooldagen) || 5;
     archief = Array.isArray(data.archief) ? data.archief : archief;
     evalDataPerPeriode = data.evalDataPerPeriode || evalDataPerPeriode;
+    const verborgenOpFirebase = Array.isArray(data.verwijderdeNamen) ? data.verwijderdeNamen : [];
+    verwijderdeNamen = [...new Set([...verwijderdeNamen, ...verborgenOpFirebase])];
   }
   if (klasNamen.length) {
-    namen = klasNamen;
-    document.getElementById('namenInput').value = namen.join('\n');
+    namen = klasNamen.filter(naam => !verwijderdeNamen.includes(naam));
+    syncNamenInput();
     namen.forEach(naam => {
       if (!vg[naam] || !vg[naam].dagen) vg[naam] = { dagen: new Array(schooldagen).fill(null), medaille: false };
       if (!med[naam]) med[naam] = [false, false, false, false];
@@ -810,6 +957,7 @@ async function laadKlasafsprakenVoorGebruiker(user) {
   updateWkChips();
   updateSdChips();
   if (document.getElementById('spel').style.display === 'block') tekenGrid();
+  tekenSetupNamen();
   planRemoteSave();
 }
 
@@ -824,13 +972,25 @@ startFirebaseKlasafspraken();
     const n = localStorage.getItem(SK.namen);
     if (n) { document.getElementById('namenInput').value = n; namen = parseNamen(n); document.getElementById('opgeslagenBadge').style.display='inline-block'; }
     const v = localStorage.getItem(SK.voortgang);  if (v) vg = JSON.parse(v);
+    const wv = localStorage.getItem(SK.weekVoortgang); if (wv) weekVoortgang = JSON.parse(wv);
     const m = localStorage.getItem(SK.medailles);  if (m) med = JSON.parse(m);
     const per = localStorage.getItem(SK.periodes); if (per) periodes = JSON.parse(per);
     const sd = localStorage.getItem(SK.schooldagen); if (sd) schooldagen = parseInt(sd)||5;
     const actp = localStorage.getItem(SK.actiefPeriode); if (actp) actiefPeriode = actp;
     const arch = localStorage.getItem(SK.archief); if (arch) archief = JSON.parse(arch);
+    const verborgen = localStorage.getItem(SK.verwijderdeNamen); if (verborgen) verwijderdeNamen = JSON.parse(verborgen);
+    if (verwijderdeNamen.length && namen.length) {
+      namen = namen.filter(naam => !verwijderdeNamen.includes(naam));
+      syncNamenInput();
+    }
   } catch(e) {}
-  tekenAfspraken(); tekenPeriodes(); updateWkChips();
+  if (!Object.keys(weekVoortgang || {}).length && Object.keys(vg || {}).length) {
+    weekVoortgang["1"] = kopieerData(vg);
+    if (weekNr !== 1) laadVoortgangVoorWeek(weekNr);
+  } else {
+    laadVoortgangVoorWeek(weekNr);
+  }
+  tekenAfspraken(); tekenPeriodes(); updateWkChips(); tekenSetupNamen();
 })();
 
 function parseNamen(t) { return t.split('\n').map(x=>x.trim()).filter(x=>x).slice(0,30); }
@@ -842,16 +1002,20 @@ function slaOp() {
     localStorage.setItem(SK.actief, actief);
     localStorage.setItem(SK.week, weekNr);
     localStorage.setItem(SK.voortgang, JSON.stringify(vg));
+    localStorage.setItem(SK.weekVoortgang, JSON.stringify(weekVoortgang));
     localStorage.setItem(SK.medailles, JSON.stringify(med));
     localStorage.setItem(SK.periodes, JSON.stringify(periodes));
     localStorage.setItem(SK.schooldagen, schooldagen);
     localStorage.setItem(SK.actiefPeriode, actiefPeriode);
     localStorage.setItem(SK.archief, JSON.stringify(archief));
+    localStorage.setItem(SK.verwijderdeNamen, JSON.stringify(verwijderdeNamen));
   } catch(e) {}
   planRemoteSave();
 }
 function slaVgOp() {
+  bewaarHuidigeWeekVoortgang();
   try { localStorage.setItem(SK.voortgang, JSON.stringify(vg)); localStorage.setItem(SK.medailles, JSON.stringify(med)); } catch(e) {}
+  try { localStorage.setItem(SK.weekVoortgang, JSON.stringify(weekVoortgang)); } catch(e) {}
   planRemoteSave();
 }
 function slaArchiefOp() { try { localStorage.setItem(SK.archief, JSON.stringify(archief)); } catch(e) {} planRemoteSave(); }
@@ -918,7 +1082,15 @@ function voegToe() {
 }
 
 // ── WEEK ──────────────────────────────────────────────────────────
-function setWeek(n) { weekNr=n; updateWkChips(); try{localStorage.setItem(SK.week,n);}catch(e){} planRemoteSave(); }
+function setWeek(n) {
+  bewaarHuidigeWeekVoortgang();
+  weekNr = n;
+  laadVoortgangVoorWeek(n);
+  updateWkChips();
+  try{localStorage.setItem(SK.week,n);}catch(e){}
+  slaVgOp();
+  if (document.getElementById('spel').style.display === 'block') tekenGrid();
+}
 function updateWkChips() {
   for(let i=1;i<=4;i++) { const el=document.getElementById('wk'+i); if(el) el.className='wk'+(weekNr===i?' actief':''); }
 }
@@ -973,15 +1145,9 @@ function tekenGrid() {
   const grid = document.getElementById('kinderenGrid');
   grid.innerHTML = '';
 
-  // Schaal de kaartgrootte op basis van het aantal kinderen — minder kinderen = grotere kaarten
+  // Vast 5 kolommen — bij meer namen komen er extra rijen (scrollen)
   const n = namen.length;
-  let minWidth;
-  if (n <= 10) minWidth = 260;
-  else if (n <= 15) minWidth = 220;
-  else if (n <= 20) minWidth = 190;
-  else if (n <= 25) minWidth = 170;
-  else minWidth = 150;
-  grid.style.gridTemplateColumns = `repeat(auto-fill, minmax(${minWidth}px, 1fr))`;
+  grid.style.gridTemplateColumns = '';
   grid.className = 'kinderen-grid';
   if (n <= 10) grid.classList.add('grid-xl');
   else if (n <= 15) grid.classList.add('grid-lg');
@@ -1008,7 +1174,7 @@ function maakKaartje(naam, i) {
   const v = vg[naam];
   const stats = dagStats(v);
   const kaart = document.createElement('div');
-  kaart.className = 'kind-kaart' + (v.medaille?' medaille':'');
+  kaart.className = 'kind-kaart pk-' + (i % 5) + (v.medaille?' medaille':'');
   kaart.id = 'kaart_' + i;
 
   const sterHtml = v.medaille ? '<div class="medaille-ster">⭐</div>' : '';
@@ -1016,10 +1182,10 @@ function maakKaartje(naam, i) {
   // Vakjes: 1 onzichtbaar startvakje + 1 zichtbaar vakje per schooldag. Allemaal evenveel breed (flex:1),
   // zodat de zebra-positie hierop kan aansluiten zonder afzonderlijke wiskunde.
   let vakjes = '<div class="pad-vakje start-vakje"></div>';
-  v.dagen.forEach(d => {
-    let klasse = '';
-    if (d === 'goed') klasse = 'gedaan';
-    else if (d === 'afwezig') klasse = 'afwezig-vakje';
+  v.dagen.forEach((d, j) => {
+    let klasse = 'pv-' + (j % 5);
+    if (d === 'goed') klasse += ' gedaan';
+    else if (d === 'afwezig') klasse += ' afwezig-vakje';
     vakjes += `<div class="pad-vakje ${klasse}"></div>`;
   });
 
@@ -1052,7 +1218,7 @@ function maakKaartje(naam, i) {
       <div class="zebra-pad">
         ${vakjes}
       </div>
-      <div class="zebra-op-pad" id="zebra_${i}" style="left:${zebraLinksCalc};margin-left:-14px">🦓</div>
+      <div class="zebra-op-pad" id="zebra_${i}" style="left:${zebraLinksCalc}"><img src="${IMG}zebra.png" alt="zebra"></div>
     </div>
     <div class="k-status">${statusTekst}</div>
   `;
@@ -1157,16 +1323,68 @@ function toonMedailleOv(naam) {
 }
 
 // ── WEEKRESET ─────────────────────────────────────────────────────
-function vraagReset() { document.getElementById('resetOv').classList.add('toon'); }
-function bevestigReset() {
-  weekNr = weekNr<4 ? weekNr+1 : 1;
+function resetZebrasNaarStart() {
   namen.forEach(n => { vg[n] = { dagen: new Array(schooldagen).fill(null), medaille: false }; });
-  try { localStorage.setItem(SK.week, weekNr); } catch(e) {}
-  slaVgOp(); updateWkChips(); sluitOv('resetOv'); tekenGrid();
+  weekVoortgang[String(weekNr)] = kopieerData(vg);
+}
+function vraagReset() {
+  if (weekNr >= 4) {
+    alert('Week 4 is de laatste week van deze afspraak. Start nu een nieuwe afspraak, dan begint week 1 met een leeg maandoverzicht.');
+    return;
+  }
+  document.getElementById('resetOv').classList.add('toon');
+}
+function bevestigReset() {
+  setWeek(Math.min(4, weekNr + 1));
+  sluitOv('resetOv');
+  tekenGrid();
 }
 
 // ── MAANDOVERZICHT ────────────────────────────────────────────────
 function tekenMaand() {
+  const overzicht = document.getElementById('maandBody');
+  overzicht.innerHTML = '';
+  const perKolom = 10;
+  const kolommen = [
+    namen.slice(0, perKolom),
+    namen.slice(perKolom, perKolom * 2),
+    namen.slice(perKolom * 2)
+  ];
+
+  kolommen.filter(kolom => kolom.length).forEach(kolomNamen => {
+    const kolom = document.createElement('section');
+    kolom.className = 'maand-kolom';
+    kolom.innerHTML = `
+      <div class="maand-kop">
+        <span>Kind</span>
+        <span>Week 1-4</span>
+        <span>Totaal</span>
+        <span class="diploma-kop">Diploma</span>
+      </div>
+    `;
+    kolomNamen.forEach(naam => {
+      const m = med[naam] || [false,false,false,false];
+      const tot = m.filter(Boolean).length;
+      let label='-', kl='chip-geen';
+      if(tot===4){label='Goud';kl='chip-goud';}
+      else if(tot===3){label='Zilver';kl='chip-zilver';}
+      else if(tot===2){label='Brons';kl='chip-brons';}
+      else if(tot===1){label='Aanmoediging';kl='chip-aanm';}
+      const rij = document.createElement('div');
+      rij.className = 'maand-rij';
+      rij.innerHTML = `
+        <div class="maand-kind">${escapeHtml(naam)}</div>
+        <div class="week-medailles">
+          ${[0,1,2,3].map(i => `<span class="week-medaille">${m[i] ? `<img src="${IMG}zebra_medaille.png" alt="medaille">` : i + 1}</span>`).join('')}
+        </div>
+        <div class="maand-totaal">${tot}/4</div>
+        <div class="maand-diploma"><span class="chip ${kl}">${label}</span></div>
+      `;
+      kolom.appendChild(rij);
+    });
+    overzicht.appendChild(kolom);
+  });
+  return;
   const tbody = document.getElementById('maandBody');
   tbody.innerHTML = '';
   namen.forEach(naam => {
@@ -1278,15 +1496,15 @@ function bevestigNieuweAfspraak() {
   });
   slaArchiefOp();
 
-  // Wis medailles en voortgang, bewaar namen
-  vg = {}; med = {};
-  namen.forEach(n => {
-    vg[n] = { dagen: new Array(schooldagen).fill(null), medaille: false };
-    med[n] = [false, false, false, false];
-  });
+  // Nieuwe afspraak = nieuw maandoverzicht. Namen blijven, weekmedailles starten leeg.
+  weekVoortgang = {};
+  med = {};
+  namen.forEach(n => { med[n] = [false, false, false, false]; });
   weekNr = 1;
+  resetZebrasNaarStart();
   try {
     localStorage.setItem(SK.voortgang, JSON.stringify(vg));
+    localStorage.setItem(SK.weekVoortgang, JSON.stringify(weekVoortgang));
     localStorage.setItem(SK.medailles, JSON.stringify(med));
     localStorage.setItem(SK.week, 1);
   } catch(e) {}
@@ -1326,11 +1544,14 @@ function voegKindToe() {
   if (!naam) return;
   if (namen.includes(naam)) { alert('Dit kind staat er al in.'); return; }
   if (namen.length >= 30) { alert('Maximum 30 kinderen bereikt.'); return; }
+  verwijderdeNamen = verwijderdeNamen.filter(n => n !== naam);
+  bewaarVerwijderdeNamenLokaal();
   namen.push(naam);
-  vg[naam] = { stappen: 0, ziek: false, medaille: false };
+  vg[naam] = { dagen: new Array(schooldagen).fill(null), medaille: false };
   med[naam] = [false, false, false, false];
   input.value = '';
   // Bewaar namen
+  syncNamenInput();
   try { localStorage.setItem(SK.namen, namen.join('\n')); } catch(e) {}
   slaVgOp();
   tekenNamenBeheer();
@@ -1339,11 +1560,15 @@ function voegKindToe() {
 
 function verwijderKind(naam) {
   if (!confirm(`"${naam}" verwijderen? De voortgang van dit kind wordt gewist.`)) return;
+  if (!verwijderdeNamen.includes(naam)) verwijderdeNamen.push(naam);
+  bewaarVerwijderdeNamenLokaal();
   namen = namen.filter(n => n !== naam);
   delete vg[naam];
   delete med[naam];
+  syncNamenInput();
   try { localStorage.setItem(SK.namen, namen.join('\n')); } catch(e) {}
   slaVgOp();
+  slaRemoteOp();
   tekenNamenBeheer();
   tekenGrid();
 }
@@ -1351,11 +1576,12 @@ function verwijderKind(naam) {
 // ── NIEUW SCHOOLJAAR ──────────────────────────────────────────────
 function nieuwSchooljaar() {
   if(!confirm('Nieuw schooljaar? Namen, voortgang, het archief en alle evaluatiebladen worden gewist. Afspraken en rapportperiodes blijven.')) return;
-  namen=[]; vg={}; med={}; weekNr=1; archief=[]; evalDataPerPeriode={};
-  document.getElementById('namenInput').value='';
+  namen=[]; vg={}; weekVoortgang={}; med={}; weekNr=1; archief=[]; evalDataPerPeriode={}; verwijderdeNamen=[];
+  bewaarVerwijderdeNamenLokaal();
+  syncNamenInput();
   document.getElementById('opgeslagenBadge').style.display='none';
   try{
-    [SK.namen,SK.week,SK.voortgang,SK.medailles,SK.archief].forEach(k=>localStorage.removeItem(k));
+    [SK.namen,SK.week,SK.voortgang,SK.weekVoortgang,SK.medailles,SK.archief].forEach(k=>localStorage.removeItem(k));
     // Wis ook alle evaluatiedata per periode
     periodes.forEach(p => localStorage.removeItem(SK_EVALDATA + '_' + p));
   }catch(e){}
@@ -1563,7 +1789,7 @@ function evalMaakBladHTML(naam) {
   return `
   <div class="evalblad">
     <div class="evalblad-header">
-      <div class="eb-logo">🦓</div>
+      <div class="eb-logo"><img src="${IMG}zebra.png" alt="zebra"></div>
       <h2>Evaluatieblad Klasafspraken</h2>
       <div class="eb-naam">${naam}</div>
       <div class="eb-periode">${evalGekozenPeriode} · ${vandaag}</div>
@@ -1671,7 +1897,7 @@ function toonVoorbeeld() {
   const html = `
   <div class="evalblad" style="border-width:2px">
     <div class="evalblad-header">
-      <div class="eb-logo">🦓</div>
+      <div class="eb-logo"><img src="${IMG}zebra.png" alt="zebra"></div>
       <h2>Evaluatieblad Klasafspraken</h2>
       <div class="eb-naam">${voorbeeldNaam}</div>
       <div class="eb-periode">Periode 1 (voorbeeld) · ${vandaag}</div>
