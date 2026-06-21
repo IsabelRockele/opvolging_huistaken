@@ -1,0 +1,1750 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🦓 Zebra Klasafspraken</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Segoe UI', Arial, sans-serif; min-height: 100vh; }
+
+/* ══ SETUP ══ */
+#setup {
+  min-height: 100vh;
+  background: #FDFAF6;
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  grid-template-rows: 100vh;
+}
+.setup-zijbalk {
+  background: linear-gradient(180deg, #F5ECD7 0%, #EDD9B0 100%);
+  display: flex; flex-direction: column;
+  border-right: 1px solid #E8D5B0;
+  height: 100vh;
+  overflow: hidden;
+}
+.zijbalk-scroll {
+  flex: 1; overflow-y: auto; padding: 32px 24px 16px;
+}
+.zijbalk-footer {
+  padding: 16px 24px 24px; flex-shrink: 0;
+  border-top: 1px solid rgba(176,128,80,0.2);
+}
+.setup-zijbalk .logo { font-size: 32px; margin-bottom: 8px; }
+.setup-zijbalk h1 { font-size: 20px; font-weight: 800; color: #C0610A; margin-bottom: 4px; line-height: 1.2; }
+.setup-zijbalk .subtitel { font-size: 12px; color: #B08050; margin-bottom: 28px; }
+.zijbalk-tip { background: rgba(255,255,255,0.6); border-radius: 10px; padding: 12px; font-size: 12px; color: #8B6040; line-height: 1.5; margin-bottom: 12px; }
+.zijbalk-tip strong { color: #C0610A; display: block; margin-bottom: 3px; }
+.tip-voorbeeld-btn { display:block; width:100%; background:rgba(230,126,34,0.15); border:1px solid rgba(230,126,34,0.3); color:#C0610A; border-radius:8px; padding:7px 10px; font-size:11px; font-weight:700; cursor:pointer; margin-top:8px; font-family:inherit; transition:all .15s; }
+.tip-voorbeeld-btn:hover { background:rgba(230,126,34,0.28); }
+.menu-btn { display:block; width:100%; text-align:center; text-decoration:none; background:rgba(255,255,255,0.72); border:1px solid rgba(176,128,80,0.35); color:#8B6040; border-radius:10px; padding:9px 12px; font-size:13px; font-weight:800; font-family:inherit; margin-bottom:12px; }
+.menu-btn:hover { background:#fff; color:#C0610A; }
+.start-btn {
+  background: #E67E22; color: white; border: none; border-radius: 12px;
+  padding: 14px; font-size: 15px; font-weight: 800; cursor: pointer;
+  font-family: inherit; transition: all .15s; width: 100%;
+  box-shadow: 0 4px 12px rgba(230,126,34,0.35);
+}
+.start-btn:hover { background: #D35400; transform: translateY(-1px); box-shadow: 0 6px 16px rgba(230,126,34,0.4); }
+.reset-btn { background: none; border: none; color: #C0A080; font-size: 11px; cursor: pointer; margin-top: 8px; font-family: inherit; padding: 4px; text-align: center; width:100%; }
+
+.setup-inhoud {
+  overflow-y: auto; padding: 28px 36px;
+}
+.setup-grid {
+  display: grid;
+  grid-template-columns: 1.6fr 1fr;
+  gap: 36px;
+  align-items: start;
+}
+.setup-kolom-breed { min-width: 0; }
+.setup-kolom-smal { min-width: 0; }
+.setup-sectie { margin-bottom: 22px; }
+.s-label { font-size: 11px; font-weight: 700; color: #B08050; text-transform: uppercase; letter-spacing: 1px; display: block; margin-bottom: 8px; }
+.s-input { width: 100%; border: 1.5px solid #E8D5B0; border-radius: 10px; padding: 10px 13px; font-size: 14px; font-family: inherit; color: #333; transition: border-color .2s; background: white; }
+.s-input:focus { outline: none; border-color: #E67E22; background: #FFFAF5; }
+textarea.s-input { min-height: 140px; resize: vertical; }
+.s-input-namen { min-height: 260px; font-size: 13px; }
+.afsp-rij { display: flex; align-items: center; gap: 8px; padding: 9px 12px; border: 1.5px solid #EEE; border-radius: 10px; margin-bottom: 5px; cursor: pointer; transition: all .15s; background: white; }
+.afsp-rij:hover { border-color: #E67E22; background: #FFFAF5; }
+.afsp-rij.actief { border-color: #E67E22; background: #FFF3E0; }
+.afsp-dot { width: 8px; height: 8px; border-radius: 50%; background: #E67E22; opacity: 0; flex-shrink: 0; transition: opacity .15s; }
+.afsp-rij.actief .afsp-dot { opacity: 1; }
+.afsp-tekst { flex: 1; font-size: 13px; color: #555; }
+.afsp-rij.actief .afsp-tekst { color: #C0610A; font-weight: 700; }
+.knop-mini { border: 1px solid #eee; border-radius: 6px; padding: 4px 8px; font-size: 11px; cursor: pointer; background: white; color: #aaa; }
+.knop-mini:hover { border-color: #E67E22; color: #E67E22; }
+.nieuw-rij { display: flex; gap: 8px; margin-top: 6px; }
+.week-rij { display: flex; gap: 6px; flex-wrap: wrap; }
+.wk { border: 1.5px solid #E8D5B0; border-radius: 8px; padding: 8px 14px; font-size: 13px; font-weight: 700; cursor: pointer; background: white; color: #B08050; font-family: inherit; transition: all .15s; flex:1; min-width:40px; }
+.wk.actief { border-color: #E67E22; background: #E67E22; color: white; box-shadow: 0 3px 8px rgba(230,126,34,0.3); }
+.opgeslagen { font-size: 11px; color: #27AE60; background: #EAFAF1; border: 1px solid #ABEBC6; border-radius: 6px; padding: 3px 10px; display: inline-block; margin-bottom: 10px; }
+
+@media (max-width: 900px) {
+  .setup-grid { grid-template-columns: 1fr; }
+}
+
+/* ══ SPEELVELD ══ */
+#spel {
+  display: none; min-height: 100vh;
+  background: linear-gradient(180deg, #E8F5E9 0%, #FFF8F0 100%);
+}
+.spel-header {
+  background: linear-gradient(135deg, #E67E22, #D35400);
+  padding: 10px 20px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;
+}
+.spel-afspraak { font-size: 14px; font-weight: 700; color: white; }
+.spel-week { font-size: 12px; color: rgba(255,255,255,.7); }
+.header-knoppen { display: flex; gap: 6px; align-items:center; flex-wrap:wrap; }
+.schooldagen-kiezer { display:flex; align-items:center; background:rgba(255,255,255,.12); border-radius:18px; padding:4px 10px 4px 4px; margin-right:4px; }
+.sd-btn { border:none; background:rgba(255,255,255,.18); color:white; width:26px; height:26px; border-radius:50%; font-size:12px; font-weight:700; cursor:pointer; font-family:inherit; margin-left:3px; transition:all .15s; }
+.sd-btn:hover { background:rgba(255,255,255,.32); }
+.sd-btn.actief { background:white; color:#D35400; }
+.hdr-btn { background: rgba(255,255,255,.2); border: none; color: white; border-radius: 16px; padding: 6px 14px; font-size: 12px; font-weight: 600; cursor: pointer; font-family: inherit; transition: background .15s; }
+.hdr-btn:hover { background: rgba(255,255,255,.35); }
+
+/* GRID VAN KAARTJES */
+.kinderen-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+  gap: 12px; padding: 16px;
+}
+
+/* ══ KIND KAARTJE ══ */
+.kind-kaart {
+  background: white;
+  border-radius: 16px;
+  padding: 14px 12px 12px;
+  box-shadow: 0 3px 12px rgba(0,0,0,0.10);
+  cursor: pointer;
+  transition: transform .15s, box-shadow .15s;
+  border: 2.5px solid transparent;
+  position: relative;
+  overflow: hidden;
+  user-select: none;
+}
+.kind-kaart:hover { transform: translateY(-3px); box-shadow: 0 8px 24px rgba(0,0,0,0.15); }
+.kind-kaart:active { transform: scale(0.97); }
+
+/* Schaalbare groottes op basis van klasgrootte */
+.grid-xl .kind-kaart { padding: 16px 16px 14px; }
+.grid-xl .k-naam { font-size: 18px; }
+.grid-xl .zebra-pad-wrap { height: 44px; margin-bottom: 8px; }
+.grid-xl .zebra-op-pad { font-size: 30px; bottom: 8px; }
+.grid-xl .pad-label { font-size: 11px; }
+.grid-xl .pad-vakje { height: 10px; }
+.grid-xl .k-status { font-size: 13px; }
+.grid-xl .k-actie { font-size: 16px; padding: 5px 9px; }
+.grid-xl .medaille-ster { font-size: 24px; }
+
+.grid-lg .kind-kaart { padding: 14px 13px 12px; }
+.grid-lg .k-naam { font-size: 16px; }
+.grid-lg .zebra-pad-wrap { height: 38px; margin-bottom: 7px; }
+.grid-lg .zebra-op-pad { font-size: 26px; bottom: 7px; }
+.grid-lg .pad-vakje { height: 9px; }
+.grid-lg .k-status { font-size: 11px; }
+.grid-lg .k-actie { font-size: 14px; padding: 4px 8px; }
+.grid-lg .medaille-ster { font-size: 20px; }
+
+.grid-md .kind-kaart { padding: 12px 11px 10px; }
+.grid-md .k-naam { font-size: 14px; }
+.grid-md .zebra-pad-wrap { height: 34px; margin-bottom: 6px; }
+.grid-md .zebra-op-pad { font-size: 23px; bottom: 7px; }
+.kind-kaart.medaille {
+  border-color: #FFD700;
+  background: linear-gradient(135deg, #FFFDE7, #FFF8E1);
+  box-shadow: 0 4px 20px rgba(255,215,0,0.4);
+  cursor: default;
+}
+.kind-kaart.ziek {
+  opacity: 0.5; cursor: default;
+  border-color: #eee;
+}
+.kind-kaart.ziek:hover { transform: none; }
+
+/* Naam + acties op 1 rij */
+.k-top-rij {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 6px; margin-bottom: 10px;
+}
+.k-naam {
+  font-size: 13px; font-weight: 800; color: #333;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  flex: 1; min-width: 0;
+}
+.kind-kaart.medaille .k-naam { color: #B8860B; }
+.kind-kaart.ziek .k-naam { color: #aaa; }
+
+.k-acties {
+  display: flex; gap: 3px; flex-shrink: 0;
+}
+.k-actie {
+  border: 1.5px solid #eee; border-radius: 7px; padding: 3px 6px;
+  font-size: 12px; cursor: pointer; background: white; transition: all .15s;
+  line-height: 1;
+}
+.k-actie:hover:not(:disabled) { border-color: #E67E22; background: #FFF3E0; }
+.k-actie:disabled { opacity: .3; cursor: default; }
+.k-actie.ziek-actief { background: #FFF9C4; border-color: #F9CA24; }
+
+/* Zebra pad — vakjes, zebra wordt via JS exact gepositioneerd */
+.zebra-pad-wrap {
+  position: relative;
+  margin-bottom: 6px;
+  height: 34px;
+}
+.zebra-pad {
+  display: flex; gap: 3px; align-items: flex-end;
+  height: 100%; width: 100%;
+}
+.pad-vakje {
+  flex: 1; border-radius: 6px; height: 8px;
+  background: #eee; transition: background .3s;
+  position: relative; align-self: flex-end;
+}
+.pad-vakje.gedaan { background: linear-gradient(135deg, #F39C12, #E67E22); }
+.pad-vakje.gedaan-goud { background: linear-gradient(135deg, #FFD700, #FFA500); }
+.pad-vakje.afwezig-vakje { background: linear-gradient(135deg, #F7DC6F, #F4D03F); }
+.pad-vakje.start-vakje { background: transparent; }
+
+.pad-labels {
+  position: relative;
+  height: 14px;
+  margin-bottom: 2px;
+}
+.pad-label {
+  position: absolute;
+  font-size: 9px; font-weight: 700; color: #aaa;
+  white-space: nowrap;
+}
+.pad-label-start {
+  left: calc(100% / var(--segmenten) / 2);
+  transform: translateX(-50%);
+}
+.pad-label-finish {
+  left: calc((100% / var(--segmenten)) * (var(--segmenten) - 1) + (100% / var(--segmenten) / 2));
+  transform: translateX(-50%);
+}
+
+/* Zebra emoji op het pad */
+.zebra-op-pad {
+  position: absolute;
+  font-size: 22px;
+  bottom: 8px;
+  transition: left .45s cubic-bezier(0.34, 1.56, 0.64, 1);
+  filter: drop-shadow(0 2px 3px rgba(0,0,0,0.25));
+  line-height: 1;
+}
+.zebra-op-pad.spring {
+  animation: zebra-spring .4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+@keyframes zebra-spring {
+  0%   { transform: scale(1) translateY(0); }
+  40%  { transform: scale(1.4) translateY(-12px); }
+  100% { transform: scale(1) translateY(0); }
+}
+
+/* Status tekst */
+.k-status {
+  font-size: 10px; color: #bbb; text-align: center; font-weight: 600;
+  min-height: 14px;
+}
+.kind-kaart.medaille .k-status { color: #DAA520; }
+
+/* Medaille ster linksboven */
+.medaille-ster {
+  position: absolute; top: 8px; right: 8px;
+  font-size: 18px; animation: ster-glow 1.5s ease-in-out infinite alternate;
+}
+@keyframes ster-glow {
+  from { filter: drop-shadow(0 0 2px gold); }
+  to   { filter: drop-shadow(0 0 8px gold); }
+}
+
+/* Popup +ster */
+.ster-popup {
+  position: absolute; top: 10px; left: 50%; transform: translateX(-50%);
+  background: #E67E22; color: white; border-radius: 10px;
+  padding: 3px 10px; font-size: 12px; font-weight: 800;
+  pointer-events: none; z-index: 10;
+  animation: popup-op .8s ease forwards;
+}
+@keyframes popup-op {
+  0%   { opacity: 1; transform: translateX(-50%) translateY(0); }
+  100% { opacity: 0; transform: translateX(-50%) translateY(-30px); }
+}
+
+/* ══ OVERLAYS ══ */
+.overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,.55);
+  display: none; align-items: center; justify-content: center; z-index: 200;
+}
+.overlay.toon { display: flex; }
+.ov-kaart {
+  background: white; border-radius: 24px; padding: 36px 28px;
+  text-align: center; max-width: 300px; width: 90%;
+  box-shadow: 0 20px 60px rgba(0,0,0,.4);
+  animation: pop-in .4s cubic-bezier(0.34,1.56,.64,1);
+}
+@keyframes pop-in { from { transform: scale(.4); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+.ov-emoji { font-size: 72px; display: block; margin-bottom: 8px; }
+.ov-naam { font-size: 24px; font-weight: 800; color: #E67E22; margin-bottom: 6px; }
+.ov-tekst { font-size: 14px; color: #666; margin-bottom: 20px; line-height: 1.5; }
+.ov-btn { background: #E67E22; color: white; border: none; border-radius: 12px; padding: 13px 28px; font-size: 15px; font-weight: 800; cursor: pointer; font-family: inherit; }
+.ov-btn:hover { background: #D35400; }
+.ov-klein { font-size: 16px; font-weight: 800; color: #E67E22; margin-bottom: 4px; }
+.ov-tekst-klein { font-size: 13px; color: #555; margin-bottom: 16px; line-height: 1.5; }
+.ov-btn-rij { display: flex; gap: 8px; justify-content: center; }
+.btn-rood { background: #E74C3C; color: white; border: none; border-radius: 10px; padding: 10px 20px; font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit; }
+.btn-grijs { background: #f0f0f0; color: #555; border: none; border-radius: 10px; padding: 10px 20px; font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit; }
+
+/* ══ EVALUATIE ══ */
+#evaluatie { display: none; min-height: 100vh; background: #FDF6EC; }
+.eval-header { background: linear-gradient(135deg,#E67E22,#D35400); padding: 14px 24px; display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; }
+.eval-keuze { padding: 24px; max-width: 600px; margin: 0 auto; }
+.eval-keuze-kaart { background:white; border-radius:16px; padding:24px; box-shadow:0 3px 14px rgba(0,0,0,.08); }
+.eval-keuze-kaart h3 { font-size:16px; color:#E67E22; margin-bottom:14px; }
+.eval-periode-btn { display:block; width:100%; text-align:left; border:2px solid #eee; border-radius:10px; padding:12px 16px; margin-bottom:8px; background:white; font-size:14px; font-weight:600; color:#555; cursor:pointer; font-family:inherit; transition:all .15s; }
+.eval-periode-btn:hover { border-color:#E67E22; background:#FFF8F3; }
+.eval-kind-tabs { display:flex; gap:6px; padding:14px 24px 0; overflow-x:auto; background:white; border-bottom:2px solid #f0e8d8; }
+.eval-kind-tab { border:none; background:none; padding:10px 16px; font-size:13px; font-weight:600; color:#aaa; cursor:pointer; font-family:inherit; border-bottom:3px solid transparent; white-space:nowrap; }
+.eval-kind-tab.actief { color:#E67E22; border-bottom-color:#E67E22; }
+.eval-kind-tab.klaar::after { content:' ✓'; color:#27AE60; }
+.eval-body { max-width: 800px; margin: 0 auto; padding: 24px; }
+.eval-kaart { background:white; border-radius:16px; padding:22px; margin-bottom:18px; box-shadow:0 2px 10px rgba(0,0,0,.06); }
+.eval-kaart h4 { font-size:14px; color:#E67E22; margin-bottom:12px; text-transform:uppercase; letter-spacing:.5px; }
+.eval-afspraak-rij { display:flex; align-items:center; justify-content:space-between; padding:9px 0; border-bottom:1px solid #f5f5f5; font-size:13px; }
+.eval-afspraak-rij:last-child { border-bottom: none; }
+.eval-afspraak-naam { color:#555; flex:1; }
+.eval-afspraak-periode { color:#bbb; font-size:11px; margin-left:8px; }
+.eval-cat { margin-bottom: 16px; }
+.eval-cat-titel { font-size:12px; font-weight:700; color:#888; margin-bottom:8px; }
+.eval-zin { display:inline-block; border:1.5px solid #eee; border-radius:18px; padding:7px 14px; margin:0 6px 8px 0; font-size:13px; color:#555; cursor:pointer; background:white; transition:all .15s; }
+.eval-zin:hover { border-color:#E67E22; background:#FFF8F3; }
+.eval-zin.gekozen { border-color:#E67E22; background:#E67E22; color:white; font-weight:600; }
+.eval-vrije-tekst { width:100%; border:1.5px solid #eee; border-radius:10px; padding:12px; font-size:14px; font-family:inherit; min-height:90px; resize:vertical; margin-top:8px; }
+.eval-vrije-tekst:focus { outline:none; border-color:#E67E22; }
+.eval-nav-rij { display:flex; justify-content:space-between; margin-top:20px; }
+.eval-nav-btn { background:#E67E22; color:white; border:none; border-radius:10px; padding:11px 24px; font-size:14px; font-weight:700; cursor:pointer; font-family:inherit; }
+.eval-nav-btn.secundair { background:#f0f0f0; color:#666; }
+.eval-nav-btn:disabled { opacity:.3; cursor:default; }
+
+/* EVALUATIEBLAD print/preview */
+.evalblad { background:white; border:3px solid #E67E22; border-radius:16px; padding:40px; max-width:794px; width:100%; margin:0 auto; box-sizing:border-box; min-height:1000px; display:flex; flex-direction:column; }
+@media print {
+  .evalblad { max-width:none; width:100%; min-height:0; border-radius:0; box-shadow:none; padding:14mm; }
+}
+.evalblad-header { text-align:center; margin-bottom:26px; border-bottom:2px dashed #F0D9B5; padding-bottom:20px; }
+.evalblad-header .eb-logo { font-size:44px; }
+.evalblad-header h2 { font-size:26px; color:#E67E22; margin:6px 0; }
+.evalblad-header .eb-naam { font-size:32px; font-weight:800; color:#1A0A00; margin-top:10px; }
+.evalblad-header .eb-periode { font-size:15px; color:#999; }
+.evalblad-sectie { margin-bottom:26px; }
+.evalblad-sectie h3 { font-size:15px; color:#E67E22; text-transform:uppercase; letter-spacing:.5px; margin-bottom:14px; }
+.evalblad-afspraak { display:flex; justify-content:space-between; align-items:center; padding:12px 16px; background:#FFF8F0; border-radius:10px; margin-bottom:8px; font-size:15px; }
+.evalblad-tekstblok { font-size:16px; color:#333; line-height:1.8; background:#FAFAFA; border-radius:12px; padding:20px; }
+.evalblad-handtekening { display:flex; justify-content:space-between; margin-top:auto; gap:20px; padding-top:30px; }
+.evalblad-handtekening div { flex:1; text-align:center; }
+.evalblad-handtekening .lijn { border-top:1.5px solid #ccc; margin-top:50px; padding-top:6px; font-size:12px; color:#999; }
+
+/* ══ MAAND ══ */
+#maand { display: none; min-height: 100vh; background: #FDF6EC; padding: 20px; }
+.maand-header { display: flex; align-items: center; gap: 14px; margin-bottom: 18px; }
+.maand-header h2 { font-size: 20px; font-weight: 800; color: #E67E22; }
+.terug-btn { background: white; border: 2px solid #E67E22; color: #E67E22; border-radius: 10px; padding: 8px 16px; font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit; }
+.m-tabel { width: 100%; border-collapse: collapse; background: white; border-radius: 14px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,.08); font-size: 13px; }
+.m-tabel th { background: #FFF3E0; color: #E67E22; padding: 11px 13px; text-align: left; font-weight: 800; border-bottom: 2px solid #F0D9B5; }
+.m-tabel td { padding: 10px 13px; border-bottom: 1px solid #f5f5f5; }
+.m-tabel tr:last-child td { border-bottom: none; }
+.m-tabel tr:hover td { background: #FFFAF5; }
+.med-cel { font-size: 18px; }
+.chip { display: inline-block; border-radius: 12px; padding: 3px 12px; font-size: 11px; font-weight: 800; }
+.chip-goud   { background: #FFF3CD; color: #B7860B; border: 1px solid #F0C030; }
+.chip-zilver { background: #F0F0F0; color: #666;    border: 1px solid #CCC; }
+.chip-brons  { background: #FDE8D8; color: #A0522D; border: 1px solid #DDA070; }
+.chip-aanm   { background: #EBF5FB; color: #2E86C1; border: 1px solid #AED6F1; }
+.chip-geen   { background: #f8f8f8; color: #bbb;    border: 1px solid #eee; }
+
+/* ══ AFDRUK ══ */
+#afdruk { background: #f5f0e8; }
+@media print {
+  #setup, #spel, #maand, #evaluatie { display: none !important; }
+  #afdruk { display: block !important; background: white; }
+  .geen-print { display: none !important; }
+  #diplomaContainer { display: block !important; }
+  @page { size: A4 portrait; margin: 8mm; }
+}
+#diplomaContainer { display: none; }
+
+/* Evaluatieblad print */
+#evalPrintContainer { display: none; }
+@media print {
+  body.print-evaluatie #setup, body.print-evaluatie #spel, body.print-evaluatie #maand, body.print-evaluatie #afdruk, body.print-evaluatie #evaluatie { display: none !important; }
+  body.print-evaluatie #evalPrintContainer { display: block !important; }
+  body.print-evaluatie .geen-print { display: none !important; }
+}
+
+.confetti-wrap { position: fixed; inset: 0; pointer-events: none; z-index: 300; }
+</style>
+</head>
+<body>
+
+<!-- ══ SETUP ══ -->
+<div id="setup">
+
+  <div class="setup-zijbalk">
+    <div class="zijbalk-scroll">
+      <div class="logo">🦓</div>
+      <h1>Zebra Klasafspraken</h1>
+      <p class="subtitel">Juf Zisa</p>
+      <a class="menu-btn" href="../index.html">Keuzescherm</a>
+
+      <div class="zijbalk-tip">
+        <strong>📋 Hoe werkt het?</strong>
+        Kies de afspraak van de maand, voeg de namen in en klik op Start.
+      </div>
+      <div class="zijbalk-tip">
+        <strong>📅 Elke dag</strong>
+        Klik op een kind om een stap te geven. Na alle schooldagen → medaille!
+      </div>
+      <div class="zijbalk-tip">
+        <strong>🔄 Nieuwe afspraak?</strong>
+        Klik hieronder op "Nieuwe afspraak starten" — de oude wordt bewaard voor je evaluatieblad, en je kiest meteen de volgende afspraak.
+      </div>
+      <div class="zijbalk-tip">
+        <strong>🏅 Einde maand</strong>
+        Druk diploma's af voor elk kind op basis van hun medailles.
+        <button class="tip-voorbeeld-btn" onclick="toonVoorbeeldDiplomas()">👀 Toon voorbeeld diploma's</button>
+      </div>
+      <div class="zijbalk-tip">
+        <strong>📋 Evaluatieblad</strong>
+        Per rapportperiode een overzicht met feedback, klaar om af te drukken.
+        <button class="tip-voorbeeld-btn" onclick="toonVoorbeeld()">👀 Toon voorbeeld evaluatie</button>
+      </div>
+    </div>
+
+    <div class="zijbalk-footer">
+      <div id="opgeslagenBadge" class="opgeslagen" style="display:none">✓ Gegevens opgeslagen</div>
+      <button class="start-btn" onclick="startSpel()">▶ Start het spel</button>
+      <button class="reset-btn" onclick="vraagNieuweAfspraak()" style="color:#C0610A;font-weight:700">🔄 Nieuwe afspraak starten</button>
+      <button class="reset-btn" onclick="nieuwSchooljaar()">🗑 Nieuw schooljaar</button>
+    </div>
+  </div>
+
+  <div class="setup-inhoud">
+    <div class="setup-grid">
+
+      <div class="setup-kolom-breed">
+        <div class="setup-sectie">
+          <span class="s-label">Klasafspraak van deze maand</span>
+          <div id="afsprakenLijst"></div>
+          <div class="nieuw-rij">
+            <input class="s-input" type="text" id="nieuweAfspraak" placeholder="Eigen afspraak toevoegen..." style="margin:0" onkeydown="if(event.key==='Enter')voegToe()" />
+            <button class="start-btn" style="width:auto;margin:0;padding:10px 14px;font-size:13px;box-shadow:none" onclick="voegToe()">+</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="setup-kolom-smal">
+        <div class="setup-sectie">
+          <span class="s-label">Namen van de kinderen</span>
+          <textarea class="s-input s-input-namen" id="namenInput" placeholder="Anna&#10;Bram&#10;Charlotte&#10;..."></textarea>
+        </div>
+
+        <div class="setup-sectie">
+          <span class="s-label">Week van de maand</span>
+          <div class="week-rij">
+            <button class="wk" id="wk1" onclick="setWeek(1)">1</button>
+            <button class="wk" id="wk2" onclick="setWeek(2)">2</button>
+            <button class="wk" id="wk3" onclick="setWeek(3)">3</button>
+            <button class="wk" id="wk4" onclick="setWeek(4)">4</button>
+          </div>
+        </div>
+
+        <div class="setup-sectie">
+          <span class="s-label">Hoort bij rapportperiode</span>
+          <div id="periodesLijst"></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ══ SPEELVELD ══ -->
+<div id="spel">
+  <div class="spel-header">
+    <div>
+      <div class="spel-afspraak" id="spelAfspraak">—</div>
+      <div class="spel-week" id="spelWeek">Week —</div>
+    </div>
+    <div class="header-knoppen">
+      <a class="hdr-btn" href="../index.html" style="text-decoration:none">Keuzescherm</a>
+      <div class="schooldagen-kiezer geen-print" title="Aantal schooldagen deze week (bv. minder bij een feestdag)">
+        <span style="color:rgba(255,255,255,.8);font-size:12px;margin-right:6px">Dagen deze week:</span>
+        <button class="sd-btn" id="sd1" onclick="setSchooldagen(1)">1</button>
+        <button class="sd-btn" id="sd2" onclick="setSchooldagen(2)">2</button>
+        <button class="sd-btn" id="sd3" onclick="setSchooldagen(3)">3</button>
+        <button class="sd-btn" id="sd4" onclick="setSchooldagen(4)">4</button>
+        <button class="sd-btn" id="sd5" onclick="setSchooldagen(5)">5</button>
+      </div>
+      <button class="hdr-btn" onclick="naarSetup()">⚙️ Instellingen</button>
+      <button class="hdr-btn" onclick="naarMaand()">📊 Maandoverzicht</button>
+      <button class="hdr-btn" onclick="naarAfdruk()">🖨️ Afdrukken</button>
+      <button class="hdr-btn" onclick="openNamenBeheer()">👧 Namen</button>
+      <button class="hdr-btn" onclick="naarEvaluatie()" style="background:rgba(255,255,255,.35)">📋 Evaluatie</button>
+      <button class="hdr-btn" onclick="vraagNieuweAfspraak()" style="background:rgba(255,255,255,.35)">🔄 Nieuwe afspraak</button>
+      <button class="hdr-btn" onclick="vraagReset()">↺ Nieuwe week</button>
+    </div>
+  </div>
+  <div class="kinderen-grid" id="kinderenGrid"></div>
+</div>
+
+<!-- ══ EVALUATIE ══ -->
+<div id="evaluatie">
+  <div class="eval-header geen-print">
+    <div>
+      <strong style="color:white;font-size:16px">📋 Evaluatieblad</strong>
+      <span style="color:rgba(255,255,255,.75);font-size:13px;margin-left:10px" id="evalSubtitel"></span>
+    </div>
+    <button onclick="naarSpel()" style="background:rgba(255,255,255,.2);border:none;color:white;border-radius:10px;padding:8px 16px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">← Terug</button>
+  </div>
+
+  <!-- STAP 1: periode kiezen -->
+  <div id="evalStapPeriode" class="eval-keuze">
+    <div class="eval-keuze-kaart">
+      <h3>Voor welke rapportperiode maak je het evaluatieblad?</h3>
+      <div id="evalPeriodeKnoppen"></div>
+      <div style="text-align:center;margin-top:18px;padding-top:16px;border-top:1px solid #f0e8d8">
+        <button class="eval-nav-btn secundair" onclick="toonVoorbeeld()">👀 Toon voorbeeld (om aan collega's te laten zien)</button>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- STAP 2: per kind invullen -->
+  <div id="evalStapKind" style="display:none">
+    <div class="eval-kind-tabs" id="evalKindTabs"></div>
+    <div class="eval-body" id="evalKindBody"></div>
+  </div>
+
+  <!-- STAP 3: overzicht + afdrukken -->
+  <div id="evalStapOverzicht" style="display:none">
+    <div class="eval-body">
+      <div class="geen-print" style="margin-bottom:16px;display:flex;gap:8px;justify-content:flex-end">
+        <button class="eval-nav-btn secundair" onclick="terugNaarKindStap()">← Terug naar invullen</button>
+        <button class="eval-nav-btn" onclick="printEvaluatie()">🖨️ Downloaden als PDF</button>
+      </div>
+      <div id="evalOverzichtBladen"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Print container voor evaluatieblad -->
+<div id="evalPrintContainer"></div>
+
+<!-- ══ MAAND ══ -->
+<div id="maand">
+  <div class="maand-header">
+    <button class="terug-btn" onclick="naarSpel()">← Terug</button>
+    <h2>📊 Maandoverzicht</h2>
+  </div>
+  <div style="overflow-x:auto">
+    <table class="m-tabel">
+      <thead><tr>
+        <th>Kind</th><th>Week 1</th><th>Week 2</th><th>Week 3</th><th>Week 4</th><th>Totaal</th><th>Diploma</th>
+      </tr></thead>
+      <tbody id="maandBody"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ══ AFDRUK ══ -->
+<div id="afdruk" style="display:none;min-height:100vh;background:#f5f0e8">
+
+  <div class="geen-print" style="background:linear-gradient(135deg,#E67E22,#D35400);padding:14px 24px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
+    <div>
+      <strong style="color:white;font-size:16px">🖨️ Diploma's</strong>
+      <span style="color:rgba(255,255,255,.75);font-size:13px;margin-left:10px">Elk kind krijgt automatisch het juiste diploma</span>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center">
+      <button onclick="naarSpel()" style="background:rgba(255,255,255,.2);border:none;color:white;border-radius:10px;padding:8px 16px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">← Terug</button>
+      <button onclick="window.print()" style="background:white;border:none;color:#E67E22;border-radius:10px;padding:8px 18px;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit">🖨️ Alles afdrukken</button>
+    </div>
+  </div>
+
+  <!-- PREVIEW GRID — zichtbaar in browser -->
+  <div class="geen-print" style="padding:20px 24px 8px">
+    <p style="font-size:13px;color:#888;margin-bottom:16px">Scroll door alle diploma's hieronder. Bij afdrukken komen er 2 per A4-blad.</p>
+    <div id="diplomaPreviewGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(500px,1fr));gap:20px"></div>
+  </div>
+
+  <!-- PRINT CONTAINER — alleen bij afdrukken zichtbaar -->
+  <div id="diplomaContainer"></div>
+</div>
+
+<!-- MEDAILLE OVERLAY -->
+<div class="overlay" id="medailleOv">
+  <div class="ov-kaart">
+    <span class="ov-emoji">🥇</span>
+    <div class="ov-naam" id="ovNaam"></div>
+    <div class="ov-tekst" id="ovTekst"></div>
+    <button class="ov-btn" onclick="sluitOv('medailleOv')">🎉 Super gedaan!</button>
+  </div>
+</div>
+
+<!-- NIEUWE AFSPRAAK OVERLAY -->
+<div class="overlay" id="nieuweAfspraakOv">
+  <div class="ov-kaart" style="max-width:380px;width:90%">
+    <div style="font-size:28px;margin-bottom:8px">🔄</div>
+    <div class="ov-klein">Nieuwe afspraak starten?</div>
+    <div class="ov-tekst-klein">Alle medailles en voortgang worden gewist. Namen blijven bewaard. Je kiest daarna een nieuwe afspraak in de instellingen.</div>
+    <div class="ov-btn-rij">
+      <button class="btn-rood" onclick="bevestigNieuweAfspraak()">Ja, nieuwe afspraak</button>
+      <button class="btn-grijs" onclick="sluitOv('nieuweAfspraakOv')">Annuleer</button>
+    </div>
+  </div>
+</div>
+
+<!-- NAAM BEHEER OVERLAY -->
+<div class="overlay" id="naamBeheerOv">
+  <div class="ov-kaart" style="max-width:420px;width:90%;max-height:80vh;overflow-y:auto">
+    <div style="font-size:22px;font-weight:800;color:#E67E22;margin-bottom:4px">👧👦 Namen beheren</div>
+    <div style="font-size:13px;color:#aaa;margin-bottom:14px">Voeg een kind toe of verwijder een kind. Voortgang van verwijderde kinderen wordt gewist.</div>
+    <div id="namenBeheerLijst" style="margin-bottom:14px"></div>
+    <div style="display:flex;gap:8px">
+      <input type="text" id="nieuwKindInput" placeholder="Naam nieuw kind..." style="flex:1;border:1.5px solid #eee;border-radius:8px;padding:9px 12px;font-size:14px;font-family:inherit" onkeydown="if(event.key==='Enter')voegKindToe()" />
+      <button onclick="voegKindToe()" style="background:#E67E22;color:white;border:none;border-radius:8px;padding:9px 16px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">+ Toevoegen</button>
+    </div>
+    <button onclick="sluitOv('naamBeheerOv')" style="margin-top:14px;width:100%;background:#f0f0f0;border:none;border-radius:8px;padding:10px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;color:#555">✓ Klaar</button>
+  </div>
+</div>
+
+<!-- VOORBEELD OVERLAY (diploma's of evaluatieblad) -->
+<div class="overlay" id="voorbeeldOv">
+  <div class="ov-kaart" style="max-width:880px;width:94%;max-height:92vh;overflow-y:auto;text-align:left">
+    <div class="geen-print" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+      <strong style="font-size:16px;color:#E67E22" id="voorbeeldTitel">👀 Voorbeeld</strong>
+      <button onclick="sluitOv('voorbeeldOv')" style="background:#f0f0f0;border:none;border-radius:8px;padding:6px 14px;font-size:13px;cursor:pointer;font-family:inherit;color:#666">✕ Sluiten</button>
+    </div>
+    <div id="voorbeeldInhoud"></div>
+  </div>
+</div>
+
+<!-- RESET OVERLAY -->
+<div class="overlay" id="resetOv">
+  <div class="ov-kaart">
+    <div class="ov-klein">↺ Nieuwe week starten?</div>
+    <div class="ov-tekst-klein">De voortgang van deze week wordt gewist.<br>Medailles van vorige weken blijven bewaard.</div>
+    <div class="ov-btn-rij">
+      <button class="btn-rood" onclick="bevestigReset()">Ja, nieuwe week</button>
+      <button class="btn-grijs" onclick="sluitOv('resetOv')">Annuleer</button>
+    </div>
+  </div>
+</div>
+
+<div class="confetti-wrap" id="confettiWrap"></div>
+
+<script>
+const SK = { namen:'zisa_n', afspraken:'zisa_a', actief:'zisa_act', week:'zisa_w', voortgang:'zisa_vg', medailles:'zisa_med', periodes:'zisa_per', actiefPeriode:'zisa_actper', archief:'zisa_arch', schooldagen:'zisa_schooldagen' };
+const STD = [
+  'Ik kom in stilte de klas binnen',
+  'Ik werk in stilte tijdens zelfstandig werk',
+  'Ik steek mijn vinger op als ik iets wil vragen of antwoorden',
+  'Ik wandel in stilte in de gang',
+  'Ik luister naar de ander'
+];
+const STD_PERIODES = ['Periode 1', 'Periode 2', 'Periode 3'];
+
+let namen = [], afspraken = [...STD], actief = STD[0], weekNr = 1, vg = {}, med = {};
+let periodes = [...STD_PERIODES], actiefPeriode = STD_PERIODES[0];
+let schooldagen = 5; // aantal schooldagen deze week (3, 4 of 5)
+// archief: [{ afspraak, periode, medailles: {naam: [b,b,b,b]}, datum }]
+let archief = [];
+let evalDataPerPeriode = {};
+const TEST_EMAILS = ['isabel.rockele@bsdelinde.net'];
+const BEWAAR_JAREN_KLASAFSPRAKEN = 1;
+let remote = { enabled:false, db:null, user:null, schooljaar:null, klas:null, ref:null, saveTimer:null, loaded:false };
+
+function huidigSchooljaar() {
+  const nu = new Date();
+  const start = nu.getMonth() >= 7 ? nu.getFullYear() : nu.getFullYear() - 1;
+  return `${start}-${start + 1}`;
+}
+
+function bewaarTotVoorSchooljaar(jaar) {
+  return `${Number(String(jaar).slice(0, 4)) + BEWAAR_JAREN_KLASAFSPRAKEN}-08-31`;
+}
+
+function leerlingNaam(leerling) {
+  const voornaam = leerling.first || leerling.firstName || leerling.voornaam || '';
+  const achternaam = leerling.last || leerling.lastName || leerling.achternaam || '';
+  return `${achternaam}, ${voornaam}`.replace(/^, /, '').replace(/, $/, '') || leerling.naam || '';
+}
+
+function actieveLeerlingen(leerlingen) {
+  const vandaag = new Date().toISOString().slice(0, 10);
+  return (leerlingen || [])
+    .filter(l => (!l.start || l.start <= vandaag) && (!l.end || l.end >= vandaag))
+    .map(leerlingNaam)
+    .filter(Boolean)
+    .sort((a, b) => a.localeCompare(b, 'nl'));
+}
+
+function planRemoteSave() {
+  if (!remote.enabled || !remote.ref || !remote.loaded) return;
+  clearTimeout(remote.saveTimer);
+  remote.saveTimer = setTimeout(slaRemoteOp, 500);
+}
+
+async function slaRemoteOp() {
+  if (!remote.enabled || !remote.ref || !remote.loaded) return;
+  try {
+    const { setDoc, serverTimestamp } = remote.firestore;
+    await setDoc(remote.ref, {
+      schooljaar: remote.schooljaar,
+      klas: remote.klas,
+      namen,
+      afspraken,
+      actief,
+      weekNr,
+      voortgang: vg,
+      medailles: med,
+      periodes,
+      actiefPeriode,
+      schooldagen,
+      archief,
+      evalDataPerPeriode,
+      bewaarTot: bewaarTotVoorSchooljaar(remote.schooljaar),
+      bewaartermijnJaren: BEWAAR_JAREN_KLASAFSPRAKEN,
+      bijgewerktOp: serverTimestamp(),
+      bijgewerktDoor: remote.user?.email || remote.user?.uid || ''
+    }, { merge:true });
+    const badge = document.getElementById('opgeslagenBadge');
+    if (badge) badge.style.display = 'inline-block';
+  } catch (e) {
+    console.error('Klasafspraken bewaren in Firebase lukte niet:', e);
+  }
+}
+
+async function startFirebaseKlasafspraken() {
+  try {
+    const [{ initializeApp, getApps, getApp }, { getAuth, onAuthStateChanged }, firestore] = await Promise.all([
+      import('https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js'),
+      import('https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js'),
+      import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js')
+    ]);
+    const firebaseConfig = {
+      apiKey: 'AIzaSyA7KxXMvZ4dzBQDut3CMyWUblLte2tFzoQ',
+      authDomain: 'huiswerkapp-a311e.firebaseapp.com',
+      projectId: 'huiswerkapp-a311e',
+      storageBucket: 'huiswerkapp-a311e.appspot.com',
+      messagingSenderId: '797169941164',
+      appId: '1:797169941164:web:511d9618079f1378d0fd09'
+    };
+    const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    remote.db = firestore.getFirestore(app);
+    remote.firestore = firestore;
+    onAuthStateChanged(auth, laadKlasafsprakenVoorGebruiker);
+  } catch (e) {
+    console.error('Firebase starten voor klasafspraken lukte niet:', e);
+  }
+}
+
+async function laadKlasafsprakenVoorGebruiker(user) {
+  if (!user) {
+    location.href = '../index.html';
+    return;
+  }
+  if (!TEST_EMAILS.includes(String(user.email || '').toLowerCase())) {
+    alert('Deze testpagina staat voorlopig alleen open voor juf Isabel.');
+    location.href = '../index.html';
+    return;
+  }
+  remote.user = user;
+  remote.schooljaar = huidigSchooljaar();
+  const fs = remote.firestore;
+  const email = String(user.email || '').toLowerCase();
+  const resultaten = await Promise.all([
+    fs.getDocs(fs.query(fs.collection(remote.db, 'klasleerkrachten'), fs.where('leerkracht_uids', 'array-contains', user.uid))),
+    fs.getDocs(fs.query(fs.collection(remote.db, 'klasleerkrachten'), fs.where('leerkracht_emails', 'array-contains', email)))
+  ]);
+  const klasDoc = resultaten.flatMap(snap => snap.docs)
+    .map(d => d.data())
+    .find(d => String(d.schooljaar || remote.schooljaar) === remote.schooljaar && (d.klas || d.klasId));
+  if (!klasDoc) return;
+  remote.klas = String(klasDoc.klas || klasDoc.klasId);
+  remote.ref = fs.doc(remote.db, 'klasafspraken', remote.schooljaar, 'klassen', remote.klas);
+
+  const [klasSnap, dataSnap] = await Promise.all([
+    fs.getDoc(fs.doc(remote.db, 'schoolbeheer', remote.schooljaar, 'klassen', remote.klas)),
+    fs.getDoc(remote.ref)
+  ]);
+  const klasNamen = klasSnap.exists() ? actieveLeerlingen(klasSnap.data().leerlingen || []) : [];
+  if (dataSnap.exists()) {
+    const data = dataSnap.data();
+    afspraken = Array.isArray(data.afspraken) && data.afspraken.length ? data.afspraken : afspraken;
+    actief = data.actief || actief;
+    weekNr = Number(data.weekNr || weekNr) || 1;
+    vg = data.voortgang || data.vg || vg;
+    med = data.medailles || data.med || med;
+    periodes = Array.isArray(data.periodes) && data.periodes.length ? data.periodes : periodes;
+    actiefPeriode = data.actiefPeriode || actiefPeriode;
+    schooldagen = Number(data.schooldagen || schooldagen) || 5;
+    archief = Array.isArray(data.archief) ? data.archief : archief;
+    evalDataPerPeriode = data.evalDataPerPeriode || evalDataPerPeriode;
+  }
+  if (klasNamen.length) {
+    namen = klasNamen;
+    document.getElementById('namenInput').value = namen.join('\n');
+    namen.forEach(naam => {
+      if (!vg[naam] || !vg[naam].dagen) vg[naam] = { dagen: new Array(schooldagen).fill(null), medaille: false };
+      if (!med[naam]) med[naam] = [false, false, false, false];
+    });
+  }
+  remote.enabled = true;
+  remote.loaded = true;
+  tekenAfspraken();
+  tekenPeriodes();
+  updateWkChips();
+  updateSdChips();
+  if (document.getElementById('spel').style.display === 'block') tekenGrid();
+  planRemoteSave();
+}
+
+startFirebaseKlasafspraken();
+
+// ── LAAD ──────────────────────────────────────────────────────────
+(function init() {
+  try {
+    const a = localStorage.getItem(SK.afspraken); if (a) afspraken = JSON.parse(a);
+    const act = localStorage.getItem(SK.actief);   if (act) actief = act;
+    const w = localStorage.getItem(SK.week);        if (w) weekNr = parseInt(w)||1;
+    const n = localStorage.getItem(SK.namen);
+    if (n) { document.getElementById('namenInput').value = n; namen = parseNamen(n); document.getElementById('opgeslagenBadge').style.display='inline-block'; }
+    const v = localStorage.getItem(SK.voortgang);  if (v) vg = JSON.parse(v);
+    const m = localStorage.getItem(SK.medailles);  if (m) med = JSON.parse(m);
+    const per = localStorage.getItem(SK.periodes); if (per) periodes = JSON.parse(per);
+    const sd = localStorage.getItem(SK.schooldagen); if (sd) schooldagen = parseInt(sd)||5;
+    const actp = localStorage.getItem(SK.actiefPeriode); if (actp) actiefPeriode = actp;
+    const arch = localStorage.getItem(SK.archief); if (arch) archief = JSON.parse(arch);
+  } catch(e) {}
+  tekenAfspraken(); tekenPeriodes(); updateWkChips();
+})();
+
+function parseNamen(t) { return t.split('\n').map(x=>x.trim()).filter(x=>x).slice(0,30); }
+
+function slaOp() {
+  try {
+    localStorage.setItem(SK.namen, document.getElementById('namenInput').value);
+    localStorage.setItem(SK.afspraken, JSON.stringify(afspraken));
+    localStorage.setItem(SK.actief, actief);
+    localStorage.setItem(SK.week, weekNr);
+    localStorage.setItem(SK.voortgang, JSON.stringify(vg));
+    localStorage.setItem(SK.medailles, JSON.stringify(med));
+    localStorage.setItem(SK.periodes, JSON.stringify(periodes));
+    localStorage.setItem(SK.schooldagen, schooldagen);
+    localStorage.setItem(SK.actiefPeriode, actiefPeriode);
+    localStorage.setItem(SK.archief, JSON.stringify(archief));
+  } catch(e) {}
+  planRemoteSave();
+}
+function slaVgOp() {
+  try { localStorage.setItem(SK.voortgang, JSON.stringify(vg)); localStorage.setItem(SK.medailles, JSON.stringify(med)); } catch(e) {}
+  planRemoteSave();
+}
+function slaArchiefOp() { try { localStorage.setItem(SK.archief, JSON.stringify(archief)); } catch(e) {} planRemoteSave(); }
+function slaPeriodesOp() { try { localStorage.setItem(SK.periodes, JSON.stringify(periodes)); localStorage.setItem(SK.actiefPeriode, actiefPeriode); } catch(e) {} planRemoteSave(); }
+
+// ── RAPPORTPERIODES ───────────────────────────────────────────────
+function tekenPeriodes() {
+  const el = document.getElementById('periodesLijst');
+  if (!el) return;
+  el.innerHTML = '';
+  periodes.forEach((p, i) => {
+    const r = document.createElement('div');
+    r.className = 'afsp-rij' + (p===actiefPeriode?' actief':'');
+    r.innerHTML = `<div class="afsp-dot"></div><span class="afsp-tekst" onclick="kiesPeriode(${i})">${p}</span>
+      <button class="knop-mini" style="background:#fff3e0;color:#e67e22;border-color:#e67e22" onclick="bewerkPeriode(${i})">✏️</button>`;
+    el.appendChild(r);
+  });
+}
+function kiesPeriode(i) { actiefPeriode = periodes[i]; tekenPeriodes(); slaPeriodesOp(); }
+function bewerkPeriode(i) {
+  const n = prompt('Periode hernoemen:', periodes[i]);
+  if (!n || !n.trim()) return;
+  const was = periodes[i] === actiefPeriode;
+  periodes[i] = n.trim();
+  if (was) actiefPeriode = n.trim();
+  tekenPeriodes(); slaPeriodesOp();
+}
+
+// ── AFSPRAKEN ─────────────────────────────────────────────────────
+function tekenAfspraken() {
+  const el = document.getElementById('afsprakenLijst');
+  el.innerHTML = '';
+  afspraken.forEach((a, i) => {
+    const r = document.createElement('div');
+    r.className = 'afsp-rij' + (a===actief?' actief':'');
+    r.innerHTML = `<div class="afsp-dot"></div><span class="afsp-tekst" onclick="kiesAfsp(${i})">${a}</span>
+      <button class="knop-mini" style="background:#fff3e0;color:#e67e22;border-color:#e67e22" onclick="bewerkAfsp(${i})">✏️</button>
+      <button class="knop-mini" style="background:#fef0f0;color:#e74c3c;border-color:#e74c3c" onclick="verwijderAfsp(${i})">🗑</button>`;
+    el.appendChild(r);
+  });
+}
+function kiesAfsp(i) { actief = afspraken[i]; tekenAfspraken(); slaOp(); }
+function bewerkAfsp(i) {
+  const n = prompt('Afspraak bewerken:', afspraken[i]);
+  if (!n||!n.trim()) return;
+  const was = afspraken[i]===actief;
+  afspraken[i] = n.trim();
+  if (was) actief = n.trim();
+  tekenAfspraken(); slaOp();
+}
+function verwijderAfsp(i) {
+  if (afspraken.length<=1) { alert('Minstens 1 afspraak bewaren.'); return; }
+  if (!confirm('Verwijderen?')) return;
+  const was = afspraken[i]===actief;
+  afspraken.splice(i,1);
+  if (was) actief = afspraken[0];
+  tekenAfspraken(); slaOp();
+}
+function voegToe() {
+  const inp = document.getElementById('nieuweAfspraak');
+  const v = inp.value.trim(); if (!v) return;
+  afspraken.push(v); inp.value='';
+  tekenAfspraken(); slaOp();
+}
+
+// ── WEEK ──────────────────────────────────────────────────────────
+function setWeek(n) { weekNr=n; updateWkChips(); try{localStorage.setItem(SK.week,n);}catch(e){} planRemoteSave(); }
+function updateWkChips() {
+  for(let i=1;i<=4;i++) { const el=document.getElementById('wk'+i); if(el) el.className='wk'+(weekNr===i?' actief':''); }
+}
+
+// ── SCHOOLDAGEN PER WEEK ──────────────────────────────────────────
+function setSchooldagen(n) {
+  if (schooldagen === n) return;
+  if (Object.values(vg).some(v => v.dagen && v.dagen.some(d => d !== null))) {
+    if (!confirm(`Aantal schooldagen wijzigen naar ${n}? De voortgang van deze week wordt opnieuw ingesteld.`)) return;
+  }
+  schooldagen = n;
+  // Reset dagen-array voor alle kinderen naar de nieuwe lengte
+  namen.forEach(naam => {
+    if (!vg[naam]) vg[naam] = { dagen: [], medaille: false };
+    vg[naam].dagen = new Array(schooldagen).fill(null);
+    vg[naam].medaille = false;
+  });
+  try { localStorage.setItem(SK.schooldagen, schooldagen); } catch(e) {}
+  slaVgOp();
+  updateSdChips();
+  tekenGrid();
+}
+function updateSdChips() {
+  for (let i=1; i<=5; i++) { const el=document.getElementById('sd'+i); if(el) el.className='sd-btn'+(schooldagen===i?' actief':''); }
+}
+
+// ── NAVIGATIE ─────────────────────────────────────────────────────
+function toon(id) { ['setup','spel','maand','afdruk','evaluatie'].forEach(x=>{ document.getElementById(x).style.display='none'; }); document.getElementById(id).style.display='block'; }
+function naarSetup() { toon('setup'); document.getElementById('setup').style.display='flex'; }
+function naarSpel() { toon('spel'); updateSdChips(); tekenGrid(); }
+function naarMaand() { toon('maand'); tekenMaand(); }
+function naarEvaluatie() { toon('evaluatie'); evalStartPeriodeKeuze(); }
+
+// ── START SPEL ────────────────────────────────────────────────────
+function startSpel() {
+  namen = parseNamen(document.getElementById('namenInput').value);
+  if (!namen.length) { alert('Voeg minstens één naam in.'); return; }
+  if (!actief) { alert('Kies een klasafspraak.'); return; }
+  namen.forEach(n => {
+    if (!vg[n] || !vg[n].dagen) vg[n] = { dagen: new Array(schooldagen).fill(null), medaille: false };
+    if (!med[n]) med[n] = [false,false,false,false];
+  });
+  slaOp();
+  document.getElementById('opgeslagenBadge').style.display='inline-block';
+  naarSpel();
+}
+
+// ── GRID ──────────────────────────────────────────────────────────
+function tekenGrid() {
+  document.getElementById('spelAfspraak').textContent = '⭐ ' + actief;
+  document.getElementById('spelWeek').textContent = 'Week ' + weekNr + ' van de maand';
+  const grid = document.getElementById('kinderenGrid');
+  grid.innerHTML = '';
+
+  // Schaal de kaartgrootte op basis van het aantal kinderen — minder kinderen = grotere kaarten
+  const n = namen.length;
+  let minWidth;
+  if (n <= 10) minWidth = 260;
+  else if (n <= 15) minWidth = 220;
+  else if (n <= 20) minWidth = 190;
+  else if (n <= 25) minWidth = 170;
+  else minWidth = 150;
+  grid.style.gridTemplateColumns = `repeat(auto-fill, minmax(${minWidth}px, 1fr))`;
+  grid.className = 'kinderen-grid';
+  if (n <= 10) grid.classList.add('grid-xl');
+  else if (n <= 15) grid.classList.add('grid-lg');
+  else if (n <= 20) grid.classList.add('grid-md');
+
+  namen.forEach((naam, i) => {
+    if (!vg[naam] || !vg[naam].dagen) vg[naam] = { dagen: new Array(schooldagen).fill(null), medaille: false };
+    grid.appendChild(maakKaartje(naam, i));
+  });
+}
+
+// Hulpfunctie: hoeveel dagen zijn al ingevuld (goed of afwezig), hoeveel zijn 'goed', is er nog ruimte
+function dagStats(v) {
+  const dagen = v.dagen;
+  const ingevuld = dagen.filter(d => d !== null).length;
+  const goed = dagen.filter(d => d === 'goed').length;
+  const afwezig = dagen.filter(d => d === 'afwezig').length;
+  const eersteVrijeIdx = dagen.indexOf(null);
+  const volZonderMisser = ingevuld === dagen.length && afwezig === 0 ? goed === dagen.length : null;
+  return { ingevuld, goed, afwezig, eersteVrijeIdx, totaal: dagen.length, isVol: eersteVrijeIdx === -1 };
+}
+
+function maakKaartje(naam, i) {
+  const v = vg[naam];
+  const stats = dagStats(v);
+  const kaart = document.createElement('div');
+  kaart.className = 'kind-kaart' + (v.medaille?' medaille':'');
+  kaart.id = 'kaart_' + i;
+
+  const sterHtml = v.medaille ? '<div class="medaille-ster">⭐</div>' : '';
+
+  // Vakjes: 1 onzichtbaar startvakje + 1 zichtbaar vakje per schooldag. Allemaal evenveel breed (flex:1),
+  // zodat de zebra-positie hierop kan aansluiten zonder afzonderlijke wiskunde.
+  let vakjes = '<div class="pad-vakje start-vakje"></div>';
+  v.dagen.forEach(d => {
+    let klasse = '';
+    if (d === 'goed') klasse = 'gedaan';
+    else if (d === 'afwezig') klasse = 'afwezig-vakje';
+    vakjes += `<div class="pad-vakje ${klasse}"></div>`;
+  });
+
+  const totaal = stats.totaal || 1;
+  const segmenten = totaal + 1; // het startvakje + alle dagvakjes, exact gelijk aan het aantal flex-items hierboven
+  const huidigSegment = v.medaille ? totaal : stats.ingevuld; // 0 = op het startvakje, 1 = op vakje 1, ... totaal = op laatste vakje
+  const zebraLinksCalc = `calc((100% / ${segmenten}) * ${huidigSegment} + (100% / ${segmenten} / 2))`;
+
+  let statusTekst;
+  if (v.medaille) statusTekst = '🥇 Medaille verdiend!';
+  else statusTekst = `${stats.ingevuld} / ${stats.totaal} dagen${stats.afwezig ? ` (${stats.afwezig}× afwezig)` : ''}`;
+
+  const kanNogInvullen = !stats.isVol && !v.medaille;
+
+  kaart.innerHTML = `
+    ${sterHtml}
+    <div class="k-top-rij">
+      <div class="k-naam">${naam}</div>
+      <div class="k-acties">
+        <button class="k-actie" id="btnStap_${i}" title="Dag goed gevolgd" onclick="geefStap(${i})" ${!kanNogInvullen?'disabled':''}>✅</button>
+        <button class="k-actie" title="Dag afwezig" onclick="geefAfwezig(${i})" ${!kanNogInvullen?'disabled':''}>🤒</button>
+        <button class="k-actie" title="Laatste dag wissen" onclick="wisLaatsteDag(${i})" ${stats.ingevuld===0||v.medaille?'disabled':''}>↩</button>
+      </div>
+    </div>
+    <div class="pad-labels" style="--segmenten:${segmenten}">
+      <span class="pad-label pad-label-start">🏁 Start</span>
+      <span class="pad-label pad-label-finish">Finish 🏆</span>
+    </div>
+    <div class="zebra-pad-wrap" id="wrap_${i}">
+      <div class="zebra-pad">
+        ${vakjes}
+      </div>
+      <div class="zebra-op-pad" id="zebra_${i}" style="left:${zebraLinksCalc};margin-left:-14px">🦓</div>
+    </div>
+    <div class="k-status">${statusTekst}</div>
+  `;
+
+  kaart.addEventListener('click', (e) => {
+    if (e.target.closest('.k-actie')) return;
+    if (kanNogInvullen) geefStap(i);
+  });
+
+  return kaart;
+}
+
+function updateKaartje(i) {
+  const naam = namen[i];
+  const kaart = document.getElementById('kaart_' + i);
+  if (!kaart) return;
+  const nieuw = maakKaartje(naam, i);
+  kaart.replaceWith(nieuw);
+}
+
+// Controleert of de week "vol" is en bepaalt of medaille verdiend is (alle ingevulde dagen = 'goed', geen enkele afwezigheid telt tegen je)
+function checkMedaille(naam, i) {
+  const v = vg[naam];
+  const stats = dagStats(v);
+  if (!stats.isVol) return false;
+  // Medaille: alle dagen die NIET afwezig waren, moeten 'goed' zijn. Afwezige dagen tellen niet mee.
+  const verdiend = stats.goed > 0 && stats.afwezig + stats.goed === stats.totaal && stats.goed === (stats.totaal - stats.afwezig);
+  if (verdiend) {
+    v.medaille = true;
+    if (!med[naam]) med[naam] = [false,false,false,false];
+    med[naam][weekNr-1] = true;
+  }
+  return verdiend;
+}
+
+// ── DAG REGISTREREN ───────────────────────────────────────────────
+function geefStap(i) {
+  const naam = namen[i];
+  const v = vg[naam];
+  const stats = dagStats(v);
+  if (!v || stats.isVol || v.medaille) return;
+
+  v.dagen[stats.eersteVrijeIdx] = 'goed';
+
+  const kaart = document.getElementById('kaart_' + i);
+  if (kaart) {
+    const popup = document.createElement('div');
+    popup.className = 'ster-popup';
+    popup.textContent = '+1 ⭐';
+    kaart.appendChild(popup);
+    setTimeout(() => popup.remove(), 900);
+  }
+  const zebraEl = document.getElementById('zebra_' + i);
+  if (zebraEl) { zebraEl.classList.add('spring'); setTimeout(() => zebraEl.classList.remove('spring'), 400); }
+
+  const verdiend = checkMedaille(naam, i);
+  slaVgOp();
+
+  if (verdiend) {
+    setTimeout(() => { updateKaartje(i); gooidConfetti(); setTimeout(()=>toonMedailleOv(naam), 300); }, 100);
+  } else {
+    setTimeout(() => updateKaartje(i), 100);
+  }
+}
+
+function geefAfwezig(i) {
+  const naam = namen[i];
+  const v = vg[naam];
+  const stats = dagStats(v);
+  if (!v || stats.isVol || v.medaille) return;
+
+  v.dagen[stats.eersteVrijeIdx] = 'afwezig';
+
+  // Check of de week hierdoor "vol" is en of dat alsnog een medaille geeft
+  const verdiend = checkMedaille(naam, i);
+  slaVgOp();
+
+  if (verdiend) {
+    setTimeout(() => { updateKaartje(i); gooidConfetti(); setTimeout(()=>toonMedailleOv(naam), 300); }, 100);
+  } else {
+    updateKaartje(i);
+  }
+}
+
+function wisLaatsteDag(i) {
+  const naam = namen[i];
+  const v = vg[naam];
+  if (!v || v.medaille) return;
+  // Zoek de laatst ingevulde dag en wis die
+  for (let d = v.dagen.length - 1; d >= 0; d--) {
+    if (v.dagen[d] !== null) { v.dagen[d] = null; break; }
+  }
+  slaVgOp();
+  updateKaartje(i);
+}
+
+// ── MEDAILLE ──────────────────────────────────────────────────────
+function toonMedailleOv(naam) {
+  document.getElementById('ovNaam').textContent = naam;
+  document.getElementById('ovTekst').textContent = 'heeft alle 5 dagen de klasafspraak super gevolgd en verdient een medaille! 🥇';
+  document.getElementById('medailleOv').classList.add('toon');
+}
+
+// ── WEEKRESET ─────────────────────────────────────────────────────
+function vraagReset() { document.getElementById('resetOv').classList.add('toon'); }
+function bevestigReset() {
+  weekNr = weekNr<4 ? weekNr+1 : 1;
+  namen.forEach(n => { vg[n] = { dagen: new Array(schooldagen).fill(null), medaille: false }; });
+  try { localStorage.setItem(SK.week, weekNr); } catch(e) {}
+  slaVgOp(); updateWkChips(); sluitOv('resetOv'); tekenGrid();
+}
+
+// ── MAANDOVERZICHT ────────────────────────────────────────────────
+function tekenMaand() {
+  const tbody = document.getElementById('maandBody');
+  tbody.innerHTML = '';
+  namen.forEach(naam => {
+    const m = med[naam]||[false,false,false,false];
+    const tot = m.filter(Boolean).length;
+    let label='—', kl='chip-geen';
+    if(tot===4){label='🥇 Goud';kl='chip-goud';}
+    else if(tot===3){label='🥈 Zilver';kl='chip-zilver';}
+    else if(tot===2){label='🥉 Brons';kl='chip-brons';}
+    else if(tot===1){label='💛 Aanmoediging';kl='chip-aanm';}
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td><strong>${naam}</strong></td><td class="med-cel">${m[0]?'🥇':'—'}</td><td class="med-cel">${m[1]?'🥇':'—'}</td><td class="med-cel">${m[2]?'🥇':'—'}</td><td class="med-cel">${m[3]?'🥇':'—'}</td><td><strong>${tot}/4</strong></td><td><span class="chip ${kl}">${label}</span></td>`;
+    tbody.appendChild(tr);
+  });
+}
+
+// ── AFDRUK ────────────────────────────────────────────────────────
+function naarAfdruk() { genereerDiplomas(); toon('afdruk'); }
+
+// PNG afbeeldingen map (relatief t.o.v. HTML-bestand)
+const IMG = 'afbeeldingen/';
+
+// Diploma config per type
+const DIP_CFG = {
+  goud:   { png: 'gouden_diploma.png',   sterren: '⭐⭐⭐⭐', tekst: 'heeft alle 4 weken de klasafspraak fantastisch gevolgd!',       pos: { left:'26%', right:'26%', top:'32%', bottom:'12%' } },
+  zilver: { png: 'zilveren_diploma.png', sterren: '⭐⭐⭐',   tekst: 'heeft 3 van de 4 weken de klasafspraak heel goed gevolgd!',     pos: { left:'26%', right:'26%', top:'32%', bottom:'12%' } },
+  brons:  { png: 'bronzen_diploma.png',  sterren: '⭐⭐',    tekst: 'heeft 2 weken goed haar/zijn best gedaan voor de klasafspraak!', pos: { left:'26%', right:'26%', top:'32%', bottom:'12%' } },
+  aanm:   { png: 'aanmoediging.png',     sterren: '⭐',      tekst: 'heeft een goede eerste stap gezet! Volgende maand lukt het nog beter!', pos: { left:'26%', right:'26%', top:'28%', bottom:'12%' } }
+};
+
+function maakDiplomaHTML(naam, type, afspraakTekst) {
+  const c = DIP_CFG[type];
+  const p = c.pos;
+  const naamFontSize = naam.length > 16 ? '30px' : naam.length > 12 ? '36px' : '44px';
+
+  const fallbackKleur = {
+    goud:   { rand: '#DAA520', bg: '#FFFDE7' },
+    zilver: { rand: '#90A4AE', bg: '#ECEFF1' },
+    brons:  { rand: '#CD853F', bg: '#FFF3E0' },
+    aanm:   { rand: '#7BC8A4', bg: '#F0FAF6' }
+  }[type];
+
+  return `
+  <div style="position:relative;width:100%;aspect-ratio:1.414;border-radius:12px;overflow:hidden;background:${fallbackKleur.bg};border:2px solid ${fallbackKleur.rand};box-sizing:border-box;">
+    <img src="${IMG}${c.png}"
+         style="position:absolute;inset:0;width:100%;height:100%;object-fit:fill;display:block;"
+         onerror="this.style.display='none'" />
+    <div style="
+      position:absolute;
+      left:${p.left};right:${p.right};top:${p.top};bottom:${p.bottom};
+      display:flex;flex-direction:column;align-items:center;justify-content:center;
+      text-align:center;gap:5px;z-index:2;
+    ">
+      <div style="font-family:'Comic Sans MS','Chalkboard SE',Arial,sans-serif;font-size:${naamFontSize};font-weight:900;color:#1A0A00;line-height:1.1;text-shadow:1px 1px 0 rgba(255,255,255,0.9);">${naam}</div>
+      <div style="font-family:Arial,sans-serif;font-size:15px;color:#444;line-height:1.5;margin-top:4px">${c.tekst}</div>
+      <div style="font-family:Arial,sans-serif;font-size:13px;color:#888;font-style:italic;margin-top:3px">voor de klasafspraak:</div>
+      <div style="font-family:Arial,sans-serif;font-size:15px;font-weight:700;color:#333;font-style:italic;line-height:1.4;word-break:break-word">"${afspraakTekst}"</div>
+      <div style="font-size:22px;margin-top:6px;line-height:1">${c.sterren}</div>
+    </div>
+  </div>`;
+}
+
+function genereerDiplomas() {
+  const container = document.getElementById('diplomaContainer');
+  const preview = document.getElementById('diplomaPreviewGrid');
+  container.innerHTML = '';
+  preview.innerHTML = '';
+
+  namen.forEach((naam, idx) => {
+    const m = med[naam] || [false, false, false, false];
+    const tot = m.filter(Boolean).length;
+    const type = tot >= 4 ? 'goud' : tot === 3 ? 'zilver' : tot === 2 ? 'brons' : 'aanm';
+    const html = maakDiplomaHTML(naam, type, actief || '');
+
+    // Preview kaartje
+    const previewKaart = document.createElement('div');
+    previewKaart.style.cssText = 'background:white;border-radius:12px;overflow:hidden;box-shadow:0 3px 12px rgba(0,0,0,0.12);min-width:420px';
+    previewKaart.innerHTML = html;
+    preview.appendChild(previewKaart);
+
+    // Print container: 2 per pagina
+    if (idx % 2 === 0) {
+      const pagina = document.createElement('div');
+      pagina.style.cssText = 'page-break-after:always;page-break-inside:avoid;width:100%;box-sizing:border-box';
+      pagina.innerHTML = html;
+      // Tweede diploma op zelfde pagina
+      const naam2 = namen[idx + 1];
+      if (naam2) {
+        const m2 = med[naam2] || [false, false, false, false];
+        const tot2 = m2.filter(Boolean).length;
+        const type2 = tot2 >= 4 ? 'goud' : tot2 === 3 ? 'zilver' : tot2 === 2 ? 'brons' : 'aanm';
+        pagina.innerHTML += maakDiplomaHTML(naam2, type2, actief || '');
+      }
+      container.appendChild(pagina);
+    }
+  });
+}
+
+// ── NIEUWE AFSPRAAK ───────────────────────────────────────────────
+function vraagNieuweAfspraak() { document.getElementById('nieuweAfspraakOv').classList.add('toon'); }
+
+function bevestigNieuweAfspraak() {
+  // ARCHIVEER de huidige afspraak + medailles vóór reset
+  archief.push({
+    afspraak: actief,
+    periode: actiefPeriode,
+    medailles: JSON.parse(JSON.stringify(med)),
+    datum: new Date().toISOString()
+  });
+  slaArchiefOp();
+
+  // Wis medailles en voortgang, bewaar namen
+  vg = {}; med = {};
+  namen.forEach(n => {
+    vg[n] = { dagen: new Array(schooldagen).fill(null), medaille: false };
+    med[n] = [false, false, false, false];
+  });
+  weekNr = 1;
+  try {
+    localStorage.setItem(SK.voortgang, JSON.stringify(vg));
+    localStorage.setItem(SK.medailles, JSON.stringify(med));
+    localStorage.setItem(SK.week, 1);
+  } catch(e) {}
+  planRemoteSave();
+  updateWkChips();
+  sluitOv('nieuweAfspraakOv');
+  // Ga naar instellingen om nieuwe afspraak te kiezen
+  naarSetup();
+  // Toon melding
+  setTimeout(() => alert('✅ Afspraak gearchiveerd voor het evaluatieblad! Kies nu de nieuwe klasafspraak en klik op Start.'), 100);
+}
+
+// ── NAMEN BEHEER ──────────────────────────────────────────────────
+function openNamenBeheer() {
+  tekenNamenBeheer();
+  document.getElementById('naamBeheerOv').classList.add('toon');
+}
+
+function tekenNamenBeheer() {
+  const lijst = document.getElementById('namenBeheerLijst');
+  lijst.innerHTML = '';
+  namen.forEach((naam, i) => {
+    const rij = document.createElement('div');
+    rij.style.cssText = 'display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid #f5f5f5';
+    rij.innerHTML = `
+      <span style="flex:1;font-size:14px;color:#333">${naam}</span>
+      <button onclick="verwijderKind('${naam}')" style="background:#fef0f0;color:#e74c3c;border:1px solid #f5c6c6;border-radius:6px;padding:4px 10px;font-size:12px;cursor:pointer;font-family:inherit">✕ Verwijderen</button>
+    `;
+    lijst.appendChild(rij);
+  });
+  if (!namen.length) lijst.innerHTML = '<p style="color:#aaa;font-size:13px;text-align:center">Geen kinderen ingegeven</p>';
+}
+
+function voegKindToe() {
+  const input = document.getElementById('nieuwKindInput');
+  const naam = input.value.trim();
+  if (!naam) return;
+  if (namen.includes(naam)) { alert('Dit kind staat er al in.'); return; }
+  if (namen.length >= 30) { alert('Maximum 30 kinderen bereikt.'); return; }
+  namen.push(naam);
+  vg[naam] = { stappen: 0, ziek: false, medaille: false };
+  med[naam] = [false, false, false, false];
+  input.value = '';
+  // Bewaar namen
+  try { localStorage.setItem(SK.namen, namen.join('\n')); } catch(e) {}
+  slaVgOp();
+  tekenNamenBeheer();
+  tekenGrid();
+}
+
+function verwijderKind(naam) {
+  if (!confirm(`"${naam}" verwijderen? De voortgang van dit kind wordt gewist.`)) return;
+  namen = namen.filter(n => n !== naam);
+  delete vg[naam];
+  delete med[naam];
+  try { localStorage.setItem(SK.namen, namen.join('\n')); } catch(e) {}
+  slaVgOp();
+  tekenNamenBeheer();
+  tekenGrid();
+}
+
+// ── NIEUW SCHOOLJAAR ──────────────────────────────────────────────
+function nieuwSchooljaar() {
+  if(!confirm('Nieuw schooljaar? Namen, voortgang, het archief en alle evaluatiebladen worden gewist. Afspraken en rapportperiodes blijven.')) return;
+  namen=[]; vg={}; med={}; weekNr=1; archief=[]; evalDataPerPeriode={};
+  document.getElementById('namenInput').value='';
+  document.getElementById('opgeslagenBadge').style.display='none';
+  try{
+    [SK.namen,SK.week,SK.voortgang,SK.medailles,SK.archief].forEach(k=>localStorage.removeItem(k));
+    // Wis ook alle evaluatiedata per periode
+    periodes.forEach(p => localStorage.removeItem(SK_EVALDATA + '_' + p));
+  }catch(e){}
+  updateWkChips();
+  planRemoteSave();
+}
+
+// ── OVERLAYS ──────────────────────────────────────────────────────
+function sluitOv(id) { document.getElementById(id).classList.remove('toon'); }
+
+// ══════════════════════════════════════════════════════════════════
+// EVALUATIEBLAD
+// ══════════════════════════════════════════════════════════════════
+
+let evalHuidigeKindIdx = 0;
+let evalGekozenPeriode = null;
+// evalData: { naam: { gekozenZinnen: [str,...], vrijeTekst: '' } }
+let evalData = {};
+
+const SK_EVALDATA = 'zisa_evaldata';
+
+function evalLaadData() {
+  if (evalDataPerPeriode[evalGekozenPeriode]) {
+    evalData = evalDataPerPeriode[evalGekozenPeriode];
+    return;
+  }
+  try {
+    const d = localStorage.getItem(SK_EVALDATA + '_' + evalGekozenPeriode);
+    evalData = d ? JSON.parse(d) : {};
+  } catch(e) { evalData = {}; }
+}
+function evalSlaData() {
+  try { localStorage.setItem(SK_EVALDATA + '_' + evalGekozenPeriode, JSON.stringify(evalData)); } catch(e) {}
+  if (evalGekozenPeriode) evalDataPerPeriode[evalGekozenPeriode] = evalData;
+  planRemoteSave();
+}
+
+// Zinnenbank per categorie
+const ZINNENBANK = {
+  'Gedrag & afspraken volgen': [
+    'Volgt alle klasafspraken consequent goed op.',
+    'Volgt de afspraak van deze periode goed, maar moet ook de afspraken van eerder dit jaar blijven opvolgen.',
+    'Heeft het nog moeilijk met de meeste klasafspraken, blijft een aandachtspunt.',
+    'Toont duidelijke groei in het opvolgen van de afspraken.',
+    'Volgt de afspraken goed wanneer hierop gewezen wordt, maar nog niet altijd zelfstandig.'
+  ],
+  'Werkhouding & inzet': [
+    'Werkt geconcentreerd en zelfstandig.',
+    'Heeft soms een duwtje in de rug nodig om aan het werk te blijven.',
+    'Toont veel inzet, ook bij moeilijkere taken.',
+    'De werkhouding wisselt sterk van dag tot dag.',
+    'Is gemotiveerd en wil graag goed doen.'
+  ],
+  'Doorzettingsvermogen / groei': [
+    'Geeft niet snel op, ook niet als iets moeilijk gaat.',
+    'Heeft het soms moeilijk om door te zetten, maar doet duidelijk zijn/haar best.',
+    'Is gegroeid ten opzichte van het begin van het schooljaar.',
+    'Stopt soms snel als iets niet meteen lukt.',
+    'Durft het opnieuw te proberen na een mislukking.'
+  ],
+  'Sociaal gedrag': [
+    'Gaat vriendelijk om met klasgenoten.',
+    'Heeft soms moeite met samenwerken in groep.',
+    'Wordt graag geholpen door klasgenoten en helpt zelf ook graag.',
+    'Zoekt soms nog conflicten op met andere kinderen.',
+    'Is een fijne, sociale aanwezigheid in de klas.'
+  ],
+  'Algemeen / overkoepelend': [
+    'Een fijne periode met mooie groei te zien.',
+    'Blijft een kind dat het echt moeilijk heeft, extra aandacht en geduld blijven nodig.',
+    'Doet zichtbaar zijn/haar best, ook al lukt het nog niet altijd.',
+    'Een periode met ups en downs, maar de inzet is er steeds.',
+    'Kon de afspraak van deze periode goed volgen, maar had het moeilijker met de afspraken van eerder dit jaar.'
+  ]
+};
+
+function evalStartPeriodeKeuze() {
+  document.getElementById('evalStapPeriode').style.display = 'block';
+  document.getElementById('evalStapKind').style.display = 'none';
+  document.getElementById('evalStapOverzicht').style.display = 'none';
+  document.getElementById('evalSubtitel').textContent = '';
+
+  const knoppen = document.getElementById('evalPeriodeKnoppen');
+  knoppen.innerHTML = '';
+  periodes.forEach(p => {
+    const aantalAfspraken = archief.filter(a => a.periode === p).length;
+    const btn = document.createElement('button');
+    btn.className = 'eval-periode-btn';
+    btn.innerHTML = `<strong>${p}</strong><br><span style="font-size:11px;color:#aaa">${aantalAfspraken} afgeronde afspra${aantalAfspraken===1?'ak':'ken'} in deze periode</span>`;
+    btn.onclick = () => evalKiesPeriode(p);
+    knoppen.appendChild(btn);
+  });
+}
+
+function evalKiesPeriode(periode) {
+  evalGekozenPeriode = periode;
+  evalLaadData();
+  evalHuidigeKindIdx = 0;
+  document.getElementById('evalSubtitel').textContent = '— ' + periode;
+  document.getElementById('evalStapPeriode').style.display = 'none';
+  document.getElementById('evalStapKind').style.display = 'block';
+  evalTekenKindTabs();
+  evalTekenKindBody();
+}
+
+function evalTekenKindTabs() {
+  const tabs = document.getElementById('evalKindTabs');
+  tabs.innerHTML = '';
+  namen.forEach((naam, i) => {
+    const heeftData = evalData[naam] && (evalData[naam].gekozenZinnen?.length || evalData[naam].vrijeTekst);
+    const btn = document.createElement('button');
+    btn.className = 'eval-kind-tab' + (i===evalHuidigeKindIdx?' actief':'') + (heeftData?' klaar':'');
+    btn.textContent = naam;
+    btn.onclick = () => { evalHuidigeKindIdx = i; evalTekenKindTabs(); evalTekenKindBody(); };
+    tabs.appendChild(btn);
+  });
+}
+
+function evalAfsprakenVoorPeriode(naam, periode) {
+  return archief.filter(a => a.periode === periode).map(a => {
+    const med4 = a.medailles[naam] || [false,false,false,false];
+    const tot = med4.filter(Boolean).length;
+    let diploma = '💛 Aanmoediging';
+    if (tot>=4) diploma='🥇 Goud'; else if (tot===3) diploma='🥈 Zilver'; else if (tot===2) diploma='🥉 Brons';
+    return { afspraak: a.afspraak, diploma, tot };
+  });
+}
+
+function evalTekenKindBody() {
+  const naam = namen[evalHuidigeKindIdx];
+  if (!naam) return;
+  if (!evalData[naam]) evalData[naam] = { gekozenZinnen: [], vrijeTekst: '' };
+  const data = evalData[naam];
+
+  const afsprakenLijst = evalAfsprakenVoorPeriode(naam, evalGekozenPeriode);
+
+  const body = document.getElementById('evalKindBody');
+  body.innerHTML = `
+    <div class="eval-kaart">
+      <h4>Afspraken in ${evalGekozenPeriode} — ${naam}</h4>
+      ${afsprakenLijst.length ? afsprakenLijst.map(a => `
+        <div class="eval-afspraak-rij">
+          <span class="eval-afspraak-naam">${a.afspraak}</span>
+          <span><strong>${a.diploma}</strong></span>
+        </div>
+      `).join('') : '<p style="color:#bbb;font-size:13px">Nog geen afgeronde afspraken in deze periode. Gebruik "🔄 Nieuwe afspraak" om een afspraak af te ronden en te archiveren.</p>'}
+    </div>
+
+    <div class="eval-kaart">
+      <h4>Feedback kiezen</h4>
+      ${Object.entries(ZINNENBANK).map(([cat, zinnen]) => `
+        <div class="eval-cat">
+          <div class="eval-cat-titel">${cat}</div>
+          ${zinnen.map(z => `<span class="eval-zin ${data.gekozenZinnen.includes(z)?'gekozen':''}" onclick="evalToggleZin('${naam.replace(/'/g,"\\'")}', \`${z.replace(/`/g,'')}\`)">${z}</span>`).join('')}
+        </div>
+      `).join('')}
+      <h4 style="margin-top:14px">Eigen aanvulling (optioneel)</h4>
+      <textarea class="eval-vrije-tekst" id="evalVrijeTekst" placeholder="Eigen opmerking voor ${naam}..." oninput="evalUpdateVrijeTekst('${naam.replace(/'/g,"\\'")}', this.value)">${data.vrijeTekst||''}</textarea>
+    </div>
+
+    <div class="eval-nav-rij geen-print">
+      <button class="eval-nav-btn secundair" onclick="evalVorigKind()" ${evalHuidigeKindIdx===0?'disabled':''}>← Vorig kind</button>
+      <button class="eval-nav-btn secundair" onclick="printEenKind('${naam.replace(/'/g,"\\'")}')">🖨️ Print dit blad</button>
+      ${evalHuidigeKindIdx < namen.length-1
+        ? `<button class="eval-nav-btn" onclick="evalVolgendKind()">Volgend kind →</button>`
+        : `<button class="eval-nav-btn" onclick="evalNaarOverzicht()">📄 Overzicht alle kinderen</button>`}
+    </div>
+  `;
+}
+
+function evalToggleZin(naam, zin) {
+  const data = evalData[naam];
+  const idx = data.gekozenZinnen.indexOf(zin);
+  if (idx >= 0) data.gekozenZinnen.splice(idx, 1);
+  else data.gekozenZinnen.push(zin);
+  evalSlaData();
+  evalTekenKindTabs();
+  evalTekenKindBody();
+}
+
+function evalUpdateVrijeTekst(naam, tekst) {
+  evalData[naam].vrijeTekst = tekst;
+  evalSlaData();
+}
+
+function evalVolgendKind() { if (evalHuidigeKindIdx < namen.length-1) { evalHuidigeKindIdx++; evalTekenKindTabs(); evalTekenKindBody(); } }
+function evalVorigKind() { if (evalHuidigeKindIdx > 0) { evalHuidigeKindIdx--; evalTekenKindTabs(); evalTekenKindBody(); } }
+
+function terugNaarKindStap() {
+  document.getElementById('evalStapOverzicht').style.display = 'none';
+  document.getElementById('evalStapKind').style.display = 'block';
+}
+
+function evalNaarOverzicht() {
+  document.getElementById('evalStapKind').style.display = 'none';
+  document.getElementById('evalStapOverzicht').style.display = 'block';
+  evalGenereerBladen();
+}
+
+function evalMaakBladHTML(naam) {
+  const data = evalData[naam] || { gekozenZinnen: [], vrijeTekst: '' };
+  const afsprakenLijst = evalAfsprakenVoorPeriode(naam, evalGekozenPeriode);
+  const vandaag = new Date().toLocaleDateString('nl-BE', { day:'numeric', month:'long', year:'numeric' });
+
+  return `
+  <div class="evalblad">
+    <div class="evalblad-header">
+      <div class="eb-logo">🦓</div>
+      <h2>Evaluatieblad Klasafspraken</h2>
+      <div class="eb-naam">${naam}</div>
+      <div class="eb-periode">${evalGekozenPeriode} · ${vandaag}</div>
+    </div>
+
+    <div class="evalblad-sectie">
+      <h3>Afspraken deze periode</h3>
+      ${afsprakenLijst.length ? afsprakenLijst.map(a => `
+        <div class="evalblad-afspraak">
+          <span>${a.afspraak}</span>
+          <strong>${a.diploma}</strong>
+        </div>
+      `).join('') : '<p style="color:#bbb;font-size:13px">Geen afgeronde afspraken geregistreerd.</p>'}
+    </div>
+
+    <div class="evalblad-sectie">
+      <h3>Feedback</h3>
+      <div class="evalblad-tekstblok">
+        ${data.gekozenZinnen.length ? '<p>' + data.gekozenZinnen.join(' ') + '</p>' : ''}
+        ${data.vrijeTekst ? '<p style="margin-top:' + (data.gekozenZinnen.length?'10px':'0') + '">' + data.vrijeTekst.replace(/\n/g,'<br>') + '</p>' : ''}
+        ${!data.gekozenZinnen.length && !data.vrijeTekst ? '<p style="color:#bbb">Geen feedback ingevuld.</p>' : ''}
+      </div>
+    </div>
+
+    <div class="evalblad-handtekening">
+      <div><div class="lijn">Handtekening leerkracht</div></div>
+      <div><div class="lijn">Handtekening ouder(s)</div></div>
+    </div>
+  </div>`;
+}
+
+function evalGenereerBladen() {
+  const container = document.getElementById('evalOverzichtBladen');
+  container.innerHTML = `
+    <div style="background:white;border-radius:14px;padding:8px;box-shadow:0 2px 10px rgba(0,0,0,.06)">
+      ${namen.map(naam => {
+        const data = evalData[naam] || { gekozenZinnen: [], vrijeTekst: '' };
+        const ingevuld = data.gekozenZinnen.length > 0 || (data.vrijeTekst && data.vrijeTekst.trim());
+        return `
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid #f5f5f5">
+          <div>
+            <strong style="font-size:14px;color:#333">${naam}</strong>
+            ${ingevuld ? '<span style="color:#27AE60;font-size:12px;margin-left:8px">✓ ingevuld</span>' : '<span style="color:#ccc;font-size:12px;margin-left:8px">nog niet ingevuld</span>'}
+          </div>
+          <div style="display:flex;gap:6px">
+            <button class="eval-nav-btn secundair" style="padding:7px 14px;font-size:12px" onclick="evalBekijkKind('${naam.replace(/'/g,"\\'")}')">✏️ Bewerken</button>
+            <button class="eval-nav-btn" style="padding:7px 14px;font-size:12px" onclick="printEenKind('${naam.replace(/'/g,"\\'")}')">🖨️ Print</button>
+          </div>
+        </div>`;
+      }).join('')}
+    </div>
+    <div style="text-align:center;margin-top:18px">
+      <button class="eval-nav-btn" onclick="printAlleKinderen()">🖨️ Alle bladen tegelijk afdrukken</button>
+    </div>
+  `;
+}
+
+function evalBekijkKind(naam) {
+  evalHuidigeKindIdx = namen.indexOf(naam);
+  document.getElementById('evalStapOverzicht').style.display = 'none';
+  document.getElementById('evalStapKind').style.display = 'block';
+  evalTekenKindTabs();
+  evalTekenKindBody();
+}
+
+function printEenKind(naam) {
+  const printC = document.getElementById('evalPrintContainer');
+  printC.innerHTML = `<div style="padding:10mm">${evalMaakBladHTML(naam)}</div>`;
+  document.body.classList.add('print-evaluatie');
+  window.print();
+  setTimeout(() => document.body.classList.remove('print-evaluatie'), 500);
+}
+
+function printAlleKinderen() {
+  const printC = document.getElementById('evalPrintContainer');
+  printC.innerHTML = '';
+  namen.forEach((naam, idx) => {
+    const wrap = document.createElement('div');
+    wrap.style.cssText = 'padding:10mm;' + (idx < namen.length-1 ? 'page-break-after:always;' : '');
+    wrap.innerHTML = evalMaakBladHTML(naam);
+    printC.appendChild(wrap);
+  });
+  document.body.classList.add('print-evaluatie');
+  window.print();
+  setTimeout(() => document.body.classList.remove('print-evaluatie'), 500);
+}
+
+// ── VOORBEELDEN VOOR COLLEGA'S (vanaf startscherm) ────────────────
+function toonVoorbeeld() {
+  const voorbeeldNaam = 'Voorbeeld - Sam';
+  const voorbeeldData = {
+    gekozenZinnen: [
+      'Volgt de afspraak van deze periode goed, maar moet ook de afspraken van eerder dit jaar blijven opvolgen.',
+      'Toont veel inzet, ook bij moeilijkere taken.',
+      'Gaat vriendelijk om met klasgenoten.'
+    ],
+    vrijeTekst: 'Sam heeft deze periode duidelijk werk gemaakt van "ik steek mijn vinger op". We vinden het knap hoe gemotiveerd hij hiermee bezig is geweest. We blijven samen verder werken aan het rustig binnenkomen, dat lukt nog niet altijd.'
+  };
+  const voorbeeldAfspraken = [
+    { afspraak: 'Ik steek mijn vinger op als ik iets wil vragen of antwoorden', diploma: '🥇 Goud' },
+    { afspraak: 'Ik kom in stilte de klas binnen', diploma: '🥉 Brons' }
+  ];
+
+  const vandaag = new Date().toLocaleDateString('nl-BE', { day:'numeric', month:'long', year:'numeric' });
+  const html = `
+  <div class="evalblad" style="border-width:2px">
+    <div class="evalblad-header">
+      <div class="eb-logo">🦓</div>
+      <h2>Evaluatieblad Klasafspraken</h2>
+      <div class="eb-naam">${voorbeeldNaam}</div>
+      <div class="eb-periode">Periode 1 (voorbeeld) · ${vandaag}</div>
+    </div>
+    <div class="evalblad-sectie">
+      <h3>Afspraken deze periode</h3>
+      ${voorbeeldAfspraken.map(a => `<div class="evalblad-afspraak"><span>${a.afspraak}</span><strong>${a.diploma}</strong></div>`).join('')}
+    </div>
+    <div class="evalblad-sectie">
+      <h3>Feedback</h3>
+      <div class="evalblad-tekstblok">
+        <p>${voorbeeldData.gekozenZinnen.join(' ')}</p>
+        <p style="margin-top:10px">${voorbeeldData.vrijeTekst}</p>
+      </div>
+    </div>
+    <div class="evalblad-handtekening">
+      <div><div class="lijn">Handtekening leerkracht</div></div>
+      <div><div class="lijn">Handtekening ouder(s)</div></div>
+    </div>
+  </div>`;
+
+  document.getElementById('voorbeeldTitel').textContent = '👀 Voorbeeld evaluatieblad';
+  document.getElementById('voorbeeldInhoud').innerHTML = `
+    <p class="geen-print" style="font-size:12px;color:#aaa;margin-bottom:12px">Fictief voorbeeld — geen echte leerlingdata. Zo kan je dit aan collega's tonen.</p>
+    ${html}
+    <button class="eval-nav-btn geen-print" style="width:100%;margin-top:14px" onclick="printVoorbeeldUitOverlay('${btoa(unescape(encodeURIComponent(html)))}')">🖨️ Print dit voorbeeld</button>
+  `;
+  document.getElementById('voorbeeldOv').classList.add('toon');
+}
+
+function toonVoorbeeldDiplomas() {
+  const voorbeeldAfspraak = 'Ik steek mijn vinger op als ik iets wil vragen of antwoorden';
+  const namenVoorbeeld = { goud: 'Aaliyah', zilver: 'Storm', brons: 'Hasti', aanm: 'Mattiz' };
+  const labels = { goud: '🥇 Goud — 4/4 weken', zilver: '🥈 Zilver — 3/4 weken', brons: '🥉 Brons — 2/4 weken', aanm: '💛 Aanmoediging — 1/4 week' };
+
+  document.getElementById('voorbeeldTitel').textContent = '👀 Voorbeeld diploma\'s';
+  const inhoud = document.getElementById('voorbeeldInhoud');
+  inhoud.innerHTML = `<p class="geen-print" style="font-size:12px;color:#aaa;margin-bottom:12px">Fictieve voorbeelden — zo ziet elk diploma-niveau eruit. Zo kan je dit aan collega's tonen.</p>`;
+
+  ['goud','zilver','brons','aanm'].forEach(type => {
+    const wrap = document.createElement('div');
+    wrap.style.marginBottom = '16px';
+    wrap.innerHTML = `<div style="font-size:11px;font-weight:700;color:#aaa;margin-bottom:6px">${labels[type]}</div>${maakDiplomaHTML(namenVoorbeeld[type], type, voorbeeldAfspraak)}`;
+    inhoud.appendChild(wrap);
+  });
+
+  document.getElementById('voorbeeldOv').classList.add('toon');
+}
+
+function printVoorbeeldUitOverlay(b64html) {
+  const html = decodeURIComponent(escape(atob(b64html)));
+  document.getElementById('evalPrintContainer').innerHTML = `<div style="padding:10mm">${html}</div>`;
+  document.body.classList.add('print-evaluatie');
+  window.print();
+  setTimeout(() => document.body.classList.remove('print-evaluatie'), 500);
+}
+
+// ── CONFETTI ──────────────────────────────────────────────────────
+function gooidConfetti() {
+  const wrap=document.getElementById('confettiWrap');
+  wrap.innerHTML='';
+  const st=document.createElement('style');
+  st.textContent='@keyframes val{0%{transform:translateY(0) rotate(0);opacity:1}100%{transform:translateY(100vh) rotate(720deg);opacity:0}}';
+  wrap.appendChild(st);
+  const kl=['#FF6B6B','#FFD93D','#6BCB77','#4D96FF','#FF922B','#CC5DE8','#FFD700','#FF8FAB'];
+  for(let i=0;i<100;i++){
+    const d=document.createElement('div');
+    const sz=7+Math.random()*8;
+    d.style.cssText=`position:absolute;left:${Math.random()*100}%;top:-12px;width:${sz}px;height:${sz}px;background:${kl[i%kl.length]};border-radius:${i%3?'50%':'2px'};animation:val ${1.5+Math.random()}s ${Math.random()*.9}s linear forwards`;
+    wrap.appendChild(d);
+  }
+  setTimeout(()=>{wrap.innerHTML='';},4000);
+}
+</script>
+</body>
+</html>
