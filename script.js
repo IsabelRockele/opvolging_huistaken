@@ -52,7 +52,11 @@ onAuthStateChanged(auth, (user) => {
 });
 
 // Past knoppen toe op basis van rol-data (gebruikt door cache én verse data)
-function pasKnoppenToe(huistakenKnop, overgangKnop, schoolbeheerKnop, bestellingenKnop, oudercontactKnop, schoolKnop, groeigroepenKnop, zorgoverlegKnop, huiswerkklasKnop, isSchoolBreed, isSecretariaat, heeftKlasbeheer) {
+function magKlasafsprakenTesten(user) {
+  return String(user?.email || '').toLowerCase() === 'isabel.rockele@bsdelinde.net';
+}
+
+function pasKnoppenToe(huistakenKnop, overgangKnop, schoolbeheerKnop, bestellingenKnop, oudercontactKnop, schoolKnop, groeigroepenKnop, zorgoverlegKnop, huiswerkklasKnop, klasafsprakenKnop, isSchoolBreed, isSecretariaat, heeftKlasbeheer) {
   function vulTegel(tegel, href, icoon, titel, tekst) {
     if (!tegel) return;
     tegel.href = href;
@@ -70,6 +74,7 @@ function pasKnoppenToe(huistakenKnop, overgangKnop, schoolbeheerKnop, bestelling
   if (oudercontactKnop) oudercontactKnop.style.display = (isSchoolBreed || heeftKlasbeheer) ? '' : 'none';
   if (zorgoverlegKnop) zorgoverlegKnop.style.display = (isSchoolBreed || heeftKlasbeheer) ? '' : 'none';
   if (huiswerkklasKnop) huiswerkklasKnop.style.display = (isSchoolBreed || isSecretariaat || heeftKlasbeheer) ? '' : 'none';
+  if (klasafsprakenKnop) klasafsprakenKnop.style.display = 'none';
   if (schoolbeheerKnop) schoolbeheerKnop.style.display = (isSecretariaat || isSchoolBreed || heeftKlasbeheer) ? '' : 'none';
   if (bestellingenKnop) bestellingenKnop.style.display = (isSecretariaat || heeftKlasbeheer) ? '' : 'none';
   const publiekeAgendaLinks = document.getElementById('publiekeAgendaLinks');
@@ -161,6 +166,7 @@ async function toonSchooloverzichtKnopAlsNodig(user) {
   const groeigroepenKnop = document.getElementById('groeigroepenKeuzeKnop');
   const zorgoverlegKnop = document.getElementById('zorgoverlegKeuzeKnop');
   const huiswerkklasKnop = document.getElementById('huiswerkklasKeuzeKnop');
+  const klasafsprakenKnop = document.getElementById('klasafsprakenKeuzeKnop');
   if (schoolKnop) schoolKnop.style.display = 'none';
   if (schoolbeheerKnop) schoolbeheerKnop.style.display = 'none';
   if (bestellingenKnop) bestellingenKnop.style.display = 'none';
@@ -168,6 +174,7 @@ async function toonSchooloverzichtKnopAlsNodig(user) {
   if (groeigroepenKnop) groeigroepenKnop.style.display = 'none';
   if (zorgoverlegKnop) zorgoverlegKnop.style.display = 'none';
   if (huiswerkklasKnop) huiswerkklasKnop.style.display = 'none';
+  if (klasafsprakenKnop) klasafsprakenKnop.style.display = magKlasafsprakenTesten(user) ? '' : 'none';
   if (!user) return;
 
   // Toon meteen op basis van gecachte rol (vorige sessie) — geen wachttijd
@@ -176,7 +183,9 @@ async function toonSchooloverzichtKnopAlsNodig(user) {
     const cached = JSON.parse(localStorage.getItem(cacheKey) || 'null');
     if (cached) {
       pasKnoppenToe(huistakenKnop, overgangKnop, schoolbeheerKnop, bestellingenKnop, oudercontactKnop, schoolKnop, groeigroepenKnop, zorgoverlegKnop, huiswerkklasKnop,
+        klasafsprakenKnop,
         cached.isSchoolBreed, cached.isSecretariaat, cached.heeftKlasbeheer);
+      if (klasafsprakenKnop) klasafsprakenKnop.style.display = magKlasafsprakenTesten(user) ? '' : 'none';
     }
   } catch (e) { /* cache onleesbaar, gewoon doorgaan */ }
 
@@ -194,7 +203,9 @@ async function toonSchooloverzichtKnopAlsNodig(user) {
       const gesimuleerdRol = localStorage.getItem(simuleerSleutel) || 'beheerder';
       const { isSchoolBreed, isSecretariaat, heeftKlasbeheer } = gesimuleerdePaspoorten(gesimuleerdRol);
       pasKnoppenToe(huistakenKnop, overgangKnop, schoolbeheerKnop, bestellingenKnop, oudercontactKnop, schoolKnop, groeigroepenKnop, zorgoverlegKnop, huiswerkklasKnop,
+        klasafsprakenKnop,
         isSchoolBreed, isSecretariaat, heeftKlasbeheer);
+      if (klasafsprakenKnop) klasafsprakenKnop.style.display = magKlasafsprakenTesten(user) ? '' : 'none';
       return;
     }
 
@@ -215,7 +226,9 @@ async function toonSchooloverzichtKnopAlsNodig(user) {
 
     // Update knoppen met verse data (corrigeert cache indien nodig)
     pasKnoppenToe(huistakenKnop, overgangKnop, schoolbeheerKnop, bestellingenKnop, oudercontactKnop, schoolKnop, groeigroepenKnop, zorgoverlegKnop, huiswerkklasKnop,
+      klasafsprakenKnop,
       isSchoolBreed, isSecretariaat, heeftKlasbeheer);
+    if (klasafsprakenKnop) klasafsprakenKnop.style.display = magKlasafsprakenTesten(user) ? '' : 'none';
 
   } catch (err) {
     console.error('Rol controleren mislukt:', err);
