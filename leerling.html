@@ -12,8 +12,17 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
   <style>
-    /* CSS is ongewijzigd, maar hier voor de volledigheid */
-    .navigatie-container { position: absolute; top: 1rem; left: 1rem; }
+    .navigatie-container {
+      position: absolute;
+      top: 1rem;
+      left: 1rem;
+      right: 1rem;
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: center;
+    }
+    .nav-groep { display: flex; gap: 8px; flex-wrap: wrap; }
     body {
       font-family: Arial, sans-serif; margin: 0; padding: 1rem; padding-top: 4rem;
       display: flex; flex-direction: column; align-items: center;
@@ -27,17 +36,41 @@
     }
     #samenvatting {
       margin-top: 1.5rem; padding: 1rem; background-color: #fff;
-      border: 1px solid #ddd; border-radius: 8px; min-width: 300px; text-align: left;
+      border: 1px solid #ddd; border-radius: 8px; width: min(620px, 92vw); text-align: left;
     }
-    #samenvatting h3 { margin-top: 0; }
-    #samenvatting ul { padding-left: 20px; }
-    #samenvatting ul ul { padding-left: 20px; font-style: italic; }
-    button { margin-top: 1rem; padding: 0.5rem 1rem; cursor: pointer; }
+    #samenvatting h3 { margin: 0 0 12px; }
+    .samenvatting-grid { display: grid; gap: 10px; }
+    .status-kaart {
+      border-left: 6px solid #cfcfcf;
+      border-radius: 8px;
+      padding: 10px 12px;
+      background: #fff;
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
+    .status-kop { display: flex; justify-content: space-between; gap: 12px; font-weight: 700; }
+    .status-detail { margin-top: 6px; color: #4f4f4f; line-height: 1.45; font-style: italic; }
+    .op-tijd { background: #fff; border-left-color: #8ecb8a; }
+    .te-laat { background: #fff; border-left-color: #e5b068; }
+    .onvolledig { background: #fff; border-left-color: #d6c35b; }
+    .niet-gemaakt { background: #fff; border-left-color: #d98484; }
+    .ziek { background: #fff; border-left-color: #8db9e2; }
+    button {
+      margin-top: 1rem; padding: 0.5rem 1rem; cursor: pointer;
+      border-radius: 8px; border: 1px solid #cfcfcf; background: white; font-weight: 700;
+    }
+    button:disabled { opacity: 0.4; cursor: not-allowed; }
     .navigatie-container button { margin: 0; }
     .actie-knoppen { display: flex; gap: 10px; }
     @media print {
       .no-print { display: none !important; }
       canvas { background-color: transparent; }
+      body { background: #fff; padding-top: 1rem; }
+      #samenvatting {
+        width: 92%;
+        max-width: none;
+        box-sizing: border-box;
+      }
     }
 
 /* Schoollogo = enkel zichtbaar bij afdruk */
@@ -71,6 +104,10 @@
 <body>
   <div class="navigatie-container no-print">
     <button onclick="gaTerug()">← Terug naar overzicht</button>
+    <div class="nav-groep">
+      <button id="vorigeLeerlingBtn" type="button">Vorige leerling</button>
+      <button id="volgendeLeerlingBtn" type="button">Volgende leerling</button>
+    </div>
   </div>
 
   <h1 id="titel"></h1>
@@ -89,14 +126,32 @@
   </div>
 
 <script>
-    function gaTerug() { window.location.href = 'dashboard.html'; }
+    const allData = JSON.parse(localStorage.getItem("detailPaginaData")) || {};
+
+    const query = new URLSearchParams(window.location.search);
+    const urlModus = query.get("modus") || '';
+    const urlPeriode = query.get("periode") || '';
+
+    function dashboardUrlMetContext() {
+      const basis = allData.dashboardReturnUrl || 'dashboard.html';
+      const url = new URL(basis, window.location.href);
+      const terugModus = urlModus || allData.huidigeModus || '';
+      const terugPeriode = urlPeriode || allData.huidigePeriode || '';
+      if (terugModus) url.searchParams.set('modus', terugModus);
+      if (terugPeriode) url.searchParams.set('periode', terugPeriode);
+      if (terugPeriode) {
+        localStorage.setItem('dashboardRapportperiode_laatst', terugPeriode);
+      }
+      return `${url.pathname.split('/').pop()}?${url.searchParams.toString()}`;
+    }
+
+    function gaTerug() { window.location.href = dashboardUrlMetContext(); }
 
     const kleuren = {
       "op tijd": "#c8f7c5", "te laat": "#ffe0b3",
       "onvolledig": "#fff9c4", "niet gemaakt": "#f8d7da", "ziek": "#d0e7ff"
     };
 
-    const query = new URLSearchParams(window.location.search);
     const naam = query.get("naam");
     document.getElementById("titel").innerHTML = `
   Overzicht opvolging huistaken<br>
@@ -104,10 +159,28 @@
 `;
 
 
-    const allData = JSON.parse(localStorage.getItem("detailPaginaData")) || {};
     const leerling = allData.leerlingen?.find(l => l.naam === naam);
-    const modus = allData.huidigeModus;
-    const periode = allData.huidigePeriode;
+    const modus = urlModus || allData.huidigeModus;
+    const periode = urlPeriode || allData.huidigePeriode;
+    const leerlingen = [...(allData.leerlingen || [])].sort((a, b) => a.naam.localeCompare(b.naam, 'nl'));
+    const huidigeIndex = leerlingen.findIndex(l => l.naam === naam);
+
+    function openLeerling(index) {
+      if (index < 0 || index >= leerlingen.length) return;
+      const q = new URLSearchParams({
+        naam: leerlingen[index].naam,
+        modus: modus || '',
+        periode: periode || ''
+      });
+      window.location.href = `leerling.html?${q.toString()}`;
+    }
+
+    const vorigeBtn = document.getElementById('vorigeLeerlingBtn');
+    const volgendeBtn = document.getElementById('volgendeLeerlingBtn');
+    vorigeBtn.disabled = huidigeIndex <= 0;
+    volgendeBtn.disabled = huidigeIndex < 0 || huidigeIndex >= leerlingen.length - 1;
+    vorigeBtn.onclick = () => openLeerling(huidigeIndex - 1);
+    volgendeBtn.onclick = () => openLeerling(huidigeIndex + 1);
 
     const telling = {"op tijd": 0, "te laat": 0, "onvolledig": 0, "niet gemaakt": 0, "ziek": 0};
     const statusDetails = {"te laat": [], "onvolledig": [], "niet gemaakt": [], "ziek": []};
@@ -167,17 +240,26 @@
       options: { responsive: true, plugins: { legend: { position: "bottom" } } }
     });
 
-    let samenvattingHTML = "<h3>Samenvatting</h3><ul>";
-    samenvattingHTML += `<li><strong>Op tijd:</strong> ${telling['op tijd']} keer</li>`;
+    const statusLabels = {
+      "op tijd": "Op tijd",
+      "te laat": "Te laat",
+      "onvolledig": "Onvolledig",
+      "niet gemaakt": "Niet gemaakt",
+      "ziek": "Ziek"
+    };
+    let samenvattingHTML = `<h3>Samenvatting</h3><div class="samenvatting-grid">`;
+    samenvattingHTML += `<div class="status-kaart op-tijd"><div class="status-kop"><span>Op tijd</span><span>${telling['op tijd']} keer</span></div></div>`;
     for (const [status, detailLijst] of Object.entries(statusDetails)) {
         if (detailLijst.length > 0) {
-            const statusNaam = status.charAt(0).toUpperCase() + status.slice(1);
-            samenvattingHTML += `<li><strong>${statusNaam}:</strong> ${detailLijst.length} keer<ul>`;
-            detailLijst.forEach(d => { samenvattingHTML += `<li>${d}</li>`; });
-            samenvattingHTML += `</ul></li>`;
+            const statusClass = status.replace(/\s+/g, '-');
+            samenvattingHTML += `
+              <div class="status-kaart ${statusClass}">
+                <div class="status-kop"><span>${statusLabels[status] || status}</span><span>${detailLijst.length} keer</span></div>
+                <div class="status-detail">${detailLijst.map(d => `<div>${d}</div>`).join('')}</div>
+              </div>`;
         }
     }
-    samenvattingHTML += "</ul>";
+    samenvattingHTML += "</div>";
     document.getElementById("samenvatting").innerHTML = samenvattingHTML;
     
     document.getElementById('kopieerBtn').onclick = async function() { /* ... ongewijzigd ... */ };
