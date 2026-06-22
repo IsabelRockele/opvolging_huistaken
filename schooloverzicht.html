@@ -78,10 +78,15 @@
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db = getFirestore(app);
-    const allowedRoles = ['directie', 'zorgcoordinator', 'zorgleerkracht'];
+    const allowedRoles = ['directie', 'zorgcoordinator', 'zorgleerkracht', 'beheerder'];
     let allClasses = [];
     const params = new URLSearchParams(window.location.search);
     const mode = params.get('mode') === 'overgang' ? 'overgang' : 'huistaken';
+    const schooljaar = (() => {
+      const now = new Date();
+      const start = now.getMonth() >= 7 ? now.getFullYear() : now.getFullYear() - 1;
+      return `${start}-${start + 1}`;
+    })();
 
     const esc = value => String(value ?? '').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#039;');
 
@@ -111,13 +116,13 @@
         const role = roleSnap.exists() ? roleSnap.data().rol : '';
         if (!allowedRoles.includes(role)) {
           document.getElementById('status').textContent = 'Geen schoolbrede toegang voor dit account.';
-          document.getElementById('classes').innerHTML = '<div class="error">Dit scherm is alleen voor directie, zorgcoordinator en zorgleerkrachten.</div>';
+          document.getElementById('classes').innerHTML = '<div class="error">Dit scherm is alleen voor directie, zorgcoordinator, zorgleerkrachten en beheerder.</div>';
           return;
         }
 
         document.getElementById('status').textContent = `Ingelogd met schoolbrede rol: ${role}`;
         const snap = await getDocs(query(collection(db, 'klasleerkrachten'), where('actief', '==', true)));
-        allClasses = snap.docs.map(d => ({ id: d.id, ...d.data() }))
+        allClasses = uniekeKlassen(snap.docs.map(d => ({ id: d.id, ...d.data() })))
           .sort((a, b) => String(a.klas || a.id).localeCompare(String(b.klas || b.id), 'nl', { numeric: true }));
         renderClasses();
       } catch (err) {
@@ -126,6 +131,30 @@
         document.getElementById('classes').innerHTML = `<div class="error">${esc(err.message)}</div>`;
       }
     });
+
+    function klasKey(klas) {
+      return String(klas.klas || klas.id || '').trim().toLowerCase();
+    }
+
+    function klasScore(klas) {
+      let score = 0;
+      if ((klas.leerkracht_uids || []).filter(Boolean).length) score += 100;
+      if (String(klas.schooljaar || '') === schooljaar) score += 10;
+      if ((klas.leerkracht_emails || []).filter(Boolean).length) score += 2;
+      if (klas.leerjaar && !String(klas.leerjaar).includes(klas.klas || '')) score += 1;
+      return score;
+    }
+
+    function uniekeKlassen(klassen) {
+      const perKlas = new Map();
+      klassen.forEach(klas => {
+        const key = klasKey(klas);
+        if (!key) return;
+        const bestaande = perKlas.get(key);
+        if (!bestaande || klasScore(klas) > klasScore(bestaande)) perKlas.set(key, klas);
+      });
+      return [...perKlas.values()];
+    }
 
     function renderClasses() {
       const term = document.getElementById('zoek').value.trim().toLowerCase();
@@ -158,7 +187,7 @@
         return `<article class="class-card">
           <div>
             <div class="class-title">${esc(klas.klas || klas.id)}</div>
-            <div class="meta">${esc(klas.leerjaar || '')} Â· ${esc(namen)}<br>${esc(emails)}</div>
+            <div class="meta">${esc(klas.leerjaar || '')} - ${esc(namen)}<br>${esc(emails)}</div>
           </div>
           <div class="actions">
             ${uid ? `<a class="button" href="${openUrl}">${openLabel}</a>` : '<span class="meta">Geen UID gekoppeld</span>'}
