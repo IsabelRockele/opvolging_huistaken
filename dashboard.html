@@ -9,6 +9,11 @@
   <link rel="manifest" href="manifest.json">
   <link rel="apple-touch-icon" href="icon-192x192.png">
   <meta name="theme-color" content="#d99775">
+  <script>
+    if (new URLSearchParams(window.location.search).get('modus')) {
+      document.documentElement.classList.add('directe-modus');
+    }
+  </script>
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -45,6 +50,25 @@
       margin: 0;
       padding: 20px;
       min-height: 100vh;
+    }
+
+    .directe-modus #modus-keuzescherm {
+      display: none !important;
+    }
+
+    .directe-modus #content {
+      display: block !important;
+    }
+
+    .directe-laadmelding {
+      margin: 18px 0;
+      padding: 22px;
+      border: 1px solid var(--rand);
+      border-radius: 14px;
+      background: var(--wit);
+      color: var(--tekst-zacht);
+      box-shadow: 0 4px 16px var(--schaduw);
+      font-weight: 700;
     }
 
     /* HEADER */
@@ -537,6 +561,20 @@
   </dialog>
 
   <div id="pdf-render-container" style="position: absolute; left: -9999px; top: auto; width: 700px; background-color: white; padding: 20px;"></div>
+
+  <script>
+    (function () {
+      const params = new URLSearchParams(window.location.search);
+      const modus = params.get('modus');
+      if (!modus) return;
+      const titel = document.getElementById('weergave-titel');
+      const tabel = document.getElementById('tabelContainer');
+      const terug = document.getElementById('btnTerugNaarKeuze');
+      if (titel) titel.textContent = `Huistakenoverzicht per ${modus} laden...`;
+      if (tabel) tabel.innerHTML = '<div class="directe-laadmelding">De lijst met leerlingen wordt geladen...</div>';
+      if (terug) terug.style.display = '';
+    })();
+  </script>
 
   <script type="module" src="script.js?v=6"></script>
   <script type="module" src="dashboard.js?v=7"></script>
