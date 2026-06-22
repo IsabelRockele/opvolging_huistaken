@@ -19,6 +19,7 @@ let schoolbeheerSyncGedaan = false;
 // het dashboard terugkeert eerst het keuzescherm ziet (Per Week / Per Dag / Gedrag / Klasbeheer).
 // De keuze blijft wel behouden binnen de huidige sessie, via het gebruik van setModus() hieronder.
 let huidigeModus = null;
+window.huidigeModus = huidigeModus;
 let klasOverzichtChartInstance = null; // Voor de klasoverzicht-grafiek
 let kolomMigratieUitgevoerd = false;   // voorkomt herhaalde migraties in één sessie
 const schooljaar = (() => {
@@ -293,8 +294,26 @@ async function laadLeerlingenUitSchoolbeheerVoorDashboard() {
   }
 }
 
+function toonDashboardLaadstandVoorModus(modus) {
+  if (!modus) return;
+  const keuze = document.getElementById('modus-keuzescherm');
+  const content = document.getElementById('content');
+  const titel = document.getElementById('weergave-titel');
+  const tabel = document.getElementById('tabelContainer');
+  const btnTerug = document.getElementById('btnTerugNaarKeuze');
+  if (keuze) keuze.style.display = 'none';
+  if (content) content.style.display = 'block';
+  if (btnTerug) btnTerug.style.display = '';
+  if (titel && !titel.textContent.trim()) titel.textContent = `Huistakenoverzicht per ${modus} laden...`;
+  if (tabel && !tabel.textContent.trim()) {
+    tabel.innerHTML = '<div class="directe-laadmelding">De lijst met leerlingen wordt geladen...</div>';
+  }
+}
+
 // --- INIT & AUTH ---
 document.addEventListener('DOMContentLoaded', () => {
+  const startParams = new URLSearchParams(window.location.search);
+  toonDashboardLaadstandVoorModus(startParams.get('modus'));
   onAuthStateChanged(auth, async (user) => {
     if (user) {
       currentUser = user;
@@ -303,6 +322,9 @@ document.addEventListener('DOMContentLoaded', () => {
       beheerKlasLabel = params.get('klas') || '';
       beheerKlasId = params.get('klasId') || beheerKlasLabel || '';
       beheerNaamLabel = params.get('naam') || '';
+      huidigeModus = params.get('modus') || null;
+      window.huidigeModus = huidigeModus;
+      toonDashboardLaadstandVoorModus(huidigeModus);
       if (targetUserId === currentUser.uid) await ensureLeerkrachtDocExists();
       updateBeheerHeader();   // verzeker dat basisdoc bestaat (klaslijst blijft ongewijzigd)
       await laadKlassenNavigatie();
@@ -333,10 +355,19 @@ function setupEventListeners() {
   }
   document.getElementById('addLeerlingBtn').addEventListener('click', voegLeerlingToe);
   const periodeSelect = document.getElementById('rapportperiode');
-  const bewaardePeriode = localStorage.getItem(`dashboardRapportperiode_${targetUserId || currentUser?.uid || "eigen"}`);
-  if (bewaardePeriode && [...periodeSelect.options].some(o => o.value === bewaardePeriode)) periodeSelect.value = bewaardePeriode;
+  const params = new URLSearchParams(window.location.search);
+  const bewaardePeriode =
+    params.get('periode')
+    || localStorage.getItem(`dashboardRapportperiode_${targetUserId || currentUser?.uid || "eigen"}`)
+    || localStorage.getItem('dashboardRapportperiode_laatst');
+  if (bewaardePeriode && [...periodeSelect.options].some(o => o.value === bewaardePeriode)) {
+    periodeSelect.value = bewaardePeriode;
+    localStorage.setItem(`dashboardRapportperiode_${targetUserId || currentUser?.uid || "eigen"}`, periodeSelect.value);
+    localStorage.setItem('dashboardRapportperiode_laatst', periodeSelect.value);
+  }
   periodeSelect.addEventListener('change', () => {
     localStorage.setItem(`dashboardRapportperiode_${targetUserId || currentUser?.uid || "eigen"}`, periodeSelect.value);
+    localStorage.setItem('dashboardRapportperiode_laatst', periodeSelect.value);
     renderHoofdweergave();
   });
   document.getElementById('toonOverzichtBtn').addEventListener('click', toonKlasOverzicht);
@@ -394,13 +425,15 @@ function prepareDataForDetailPages() {
   localStorage.setItem('detailPaginaData', JSON.stringify({
     ...leerkrachtData,
     huidigeModus,
-    huidigePeriode: document.getElementById("rapportperiode").value
+    huidigePeriode: document.getElementById("rapportperiode").value,
+    dashboardReturnUrl: `dashboard.html${window.location.search || ''}`
   }));
 }
 
 // --- MODUS BEHEER ---
 function setModus(modus) {
   huidigeModus = modus;
+  window.huidigeModus = huidigeModus;
   // AANGEPAST: niet meer in localStorage bewaren, zodat elke terugkeer naar dashboard
   // opnieuw start bij het keuzescherm.
   updateUIModus();
@@ -409,6 +442,7 @@ function wisselModus() { setModus(huidigeModus === 'week' ? 'dag' : 'week'); }
 
 function updateUIModus() {
   const isModusGekozen = !!huidigeModus;
+  window.huidigeModus = huidigeModus;
   document.getElementById('modus-keuzescherm').style.display = isModusGekozen ? 'none' : 'block';
   document.getElementById('content').style.display = isModusGekozen ? 'block' : 'none';
   // Terug-knop in header enkel tonen wanneer een weergave actief is
@@ -531,8 +565,14 @@ function leerlingNietAanwezigOpDatum(leerling, datum) {
   return false;
 }
 function createLeerlingCelHTML(leerling) {
+  const periode = document.getElementById("rapportperiode")?.value || '';
+  const query = new URLSearchParams({
+    naam: leerling.naam,
+    modus: huidigeModus || '',
+    periode
+  });
   return `<td><div class="leerling-cel">
-    <span class="leerling-naam" title="${leerling.naam}"><a href="leerling.html?naam=${encodeURIComponent(leerling.naam)}">${leerling.naam}</a></span>
+    <span class="leerling-naam" title="${leerling.naam}"><a href="leerling.html?${query.toString()}">${leerling.naam}</a></span>
     <button class="verwijder-knop" onclick="window.verwijderLeerling('${leerling.id}')" title="Verwijder ${leerling.naam}"><svg viewBox="0 0 16 16"><path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5Zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5Zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6Z"/><path d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1ZM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118ZM2.5 3V2h11v1h-11Z"/></svg></button>
   </div></td>`;
 }
@@ -1000,14 +1040,6 @@ async function genereerBulkPdf() {
     const { telling, statusDetails } = berekenLeerlingData(leerling, periode);
 
     // Kleuren per status (zelfde als chart)
-    const statusKleurenAchtergrond = {
-      'op tijd': '#e8f8e5',
-      'te laat': '#fff4e0',
-      'onvolledig': '#fffbe0',
-      'niet gemaakt': '#fce4e4',
-      'ziek': '#e8f1fb',
-      'geen': '#f0f0f0'
-    };
     const statusKleurenRand = {
       'op tijd': '#9ec4a3',
       'te laat': '#e8b87a',
@@ -1024,7 +1056,7 @@ async function genereerBulkPdf() {
     // Op tijd altijd eerst
     if (telling['op tijd'] > 0) {
       samenvattingHTML += `
-        <div style="background: ${statusKleurenAchtergrond['op tijd']}; border-left: 5px solid ${statusKleurenRand['op tijd']}; padding: 10px 14px; border-radius: 6px;">
+        <div style="background: #fff; border: 1px solid #ddd; border-left: 5px solid ${statusKleurenRand['op tijd']}; padding: 10px 14px; border-radius: 6px;">
           <div style="font-weight: bold; font-size: 11pt;">✓ Op tijd</div>
           <div style="font-size: 10pt; color: #555;">${telling['op tijd']} keer</div>
         </div>
@@ -1034,13 +1066,15 @@ async function genereerBulkPdf() {
     for (const [status, detailLijst] of Object.entries(statusDetails)) {
       if (detailLijst.length > 0) {
         const statusNaam = status.charAt(0).toUpperCase() + status.slice(1);
-        const bg = statusKleurenAchtergrond[status] || '#f5f5f5';
         const rand = statusKleurenRand[status] || '#ccc';
+        const detailsHTML = detailLijst
+          .map(d => `<div style="margin-top: 3px;">• ${d}</div>`)
+          .join('');
         samenvattingHTML += `
-          <div style="background: ${bg}; border-left: 5px solid ${rand}; padding: 10px 14px; border-radius: 6px;">
+          <div style="background: #fff; border: 1px solid #ddd; border-left: 5px solid ${rand}; padding: 10px 14px; border-radius: 6px;">
             <div style="font-weight: bold; font-size: 11pt;">${statusNaam}</div>
             <div style="font-size: 10pt; color: #555; margin-bottom: 4px;">${detailLijst.length} keer</div>
-            <div style="font-size: 9.5pt; color: #666; font-style: italic;">${detailLijst.join(' · ')}</div>
+            <div style="font-size: 9.5pt; color: #666; font-style: italic; line-height: 1.45;">${detailsHTML}</div>
           </div>
         `;
       }
