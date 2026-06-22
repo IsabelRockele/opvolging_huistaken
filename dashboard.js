@@ -48,13 +48,53 @@ const chartKleuren = {
   "geen": "#f0f0f0"
 };
 const dagNamen = ['zo', 'ma', 'di', 'wo', 'do', 'vr', 'za'];
-function naamKey(naam){ return String(naam || '').replace(/\s+/g, ' ').trim().toLowerCase(); }
+function naamKey(naam){
+  const woorden = String(naam || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, ' ')
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean);
+  return woorden.sort().join('|');
+}
 function leerlingNaamSchoolbeheer(s) {
   const first = (s.firstName || s.first || s.voornaam || '').trim();
   const last = (s.lastName || s.last || s.achternaam || '').trim();
   const direct = (s.naam || s.name || s.fullName || s.volledigeNaam || '').trim();
-  if (first || last) return `${first} ${last}`.trim();
+  if (first && last) return `${last}, ${first}`;
+  if (first || last) return first || last;
   return direct;
+}
+function isSchoolbeheerLeerling(leerling) {
+  return Boolean(leerling?.schoolbeheerId || String(leerling?.id || '').startsWith('schoolbeheer_'));
+}
+function naamHeeftAchternaamVoorop(naam) {
+  return String(naam || '').includes(',');
+}
+function dedupeLeerlingenOpNaam(leerlingen) {
+  const perNaam = new Map();
+  (leerlingen || []).forEach(leerling => {
+    const key = naamKey(leerling.naam);
+    if (!key) return;
+    const bestaande = perNaam.get(key);
+    if (!bestaande) {
+      perNaam.set(key, leerling);
+      return;
+    }
+    if (isSchoolbeheerLeerling(bestaande) && !isSchoolbeheerLeerling(leerling)) {
+      perNaam.set(key, leerling);
+    } else if (
+      isSchoolbeheerLeerling(bestaande)
+      && isSchoolbeheerLeerling(leerling)
+      && !naamHeeftAchternaamVoorop(bestaande.naam)
+      && naamHeeftAchternaamVoorop(leerling.naam)
+    ) {
+      perNaam.set(key, leerling);
+    }
+  });
+  return [...perNaam.values()];
 }
 
 // --- HELPERS VOOR DOCREF & BASISDOC ---
@@ -133,7 +173,7 @@ async function laadKlassenNavigatie() {
     // Controleer eerst of deze gebruiker een schoolbrede rol heeft
     const rolSnap = await getDoc(doc(db, "schoolrollen", currentUser.uid));
     const rol = rolSnap.exists() ? String(rolSnap.data().rol || '').toLowerCase() : '';
-    const isSchoolBreed = ['directie', 'zorgcoordinator', 'zorgleerkracht'].includes(rol);
+    const isSchoolBreed = ['directie', 'zorgcoordinator', 'zorgleerkracht', 'beheerder'].includes(rol);
     if (!isSchoolBreed) return;  // Gewone leerkracht: geen navigatiebalk
 
     // Haal alle klassen op uit klasleerkrachten
@@ -143,6 +183,7 @@ async function laadKlassenNavigatie() {
       const data = d.data();
       // Filter op huidig schooljaar
       if (data.actief === false) return;
+      if (String(data.schooljaar || schooljaar) !== schooljaar) return;
       const klasId = (data.klas || '').trim();
       const uid = Array.isArray(data.leerkracht_uids) ? data.leerkracht_uids[0] : null;
       const naam = data.klasNaam || klasId;
@@ -210,13 +251,28 @@ async function laadLeerlingenUitSchoolbeheerVoorDashboard() {
   try {
     const snap = await getDoc(doc(db, "schoolbeheer", schooljaar, "klassen", klas));
     if (!snap.exists()) return 0;
-    const bestaande = new Set((leerkrachtData.leerlingen || []).map(l => naamKey(l.naam)));
+    const bestaandeLeerlingen = dedupeLeerlingenOpNaam(leerkrachtData.leerlingen || []);
+    const bestaande = new Map(bestaandeLeerlingen.map(l => [naamKey(l.naam), l]));
     const nieuwe = [];
+    let bestaandeNaamBijgewerkt = false;
     (snap.data().leerlingen || []).forEach(s => {
       const naam = leerlingNaamSchoolbeheer(s);
       const key = naamKey(naam);
-      if (!naam || bestaande.has(key)) return;
-      bestaande.add(key);
+      if (!naam) return;
+      if (bestaande.has(key)) {
+        const bestaand = bestaande.get(key);
+        if (
+          isSchoolbeheerLeerling(bestaand)
+          && !naamHeeftAchternaamVoorop(bestaand.naam)
+          && naamHeeftAchternaamVoorop(naam)
+        ) {
+          bestaand.naam = naam;
+          bestaand.schoolbeheerId = bestaand.schoolbeheerId || s.id || '';
+          bestaandeNaamBijgewerkt = true;
+        }
+        return;
+      }
+      bestaande.set(key, true);
       nieuwe.push({
         id: `schoolbeheer_${klas}_${s.id || key.replace(/[^a-z0-9]+/g, "_")}`,
         naam,
@@ -225,8 +281,10 @@ async function laadLeerlingenUitSchoolbeheerVoorDashboard() {
         eindDatum: s.end || `${schooljaar.slice(5,9)}-06-30`
       });
     });
-    if (!nieuwe.length) return 0;
-    const leerlingen = [...leerkrachtData.leerlingen, ...nieuwe].sort((a,b)=>a.naam.localeCompare(b.naam,'nl'));
+    const hadDubbeleNamen = bestaandeLeerlingen.length !== (leerkrachtData.leerlingen || []).length;
+    if (!nieuwe.length && !hadDubbeleNamen && !bestaandeNaamBijgewerkt) return 0;
+    const leerlingen = [...bestaandeLeerlingen, ...nieuwe].sort((a,b)=>a.naam.localeCompare(b.naam,'nl'));
+    leerkrachtData.leerlingen = leerlingen;
     await setDoc(getDocRef(), { leerlingen, schooljaar, klas: klas || '' }, { merge: true });
     return nieuwe.length;
   } catch (err) {
