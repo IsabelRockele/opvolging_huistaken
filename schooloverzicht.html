@@ -81,7 +81,7 @@
     const allowedRoles = ['directie', 'zorgcoordinator', 'zorgleerkracht', 'beheerder'];
     let allClasses = [];
     const params = new URLSearchParams(window.location.search);
-    const mode = params.get('mode') === 'overgang' ? 'overgang' : 'huistaken';
+    const mode = ['overgang', 'oudercontact'].includes(params.get('mode')) ? params.get('mode') : 'huistaken';
     const schooljaar = (() => {
       const now = new Date();
       const start = now.getMonth() >= 7 ? now.getFullYear() : now.getFullYear() - 1;
@@ -99,6 +99,9 @@
       if (mode === 'overgang') {
         if (title) title.textContent = 'Overgangsbesprekingen per klas';
         if (help) help.textContent = 'Klik op een klas om de overgangsbespreking van die klas te openen.';
+      } else if (mode === 'oudercontact') {
+        if (title) title.textContent = 'Oudercontacten per klas';
+        if (help) help.textContent = 'Klik op een klas om de oudercontactvoorbereidingen van die klas te openen.';
       } else {
         if (title) title.textContent = 'Huistaken per klas';
         if (help) help.textContent = 'Klik op een klas om de huistakenopvolging van die leerkracht te openen.';
@@ -178,19 +181,24 @@
         const emails = (klas.leerkracht_emails || []).join(', ');
         const uids = klas.leerkracht_uids || [];
         const uid = uids[0] || '';
-        const openUrl = uid
-          ? (mode === 'overgang'
-              ? `overgangsbespreking.html?beheerUid=${encodeURIComponent(uid)}&klas=${encodeURIComponent(klas.klas || klas.id)}&naam=${encodeURIComponent(namen)}`
-              : `dashboard.html?beheerUid=${encodeURIComponent(uid)}&klas=${encodeURIComponent(klas.klas || klas.id)}&naam=${encodeURIComponent(namen)}`)
-          : '';
-        const openLabel = mode === 'overgang' ? '&#128196; Overgang openen' : '&#128230; Huistaken openen';
+        const klasId = klas.klas || klas.id;
+        let openUrl = '';
+        if (mode === 'overgang' && uid) {
+          openUrl = `overgangsbespreking.html?beheerUid=${encodeURIComponent(uid)}&klas=${encodeURIComponent(klasId)}&naam=${encodeURIComponent(namen)}`;
+        } else if (mode === 'oudercontact') {
+          const klasProject = uid ? '' : '&klasProject=1';
+          openUrl = `oudercontact.html?beheerUid=${encodeURIComponent(uid)}&klas=${encodeURIComponent(klasId)}&klasId=${encodeURIComponent(klasId)}&naam=${encodeURIComponent(namen)}${klasProject}`;
+        } else if (uid) {
+          openUrl = `dashboard.html?beheerUid=${encodeURIComponent(uid)}&klas=${encodeURIComponent(klasId)}&naam=${encodeURIComponent(namen)}`;
+        }
+        const openLabel = mode === 'overgang' ? '&#128196; Overgang openen' : (mode === 'oudercontact' ? '&#128172; Oudercontact openen' : '&#128230; Huistaken openen');
         return `<article class="class-card">
           <div>
             <div class="class-title">${esc(klas.klas || klas.id)}</div>
             <div class="meta">${esc(klas.leerjaar || '')} - ${esc(namen)}<br>${esc(emails)}</div>
           </div>
           <div class="actions">
-            ${uid ? `<a class="button" href="${openUrl}">${openLabel}</a>` : '<span class="meta">Geen UID gekoppeld</span>'}
+            ${openUrl ? `<a class="button" href="${openUrl}">${openLabel}</a>` : '<span class="meta">Geen UID gekoppeld</span>'}
           </div>
         </article>`;
       }).join('');
