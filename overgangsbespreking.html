@@ -1447,6 +1447,13 @@ window.overgangSchool = {
     const snap = await getDocs(query(dossiersRef(), where("eigenaar_uid", "==", sfUser.uid)));
     return snap.docs.map(d => ({ id: d.id, ...d.data() }));
   },
+  async klasKoppeling(klasId) {
+    await sfReady;
+    const clean = String(klasId || "").trim();
+    if (!clean) return null;
+    const snap = await getDoc(doc(sfDb, "klasleerkrachten", `${sfSchooljaar}_${clean}`));
+    return snap.exists() ? snap.data() : null;
+  },
   async markOvergenomen(id) {
     await sfReady;
     await updateDoc(doc(sfDb, "overgangsbesprekingen", sfSchooljaar, "dossiers", id), {
@@ -4143,6 +4150,51 @@ function sfCloneStayersForNewClass(students) {
     }));
 }
 
+const OVERDRACHT_KLASSEN = ['K1','K2','K3','1A','2A','3A','4A','5A','6A'];
+
+function klasUitTekst(tekst) {
+  const raw = String(tekst || '').toUpperCase();
+  return OVERDRACHT_KLASSEN.find(k => raw.includes(k)) || '';
+}
+
+function standaardVolgendeKlas() {
+  const beheerKlasNaam = typeof beheerKlas !== 'undefined' ? beheerKlas : '';
+  const huidige = klasUitTekst(state.projectName || state.van_leerjaar || beheerKlasNaam || '');
+  const idx = OVERDRACHT_KLASSEN.indexOf(huidige);
+  if (idx >= 0 && idx < OVERDRACHT_KLASSEN.length - 1) return OVERDRACHT_KLASSEN[idx + 1];
+  return state.naar_leerjaar || '';
+}
+
+function kiesOverdrachtKlas() {
+  return new Promise(resolve => {
+    const standaard = standaardVolgendeKlas();
+    const wrap = document.createElement('div');
+    wrap.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9999;display:flex;align-items:center;justify-content:center;padding:18px';
+    wrap.innerHTML = `
+      <div style="background:#fff;border-radius:18px;box-shadow:0 18px 60px rgba(0,0,0,.25);max-width:560px;width:100%;padding:22px">
+        <div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start;margin-bottom:14px">
+          <div>
+            <h2 style="margin:0 0 6px;color:#2c1f0e">Naar welke klas?</h2>
+            <p style="margin:0;color:#7a6a55">Klik de klas aan waar deze overgangsbespreking naartoe moet.</p>
+          </div>
+          <button type="button" data-close="1" style="background:#ede8df">Sluiten</button>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px">
+          ${OVERDRACHT_KLASSEN.map(k => `<button type="button" data-klas="${k}" style="padding:18px 10px;font-size:22px;border-radius:14px;background:${k === standaard ? '#f6d76b' : '#eaf4ec'};border:2px solid ${k === standaard ? '#d4a915' : '#bfe8dc'}">${k}</button>`).join('')}
+        </div>
+        ${standaard ? `<p style="margin:14px 0 0;color:#7a6a55;font-size:13px">Standaard voorstel: <strong>${standaard}</strong></p>` : ''}
+      </div>`;
+    document.body.appendChild(wrap);
+    wrap.addEventListener('click', e => {
+      const btn = e.target.closest('button');
+      if (!btn) return;
+      const klas = btn.dataset.klas || '';
+      wrap.remove();
+      resolve(klas || null);
+    });
+  });
+}
+
 async function sfShareTransfer() {
   if (!window.overgangSchool) {
     alert('Firebase is nog niet klaar. Probeer zo meteen opnieuw.');
@@ -4155,26 +4207,40 @@ async function sfShareTransfer() {
     return;
   }
 
-  const naarLeerjaar = prompt('Naar welk leerjaar of welke klas gaat deze overdracht? Bv. 3A of 3de leerjaar', state.naar_leerjaar || '');
+  const naarLeerjaar = await kiesOverdrachtKlas();
   if (naarLeerjaar === null) return;
-  const email = prompt('E-mailadres van de volgende leerkracht:', state.volgende_leerkracht_email || '');
-  if (email === null) return;
-  const cleanEmail = email.trim().toLowerCase();
+  const doelKlas = naarLeerjaar.trim();
+  let cleanEmail = '';
+  let doelKlasNaam = doelKlas;
+  try {
+    const koppeling = await window.overgangSchool.klasKoppeling(doelKlas);
+    const emails = Array.isArray(koppeling?.leerkracht_emails) ? koppeling.leerkracht_emails.filter(Boolean) : [];
+    cleanEmail = String(emails[0] || '').trim().toLowerCase();
+    doelKlasNaam = koppeling?.klasNaam || koppeling?.klas || doelKlas;
+  } catch(e) {
+    console.warn('Klasleerkracht voor overdracht zoeken mislukt:', e);
+  }
+  if (!cleanEmail) {
+    const email = prompt(`Ik vind nog geen gekoppelde leerkracht voor ${doelKlas}. Vul uitzonderlijk het e-mailadres in:`, state.volgende_leerkracht_email || '');
+    if (email === null) return;
+    cleanEmail = email.trim().toLowerCase();
+  }
   if (!cleanEmail.includes('@')) {
-    alert('Vul een geldig e-mailadres in.');
+    alert('Ik vond geen geldig e-mailadres voor deze klas. Controleer bij schoolbeheer of de klasleerkracht gekoppeld is.');
     return;
   }
 
-  const samenvatting = `Je deelt ${doorgaan.length} leerling(en) met ${cleanEmail}.\n\n${zittenblijvers.length} zittenblijver(s) worden niet doorgestuurd en blijven bij jou.\n\nDoorgaan?`;
+  const samenvatting = `Je deelt ${doorgaan.length} leerling(en) met ${doelKlasNaam} (${cleanEmail}).\n\n${zittenblijvers.length} zittenblijver(s) worden niet doorgestuurd en blijven bij jou.\n\nDoorgaan?`;
   if (!confirm(samenvatting)) return;
 
   readSettings();
   const user = await window.overgangSchool.currentUser();
   const id = await window.overgangSchool.createDossier({
-    titel: `${state.projectName || 'Overdracht'} -> ${naarLeerjaar.trim() || 'volgende klas'}`,
+    titel: `${state.projectName || 'Overdracht'} -> ${doelKlasNaam || 'volgende klas'}`,
     projectName: state.projectName || 'Overdracht',
     van_leerjaar: state.projectName || '',
-    naar_leerjaar: naarLeerjaar.trim(),
+    naar_leerjaar: doelKlasNaam,
+    volgende_klas: doelKlas,
     volgende_leerkracht_email: cleanEmail,
     gedeeld_door_email: user.email || '',
     students: doorgaan,
@@ -4183,9 +4249,9 @@ async function sfShareTransfer() {
   });
 
   state.volgende_leerkracht_email = cleanEmail;
-  state.naar_leerjaar = naarLeerjaar.trim();
+  state.naar_leerjaar = doelKlas;
   setFirebaseStatus(`Overdracht gedeeld: ${doorgaan.length} leerling(en).`);
-  alert('Overdracht gedeeld. De volgende leerkracht ziet ze bij "Overdrachten naar mij" zodra die met dit e-mailadres inlogt.');
+  alert(`Overdracht gedeeld met ${doelKlasNaam}. De volgende leerkracht ziet ze bij "Overdrachten naar mij".`);
   sfShowOutgoing();
 }
 
