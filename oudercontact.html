@@ -76,7 +76,7 @@ button:disabled{opacity:.5;cursor:not-allowed}
 .leerling-row.active{background:#fef9c3;font-weight:700;border-left:3px solid #d4a915}
 .leerling-row.active .lr-naam{color:#5c3010}
 .leerling-row:not(.active){border-left:3px solid transparent}
-.lr-tijd{font-size:11px;color:var(--muted);min-width:38px;font-weight:600}
+.lr-tijd{font-size:11px;color:var(--muted);min-width:120px;max-width:155px;line-height:1.25;font-weight:600}
 .lr-naam{flex:1;font-weight:600}
 .lr-status{width:8px;height:8px;border-radius:50%;background:#e5e7eb;flex-shrink:0}
 .lr-status.ingevuld{background:#22c55e}
@@ -88,6 +88,10 @@ button:disabled{opacity:.5;cursor:not-allowed}
 .fiche-naam{font-size:20px;font-weight:900;color:#fff;display:flex;align-items:center;gap:10px}
 .fiche-tijd-input{background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.35);color:#fff;border-radius:8px;padding:5px 9px;font-size:13px;font-weight:700;width:90px}
 .fiche-tijd-input::placeholder{color:rgba(255,255,255,.55)}
+.fiche-extra-afspraak{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.fiche-ouder-input{background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.35);color:#fff;border-radius:8px;padding:5px 9px;font-size:13px;font-weight:700;width:150px}
+.fiche-ouder-input::placeholder{color:rgba(255,255,255,.55)}
+.fiche-ouder-select{background:rgba(255,255,255,.95);border:1px solid rgba(255,255,255,.45);color:#2f241c;border-radius:8px;padding:5px 9px;font-size:13px;font-weight:800;max-width:135px}
 .fiche-nav-btns{display:flex;gap:6px}
 .fiche-nav-btns button{padding:6px 12px;font-size:13px;min-width:80px}
 
@@ -222,6 +226,7 @@ button:disabled{opacity:.5;cursor:not-allowed}
         <button id="fransToggleBtn" onclick="toggleFrans()" style="background:#fce7f3;border:2px solid #f9a8d4;color:#831843;font-weight:800;font-size:13px;padding:6px 14px;border-radius:10px;cursor:pointer;display:inline-flex;align-items:center;gap:6px"><img src="https://cdn.jsdelivr.net/gh/twitter/twemoji@latest/assets/72x72/1f1eb-1f1f7.png" style="width:18px;height:18px;vertical-align:middle"> Frans: UIT</button>
         <button class="ghost small readonly-hide" id="bewerkOcBtn">✏️ Bewerken</button>
         <button class="secondary small" id="pdfBtnWerk">⬇ PDF huidig kind</button>
+        <button class="secondary small" id="deurPdfBtn">⬇ Deuroverzicht</button>
         <button class="small" id="pdfAlleBtn">⬇ PDF alle kinderen</button>
       </div>
     </div>
@@ -296,7 +301,7 @@ button:disabled{opacity:.5;cursor:not-allowed}
 // ── FIREBASE ──
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-import { getFirestore, doc, getDoc, getDocs, setDoc, collection, query, where, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getFirestore, doc, getDoc, getDocs, setDoc, collection, query, where, orderBy, serverTimestamp, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyA7KxXMvZ4dzBQDut3CMyWUblLte2tFzoQ",
@@ -384,6 +389,7 @@ let huidigeLeerlingId = null;
 let metFrans = false;
 let isDirty = false;
 let saveTimer = null;
+let unsubscribeProject = null;
 
 function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
 function $(id) { return document.getElementById(id); }
@@ -433,6 +439,34 @@ async function autoSave() {
 }
 
 // ── TWEMOJI ICONEN (base64 via canvas) ──
+function startLiveSync() {
+  if (unsubscribeProject) unsubscribeProject();
+  unsubscribeProject = onSnapshot(projectRef(), snap => {
+    if (!snap.exists() || isDirty) return;
+    const data = snap.data() || {};
+    state.leerlingen = Array.isArray(data.leerlingen) ? [...data.leerlingen] : state.leerlingen;
+    state.oudercontacten = Array.isArray(data.oudercontacten) ? [...data.oudercontacten] : state.oudercontacten;
+
+    if (huidigOcId && !state.oudercontacten.some(o => o.id === huidigOcId)) {
+      huidigOcId = null;
+      huidigeLeerlingId = null;
+      naarOcLijst();
+      return;
+    }
+
+    renderOcLijst();
+    const isAanHetTypen = document.activeElement && document.activeElement.closest && document.activeElement.closest('#ficheContainer');
+    if (huidigOcId) {
+      renderLeerlingenSidebar();
+      if (huidigeLeerlingId && !isAanHetTypen) renderFiche();
+    }
+    if (!isReadOnly) {
+      $('saveStatus').className = 'save-status saved';
+      $('saveStatusText').textContent = 'Bijgewerkt';
+    }
+  }, err => console.warn('Live oudercontact-sync mislukt:', err));
+}
+
 const ICON_URLS = {
   nl:   'https://cdn.jsdelivr.net/gh/twitter/twemoji@latest/assets/72x72/1f4d6.png',
   wis:  'https://cdn.jsdelivr.net/gh/twitter/twemoji@latest/assets/72x72/1f522.png',
@@ -529,8 +563,13 @@ async function laadRol() {
   try {
     const snap = await getDoc(doc(db, 'schoolrollen', currentUser.uid));
     if (snap.exists()) {
-      currentRol = snap.data().rol || null;
-      isSchoolBreed = ['directie','zorgcoordinator','zorgleerkracht'].includes(currentRol);
+      const echteRol = String(snap.data().rol || '').toLowerCase();
+      if (echteRol === 'beheerder') {
+        currentRol = localStorage.getItem('lindeSimuleerRol_' + currentUser.uid) || 'beheerder';
+      } else {
+        currentRol = echteRol || null;
+      }
+      isSchoolBreed = ['directie','zorgcoordinator','zorgleerkracht','beheerder'].includes(currentRol);
     }
   } catch(e) { console.error('Rol laden mislukt:', e); }
 }
@@ -617,7 +656,7 @@ async function toonKlaskiezer() {
     const naam = esc(k.klasNaam || klasId);
     const leerkrachten = (k.leerkracht_namen || k.leerkracht_emails || []).join(', ');
     const uidLijst = Array.isArray(k.leerkracht_uids) ? k.leerkracht_uids : [];
-    const projectUid = k.eigenaar_uid || uidLijst[0] || '';
+    const projectUid = uidLijst[0] || '';
     return `<div class="klas-card" onclick="window.openKlasAlsSchoolBreed('${esc(projectUid)}','${esc(klasId)}','${naam}','${esc(leerkrachten)}')">
       <div>
         <div class="klas-card-naam">${naam}</div>
@@ -677,6 +716,7 @@ async function laadEnToonKlas() {
   $('saveStatus').className = 'save-status';
   $('saveStatusText').textContent = isReadOnly ? 'Alleen lezen' : 'Geladen';
   $('ocLijstView').classList.remove('hidden');
+  startLiveSync();
 
   // Verberg bewerkingsknoppen in readonly
   if (isReadOnly) {
@@ -705,7 +745,9 @@ async function init() {
   // Normale leerkracht of schoolbreed via URL-parameter
   if (beheerNaam) $('headerSub').textContent = beheerNaam + (beheerKlas ? ' · ' + beheerKlas : '');
   if (!activeKlasId && !targetUid) await bepaalEigenKlasVoorOudercontact();
-  if (targetUid && targetUid !== currentUser.uid) isReadOnly = true;
+  if (targetUid && targetUid !== currentUser.uid) {
+    isReadOnly = ['directie','zorgcoordinator'].includes(currentRol);
+  }
   if ($('andereKlasBtn')) $('andereKlasBtn').style.display = isSchoolBreed ? '' : 'none';
 
   await laadEnToonKlas();
@@ -804,10 +846,12 @@ function renderLeerlingenSidebar() {
     const heeft = heeftData(g);
     const deels = g && Object.keys(g).filter(k=>k!=='tijd').some(k=>g[k]?.trim()) && !heeft;
     const status = heeft ? 'ingevuld' : (deels ? 'deels' : '');
-    const tijd = g?.tijd || '';
+    const tijd = [g?.tijd, g?.tijd2].filter(Boolean).join(' / ');
+    const ouderInfo = [g?.ouderAanwezig, g?.ouder2].filter(Boolean).join(' / ');
+    const planning = [tijd, ouderInfo].filter(Boolean).join(' · ');
     const active = l.id === huidigeLeerlingId ? 'active' : '';
     return `<div class="leerling-row ${active}" onclick="selecteerLeerling('${l.id}')">
-      <span class="lr-tijd">${tijd || '–'}</span>
+      <span class="lr-tijd">${planning || '–'}</span>
       <span class="lr-naam">${esc(l.naam)}</span>
       <span class="lr-status ${status}"></span>
     </div>`;
@@ -822,6 +866,18 @@ window.selecteerLeerling = function(id) {
 };
 
 // ── FICHE RENDEREN ──
+function ouderOpties(value = '') {
+  const opties = [
+    ['', 'Wie komt?'],
+    ['mama', 'Mama'],
+    ['papa', 'Papa'],
+    ['mama en papa', 'Mama en papa'],
+    ['ouder(s)', 'Ouder(s)'],
+    ['andere', 'Andere']
+  ];
+  return opties.map(([v, label]) => `<option value="${esc(v)}" ${v === value ? 'selected' : ''}>${esc(label)}</option>`).join('');
+}
+
 function renderFiche() {
   const oc = state.oudercontacten.find(o => o.id === huidigOcId);
   if (!oc || !huidigeLeerlingId) return;
@@ -865,6 +921,13 @@ function renderFiche() {
       <div class="fiche-naam">
         👤 ${esc(leerling.naam)}
         <input type="time" class="fiche-tijd-input" id="f_tijd" value="${g.tijd||''}" placeholder="uur" oninput="onFicheChange()" title="Tijdstip gesprek"/>
+        <select class="fiche-ouder-select" id="f_ouderAanwezig" onchange="onFicheChange()" title="Wie komt op dit uur?">
+          ${ouderOpties(g.ouderAanwezig || '')}
+        </select>
+        <span class="fiche-extra-afspraak">
+          <input type="time" class="fiche-tijd-input" id="f_tijd2" value="${g.tijd2||''}" oninput="onFicheChange()" title="Tweede afspraak voor dezelfde voorbereiding"/>
+          <input type="text" class="fiche-ouder-input" id="f_ouder2" value="${esc(g.ouder2||'')}" placeholder="bv. papa apart" oninput="onFicheChange()" title="Wie komt apart?"/>
+        </span>
       </div>
       <div class="fiche-nav-btns">
         <button class="ghost small" onclick="navigeerLeerling(-1)" ${heeftVorige?'':'disabled'}>← Vorige</button>
@@ -932,12 +995,18 @@ function vakCard(id, emoji, label, cls, value) {
   </div>`;
 }
 
-function onFicheChange() { /* live — opslaan via opslaan-knop of navigatie */ }
+function onFicheChange() {
+  if (isReadOnly) return;
+  saveFicheData();
+}
 
 function getFicheData() {
   const val = id => $(id) ? $(id).value : '';
   return {
     tijd: val('f_tijd'),
+    ouderAanwezig: val('f_ouderAanwezig'),
+    tijd2: val('f_tijd2'),
+    ouder2: val('f_ouder2'),
     nl: val('f_nl'),
     wiskunde: val('f_wiskunde'),
     wo: val('f_wo'),
@@ -1197,12 +1266,16 @@ async function maakPdf(leerlingen) {
     doc.setFont('helvetica', 'bold');
     doc.text(leerling.naam, PW / 2, MARGIN + 15, { align: 'center' });
 
-    // Tijdstip rechts
-    if (g.tijd) {
+    // Afspraak rechts
+    const afspraakRegels = [
+      [g.tijd, g.ouderAanwezig].filter(Boolean).join(' - '),
+      [g.tijd2, g.ouder2].filter(Boolean).join(' - ')
+    ].filter(Boolean);
+    if (afspraakRegels.length) {
       doc.setTextColor(80, 80, 80);
       doc.setFontSize(9);
       doc.setFont('helvetica', 'bold');
-      doc.text(g.tijd, PW - MARGIN - 5, MARGIN + 15, { align: 'right' });
+      doc.text(afspraakRegels, PW - MARGIN - 5, MARGIN + 12, { align: 'right' });
     }
 
     const Y_START = MARGIN + HEADER_H + 4;
@@ -1324,6 +1397,69 @@ window.pdfAlleKinderen = async function() {
 };
 
 // ── HELPERS ──
+async function pdfDeuroverzicht() {
+  saveFicheData();
+  const oc = state.oudercontacten.find(o => o.id === huidigOcId);
+  if (!oc) return;
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+  const PW = 210, PH = 297, M = 13;
+  const rows = [];
+  getLeerlingenVoorOc(oc).forEach(leerling => {
+    const g = (oc.gesprekken || {})[leerling.id] || {};
+    if (g.tijd) rows.push({ tijd: g.tijd, naam: leerling.naam });
+    if (g.tijd2) rows.push({ tijd: g.tijd2, naam: leerling.naam });
+  });
+  rows.sort((a, b) => a.tijd.localeCompare(b.tijd) || a.naam.localeCompare(b.naam, 'nl'));
+
+  doc.setTextColor(44, 31, 14);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(23);
+  doc.text('Oudercontact', PW / 2, M + 10, { align: 'center' });
+  doc.setFontSize(12);
+  doc.setFont('helvetica', 'normal');
+  const sub = [oc.naam, oc.datum ? formatDatum(oc.datum) : ''].filter(Boolean).join(' - ');
+  if (sub) doc.text(sub, PW / 2, M + 18, { align: 'center' });
+  doc.setDrawColor(194, 65, 12);
+  doc.setLineWidth(0.6);
+  doc.line(M + 18, M + 24, PW - M - 18, M + 24);
+
+  if (!rows.length) {
+    doc.setFontSize(16);
+    doc.text('Nog geen uren ingevuld.', PW / 2, 80, { align: 'center' });
+    doc.save(`deuroverzicht_oudercontact_${(oc.naam || 'oudercontact').replace(/[^a-zA-Z0-9]/g, '_')}.pdf`);
+    return;
+  }
+
+  const useTwoCols = rows.length > 17;
+  const colGap = 8;
+  const colW = useTwoCols ? (PW - 2 * M - colGap) / 2 : PW - 2 * M;
+  const rowH = useTwoCols ? Math.min(11, (PH - 55) / Math.ceil(rows.length / 2)) : Math.min(13, (PH - 55) / rows.length);
+  const fontSize = useTwoCols ? 11 : 13;
+  const perCol = useTwoCols ? Math.ceil(rows.length / 2) : rows.length;
+  const startY = M + 38;
+
+  rows.forEach((row, index) => {
+    const col = useTwoCols && index >= perCol ? 1 : 0;
+    const pos = useTwoCols ? index % perCol : index;
+    const x = M + col * (colW + colGap);
+    const y = startY + pos * rowH;
+    const fill = pos % 2 === 0 ? 255 : 250;
+    doc.setFillColor(fill, fill, fill);
+    doc.setDrawColor(226, 214, 197);
+    doc.roundedRect(x, y, colW, rowH - 1.4, 2, 2, 'FD');
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(fontSize);
+    doc.setTextColor(92, 48, 16);
+    doc.text(row.tijd, x + 4, y + rowH / 2 + 1.7);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(44, 31, 14);
+    doc.text(row.naam, x + 25, y + rowH / 2 + 1.7, { maxWidth: colW - 30 });
+  });
+
+  doc.save(`deuroverzicht_oudercontact_${(oc.naam || 'oudercontact').replace(/[^a-zA-Z0-9]/g, '_')}.pdf`);
+}
+
 function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 function formatDatum(d) { if (!d) return ''; const [y,m,day] = d.split('-'); return `${day}/${m}/${y}`; }
 
@@ -1338,6 +1474,8 @@ window.navigeerLeerling = navigeerLeerling;
 window.toggleFrans = toggleFrans;
 window.pdfHuidigKind = pdfHuidigKind;
 window.pdfAlleKinderen = pdfAlleKinderen;
+window.pdfDeuroverzicht = pdfDeuroverzicht;
+window.onFicheChange = onFicheChange;
 
 function koppelStatischeKnoppen() {
   const bind = (id, fn) => { const el = $(id); if (el) el.addEventListener('click', fn); };
@@ -1347,6 +1485,7 @@ function koppelStatischeKnoppen() {
   bind('terugBtn',          () => naarOcLijst());
   bind('bewerkOcBtn',       () => openBewerkenOcModal());
   bind('pdfBtnWerk',        () => pdfHuidigKind());
+  bind('deurPdfBtn',        () => pdfDeuroverzicht());
   bind('pdfAlleBtn',        () => pdfAlleKinderen());
   bind('ocModalCloseBtn',   () => sluitOcModal());
   bind('ocModalAnnuleerBtn',() => sluitOcModal());
