@@ -89,9 +89,11 @@ function pasKnoppenToe(huistakenKnop, overgangKnop, schoolbeheerKnop, bestelling
   if (isSchoolBreed) {
     vulTegel(huistakenKnop, 'schooloverzicht.html?mode=huistaken', '&#128218;', 'Huistaken per klas', 'Kies eerst een klas en open daarna de huistakenopvolging van die klas.');
     vulTegel(overgangKnop, 'schooloverzicht.html?mode=overgang', '&#128196;', 'Overgang per klas', 'Kies eerst een klas en bekijk of vul de overgangsbespreking aan.');
+    vulTegel(oudercontactKnop, 'schooloverzicht.html?mode=oudercontact', '&#128172;', 'Oudercontact per klas', 'Kies eerst een klas en open daarna de oudercontactvoorbereidingen.');
   } else {
     vulTegel(huistakenKnop, 'dashboard.html', '&#128230;', 'Huistaken opvolgen', 'Open de opvolging van je klas voor het afgeven van huistaken per leerling.');
     vulTegel(overgangKnop, 'overgangsbespreking.html', '&#128196;', 'Overgangsbespreking', 'Werk leerlingenfiches bij en bereid de overdracht naar de volgende klas voor.');
+    vulTegel(oudercontactKnop, 'oudercontact.html', '&#128172;', 'Oudercontact', 'Bereid gesprekken per leerling voor en maak een nette PDF voor ouders.');
   }
 }
 
