@@ -97,6 +97,8 @@
   .group-title input:hover,.group-title input:focus{border-color:var(--border);background:#fff}
   .stats{font-size:12px;color:var(--muted);line-height:1.5;margin-bottom:10px;padding:8px;background:#fff;border-radius:8px}
   .student-card{background:#fff;border:1px solid var(--border);border-radius:12px;padding:8px 10px;cursor:grab;margin-bottom:6px}
+  .student-table tr.gok-student td:first-child{background:#eef6ff;border-left:4px solid #4f8fcf}
+  .student-table tr.gok-student td:first-child strong{color:#1d4e89}
   .student-card:active{cursor:grabbing}
   .student-card-name{font-weight:700;font-size:14px;display:flex;justify-content:space-between;align-items:center;gap:6px}
   .student-card-tags{display:flex;gap:3px;flex-wrap:wrap;margin-top:4px}
@@ -531,7 +533,8 @@
       </label>
       <button id="exportJsonBtn" type="button" style="background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.25);font-size:13px;padding:7px 14px">&#128190; Exporteren</button>
       <button id="terugNaarStartBtn" type="button" onclick="window.location.href='index.html'" style="background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.35);color:#fff;border-radius:10px;padding:6px 14px;font-size:13px;cursor:pointer;font-weight:700">🏠 Keuzescherm</button>
-      <button id="andereOvergangKlasBtn" type="button" style="display:none;background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.35);color:#fff;border-radius:10px;padding:6px 14px;font-size:13px;cursor:pointer;font-weight:700">Andere klas</button>
+      <button id="andereOvergangKlasBtn" type="button" style="display:none;background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.35);color:#fff;border-radius:10px;padding:6px 14px;font-size:13px;cursor:pointer;font-weight:700">🏫 Andere klas</button>
+      <button id="klasKoppelingenBtn" type="button" style="display:none;background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.35);color:#fff;border-radius:10px;padding:6px 14px;font-size:13px;cursor:pointer;font-weight:700">🔗 Klaskoppelingen</button>
       <div id="firebaseStatus" class="small" style="flex-basis:100%;color:rgba(255,255,255,.5);font-size:11px">Firebase wordt gecontroleerd...</div>
     </div>
   </div>
@@ -1118,6 +1121,13 @@ let targetOvergangUserId = overgangParams.get('beheerUid') || null;
 let beheerKlasLabel = overgangParams.get('klas') || '';
 let beheerNaamLabel = overgangParams.get('naam') || '';
 let klasProjectMode = overgangParams.get('klasProject') === '1';
+// Beschikbaar maken op window: dit script en het tweede <script type="module">
+// blok hieronder (schoolflow/overgangSchool) zijn TWEE losse modules met elk
+// hun eigen scope. Zonder dit zou sfContextKlas()/sfContextOwnerUid() crashen
+// met "beheerKlasLabel is not defined" — wat exact de fout was die overdrachten
+// (creëren van dossiers, "overdrachten naar mij" ophalen) altijd liet mislukken.
+window.targetOvergangUserId = targetOvergangUserId;
+window.beheerKlasLabel = beheerKlasLabel;
 const ready = new Promise(resolve => {
   onAuthStateChanged(auth, user => {
     if (!user) {
@@ -1129,13 +1139,18 @@ const ready = new Promise(resolve => {
   });
 });
 
-const schoolbredeRollenOvergang = ["directie", "zorgcoordinator", "zorgleerkracht"];
+const schoolbredeRollenOvergang = ["beheerder", "directie", "zorgcoordinator", "zorgleerkracht"];
 const ovEsc = v => String(v ?? "").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;");
 async function huidigeOvergangRol() {
   await ready;
   try {
     const snap = await getDoc(doc(db, "schoolrollen", currentUser.uid));
-    return snap.exists() ? String(snap.data().rol || "").toLowerCase() : "";
+    const echteRol = snap.exists() ? String(snap.data().rol || "").toLowerCase() : "";
+    if (echteRol === "beheerder") {
+      const simulatie = localStorage.getItem("lindeSimuleerRol_" + currentUser.uid);
+      if (simulatie) return String(simulatie).toLowerCase();
+    }
+    return echteRol;
   } catch(e) {
     console.warn("Rol laden mislukt", e);
     return "";
@@ -1151,11 +1166,11 @@ async function laadOvergangKlassen() {
     const klasId = String(item.klasId || item.klas || d.id.replace(schooljaar + "_","")).trim();
     if (klasId) koppelingen.set(klasId, item);
   });
-  const klassen = [];
+  const klassenMap = new Map();
   klaslijstSnap.forEach(d => {
     const item = d.data() || {};
     const koppeling = koppelingen.get(d.id) || {};
-    klassen.push({
+    klassenMap.set(d.id, {
       ...item,
       ...koppeling,
       id: d.id,
@@ -1164,6 +1179,17 @@ async function laadOvergangKlassen() {
       leerlingAantal: Array.isArray(item.leerlingen) ? item.leerlingen.length : 0
     });
   });
+  koppelingen.forEach((koppeling, klasId) => {
+    if (klassenMap.has(klasId)) return;
+    klassenMap.set(klasId, {
+      ...koppeling,
+      id: klasId,
+      klasId,
+      klasNaam: koppeling.klasNaam || koppeling.klas || klasId,
+      leerlingAantal: 0
+    });
+  });
+  const klassen = [...klassenMap.values()];
   klassen.sort((a,b)=>(a.klasNaam || a.klas || a.id).localeCompare(b.klasNaam || b.klas || b.id, "nl", { numeric:true }));
   return klassen;
 }
@@ -1219,7 +1245,101 @@ ready.then(async () => {
     btn.style.display = "";
     btn.onclick = () => window.openOvergangKlasKiezer();
   }
+  const koppelBtn = document.getElementById("klasKoppelingenBtn");
+  if (koppelBtn && schoolbredeRollenOvergang.includes(rol)) {
+    koppelBtn.style.display = "";
+    koppelBtn.onclick = () => window.openKlasKoppelingenBeheer();
+  }
 });
+
+// ---- Klaskoppelingen beheren: zorgt dat elke klas een correct gekoppeld
+// leerkracht-e-mailadres heeft, zodat overdrachten automatisch bij de juiste
+// klas/leerkracht terechtkomen (geen Firebase Console nodig). ----
+function sluitKlasKoppelingenBeheer() {
+  document.getElementById("klasKoppelingenOverlay")?.remove();
+}
+window.sluitKlasKoppelingenBeheer = sluitKlasKoppelingenBeheer;
+
+async function haalKlasleerkrachtenDocOp(klasId) {
+  const refId = `${schooljaar}_${klasId}`;
+  const snap = await getDoc(doc(db, "klasleerkrachten", refId));
+  return snap.exists() ? { id: refId, ...snap.data() } : { id: refId, klas: klasId, klasId, leerkracht_emails: [], leerkracht_namen: [] };
+}
+
+async function bewaarKlasKoppeling(klasId, email, naam) {
+  const refId = `${schooljaar}_${klasId}`;
+  const cleanEmail = String(email || "").trim().toLowerCase();
+  const cleanNaam = String(naam || "").trim();
+  if (!cleanEmail || !cleanEmail.includes("@")) {
+    alert("Geef een geldig e-mailadres in.");
+    return false;
+  }
+  await setDoc(doc(db, "klasleerkrachten", refId), {
+    klas: klasId,
+    klasId,
+    klasNaam: klasId,
+    schooljaar,
+    leerkracht_emails: [cleanEmail],
+    leerkracht_namen: cleanNaam ? [cleanNaam] : [],
+    bijgewerktDoor: currentUser?.email || "",
+    bijgewerktOp: new Date().toISOString()
+  }, { merge: true });
+  return true;
+}
+
+window.openKlasKoppelingenBeheer = async function () {
+  const rol = await huidigeOvergangRol();
+  if (!schoolbredeRollenOvergang.includes(rol)) return;
+  const bestaand = document.getElementById("klasKoppelingenOverlay");
+  if (bestaand) bestaand.remove();
+  const overlay = document.createElement("div");
+  overlay.id = "klasKoppelingenOverlay";
+  overlay.style.cssText = "position:fixed;inset:0;background:rgba(34,48,68,.55);z-index:9999;padding:24px;overflow:auto";
+  overlay.innerHTML = `<div style="background:#fff;border-radius:18px;max-width:760px;margin:30px auto;padding:20px;box-shadow:0 20px 60px rgba(0,0,0,.25)">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:14px">
+      <div>
+        <h2 style="margin:0 0 6px">Klaskoppelingen (schooljaar ${ovEsc(schooljaar)})</h2>
+        <p class="help" style="margin:0">Vul per klas het e-mailadres van de huidige leerkracht in. Dit zorgt dat overdrachten automatisch bij de juiste klas terechtkomen — zonder dit goed te zetten, kan een overdracht "verdwijnen" of bij de verkeerde klas terechtkomen.</p>
+      </div>
+      <button type="button" class="ghost" onclick="sluitKlasKoppelingenBeheer()">Sluiten</button>
+    </div>
+    <div id="klasKoppelingenLijst"><p>Klassen laden...</p></div>
+  </div>`;
+  document.body.appendChild(overlay);
+  const lijst = document.getElementById("klasKoppelingenLijst");
+  try {
+    const klassen = ['K1','K2','K3','1A','2A','3A','4A','5A','6A'];
+    const docs = await Promise.all(klassen.map(k => haalKlasleerkrachtenDocOp(k)));
+    lijst.innerHTML = `<div style="display:grid;gap:10px">${docs.map(d => {
+      const email = (d.leerkracht_emails || [])[0] || "";
+      const naam = (d.leerkracht_namen || [])[0] || "";
+      const status = email
+        ? `<span class="okbox" style="display:inline-block;padding:2px 8px;font-size:11px">✓ gekoppeld</span>`
+        : `<span class="errorbox" style="display:inline-block;padding:2px 8px;font-size:11px">⚠ nog niet gekoppeld</span>`;
+      return `<div style="border:1px solid #d9cfc0;border-radius:12px;padding:12px;display:grid;grid-template-columns:60px 1fr 1fr auto;gap:8px;align-items:center">
+        <strong style="font-size:16px">${ovEsc(d.klasId)}</strong>
+        <input type="text" placeholder="naam leerkracht (optioneel)" value="${ovEsc(naam)}" id="kk_naam_${ovEsc(d.klasId)}">
+        <input type="email" placeholder="e-mailadres leerkracht" value="${ovEsc(email)}" id="kk_email_${ovEsc(d.klasId)}">
+        <div style="display:flex;gap:6px;align-items:center;white-space:nowrap">
+          <button type="button" class="secondary small" onclick="window.__opslaanKlasKoppeling('${ovEsc(d.klasId)}')">Opslaan</button>
+          ${status}
+        </div>
+      </div>`;
+    }).join("")}</div>`;
+  } catch (e) {
+    lijst.innerHTML = `<div class="errorbox">Klaskoppelingen laden mislukt: ${ovEsc(e.message)}</div>`;
+  }
+};
+
+window.__opslaanKlasKoppeling = async function (klasId) {
+  const emailInput = document.getElementById(`kk_email_${klasId}`);
+  const naamInput = document.getElementById(`kk_naam_${klasId}`);
+  const ok = await bewaarKlasKoppeling(klasId, emailInput?.value, naamInput?.value);
+  if (ok) {
+    alert(`Klas ${klasId} is gekoppeld aan ${emailInput.value.trim().toLowerCase()}.`);
+    window.openKlasKoppelingenBeheer();
+  }
+};
 
 function projectRef() {
   if (klasProjectMode && beheerKlasLabel) {
@@ -1414,6 +1534,14 @@ function dossiersRef() {
   return collection(sfDb, "overgangsbesprekingen", sfSchooljaar, "dossiers");
 }
 
+function sfContextOwnerUid() {
+  return window.targetOvergangUserId || sfUser.uid;
+}
+
+function sfContextKlas() {
+  return String(window.beheerKlasLabel || '').trim();
+}
+
 window.overgangSchool = {
   ready: sfReady,
   schooljaar: sfSchooljaar,
@@ -1423,13 +1551,15 @@ window.overgangSchool = {
   },
   async createDossier(payload) {
     await sfReady;
-    const id = `${sfUser.uid}_${Date.now()}`;
+    const ownerUid = sfContextOwnerUid();
+    const id = `${ownerUid}_${Date.now()}`;
     await setDoc(doc(sfDb, "overgangsbesprekingen", sfSchooljaar, "dossiers", id), {
       ...payload,
       id,
       schooljaar: sfSchooljaar,
-      eigenaar_uid: sfUser.uid,
+      eigenaar_uid: ownerUid,
       eigenaar_email: sfUser.email || "",
+      eigenaar_klas: sfContextKlas(),
       status: "gedeeld",
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp()
@@ -1439,20 +1569,86 @@ window.overgangSchool = {
   async listIncoming() {
     await sfReady;
     const email = (sfUser.email || "").toLowerCase();
-    const snap = await getDocs(query(dossiersRef(), where("volgende_leerkracht_email", "==", email)));
-    return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    const resultaten = new Map();
+    const eigenKlas = sfContextKlas();
+    const voegToe = d => {
+      const item = { id: d.id, ...d.data() };
+      resultaten.set(d.id, item);
+    };
+    const isOpenDossier = item => !["overgenomen", "afgesloten", "opgeruimd", "verwijderd"].includes(String(item.status || "").toLowerCase());
+
+    if (eigenKlas) {
+      const snaps = await Promise.all([
+        getDocs(query(dossiersRef(), where("volgende_klas", "==", eigenKlas))),
+        getDocs(query(dossiersRef(), where("naar_leerjaar", "==", eigenKlas)))
+      ]);
+      snaps.forEach(snap => snap.docs.forEach(voegToe));
+      return [...resultaten.values()].filter(item =>
+        isOpenDossier(item) && String(item.eigenaar_klas || item.van_leerjaar || "") !== eigenKlas
+      );
+    }
+
+    if (email) {
+      const emailSnap = await getDocs(query(dossiersRef(), where("volgende_leerkracht_email", "==", email)));
+      emailSnap.docs.forEach(d => {
+        const item = { id: d.id, ...d.data() };
+        if (item.eigenaar_uid !== sfUser.uid && (item.eigenaar_email || "").toLowerCase() !== email) resultaten.set(d.id, item);
+      });
+    }
+
+    const klasSet = new Set();
+    const uidSnap = await getDocs(query(collection(sfDb, "klasleerkrachten"), where("leerkracht_uids", "array-contains", sfUser.uid)));
+    uidSnap.docs.forEach(d => {
+      const item = d.data() || {};
+      if (!item.schooljaar || String(item.schooljaar) === sfSchooljaar) klasSet.add(String(item.klasId || item.klas || item.klasNaam || "").trim());
+    });
+    if (email) {
+      const mailSnap = await getDocs(query(collection(sfDb, "klasleerkrachten"), where("leerkracht_emails", "array-contains", email)));
+      mailSnap.docs.forEach(d => {
+        const item = d.data() || {};
+        if (!item.schooljaar || String(item.schooljaar) === sfSchooljaar) klasSet.add(String(item.klasId || item.klas || item.klasNaam || "").trim());
+      });
+    }
+
+    for (const klas of [...klasSet].filter(Boolean)) {
+      const snaps = await Promise.all([
+        getDocs(query(dossiersRef(), where("volgende_klas", "==", klas))),
+        getDocs(query(dossiersRef(), where("naar_leerjaar", "==", klas)))
+      ]);
+      snaps.forEach(snap => snap.docs.forEach(voegToe));
+    }
+    return [...resultaten.values()].filter(item => isOpenDossier(item) && item.eigenaar_uid !== sfUser.uid);
   },
   async listOutgoing() {
     await sfReady;
-    const snap = await getDocs(query(dossiersRef(), where("eigenaar_uid", "==", sfUser.uid)));
-    return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    const snap = await getDocs(query(dossiersRef(), where("eigenaar_uid", "==", sfContextOwnerUid())));
+    return snap.docs
+      .map(d => ({ id: d.id, ...d.data() }))
+      .filter(item => !["opgeruimd", "verwijderd"].includes(String(item.status || "").toLowerCase()));
   },
   async klasKoppeling(klasId) {
     await sfReady;
     const clean = String(klasId || "").trim();
     if (!clean) return null;
-    const snap = await getDoc(doc(sfDb, "klasleerkrachten", `${sfSchooljaar}_${clean}`));
-    return snap.exists() ? snap.data() : null;
+    const jaren = [...new Set([sfSchooljaar, typeof schooljaar !== "undefined" ? schooljaar : ""].filter(Boolean))];
+    for (const jaar of jaren) {
+      const snap = await getDoc(doc(sfDb, "klasleerkrachten", `${jaar}_${clean}`));
+      if (snap.exists()) return { id: snap.id, ...snap.data() };
+    }
+
+    const probes = [
+      query(collection(sfDb, "klasleerkrachten"), where("klas", "==", clean)),
+      query(collection(sfDb, "klasleerkrachten"), where("klasId", "==", clean)),
+      query(collection(sfDb, "klasleerkrachten"), where("klasNaam", "==", clean))
+    ];
+    for (const q of probes) {
+      const snap = await getDocs(q);
+      const match = snap.docs
+        .map(d => ({ id: d.id, ...d.data() }))
+        .find(item => !item.schooljaar || jaren.includes(String(item.schooljaar)));
+      if (match) return match;
+    }
+    return null;
   },
   async markOvergenomen(id) {
     await sfReady;
@@ -1466,13 +1662,60 @@ window.overgangSchool = {
   },
   async syncOutgoing(payload) {
     await sfReady;
-    const snap = await getDocs(query(dossiersRef(), where("eigenaar_uid", "==", sfUser.uid)));
+    const snap = await getDocs(query(dossiersRef(), where("eigenaar_uid", "==", sfContextOwnerUid())));
     let count = 0;
     for (const item of snap.docs) {
       const data = item.data();
       if (data.status === "overgenomen" || data.status === "afgesloten") continue;
       await updateDoc(doc(sfDb, "overgangsbesprekingen", sfSchooljaar, "dossiers", item.id), {
         ...payload,
+        updatedAt: serverTimestamp()
+      });
+      count++;
+    }
+    return count;
+  },
+  async cleanupTransferMessagesForCurrentClass(scope = "all") {
+    await sfReady;
+    const klas = sfContextKlas();
+    const ownerUid = sfContextOwnerUid();
+    const incomingQueries = [
+      klas ? getDocs(query(dossiersRef(), where("volgende_klas", "==", klas))) : Promise.resolve({ docs: [] }),
+      klas ? getDocs(query(dossiersRef(), where("naar_leerjaar", "==", klas))) : Promise.resolve({ docs: [] })
+    ];
+    const outgoingQueries = [
+      ownerUid ? getDocs(query(dossiersRef(), where("eigenaar_uid", "==", ownerUid))) : Promise.resolve({ docs: [] }),
+      klas ? getDocs(query(dossiersRef(), where("eigenaar_klas", "==", klas))) : Promise.resolve({ docs: [] })
+    ];
+    const gekozenQueries = scope === "incoming" ? incomingQueries : scope === "outgoing" ? outgoingQueries : [...incomingQueries, ...outgoingQueries];
+    const snaps = await Promise.all(gekozenQueries);
+    const docs = new Map();
+    snaps.forEach(snap => snap.docs.forEach(d => docs.set(d.id, d)));
+    const vorige = [];
+    for (const d of docs.values()) {
+      const data = d.data() || {};
+      if (["opgeruimd", "verwijderd"].includes(String(data.status || "").toLowerCase())) continue;
+      vorige.push({ id: d.id, status: data.status || "gedeeld", data });
+      await updateDoc(doc(sfDb, "overgangsbesprekingen", sfSchooljaar, "dossiers", d.id), {
+        status: "opgeruimd",
+        statusVoorOpruimen: data.status || "gedeeld",
+        opgeruimdVoorKlas: klas || "",
+        opgeruimdOnderdeel: scope,
+        opgeruimdDoorEmail: sfUser.email || "",
+        opgeruimdOp: serverTimestamp(),
+        updatedAt: serverTimestamp()
+      });
+    }
+    return { klas, vorige };
+  },
+  async undoCleanupTransferMessages(entries) {
+    await sfReady;
+    let count = 0;
+    for (const item of entries || []) {
+      if (!item || !item.id) continue;
+      await updateDoc(doc(sfDb, "overgangsbesprekingen", sfSchooljaar, "dossiers", item.id), {
+        status: item.status || "gedeeld",
+        hersteldNaOpruimenOp: serverTimestamp(),
         updatedAt: serverTimestamp()
       });
       count++;
@@ -1487,7 +1730,7 @@ window.dispatchEvent(new Event("overgangSchoolReady"));
 const state = {
   projectName: 'Nieuwe verdeling', mode: 'classes', levelType: 'homogeneous', levelCriterion: 'general',
   groupCount: 3, balanceGender: true, respectFriends: true, respectAvoid: true,
-  students: [], groups: [], locks: {}
+  students: [], groups: [], locks: {}, excludedSchoolbeheerKeys: []
 };
 let isDirty = false, lastSaveTime = null, activeTab = 'settings';
 let zorggroepen = [];
@@ -1506,6 +1749,13 @@ const uid = () => Math.random().toString(36).slice(2,10) + Date.now().toString(3
 const split = v => v.split(',').map(x => x.trim()).filter(Boolean);
 const esc = v => String(v == null ? '' : v).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#039;');
 const todayISO = () => new Date().toISOString().slice(0,10);
+function markExcludedFromSchoolbeheer(s) {
+  if (!s) return;
+  const key = studentNameKey(s.firstName, s.lastName);
+  if (!key || key === '|') return;
+  if (!Array.isArray(state.excludedSchoolbeheerKeys)) state.excludedSchoolbeheerKeys = [];
+  if (!state.excludedSchoolbeheerKeys.includes(key)) state.excludedSchoolbeheerKeys.push(key);
+}
 
 
 function setFirebaseStatus(text) {
@@ -2002,6 +2252,7 @@ function saveStudent() {
 function deleteStudent() {
   const id = $('editId').value;
   if (!id || !confirm('Deze leerling verwijderen?')) return;
+  markExcludedFromSchoolbeheer(state.students.find(s => s.id === id));
   state.students = state.students.filter(s => s.id !== id);
   state.groups.forEach(g => g.ids = g.ids.filter(x => x !== id));
   delete state.locks[id];
@@ -2013,6 +2264,7 @@ window.verwijderLeerlingRij = function(id) {
   const lln = state.students.find(s => s.id === id);
   if (!lln) return;
   if (!confirm(`${lln.name} verwijderen uit de lijst?`)) return;
+  markExcludedFromSchoolbeheer(lln);
   state.students = state.students.filter(s => s.id !== id);
   state.groups.forEach(g => g.ids = g.ids.filter(x => x !== id));
   delete state.locks[id];
@@ -2396,9 +2648,11 @@ async function vulOntbrekendeLeerlingenUitSchoolbeheer() {
     .map(schoolbeheerNaamNaarRij)
     .filter(row => row && (row.firstName || row.lastName));
   const existing = new Set(state.students.map(s => studentNameKey(s.firstName, s.lastName)));
+  const excluded = new Set(Array.isArray(state.excludedSchoolbeheerKeys) ? state.excludedSchoolbeheerKeys : []);
   let added = 0;
   rows.forEach(row => {
     const key = studentNameKey(row.firstName, row.lastName);
+    if (excluded.has(key)) return;
     if (existing.has(key)) return;
     existing.add(key);
     state.students.push(nieuweLegeStudent(row, 'schoolbeheer'));
@@ -2699,7 +2953,8 @@ function renderStudents() {
       const BADMUTS_EMOJI = {rood:'🔴',blauw_ondiep:'🔵',blauw_diep:'🔵',groen:'🟢'};
       if (s.badmuts) tags.push(`<span class="mini-tag">${BADMUTS_EMOJI[s.badmuts]||'🏊'} badmuts</span>`);
       const displayName = s.lastName ? `<strong>${esc(s.lastName)}</strong>, ${esc(s.firstName)}` : `<strong>${esc(s.name)}</strong>`;
-      return `<tr>
+      const rijClass = s.gok === 'ja' ? ' class="gok-student"' : '';
+      return `<tr${rijClass}>
         <td style="cursor:pointer" onclick="openFicheModal('${s.id}')" title="Klik voor fiche · dubbelklik om te bewerken" ondblclick="openModal('${s.id}')">${displayName} ${genderBadge(s.gender)} <span style="font-size:11px;color:var(--muted);margin-left:4px" title="Klik voor fiche">🔍</span></td>
         <td onclick="openFicheModal('${s.id}')" style="cursor:pointer">${s.level}/5</td>
         <td onclick="openFicheModal('${s.id}')" style="cursor:pointer">${esc(s.reading)} ${s.avi ? '· AVI ' + esc(s.avi) : ''}<br><span class="small">spelling ${esc(s.spelling || 'basis')} · rekenen ${esc(s.math)} · handschrift ${esc(s.writing || 'basis')}</span></td>
@@ -2928,7 +3183,7 @@ function exportJSONOnly(asNewVersion = false) {
         levelCriterion: data.levelCriterion || 'general', groupCount: data.groupCount || 3,
         balanceGender: data.balanceGender !== false, respectFriends: data.respectFriends !== false,
         respectAvoid: data.respectAvoid !== false, students: data.students || [],
-        groups: data.groups || [], locks: data.locks || {}
+        groups: data.groups || [], locks: data.locks || {}, excludedSchoolbeheerKeys: data.excludedSchoolbeheerKeys || []
       });
       e.target.value = '';
       writeSettings(); renderStudents(); renderGroups(); updateBadges(); markClean();
@@ -2987,7 +3242,8 @@ function applyProjectData(data) {
     respectAvoid: data.respectAvoid !== false,
     students: data.students || [],
     groups: data.groups || [],
-    locks: data.locks || {}
+    locks: data.locks || {},
+    excludedSchoolbeheerKeys: data.excludedSchoolbeheerKeys || []
   });
   return true;
 }
@@ -4150,6 +4406,73 @@ function sfCloneStayersForNewClass(students) {
     }));
 }
 
+function sfCloneSelectedStayersForNewClass(studentIds) {
+  const keep = new Set(studentIds || []);
+  return sfSortedStudents(state.students)
+    .filter(s => keep.has(s.id))
+    .map(s => ({
+      ...s,
+      id: uid(),
+      stayingThisYear: false,
+      repeated: s.repeated || true,
+      updatedAt: todayISO()
+    }));
+}
+
+function sfKiesZittenblijversVoorOvername() {
+  return new Promise(resolve => {
+    const huidige = sfSortedStudents(state.students || []);
+    if (!huidige.length) {
+      resolve([]);
+      return;
+    }
+    const wrap = document.createElement('div');
+    wrap.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9999;display:flex;align-items:center;justify-content:center;padding:18px';
+    wrap.innerHTML = `
+      <div style="background:#fff;border-radius:18px;box-shadow:0 18px 60px rgba(0,0,0,.25);max-width:720px;width:100%;padding:22px">
+        <div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start;margin-bottom:12px">
+          <div>
+            <h2 style="margin:0 0 6px;color:#2c1f0e">Welke zittenblijver(s) blijven bij jou?</h2>
+            <p style="margin:0;color:#7a6a55">Vink alleen de kinderen aan die echt in jouw nieuwe klas blijven. De andere leerlingen uit je oude klas verdwijnen uit deze werkklas.</p>
+          </div>
+          <button type="button" data-cancel="1" style="background:#ede8df">Annuleren</button>
+        </div>
+        <div style="max-height:360px;overflow:auto;border:1px solid #d9cfc0;border-radius:12px">
+          ${huidige.map(s => `
+            <label style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-bottom:1px solid #f0e8dc;font-weight:700;cursor:pointer">
+              <input type="checkbox" data-stayer-id="${esc(s.id)}" ${s.stayingThisYear ? 'checked' : ''} style="width:auto">
+              <span>${esc(s.lastName ? `${s.lastName}, ${s.firstName}` : s.name)}</span>
+              ${s.stayingThisYear ? '<span class="mini-tag" style="background:#fde68a;color:#92400e">aangeduid als blijft zitten</span>' : ''}
+            </label>`).join('')}
+        </div>
+        <div class="actions" style="justify-content:flex-end;margin-top:14px">
+          <button type="button" data-none="1" class="ghost">Niemand behouden</button>
+          <button type="button" data-ok="1" class="secondary">Deze kinderen behouden</button>
+        </div>
+      </div>`;
+    document.body.appendChild(wrap);
+    wrap.addEventListener('click', e => {
+      const btn = e.target.closest('button');
+      if (!btn) return;
+      if (btn.dataset.cancel) {
+        wrap.remove();
+        resolve(null);
+        return;
+      }
+      if (btn.dataset.none) {
+        wrap.remove();
+        resolve([]);
+        return;
+      }
+      if (btn.dataset.ok) {
+        const ids = [...wrap.querySelectorAll('input[data-stayer-id]:checked')].map(el => el.dataset.stayerId);
+        wrap.remove();
+        resolve(ids);
+      }
+    });
+  });
+}
+
 const OVERDRACHT_KLASSEN = ['K1','K2','K3','1A','2A','3A','4A','5A','6A'];
 
 function klasUitTekst(tekst) {
@@ -4195,7 +4518,30 @@ function kiesOverdrachtKlas() {
   });
 }
 
+function emailsUitKlasKoppeling(koppeling) {
+  if (!koppeling) return [];
+  const velden = [
+    koppeling.leerkracht_emails,
+    koppeling.hoofdleerkracht_email,
+    koppeling.verzorger_emails,
+    koppeling['verzorger_e-mails'],
+    koppeling.trainer_emails,
+    koppeling.email,
+    koppeling.emails
+  ];
+  return velden
+    .flatMap(v => Array.isArray(v) ? v : [v])
+    .map(v => String(v || '').trim().toLowerCase())
+    .filter(v => v.includes('@'));
+}
+
+const OVERDRACHT_ACTIES_GEBLOKKEERD = false;
+
 async function sfShareTransfer() {
+  if (OVERDRACHT_ACTIES_GEBLOKKEERD) {
+    alert('Overdrachten zijn tijdelijk geblokkeerd om te voorkomen dat er nog iets wordt overschreven. Gebruik voorlopig alleen bekijken/exporteren/diagnose.');
+    return;
+  }
   if (!window.overgangSchool) {
     alert('Firebase is nog niet klaar. Probeer zo meteen opnieuw.');
     return;
@@ -4214,65 +4560,76 @@ async function sfShareTransfer() {
   let doelKlasNaam = doelKlas;
   try {
     const koppeling = await window.overgangSchool.klasKoppeling(doelKlas);
-    const emails = Array.isArray(koppeling?.leerkracht_emails) ? koppeling.leerkracht_emails.filter(Boolean) : [];
+    const emails = emailsUitKlasKoppeling(koppeling);
     cleanEmail = String(emails[0] || '').trim().toLowerCase();
     doelKlasNaam = koppeling?.klasNaam || koppeling?.klas || doelKlas;
   } catch(e) {
     console.warn('Klasleerkracht voor overdracht zoeken mislukt:', e);
   }
-  if (!cleanEmail) {
-    const email = prompt(`Ik vind nog geen gekoppelde leerkracht voor ${doelKlas}. Vul uitzonderlijk het e-mailadres in:`, state.volgende_leerkracht_email || '');
-    if (email === null) return;
-    cleanEmail = email.trim().toLowerCase();
-  }
-  if (!cleanEmail.includes('@')) {
-    alert('Ik vond geen geldig e-mailadres voor deze klas. Controleer bij schoolbeheer of de klasleerkracht gekoppeld is.');
-    return;
-  }
 
-  const samenvatting = `Je deelt ${doorgaan.length} leerling(en) met ${doelKlasNaam} (${cleanEmail}).\n\n${zittenblijvers.length} zittenblijver(s) worden niet doorgestuurd en blijven bij jou.\n\nDoorgaan?`;
+  const ontvangerTekst = cleanEmail ? `${doelKlasNaam} (${cleanEmail})` : doelKlasNaam;
+  if (!cleanEmail) {
+    const doorgaanZonderKoppeling = confirm(
+      `Waarschuwing: er is geen leerkracht-e-mailadres gekoppeld aan klas ${doelKlasNaam}.\n\n` +
+      `Dit overdracht-dossier komt mogelijk NIET automatisch zichtbaar bij de juiste leerkracht ("Overdrachten naar mij").\n\n` +
+      `Tip: koppel eerst het juiste e-mailadres via de knop "🔗 Klaskoppelingen" boven in het scherm.\n\n` +
+      `Toch doorgaan zonder koppeling?`
+    );
+    if (!doorgaanZonderKoppeling) return;
+  }
+  const samenvatting = `Je deelt ${doorgaan.length} leerling(en) met ${ontvangerTekst}.\n\nNa het delen verdwijnen deze leerlingen uit jouw huidige werkklas.\n${zittenblijvers.length} zittenblijver(s) blijven bij jou.\n\nDoorgaan?`;
   if (!confirm(samenvatting)) return;
 
   readSettings();
-  const user = await window.overgangSchool.currentUser();
-  const id = await window.overgangSchool.createDossier({
-    titel: `${state.projectName || 'Overdracht'} -> ${doelKlasNaam || 'volgende klas'}`,
-    projectName: state.projectName || 'Overdracht',
-    van_leerjaar: state.projectName || '',
-    naar_leerjaar: doelKlasNaam,
-    volgende_klas: doelKlas,
-    volgende_leerkracht_email: cleanEmail,
-    gedeeld_door_email: user.email || '',
-    students: doorgaan,
-    zittenblijvers: sfSortedStudents(zittenblijvers).map(s => ({ id: s.id, firstName: s.firstName, lastName: s.lastName, name: s.name })),
-    gedeeldOp: new Date().toISOString()
-  });
+  let id;
+  try {
+    const user = await window.overgangSchool.currentUser();
+    id = await window.overgangSchool.createDossier({
+      titel: `${state.projectName || 'Overdracht'} -> ${doelKlasNaam || 'volgende klas'}`,
+      projectName: state.projectName || 'Overdracht',
+      van_leerjaar: state.projectName || '',
+      naar_leerjaar: doelKlasNaam,
+      volgende_klas: doelKlas,
+      volgende_leerkracht_email: cleanEmail,
+      gedeeld_door_email: user.email || '',
+      students: doorgaan,
+      zittenblijvers: sfSortedStudents(zittenblijvers).map(s => ({ id: s.id, firstName: s.firstName, lastName: s.lastName, name: s.name })),
+      gedeeldOp: new Date().toISOString()
+    });
+  } catch (err) {
+    console.error('Overdracht delen mislukt:', err);
+    alert(
+      'Het delen van deze overdracht is MISLUKT. Er is GEEN dossier aangemaakt en jouw klaslijst is NIET aangepast — er is dus niets verloren.\n\n' +
+      'Foutmelding: ' + (err && err.message ? err.message : err) + '\n\n' +
+      'Probeer het opnieuw. Blijft de fout terugkomen, geef deze foutmelding door.'
+    );
+    return;
+  }
 
   state.volgende_leerkracht_email = cleanEmail;
   state.naar_leerjaar = doelKlas;
-  setFirebaseStatus(`Overdracht gedeeld: ${doorgaan.length} leerling(en).`);
-  alert(`Overdracht gedeeld met ${doelKlasNaam}. De volgende leerkracht ziet ze bij "Overdrachten naar mij".`);
+  setFirebaseStatus(`Overdracht gedeeld: ${doorgaan.length} leerling(en). Je huidige klaslijst is niet aangepast.`);
+  alert(`Overdracht gedeeld met ${doelKlasNaam}. Ik heb je huidige klaslijst voorlopig niet aangepast, zodat er niets extra overschreven wordt.`);
   sfShowOutgoing();
 }
 
 async function sfSyncSharedDossiersAfterSave() {
-  if (!window.overgangSchool || typeof window.overgangSchool.syncOutgoing !== 'function') return 0;
-  const doorgaan = sfCloneForNextTeacher(state.students);
-  const zittenblijvers = state.students.filter(s => s.stayingThisYear);
-  return await window.overgangSchool.syncOutgoing({
-    students: doorgaan,
-    zittenblijvers: sfSortedStudents(zittenblijvers).map(s => ({ id: s.id, firstName: s.firstName, lastName: s.lastName, name: s.name })),
-    laatstGesynchroniseerdOp: new Date().toISOString()
-  });
+  // Tijdelijk uitgeschakeld: een opgeslagen nieuwe werkklas mag nooit
+  // bestaande doorgestuurde dossiers overschrijven.
+  return 0;
 }
 
 function sfRenderDossierCard(dossier, mode) {
   const students = dossier.students || [];
   const status = dossier.status || 'gedeeld';
   const title = esc(dossier.titel || `${dossier.projectName || 'Overdracht'} -> ${dossier.naar_leerjaar || 'volgende klas'}`);
+  const doel = dossier.volgende_leerkracht_email || dossier.volgende_klas || dossier.naar_leerjaar || 'onbekend';
+  const isOvergenomen = ['overgenomen', 'afgesloten'].includes(String(status).toLowerCase());
   const meta = mode === 'incoming'
-    ? `Van ${esc(dossier.gedeeld_door_email || dossier.eigenaar_email || 'onbekend')} Â· ${students.length} leerling(en) Â· status: ${esc(status)}`
-    : `Naar ${esc(dossier.volgende_leerkracht_email || 'onbekend')} Â· ${students.length} leerling(en) Â· status: ${esc(status)}`;
+    ? `Van ${esc(dossier.gedeeld_door_email || dossier.eigenaar_email || 'onbekend')} · ${students.length} leerling(en) · status: ${esc(status)}`
+    : isOvergenomen
+      ? `${students.length} leerling(en) overgedragen naar ${esc(doel)} · verwerkt`
+      : `Naar ${esc(doel)} · ${students.length} leerling(en) · status: ${esc(status)}`;
   const overneem = mode === 'incoming'
     ? `<button type="button" class="secondary" onclick="sfTakeOverDossier('${dossier.id}')">Overnemen als mijn nieuwe werkklas</button>`
     : '';
@@ -4291,6 +4648,19 @@ function sfRenderDossierCard(dossier, mode) {
 
 let sfIncomingCache = [];
 let sfOutgoingCache = [];
+let sfLastCleanup = null;
+
+function sfLatestDossiersPerTarget(list) {
+  const latest = new Map();
+  (list || []).forEach(d => {
+    const doel = d.volgende_klas || d.naar_leerjaar || d.volgende_leerkracht_email || 'onbekend';
+    const key = `${d.schooljaar || ''}|${doel}`;
+    const time = new Date(d.gedeeldOp || d.updatedAt?.toDate?.() || d.createdAt?.toDate?.() || 0).getTime() || 0;
+    const current = latest.get(key);
+    if (!current || time >= current.__time) latest.set(key, { ...d, __time: time });
+  });
+  return [...latest.values()].sort((a, b) => (b.__time || 0) - (a.__time || 0));
+}
 
 async function sfShowIncoming() {
   if (!window.overgangSchool) {
@@ -4303,7 +4673,13 @@ async function sfShowIncoming() {
     const cards = sfIncomingCache.length
       ? sfIncomingCache.map(d => sfRenderDossierCard(d, 'incoming')).join('')
       : `<div class="okbox" style="margin-top:8px">📭 Er staan nog geen overdrachten klaar voor jouw e-mailadres. Zodra een collega een overdracht naar jou stuurt, verschijnt die hier.</div>`;
-    sfBox(`<h2>Overdrachten naar mij</h2><p class="help">Bekijk eerst rustig de overdracht. Neem ze pas over wanneer dit jouw nieuwe werkklas mag worden.</p><div class="schoolflow-list">${cards}</div>`);
+    const actions = `<div class="warning" style="margin:8px 0 12px">
+      <strong>Volgorde:</strong> neem een overdracht pas over wanneer je eigen oude klas al is doorgestuurd. Is deze klas al juist en wil je alleen oude/foutieve kaarten verbergen? Gebruik dan de knop hieronder.
+      <div class="actions" style="margin-top:8px">
+        <button type="button" class="ghost" onclick="sfClearTransferMessages('incoming')">Meldingen wissen</button>
+      </div>
+    </div>`;
+    sfBox(`<h2>Overdrachten naar mij</h2><p class="help">Bekijk eerst rustig de overdracht. Neem ze pas over wanneer dit jouw nieuwe werkklas mag worden.</p>${actions}<div class="schoolflow-list">${cards}</div>`);
   } catch (err) {
     sfBox(`<h2>Overdrachten naar mij</h2><div class="errorbox">Kon overdrachten niet laden: ${esc(err.message)}</div>`);
   }
@@ -4317,10 +4693,27 @@ async function sfShowOutgoing() {
   sfBox('<h2>Mijn doorgestuurde overdrachten</h2><p>Even ophalen uit Firebase...</p>');
   try {
     sfOutgoingCache = await window.overgangSchool.listOutgoing();
-    const cards = sfOutgoingCache.length
-      ? sfOutgoingCache.map(d => sfRenderDossierCard(d, 'outgoing')).join('')
+    const zichtbaar = sfLatestDossiersPerTarget(sfOutgoingCache);
+    const historiek = zichtbaar
+      .filter(d => ['overgenomen', 'afgesloten'].includes(String(d.status || '').toLowerCase()))
+      .map(d => {
+        const doel = d.volgende_klas || d.naar_leerjaar || d.volgende_leerkracht_email || 'volgende klas';
+        const aantal = Array.isArray(d.students) ? d.students.length : 0;
+        return `${aantal} leerling(en) overgedragen naar ${esc(doel)}`;
+      });
+    const historiekBox = historiek.length
+      ? `<div class="okbox" style="margin:8px 0 12px">${historiek.map(x => `✅ ${x}`).join('<br>')}</div>`
+      : '';
+    const cards = zichtbaar.length
+      ? zichtbaar.map(d => sfRenderDossierCard(d, 'outgoing')).join('')
       : `<div class="okbox" style="margin-top:8px">📭 Je hebt nog geen overdracht gedeeld met een collega. Gebruik "Overdracht delen" om jouw leerlingenfiches door te sturen.</div>`;
-    sfBox(`<h2>Mijn doorgestuurde overdrachten</h2><p class="help">Zolang je collega nog niet heeft overgenomen, kan die jouw gedeelde overdracht raadplegen.</p><div class="schoolflow-list">${cards}</div>`);
+    const actions = `<div class="warning" style="margin:8px 0 12px">
+      <strong>Volgorde:</strong> hier kijk je na wat jij al hebt doorgestuurd. Is de overdracht verwerkt en wil je oude/foutieve kaarten verbergen? Gebruik dan de knop hieronder.
+      <div class="actions" style="margin-top:8px">
+        <button type="button" class="ghost" onclick="sfClearTransferMessages('outgoing')">Meldingen wissen</button>
+      </div>
+    </div>`;
+    sfBox(`<h2>Mijn doorgestuurde overdrachten</h2><p class="help">Hier zie je open overdrachten en wat al verwerkt is.</p>${actions}${historiekBox}<div class="schoolflow-list">${cards}</div>`);
   } catch (err) {
     sfBox(`<h2>Mijn doorgestuurde overdrachten</h2><div class="errorbox">Kon overdrachten niet laden: ${esc(err.message)}</div>`);
   }
@@ -4355,24 +4748,110 @@ function sfPreviewDossier(id, mode) {
     </div>`);
 }
 
+async function sfClearTransferMessages(scope = "all") {
+  if (!window.overgangSchool || typeof window.overgangSchool.cleanupTransferMessagesForCurrentClass !== 'function') {
+    alert('Firebase is nog niet klaar. Probeer zo meteen opnieuw.');
+    return;
+  }
+  const klas = String(window.beheerKlasLabel || '').trim();
+  if (!klas) {
+    alert('Ik kan niet bepalen voor welke klas ik de meldingen moet wissen.');
+    return;
+  }
+  const onderdeel = scope === 'incoming' ? 'Naar mij ontvangen' : scope === 'outgoing' ? 'Doorgestuurde' : 'Naar mij ontvangen en Doorgestuurde';
+  const zeker = confirm(
+    `Meldingen wissen bij "${onderdeel}" voor ${klas}?\n\n` +
+    `Stap 1: controleer eerst of de juiste leerlingen al in deze klas staan.\n\n` +
+    `Stap 2: controleer of je deze melding niet meer nodig hebt.\n\n` +
+    `Dit wist/verbergt alleen de kaarten in dit onderdeel. Leerlingen en fiches blijven staan.`
+  );
+  if (!zeker) return;
+  const dubbel = confirm(
+    `Laatste controle:\n\n` +
+    `Is ${klas} werkelijk de juiste nieuwe klas en mag "${onderdeel}" leeg worden?\n\n` +
+    `Klik alleen OK als je zeker bent. Daarna krijg je meteen een knop "Ongedaan maken".`
+  );
+  if (!dubbel) return;
+
+  sfBox(`<h2>Meldingen wissen</h2><p>Ik ruim "${esc(onderdeel)}" van ${esc(klas)} op...</p>`);
+  try {
+    sfLastCleanup = await window.overgangSchool.cleanupTransferMessagesForCurrentClass(scope);
+    const aantal = sfLastCleanup.vorige.length;
+    sfBox(`<h2>Meldingen gewist</h2>
+      <div class="okbox">${aantal} melding(en) verborgen bij "${esc(onderdeel)}" voor ${esc(klas)}. Leerlingen en fiches zijn niet aangepast.</div>
+      <p class="help">Te snel geklikt? Gebruik hieronder meteen "Ongedaan maken".</p>
+      <div class="actions" style="margin-top:12px">
+        <button type="button" class="secondary" onclick="sfUndoClearTransferMessages()">Ongedaan maken</button>
+        <button type="button" class="ghost" onclick="${scope === 'outgoing' ? 'sfShowOutgoing()' : 'sfShowIncoming()'}">Terug naar onderdeel</button>
+      </div>`);
+    sfCheckIncomingBadge();
+  } catch (err) {
+    console.error('Meldingen wissen mislukt:', err);
+    sfBox(`<h2>Meldingen wissen</h2><div class="errorbox">Meldingen wissen lukte niet: ${esc(err.message)}</div>`);
+  }
+}
+
+async function sfUndoClearTransferMessages() {
+  if (!sfLastCleanup || !sfLastCleanup.vorige || !sfLastCleanup.vorige.length) {
+    alert('Er is niets om ongedaan te maken in deze pagina.');
+    return;
+  }
+  if (!confirm('Meldingen terugzetten?')) return;
+  try {
+    const count = await window.overgangSchool.undoCleanupTransferMessages(sfLastCleanup.vorige);
+    const klas = sfLastCleanup.klas || '';
+    sfLastCleanup = null;
+    sfBox(`<h2>Ongedaan gemaakt</h2><div class="okbox">${count} melding(en) teruggezet${klas ? ` voor ${esc(klas)}` : ''}.</div>`);
+    sfCheckIncomingBadge();
+  } catch (err) {
+    console.error('Ongedaan maken mislukt:', err);
+    sfBox(`<h2>Ongedaan maken</h2><div class="errorbox">Ongedaan maken lukte niet: ${esc(err.message)}</div>`);
+  }
+}
+
 async function sfTakeOverDossier(id) {
+  if (OVERDRACHT_ACTIES_GEBLOKKEERD) {
+    alert('Overnemen is tijdelijk geblokkeerd om te voorkomen dat er nog iets wordt overschreven. We herstellen eerst veilig vanuit diagnose of PDF.');
+    return;
+  }
   const dossier = sfFindDossier(id, 'incoming');
   if (!dossier) return;
-  const students = sfSortedStudents(dossier.students || []).map(s => ({
+  const eerstEigenKlas = confirm(
+    'Heb je je eigen klas al overgedragen?\n\n' +
+    'Zo niet: klik nu op Annuleren en doe eerst "Overdracht delen" voor je oude klas.\n\n' +
+    'Klik alleen OK als jouw oude klas al veilig is doorgestuurd en je deze ontvangen klas nu als jouw nieuwe werkklas wil activeren.'
+  );
+  if (!eerstEigenKlas) return;
+  const ontvangen = sfSortedStudents(dossier.students || []).map(s => ({
     ...s,
     id: uid(),
     sourceDossierId: id,
     stayingThisYear: false,
     updatedAt: todayISO()
   }));
-  if (!students.length) {
+  if (!ontvangen.length) {
     alert('Deze overdracht bevat geen leerlingen.');
     return;
   }
-  const msg = `Dit vervangt je huidige werkklas door ${students.length} leerling(en) uit deze overdracht.\n\nMaak eventueel eerst een JSON-export als backup.\n\nDoorgaan?`;
+  const stayerIds = await sfKiesZittenblijversVoorOvername();
+  if (stayerIds === null) return;
+  const stayers = sfCloneSelectedStayersForNewClass(stayerIds);
+  const bestaandeKeys = new Set(stayers.map(s => studentNameKey(s.firstName, s.lastName)));
+  const nieuwUitOverdracht = ontvangen.filter(s => {
+    const key = studentNameKey(s.firstName, s.lastName);
+    if (bestaandeKeys.has(key)) return false;
+    bestaandeKeys.add(key);
+    return true;
+  });
+  const overgeslagen = ontvangen.length - nieuwUitOverdracht.length;
+  const stayerNames = stayers.length
+    ? '\n\nZittenblijver(s) die blijven:\n- ' + sfSortedStudents(stayers).map(s => `${s.lastName || ''}, ${s.firstName || s.name}`.trim()).join('\n- ')
+    : '\n\nEr zijn momenteel geen zittenblijvers in jouw werkklas.';
+  const skippedText = overgeslagen ? `\n\n${overgeslagen} leerling(en) uit de overdracht stonden al in jouw lijst en worden niet dubbel toegevoegd.` : '';
+  const msg = `Dit maakt jouw nieuwe werkklas met:\n\n- ${nieuwUitOverdracht.length} leerling(en) uit deze overdracht\n- ${stayers.length} zittenblijver(s) die je al had${stayerNames}${skippedText}\n\nMaak eventueel eerst een JSON-export als backup.\n\nDoorgaan?`;
   if (!confirm(msg)) return;
 
-  state.students = students;
+  state.students = sfSortedStudents([...nieuwUitOverdracht, ...stayers]);
   state.groups = [];
   state.locks = {};
   state.projectName = dossier.naar_leerjaar || dossier.titel || 'Nieuwe werkklas';
@@ -4382,8 +4861,10 @@ async function sfTakeOverDossier(id) {
   markDirty();
   await saveJSON(false);
   if (window.overgangSchool) await window.overgangSchool.markOvergenomen(id);
-  setFirebaseStatus(`Nieuwe werkklas overgenomen: ${students.length} leerling(en).`);
-  sfCloseBox();
+  setFirebaseStatus(`Nieuwe werkklas overgenomen: ${nieuwUitOverdracht.length} nieuwe leerling(en), ${stayers.length} zittenblijver(s) behouden.`);
+  sfBox(`<h2>Nieuwe klas geactiveerd</h2>
+    <div class="okbox">Deze overdracht is verwerkt. De melding verdwijnt nu uit "Naar mij ontvangen".</div>`);
+  setTimeout(() => sfShowIncoming(), 1400);
 }
 
 async function sfStartNewClass() {
@@ -4417,6 +4898,7 @@ function sfShowCurrentClass() {
   function kaart(s) {
     const tags = [];
     if (s.stayingThisYear) tags.push('<span class="mini-tag warn">blijft zitten</span>');
+    if (s.gok === 'ja') tags.push('<span class="mini-tag" style="background:#dbeafe;color:#1e3a8a;font-weight:800">GOK</span>');
     if (s.care === 'hoog' || s.iac === 'ja') tags.push('<span class="mini-tag care">zorg</span>');
     if (s.reading === 'zwak' || s.spelling === 'zwak' || s.math === 'zwak') tags.push('<span class="mini-tag">zwak vak</span>');
     return `<div class="sf-lln-kaart" style="cursor:pointer" onclick="openFicheModal('${s.id}')">
