@@ -987,7 +987,7 @@
     function bewaarTotVoorSchooljaar(jaar=schooljaar, extraJaren=BEWAAR_JAREN_SCHOOLBEHEER){
       return `${Number(String(jaar).slice(0,4)) + extraJaren}-08-31`;
     }
-    function emptyClassDoc(klas){ return { schooljaar, klas, leerlingen:[], refter:{}, activiteiten:[], aankopen:[], vrijeDagen:[...standardFree], messages:[], processed:{refter:""}, bewaarTot:bewaarTotVoorSchooljaar(), bewaartermijnJaren:BEWAAR_JAREN_SCHOOLBEHEER, bijgewerktOp:new Date().toISOString() }; }
+    function emptyClassDoc(klas){ return { schooljaar, klas, leerlingen:[], refter:{}, refterVrijeDagen:[], activiteiten:[], aankopen:[], vrijeDagen:[...standardFree], messages:[], processed:{refter:""}, bewaarTot:bewaarTotVoorSchooljaar(), bewaartermijnJaren:BEWAAR_JAREN_SCHOOLBEHEER, bijgewerktOp:new Date().toISOString() }; }
     function classRef(klas=activeClass){ return doc(db, "schoolbeheer", schooljaar, "klassen", klas); }
     function schooljaarOffset(jaar, offset){
       const start = Number(String(jaar || schooljaar).slice(0,4)) + offset;
@@ -1175,6 +1175,7 @@
     function normalize(){
       data.leerlingen ||= [];
       data.refter ||= {};
+      data.refterVrijeDagen ||= [];
       data.activiteiten ||= [];
       data.aankopen ||= [];
       data.vrijeDagen ||= [...standardFree];
@@ -2081,15 +2082,74 @@
     }
 
     function daysInMonth(month){ const [y,m]=month.split("-").map(Number); const last=new Date(y,m,0).getDate(); return Array.from({length:last},(_,i)=>{const d=`${month}-${String(i+1).padStart(2,"0")}`; return {date:d,day:i+1,week:new Date(d+"T12:00:00").getDay()};}); }
-    function isFree(date){ const w=new Date(date+"T12:00:00").getDay(); return w===0||w===3||w===6||(data.vrijeDagen||[]).some(v=>date>=v.start&&date<=v.end); }
+    function algemeneVrijeDag(date){ const w=new Date(date+"T12:00:00").getDay(); return w===0||w===3||w===6||(data.vrijeDagen||[]).some(v=>date>=v.start&&date<=v.end); }
+    function refterVrijeDagVoor(date){
+      return (data.refterVrijeDagen||[]).find(v => {
+        const start = v.date || v.datum || v.start;
+        const end = v.end || start;
+        return start && date >= start && date <= end;
+      });
+    }
+    function isFree(date){ return algemeneVrijeDag(date) || !!refterVrijeDagVoor(date); }
+    function refterVrijeDagenVoorMaand(month){
+      return (data.refterVrijeDagen||[])
+        .filter(v => String(v.date || v.datum || v.start || "").slice(0,7) === month)
+        .sort((a,b)=>String(a.date||a.datum||a.start||"").localeCompare(String(b.date||b.datum||b.start||"")));
+    }
+    function refterVrijeDagenBlok(month){
+      const list = refterVrijeDagenVoorMaand(month);
+      if(!list.length) return "";
+      return `<div class="notice refter-free-summary" style="margin:14px 0;background:#fffaf0;border-color:#f2c46d">
+        <strong>Niet betalend voor de hele klas deze maand</strong>
+        <ul style="margin:8px 0 0 18px;padding:0">${list.map(v=>{
+          const date = v.date || v.datum || v.start || "";
+          return `<li><strong>${formatDate(date)}</strong> - ${esc(v.reason || v.reden || "Geen refter voor de hele klas")} <button class="small pink no-print" onclick="removeRefterVrijeDag('${esc(v.id||date)}')">wissen</button></li>`;
+        }).join("")}</ul>
+      </div>`;
+    }
     function processedInMonth(month){ const value=data.processed?.refter||""; return value && value.slice(0,7)===month ? value : ""; }
     window.setProcessedRefter = value => { data.processed.refter=value||""; markDirty(); renderRefter(); };
+    window.addRefterVrijeDag = () => {
+      const date = $("refterFreeDate")?.value || "";
+      const reason = ($("refterFreeReason")?.value || "").trim();
+      if(!date) return alert("Kies eerst een datum.");
+      if(!reason) return alert("Vul ook de reden in, bijvoorbeeld: schoolreis - betaald via activiteit.");
+      data.refterVrijeDagen ||= [];
+      const bestaand = data.refterVrijeDagen.find(v => (v.date || v.datum || v.start) === date);
+      if(bestaand){
+        bestaand.reason = reason;
+        bestaand.bijgewerktDoor = user.email || "";
+        bestaand.bijgewerktOp = new Date().toISOString();
+      } else {
+        data.refterVrijeDagen.push({id:uid(), date, reason, aangemaaktDoor:user.email || "", aangemaaktOp:new Date().toISOString()});
+      }
+      markDirty();
+      renderRefter();
+    };
+    window.removeRefterVrijeDag = id => {
+      const item = (data.refterVrijeDagen||[]).find(v => (v.id || v.date || v.datum || v.start) === id);
+      if(!item) return;
+      const date = item.date || item.datum || item.start || "";
+      if(!confirm(`Deze reftervrije dag wissen?\n\n${formatDate(date)} - ${item.reason || item.reden || ""}`)) return;
+      data.refterVrijeDagen = (data.refterVrijeDagen||[]).filter(v => (v.id || v.date || v.datum || v.start) !== id);
+      markDirty();
+      renderRefter();
+    };
 
     function renderRefter(){
       const month=standaardRefterMaand();
       const days=daysInMonth(month), students=activeStudents(`${month}-15`), m=data.refter[month] ||= {}, processedUntil=processedInMonth(month);
       const volledig = refterMaandVolledigVerwerkt(month);
-      $("content").innerHTML = `<div class="panel"><div class="bar"><div><h2>Refter <span class="muted" style="font-weight:400">${esc(activeClass)}</span></h2><p class="muted">Leerkracht vinkt enkel afwezigheden aan.${volledig ? " Deze maand is volledig verwerkt." : ""}</p></div><label class="right no-print" style="max-width:180px">Maand<input id="refterMonth" type="month" value="${month}" onchange="renderRefter()"></label>${isSecretary()?`<label class="no-print" style="max-width:190px">Verwerkt tot<input type="date" value="${processedUntil}" min="${month}-01" max="${month}-${String(days.length).padStart(2,"0")}" onchange="setProcessedRefter(this.value)"></label>`:""}${screenTools("refter")}</div>${helpPanel("refter")}<div class="table-wrap refter-print-wrap"><table class="refter-print-table"><colgroup><col class="refter-name-col">${days.map(()=>`<col class="refter-day-col">`).join("")}</colgroup><thead><tr><th>Leerling</th>${days.map(d=>{const locked=processedUntil&&d.date<=processedUntil&&!isFree(d.date);return`<th class="day ${isFree(d.date)?"grey":""} ${locked?"locked-head":""}">${d.day}${locked&&!isSecretary()?'<br><span class="teacher-lock">&#128274;</span>':locked?'<br><span class="tag done">verwerkt</span>':""}</th>`}).join("")}</tr></thead><tbody>${students.map(s=>`<tr class="${s.colleague?"colleague":""}"><td><strong>${esc(name(s))}</strong>${s.colleague?'<span class="tag green">collega</span>':''}</td>${days.map(d=>{const locked=processedUntil&&d.date<=processedUntil;if(isFree(d.date))return`<td class="day grey">-</td>`;if(s.colleague)return`<td class="day collega-dag" title="Kind van collega — geen refter">-</td>`;return`<td class="day ${locked?"locked":""}"><input type="checkbox" ${m[s.id]?.[d.date]?"checked":""} ${locked&&!isSecretary()?"disabled":""} onchange="toggleRefter('${month}','${s.id}','${d.date}',this.checked)">${locked&&!isSecretary()?'<br><span class="teacher-lock">&#128274;</span>':locked?'<br><span class="tag done">verwerkt</span>':''}</td>`}).join("")}</tr>`).join("")}</tbody></table></div></div>`;
+      const refterFreeForm = `<div class="notice no-print" style="margin:14px 0;background:#fff8e6;border-color:#f0bd4f">
+        <strong>Geen refter voor de hele klas?</strong>
+        <p class="muted">Gebruik dit bijvoorbeeld bij een schoolreis. De dag wordt grijs in de refterlijst en de reden blijft zichtbaar voor secretariaat en op de PDF.</p>
+        <div class="row">
+          <label style="max-width:190px">Datum<input id="refterFreeDate" type="date" value="${month}-01"></label>
+          <label>Reden<input id="refterFreeReason" placeholder="bv. Schoolreis - betaald via activiteit"></label>
+          <button class="green" onclick="addRefterVrijeDag()">Datum markeren</button>
+        </div>
+      </div>`;
+      $("content").innerHTML = `<div class="panel"><div class="bar"><div><h2>Refter <span class="muted" style="font-weight:400">${esc(activeClass)}</span></h2><p class="muted">Leerkracht vinkt enkel afwezigheden aan.${volledig ? " Deze maand is volledig verwerkt." : ""}</p></div><label class="right no-print" style="max-width:180px">Maand<input id="refterMonth" type="month" value="${month}" onchange="renderRefter()"></label>${isSecretary()?`<label class="no-print" style="max-width:190px">Verwerkt tot<input type="date" value="${processedUntil}" min="${month}-01" max="${month}-${String(days.length).padStart(2,"0")}" onchange="setProcessedRefter(this.value)"></label>`:""}${screenTools("refter")}</div>${helpPanel("refter")}${refterFreeForm}${refterVrijeDagenBlok(month)}<div class="table-wrap refter-print-wrap"><table class="refter-print-table"><colgroup><col class="refter-name-col">${days.map(()=>`<col class="refter-day-col">`).join("")}</colgroup><thead><tr><th>Leerling</th>${days.map(d=>{const freeInfo=refterVrijeDagVoor(d.date);const free=isFree(d.date);const locked=processedUntil&&d.date<=processedUntil&&!free;return`<th class="day ${free?"grey":""} ${locked?"locked-head":""}" title="${freeInfo?esc(freeInfo.reason||freeInfo.reden||"Geen refter voor de hele klas"):""}">${d.day}${freeInfo?'<br><span class="tag">geen refter</span>':locked&&!isSecretary()?'<br><span class="teacher-lock">&#128274;</span>':locked?'<br><span class="tag done">verwerkt</span>':""}</th>`}).join("")}</tr></thead><tbody>${students.map(s=>`<tr class="${s.colleague?"colleague":""}"><td><strong>${esc(name(s))}</strong>${s.colleague?'<span class="tag green">collega</span>':''}</td>${days.map(d=>{const freeInfo=refterVrijeDagVoor(d.date);const free=isFree(d.date);const locked=processedUntil&&d.date<=processedUntil;if(free)return`<td class="day grey" title="${freeInfo?esc(freeInfo.reason||freeInfo.reden||"Geen refter voor de hele klas"):"Vrije dag"}">-</td>`;if(s.colleague)return`<td class="day collega-dag" title="Kind van collega — geen refter">-</td>`;return`<td class="day ${locked?"locked":""}"><input type="checkbox" ${m[s.id]?.[d.date]?"checked":""} ${locked&&!isSecretary()?"disabled":""} onchange="toggleRefter('${month}','${s.id}','${d.date}',this.checked)">${locked&&!isSecretary()?'<br><span class="teacher-lock">&#128274;</span>':locked?'<br><span class="tag done">verwerkt</span>':''}</td>`}).join("")}</tr>`).join("")}</tbody></table></div></div>`;
     }
     window.toggleRefter = (month,sid,date,checked) => { const m=data.refter[month] ||= {}; m[sid] ||= {}; m[sid][date]=checked; markDirty(); };
 
@@ -2255,7 +2315,7 @@
       const snap=await getDoc(ref);
       const item=snap.exists()?snap.data():emptyClassDoc(klas);
       item.schooljaar=doelSchooljaar; item.klas=klas;
-      item.leerlingen||=[]; item.refter||={}; item.activiteiten||=[]; item.aankopen||=[]; item.vrijeDagen||=[...standardFree]; item.messages||=[]; item.processed||={refter:""};
+      item.leerlingen||=[]; item.refter||={}; item.refterVrijeDagen||=[]; item.activiteiten||=[]; item.aankopen||=[]; item.vrijeDagen||=[...standardFree]; item.messages||=[]; item.processed||={refter:""};
       item.bewaarTot=bewaarTotVoorSchooljaar(doelSchooljaar); item.bewaartermijnJaren=BEWAAR_JAREN_SCHOOLBEHEER;
       leerlingen.forEach(s=>{ const nieuw=studentVoorNieuwSchooljaar(s,doelSchooljaar); if(!item.leerlingen.some(b=>name(b).toLowerCase()===name(nieuw).toLowerCase())) item.leerlingen.push(nieuw); });
       item.leerlingen.sort((a,b)=>name(a).localeCompare(name(b),"nl"));
