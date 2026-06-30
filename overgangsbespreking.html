@@ -368,6 +368,34 @@
   body:not(.student-add-mode) .klaslijst-box { display:none; }
   body.student-add-mode #studentsContainer { opacity:.35; }
   .klaslijst-box { border-radius:12px; background:#fffdf7; }
+  .blokwerk-keuze { display:flex; flex-wrap:wrap; gap:8px; margin:0 0 12px; }
+  .blokwerk-keuze button { border-radius:999px; padding:8px 13px; min-height:0; font-size:13px; }
+  .blokwerk-keuze button.active { background:var(--yellow); border-color:#caa13d; font-weight:800; }
+  .blokwerk-panel { background:#fff; border:1px solid var(--border); border-radius:12px; overflow:hidden; }
+  .blokwerk-table { width:100%; border-collapse:collapse; }
+  .blokwerk-table.compact { table-layout:fixed; }
+  .blokwerk-table.compact .bw-name { width:310px; }
+  .blokwerk-table.compact .bw-small { width:260px; }
+  .blokwerk-table.compact .bw-xs { width:240px; }
+  .blokwerk-table th { background:#f1f5f9; color:#475569; text-transform:uppercase; letter-spacing:.4px; font-size:12px; padding:9px; text-align:left; position:sticky; top:0; z-index:1; }
+  .blokwerk-table td { border-top:1px solid var(--border); padding:8px; vertical-align:top; }
+  .blokwerk-table td:first-child, .blokwerk-table th:first-child { min-width:190px; position:sticky; left:0; background:#fff; z-index:2; box-shadow:4px 0 8px rgba(15,23,42,.04); }
+  .blokwerk-table th:first-child { background:#f1f5f9; z-index:3; }
+  .blokwerk-table select, .blokwerk-table input, .blokwerk-table textarea { font-size:13px; padding:7px 8px; }
+  .blokwerk-table textarea { min-height:76px; resize:vertical; line-height:1.35; overflow:hidden; }
+  .blokwerk-checks { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+  .blokwerk-checks label { display:flex; gap:5px; align-items:center; font-size:13px; font-weight:700; background:#f8fafc; border:1px solid var(--border); border-radius:8px; padding:6px 9px; margin:0; }
+  .blokwerk-checks input { width:auto; margin:0; }
+  .blokwerk-card-list { display:grid; gap:10px; padding:10px; background:#fbfcfe; }
+  .blokwerk-card { border:1px solid var(--border); border-radius:12px; background:#fff; overflow:hidden; }
+  .blokwerk-card-title { display:flex; align-items:center; gap:7px; padding:10px 12px; background:#f8fafc; border-bottom:1px solid var(--border); font-size:16px; }
+  .blokwerk-card-grid { display:grid; grid-template-columns:repeat(3,minmax(240px,1fr)); gap:10px; padding:12px; }
+  .blokwerk-field { display:block; }
+  .blokwerk-field label { display:block; font-size:12px; color:#475569; text-transform:uppercase; letter-spacing:.3px; margin:0 0 7px; }
+  .blokwerk-field .blokwerk-controls { display:grid; gap:6px; }
+  .blokwerk-field textarea { min-height:86px; line-height:1.4; overflow:hidden; resize:vertical; }
+  @media(max-width:1100px){ .blokwerk-card-grid { grid-template-columns:1fr; } .blokwerk-field { grid-template-columns:1fr; } }
+  body.student-block-mode .klaslijst-box { display:none; }
   .leerlingen-toolbar { grid-template-columns:minmax(260px,1fr) auto; }
   .student-table { border-radius:10px; }
   .student-table th, .student-table td { padding:9px 12px; }
@@ -636,7 +664,8 @@
       <div class="student-workbar" id="studentWerkbarCodex">
         <button type="button" id="toonKlaslijstWerkbladBtn">📋 Klaslijst importeren</button>
         <button type="button" id="toonFichesWerkbladBtn" class="ghost active">&#128101; Leerlingenfiches</button>
-        <span class="hint">Werk eerst je klaslijst bij, klik daarna op een leerling om de fiche te openen.</span>
+        <button type="button" id="toonBlokWerkbladBtn" class="ghost">🧩 Per onderdeel invullen</button>
+        <span class="hint">Werk per kind of vul één onderdeel meteen voor de hele klas in.</span>
       </div>
 
       <div class="klaslijst-box">
@@ -2901,6 +2930,138 @@ function genderBadge(g) {
   return '<span class="gender-badge dash">–</span>';
 }
 function updateBadges() { $('studentsBadge').textContent = state.students.length; }
+let blokWerkbladType = 'nederlands';
+function sortedStudentsForWork() {
+  return [...state.students].sort((a, b) => {
+    const lastCmp = (a.lastName || '').localeCompare(b.lastName || '', 'nl');
+    if (lastCmp !== 0) return lastCmp;
+    return (a.firstName || '').localeCompare(b.firstName || '', 'nl');
+  });
+}
+function niveauOptions(value, labels = {zwak:'Zwak', basis:'Basis', sterk:'Sterk'}) {
+  return Object.entries(labels).map(([k, label]) => `<option value="${esc(k)}" ${value === k ? 'selected' : ''}>${esc(label)}</option>`).join('');
+}
+function aviOptions(value) {
+  const lijst = ['', 'START','M3','E3','M4','E4','M5','E5','M6','E6','M7','E7','PLUS'];
+  return lijst.map(v => `<option value="${esc(v)}" ${value === v ? 'selected' : ''}>${v ? 'AVI ' + esc(v) : 'AVI - niet ingevuld'}</option>`).join('');
+}
+function leerlingNaamVoorRij(s) {
+  return s.lastName ? `<strong>${esc(s.lastName)}</strong>, ${esc(s.firstName)}` : `<strong>${esc(s.name || '')}</strong>`;
+}
+function updateBlokWerkveld(id, field, value) {
+  const s = get(id);
+  if (!s) return;
+  s[field] = value;
+  if (field === 'care') s.extraCare = value === 'hoog' ? 'ja' : 'nee';
+  s.updatedAt = todayISO();
+  markDirty();
+  updateBadges();
+}
+function updateBlokWerkCheck(id, field, checked) {
+  updateBlokWerkveld(id, field, !!checked);
+}
+function updateBlokWerkHuiswerk(id, dag, checked) {
+  const s = get(id);
+  if (!s) return;
+  const set = new Set(Array.isArray(s.huiswerkklas) ? s.huiswerkklas : []);
+  if (checked) set.add(dag); else set.delete(dag);
+  s.huiswerkklas = [...set];
+  s.updatedAt = todayISO();
+  markDirty();
+  updateBadges();
+}
+function autoGrowTextarea(el) {
+  if (!el) return;
+  el.style.height = 'auto';
+  el.style.height = Math.max(el.scrollHeight, 76) + 'px';
+}
+function autoGrowBlokwerkTextareas() {
+  document.querySelectorAll('#studentsContainer textarea').forEach(autoGrowTextarea);
+}
+function blokWerkNederlands(students) {
+  return `<div class="blokwerk-card-list">${students.map(s => `<section class="blokwerk-card">
+    <div class="blokwerk-card-title">${leerlingNaamVoorRij(s)} ${genderBadge(s.gender)}</div>
+    <div class="blokwerk-card-grid">
+      <div class="blokwerk-field"><label>Lezen</label><div class="blokwerk-controls">
+        <select onchange="updateBlokWerkveld('${s.id}','reading',this.value)">${niveauOptions(s.reading || 'basis')}</select>
+        <select onchange="updateBlokWerkveld('${s.id}','avi',this.value)">${aviOptions(s.avi || '')}</select>
+        <textarea oninput="autoGrowTextarea(this);updateBlokWerkveld('${s.id}','readingNote',this.value)" placeholder="Notitie over lezen...">${esc(s.readingNote || '')}</textarea>
+      </div></div>
+      <div class="blokwerk-field"><label>Spelling</label><div class="blokwerk-controls">
+        <select onchange="updateBlokWerkveld('${s.id}','spelling',this.value)">${niveauOptions(s.spelling || 'basis')}</select>
+        <textarea oninput="autoGrowTextarea(this);updateBlokWerkveld('${s.id}','spellingNote',this.value)" placeholder="Notitie over spelling...">${esc(s.spellingNote || '')}</textarea>
+      </div></div>
+      <div class="blokwerk-field"><label>Handschrift</label><div class="blokwerk-controls">
+        <select onchange="updateBlokWerkveld('${s.id}','writing',this.value)">${niveauOptions(s.writing || 'basis')}</select>
+        <textarea oninput="autoGrowTextarea(this);updateBlokWerkveld('${s.id}','writingNote',this.value)" placeholder="Notitie over handschrift...">${esc(s.writingNote || '')}</textarea>
+      </div></div>
+    </div>
+  </section>`).join('')}</div>`;
+}
+function blokWerkWiskunde(students) {
+  return `<table class="blokwerk-table compact"><colgroup><col class="bw-name"><col class="bw-small"><col></colgroup><thead><tr><th>Leerling</th><th>Rekenen</th><th>Notitie rekenen</th></tr></thead><tbody>${students.map(s => `<tr>
+    <td>${leerlingNaamVoorRij(s)} ${genderBadge(s.gender)}</td>
+    <td><select onchange="updateBlokWerkveld('${s.id}','math',this.value)">${niveauOptions(s.math || 'basis')}</select></td>
+    <td><textarea oninput="autoGrowTextarea(this);updateBlokWerkveld('${s.id}','mathNote',this.value)">${esc(s.mathNote || '')}</textarea></td>
+  </tr>`).join('')}</tbody></table>`;
+}
+function blokWerkZorg(students) {
+  return `<table class="blokwerk-table"><thead><tr><th>Leerling</th><th>Zorgniveau</th><th>IAC</th><th>GOK</th><th>Notitie zorg</th><th>Allergieën</th><th>Medisch</th></tr></thead><tbody>${students.map(s => `<tr>
+    <td>${leerlingNaamVoorRij(s)} ${genderBadge(s.gender)}</td>
+    <td><select onchange="updateBlokWerkveld('${s.id}','care',this.value)">${niveauOptions(s.care || 'laag', {laag:'Laag', midden:'Midden', hoog:'Hoog'})}</select></td>
+    <td><select onchange="updateBlokWerkveld('${s.id}','iac',this.value)">${niveauOptions(s.iac || 'nee', {nee:'Nee', ja:'Ja'})}</select></td>
+    <td><select onchange="updateBlokWerkveld('${s.id}','gok',this.value)">${niveauOptions(s.gok || 'nee', {nee:'Nee', ja:'Ja'})}</select></td>
+    <td><textarea oninput="autoGrowTextarea(this);updateBlokWerkveld('${s.id}','careNote',this.value)">${esc(s.careNote || '')}</textarea></td>
+    <td><textarea oninput="autoGrowTextarea(this);updateBlokWerkveld('${s.id}','allergies',this.value)">${esc(s.allergies || '')}</textarea></td>
+    <td><textarea oninput="autoGrowTextarea(this);updateBlokWerkveld('${s.id}','medicalNote',this.value)">${esc(s.medicalNote || '')}</textarea></td>
+  </tr>`).join('')}</tbody></table>`;
+}
+function blokWerkHuiswerkklas(students) {
+  return `<table class="blokwerk-table compact"><colgroup><col class="bw-name"><col class="bw-small"><col></colgroup><thead><tr><th>Leerling</th><th>Huiswerkklas</th><th>Notitie</th></tr></thead><tbody>${students.map(s => {
+    const hw = Array.isArray(s.huiswerkklas) ? s.huiswerkklas : [];
+    return `<tr>
+      <td>${leerlingNaamVoorRij(s)} ${genderBadge(s.gender)}</td>
+      <td><div class="blokwerk-checks">
+        <label><input type="checkbox" ${hw.includes('dinsdag') ? 'checked' : ''} onchange="updateBlokWerkHuiswerk('${s.id}','dinsdag',this.checked)"> Dinsdag</label>
+        <label><input type="checkbox" ${hw.includes('donderdag') ? 'checked' : ''} onchange="updateBlokWerkHuiswerk('${s.id}','donderdag',this.checked)"> Donderdag</label>
+      </div></td>
+      <td><textarea oninput="autoGrowTextarea(this);updateBlokWerkveld('${s.id}','notes',this.value)" placeholder="Algemene notitie indien nodig...">${esc(s.notes || '')}</textarea></td>
+    </tr>`;
+  }).join('')}</tbody></table>`;
+}
+function blokWerkBadmutsen(students) {
+  return `<table class="blokwerk-table compact"><colgroup><col class="bw-name"><col class="bw-xs"><col></colgroup><thead><tr><th>Leerling</th><th>Badmuts</th><th></th></tr></thead><tbody>${students.map(s => `<tr>
+    <td>${leerlingNaamVoorRij(s)} ${genderBadge(s.gender)}</td>
+    <td><select onchange="updateBlokWerkveld('${s.id}','badmuts',this.value)">
+      <option value="" ${!s.badmuts ? 'selected' : ''}>Geen / onbekend</option>
+      <option value="rood" ${s.badmuts === 'rood' ? 'selected' : ''}>Rood</option>
+      <option value="blauw_ondiep" ${s.badmuts === 'blauw_ondiep' ? 'selected' : ''}>Blauw ondiep</option>
+      <option value="blauw_diep" ${s.badmuts === 'blauw_diep' ? 'selected' : ''}>Blauw diep</option>
+      <option value="groen" ${s.badmuts === 'groen' ? 'selected' : ''}>Groen</option>
+    </select></td><td></td>
+  </tr>`).join('')}</tbody></table>`;
+}
+function renderBlokWerkblad(type = blokWerkbladType) {
+  blokWerkbladType = type;
+  const c = $('studentsContainer');
+  if (!state.students.length) {
+    c.innerHTML = `<div class="empty-state"><h3>Nog geen leerlingen</h3><p>Voeg eerst leerlingen toe of importeer je klaslijst.</p></div>`;
+    return;
+  }
+  const students = sortedStudentsForWork();
+  const tabs = [
+    ['nederlands', '📖 Nederlands'],
+    ['wiskunde', '🔢 Wiskunde'],
+    ['zorg', '❤️ Zorg'],
+    ['huiswerkklas', '📚 Huiswerkklas'],
+    ['badmutsen', '🏊 Badmutsen']
+  ];
+  const builders = { nederlands:blokWerkNederlands, wiskunde:blokWerkWiskunde, zorg:blokWerkZorg, huiswerkklas:blokWerkHuiswerkklas, badmutsen:blokWerkBadmutsen };
+  c.innerHTML = `<div class="blokwerk-keuze">${tabs.map(([id,label]) => `<button type="button" class="${id === type ? 'active' : 'ghost'}" onclick="renderBlokWerkblad('${id}')">${label}</button>`).join('')}</div>
+    <div class="notice" style="margin-bottom:12px">Je werkt hier per onderdeel door de hele klas. Alles wat je wijzigt, staat meteen ook in de gewone leerlingfiche.</div>
+    <div class="blokwerk-panel">${(builders[type] || builders.nederlands)(students)}</div>`;
+  setTimeout(autoGrowBlokwerkTextareas, 30);
+}
 
 function renderStudents() {
   const c = $('studentsContainer');
@@ -5091,23 +5252,32 @@ sfInitSchoolflow(); writeSettings(); updateBadges(); renderStudents(); updateSav
 (function () {
   function setStudentMode(mode) {
     const addMode = mode === 'add';
+    const blockMode = mode === 'block';
     document.body.classList.toggle('student-add-mode', addMode);
+    document.body.classList.toggle('student-block-mode', blockMode);
     const addBtn = document.getElementById('toonKlaslijstWerkbladBtn');
     const fichesBtn = document.getElementById('toonFichesWerkbladBtn');
+    const blockBtn = document.getElementById('toonBlokWerkbladBtn');
     if (addBtn) addBtn.classList.toggle('active', addMode);
-    if (fichesBtn) fichesBtn.classList.toggle('active', !addMode);
+    if (fichesBtn) fichesBtn.classList.toggle('active', !addMode && !blockMode);
+    if (blockBtn) blockBtn.classList.toggle('active', blockMode);
+    if (blockMode && typeof renderBlokWerkblad === 'function') renderBlokWerkblad();
+    if (!blockMode && typeof renderStudents === 'function') renderStudents();
     const input = document.getElementById('klaslijstInput');
     if (addMode && input) setTimeout(function () { input.focus(); }, 80);
   }
 
   window.toonLeerlingenToevoegen = function () { setStudentMode('add'); };
   window.toonLeerlingenFiches = function () { setStudentMode('fiches'); };
+  window.toonBlokWerkblad = function () { setStudentMode('block'); };
 
   document.addEventListener('DOMContentLoaded', function () {
     const addBtn = document.getElementById('toonKlaslijstWerkbladBtn');
     const fichesBtn = document.getElementById('toonFichesWerkbladBtn');
+    const blockBtn = document.getElementById('toonBlokWerkbladBtn');
     if (addBtn) addBtn.addEventListener('click', function () { setStudentMode('add'); });
     if (fichesBtn) fichesBtn.addEventListener('click', function () { setStudentMode('fiches'); });
+    if (blockBtn) blockBtn.addEventListener('click', function () { setStudentMode('block'); });
     setStudentMode('fiches');
   });
 
