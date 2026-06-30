@@ -764,7 +764,7 @@
     }
 
     body.start-ingelogd .publieke-links {
-      margin-top: 0;
+      display: none;
     }
 
     @media (max-width: 980px) {
@@ -882,31 +882,81 @@
 /* Veilige, evenwichtige schikking voor het keuzescherm */
 #ingelogd-kaart.startportaal:not([style*="display:none"]) .portaal-keuzes {
   display: grid !important;
-  grid-template-columns: repeat(4, minmax(230px, 1fr)) !important;
-  gap: 16px !important;
-  max-width: 1220px !important;
+  grid-template-columns: 1fr !important;
+  gap: 18px !important;
+  max-width: 1380px !important;
   margin: 0 auto !important;
+}
+
+#ingelogd-kaart.startportaal .portaal-sectie {
+  background: rgba(255,255,255,.72);
+  border: 1px solid var(--rand);
+  border-radius: 18px;
+  padding: 16px;
+  box-shadow: 0 3px 12px var(--schaduw);
+}
+
+#ingelogd-kaart.startportaal .portaal-sectie:not(:has(.portaal-tegel:not([style*="display:none"]))) {
+  display: none;
+}
+
+#ingelogd-kaart.startportaal .portaal-sectie-kop {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 12px;
+  color: var(--tekst);
+}
+
+#ingelogd-kaart.startportaal .portaal-sectie-kop h2 {
+  margin: 0;
+  font-size: 1.05em;
+  font-weight: 950;
+}
+
+#ingelogd-kaart.startportaal .portaal-sectie-kop span {
+  color: var(--tekst-zacht);
+  font-size: .9em;
+}
+
+#ingelogd-kaart.startportaal .portaal-sectie-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(230px, 1fr));
+  gap: 14px;
+}
+
+#ingelogd-kaart.startportaal .portaal-sectie.zorgblok {
+  border-left: 5px solid #8abf83;
+}
+
+#ingelogd-kaart.startportaal .portaal-sectie.organisatieblok {
+  border-left: 5px solid #70a6c2;
+}
+
+#ingelogd-kaart.startportaal .portaal-sectie.adminblok {
+  border-left: 5px solid #e1b85f;
 }
 
 #ingelogd-kaart.startportaal:not([style*="display:none"]) .portaal-tegel {
   width: auto !important;
   min-height: 170px !important;
+  box-shadow: none;
 }
 
 @media (max-width: 1220px) {
-  #ingelogd-kaart.startportaal:not([style*="display:none"]) .portaal-keuzes {
+  #ingelogd-kaart.startportaal .portaal-sectie-grid {
     grid-template-columns: repeat(3, minmax(240px, 1fr)) !important;
   }
 }
 
 @media (max-width: 980px) {
-  #ingelogd-kaart.startportaal:not([style*="display:none"]) .portaal-keuzes {
+  #ingelogd-kaart.startportaal .portaal-sectie-grid {
     grid-template-columns: repeat(2, minmax(240px, 1fr)) !important;
   }
 }
 
 @media (max-width: 640px) {
-  #ingelogd-kaart.startportaal:not([style*="display:none"]) .portaal-keuzes {
+  #ingelogd-kaart.startportaal .portaal-sectie-grid {
     grid-template-columns: 1fr !important;
   }
 }
@@ -946,68 +996,95 @@
   <div id="ingelogd-kaart" class="ingelogd-kaart startportaal" style="display:none;">
     <span id="ingelogd-email" style="display:none;"></span>
     <div class="portaal-keuzes" aria-label="Keuzescherm">
-      <a id="huistakenKeuzeKnop" href="dashboard.html" class="portaal-tegel" target="_blank" rel="noopener">
-        <span class="portaal-tegel-icoon">&#128230;</span>
-        <span class="portaal-title">Huistaken opvolgen</span>
-        <span class="portaal-desc">Open de opvolging van je klas voor het afgeven van huistaken per leerling.</span>
-        <span class="portaal-open">Openen</span>
-      </a>
+      <section class="portaal-sectie zorgblok">
+        <div class="portaal-sectie-kop"><h2>Leerling en zorg</h2><span>gesprekken, overdracht en begeleiding</span></div>
+        <div class="portaal-sectie-grid">
+          <a id="overgangKeuzeKnop" href="overgangsbespreking.html" class="portaal-tegel zorg" target="_blank" rel="noopener">
+            <span class="portaal-tegel-icoon">&#128196;</span>
+            <span class="portaal-title">Overgangsbespreking</span>
+            <span class="portaal-desc">Werk leerlingenfiches bij en bereid de overdracht naar de volgende klas voor.</span>
+            <span class="portaal-open">Openen</span>
+          </a>
+          <a id="oudercontactKeuzeKnop" href="oudercontact.html" class="portaal-tegel zorg" target="_blank" rel="noopener" style="display:none">
+            <span class="portaal-tegel-icoon">&#128483;</span>
+            <span class="portaal-title">Oudercontact</span>
+            <span class="portaal-desc">Bereid gesprekken per leerling voor en maak een nette PDF voor ouders.</span>
+            <span class="portaal-open">Openen</span>
+          </a>
+          <a id="zorgoverlegKeuzeKnop" href="zorgoverleg.html" class="portaal-tegel zorg" target="_blank" rel="noopener" style="display:none">
+            <span class="portaal-tegel-icoon">&#128172;</span>
+            <span class="portaal-title">Zorgoverleg</span>
+            <span class="portaal-desc">Noteer zorg, acties en evaluatie per klas en download een PDF.</span>
+            <span class="portaal-open">Openen</span>
+          </a>
+          <a id="groeigroepenKeuzeKnop" href="groeigroepen.html" class="portaal-tegel groeigroepen" target="_blank" rel="noopener" style="display:none">
+            <span class="portaal-tegel-icoon">&#127793;</span>
+            <span class="portaal-title">Groeigroepen</span>
+            <span class="portaal-desc">Maak zorggroepjes met kinderen uit verschillende klassen, noteer groei en maak aangepaste rapporten.</span>
+            <span class="portaal-open">Openen</span>
+          </a>
+        </div>
+      </section>
 
-      <a id="overgangKeuzeKnop" href="overgangsbespreking.html" class="portaal-tegel zorg" target="_blank" rel="noopener">
-        <span class="portaal-tegel-icoon">&#128196;</span>
-        <span class="portaal-title">Overgangsbespreking</span>
-        <span class="portaal-desc">Werk leerlingenfiches bij en bereid de overdracht naar de volgende klas voor.</span>
-        <span class="portaal-open">Openen</span>
-      </a>
-      <a id="bestellingenKeuzeKnop" href="bestellingen.html" class="portaal-tegel administratie" target="_blank" rel="noopener" style="display:none">
-        <span class="portaal-tegel-icoon">&#128218;</span>
-        <span class="portaal-title">Bestellingen</span>
-        <span class="portaal-desc">Werkboeken, Lyreco, stock materiaal en knutselideetjes.</span>
-        <span class="portaal-open">Openen</span>
-      </a>
-      <a id="oudercontactKeuzeKnop" href="oudercontact.html" class="portaal-tegel zorg" target="_blank" rel="noopener" style="display:none">
-        <span class="portaal-tegel-icoon">&#128483;</span>
-        <span class="portaal-title">Oudercontact</span>
-        <span class="portaal-desc">Bereid gesprekken per leerling voor en maak een nette PDF voor ouders.</span>
-        <span class="portaal-open">Openen</span>
-      </a>
-      <a id="zorgoverlegKeuzeKnop" href="zorgoverleg.html" class="portaal-tegel zorg" target="_blank" rel="noopener" style="display:none">
-        <span class="portaal-tegel-icoon">&#128172;</span>
-        <span class="portaal-title">Zorgoverleg</span>
-        <span class="portaal-desc">Noteer maandelijks zorg, acties en evaluatie per klas en download een PDF.</span>
-        <span class="portaal-open">Openen</span>
-      </a>
-      <a id="klasafsprakenKeuzeKnop" href="opvolgen_klasafspraken/zebra-klasafspraken.html" class="portaal-tegel zorg" target="_blank" rel="noopener" style="display:none">
-        <span class="portaal-tegel-icoon">&#129427;</span>
-        <span class="portaal-title">Klasafspraken</span>
-        <span class="portaal-desc">Test de opvolging van klasafspraken, medailles, diploma's en evaluatie.</span>
-        <span class="portaal-open">Openen</span>
-      </a>
-      <a id="huiswerkklasKeuzeKnop" href="huiswerkklas.html" class="portaal-tegel administratie" target="_blank" rel="noopener" style="display:none">
-        <span class="portaal-tegel-icoon">&#9997;</span>
-        <span class="portaal-title">Huiswerkklas</span>
-        <span class="portaal-desc">Duid deelnemers aan en vink per dinsdag of donderdag de aanwezigen af.</span>
-        <span class="portaal-open">Openen</span>
-      </a>
-      <a id="groeigroepenKeuzeKnop" href="groeigroepen.html" class="portaal-tegel groeigroepen" target="_blank" rel="noopener" style="display:none">
-        <span class="portaal-tegel-icoon">&#127793;</span>
-        <span class="portaal-title">Groeigroepen</span>
-        <span class="portaal-desc">Maak zorggroepjes met kinderen uit verschillende klassen, noteer groei en maak aangepaste rapporten.</span>
-        <span class="portaal-open">Openen</span>
-      </a>
-      <a id="schoolbeheerKeuzeKnop" href="schoolbeheer.html" class="portaal-tegel administratie" target="_blank" rel="noopener" style="display:none">
-        <span class="portaal-tegel-icoon">&#127979;</span>
-        <span class="portaal-title">Klaslijsten</span>
-        <span class="portaal-desc">Open klaslijst, refter, activiteiten en aankopen voor secretariaat of je eigen klas.</span>
-        <span class="portaal-open">Openen</span>
-      </a>
+      <section class="portaal-sectie organisatieblok">
+        <div class="portaal-sectie-kop"><h2>Klasorganisatie</h2><span>dagelijkse opvolging en praktische lijsten</span></div>
+        <div class="portaal-sectie-grid">
+          <a id="huistakenKeuzeKnop" href="dashboard.html" class="portaal-tegel" target="_blank" rel="noopener">
+            <span class="portaal-tegel-icoon">&#128230;</span>
+            <span class="portaal-title">Huistaken opvolgen</span>
+            <span class="portaal-desc">Open de opvolging van je klas voor het afgeven van huistaken per leerling.</span>
+            <span class="portaal-open">Openen</span>
+          </a>
+          <a id="klasafsprakenKeuzeKnop" href="opvolgen_klasafspraken/zebra-klasafspraken.html" class="portaal-tegel zorg" target="_blank" rel="noopener" style="display:none">
+            <span class="portaal-tegel-icoon">&#129427;</span>
+            <span class="portaal-title">Klasafspraken</span>
+            <span class="portaal-desc">Test de opvolging van klasafspraken, medailles, diploma's en evaluatie.</span>
+            <span class="portaal-open">Openen</span>
+          </a>
+          <a href="klasagenda.html" class="portaal-tegel administratie" target="_blank" rel="noopener">
+            <span class="portaal-tegel-icoon">&#128216;</span>
+            <span class="portaal-title">Klasagenda</span>
+            <span class="portaal-desc">Eerste, tweede en derde graad.</span>
+            <span class="portaal-open">Openen</span>
+          </a>
+          <a href="klasagendav2.html" class="portaal-tegel administratie" target="_blank" rel="noopener">
+            <span class="portaal-tegel-icoon">&#128213;</span>
+            <span class="portaal-title">Klasagenda nieuw</span>
+            <span class="portaal-desc">Nieuwe versie - probeer & test.</span>
+            <span class="portaal-open">Openen</span>
+          </a>
+        </div>
+      </section>
 
-      <a id="schooloverzichtKnop" style="display:none" href="schooloverzicht.html" class="portaal-tegel school" target="_blank" rel="noopener">
-        <span class="portaal-tegel-icoon">&#127979;</span>
-        <span class="portaal-title">Schooloverzicht</span>
-        <span class="portaal-desc">Kies een klas om schoolbreed te ondersteunen.</span>
-        <span class="portaal-open">Openen</span>
-      </a>
+      <section class="portaal-sectie adminblok">
+        <div class="portaal-sectie-kop"><h2>School en administratie</h2><span>materiaal, overzicht en schoolbrede taken</span></div>
+        <div class="portaal-sectie-grid">
+          <a id="bestellingenKeuzeKnop" href="bestellingen.html" class="portaal-tegel administratie" target="_blank" rel="noopener" style="display:none">
+            <span class="portaal-tegel-icoon">&#128218;</span>
+            <span class="portaal-title">Bestellingen</span>
+            <span class="portaal-desc">Werkboeken, Lyreco, stock materiaal en knutselideetjes.</span>
+            <span class="portaal-open">Openen</span>
+          </a>
+          <a id="huiswerkklasKeuzeKnop" href="huiswerkklas.html" class="portaal-tegel administratie" target="_blank" rel="noopener" style="display:none">
+            <span class="portaal-tegel-icoon">&#9997;</span>
+            <span class="portaal-title">Huiswerkklas</span>
+            <span class="portaal-desc">Vink per dinsdag of donderdag de aanwezigen af.</span>
+            <span class="portaal-open">Openen</span>
+          </a>
+          <a id="schoolbeheerKeuzeKnop" href="schoolbeheer.html" class="portaal-tegel administratie" target="_blank" rel="noopener" style="display:none">
+            <span class="portaal-tegel-icoon">&#127979;</span>
+            <span class="portaal-title">Klaslijsten</span>
+            <span class="portaal-desc">Open klaslijst, refter, activiteiten en aankopen voor secretariaat of je eigen klas.</span>
+            <span class="portaal-open">Openen</span>
+          </a>
+          <a id="schooloverzichtKnop" style="display:none" href="schooloverzicht.html" class="portaal-tegel school" target="_blank" rel="noopener">
+            <span class="portaal-tegel-icoon">&#127979;</span>
+            <span class="portaal-title">Schooloverzicht</span>
+            <span class="portaal-desc">Kies een klas om schoolbreed te ondersteunen.</span>
+            <span class="portaal-open">Openen</span>
+          </a>
+        </div>
+      </section>
     </div>
   </div>
   <div id="auth" style="display:none;">
