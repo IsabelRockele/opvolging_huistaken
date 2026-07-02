@@ -150,6 +150,12 @@ button:disabled{opacity:.5;cursor:not-allowed}
 .klas-card-meta{font-size:12px;color:var(--muted);margin-top:3px}
 .klas-card-pijl{font-size:20px;color:var(--muted);flex-shrink:0}
 .klas-card:hover .klas-card-pijl{color:#b87a5e}
+.history-panel{margin:10px 16px 0;background:#fffaf0;border:1px solid #ead8b8;border-radius:12px;overflow:hidden}
+.history-toggle{width:100%;background:#fff3d2;border-radius:0;display:flex;justify-content:space-between;align-items:center;text-align:left;color:#5f4216;padding:10px 14px}
+.history-body{display:none;padding:12px 14px}.history-panel.open .history-body{display:block}
+.history-year{border:1px solid #ead8b8;background:#fff;border-radius:12px;padding:10px 12px;margin-bottom:10px}
+.history-year h3{margin:0 0 7px;font-size:15px;color:#4b3b2d}
+.history-item{border-left:5px solid #f1c76d;background:#fffaf0;border-radius:8px;padding:8px 10px;margin-top:7px;white-space:pre-wrap;font-size:13px;line-height:1.45}
 
 @media (max-width: 900px) {
   .oc-werkruimte{grid-template-columns:1fr}
@@ -192,6 +198,7 @@ button:disabled{opacity:.5;cursor:not-allowed}
     <div class="panel">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:10px">
         <h2 style="margin:0">📋 Oudercontacten <span id="schooljaarLabel" class="muted"></span></h2>
+        <label style="min-width:150px;margin:0">Schooljaar<select id="schooljaarSelect"></select></label>
       </div>
       <p class="muted" style="margin-bottom:14px">Maak een nieuw oudercontact aan of open een bestaand om gesprekken voor te bereiden.</p>
       <div id="ocLijst" class="oc-list">
@@ -316,21 +323,42 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-const schooljaar = (() => {
+function huidigSchooljaar() {
   const now = new Date();
   const y = now.getMonth() >= 7 ? now.getFullYear() : now.getFullYear() - 1;
   return `${y}-${y+1}`;
-})();
-const BEWAAR_JAREN_OUDERCONTACT = 2; // Aanpasbaar: oudercontacten bewaren tot eind augustus na dit aantal schooljaren.
+}
+let schooljaar = huidigSchooljaar();
+const BEWAAR_JAREN_OUDERCONTACT = 12; // Maximum: K1 tot einde lager onderwijs plus marge.
+const BEWAAR_JAREN_PER_STARTKLAS = { K1:12, K2:11, K3:10, "1A":9, "2A":8, "3A":7, "4A":6, "5A":5, "6A":4 };
+const EERSTE_APP_SCHOOLJAAR = "2025-2026";
 
 function bewaarTotVoorSchooljaar(jaar=schooljaar, extraJaren=BEWAAR_JAREN_OUDERCONTACT) {
   return `${Number(String(jaar).slice(0,4)) + extraJaren}-08-31`;
+}
+function bewaarJarenVoorKlas(klas) {
+  const key = String(klas || '').trim().toUpperCase();
+  return BEWAAR_JAREN_PER_STARTKLAS[key] || BEWAAR_JAREN_OUDERCONTACT;
+}
+function schooljaarOpties() {
+  const start = Number(huidigSchooljaar().slice(0,4));
+  const eerste = Number(EERSTE_APP_SCHOOLJAAR.slice(0,4));
+  const opties = Array.from({length: Math.max(1, start + 2 - eerste)}, (_, i) => {
+    const y = start + 1 - i;
+    return `${y}-${y+1}`;
+  });
+  return opties.filter(j => Number(j.slice(0,4)) >= eerste);
+}
+function isArchiefJaar() { return Number(schooljaar.slice(0,4)) < Number(huidigSchooljaar().slice(0,4)); }
+function refreshEffectiveReadOnly() {
+  isReadOnly = roleReadOnly || isArchiefJaar();
 }
 
 let currentUser = null;
 let currentRol = null;      // 'directie' | 'zorgcoordinator' | 'zorgleerkracht' | 'leerkracht' | null
 let isSchoolBreed = false;
 let isReadOnly = false;     // true wanneer schoolbreed een andere klas inkijkt
+let roleReadOnly = false;
 const params = new URLSearchParams(window.location.search);
 let targetUid = params.get('beheerUid') || null;
 let beheerKlas = params.get('klas') || '';
@@ -357,6 +385,9 @@ function projectRef() {
 
 async function saveToFirebase() {
   await ready;
+  if (isArchiefJaar()) {
+    throw new Error("Dit is een vorig schooljaar. Je kan dit bekijken, maar niet per ongeluk overschrijven.");
+  }
   await setDoc(projectRef(), {
     ...state,
     eigenaar_uid: targetUid || currentUser.uid,
@@ -365,8 +396,8 @@ async function saveToFirebase() {
     klasId: activeKlasId || '',
     klasNaam: activeKlasNaam || beheerKlas || '',
     schooljaar,
-    bewaarTot: bewaarTotVoorSchooljaar(),
-    bewaartermijnJaren: BEWAAR_JAREN_OUDERCONTACT,
+    bewaarTot: bewaarTotVoorSchooljaar(schooljaar, bewaarJarenVoorKlas(activeKlasId || activeKlasNaam || beheerKlas)),
+    bewaartermijnJaren: bewaarJarenVoorKlas(activeKlasId || activeKlasNaam || beheerKlas),
     updatedAt: serverTimestamp()
   }, { merge: true });
 }
@@ -394,6 +425,9 @@ let unsubscribeProject = null;
 function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
 function $(id) { return document.getElementById(id); }
 function naamKey(naam) { return String(naam || '').replace(/\s+/g, ' ').trim().toLowerCase(); }
+function slimmeNaamKey(naam) {
+  return String(naam || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim().split(/\s+/).filter(Boolean).sort().join('|');
+}
 function leerlingNaamSchoolbeheer(s) {
   const first = (s.firstName || s.first || s.voornaam || '').trim();
   const last = (s.lastName || s.last || s.achternaam || '').trim();
@@ -417,6 +451,7 @@ function voegLeerlingenZonderDubbelToe(nieuweLeerlingen) {
 }
 
 function markDirty() {
+  if (isReadOnly) return;
   isDirty = true;
   $('saveStatus').className = 'save-status dirty';
   $('saveStatusText').textContent = 'Niet opgeslagen';
@@ -674,7 +709,8 @@ window.openKlasAlsSchoolBreed = function(uid, klasId, klasNaam, leerkrachtNaam) 
   activeKlasNaam = klasNaam || klasId;
   beheerKlas = activeKlasNaam;
   beheerNaam = leerkrachtNaam || (klasProjectMode ? 'Klaslijst zonder gekoppelde leerkracht' : '');
-  isReadOnly = ['directie','zorgcoordinator'].includes(currentRol);
+  roleReadOnly = ['directie','zorgcoordinator'].includes(currentRol);
+  refreshEffectiveReadOnly();
   $('klaskiezerView').classList.add('hidden');
   const label = isReadOnly ? '(alleen lezen)' : '';
   $('headerSub').textContent = `${beheerNaam || 'Klas'} - ${activeKlasNaam}${label ? ' ' + label : ''}`;
@@ -685,6 +721,7 @@ window.openKlasAlsSchoolBreed = function(uid, klasId, klasNaam, leerkrachtNaam) 
 
 async function laadEnToonKlas() {
   $('saveStatusText').textContent = 'Laden...';
+  refreshEffectiveReadOnly();
   try {
     const data = await loadFromFirebase();
     state.leerlingen = Array.isArray(data?.leerlingen) ? [...data.leerlingen] : [];
@@ -714,8 +751,9 @@ async function laadEnToonKlas() {
     }
   } catch(e) { console.error(e); }
   $('saveStatus').className = 'save-status';
-  $('saveStatusText').textContent = isReadOnly ? 'Alleen lezen' : 'Geladen';
+  $('saveStatusText').textContent = isReadOnly ? (isArchiefJaar() ? 'Archief - alleen lezen' : 'Alleen lezen') : 'Geladen';
   $('ocLijstView').classList.remove('hidden');
+  $('headerNieuwBtn').style.display = isReadOnly ? 'none' : '';
   startLiveSync();
 
   // Verberg bewerkingsknoppen in readonly
@@ -729,6 +767,19 @@ async function laadEnToonKlas() {
 async function init() {
   $('saveStatusText').textContent = 'Laden...';
   $('schooljaarLabel').textContent = schooljaar;
+  $('schooljaarSelect').innerHTML = schooljaarOpties().map(j => `<option>${j}</option>`).join('');
+  $('schooljaarSelect').value = schooljaar;
+  $('schooljaarSelect').onchange = async () => {
+    if (isDirty && !isReadOnly) await autoSave();
+    schooljaar = $('schooljaarSelect').value || huidigSchooljaar();
+    $('schooljaarLabel').textContent = schooljaar;
+    huidigOcId = null;
+    huidigeLeerlingId = null;
+    state = { oudercontacten: [], leerlingen: [] };
+    refreshEffectiveReadOnly();
+    if (isSchoolBreed && !targetUid) await toonKlaskiezer();
+    else await laadEnToonKlas();
+  };
 
   await ready;
   await laadRol();
@@ -746,8 +797,9 @@ async function init() {
   if (beheerNaam) $('headerSub').textContent = beheerNaam + (beheerKlas ? ' · ' + beheerKlas : '');
   if (!activeKlasId && !targetUid) await bepaalEigenKlasVoorOudercontact();
   if (targetUid && targetUid !== currentUser.uid) {
-    isReadOnly = ['directie','zorgcoordinator'].includes(currentRol);
+    roleReadOnly = ['directie','zorgcoordinator'].includes(currentRol);
   }
+  refreshEffectiveReadOnly();
   if ($('andereKlasBtn')) $('andereKlasBtn').style.display = isSchoolBreed ? '' : 'none';
 
   await laadEnToonKlas();
@@ -935,6 +987,13 @@ function renderFiche() {
       </div>
     </div>
     ${vorigPanelHtml}
+    <div class="history-panel" id="ouderHistoryPanel">
+      <button type="button" class="history-toggle" onclick="toggleOudercontactGeschiedenis()">
+        <strong>Vorige schooljaren van deze leerling</strong>
+        <span id="ouderHistoryPijl">Tonen</span>
+      </button>
+      <div class="history-body" id="ouderHistoryBody"><div class="muted">Klik om de vorige schooljaren te laden.</div></div>
+    </div>
 
     <div class="${vakGridClass}" style="padding-top:12px">
       ${vakCard('nl','📖','Nederlands','vak-nl',g.nl||'')}
@@ -984,6 +1043,67 @@ window.neemVorigOver = function() {
     const el = $('f_' + k);
     if (el && vorigG[k]?.trim() && !el.value.trim()) el.value = vorigG[k];
   });
+};
+
+function vorigeSchooljaren() {
+  return schooljaarOpties().filter(j => Number(j.slice(0,4)) < Number(schooljaar.slice(0,4)));
+}
+function oudercontactSamenvatting(g) {
+  const labels = {
+    nl: 'Nederlands',
+    wiskunde: 'Wiskunde',
+    wo: 'WO',
+    fr: 'Frans',
+    huistaken: 'Huistaken',
+    bezorgdheden: 'Werkpunten',
+    positief: 'Positief',
+    vragen: 'Vragen / tips',
+    ouderOpm: 'Opmerkingen ouders'
+  };
+  return Object.entries(labels)
+    .map(([k,label]) => g?.[k]?.trim() ? `${label}: ${g[k].trim()}` : '')
+    .filter(Boolean)
+    .join('\n\n');
+}
+async function laadOudercontactGeschiedenisVoorLeerling(leerling) {
+  const targetKey = slimmeNaamKey(leerling?.naam || '');
+  const jaren = vorigeSchooljaren();
+  if (!jaren.length) return `<div class="muted">Er zijn nog geen vorige schooljaren in deze app.</div>`;
+  const blokken = [];
+  for (const jaar of jaren) {
+    const snap = await getDocs(collection(db, "oudercontacten", jaar, "projecten"));
+    const items = [];
+    snap.forEach(d => {
+      const project = d.data() || {};
+      const leerlingen = Array.isArray(project.leerlingen) ? project.leerlingen : [];
+      const match = leerlingen.find(l => slimmeNaamKey(l.naam) === targetKey);
+      if (!match) return;
+      (project.oudercontacten || []).forEach(oc => {
+        const g = (oc.gesprekken || {})[match.id];
+        const tekst = oudercontactSamenvatting(g);
+        if (tekst) items.push({ naam: oc.naam || 'Oudercontact', datum: oc.datum || '', klas: project.klasNaam || project.klasId || '', tekst });
+      });
+    });
+    items.sort((a,b) => (b.datum || '').localeCompare(a.datum || ''));
+    if (items.length) {
+      blokken.push(`<section class="history-year"><h3>${esc(jaar)}</h3>${items.map(it => `<div class="history-item"><strong>${esc(it.naam)}${it.datum ? ' - ' + esc(formatDatum(it.datum)) : ''}${it.klas ? ' - ' + esc(it.klas) : ''}</strong>\n${esc(it.tekst)}</div>`).join('')}</section>`);
+    }
+  }
+  return blokken.length ? blokken.join('') : `<div class="muted">Geen oudercontacten gevonden voor vorige schooljaren.</div>`;
+}
+window.toggleOudercontactGeschiedenis = async function() {
+  const panel = $('ouderHistoryPanel');
+  const body = $('ouderHistoryBody');
+  const pijl = $('ouderHistoryPijl');
+  if (!panel || !body) return;
+  const open = panel.classList.toggle('open');
+  if (pijl) pijl.textContent = open ? 'Verbergen' : 'Tonen';
+  if (open && !body.dataset.loaded) {
+    body.innerHTML = `<div class="muted">Vorige schooljaren laden...</div>`;
+    const leerling = state.leerlingen.find(l => l.id === huidigeLeerlingId);
+    body.innerHTML = await laadOudercontactGeschiedenisVoorLeerling(leerling);
+    body.dataset.loaded = '1';
+  }
 };
 
 function vakCard(id, emoji, label, cls, value) {
