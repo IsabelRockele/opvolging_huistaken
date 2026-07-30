@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="nl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#173f3a">
+  <title>Groeiboek · intelligent puntenboek</title>
+  <link rel="stylesheet" href="intelligent-puntenboek.css">
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+    import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    const app = initializeApp({
+      apiKey: "AIzaSyA7KxXMvZ4dzBQDut3CMyWUblLte2tFzoQ",
+      authDomain: "huiswerkapp-a311e.firebaseapp.com",
+      projectId: "huiswerkapp-a311e",
+      storageBucket: "huiswerkapp-a311e.appspot.com",
+      messagingSenderId: "797169941164",
+      appId: "1:797169941164:web:511d9618079f1378d0fd09"
+    });
+    onAuthStateChanged(getAuth(app), user => {
+      if (String(user?.email || "").toLowerCase() === "isabel.rockele@bsdelinde.net") {
+        window.haalTweedeLeerjaarOp = async () => {
+          const now = new Date();
+          const startjaar = now.getMonth() >= 6 ? now.getFullYear() : now.getFullYear() - 1;
+          const schooljaren = [
+            `${startjaar}-${startjaar + 1}`,
+            `${startjaar - 1}-${startjaar}`
+          ];
+          for (const schooljaar of schooljaren) {
+            const snap = await getDoc(doc(getFirestore(app), "schoolbeheer_groepen", `${schooljaar}_graad1`));
+            if (!snap.exists()) continue;
+            const leerlingen = (snap.data()?.klassen?.["2A"]?.leerlingen || [])
+              .map(leerling => ({
+                id: leerling.id,
+                name: [leerling.firstName, leerling.lastName].filter(Boolean).join(" ").trim()
+              }))
+              .filter(leerling => leerling.name);
+            if (leerlingen.length) return { leerlingen, schooljaar };
+          }
+          throw new Error("In de centrale klaslijsten staat nog geen ingevulde klas 2A.");
+        };
+        document.body.classList.remove("auth-pending");
+      } else {
+        window.location.replace("index.html");
+      }
+    });
+  </script>
+</head>
+<body class="auth-pending">
+  <aside class="sidebar">
+    <a class="brand" href="index.html" aria-label="Terug naar home">
+      <span class="brand-mark">G</span>
+      <span><strong>Groeiboek</strong><small>2de leerjaar</small></span>
+    </a>
+    <nav aria-label="Hoofdnavigatie">
+      <button class="nav-item active" data-view="overzicht"><span>⌂</span> Overzicht</button>
+      <button class="nav-item" data-view="leerlingen"><span>♙</span> Leerlingen</button>
+      <button class="nav-item" data-view="toetsen"><span>▤</span> Toetsen</button>
+      <button class="nav-item" data-view="analyse"><span>↗</span> Groei & analyse</button>
+      <button class="nav-item" data-view="feedback"><span>✦</span> Rapportfeedback</button>
+    </nav>
+    <div class="period-card">
+      <label for="periodeSelect">Rapportperiode</label>
+      <select id="periodeSelect">
+        <option value="1">Periode 1 · sep–dec</option>
+        <option value="2">Periode 2 · jan–mrt</option>
+        <option value="3">Periode 3 · apr–jun</option>
+      </select>
+      <small>Feedback kijkt ook naar eerdere periodes.</small>
+    </div>
+    <div class="storage-note"><span>✓</span><p><strong>Privé op dit toestel</strong><br>Je gegevens worden automatisch bewaard.</p></div>
+  </aside>
+
+  <main>
+    <header class="topbar">
+      <div>
+        <p class="eyebrow" id="pageEyebrow">Donderdag 30 juli</p>
+        <h1 id="pageTitle">Goedemorgen, juf</h1>
+      </div>
+      <div class="top-actions">
+        <button class="button ghost" id="demoBtn">Voorbeeldgegevens</button>
+        <button class="button primary" data-action="new-test">＋ Nieuwe toets</button>
+      </div>
+    </header>
+
+    <section class="view active" id="view-overzicht">
+      <div class="welcome-card">
+        <div>
+          <span class="pill light">RAPPORTPERIODE <b id="periodNumber">1</b></span>
+          <h2>Waar groeit je klas vandaag?</h2>
+          <p>Voeg een toets toe, koppel de vragen aan leerdoelen en zie meteen wie extra oefenkansen nodig heeft.</p>
+          <button class="button cream" data-action="new-test">Toets toevoegen <span>→</span></button>
+        </div>
+        <div class="orbit" aria-hidden="true"><span>↗</span><i></i><i></i><i></i></div>
+      </div>
+
+      <div class="metrics" id="metrics"></div>
+      <div class="dashboard-grid">
+        <article class="panel span-2">
+          <div class="panel-head"><div><p class="eyebrow">LEERDOELEN</p><h3>Groei in beeld</h3></div><button class="text-button" data-go="analyse">Bekijk alle →</button></div>
+          <div id="growthList" class="growth-list"></div>
+        </article>
+        <article class="panel">
+          <div class="panel-head"><div><p class="eyebrow">AANDACHT NODIG</p><h3>Leerlingen</h3></div></div>
+          <div id="attentionList"></div>
+        </article>
+        <article class="panel span-3">
+          <div class="panel-head"><div><p class="eyebrow">LAATSTE TOETSEN</p><h3>Recent ingevoerd</h3></div><button class="text-button" data-go="toetsen">Alle toetsen →</button></div>
+          <div id="recentTests"></div>
+        </article>
+      </div>
+    </section>
+
+    <section class="view" id="view-leerlingen">
+      <div class="section-title"><div><p class="eyebrow">KLASBEHEER</p><h2>Je klaslijst</h2><p>Neem klas 2A over uit de centrale klaslijsten of voeg zelf leerlingen toe.</p></div><div class="top-actions"><button class="button ghost" id="syncStudentsBtn">↻ Klas 2A ophalen</button><button class="button primary" id="addStudentsBtn">＋ Leerlingen toevoegen</button></div></div>
+      <article class="panel"><div id="studentGrid" class="student-grid"></div></article>
+    </section>
+
+    <section class="view" id="view-toetsen">
+      <div class="section-title"><div><p class="eyebrow">PUNTENBOEK</p><h2>Toetsen</h2><p>Alle toetsen, vragen en scores per vakgebied.</p></div><button class="button primary" data-action="new-test">＋ Nieuwe toets</button></div>
+      <div class="filters"><button class="filter active" data-subject="Alle">Alle</button><button class="filter" data-subject="Nederlands">Nederlands</button><button class="filter" data-subject="Wiskunde">Wiskunde</button><button class="filter" data-subject="WO">WO</button></div>
+      <div id="testList" class="test-list"></div>
+    </section>
+
+    <section class="view" id="view-analyse">
+      <div class="section-title"><div><p class="eyebrow">OVER TOETSEN HEEN</p><h2>Groei & analyse</h2><p>Vergelijk dezelfde leerdoelen doorheen het schooljaar.</p></div></div>
+      <div class="analysis-toolbar"><label>Leerling<select id="analysisStudent"></select></label><label>Vak<select id="analysisSubject"><option>Alle</option><option>Nederlands</option><option>Wiskunde</option><option>WO</option></select></label></div>
+      <div id="analysisContent"></div>
+    </section>
+
+    <section class="view" id="view-feedback">
+      <div class="section-title"><div><p class="eyebrow">RAPPORTPERIODE</p><h2>Persoonlijke feedback</h2><p>Conceptzinnen op basis van resultaten én evolutie vanaf het begin van het schooljaar.</p></div><button class="button ghost" id="copyAllBtn">Kopieer alle feedback</button></div>
+      <div class="feedback-layout"><aside class="feedback-students" id="feedbackStudents"></aside><article class="panel feedback-editor" id="feedbackEditor"></article></div>
+    </section>
+  </main>
+
+  <dialog id="studentDialog">
+    <form method="dialog" class="dialog-card">
+      <button class="dialog-close" value="cancel" aria-label="Sluiten">×</button>
+      <p class="eyebrow">KLASLIJST</p><h2>Leerlingen toevoegen</h2>
+      <p>Typ of plak één leerling per regel.</p>
+      <textarea id="studentNames" rows="9" placeholder="Lina Peeters&#10;Noah Janssens&#10;Mila Vermeulen"></textarea>
+      <div class="dialog-actions"><button class="button ghost" value="cancel">Annuleren</button><button class="button primary" value="default" id="saveStudentsBtn">Toevoegen</button></div>
+    </form>
+  </dialog>
+
+  <dialog id="testDialog">
+    <form method="dialog" class="dialog-card wide" id="testForm">
+      <button type="button" id="cancelTestBtn" class="dialog-close test-workspace-close" aria-label="Terug naar puntenboek">← Terug naar puntenboek</button>
+      <div class="steps"><span class="active">1 Toets</span><span>2 Leerdoelen</span><span>3 Scores</span></div>
+      <div class="step active" data-step="1">
+        <p class="eyebrow">NIEUWE TOETS</p><h2>Vertel ons over de toets</h2>
+        <div class="form-grid"><label>Titel<input id="testTitle" required placeholder="Bv. Toets getallen tot 100"></label><label>Datum<input id="testDate" type="date" required></label><label>Vakgebied<select id="testSubject"><option>Nederlands</option><option>Wiskunde</option><option>WO</option></select></label><label>Domein<select id="testDomain"></select></label></div>
+        <label class="upload-zone" for="testPdf"><span class="upload-icon">⇧</span><strong>Sleep je toets hier of kies een pdf</strong><small>De vragen worden gelezen en aan vermoedelijke leerdoelen gekoppeld.</small><input id="testPdf" type="file" accept="application/pdf"></label>
+        <div id="pdfStatus" class="pdf-status"></div>
+      </div>
+      <div class="step" data-step="2">
+        <p class="eyebrow">CONTROLE</p><h2>Vragen & leerdoelen</h2><p>Pas de voorstellen aan. Jij houdt altijd de eindbeslissing.</p>
+        <div id="questionEditor"></div>
+        <button type="button" class="add-row" id="addQuestionBtn">＋ Vraag toevoegen</button>
+      </div>
+      <div class="step" data-step="3">
+        <p class="eyebrow">SCORES</p><h2>Vul de punten in</h2><p>Laat een veld leeg bij afwezigheid.</p>
+        <div class="score-legend" aria-label="Betekenis van de kleuren">
+          <span><i class="legend-red"></i> Minder dan de helft</span>
+          <span><i class="legend-orange"></i> Van 50% tot en met 60%</span>
+          <span><i class="legend-green"></i> Meer dan 60%</span>
+        </div>
+        <div class="score-table-wrap"><table id="scoreTable"></table></div>
+      </div>
+      <div class="dialog-actions"><button type="button" class="button ghost" id="prevStep">Terug</button><button type="button" class="button primary" id="nextStep">Volgende</button></div>
+    </form>
+  </dialog>
+
+  <div id="toast" role="status"></div>
+  <script src="intelligent-puntenboek.js"></script>
+</body>
+</html>
