@@ -1134,7 +1134,9 @@ const db = getFirestore(app);
 
 const schooljaar = (() => {
   const now = new Date();
-  const y = now.getMonth() >= 7 ? now.getFullYear() : now.getFullYear() - 1;
+  // Augustus hoort nog bij het aflopende schooljaar: overgangsdossiers worden
+  // vaak tijdens de zomervakantie afgewerkt. Schakel pas op 1 september om.
+  const y = now.getMonth() >= 8 ? now.getFullYear() : now.getFullYear() - 1;
   return `${y}-${y + 1}`;
 })();
 const BEWAAR_JAREN_OVERGANG = 12; // Maximum: K1 tot einde lager onderwijs plus marge.
@@ -1550,7 +1552,9 @@ const sfDb = getFirestore(sfApp);
 
 const sfSchooljaar = (() => {
   const now = new Date();
-  const y = now.getMonth() >= 7 ? now.getFullYear() : now.getFullYear() - 1;
+  // Houd augustus bij het aflopende schooljaar, zodat bestaande overdrachten
+  // en klaskoppelingen tijdens de zomervakantie zichtbaar blijven.
+  const y = now.getMonth() >= 8 ? now.getFullYear() : now.getFullYear() - 1;
   return `${y}-${y + 1}`;
 })();
 
@@ -5221,7 +5225,14 @@ sfInitSchoolflow(); writeSettings(); updateBadges(); renderStudents(); updateSav
       }
 
       function isFormChange(target) {
-        return target && target.matches && target.matches('input, textarea, select');
+        // Een gekozen JSON-bestand wordt asynchroon ingelezen. De algemene
+        // change-listener plande vroeger al een autosave vóór die import klaar
+        // was en overschreef daarna ongemerkt het actieve Firebase-project.
+        // Een import blijft daarom eerst een lokale voorvertoning; pas een
+        // volgende bewuste inhoudelijke wijziging mag automatisch bewaren.
+        return target && target.matches &&
+          target.id !== 'importFile' &&
+          target.matches('input, textarea, select');
       }
 
       document.addEventListener('input', function (event) {
