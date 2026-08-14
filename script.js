@@ -70,7 +70,7 @@ function pasKnoppenToe(huistakenKnop, overgangKnop, schoolbeheerKnop, bestelling
   }
 
   if (schoolKnop) schoolKnop.style.display = 'none';
-  if (groeigroepenKnop) groeigroepenKnop.style.display = isSchoolBreed ? '' : 'none';
+  if (groeigroepenKnop) groeigroepenKnop.style.display = (isSchoolBreed || heeftKlasbeheer) ? '' : 'none';
   if (oudercontactKnop) oudercontactKnop.style.display = (isSchoolBreed || heeftKlasbeheer) ? '' : 'none';
   if (zorgoverlegKnop) zorgoverlegKnop.style.display = (isSchoolBreed || heeftKlasbeheer) ? '' : 'none';
   if (huiswerkklasKnop) huiswerkklasKnop.style.display = (isSchoolBreed || isSecretariaat || heeftKlasbeheer) ? '' : 'none';

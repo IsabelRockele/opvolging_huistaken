@@ -298,7 +298,7 @@ const firebaseConfig={apiKey:"AIzaSyA7KxXMvZ4dzBQDut3CMyWUblLte2tFzoQ",authDomai
 const app=getApps().length?getApp():initializeApp(firebaseConfig);
 const auth=getAuth(app);
 const db=getFirestore(app);
-const allowedRoles=["directie","zorgcoordinator","zorgleerkracht","beheerder"];
+const allowedRoles=["directie","zorgcoordinator","zorgleerkracht","beheerder","klasleerkracht"];
 const DEFAULT_CLASSES=["K1","K2","K3","1A","2A","3A","4A","5A","6A"];
 const DOMAINEN=[
   {id:"lezen",groep:"Nederlands",naam:"Lezen",emoji:"\ud83d\udcd6"},{id:"spelling",groep:"Nederlands",naam:"Spelling",emoji:"\ud83d\udd24"},{id:"spreken",groep:"Nederlands",naam:"Spreken",emoji:"\ud83d\udde3\ufe0f"},{id:"luisteren",groep:"Nederlands",naam:"Luisteren",emoji:"\ud83d\udc42"},{id:"woordenschat",groep:"Nederlands",naam:"Woordenschat",emoji:"\ud83d\udcad"},{id:"schrijven",groep:"Nederlands",naam:"Schrijven",emoji:"\u270d\ufe0f"},
@@ -378,7 +378,7 @@ function verrijkLeerling(s){
   return bron ? studentUitKlas(s.klas,bron) : {...s,naam:studentNaam(s)};
 }
 const today=()=>new Date().toISOString().slice(0,10);
-let user=null, role="", groups=[], active=null, classes={}, tab="basis";
+let user=null, role="", groups=[], active=null, classes={}, tab="basis", eigenKlassen=[];
 let rapHoofdtab="groep"; // welke rapport-hoofdtab actief is: 'groep' of 'kind'
 let ptPeriodeFilter="";
 const BEWAAR_JAREN_GROEIGROEP_LOGBOEK = 6; // Aanpasbaar: groeigroep-logboeken bewaren tot eind augustus na dit aantal schooljaren.
@@ -464,13 +464,31 @@ function bewaarHuidigeRapportPeriode(){
 async function loadRole(){
   const snap=await getDoc(doc(db,"schoolrollen",user.uid));
   role=snap.exists()?String(snap.data().rol||"").toLowerCase():"";
-  if(!allowedRoles.includes(role)) throw new Error("Dit scherm is alleen voor zorgleerkrachten, zorgcoordinator, directie en beheerder.");
+  eigenKlassen=[];
+  if(role==="klasleerkracht"||!allowedRoles.includes(role)){
+    const email=String(user.email||"").toLowerCase();
+    const resultaten=await Promise.all([
+      getDocs(query(collection(db,"klasleerkrachten"),where("leerkracht_uids","array-contains",user.uid))),
+      email?getDocs(query(collection(db,"klasleerkrachten"),where("leerkracht_emails","array-contains",email))):Promise.resolve({docs:[]})
+    ]);
+    const prefix=year()+"_";
+    eigenKlassen=[...new Set(resultaten.flatMap(s=>s.docs).map(d=>d.id).filter(id=>id.startsWith(prefix)).map(id=>id.slice(prefix.length)).filter(Boolean))];
+    if(eigenKlassen.length) role="klasleerkracht";
+  }
+  if(!allowedRoles.includes(role)) throw new Error("Dit scherm is alleen voor klasleerkrachten, zorgleerkrachten, zorgcoordinator, directie en beheerder.");
+  if(role==="klasleerkracht"&&!eigenKlassen.length) throw new Error("Er is voor dit schooljaar nog geen eigen klas aan je account gekoppeld.");
 }
+function magBewerken(){return role!=="klasleerkracht";}
 async function loadClasses(){
-  const snap=await getDocs(collection(db,"schoolbeheer",year(),"klassen"));
   classes={};
-  snap.docs.forEach(d=>{const data=d.data();classes[d.id]={klas:d.id,leerlingen:Array.isArray(data.leerlingen)?data.leerlingen:[]};});
-  DEFAULT_CLASSES.forEach(k=>{if(!classes[k])classes[k]={klas:k,leerlingen:[]};});
+  if(role==="klasleerkracht"){
+    const snaps=await Promise.all(eigenKlassen.map(k=>getDoc(doc(db,"schoolbeheer",year(),"klassen",k))));
+    snaps.forEach((s,i)=>{const data=s.exists()?s.data():{};classes[eigenKlassen[i]]={klas:eigenKlassen[i],leerlingen:Array.isArray(data.leerlingen)?data.leerlingen:[]};});
+  }else{
+    const snap=await getDocs(collection(db,"schoolbeheer",year(),"klassen"));
+    snap.docs.forEach(d=>{const data=d.data();classes[d.id]={klas:d.id,leerlingen:Array.isArray(data.leerlingen)?data.leerlingen:[]};});
+    DEFAULT_CLASSES.forEach(k=>{if(!classes[k])classes[k]={klas:k,leerlingen:[]};});
+  }
 }
 async function loadClassesForYear(jaar){
   const snap=await getDocs(collection(db,"schoolbeheer",jaar,"klassen"));
@@ -482,7 +500,9 @@ async function loadClassesForYear(jaar){
 async function loadGroups(){
   try{
     const snap=await getDocs(query(collection(db,"zorggroepen"),where("schooljaar","==",year())));
-    groups=snap.docs.map(d=>normalizeGroup({id:d.id,...d.data()})).sort((a,b)=>(a.naam||"").localeCompare(b.naam||"","nl"));
+    groups=snap.docs.map(d=>normalizeGroup({id:d.id,...d.data()}));
+    if(role==="klasleerkracht") groups=groups.filter(g=>(g.leerlingen||[]).some(s=>eigenKlassen.includes(String(s.klas||""))));
+    groups.sort((a,b)=>(a.naam||"").localeCompare(b.naam||"","nl"));
     renderGroups();
   }catch(e){
     groups=[];
@@ -494,7 +514,7 @@ async function reloadAll(){
   setStatus("Laden...");
   await loadClasses();
   await loadGroups();
-  setStatus(`${role} - ${year()} - ${Object.keys(classes).length} klassen`);
+  setStatus(role==="klasleerkracht"?`Raadpleegstand - ${eigenKlassen.join(", ")} - ${year()}`:`${role} - ${year()} - ${Object.keys(classes).length} klassen`);
   if(active){active=groups.find(g=>g.id===active.id)||active;renderWorkspace();}
 }
 
@@ -512,11 +532,11 @@ function renderGroups(){
 function openGroup(id){active=normalizeGroup(groups.find(g=>g.id===id));tab="basis";renderGroups();renderWorkspace();}
 function domainName(id){return DOMAINEN.find(d=>d.id===id)?.naam||id;}
 function switchTab(next){
-  if(active&&tab==="basis"){
+  if(magBewerken()&&active&&tab==="basis"){
     collectBasis();
     persistActiveGroup("Basis bewaard").catch(()=>{});
   }
-  if(active&&tab==="groeiplan"){
+  if(magBewerken()&&active&&tab==="groeiplan"){
     collectGroeiplan();
     persistActiveGroup("Groeiplan bewaard").catch(()=>{});
   }
@@ -537,6 +557,21 @@ function renderWorkspace(){
   renderBasis();renderLeerlingen();renderGroeiplan();renderLogboek();renderToetsen();renderRapport();
   document.querySelectorAll(".tabPanel").forEach(p=>p.classList.add("hidden"));
   $(`tab-${tab}`).classList.remove("hidden");
+  pasRaadpleegstandToe();
+}
+
+function pasRaadpleegstandToe(){
+  const alleenLezen=!magBewerken();
+  document.body.classList.toggle("raadpleegstand",alleenLezen);
+  ["newGroupBtn","saveGroupBtn","deleteGroupBtn","carryGroupBtn"].forEach(id=>{const el=$(id);if(el)el.style.display=alleenLezen?"none":"";});
+  if(!alleenLezen||!$("workspace")) return;
+  $("workspace").querySelectorAll("input, textarea, select").forEach(el=>el.disabled=true);
+  $("workspace").querySelectorAll("button").forEach(btn=>{
+    const tekst=String(btn.textContent||"").toLowerCase();
+    const onclick=String(btn.getAttribute("onclick")||"");
+    const raadplegen=btn.classList.contains("tab")||btn.classList.contains("lln-tab")||tekst.includes("pdf")||tekst.includes("download")||onclick.includes("ggOpenReportStudent")||onclick.includes("ggRapportVorige");
+    if(!raadplegen) btn.style.display="none";
+  });
 }
 
 function groeiplanStatusLabel(value){
@@ -1619,6 +1654,7 @@ async function saveGroup(){
 }
 async function persistActiveGroup(doneText){
   if(!active)return;
+  if(!magBewerken()) throw new Error("Deze groeigroep staat voor jou in raadpleegstand.");
   active.schooljaar=year();
   active.bewaarTot=bewaarTotVoorSchooljaar(year());
   active.bewaartermijnJaren=BEWAAR_JAREN_GROEIGROEP_LOGBOEK;
@@ -1784,7 +1820,7 @@ $("carryGroupBtn").onclick=carryActiveGroupToNextYear;
 $("saveGroupBtn").onclick=saveGroup;
 $("deleteGroupBtn").onclick=async()=>{if(!active||!confirm("Deze groeigroep verwijderen?"))return;await deleteDoc(groupRef(active.id));active=null;await loadGroups();renderWorkspace();};
 $("groupSearch").oninput=renderGroups;
-$("schooljaar").onchange=reloadAll;
+$("schooljaar").onchange=async()=>{await loadRole();await reloadAll();};
 $("logoutBtn").onclick=()=>signOut(auth);
 document.querySelectorAll(".tab").forEach(b=>b.onclick=()=>switchTab(b.dataset.tab));
 
