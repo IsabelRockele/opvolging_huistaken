@@ -17,6 +17,11 @@ import {
 import {
   getFirestore,
   doc,
+  getDoc,
+  getDocs,
+  collection,
+  query,
+  where,
   onSnapshot,
   setDoc,
   updateDoc,
@@ -46,6 +51,10 @@ const db = getFirestore(app);
 
 // 🔹 2. Lokale state
 let currentUser = null;
+let targetUserId = null;
+let actieveKlas = '';
+let gedragSchoolbreed = false;
+let klaslijstGesynchroniseerd = false;
 let leerlingen = [];
 let sancties = {}; // structuur: { [leerlingId]: { [sanctieId]: {...} } }
 let geselecteerdeLeerlingId = null;
@@ -60,24 +69,73 @@ const TYPE_CONFIG = {
   "Ongepast gedrag naar juf/meester": 4,
 };
 const TYPE_OPTIES = Object.keys(TYPE_CONFIG);
+const SCHOOLBREDE_ROLLEN_GEDRAG = ['directie', 'zorgcoordinator', 'zorgleerkracht', 'beheerder'];
+const gedragSchooljaar = (() => {
+  const now = new Date();
+  const start = now.getMonth() >= 7 ? now.getFullYear() : now.getFullYear() - 1;
+  return `${start}-${start + 1}`;
+})();
+
+function gedragNaam(s) {
+  return String(s?.naam || s?.name || `${s?.first || s?.firstName || ''} ${s?.last || s?.lastName || ''}`)
+    .replace(/\s+/g, ' ').trim();
+}
+function gedragNaamKey(value) {
+  return String(value || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+}
+
+async function bepaalGedragToegang() {
+  const rolSnap = await getDoc(doc(db, 'schoolrollen', currentUser.uid));
+  const echteRol = rolSnap.exists() ? String(rolSnap.data().rol || '').toLowerCase() : '';
+  const rol = echteRol === 'beheerder'
+    ? String(localStorage.getItem('lindeSimuleerRol_' + currentUser.uid) || 'beheerder').toLowerCase()
+    : echteRol;
+  gedragSchoolbreed = SCHOOLBREDE_ROLLEN_GEDRAG.includes(rol);
+
+  const params = new URLSearchParams(window.location.search);
+  targetUserId = gedragSchoolbreed ? (params.get('beheerUid') || currentUser.uid) : currentUser.uid;
+  const gevraagdeKlas = String(params.get('klasId') || params.get('klas') || '').trim();
+  if (gedragSchoolbreed) {
+    actieveKlas = gevraagdeKlas;
+    return;
+  }
+
+  const email = String(currentUser.email || '').toLowerCase();
+  const snaps = await Promise.all([
+    getDocs(query(collection(db, 'klasleerkrachten'), where('leerkracht_uids', 'array-contains', currentUser.uid))),
+    email ? getDocs(query(collection(db, 'klasleerkrachten'), where('leerkracht_emails', 'array-contains', email))) : Promise.resolve({ docs: [] })
+  ]);
+  const eigenKlassen = new Set();
+  snaps.forEach(snap => snap.docs.forEach(d => {
+    const item = d.data() || {};
+    if (item.actief === false || String(item.schooljaar || gedragSchooljaar) !== gedragSchooljaar) return;
+    const klas = String(item.klas || item.klasId || '').trim();
+    if (klas) eigenKlassen.add(klas);
+  }));
+  actieveKlas = eigenKlassen.has(gevraagdeKlas)
+    ? gevraagdeKlas
+    : [...eigenKlassen].sort((a,b) => a.localeCompare(b, 'nl', { numeric:true }))[0] || '';
+}
 
 // Convenience
 function getLeerkrachtDocRef() {
   if (!currentUser) {
     throw new Error("Geen ingelogde leerkracht.");
   }
-  return doc(db, "leerkrachten", currentUser.uid);
+  return doc(db, "leerkrachten", targetUserId || currentUser.uid);
 }
 
 // --- INIT ---
 document.addEventListener("DOMContentLoaded", () => {
-  onAuthStateChanged(auth, (user) => {
+  onAuthStateChanged(auth, async (user) => {
     if (!user) {
       // niet ingelogd → terug naar start
       window.location.href = "index.html";
       return;
     }
     currentUser = user;
+    await bepaalGedragToegang();
     koppelData();
     setupUI();
   });
@@ -105,7 +163,7 @@ btnOverzicht.addEventListener("click", () => {
 
   // Terug naar dashboard
   btnTerug.addEventListener("click", () => {
-    window.location.href = "dashboard.html";
+    window.location.href = "dashboard.html" + window.location.search;
   });
 
   // Uitloggen
@@ -148,12 +206,55 @@ console.log("DEBUG: Klik-event is gekoppeld aan voegRegistratieToe()");
 }
 
 // --- DATA KOPPELEN ---
+async function vulGedragLeerlingenAanUitSchoolbeheer(bestaandeLeerlingen) {
+  if (!actieveKlas) return bestaandeLeerlingen;
+  try {
+    const klasSnap = await getDoc(doc(db, 'schoolbeheer', gedragSchooljaar, 'klassen', actieveKlas));
+    if (!klasSnap.exists()) return bestaandeLeerlingen;
+    const vandaag = new Date().toISOString().slice(0, 10);
+    const centraleLeerlingen = (klasSnap.data().leerlingen || []).filter(s =>
+      (!s.start || s.start <= vandaag) && (!s.end || s.end >= vandaag)
+    );
+    const resultaat = [...bestaandeLeerlingen];
+    const ids = new Set(resultaat.map(s => String(s.schoolbeheerId || '')).filter(Boolean));
+    const namen = new Set(resultaat.map(s => gedragNaamKey(s.naam)));
+    let toegevoegd = 0;
+    centraleLeerlingen.forEach(s => {
+      const naam = gedragNaam(s);
+      const naamKey = gedragNaamKey(naam);
+      const schoolbeheerId = String(s.id || '');
+      if (!naam || (schoolbeheerId && ids.has(schoolbeheerId)) || namen.has(naamKey)) return;
+      resultaat.push({
+        id: `schoolbeheer_${actieveKlas}_${schoolbeheerId || naamKey.replace(/[^a-z0-9]+/g, '_')}`,
+        naam,
+        schoolbeheerId
+      });
+      if (schoolbeheerId) ids.add(schoolbeheerId);
+      namen.add(naamKey);
+      toegevoegd++;
+    });
+    if (toegevoegd) {
+      resultaat.sort((a,b) => String(a.naam || '').localeCompare(String(b.naam || ''), 'nl'));
+      await setDoc(getLeerkrachtDocRef(), { leerlingen: resultaat }, { merge: true });
+    }
+    return resultaat;
+  } catch (err) {
+    console.warn('Centrale klaslijst synchroniseren voor gedragsopvolging mislukt:', err);
+    return bestaandeLeerlingen;
+  }
+}
+
 function koppelData() {
   const ref = getLeerkrachtDocRef();
-  onSnapshot(ref, (snap) => {
+  onSnapshot(ref, async (snap) => {
     const data = snap.exists() ? snap.data() : {};
     leerlingen = data.leerlingen || [];
     sancties = data.sancties || {};
+
+    if (!klaslijstGesynchroniseerd) {
+      klaslijstGesynchroniseerd = true;
+      leerlingen = await vulGedragLeerlingenAanUitSchoolbeheer(leerlingen);
+    }
 
     vulLeerlingSelect();
 

@@ -15,6 +15,8 @@ let beheerKlasLabel = '';
 let beheerNaamLabel = '';
 let beheerKlasId = '';
 let schoolbeheerSyncGedaan = false;
+let huidigeRol = '';
+let heeftSchoolbredeToegang = false;
 // AANGEPAST: huidigeModus NIET meer uit localStorage lezen, zodat je bij elke keer naar
 // het dashboard terugkeert eerst het keuzescherm ziet (Per Week / Per Dag / Gedrag / Klasbeheer).
 // De keuze blijft wel behouden binnen de huidige sessie, via het gebruik van setModus() hieronder.
@@ -28,6 +30,46 @@ const schooljaar = (() => {
   return `${start}-${start + 1}`;
 })();
 const schooljaarKey = schooljaar.replace(/[^a-z0-9]+/gi, "_");
+const SCHOOLBREDE_ROLLEN = ['directie', 'zorgcoordinator', 'zorgleerkracht', 'beheerder'];
+
+async function bepaalDashboardToegang(params) {
+  const rolSnap = await getDoc(doc(db, "schoolrollen", currentUser.uid));
+  const echteRol = rolSnap.exists() ? String(rolSnap.data().rol || '').toLowerCase() : '';
+  huidigeRol = echteRol === 'beheerder'
+    ? String(localStorage.getItem('lindeSimuleerRol_' + currentUser.uid) || 'beheerder').toLowerCase()
+    : echteRol;
+  heeftSchoolbredeToegang = SCHOOLBREDE_ROLLEN.includes(huidigeRol);
+
+  targetUserId = params.get('beheerUid') || currentUser.uid;
+  beheerKlasLabel = params.get('klas') || '';
+  beheerKlasId = params.get('klasId') || beheerKlasLabel || '';
+  beheerNaamLabel = params.get('naam') || '';
+  if (heeftSchoolbredeToegang) return;
+
+  const email = String(currentUser.email || '').toLowerCase();
+  const snaps = await Promise.all([
+    getDocs(query(collection(db, 'klasleerkrachten'), where('leerkracht_uids', 'array-contains', currentUser.uid))),
+    email ? getDocs(query(collection(db, 'klasleerkrachten'), where('leerkracht_emails', 'array-contains', email))) : Promise.resolve({ docs: [] })
+  ]);
+  const eigenKlassen = new Set();
+  snaps.forEach(snap => snap.docs.forEach(d => {
+    const item = d.data() || {};
+    if (item.actief === false || String(item.schooljaar || schooljaar) !== schooljaar) return;
+    const klas = String(item.klas || item.klasId || '').trim();
+    if (klas) eigenKlassen.add(klas);
+  }));
+
+  // Een klasleerkracht werkt altijd in het eigen document. Parameters voor een
+  // andere leerkracht of klas worden genegeerd, ook bij een handmatig aangepaste URL.
+  targetUserId = currentUser.uid;
+  const gevraagdeKlas = beheerKlasId || beheerKlasLabel;
+  const eigenKlas = eigenKlassen.has(gevraagdeKlas)
+    ? gevraagdeKlas
+    : [...eigenKlassen].sort((a,b) => a.localeCompare(b, 'nl', { numeric:true }))[0] || '';
+  beheerKlasId = eigenKlas;
+  beheerKlasLabel = eigenKlas;
+  beheerNaamLabel = '';
+}
 
 let leerkrachtData = {
   leerlingen: [],
@@ -171,11 +213,7 @@ function updateBeheerHeader() {
 // --- KLASSENNAVIGATIE voor zorg/directie-rollen ---
 async function laadKlassenNavigatie() {
   try {
-    // Controleer eerst of deze gebruiker een schoolbrede rol heeft
-    const rolSnap = await getDoc(doc(db, "schoolrollen", currentUser.uid));
-    const rol = rolSnap.exists() ? String(rolSnap.data().rol || '').toLowerCase() : '';
-    const isSchoolBreed = ['directie', 'zorgcoordinator', 'zorgleerkracht', 'beheerder'].includes(rol);
-    if (!isSchoolBreed) return;  // Gewone leerkracht: geen navigatiebalk
+    if (!heeftSchoolbredeToegang) return;  // Klasleerkracht: geen navigatiebalk
 
     // Haal alle klassen op uit klasleerkrachten
     const snap = await getDocs(collection(db, 'klasleerkrachten'));
@@ -318,10 +356,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (user) {
       currentUser = user;
       const params = new URLSearchParams(window.location.search);
-      targetUserId = params.get('beheerUid') || currentUser.uid;
-      beheerKlasLabel = params.get('klas') || '';
-      beheerKlasId = params.get('klasId') || beheerKlasLabel || '';
-      beheerNaamLabel = params.get('naam') || '';
+      await bepaalDashboardToegang(params);
       huidigeModus = params.get('modus') || null;
       window.huidigeModus = huidigeModus;
       toonDashboardLaadstandVoorModus(huidigeModus);
@@ -340,6 +375,10 @@ function setupEventListeners() {
   document.getElementById('logoutBtn').addEventListener('click', () => signOut(auth));
   document.getElementById('wijzigWachtwoordBtn').addEventListener('click', wijzigWachtwoord);
   document.getElementById('nieuwSchooljaarBtn').addEventListener('click', startNieuwSchooljaar);
+  const gedragKnop = document.querySelector('button.gedrag');
+  if (gedragKnop) gedragKnop.onclick = () => {
+    window.location.href = 'gedragsopvolging.html' + window.location.search;
+  };
   document.getElementById('kiesModusWeek').addEventListener('click', () => setModus('week'));
   document.getElementById('kiesModusDag').addEventListener('click', () => setModus('dag'));
   document.getElementById('wisselModusBtn').addEventListener('click', wisselModus);
