@@ -1664,7 +1664,17 @@ async function persistActiveGroup(doneText){
     const tekst=doneText||("Bewaard om "+new Date().toLocaleTimeString("nl-BE",{hour:"2-digit",minute:"2-digit"}));
     setStatus(tekst);
   }catch(e){
-    const msg="Bewaren lukte niet. Waarschijnlijk ontbreken de Firebase-regels voor zorggroepen of zijn ze nog niet gepubliceerd.";
+    console.error("Groeigroep bewaren mislukt",e);
+    const code=String(e?.code||"onbekende-fout").replace(/^firestore\//,"");
+    const uitleg=code==="permission-denied"
+      ? "Firebase weigert de schrijfrechten voor dit account."
+      : code==="invalid-argument"
+        ? "Een ingevuld gegeven heeft een vorm die Firebase niet kan bewaren."
+        : code==="resource-exhausted"
+          ? "Deze groeigroep is te groot geworden om als één document te bewaren."
+          : "Firebase gaf een technische fout terug.";
+    const detail=String(e?.message||"").replace(/\s+/g," ").trim();
+    const msg=`Bewaren lukte niet. ${uitleg}\n\nFoutcode: ${code}${detail?`\nDetails: ${detail}`:""}`;
     setStatus(msg);
     alert(msg);
     throw e;
