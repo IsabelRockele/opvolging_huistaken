@@ -308,7 +308,8 @@ button:disabled{opacity:.5;cursor:not-allowed}
 // ── FIREBASE ──
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-import { getFirestore, doc, getDoc, getDocs, setDoc, collection, query, where, orderBy, serverTimestamp, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getFirestore, doc, getDoc, getDocs, setDoc as firestoreSetDoc, collection, query, where, orderBy, serverTimestamp, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { probeerVeiligheidskopie } from "./firebase-veiligheid.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyA7KxXMvZ4dzBQDut3CMyWUblLte2tFzoQ",
@@ -381,6 +382,19 @@ function projectRef() {
     return doc(db, "oudercontacten", schooljaar, "projecten", `klas_${klasKey}`);
   }
   return doc(db, "oudercontacten", schooljaar, "projecten", targetUid || currentUser.uid);
+}
+
+async function setDoc(ref, payload, options) {
+  await probeerVeiligheidskopie(ref, {
+    reden: 'Oudercontact vóór opslag', schooljaar,
+    klas: activeKlasId || activeKlasNaam || beheerKlas || '',
+    gebruiker: currentUser?.email || currentUser?.uid || ''
+  }, (melding, err) => {
+    console.warn(melding, err);
+    const status = document.getElementById('saveStatusText');
+    if (status) status.textContent = 'Let op: reservekopie mislukt';
+  });
+  return firestoreSetDoc(ref, payload, options);
 }
 
 async function saveToFirebase() {

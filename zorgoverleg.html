@@ -140,7 +140,8 @@
 <script type="module">
 import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-import { getFirestore, doc, getDoc, setDoc, collection, getDocs, query, where, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getFirestore, doc, getDoc, setDoc as firestoreSetDoc, collection, getDocs, query, where, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { probeerVeiligheidskopie } from "./firebase-veiligheid.js";
 const firebaseConfig={apiKey:"AIzaSyA7KxXMvZ4dzBQDut3CMyWUblLte2tFzoQ",authDomain:"huiswerkapp-a311e.firebaseapp.com",projectId:"huiswerkapp-a311e",storageBucket:"huiswerkapp-a311e.appspot.com",messagingSenderId:"797169941164",appId:"1:797169941164:web:511d9618079f1378d0fd09"};
 const app=getApps().length?getApp():initializeApp(firebaseConfig), auth=getAuth(app), db=getFirestore(app);
 const DEFAULT_CLASSES=["K1","K2","K3","1A","2A","3A","4A","5A","6A"], $=id=>document.getElementById(id);
@@ -149,6 +150,10 @@ const BEWAAR_JAREN_PER_STARTKLAS = { K1:12, K2:11, K3:10, "1A":9, "2A":8, "3A":7
 const EERSTE_APP_SCHOOLJAAR = "2025-2026";
 const esc=v=>String(v??"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;");
 let user=null, role="", schooljaar=huidigSchooljaar(), classes=[], activeKlas="", maand="", leerlingen=[], data={entries:{},groupActions:[]}, previousData={entries:{},groupActions:[]}, overlegHistoriek=[], activeStudentIndex=0, activeField="werkhouding", fullFicheMode=false;
+async function setDoc(ref,payload,options){
+  await probeerVeiligheidskopie(ref,{reden:"Zorgoverleg vóór opslag",schooljaar,klas:activeKlas,gebruiker:user?.email||user?.uid||""},(melding,err)=>{console.warn(melding,err);const status=document.getElementById("status");if(status)status.textContent="Let op: reservekopie mislukt";});
+  return firestoreSetDoc(ref,payload,options);
+}
 function huidigSchooljaar(){const n=new Date(), y=n.getMonth()>=7?n.getFullYear():n.getFullYear()-1;return `${y}-${y+1}`;}
 function bewaarTotVoorSchooljaar(jaar=schooljaar, extraJaren=BEWAAR_JAREN_ZORGOVERLEG){return `${Number(String(jaar).slice(0,4))+extraJaren}-08-31`;}
 function bewaarJarenVoorKlas(klas){const key=String(klas||"").trim().toUpperCase();return BEWAAR_JAREN_PER_STARTKLAS[key]||BEWAAR_JAREN_ZORGOVERLEG;}

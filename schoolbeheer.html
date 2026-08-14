@@ -896,7 +896,8 @@
   <script type="module">
     import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
     import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-    import { getFirestore, doc, getDoc, setDoc, deleteDoc, onSnapshot, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    import { getFirestore, doc, getDoc, setDoc as firestoreSetDoc, deleteDoc as firestoreDeleteDoc, onSnapshot, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    import { maakVeiligheidskopie, probeerVeiligheidskopie } from "./firebase-veiligheid.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyA7KxXMvZ4dzBQDut3CMyWUblLte2tFzoQ",
@@ -924,6 +925,27 @@
         activityMonth = "", purchaseMonth = "",
         tab = "administratie", adminPanel = "klaslijsten", classListMode = "", saveTimer = null;
     $("schooljaarInput").value = schooljaar;
+
+    async function schoolbeheerVeiligheidskopie(ref, reden, forceer=false){
+      return probeerVeiligheidskopie(ref, {
+        reden, forceer, schooljaar, klas: activeClass,
+        gebruiker: user?.email || user?.uid || ''
+      }, (melding, err) => {
+        console.warn(melding, err);
+        setStatus('Let op: reservekopie mislukt');
+      });
+    }
+    async function setDoc(ref, payload, options){
+      await schoolbeheerVeiligheidskopie(ref, 'Schoolbeheer vóór opslag');
+      return firestoreSetDoc(ref, payload, options);
+    }
+    async function deleteDoc(ref){
+      await maakVeiligheidskopie(ref, {
+        reden: 'Schoolbeheer vóór verwijderen', forceer: true, schooljaar,
+        klas: activeClass, gebruiker: user?.email || user?.uid || ''
+      });
+      return firestoreDeleteDoc(ref);
+    }
 
     const standardFree = [
       {naam:"Herfstvakantie",start:"2026-11-02",end:"2026-11-08"},

@@ -1,9 +1,10 @@
 ﻿// Importeer Firebase services
 import { getAuth, onAuthStateChanged, signOut, updatePassword } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import {
-  getFirestore, doc, onSnapshot, setDoc, updateDoc, getDoc, getDocs, collection, query, where,
+  getFirestore, doc, onSnapshot, setDoc as firestoreSetDoc, updateDoc as firestoreUpdateDoc, getDoc, getDocs, collection, query, where,
   arrayUnion, arrayRemove, deleteField
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { probeerVeiligheidskopie } from "./firebase-veiligheid.js";
 
 const auth = getAuth();
 const db = getFirestore();
@@ -31,6 +32,29 @@ const schooljaar = (() => {
 })();
 const schooljaarKey = schooljaar.replace(/[^a-z0-9]+/gi, "_");
 const SCHOOLBREDE_ROLLEN = ['directie', 'zorgcoordinator', 'zorgleerkracht', 'beheerder'];
+
+async function dashboardVeiligheidskopie(ref, reden) {
+  return probeerVeiligheidskopie(ref, {
+    reden,
+    schooljaar,
+    klas: beheerKlasId || beheerKlasLabel || '',
+    gebruiker: currentUser?.email || currentUser?.uid || ''
+  }, (melding, err) => {
+    console.warn(melding, err);
+    const status = document.getElementById('saveStatusText');
+    if (status) status.textContent = 'Let op: reservekopie mislukt';
+  });
+}
+
+async function setDoc(ref, data, options) {
+  await dashboardVeiligheidskopie(ref, 'Huistaken vóór opslag');
+  return firestoreSetDoc(ref, data, options);
+}
+
+async function updateDoc(ref, data) {
+  await dashboardVeiligheidskopie(ref, 'Huistaken vóór wijziging');
+  return firestoreUpdateDoc(ref, data);
+}
 
 async function bepaalDashboardToegang(params) {
   const rolSnap = await getDoc(doc(db, "schoolrollen", currentUser.uid));

@@ -91,12 +91,17 @@
 <script type="module">
 import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-import { getFirestore, doc, getDoc, setDoc, collection, getDocs, query, where, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getFirestore, doc, getDoc, setDoc as firestoreSetDoc, collection, getDocs, query, where, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { probeerVeiligheidskopie } from "./firebase-veiligheid.js";
 const firebaseConfig={apiKey:"AIzaSyA7KxXMvZ4dzBQDut3CMyWUblLte2tFzoQ",authDomain:"huiswerkapp-a311e.firebaseapp.com",projectId:"huiswerkapp-a311e",storageBucket:"huiswerkapp-a311e.appspot.com",messagingSenderId:"797169941164",appId:"1:797169941164:web:511d9618079f1378d0fd09"};
 const app=getApps().length?getApp():initializeApp(firebaseConfig), auth=getAuth(app), db=getFirestore(app);
 const DEFAULT_CLASSES=["K1","K2","K3","1A","2A","3A","4A","5A","6A"], COLORS=["#93c47d","#6fa8dc","#ffd966","#e6a5c8","#b4a7d6","#76a5af","#f6b26b","#8fce00","#c27ba0"];
 const $=id=>document.getElementById(id), esc=v=>String(v??"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;");
 let user=null, role="", schooljaar=currentSchooljaar(), month=currentMonth(), date=todayIso(), ownClasses=[], allClasses=[], classStudents={}, hw={enrolled:{},attendance:{}};
+async function setDoc(ref,payload,options){
+  await probeerVeiligheidskopie(ref,{reden:"Huiswerkklas vóór opslag",schooljaar,klas:"schoolbreed",gebruiker:user?.email||user?.uid||""},(melding,err)=>{console.warn(melding,err);const status=document.getElementById("status");if(status)status.textContent="Let op: reservekopie mislukt";});
+  return firestoreSetDoc(ref,payload,options);
+}
 const BEWAAR_JAREN_HUISWERKKLAS=2;
 function currentSchooljaar(){const n=new Date(), y=n.getMonth()>=7?n.getFullYear():n.getFullYear()-1;return `${y}-${y+1}`;}
 function currentMonth(){return new Date().toISOString().slice(0,7);}

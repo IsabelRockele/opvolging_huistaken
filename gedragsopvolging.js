@@ -23,10 +23,11 @@ import {
   query,
   where,
   onSnapshot,
-  setDoc,
-  updateDoc,
+  setDoc as firestoreSetDoc,
+  updateDoc as firestoreUpdateDoc,
   deleteField,
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { probeerVeiligheidskopie } from "./firebase-veiligheid.js";
 
 // ⚠️ Dit is dezelfde config als in script.js (huiswerkapp-a311e)
 const firebaseConfig = {
@@ -75,6 +76,25 @@ const gedragSchooljaar = (() => {
   const start = now.getMonth() >= 7 ? now.getFullYear() : now.getFullYear() - 1;
   return `${start}-${start + 1}`;
 })();
+
+async function gedragVeiligheidskopie(ref, reden) {
+  return probeerVeiligheidskopie(ref, {
+    reden,
+    schooljaar: gedragSchooljaar,
+    klas: actieveKlas,
+    gebruiker: currentUser?.email || currentUser?.uid || ''
+  }, (melding, err) => console.warn(melding, err));
+}
+
+async function setDoc(ref, data, options) {
+  await gedragVeiligheidskopie(ref, 'Gedragsopvolging vóór opslag');
+  return firestoreSetDoc(ref, data, options);
+}
+
+async function updateDoc(ref, data) {
+  await gedragVeiligheidskopie(ref, 'Gedragsopvolging vóór wijziging');
+  return firestoreUpdateDoc(ref, data);
+}
 
 function gedragNaam(s) {
   return String(s?.naam || s?.name || `${s?.first || s?.firstName || ''} ${s?.last || s?.lastName || ''}`)

@@ -1117,7 +1117,8 @@
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-import { getFirestore, collection, doc, getDoc, getDocs, query, setDoc, serverTimestamp, where } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getFirestore, collection, doc, getDoc, getDocs, query, setDoc as firestoreSetDoc, serverTimestamp, where } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { probeerVeiligheidskopie } from "./firebase-veiligheid.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyA7KxXMvZ4dzBQDut3CMyWUblLte2tFzoQ",
@@ -1152,6 +1153,19 @@ const schooljaar = (() => {
 const BEWAAR_JAREN_OVERGANG = 12; // Maximum: K1 tot einde lager onderwijs plus marge.
 const BEWAAR_JAREN_PER_STARTKLAS = { K1:12, K2:11, K3:10, "1A":9, "2A":8, "3A":7, "4A":6, "5A":5, "6A":4 };
 const BEWAAR_JAREN_SCHOOLBEHEER = 2; // Aanpasbaar: klaslijsten/refter/activiteiten/aankopen bewaren tot eind augustus na dit aantal schooljaren.
+
+async function setDoc(ref, data, options) {
+  await probeerVeiligheidskopie(ref, {
+    reden: 'Overgangsbespreking vóór opslag',
+    schooljaar,
+    klas: beheerKlasLabel || data?.klas || '',
+    gebruiker: currentUser?.email || currentUser?.uid || ''
+  }, (melding, err) => {
+    console.warn(melding, err);
+    document.getElementById('firebaseStatus')?.replaceChildren(document.createTextNode('Let op: reservekopie mislukt; gegevens worden wel bewaard.'));
+  });
+  return firestoreSetDoc(ref, data, options);
+}
 
 function bewaarTotVoorSchooljaar(jaar, extraJaren) {
   return `${Number(String(jaar).slice(0, 4)) + extraJaren}-08-31`;
@@ -1591,7 +1605,8 @@ window.dispatchEvent(new Event('firebaseOvergangReady'));
 <script type="module">
 import { initializeApp, getApp, getApps } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-import { getFirestore, collection, doc, getDocs, query, serverTimestamp, setDoc, updateDoc, where } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getFirestore, collection, doc, getDocs, query, serverTimestamp, setDoc as firestoreSetDoc, updateDoc as firestoreUpdateDoc, where } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { probeerVeiligheidskopie } from "./firebase-veiligheid.js";
 
 const firebaseConfigSchoolflow = {
   apiKey: "AIzaSyA7KxXMvZ4dzBQDut3CMyWUblLte2tFzoQ",
@@ -1624,6 +1639,25 @@ const sfSchooljaar = (() => {
   const y = now.getMonth() >= 8 ? now.getFullYear() : now.getFullYear() - 1;
   return `${y}-${y + 1}`;
 })();
+
+async function sfVeiligheidskopie(ref, reden) {
+  return probeerVeiligheidskopie(ref, {
+    reden,
+    schooljaar: sfSchooljaar,
+    klas: String(window.beheerKlasLabel || ''),
+    gebruiker: sfUser?.email || sfUser?.uid || ''
+  }, (melding, err) => console.warn(melding, err));
+}
+
+async function setDoc(ref, data, options) {
+  await sfVeiligheidskopie(ref, 'Overdrachtsdossier vóór opslag');
+  return firestoreSetDoc(ref, data, options);
+}
+
+async function updateDoc(ref, data) {
+  await sfVeiligheidskopie(ref, 'Overdrachtsdossier vóór wijziging');
+  return firestoreUpdateDoc(ref, data);
+}
 
 let sfUser = null;
 const sfReady = new Promise(resolve => {

@@ -4,9 +4,10 @@
 import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import {
-  getFirestore, doc, onSnapshot, setDoc, updateDoc, getDoc,
+  getFirestore, doc, onSnapshot, setDoc as firestoreSetDoc, updateDoc as firestoreUpdateDoc, getDoc,
   collection, query, where, getDocs, arrayUnion, arrayRemove, serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { probeerVeiligheidskopie } from "./firebase-veiligheid.js";
 
 // Firebase-config (zelfde als script.js/dashboard.js van de huiswerkapp)
 const firebaseConfig = {
@@ -33,6 +34,23 @@ let teamUnsubscribe = null; // voor realtime listener
 let huidigLeerjaar = 'L1'; // voor werkboeken schakelaar
 let knutselFilter = 'alle';
 let geselecteerdeCatId = null; // voor stock accordion
+
+async function bestellingVeiligheidskopie(ref, reden) {
+  return probeerVeiligheidskopie(ref, {
+    reden,
+    schooljaar: teamData?.instellingen?.schooljaar || '',
+    klas: teamData?.instellingen?.klas || teamId || '',
+    gebruiker: huidigeUser?.email || huidigeUser?.uid || ''
+  }, (melding, err) => console.warn(melding, err));
+}
+async function setDoc(ref, payload, options) {
+  await bestellingVeiligheidskopie(ref, 'Bestellingen vóór opslag');
+  return firestoreSetDoc(ref, payload, options);
+}
+async function updateDoc(ref, payload) {
+  await bestellingVeiligheidskopie(ref, 'Bestellingen vóór wijziging');
+  return firestoreUpdateDoc(ref, payload);
+}
 let aanHetBewarenBezig = false;
 let bewaarTimer = null;
 
