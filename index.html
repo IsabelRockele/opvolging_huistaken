@@ -133,6 +133,10 @@
       flex-wrap: wrap;
       margin-top: 14px;
     }
+    .auth-korte-uitleg{max-width:520px;margin:-8px auto 16px;color:var(--tekst-zacht);font-size:.93em;line-height:1.45}
+    .auth-keuzes{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px;text-align:left}
+    .auth-keuze{border:1px solid var(--rand);border-radius:13px;padding:14px;background:#fafbf9}.auth-keuze:first-child{background:#fff9df;border-color:#ead17a}.auth-keuze strong{display:block;margin-bottom:4px}.auth-keuze p{font-size:.86em;color:var(--tekst-zacht);line-height:1.4;margin:0 0 10px}.auth-keuze button{width:100%;min-width:0!important}
+    .auth-keuze .registreer-knop{background:var(--geel-zacht)!important;color:var(--tekst)!important}.auth-keuze .login-knop{background:var(--accent)!important;color:var(--wit)!important}
 
     #auth button {
       padding: 11px 22px;
@@ -392,7 +396,7 @@
       .hoofdbanner h1 { font-size: 1.2em; }
       .hoofdbanner .logo { height: 52px; }
       #auth { padding: 22px 20px; }
-      .auth-knoppen { flex-direction: column; }
+      .auth-knoppen { flex-direction: column; }.auth-keuzes{grid-template-columns:1fr}
       #auth button { width: 100%; }
     }
     /* Brede startpagina met meer gebruik van de ruimte */
@@ -1107,16 +1111,17 @@
     </div>
   </div>
   <div id="auth" style="display:none;">
-    <h2>&#128272; Inloggen of registreren</h2>
+    <h2>&#128272; Toegang tot de schooltool</h2>
+    <p class="auth-korte-uitleg">Vul eerst je klasmail in en kies of vul je wachtwoord in. Kies daarna hieronder de juiste situatie.</p>
     <input type="email" id="email" placeholder="E-mailadres" />
     <div class="wachtwoord-veld-wrap"><input type="password" id="password" placeholder="Wachtwoord" /><button type="button" class="toon-wachtwoord-knop" onclick="toggleWachtwoordZichtbaar()" title="Wachtwoord tonen of verbergen">&#128065;</button></div>
-    <div class="auth-knoppen">
-      <button onclick="register()">Registreren</button>
-      <button onclick="login()">Inloggen</button>
+    <div class="auth-keuzes">
+      <div class="auth-keuze"><strong>Eerste keer op deze tool?</strong><p>Kies zelf een wachtwoord van minstens 6 tekens en maak één keer je account aan.</p><button class="registreer-knop" onclick="register()">Eerste keer? Registreren</button></div>
+      <div class="auth-keuze"><strong>Heb je de tool al gebruikt?</strong><p>Gebruik hetzelfde e-mailadres en wachtwoord als de vorige keer.</p><button class="login-knop" onclick="login()">Inloggen</button></div>
     </div>
 
     <div class="wachtwoord-opties">
-      <a href="#" onclick="wachtwoordVergeten()">Wachtwoord vergeten?</a>
+      <a href="#" onclick="wachtwoordVergeten()">Wachtwoord vergeten?</a><br><small>Vul hierboven eerst je klasmail of het vroeger gebruikte privéadres in.</small>
     </div>
   </div>
 

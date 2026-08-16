@@ -292,7 +292,7 @@ window.register = function () {
   const password = document.getElementById("password").value;
   createUserWithEmailAndPassword(auth, email, password)
     .then((userCredential) => {
-      alert("Account aangemaakt! U kunt nu inloggen.");
+      alert("Account aangemaakt! Je bent nu ingelogd.");
     })
     .catch((error) => {
       if (error.code === 'auth/email-already-in-use') {
