@@ -1107,10 +1107,18 @@
       $("content").innerHTML = `<div class="panel"><h2>Laden</h2><p class="muted">We halen ${esc(activeClass)} op.</p></div>`;
       unsub = onSnapshot(classRef(), snap => {
         if(!snap.exists()){
-          data = null;
-          $("messages").innerHTML = "";
-          toonKlasNietGestart(activeClass);
-          setStatus("Nog niet gestart");
+          if(isSecretary()){
+            data=emptyClassDoc(activeClass);
+            normalize();
+            setStatus("Nieuwe klaslijst");
+            render();
+            renderKlasPills();
+          }else{
+            data = null;
+            $("messages").innerHTML = "";
+            toonKlasNietGestart(activeClass);
+            setStatus("Nog niet gestart");
+          }
           return;
         }
         data = snap.data();
@@ -1145,7 +1153,7 @@
         ${isSecretary()?`<div class="notice" style="margin-top:14px">
           <strong>Nieuwe klaslijst maken voor ${esc(klas)}</strong>
           <p class="muted">Start eerst een lege klaslijst. Daarna kun je de namen uit Excel importeren, een volledige lijst plakken of leerlingen één voor één toevoegen. Dit werkt voor K1, K2, K3 en alle lagere-schoolklassen.</p>
-          <button class="green" onclick="startLegeKlaslijst('${esc(klas)}')">Lege klaslijst voor ${esc(klas)} starten</button>
+          <button class="green" onclick="openClass('${esc(klas)}')">Klaslijst voor ${esc(klas)} openen</button>
         </div>`:""}
         ${kandidaten.length ? `<div class="notice" style="margin-top:14px">
           <strong>Ik vond ${esc(klas)} wel in een ander schooljaar.</strong>
@@ -1185,14 +1193,6 @@
       await saveNow();
       render();
       alert(`Leerlingdatums hersteld naar ${schooljaar}.`);
-    };
-    window.startLegeKlaslijst=async function(klas){
-      if(!isSecretary())return;
-      const ref=doc(db,"schoolbeheer",schooljaar,"klassen",klas),snap=await getDoc(ref);
-      if(snap.exists())return openClass(klas);
-      if(!confirm(`Een lege klaslijst voor ${klas} starten in ${schooljaar}?`))return;
-      await setDoc(ref,emptyClassDoc(klas));
-      await openClass(klas);
     };
 
     async function startClass(){
@@ -1815,7 +1815,7 @@
         <section class="wegwijzer-intro"><h3 style="margin-top:0">Waarmee wil je beginnen?</h3><p style="margin-bottom:0">Klik alleen de taak open die je nu nodig hebt. Kies bovenaan eerst het juiste <strong>schooljaar</strong> en links de juiste <strong>klas</strong>. Bij twijfel verander je niets en open je eerst het stappenplan.</p></section>
         <div class="wegwijzer-grid">
           ${wegwijzerKaart("🏫","Een klaslijst starten","Voor K1, K2, K3 en alle lagere-schoolklassen.",[
-            "Kies bovenaan het juiste schooljaar en klik links op de klas.","Bestaat de klaslijst nog niet? Klik op <strong>Lege klaslijst starten</strong>.","Voeg daarna de namen toe via <strong>Excel importeren</strong>, <strong>Klaslijst plakken</strong> of <strong>Nieuwe leerling</strong>.","Controleer de namen in de gewone klaslijst."
+            "Kies bovenaan het juiste schooljaar en klik links op de klas.","Heeft de klas nog geen leerlingen? Dan verschijnt automatisch <strong>Nieuwe klaslijst maken</strong>.","Kies <strong>Start met Excel</strong>, <strong>Start met lijst plakken</strong> of <strong>Voeg eerste leerling toe</strong>.","Controleer daarna de namen in de gewone klaslijst."
           ],`<button class="green" onclick="gaNaarSecretariaatTaak('klaslijsten')">Ga naar Klaslijsten</button>`)}
           ${wegwijzerKaart("👧","Een nieuwe leerling toevoegen","Voor een leerling die later bij de klas komt.",[
             "Kies links de klas waarin de leerling start.","Open <strong>Klaslijsten</strong> en kies <strong>Nieuwe leerling</strong>.","Vul voornaam, achternaam en startdatum in.","Controleer de naam en bewaar. De leerling verschijnt ook automatisch bij etiketten en afwezigheden."
@@ -1863,6 +1863,15 @@
       </div>`;
     }
     function renderClassList(){ $("content").innerHTML = `<div class="panel"><h2>Klaslijst <span class="muted" style="font-weight:400">${esc(activeClass)}</span></h2>${classListContent()}</div>`; }
+
+    function legeKlasStartkaart(){
+      if(!isSecretary()||(data?.leerlingen||[]).length) return "";
+      return `<section class="notice no-print" style="margin:12px 0 14px">
+        <h3>Nieuwe klaslijst maken voor ${esc(activeClass)}</h3>
+        <p class="muted">Deze klas heeft nog geen leerlingen. Kies één manier om te starten; dit werkt identiek voor K1, K2, K3 en 1A tot en met 6A.</p>
+        <div class="action-row"><button class="green small" onclick="openClassListTool('excel')">📊 Start met Excel</button><button class="green small" onclick="openClassListTool('plakken')">📋 Start met lijst plakken</button><button class="green small" onclick="openClassListTool('nieuw')">＋ Voeg eerste leerling toe</button></div>
+      </section>`;
+    }
 
             function classListContent(){
       const canManageClasses = isSecretary();
@@ -1943,6 +1952,7 @@
       }
 
       return `<div class="bar"><p class="muted">Namen kan je bewerken bij typfouten. Uitschrijven bewaart vorige gegevens.</p>${screenTools("klaslijst")}</div>${helpPanel("klaslijst")}
+        ${legeKlasStartkaart()}
         ${toolButtons}
         ${toolPanel}
         <div class="class-list-heading">
