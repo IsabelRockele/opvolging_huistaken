@@ -209,6 +209,11 @@ window.sluitBeheerderHulp = function () {
 };
 window.openGebruikersHulp = function () { document.getElementById('gebruikersHulp')?.classList.add('open'); };
 window.sluitGebruikersHulp = function () { document.getElementById('gebruikersHulp')?.classList.remove('open'); };
+window.openHulpbericht = function () {
+  const onderdeel = document.getElementById('hulpberichtDetails');
+  if (onderdeel) { onderdeel.open = true; onderdeel.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
+  window.maakProbleemtekst();
+};
 window.sluitEersteKeerChecklist = function () {
   const sleutel = 'lindeEersteChecklist_' + (auth.currentUser?.uid || 'onbekend');
   localStorage.setItem(sleutel, 'klaar');
@@ -219,7 +224,7 @@ window.sluitEersteKeerChecklist = function () {
 };
 window.maakProbleemtekst = async function () {
   const tekst = [
-    'Hulpvraag schooltool',
+    'Hulpbericht schooltool',
     `E-mailadres: ${auth.currentUser?.email || 'onbekend'}`,
     `Pagina: ${location.href}`,
     `Tijdstip: ${new Date().toLocaleString('nl-BE')}`,
@@ -233,8 +238,8 @@ window.maakProbleemtekst = async function () {
   ].join('\n');
   const veld = document.getElementById('probleemtekst');
   if (veld) veld.value = tekst;
-  try { await navigator.clipboard.writeText(tekst); alert('De probleemtekst is gekopieerd. Vul de drie vragen nog aan.'); }
-  catch { alert('De probleemtekst staat klaar. Selecteer en kopieer hem uit het tekstvak.'); }
+  try { await navigator.clipboard.writeText(tekst); alert('Het hulpbericht is gekopieerd. Vul de drie vragen nog aan.'); }
+  catch { alert('Het hulpbericht staat klaar. Selecteer en kopieer het uit het tekstvak.'); }
 };
 
 // Zet gesimuleerde rol om naar isSchoolBreed / isSecretariaat / heeftKlasbeheer
