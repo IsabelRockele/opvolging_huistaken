@@ -106,11 +106,13 @@ function pasKnoppenToe(huistakenKnop, overgangKnop, schoolbeheerKnop, bestelling
   const hulpbalk = document.getElementById('portaalHulpbalk');
   const checklist = document.getElementById('eersteKeerChecklist');
   const magGebruikershulp = isSchoolBreed || isSecretariaat || heeftKlasbeheer;
-  if (hulpbalk) hulpbalk.style.display = magGebruikershulp ? 'flex' : 'none';
+  let toonChecklist = false;
   if (checklist) {
     const sleutel = 'lindeEersteChecklist_' + (auth.currentUser?.uid || 'onbekend');
-    checklist.style.display = heeftKlasbeheer && !isSchoolBreed && !isSecretariaat && localStorage.getItem(sleutel) !== 'klaar' ? 'block' : 'none';
+    toonChecklist = heeftKlasbeheer && !isSchoolBreed && !isSecretariaat && localStorage.getItem(sleutel) !== 'klaar';
+    checklist.style.display = toonChecklist ? 'flex' : 'none';
   }
+  if (hulpbalk) hulpbalk.style.display = magGebruikershulp && !toonChecklist ? 'flex' : 'none';
 
   // Secretariaat houdt Klasorganisatie bewust eenvoudig: alleen afwezigheidsattesten.
   const organisatieTegels = document.querySelectorAll('.organisatieblok .portaal-tegel');
@@ -212,6 +214,8 @@ window.sluitEersteKeerChecklist = function () {
   localStorage.setItem(sleutel, 'klaar');
   const box = document.getElementById('eersteKeerChecklist');
   if (box) box.style.display = 'none';
+  const hulpbalk = document.getElementById('portaalHulpbalk');
+  if (hulpbalk) hulpbalk.style.display = 'flex';
 };
 window.maakProbleemtekst = async function () {
   const tekst = [
