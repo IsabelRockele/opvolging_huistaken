@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="nl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Naametiketten · De Linde</title>
+  <style>
+    :root{--ink:#263238;--muted:#68757d;--green:#386b4a;--green2:#e7f2e9;--paper:#fff;--bg:#f4f0e7;--line:#d8d3c8}
+    *{box-sizing:border-box} body{margin:0;font-family:Arial,sans-serif;color:var(--ink);background:var(--bg)}
+    header{background:var(--green);color:#fff;padding:15px 22px;display:flex;align-items:center;gap:14px;box-shadow:0 2px 10px #0002}
+    header img{width:44px;height:44px;object-fit:contain;background:#fff;border-radius:10px;padding:4px} header h1{font-size:21px;margin:0} header p{margin:3px 0 0;opacity:.86;font-size:13px}
+    header a{margin-left:auto;color:#fff;text-decoration:none;border:1px solid #ffffff66;padding:8px 12px;border-radius:9px;font-weight:700}
+    main{max-width:1180px;margin:24px auto;padding:0 18px 40px;display:grid;grid-template-columns:minmax(300px,390px) 1fr;gap:22px}
+    .panel{background:var(--paper);border:1px solid var(--line);border-radius:16px;padding:20px;box-shadow:0 6px 18px #584e3812}.panel h2{margin:0 0 8px;font-size:21px}.muted{color:var(--muted);line-height:1.45}
+    label{display:block;font-size:13px;font-weight:700;margin-top:15px} select,input{width:100%;margin-top:6px;border:1px solid #bfc7c1;border-radius:9px;padding:10px 11px;font:inherit;background:#fff}
+    .keuzes{display:grid;gap:8px;margin-top:8px}.keuze{display:flex;gap:10px;align-items:flex-start;border:1px solid var(--line);border-radius:10px;padding:10px;cursor:pointer}.keuze:has(input:checked){border-color:var(--green);background:var(--green2)}.keuze input{width:auto;margin:2px 0}.keuze strong,.keuze span{display:block}.keuze span{font-size:12px;color:var(--muted);margin-top:3px}
+    button{border:0;border-radius:10px;padding:12px 15px;font:700 15px Arial;cursor:pointer}button.primary{width:100%;margin-top:18px;background:var(--green);color:#fff}button:disabled{opacity:.5;cursor:not-allowed}
+    .status{margin-top:14px;padding:10px 12px;border-radius:9px;background:#f3f5f3;font-size:13px}.namen-kop{display:flex;align-items:center;gap:7px;margin-top:14px}.namen-kop strong{font-size:13px}.mini{padding:5px 8px;background:#eef2ef;color:var(--green);font-size:11px}.namen{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;margin-top:8px;max-height:260px;overflow:auto}.naam{display:flex;align-items:center;gap:7px;background:#f5f7f5;border:1px solid #e1e6e2;border-radius:9px;padding:7px 9px;font-size:12px;font-weight:400;margin:0;cursor:pointer}.naam:has(input:checked){background:var(--green2);border-color:#a9c4af}.naam input{width:auto;margin:0}
+    .preview-kop{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}.badge{background:var(--green2);color:var(--green);border-radius:999px;padding:6px 10px;font-size:12px;font-weight:700;white-space:nowrap}
+    .vel-wrap{overflow:auto;margin-top:15px;background:#dedbd3;padding:18px;border-radius:12px}.vel{width:min(100%,630px);aspect-ratio:210/297;background:#fff;display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(8,1fr);margin:auto;box-shadow:0 2px 9px #0002}.etiket{display:flex;align-items:center;justify-content:center;text-align:center;overflow:hidden;border:1px dashed #ddd;font-family:Arial,sans-serif;font-weight:700;line-height:1;white-space:nowrap;padding:0 3%}
+    .uitleg{font-size:12px;color:var(--muted);margin-top:12px;line-height:1.45}
+    @media(max-width:820px){main{grid-template-columns:1fr}.vel{min-width:520px}}
+  </style>
+</head>
+<body>
+  <header><img src="afbeeldingen/schoollogo.png" alt="Logo"><div><h1>Naametiketten</h1><p>Lyreco · 24 etiketten op één A4</p></div><a href="index.html">Keuzescherm</a></header>
+  <main>
+    <section class="panel">
+      <h2>Etiketten maken</h2>
+      <p class="muted">De voornamen komen automatisch uit de centrale klaslijst.</p>
+      <label>Schooljaar<input id="schooljaar" autocomplete="off"></label>
+      <label>Klas<select id="klas"><option>Even laden…</option></select></label>
+      <label>Schrijfwijze<select id="schrijfwijze"><option value="hoofdletter">Met hoofdletter (standaard)</option><option value="klein">Zonder hoofdletters</option></select></label>
+      <label>Verdeling</label>
+      <div class="keuzes">
+        <label class="keuze"><input type="radio" name="modus" value="volblad" checked><span><strong>Volledig blad per kind</strong><span>24 dezelfde etiketten per leerling.</span></span></label>
+        <label class="keuze"><input type="radio" name="modus" value="halfblad"><span><strong>Half blad per kind</strong><span>12 etiketten per leerling, twee kinderen per blad.</span></span></label>
+        <label class="keuze"><input type="radio" name="modus" value="eenmaal"><span><strong>Alle namen compact</strong><span>Elke leerling één keer; vanaf 25 leerlingen gaat Word automatisch verder op een tweede blad.</span></span></label>
+      </div>
+      <div id="status" class="status">Je login en klaslijst worden gecontroleerd.</div>
+      <div class="namen-kop"><strong>Kinderen voor deze afdruk</strong><button id="selecteerAlles" class="mini" type="button">Alles</button><button id="selecteerGeen" class="mini" type="button">Geen</button></div>
+      <div id="namen" class="namen"></div>
+      <button id="download" class="primary" disabled>Word-bestand downloaden</button>
+      <p class="uitleg">Open het bestand in Word en druk af op 100% of “Werkelijke grootte”. Kies niet voor “Aanpassen aan pagina”.</p>
+    </section>
+    <section class="panel">
+      <div class="preview-kop"><div><h2>Voorbeeld van het eerste blad</h2><p class="muted" style="margin:4px 0 0">Arial 48 pt vet; lange namen worden automatisch verkleind.</p></div><span id="bladBadge" class="badge">0 bladen</span></div>
+      <div class="vel-wrap"><div id="preview" class="vel"></div></div>
+    </section>
+  </main>
+  <script type="module" src="naametiketten.js"></script>
+</body>
+</html>

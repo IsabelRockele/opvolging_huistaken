@@ -75,6 +75,8 @@ function pasKnoppenToe(huistakenKnop, overgangKnop, schoolbeheerKnop, bestelling
   if (zorgoverlegKnop) zorgoverlegKnop.style.display = (isSchoolBreed || heeftKlasbeheer) ? '' : 'none';
   if (huiswerkklasKnop) huiswerkklasKnop.style.display = (isSchoolBreed || isSecretariaat || heeftKlasbeheer) ? '' : 'none';
   if (klasafsprakenKnop) klasafsprakenKnop.style.display = 'none';
+  const naametikettenKnop = document.getElementById('naametikettenKeuzeKnop');
+  if (naametikettenKnop) naametikettenKnop.style.display = (isSchoolBreed || isSecretariaat || heeftKlasbeheer) ? '' : 'none';
   if (schoolbeheerKnop) schoolbeheerKnop.style.display = (isSecretariaat || isSchoolBreed || heeftKlasbeheer) ? '' : 'none';
   if (bestellingenKnop) bestellingenKnop.style.display = (isSecretariaat || heeftKlasbeheer) ? '' : 'none';
   const publiekeAgendaLinks = document.getElementById('publiekeAgendaLinks');
@@ -169,6 +171,7 @@ async function toonSchooloverzichtKnopAlsNodig(user) {
   const zorgoverlegKnop = document.getElementById('zorgoverlegKeuzeKnop');
   const huiswerkklasKnop = document.getElementById('huiswerkklasKeuzeKnop');
   const klasafsprakenKnop = document.getElementById('klasafsprakenKeuzeKnop');
+  const naametikettenKnop = document.getElementById('naametikettenKeuzeKnop');
   if (schoolKnop) schoolKnop.style.display = 'none';
   if (schoolbeheerKnop) schoolbeheerKnop.style.display = 'none';
   if (bestellingenKnop) bestellingenKnop.style.display = 'none';
@@ -177,6 +180,7 @@ async function toonSchooloverzichtKnopAlsNodig(user) {
   if (zorgoverlegKnop) zorgoverlegKnop.style.display = 'none';
   if (huiswerkklasKnop) huiswerkklasKnop.style.display = 'none';
   if (klasafsprakenKnop) klasafsprakenKnop.style.display = magKlasafsprakenTesten(user) ? '' : 'none';
+  if (naametikettenKnop) naametikettenKnop.style.display = 'none';
   if (!user) return;
 
   // Toon meteen op basis van gecachte rol (vorige sessie) — geen wachttijd
