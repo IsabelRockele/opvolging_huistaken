@@ -211,8 +211,9 @@ window.openGebruikersHulp = function () { document.getElementById('gebruikersHul
 window.sluitGebruikersHulp = function () { document.getElementById('gebruikersHulp')?.classList.remove('open'); };
 window.openHulpbericht = function () {
   const onderdeel = document.getElementById('hulpberichtDetails');
-  if (onderdeel) { onderdeel.open = true; onderdeel.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
+  if (onderdeel) { onderdeel.open = true; }
   window.maakProbleemtekst();
+  setTimeout(() => onderdeel?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 0);
 };
 window.sluitEersteKeerChecklist = function () {
   const sleutel = 'lindeEersteChecklist_' + (auth.currentUser?.uid || 'onbekend');
@@ -222,7 +223,7 @@ window.sluitEersteKeerChecklist = function () {
   const hulpbalk = document.getElementById('portaalHulpbalk');
   if (hulpbalk) hulpbalk.style.display = 'flex';
 };
-window.maakProbleemtekst = async function () {
+window.maakProbleemtekst = function () {
   const tekst = [
     'Hulpbericht schooltool',
     `E-mailadres: ${auth.currentUser?.email || 'onbekend'}`,
@@ -238,8 +239,19 @@ window.maakProbleemtekst = async function () {
   ].join('\n');
   const veld = document.getElementById('probleemtekst');
   if (veld) veld.value = tekst;
-  try { await navigator.clipboard.writeText(tekst); alert('Het hulpbericht is gekopieerd. Vul de drie vragen nog aan.'); }
-  catch { alert('Het hulpbericht staat klaar. Selecteer en kopieer het uit het tekstvak.'); }
+  return tekst;
+};
+window.kopieerHulpbericht = async function () {
+  const veld = document.getElementById('probleemtekst');
+  const tekst = veld?.value || window.maakProbleemtekst();
+  try { await navigator.clipboard.writeText(tekst); alert('Het hulpbericht is gekopieerd.'); }
+  catch { veld?.focus(); veld?.select(); alert('Automatisch kopiëren is geblokkeerd. De tekst is geselecteerd; kies nu Kopiëren.'); }
+};
+window.mailHulpbericht = function () {
+  const veld = document.getElementById('probleemtekst');
+  const tekst = veld?.value || window.maakProbleemtekst();
+  const onderwerp = 'Hulpvraag schooltool - ' + (auth.currentUser?.email || 'onbekende gebruiker');
+  window.location.href = `mailto:isabel.rockele@bsdelinde.net?subject=${encodeURIComponent(onderwerp)}&body=${encodeURIComponent(tekst)}`;
 };
 
 // Zet gesimuleerde rol om naar isSchoolBreed / isSecretariaat / heeftKlasbeheer
