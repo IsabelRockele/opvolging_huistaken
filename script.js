@@ -180,8 +180,23 @@ function toonBeheerderRolwissel(user) {
     paneel.appendChild(knop);
   });
 
+  const hulpKnop = document.createElement('button');
+  hulpKnop.textContent = '❓ Beheerdershulp';
+  hulpKnop.style.cssText = 'border:1px solid #64748b;border-radius:8px;padding:8px 12px;font-size:13px;cursor:pointer;text-align:left;background:#f8fafc;color:#1e293b;font-weight:700;margin-top:3px;';
+  hulpKnop.onclick = () => window.openBeheerderHulp();
+  paneel.appendChild(hulpKnop);
+
   document.body.appendChild(paneel);
 }
+
+window.openBeheerderHulp = function () {
+  const laag = document.getElementById('beheerderHulp');
+  if (laag) laag.classList.add('open');
+};
+window.sluitBeheerderHulp = function () {
+  const laag = document.getElementById('beheerderHulp');
+  if (laag) laag.classList.remove('open');
+};
 
 // Zet gesimuleerde rol om naar isSchoolBreed / isSecretariaat / heeftKlasbeheer
 function gesimuleerdePaspoorten(gesimuleerdRol) {
