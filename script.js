@@ -31,6 +31,13 @@ onAuthStateChanged(auth, (user) => {
   if (isIndex) {
     const kaart = document.getElementById('ingelogd-kaart');
     const emailSpan = document.getElementById('ingelogd-email');
+    const puntenboekKnop = document.getElementById('puntenboekKeuzeKnop');
+    if (puntenboekKnop) {
+      const simuleerSleutel = 'lindeSimuleerRol_' + user.uid;
+      const gesimuleerdRol = localStorage.getItem(simuleerSleutel) || 'beheerder';
+      puntenboekKnop.style.display =
+        magKlasafsprakenTesten(user) && gesimuleerdRol === 'beheerder' ? '' : 'none';
+    }
     if (kaart) {
       if (emailSpan) emailSpan.textContent = user.email || '';
       kaart.style.display = '';
@@ -77,6 +84,8 @@ function pasKnoppenToe(huistakenKnop, overgangKnop, schoolbeheerKnop, bestelling
   if (klasafsprakenKnop) klasafsprakenKnop.style.display = 'none';
   const naametikettenKnop = document.getElementById('naametikettenKeuzeKnop');
   if (naametikettenKnop) naametikettenKnop.style.display = (isSchoolBreed || isSecretariaat || heeftKlasbeheer) ? '' : 'none';
+  const afwezigheidsattestenKnop = document.getElementById('afwezigheidsattestenKeuzeKnop');
+  if (afwezigheidsattestenKnop) afwezigheidsattestenKnop.style.display = (isSchoolBreed || isSecretariaat || heeftKlasbeheer) ? '' : 'none';
   if (schoolbeheerKnop) schoolbeheerKnop.style.display = (isSecretariaat || isSchoolBreed || heeftKlasbeheer) ? '' : 'none';
   if (bestellingenKnop) bestellingenKnop.style.display = (isSecretariaat || heeftKlasbeheer) ? '' : 'none';
   const publiekeAgendaLinks = document.getElementById('publiekeAgendaLinks');
@@ -172,6 +181,7 @@ async function toonSchooloverzichtKnopAlsNodig(user) {
   const huiswerkklasKnop = document.getElementById('huiswerkklasKeuzeKnop');
   const klasafsprakenKnop = document.getElementById('klasafsprakenKeuzeKnop');
   const naametikettenKnop = document.getElementById('naametikettenKeuzeKnop');
+  const afwezigheidsattestenKnop = document.getElementById('afwezigheidsattestenKeuzeKnop');
   if (schoolKnop) schoolKnop.style.display = 'none';
   if (schoolbeheerKnop) schoolbeheerKnop.style.display = 'none';
   if (bestellingenKnop) bestellingenKnop.style.display = 'none';
@@ -181,6 +191,7 @@ async function toonSchooloverzichtKnopAlsNodig(user) {
   if (huiswerkklasKnop) huiswerkklasKnop.style.display = 'none';
   if (klasafsprakenKnop) klasafsprakenKnop.style.display = magKlasafsprakenTesten(user) ? '' : 'none';
   if (naametikettenKnop) naametikettenKnop.style.display = 'none';
+  if (afwezigheidsattestenKnop) afwezigheidsattestenKnop.style.display = 'none';
   if (!user) return;
 
   // Toon meteen op basis van gecachte rol (vorige sessie) — geen wachttijd
@@ -207,6 +218,10 @@ async function toonSchooloverzichtKnopAlsNodig(user) {
       toonBeheerderRolwissel(user);
       const simuleerSleutel = 'lindeSimuleerRol_' + user.uid;
       const gesimuleerdRol = localStorage.getItem(simuleerSleutel) || 'beheerder';
+      const puntenboekKnop = document.getElementById('puntenboekKeuzeKnop');
+      if (puntenboekKnop) {
+        puntenboekKnop.style.display = gesimuleerdRol === 'beheerder' ? '' : 'none';
+      }
       const { isSchoolBreed, isSecretariaat, heeftKlasbeheer } = gesimuleerdePaspoorten(gesimuleerdRol);
       pasKnoppenToe(huistakenKnop, overgangKnop, schoolbeheerKnop, bestellingenKnop, oudercontactKnop, schoolKnop, groeigroepenKnop, zorgoverlegKnop, huiswerkklasKnop,
         klasafsprakenKnop,

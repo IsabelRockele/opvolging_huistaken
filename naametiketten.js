@@ -38,6 +38,8 @@ function etikettenNamen(){
 function gekozenNamen(){return etikettenNamen().filter(x=>geselecteerd.has(x.id)).map(x=>x.naam)}
 function actief(s){const jaar=$('schooljaar').value.trim(),datum=`${jaar.slice(0,4)}-09-15`;return(!s.start||s.start<=datum)&&(!s.end||s.end>=datum)}
 function modus(){return document.querySelector('input[name="modus"]:checked').value}
+function basisGrootte(){return Math.max(26,Math.min(48,Number($('lettergrootte').value)||48))}
+function isVet(){return $('vetgedrukt').checked}
 function bladen(){
   const namen=gekozenNamen().filter(Boolean);
   if(modus()==="volblad")return namen.map(n=>Array(24).fill(n));
@@ -45,14 +47,15 @@ function bladen(){
   const uit=[];for(let i=0;i<namen.length;i+=24)uit.push([...namen.slice(i,i+24),...Array(Math.max(0,24-namen.slice(i,i+24).length)).fill("")]);return uit;
 }
 function puntgrootte(naam){
-  if(!naam)return 48; const canvas=puntgrootte.canvas||(puntgrootte.canvas=document.createElement('canvas')),ctx=canvas.getContext('2d');
-  ctx.font='bold 48pt Arial'; const breedte=ctx.measureText(naam).width,maximum=225; return Math.max(26,Math.min(48,Math.floor(48*maximum/breedte)));
+  const basis=basisGrootte();if(!naam)return basis; const canvas=puntgrootte.canvas||(puntgrootte.canvas=document.createElement('canvas')),ctx=canvas.getContext('2d');
+  ctx.font=`${isVet()?'bold ':''}${basis}pt Arial`; const breedte=ctx.measureText(naam).width,maximum=225; return Math.max(26,Math.min(basis,Math.floor(basis*maximum/breedte)));
 }
 function render(){
   const opties=etikettenNamen(),namen=gekozenNamen().filter(Boolean),pagina=bladen()[0]||Array(24).fill("");
   $('namen').innerHTML=opties.map(x=>`<label class="naam"><input type="checkbox" data-leerling-id="${esc(x.id)}" ${geselecteerd.has(x.id)?'checked':''}><span>${esc(x.naam)}</span></label>`).join('');
   $('namen').querySelectorAll('input[data-leerling-id]').forEach(v=>v.addEventListener('change',()=>{v.checked?geselecteerd.add(v.dataset.leerlingId):geselecteerd.delete(v.dataset.leerlingId);render()}));
-  $('preview').innerHTML=pagina.map(n=>`<div class="etiket" style="font-size:${Math.max(12,puntgrootte(n)*.32)}px">${esc(n)}</div>`).join('');
+  $('preview').innerHTML=pagina.map(n=>`<div class="etiket" style="font-size:${Math.max(12,puntgrootte(n)*.32)}px;font-weight:${isVet()?700:400}">${esc(n)}</div>`).join('');
+  $('letterInfo').textContent=`Arial ${basisGrootte()} pt${isVet()?' vet':''}; lange namen worden automatisch verkleind.`;
   $('bladBadge').textContent=`${bladen().length} ${bladen().length===1?'blad':'bladen'}`;
   $('download').disabled=!namen.length;
   $('status').textContent=leerlingen.length?`${namen.length} van ${leerlingen.length} actieve leerling${leerlingen.length===1?'':'en'} geselecteerd in ${$('klas').value}.`:'Geen actieve leerlingen gevonden in deze klaslijst.';
@@ -67,7 +70,7 @@ async function laadKlassen(){
 async function laadLeerlingen(){const klas=$('klas').value,jaar=$('schooljaar').value.trim();leerlingen=[];if(klas){const s=await getDoc(doc(db,'schoolbeheer',jaar,'klassen',klas));if(s.exists())leerlingen=(s.data().leerlingen||[]).filter(actief).sort((a,b)=>voornaam(a).localeCompare(voornaam(b),'nl'))}geselecteerd=new Set(leerlingen.map(leerlingId));render()}
 
 function xml(v){return String(v??'').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&apos;')}
-function celXml(naam){const half=puntgrootte(naam)*2;return `<w:tc><w:tcPr><w:tcW w:w="3968" w:type="dxa"/></w:tcPr><w:p><w:pPr><w:ind w:right="258"/><w:jc w:val="center"/></w:pPr></w:p><w:p><w:pPr><w:ind w:left="258" w:right="258"/><w:jc w:val="center"/></w:pPr></w:p><w:p><w:pPr><w:ind w:left="258" w:right="258"/><w:jc w:val="center"/></w:pPr>${naam?`<w:r><w:rPr><w:rFonts w:ascii="Arial" w:hAnsi="Arial"/><w:b/><w:sz w:val="${half}"/><w:szCs w:val="${half}"/></w:rPr><w:t>${xml(naam)}</w:t></w:r>`:''}</w:p></w:tc>`}
+function celXml(naam){const half=puntgrootte(naam)*2;return `<w:tc><w:tcPr><w:tcW w:w="3968" w:type="dxa"/></w:tcPr><w:p><w:pPr><w:ind w:right="258"/><w:jc w:val="center"/></w:pPr></w:p><w:p><w:pPr><w:ind w:left="258" w:right="258"/><w:jc w:val="center"/></w:pPr></w:p><w:p><w:pPr><w:ind w:left="258" w:right="258"/><w:jc w:val="center"/></w:pPr>${naam?`<w:r><w:rPr><w:rFonts w:ascii="Arial" w:hAnsi="Arial"/>${isVet()?'<w:b/>':''}<w:sz w:val="${half}"/><w:szCs w:val="${half}"/></w:rPr><w:t>${xml(naam)}</w:t></w:r>`:''}</w:p></w:tc>`}
 function tabelXml(namen){let r='';for(let y=0;y<8;y++)r+=`<w:tr><w:trPr><w:cantSplit/><w:trHeight w:hRule="exact" w:val="2098"/></w:trPr>${namen.slice(y*3,y*3+3).map(celXml).join('')}</w:tr>`;return `<w:tbl><w:tblPr><w:tblW w:w="0" w:type="auto"/><w:tblInd w:w="-15" w:type="dxa"/><w:tblBorders><w:top w:val="none"/><w:left w:val="none"/><w:bottom w:val="none"/><w:right w:val="none"/><w:insideH w:val="none"/><w:insideV w:val="none"/></w:tblBorders><w:tblLayout w:type="fixed"/><w:tblCellMar><w:left w:w="15" w:type="dxa"/><w:right w:w="15" w:type="dxa"/></w:tblCellMar></w:tblPr><w:tblGrid><w:gridCol w:w="3968"/><w:gridCol w:w="3968"/><w:gridCol w:w="3968"/></w:tblGrid>${r}</w:tbl>`}
 function kleinAlinea(extra=''){return `<w:p><w:pPr><w:spacing w:before="0" w:after="0" w:line="1" w:lineRule="exact"/></w:pPr><w:r><w:rPr><w:sz w:val="2"/><w:szCs w:val="2"/></w:rPr>${extra}</w:r></w:p>`}
 function documentXml(paginas){const inhoud=paginas.map((p,i)=>tabelXml(p)+(i<paginas.length-1?kleinAlinea('<w:br w:type="page"/>'):'')).join('');return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body>${inhoud}${kleinAlinea()}<w:sectPr><w:type w:val="continuous"/><w:pgSz w:w="11906" w:h="16838"/><w:pgMar w:top="0" w:right="0" w:bottom="0" w:left="0" w:header="708" w:footer="708" w:gutter="0"/><w:cols w:space="708"/></w:sectPr></w:body></w:document>`}
@@ -85,5 +88,5 @@ function maakDocx(){const paginas=bladen();if(!paginas.length)return;const besta
   const url=URL.createObjectURL(zipBestanden(bestanden)),a=document.createElement('a');a.href=url;a.download=`naametiketten_${$('klas').value}_${$('schooljaar').value}_${modus()}.docx`;a.click();setTimeout(()=>URL.revokeObjectURL(url),2000);
 }
 
-$('schooljaar').value=huidigSchooljaar();$('klas').addEventListener('change',laadLeerlingen);$('schooljaar').addEventListener('change',laadKlassen);$('schrijfwijze').addEventListener('change',render);document.querySelectorAll('input[name="modus"]').forEach(x=>x.addEventListener('change',render));$('selecteerAlles').addEventListener('click',()=>{geselecteerd=new Set(etikettenNamen().map(x=>x.id));render()});$('selecteerGeen').addEventListener('click',()=>{geselecteerd.clear();render()});$('download').addEventListener('click',maakDocx);
+$('schooljaar').value=huidigSchooljaar();$('klas').addEventListener('change',laadLeerlingen);$('schooljaar').addEventListener('change',laadKlassen);$('schrijfwijze').addEventListener('change',render);$('lettergrootte').addEventListener('input',render);$('vetgedrukt').addEventListener('change',render);document.querySelectorAll('input[name="modus"]').forEach(x=>x.addEventListener('change',render));$('selecteerAlles').addEventListener('click',()=>{geselecteerd=new Set(etikettenNamen().map(x=>x.id));render()});$('selecteerGeen').addEventListener('click',()=>{geselecteerd.clear();render()});$('download').addEventListener('click',maakDocx);
 onAuthStateChanged(auth,async u=>{if(!u){location.href='index.html';return}user=u;try{await laadRol();await laadKlassen()}catch(e){console.error(e);$('status').textContent='De klaslijst kon niet worden geladen: '+e.message}});

@@ -31,6 +31,8 @@
       <label>Schooljaar<input id="schooljaar" autocomplete="off"></label>
       <label>Klas<select id="klas"><option>Even laden…</option></select></label>
       <label>Schrijfwijze<select id="schrijfwijze"><option value="hoofdletter">Met hoofdletter (standaard)</option><option value="klein">Zonder hoofdletters</option></select></label>
+      <label>Lettergrootte<input id="lettergrootte" type="number" min="26" max="48" step="1" value="48"></label>
+      <label class="keuze" style="margin-top:10px"><input id="vetgedrukt" type="checkbox"><span><strong>Vetgedrukt</strong><span>Standaard uit; zet dit aan als je dikkere letters wilt.</span></span></label>
       <label>Verdeling</label>
       <div class="keuzes">
         <label class="keuze"><input type="radio" name="modus" value="volblad" checked><span><strong>Volledig blad per kind</strong><span>24 dezelfde etiketten per leerling.</span></span></label>
@@ -44,7 +46,7 @@
       <p class="uitleg">Open het bestand in Word en druk af op 100% of “Werkelijke grootte”. Kies niet voor “Aanpassen aan pagina”.</p>
     </section>
     <section class="panel">
-      <div class="preview-kop"><div><h2>Voorbeeld van het eerste blad</h2><p class="muted" style="margin:4px 0 0">Arial 48 pt vet; lange namen worden automatisch verkleind.</p></div><span id="bladBadge" class="badge">0 bladen</span></div>
+      <div class="preview-kop"><div><h2>Voorbeeld van het eerste blad</h2><p id="letterInfo" class="muted" style="margin:4px 0 0">Arial 48 pt; lange namen worden automatisch verkleind.</p></div><span id="bladBadge" class="badge">0 bladen</span></div>
       <div class="vel-wrap"><div id="preview" class="vel"></div></div>
     </section>
   </main>

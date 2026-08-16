@@ -64,6 +64,13 @@
     #navKlaslijst{background:#eaf4ec;border-left-color:#5a8a63;color:#2d5c35}
     #navKlaslijst .sb-icon{color:#5a8a63}
     #navKlaslijst.active{background:#d4ecda;border-left-color:#3d6b47}
+    .wegwijzer-intro{background:linear-gradient(135deg,#eef8f0,#f7fbff);border:1px solid #cfe2d3;border-radius:16px;padding:18px;margin-bottom:16px}
+    .wegwijzer-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px}
+    .wegwijzer-kaart{border:1px solid #dfe5e1;border-radius:14px;background:#fff;overflow:hidden}
+    .wegwijzer-kaart summary{cursor:pointer;padding:15px 16px;font-weight:800;list-style:none;display:flex;gap:10px;align-items:center}
+    .wegwijzer-kaart summary::-webkit-details-marker{display:none}.wegwijzer-kaart summary::after{content:'+';margin-left:auto;font-size:20px;color:#55705c}.wegwijzer-kaart[open] summary::after{content:'−'}
+    .wegwijzer-inhoud{padding:0 16px 16px;border-top:1px solid #edf0ee}.wegwijzer-inhoud ol{padding-left:20px;line-height:1.6}.wegwijzer-inhoud li+li{margin-top:5px}
+    .wegwijzer-waarschuwing{background:#fff8e6;border-left:4px solid #e0a229;padding:10px 12px;border-radius:8px;margin:10px 0}
 
     #navRefter{background:#fdf4e0;border-left-color:#d99040;color:#7a5010}
     #navRefter .sb-icon{color:#d99040}
@@ -896,7 +903,7 @@
   <script type="module">
     import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
     import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-    import { getFirestore, doc, getDoc, setDoc as firestoreSetDoc, deleteDoc as firestoreDeleteDoc, onSnapshot, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    import { getFirestore, doc, getDoc, setDoc as firestoreSetDoc, deleteDoc as firestoreDeleteDoc, onSnapshot, collection, query, where, getDocs, writeBatch } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
     import { maakVeiligheidskopie, probeerVeiligheidskopie } from "./firebase-veiligheid.js";
 
     const firebaseConfig = {
@@ -923,7 +930,7 @@
     let user = null, role = "", allowedClasses = [], allClasses = [...DEFAULT_CLASSES],
         activeClass = "", schooljaar = huidigSchooljaar(), data = null, unsub = null,
         activityMonth = "", purchaseMonth = "",
-        tab = "administratie", adminPanel = "klaslijsten", classListMode = "", saveTimer = null;
+        tab = "administratie", adminPanel = "wegwijzer", classListMode = "", saveTimer = null;
     $("schooljaarInput").value = schooljaar;
 
     async function schoolbeheerVeiligheidskopie(ref, reden, forceer=false){
@@ -1762,12 +1769,13 @@
       $("content").innerHTML = `
         <div class="panel">
           <h2>Administratie <span class="muted" style="font-weight:400;font-size:16px">— ${esc(activeClass)}</span></h2>
-          <p class="muted">Klaslijsten, vrije dagen, meldingen en overgang naar volgend schooljaar.</p>
+          <p class="muted">Kies één taak. Bij Hulp &amp; stappenplan staat alle uitleg rustig per onderwerp samengeklapt.</p>
           <div class="subnav no-print">
-            ${["klaslijsten","vrije dagen","meldingen",...(isSecretary()?["klasleerkrachten"]:[]),"nieuw schooljaar"].map(p=>`<button class="${adminPanel===p?"active":""}" onclick="openAdmin('${p}')">${p[0].toUpperCase()+p.slice(1)}</button>`).join("")}
+            ${[...(isSecretary()?["wegwijzer"]:[]),"klaslijsten","vrije dagen","meldingen",...(isSecretary()?["klasleerkrachten"]:[]),"nieuw schooljaar"].map(p=>`<button class="${adminPanel===p?"active":""}" onclick="openAdmin('${p}')">${p==="wegwijzer"?"❓ Hulp & stappenplan":p[0].toUpperCase()+p.slice(1)}</button>`).join("")}
           </div>
           <div id="adminBody"></div>
         </div>`;
+      if(adminPanel==="wegwijzer") renderSecretariaatWegwijzer();
       if(adminPanel==="klaslijsten") renderAdminClasslists();
       if(adminPanel==="vrije dagen") renderFreeDays(true);
       if(adminPanel==="meldingen") renderMessageAdmin();
@@ -1775,6 +1783,44 @@
       if(adminPanel==="nieuw schooljaar") renderNewYearHome();
     }
     window.openAdmin = p => { adminPanel = p; renderAdmin(); };
+
+    function wegwijzerKaart(icoon,titel,korteUitleg,stappen,actie="",waarschuwing=""){
+      return `<details class="wegwijzer-kaart"><summary><span style="font-size:22px">${icoon}</span><span>${esc(titel)}<small class="muted" style="display:block;font-weight:500;margin-top:2px">${esc(korteUitleg)}</small></span></summary><div class="wegwijzer-inhoud">${waarschuwing?`<div class="wegwijzer-waarschuwing">${waarschuwing}</div>`:""}<ol>${stappen.map(s=>`<li>${s}</li>`).join("")}</ol>${actie}</div></details>`;
+    }
+    function renderSecretariaatWegwijzer(){
+      $("adminBody").innerHTML=`
+        <section class="wegwijzer-intro"><h3 style="margin-top:0">Waarmee wil je beginnen?</h3><p style="margin-bottom:0">Klik alleen de taak open die je nu nodig hebt. Kies bovenaan eerst het juiste <strong>schooljaar</strong> en links de juiste <strong>klas</strong>. Bij twijfel verander je niets en open je eerst het stappenplan.</p></section>
+        <div class="wegwijzer-grid">
+          ${wegwijzerKaart("👧","Een nieuwe leerling toevoegen","Voor een leerling die later bij de klas komt.",[
+            "Kies links de klas waarin de leerling start.","Open <strong>Klaslijsten</strong> en kies <strong>Nieuwe leerling</strong>.","Vul voornaam, achternaam en startdatum in.","Controleer de naam en bewaar. De leerling verschijnt ook automatisch bij etiketten en afwezigheden."
+          ],`<button class="green" onclick="gaNaarSecretariaatTaak('nieuwe-leerling')">Ga naar Nieuwe leerling</button>`)}
+          ${wegwijzerKaart("📊","Een Excel-klaslijst verwerken","Een officiële lijst toevoegen of vergelijken.",[
+            "Kies eerst het juiste schooljaar en de juiste klas.","Open <strong>Klaslijsten → Excel importeren</strong> en selecteer het bestand.","Gebruik <strong>Namen toevoegen</strong> als alleen ontbrekende leerlingen moeten bijkomen.","Gebruik <strong>Officiële klaslijst veilig vervangen</strong> alleen wanneer het Excelbestand de volledige officiële klas bevat.","Lees het controle-overzicht en typ pas daarna de gevraagde bevestiging."
+          ],`<button class="green" onclick="gaNaarSecretariaatTaak('excel')">Ga naar Excel importeren</button>`,`Een leerling die ontbreekt in de officiële Excel wordt niet gewist. Die wordt inactief bewaard, zodat oude betalingen en registraties raadpleegbaar blijven.`)}
+          ${wegwijzerKaart("➡️","Leerlingen van 2A naar 3A verplaatsen","Binnen hetzelfde gekozen schooljaar, bijvoorbeeld bij een verkeerd geplaatste oude klaslijst.",[
+            "Kies schooljaar <strong>2026-2027</strong> en open <strong>2A</strong>.","Open <strong>Klaslijsten → Leerlingen verplaatsen</strong> en kies <strong>3A</strong>.","Vink alleen de zittenblijver aan bij <strong>Blijft in 2A</strong>.","Maak het controle-overzicht en bevestig met <strong>VERPLAATSEN</strong>.","Controleer 2A en 3A. Meteen na de bewerking kun je ze nog ongedaan maken."
+          ],`<button class="green" onclick="gaNaarSecretariaatTaak('verplaatsen')">Ga naar Leerlingen verplaatsen</button>`)}
+          ${wegwijzerKaart("🗓️","Een nieuw schooljaar voorbereiden","Leerlingen doorschuiven, laten zitten of als schoolverlater bewaren.",[
+            "Open <strong>Nieuw schooljaar → Klaslijsten voorbereiden</strong>.","Kies bronklas en doelklas.","Vink alleen uitzonderingen aan: <strong>Blijft zitten</strong> of <strong>Verlaat school</strong>.","Bekijk eerst de controlelijst en bewaar daarna de doorschuiving.","Koppel vervolgens bij <strong>Klasleerkrachten</strong> de juiste leerkracht aan elke nieuwe klas."
+          ],`<button class="green" onclick="gaNaarSecretariaatTaak('nieuw-schooljaar')">Ga naar Nieuw schooljaar</button>`,`Gebruik dit alleen wanneer je echt van het ene schooljaar naar het volgende gaat. Voor de huidige verkeerde 2A-lijst gebruik je “Leerlingen verplaatsen”.`)}
+          ${wegwijzerKaart("🚪","Een leerling die niet start of vertrekt","De leerling verdwijnt uit de actieve lijst, maar de historiek blijft bestaan.",[
+            "Open de juiste klas bij <strong>Klaslijsten</strong>.","Kies <strong>Start niet</strong> als het kind vóór de start afhaakt.","Kies <strong>Uitschrijven</strong> als het kind tijdens het schooljaar vertrekt.","Vul de reden of datum in. Onderaan blijft de leerling zichtbaar bij de niet-actieve leerlingen."
+          ],`<button class="green" onclick="gaNaarSecretariaatTaak('klaslijsten')">Ga naar Klaslijsten</button>`)}
+          ${wegwijzerKaart("🏷️","Naametiketten afdrukken","Voor de hele klas, twee kinderen per blad of één kind.",[
+            "Open Naametiketten en kies schooljaar en klas.","Kies hoofdletter of kleine letter, lettergrootte en eventueel vetgedrukt.","Kies één blad per kind, twee kinderen per blad of alle namen aansluitend.","Selecteer de hele klas of één leerling en download het Worddocument.","Open het bestand in Word en druk af op ware grootte (100%)."
+          ],`<button class="green" onclick="window.open('naametiketten.html','_blank')">Open Naametiketten</button>`)}
+          ${wegwijzerKaart("🩺","Afwezigheden en ziektebriefjes","Z/P/B opvolgen en vier briefjes per leerling afdrukken.",[
+            "Open Afwezigheden en kies schooljaar en klas.","Gebruik het overzicht om Z1-Z4, P1-P4 of B digitaal bij te houden.","Een fout vakje mag je aanpassen; de nieuwste keuze wordt bewaard.","Kies bij ziektebriefjes de hele klas of één leerling.","Download en druk het liggende document af."
+          ],`<button class="green" onclick="window.open('afwezigheidsattesten.html','_blank')">Open Afwezigheden</button>`)}
+          ${wegwijzerKaart("↩️","Een fout herstellen","Wat te doen wanneer je net iets verkeerd hebt uitgevoerd.",[
+            "Gebruik onmiddellijk de knop <strong>Ongedaan maken</strong> die na verplaatsen of doorschuiven verschijnt.","Wis een leerling niet om een fout te herstellen.","Controleer daarna opnieuw bronklas en doelklas.","Lukt het niet, noteer schooljaar, klas en leerlingnaam voordat je hulp vraagt."
+          ],"",`Bij klasverplaatsingen en jaarovergangen wordt eerst een veiligheidskopie gemaakt.`)}
+        </div>`;
+    }
+    window.gaNaarSecretariaatTaak=function(taak){
+      if(["nieuwe-leerling","excel","verplaatsen","klaslijsten"].includes(taak)){adminPanel="klaslijsten";classListMode=taak==="nieuwe-leerling"?"nieuw":taak==="klaslijsten"?"":taak;renderAdmin();return}
+      if(taak==="nieuw-schooljaar"){adminPanel="nieuw schooljaar";renderAdmin()}
+    };
 
             function renderAdminClasslists(){
       $("adminBody").innerHTML = `${classListContent()}`;
@@ -1800,6 +1846,7 @@
           <button class="${classListMode==="plakken"?"primary":""}" onclick="openClassListTool('plakken')">Klaslijst plakken</button>
           <button class="${classListMode==="nieuw"?"primary":""}" onclick="openClassListTool('nieuw')">Nieuwe leerling</button>
           ${canManageClasses ? `<button class="${classListMode==="excel"?"primary":""}" onclick="openClassListTool('excel')">Excel importeren</button>` : ""}
+          ${canManageClasses ? `<button class="${classListMode==="verplaatsen"?"primary":""}" onclick="openClassListTool('verplaatsen')">Leerlingen verplaatsen</button>` : ""}
           ${canImportDashboard ? `<button class="${classListMode==="dashboard"?"primary":""}" onclick="openClassListTool('dashboard')">Namen uit dashboard aanvullen</button>` : ""}
           ${canManageClasses ? `<button class="${classListMode==="beheer"?"primary":""}" onclick="openClassListTool('beheer')">Klassen beheren</button>` : ""}
           <span class="hint">Kies alleen wat je nu nodig hebt.</span>
@@ -1834,8 +1881,19 @@
           <div class="row">
             <label>Excel- of CSV-bestand<input id="excelKlasFile" type="file" accept=".xlsx,.xls,.csv"></label>
             <button class="green" onclick="importExcelKlaslijst()">Namen uit bestand toevoegen</button>
+            <button class="danger" onclick="vervangKlaslijstUitExcel()">Officiële klaslijst veilig vervangen</button>
           </div>
           <div id="excelImportResult" class="muted" style="margin-top:10px"></div>
+        </section>`;
+      }
+      if(classListMode === "verplaatsen" && canManageClasses){
+        const kandidaten=activeStudents();
+        toolPanel = `<section class="class-tool-panel no-print">
+          <div class="bar"><div><h3>Leerlingen verplaatsen binnen ${esc(schooljaar)}</h3><p class="muted small">Bijvoorbeeld: alle huidige leerlingen van 2A naar 3A, behalve de zittenblijver.</p></div><button class="small white right" onclick="openClassListTool('')">Sluiten</button></div>
+          <div class="notice"><strong>Historiek blijft bewaard.</strong><p class="muted">De leerling wordt in de bronklas inactief vanaf 1 september en krijgt in de doelklas een nieuw gekoppeld leerlingrecord. Refter, activiteiten en betalingen uit de bronklas worden niet gewist.</p></div>
+          <label>Doelklas<select id="zelfdeJaarDoelKlas">${allClasses.filter(k=>k!==activeClass).map(k=>`<option value="${esc(k)}">${esc(k)}</option>`).join("")}</select></label>
+          <div class="table-wrap" style="margin-top:12px"><table><thead><tr><th>Leerling uit ${esc(activeClass)}</th><th class="check-col">Blijft in ${esc(activeClass)}</th><th>Voorstel</th></tr></thead><tbody>${kandidaten.map(s=>`<tr><td><strong>${esc(name(s))}</strong></td><td class="check-col"><input type="checkbox" class="zelfdeJaarBlijft" data-id="${esc(s.id)}"></td><td>naar doelklas</td></tr>`).join("")}</tbody></table></div>
+          <div id="zelfdeJaarVoorbeeld" style="margin-top:12px"><button class="green" onclick="toonZelfdeJaarVerplaatsVoorbeeld()">Controle-overzicht maken</button></div>
         </section>`;
       }
       if(classListMode === "dashboard" && canImportDashboard){
@@ -1864,7 +1922,8 @@
           <h3>Leerlingen</h3>
           <span class="muted small">${activeStudents().length} leerling(en)</span>
         </div>
-        ${studentTable()}`;
+        ${studentTable()}
+        ${inactieveLeerlingenTabel()}`;
     }
 
     window.openClassListTool = mode => {
@@ -1937,6 +1996,27 @@
         if(result) result.textContent="Import mislukt.";
         alert(`Excel importeren lukte niet.\n\n${err.message||err}`);
       }
+    };
+    window.vervangKlaslijstUitExcel = async function(){
+      if(!isSecretary()||!data) return;
+      const file=$("excelKlasFile")?.files?.[0]; if(!file) return alert("Kies eerst een Excel- of CSV-bestand.");
+      try{
+        const rows=await leesExcelRijen(file), officieel=[],gezien=new Set();
+        rows.forEach(row=>{const item=excelRijNaarNaam(row);if(!item||(!item.first&&!item.last))return;const key=classNameKey(item.first,item.last);if(key&&!gezien.has(key)){gezien.add(key);officieel.push(item);}});
+        if(!officieel.length) return alert(`Geen geldige namen voor ${activeClass} gevonden in dit bestand.`);
+        const actieve=activeStudents(),bestaande=new Map((data.leerlingen||[]).map(s=>[classNameKey(s.first||s.firstName,s.last||s.lastName),s]));
+        const toevoegen=officieel.filter(x=>!bestaande.has(classNameKey(x.first,x.last)));
+        const inactiefMaken=actieve.filter(s=>!gezien.has(classNameKey(s.first||s.firstName,s.last||s.lastName)));
+        const behouden=officieel.length-toevoegen.length;
+        const voorbeeld=`Officiële klaslijst ${activeClass} - ${schooljaar}\n\n${behouden} bestaande leerling(en) behouden\n${toevoegen.length} nieuwe leerling(en) toevoegen\n${inactiefMaken.length} oude leerling(en) niet meer actief\n\nNiet meer actief:\n${inactiefMaken.map(name).join("\n")||"niemand"}\n\nAlle historische gegevens blijven bewaard.`;
+        if(!confirm(voorbeeld)) return;
+        const bevestig=prompt(`Typ VERVANG KLASLIJST om de actieve lijst van ${activeClass} veilig te vervangen.`); if(bevestig!=="VERVANG KLASLIJST") return;
+        const grens=`${Number(schooljaar.slice(0,4))}-08-31`;
+        inactiefMaken.forEach(s=>{s.oorspronkelijkeStart=s.start||startDate();s.end=grens;s.startNiet=true;s.startNietReden="niet in officiële Excel-lijst";s.bijgewerktOp=new Date().toISOString();});
+        toevoegen.forEach(x=>data.leerlingen.push({id:uid(),first:x.first,last:x.last,colleague:false,start:startDate(),end:endDate(),bron:"officiële Excel-import"}));
+        officieel.forEach(x=>{const s=data.leerlingen.find(y=>classNameKey(y.first||y.firstName,y.last||y.lastName)===classNameKey(x.first,x.last));if(s){s.start=startDate();s.end=endDate();delete s.startNiet;delete s.startNietReden;}});
+        data.leerlingen.sort((a,b)=>name(a).localeCompare(name(b),"nl")); await saveNow(); render(); alert(`Officiële klaslijst bewaard. ${toevoegen.length} toegevoegd en ${inactiefMaken.length} veilig inactief gemaakt.`);
+      }catch(err){console.error(err);alert(`Klaslijst vervangen lukte niet.\n\n${err.message||err}`);}
     };
     function classNameKey(first,last){
       return `${String(first||"").trim().toLowerCase()} ${String(last||"").trim().toLowerCase()}`.replace(/\s+/g," ").trim();
@@ -2099,9 +2179,65 @@
         <td class="homework-cell"><label><input data-homework-main type="checkbox" ${s.homeworkClass?"checked":""} onchange="toggleHomeworkClass('${s.id}',this.checked,this)"> komt naar huiswerkklas</label><label><input data-homework-free type="checkbox" ${s.homeworkClassFree?"checked":""} onchange="toggleHomeworkClassFree('${s.id}',this.checked,this)"> gratis via schooladvies</label></td>
         <td><input type="date" value="${esc(s.start||startDate())}" onchange="updateStudent('${s.id}','start',this.value)" title="Startdatum: ${formatDate(s.start||startDate())}"></td>
         <td><input type="date" value="${esc(s.end||endDate())}" onchange="updateStudent('${s.id}','end',this.value)" title="Einddatum: ${formatDate(s.end||endDate())}"></td>
-        <td><button class="small pink" onclick="leaveStudent('${s.id}')">uitschrijven</button></td>
+        <td><button class="small pink" onclick="leaveStudent('${s.id}')">uitschrijven</button>${isSecretary()?` <button class="small danger" onclick="startNietOpSchool('${s.id}')">start niet</button>`:""}</td>
       </tr>`).join("")}</tbody></table></div>`;
     }
+    function inactieveLeerlingenTabel(){
+      const actief=new Set(activeStudents().map(s=>s.id));
+      const lijst=(data?.leerlingen||[]).filter(s=>!actief.has(s.id)).sort((a,b)=>name(a).localeCompare(name(b),"nl"));
+      if(!lijst.length) return "";
+      return `<details class="notice no-print" style="margin-top:14px"><summary><strong>Niet-actieve of uitgeschreven leerlingen (${lijst.length})</strong></summary><p class="muted">Deze leerlingen blijven bewaard voor historiek, afrekeningen en eerdere registraties.</p><div class="table-wrap"><table><thead><tr><th>Leerling</th><th>Start</th><th>Einde</th><th>Reden</th><th></th></tr></thead><tbody>${lijst.map(s=>`<tr><td>${esc(name(s))}</td><td>${formatDate(s.start)}</td><td>${formatDate(s.end)}</td><td>${esc(s.startNietReden||s.uitschrijfReden||(s.verhuisdNaar?`verplaatst naar ${s.verhuisdNaar}`:""))}</td><td>${isSecretary()?`<button class="small green" onclick="heractiveerLeerling('${s.id}')">opnieuw activeren</button>`:""}</td></tr>`).join("")}</tbody></table></div></details>`;
+    }
+    window.startNietOpSchool = id => {
+      if(!isSecretary()) return;
+      const s=data.leerlingen.find(x=>x.id===id); if(!s) return;
+      const reden=prompt(`Waarom start ${name(s)} niet?`,`veranderd van school`); if(reden===null) return;
+      if(!confirm(`${name(s)} als 'start niet' markeren?\n\nDe leerling verdwijnt uit de actieve klas, maar alle gegevens blijven bewaard.`)) return;
+      s.startNiet=true; s.startNietReden=reden.trim(); s.oorspronkelijkeStart=s.start||startDate(); s.end=`${Number(schooljaar.slice(0,4))}-08-31`; s.bijgewerktOp=new Date().toISOString();
+      markDirty(); render();
+    };
+    window.heractiveerLeerling = id => {
+      if(!isSecretary()) return;
+      const s=data.leerlingen.find(x=>x.id===id); if(!s) return;
+      if(!confirm(`${name(s)} opnieuw activeren in ${activeClass}?`)) return;
+      s.start=s.oorspronkelijkeStart||startDate(); s.end=endDate(); delete s.startNiet; delete s.startNietReden; delete s.verhuisdNaar; delete s.verhuisdOp; markDirty(); render();
+    };
+
+    let laatsteZelfdeJaarVerplaatsing=null;
+    window.toonZelfdeJaarVerplaatsVoorbeeld = function(){
+      const doel=$("zelfdeJaarDoelKlas")?.value;
+      if(!doel) return alert("Kies eerst een doelklas.");
+      const blijvenIds=new Set([...document.querySelectorAll(".zelfdeJaarBlijft:checked")].map(x=>x.dataset.id));
+      const actief=activeStudents(), blijven=actief.filter(s=>blijvenIds.has(s.id)), verhuizen=actief.filter(s=>!blijvenIds.has(s.id));
+      $("zelfdeJaarVoorbeeld").innerHTML=`<section class="notice"><h3>Controle</h3><p><strong>${verhuizen.length}</strong> leerling(en) van ${esc(activeClass)} naar ${esc(doel)}. <strong>${blijven.length}</strong> leerling(en) blijven in ${esc(activeClass)}.</p><div class="two"><div><h3>Naar ${esc(doel)}</h3><ul>${verhuizen.map(s=>`<li>${esc(name(s))}</li>`).join("")}</ul></div><div><h3>Blijft in ${esc(activeClass)}</h3><ul>${blijven.map(s=>`<li>${esc(name(s))}</li>`).join("")||"<li>Niemand</li>"}</ul></div></div><button class="danger" onclick="bewaarZelfdeJaarVerplaatsing('${esc(doel)}')">Veilig verplaatsen</button></section>`;
+    };
+    window.bewaarZelfdeJaarVerplaatsing = async function(doel){
+      if(!isSecretary()) return;
+      const blijvenIds=new Set([...document.querySelectorAll(".zelfdeJaarBlijft:checked")].map(x=>x.dataset.id));
+      const actief=activeStudents(), verhuizen=actief.filter(s=>!blijvenIds.has(s.id));
+      if(!verhuizen.length) return alert("Er zijn geen leerlingen om te verplaatsen.");
+      const bevestig=prompt(`${verhuizen.length} leerling(en) van ${activeClass} naar ${doel} verplaatsen binnen ${schooljaar}.\n\nTyp VERPLAATSEN om te bevestigen.`);
+      if(bevestig!=="VERPLAATSEN") return;
+      const bronRef=classRef(), doelRef=doc(db,"schoolbeheer",schooljaar,"klassen",doel), doelSnap=await getDoc(doelRef);
+      const bronVoor=structuredClone(data), doelVoor=doelSnap.exists()?structuredClone(doelSnap.data()):null;
+      const bronNa=structuredClone(data), doelNa=doelVoor||emptyClassDoc(doel); doelNa.klas=doel; doelNa.schooljaar=schooljaar; doelNa.leerlingen||=[];
+      const bestaande=new Set(doelNa.leerlingen.map(s=>classNameKey(s.first||s.firstName,s.last||s.lastName)));
+      const grens=`${Number(schooljaar.slice(0,4))}-08-31`;
+      verhuizen.forEach(s=>{
+        const bron=bronNa.leerlingen.find(x=>x.id===s.id); if(bron){bron.end=grens;bron.verhuisdNaar=doel;bron.verhuisdOp=new Date().toISOString();}
+        const key=classNameKey(s.first||s.firstName,s.last||s.lastName); if(bestaande.has(key)) return; bestaande.add(key);
+        doelNa.leerlingen.push({...structuredClone(s),id:uid(),sourceStudentId:s.id,bronKlas:activeClass,start:startDate(),end:endDate(),verhuisdOp:new Date().toISOString()});
+      });
+      doelNa.leerlingen.sort((a,b)=>name(a).localeCompare(name(b),"nl")); bronNa.bijgewerktOp=doelNa.bijgewerktOp=new Date().toISOString();
+      await Promise.all([schoolbeheerVeiligheidskopie(bronRef,"Vóór leerlingen verplaatsen",true),schoolbeheerVeiligheidskopie(doelRef,"Vóór leerlingen ontvangen",true)]);
+      const batch=writeBatch(db); batch.set(bronRef,bronNa,{merge:true}); batch.set(doelRef,doelNa,{merge:true}); await batch.commit();
+      laatsteZelfdeJaarVerplaatsing={bronRef,doelRef,bronVoor,doelVoor}; data=bronNa; render();
+      setTimeout(()=>{const box=$("zelfdeJaarVoorbeeld");if(box)box.innerHTML=`<div class="notice"><strong>Verplaatsing bewaard.</strong> ${verhuizen.length} leerling(en) staan nu in ${esc(doel)}.<br><button class="white" style="margin-top:8px" onclick="maakLaatsteVerplaatsingOngedaan()">Ongedaan maken</button></div>`;},0);
+    };
+    window.maakLaatsteVerplaatsingOngedaan = async function(){
+      if(!laatsteZelfdeJaarVerplaatsing||!confirm("De laatste verplaatsing volledig ongedaan maken?")) return;
+      const x=laatsteZelfdeJaarVerplaatsing,batch=writeBatch(db); batch.set(x.bronRef,x.bronVoor); if(x.doelVoor)batch.set(x.doelRef,x.doelVoor);else batch.delete(x.doelRef); await batch.commit(); laatsteZelfdeJaarVerplaatsing=null; alert("Verplaatsing ongedaan gemaakt."); await openClass(activeClass);
+    };
 
     function daysInMonth(month){ const [y,m]=month.split("-").map(Number); const last=new Date(y,m,0).getDate(); return Array.from({length:last},(_,i)=>{const d=`${month}-${String(i+1).padStart(2,"0")}`; return {date:d,day:i+1,week:new Date(d+"T12:00:00").getDay()};}); }
     function algemeneVrijeDag(date){ const w=new Date(date+"T12:00:00").getDay(); return w===0||w===3||w===6||(data.vrijeDagen||[]).some(v=>date>=v.start&&date<=v.end); }
@@ -2314,23 +2450,28 @@
         <div id="newYearResult" style="margin:14px 0"></div>
         ${bestaatNiet?`<div class="notice">Deze klas is nog niet gestart.</div>`:""}
         <div class="table-wrap" style="margin-top:14px">
-          <table><thead><tr><th>Leerling uit ${esc(bron)}</th><th class="check-col">Zittenblijver</th><th>Gaat naar</th></tr></thead>
-          <tbody>${lijst.map(s=>`<tr><td><strong>${esc(name(s))}</strong></td><td class="check-col"><input type="checkbox" class="blijverCheck" data-id="${esc(s.id)}" data-name="${esc(name(s))}"></td><td>${esc(doel||"-")}</td></tr>`).join()||`<tr><td colspan="3">${bestaatNiet?"Klas nog niet gestart.":"Geen leerlingen."}</td></tr>`}</tbody>
+          <table><thead><tr><th>Leerling uit ${esc(bron)}</th><th class="check-col">Blijft zitten</th><th class="check-col">Verlaat school</th><th>Gaat standaard naar</th></tr></thead>
+          <tbody>${lijst.map(s=>`<tr><td><strong>${esc(name(s))}</strong></td><td class="check-col"><input type="checkbox" class="blijverCheck" data-id="${esc(s.id)}" data-name="${esc(name(s))}" onchange="wisselJaarovergangUitzondering(this,'blijft')"></td><td class="check-col"><input type="checkbox" class="verlaatSchoolCheck" data-id="${esc(s.id)}" data-name="${esc(name(s))}" onchange="wisselJaarovergangUitzondering(this,'verlaat')"></td><td>${esc(doel||"-")}</td></tr>`).join()||`<tr><td colspan="4">${bestaatNiet?"Klas nog niet gestart.":"Geen leerlingen."}</td></tr>`}</tbody>
           </table>
         </div>`;
     }
     window.renderNewYear = renderNewYear;
-    window.maakNieuwSchooljaarOverzicht = function(){
+    window.wisselJaarovergangUitzondering = function(el,type){
+      if(!el.checked) return; const id=el.dataset.id, andere=type==="blijft"?".verlaatSchoolCheck":".blijverCheck"; const vak=document.querySelector(`${andere}[data-id="${CSS.escape(id)}"]`); if(vak)vak.checked=false;
+    };
+    window.maakNieuwSchooljaarOverzicht = async function(){
       const bron=$("newYearBronKlas").value;
       const doel=$("newYearDoelKlas").value;
       if(!doel) return alert("Kies eerst een doelklas.");
-      const blijven=[], doorgaan=[];
-      document.querySelectorAll(".blijverCheck").forEach(ch => { if(ch.checked) blijven.push(ch.dataset.name); else doorgaan.push(ch.dataset.name); });
-      $("newYearResult").innerHTML = `<section class="notice"><h3>Controle-overzicht</h3><p><strong>${esc(bron)}</strong> → <strong>${esc(doel)}</strong></p><div class="two"><div><h3>Naar ${esc(doel)}</h3>${doorgaan.length?`<ul>${doorgaan.map(n=>`<li>${esc(n)}</li>`).join("")}</ul>`:`<p class="muted">Geen leerlingen.</p>`}</div><div><h3>Blijft in ${esc(bron)}</h3>${blijven.length?`<ul>${blijven.map(n=>`<li>${esc(n)}</li>`).join("")}</ul>`:`<p class="muted">Geen zittenblijvers.</p>`}</div></div><p class="muted">Controleer dit goed.</p><button class="danger" onclick="doorschuivingBewarenNieuwSchooljaar()">Doorschuiving bewaren</button></section>`;
+      const blijven=[],verlaat=[],doorgaan=[];
+      document.querySelectorAll(".blijverCheck").forEach(ch=>{if(ch.checked)blijven.push(ch.dataset.name)});document.querySelectorAll(".verlaatSchoolCheck").forEach(ch=>{if(ch.checked)verlaat.push(ch.dataset.name)});document.querySelectorAll(".blijverCheck").forEach(ch=>{const weg=document.querySelector(`.verlaatSchoolCheck[data-id="${CSS.escape(ch.dataset.id)}"]`)?.checked;if(!ch.checked&&!weg)doorgaan.push(ch.dataset.name)});
+      const nieuwJaar=volgendSchooljaarVan(schooljaar),doelSnap=doel!=="uit school"?await getDoc(doc(db,"schoolbeheer",nieuwJaar,"klassen",doel)):null,bestaand=doelSnap?.exists()?(doelSnap.data().leerlingen||[]):[];
+      const bestaandeKeys=new Set(bestaand.map(s=>name(s).toLowerCase())),dubbels=doorgaan.filter(n=>bestaandeKeys.has(n.toLowerCase()));
+      $("newYearResult").innerHTML = `<section class="notice"><h3>Controle-overzicht voor ${esc(nieuwJaar)}</h3><p><strong>${esc(bron)}</strong> → <strong>${esc(doel)}</strong></p><p class="muted">In de doelklas staan al ${bestaand.length} leerling(en). ${dubbels.length} naam/namen worden niet dubbel toegevoegd.</p><div class="grid"><div><h3>Naar ${esc(doel)}</h3>${doorgaan.length?`<ul>${doorgaan.map(n=>`<li>${esc(n)}${dubbels.includes(n)?" (bestaat al)":""}</li>`).join("")}</ul>`:`<p class="muted">Geen leerlingen.</p>`}</div><div><h3>Blijft in ${esc(bron)}</h3>${blijven.length?`<ul>${blijven.map(n=>`<li>${esc(n)}</li>`).join("")}</ul>`:`<p class="muted">Geen zittenblijvers.</p>`}</div><div><h3>Verlaat school</h3>${verlaat.length?`<ul>${verlaat.map(n=>`<li>${esc(n)}</li>`).join("")}</ul>`:`<p class="muted">Niemand aangeduid.</p>`}</div></div><p class="muted">De oude klas en alle oude betalingen blijven raadpleegbaar.</p><button class="danger" onclick="doorschuivingBewarenNieuwSchooljaar()">Doorschuiving bewaren</button></section>`;
       $("newYearResult").scrollIntoView({behavior:"smooth", block:"start"});
     };
     function volgendSchooljaarVan(huidig){ const start=Number(String(huidig||schooljaar).slice(0,4))+1; return `${start}-${start+1}`; }
-    function studentVoorNieuwSchooljaar(s,doelSchooljaar){ return {id:uid(),first:s.first||s.firstName||"",last:s.last||s.lastName||"",colleague:!!s.colleague,start:`${doelSchooljaar.slice(0,4)}-09-01`,end:`${doelSchooljaar.slice(5,9)}-06-30`}; }
+    function studentVoorNieuwSchooljaar(s,doelSchooljaar){ return {id:uid(),previousStudentId:s.id||"",first:s.first||s.firstName||"",last:s.last||s.lastName||"",colleague:!!s.colleague,start:`${doelSchooljaar.slice(0,4)}-09-01`,end:`${doelSchooljaar.slice(5,9)}-06-30`}; }
     async function voegLeerlingenToeAanNieuwSchooljaar(doelSchooljaar,klas,leerlingen){
       if(!klas||klas==="uit school"||!leerlingen.length) return;
       const ref=doc(db,"schoolbeheer",doelSchooljaar,"klassen",klas);
@@ -2344,6 +2485,19 @@
       item.bijgewerktOp=new Date().toISOString();
       await setDoc(ref,item);
     }
+    let laatsteJaarovergang=null;
+    async function klasVoorNieuwSchooljaar(jaar,klas,leerlingen){
+      if(!klas||klas==="uit school") return null;
+      const ref=doc(db,"schoolbeheer",jaar,"klassen",klas), snap=await getDoc(ref);
+      const voor=snap.exists()?snap.data():null;
+      const item=voor?structuredClone(voor):emptyClassDoc(klas);
+      item.schooljaar=jaar; item.klas=klas; item.leerlingen||=[]; item.refter||={}; item.refterVrijeDagen||=[]; item.activiteiten||=[]; item.aankopen||=[]; item.vrijeDagen||=[...standardFree]; item.messages||=[]; item.processed||={refter:""};
+      item.bewaarTot=bewaarTotVoorSchooljaar(jaar); item.bewaartermijnJaren=BEWAAR_JAREN_SCHOOLBEHEER;
+      const bestaand=new Set(item.leerlingen.map(s=>name(s).trim().toLocaleLowerCase("nl")));
+      leerlingen.forEach(s=>{const nieuw=studentVoorNieuwSchooljaar(s,jaar),sleutel=name(nieuw).trim().toLocaleLowerCase("nl");if(sleutel&&!bestaand.has(sleutel)){item.leerlingen.push(nieuw);bestaand.add(sleutel)}});
+      item.leerlingen.sort((a,b)=>name(a).localeCompare(name(b),"nl")); item.bijgewerktOp=new Date().toISOString();
+      return {ref,voor,item};
+    }
     window.doorschuivingBewarenNieuwSchooljaar = async function(){
       if(!isSecretary()) return alert("Alleen secretariaat kan doorschuiving bewaren.");
       const bron=$("newYearBronKlas").value, doel=$("newYearDoelKlas").value;
@@ -2353,12 +2507,31 @@
       const bronLeerlingen=await laadLeerlingenVoorKlas(bron);
       if(!bronLeerlingen||!bronLeerlingen.length) return alert("Geen leerlingen gevonden.");
       const zittenblijverIds=new Set([...document.querySelectorAll(".blijverCheck:checked")].map(ch=>ch.dataset.id));
+      const verlaatIds=new Set([...document.querySelectorAll(".verlaatSchoolCheck:checked")].map(ch=>ch.dataset.id));
       const blijven=bronLeerlingen.filter(s=>zittenblijverIds.has(s.id));
-      const doorgaan=bronLeerlingen.filter(s=>!zittenblijverIds.has(s.id));
+      const explicietVerlaten=bronLeerlingen.filter(s=>verlaatIds.has(s.id));
+      const doorgaan=bronLeerlingen.filter(s=>!zittenblijverIds.has(s.id)&&!verlaatIds.has(s.id));
+      const verlaten=doel==="uit school"?[...explicietVerlaten,...doorgaan]:explicietVerlaten;
+      const naarDoel=doel==="uit school"?[]:doorgaan;
       const nieuwJaar=volgendSchooljaarVan(schooljaar);
-      await voegLeerlingenToeAanNieuwSchooljaar(nieuwJaar,bron,blijven);
-      await voegLeerlingenToeAanNieuwSchooljaar(nieuwJaar,doel,doorgaan);
-      alert(`Doorschuiving bewaard in ${nieuwJaar}.\n${doorgaan.length} naar ${doel}, ${blijven.length} zittenblijver(s) in ${bron}.`);
+      const bronRef=doc(db,"schoolbeheer",schooljaar,"klassen",bron),bronSnap=await getDoc(bronRef);
+      if(!bronSnap.exists()) return alert("De bronklas bestaat niet meer. Herlaad en probeer opnieuw.");
+      const bronVoor=bronSnap.data(),bronNa=structuredClone(bronVoor),nu=new Date().toISOString();
+      bronNa.leerlingen=(bronNa.leerlingen||[]).map(s=>({...s,volgendSchooljaarStatus:zittenblijverIds.has(s.id)?"blijft_zitten":verlaatIds.has(s.id)||doel==="uit school"?"verlaat_school":"doorgeschoven",volgendeKlas:zittenblijverIds.has(s.id)?bron:(verlaatIds.has(s.id)||doel==="uit school"?"":doel),jaarovergangOp:nu})); bronNa.bijgewerktOp=nu;
+      const bestemmingen=[];
+      const bronNieuw=await klasVoorNieuwSchooljaar(nieuwJaar,bron,blijven); if(bronNieuw)bestemmingen.push(bronNieuw);
+      const doelNieuw=await klasVoorNieuwSchooljaar(nieuwJaar,doel,naarDoel); if(doelNieuw&&doel!==bron)bestemmingen.push(doelNieuw);
+      await schoolbeheerVeiligheidskopie(bronRef,`Voor jaarovergang naar ${nieuwJaar}`,true);
+      for(const bestemming of bestemmingen) await schoolbeheerVeiligheidskopie(bestemming.ref,`Voor jaarovergang vanuit ${bron}`,true);
+      const batch=writeBatch(db); batch.set(bronRef,bronNa,{merge:true}); bestemmingen.forEach(x=>batch.set(x.ref,x.item,{merge:true})); await batch.commit();
+      laatsteJaarovergang={bronRef,bronVoor,bestemmingen:bestemmingen.map(x=>({ref:x.ref,voor:x.voor}))};
+      $("newYearResult").innerHTML=`<section class="success"><strong>Doorschuiving veilig bewaard in ${esc(nieuwJaar)}.</strong><p>${naarDoel.length} naar ${esc(doel)}, ${blijven.length} zittenblijver(s) in ${esc(bron)} en ${verlaten.length} schoolverlater(s). De oude klasgegevens zijn niet verwijderd.</p><button class="white" onclick="maakLaatsteJaarovergangOngedaan()">Deze jaarovergang ongedaan maken</button></section>`;
+    };
+    window.maakLaatsteJaarovergangOngedaan=async function(){
+      if(!laatsteJaarovergang||!confirm("Deze zojuist uitgevoerde jaarovergang ongedaan maken?"))return;
+      const batch=writeBatch(db); batch.set(laatsteJaarovergang.bronRef,laatsteJaarovergang.bronVoor);
+      laatsteJaarovergang.bestemmingen.forEach(x=>x.voor?batch.set(x.ref,x.voor):batch.delete(x.ref)); await batch.commit(); laatsteJaarovergang=null;
+      alert("De jaarovergang is ongedaan gemaakt."); await renderNewYear();
     };
 
 
