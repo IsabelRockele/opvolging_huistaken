@@ -1143,9 +1143,9 @@
         <h2>Klas nog niet gestart</h2>
         <p class="muted">${isSecretary() ? "Deze klas bestaat nog niet in " + esc(schooljaar) + "." : "Secretariaat moet deze klas eerst starten."}</p>
         ${isSecretary()?`<div class="notice" style="margin-top:14px">
-          <strong>Staat deze klas al in dashboard?</strong>
-          <p class="muted">Je kan ${esc(klas)} voor ${esc(schooljaar)} starten met de namen die de klasleerkracht al in dashboard gebruikt. Er wordt een nieuwe klaslijst gemaakt; er wordt niets uit dashboard gewist.</p>
-          <button class="green" onclick="startKlasUitDashboard('${esc(klas)}')">Start ${esc(klas)} met namen uit dashboard</button>
+          <strong>Nieuwe klaslijst maken voor ${esc(klas)}</strong>
+          <p class="muted">Start eerst een lege klaslijst. Daarna kun je de namen uit Excel importeren, een volledige lijst plakken of leerlingen één voor één toevoegen. Dit werkt voor K1, K2, K3 en alle lagere-schoolklassen.</p>
+          <button class="green" onclick="startLegeKlaslijst('${esc(klas)}')">Lege klaslijst voor ${esc(klas)} starten</button>
         </div>`:""}
         ${kandidaten.length ? `<div class="notice" style="margin-top:14px">
           <strong>Ik vond ${esc(klas)} wel in een ander schooljaar.</strong>
@@ -1185,6 +1185,14 @@
       await saveNow();
       render();
       alert(`Leerlingdatums hersteld naar ${schooljaar}.`);
+    };
+    window.startLegeKlaslijst=async function(klas){
+      if(!isSecretary())return;
+      const ref=doc(db,"schoolbeheer",schooljaar,"klassen",klas),snap=await getDoc(ref);
+      if(snap.exists())return openClass(klas);
+      if(!confirm(`Een lege klaslijst voor ${klas} starten in ${schooljaar}?`))return;
+      await setDoc(ref,emptyClassDoc(klas));
+      await openClass(klas);
     };
 
     async function startClass(){
@@ -1806,6 +1814,9 @@
       $("adminBody").innerHTML=`
         <section class="wegwijzer-intro"><h3 style="margin-top:0">Waarmee wil je beginnen?</h3><p style="margin-bottom:0">Klik alleen de taak open die je nu nodig hebt. Kies bovenaan eerst het juiste <strong>schooljaar</strong> en links de juiste <strong>klas</strong>. Bij twijfel verander je niets en open je eerst het stappenplan.</p></section>
         <div class="wegwijzer-grid">
+          ${wegwijzerKaart("🏫","Een klaslijst starten","Voor K1, K2, K3 en alle lagere-schoolklassen.",[
+            "Kies bovenaan het juiste schooljaar en klik links op de klas.","Bestaat de klaslijst nog niet? Klik op <strong>Lege klaslijst starten</strong>.","Voeg daarna de namen toe via <strong>Excel importeren</strong>, <strong>Klaslijst plakken</strong> of <strong>Nieuwe leerling</strong>.","Controleer de namen in de gewone klaslijst."
+          ],`<button class="green" onclick="gaNaarSecretariaatTaak('klaslijsten')">Ga naar Klaslijsten</button>`)}
           ${wegwijzerKaart("👧","Een nieuwe leerling toevoegen","Voor een leerling die later bij de klas komt.",[
             "Kies links de klas waarin de leerling start.","Open <strong>Klaslijsten</strong> en kies <strong>Nieuwe leerling</strong>.","Vul voornaam, achternaam en startdatum in.","Controleer de naam en bewaar. De leerling verschijnt ook automatisch bij etiketten en afwezigheden."
           ],`<button class="green" onclick="gaNaarSecretariaatTaak('nieuwe-leerling')">Ga naar Nieuwe leerling</button>`)}
@@ -1855,7 +1866,7 @@
 
             function classListContent(){
       const canManageClasses = isSecretary();
-      const canImportDashboard = isSchoolBreedRole() || isSecretary();
+      const canImportDashboard = isSchoolBreedRole() && !isSecretary();
       const toolButtons = `
         <div class="class-actions no-print">
           <button class="tool-paste ${classListMode==="plakken"?"active":""}" onclick="openClassListTool('plakken')" title="Een volledige namenlijst plakken">📋 Klaslijst plakken</button>
