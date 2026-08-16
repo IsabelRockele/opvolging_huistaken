@@ -91,6 +91,16 @@ function pasKnoppenToe(huistakenKnop, overgangKnop, schoolbeheerKnop, bestelling
   const publiekeAgendaLinks = document.getElementById('publiekeAgendaLinks');
   if (publiekeAgendaLinks) publiekeAgendaLinks.style.display = isSecretariaat ? 'none' : '';
 
+  // Secretariaat houdt Klasorganisatie bewust eenvoudig: alleen afwezigheidsattesten.
+  const organisatieTegels = document.querySelectorAll('.organisatieblok .portaal-tegel');
+  if (isSecretariaat) {
+    organisatieTegels.forEach(tegel => { tegel.style.display = 'none'; });
+    if (afwezigheidsattestenKnop) afwezigheidsattestenKnop.style.display = '';
+  } else {
+    // Tegels zonder rolgestuurde id (zoals klasagenda) opnieuw zichtbaar maken bij een rolwissel.
+    organisatieTegels.forEach(tegel => { if (!tegel.id) tegel.style.display = ''; });
+  }
+
   if (isSecretariaat) {
     if (huistakenKnop) huistakenKnop.style.display = 'none';
     if (overgangKnop) overgangKnop.style.display = 'none';
