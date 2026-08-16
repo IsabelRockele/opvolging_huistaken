@@ -19,6 +19,10 @@
     @page briefjes{size:A4 landscape;margin:10mm 9mm}
     @media print{body{background:#fff;-webkit-print-color-adjust:exact;print-color-adjust:exact}header,.controls,.pending,.briefjes-paneel,.legende{display:none!important}main{max-width:none;margin:0;padding:0}.blad{box-shadow:none;margin:0;padding:0;min-height:0}.table-wrap{overflow:visible}table{font-size:9px}th,td{height:20px}th.naam,td.naam{width:55mm}th.code{width:5.8mm}.groep-start-p,.groep-start-b{border-left-width:3px!important}.b-grens{background-color:#bdbdbd!important}.vakje{font-size:11px}.waarschuwing{display:none}.voet{font-size:8px}.bladkop{margin-bottom:10px}.subtitel{margin-bottom:8px}body.briefjes-print .blad{display:none}body.briefjes-print #briefjesPrint{display:block}}
   </style>
+  <style>
+    .klik-uitleg{margin:12px 0 0;background:#eef7f0;border:1px solid #bdd6c3;border-radius:11px;padding:11px 14px;font-size:13px;line-height:1.45}
+    @media print{.klik-uitleg{display:none!important}}
+  </style>
 </head>
 <body>
   <header><img src="afbeeldingen/schoollogo.png" alt="Logo"><div><h1>Afwezigheidsattesten</h1><p>Ziektebriefjes, persoonlijke redenen en ongewettigde halve dagen</p></div><a href="index.html">Keuzescherm</a></header>
@@ -43,6 +47,7 @@
       <div id="briefjesKinderen" class="briefjes-kinderen"></div>
     </section>
     <section id="pending" class="pending"><h3>Nieuwe leerling(en) gevonden</h3><p>Kies waar elke nieuwe leerling in de vaste lijst en nummering moet komen.</p><div id="pendingLijst"></div></section>
+    <div class="klik-uitleg"><strong>Hoe invullen?</strong> Klik één keer op een vakje om een <strong>X</strong> te plaatsen. Klik nogmaals op hetzelfde vakje om de X te verwijderen of een fout te verbeteren. Iedere wijziging wordt automatisch bewaard; de melding rechtsboven toont wanneer alles <strong>bewaard</strong> is.</div>
     <section class="blad">
       <div class="bladkop"><h2 id="klasTitel">Klas: —</h2><h2 id="schooljaarTitel">Schooljaar —</h2><h2 id="leerkrachtTitel">Leerkracht: —</h2></div>
       <p class="subtitel">Overzicht afwezigheden per leerling</p>
