@@ -661,20 +661,22 @@
         </div>
       </div>
 
+      <div class="help-box" style="margin-bottom:12px"><strong>Veilig gekoppeld aan de klaslijst.</strong> Bestaande leerlingenfiches en alle reeds ingevulde informatie blijven behouden. Wanneer de centrale klaslijst verandert, worden alleen ontbrekende namen als nieuwe, lege fiche toegevoegd. Een bestaande fiche wordt nooit door een lege fiche vervangen.</div>
+
       <div class="student-workbar" id="studentWerkbarCodex">
-        <button type="button" id="toonKlaslijstWerkbladBtn">📋 Klaslijst importeren</button>
+        <button type="button" id="toonKlaslijstWerkbladBtn">📋 Ontbrekende namen toevoegen</button>
         <button type="button" id="toonFichesWerkbladBtn" class="ghost active">&#128101; Leerlingenfiches</button>
         <button type="button" id="toonBlokWerkbladBtn" class="ghost">🧩 Per onderdeel invullen</button>
         <span class="hint">Werk per kind of vul één onderdeel meteen voor de hele klas in.</span>
       </div>
 
       <div class="klaslijst-box">
-        <label for="klaslijstInput">Klaslijst importeren</label>
-        <p class="small" style="margin:0 0 8px">Plak een lijst met 1 leerling per regel. Dit kan als "Voornaam Achternaam" of "Achternaam, Voornaam". Bestaande namen worden overgeslagen.</p>
+        <label for="klaslijstInput">Ontbrekende namen uit een klaslijst toevoegen</label>
+        <p class="small" style="margin:0 0 8px">Plak een lijst met 1 leerling per regel. Dit kan als "Voornaam Achternaam" of "Achternaam, Voornaam". Bestaande namen én hun volledige fiche worden overgeslagen en dus niet gewijzigd.</p>
         <div class="leerlingen-toolbar">
           <textarea id="klaslijstInput" placeholder="Peeters, Noor&#10;Janssens, Lina&#10;Milan Vermeulen"></textarea>
           <div class="actions" style="align-self:end">
-            <button id="importKlaslijstBtn" type="button" class="secondary">📋 Klaslijst importeren</button>
+            <button id="importKlaslijstBtn" type="button" class="secondary">📋 Alleen ontbrekende namen toevoegen</button>
           </div>
         </div>
       </div>

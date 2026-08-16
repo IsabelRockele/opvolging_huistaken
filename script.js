@@ -103,6 +103,14 @@ function pasKnoppenToe(huistakenKnop, overgangKnop, schoolbeheerKnop, bestelling
   if (bestellingenKnop) bestellingenKnop.style.display = (isSecretariaat || heeftKlasbeheer) ? '' : 'none';
   const publiekeAgendaLinks = document.getElementById('publiekeAgendaLinks');
   if (publiekeAgendaLinks) publiekeAgendaLinks.style.display = 'none';
+  const hulpbalk = document.getElementById('portaalHulpbalk');
+  const checklist = document.getElementById('eersteKeerChecklist');
+  const magGebruikershulp = isSchoolBreed || isSecretariaat || heeftKlasbeheer;
+  if (hulpbalk) hulpbalk.style.display = magGebruikershulp ? 'flex' : 'none';
+  if (checklist) {
+    const sleutel = 'lindeEersteChecklist_' + (auth.currentUser?.uid || 'onbekend');
+    checklist.style.display = heeftKlasbeheer && !isSchoolBreed && !isSecretariaat && localStorage.getItem(sleutel) !== 'klaar' ? 'block' : 'none';
+  }
 
   // Secretariaat houdt Klasorganisatie bewust eenvoudig: alleen afwezigheidsattesten.
   const organisatieTegels = document.querySelectorAll('.organisatieblok .portaal-tegel');
@@ -196,6 +204,33 @@ window.openBeheerderHulp = function () {
 window.sluitBeheerderHulp = function () {
   const laag = document.getElementById('beheerderHulp');
   if (laag) laag.classList.remove('open');
+};
+window.openGebruikersHulp = function () { document.getElementById('gebruikersHulp')?.classList.add('open'); };
+window.sluitGebruikersHulp = function () { document.getElementById('gebruikersHulp')?.classList.remove('open'); };
+window.sluitEersteKeerChecklist = function () {
+  const sleutel = 'lindeEersteChecklist_' + (auth.currentUser?.uid || 'onbekend');
+  localStorage.setItem(sleutel, 'klaar');
+  const box = document.getElementById('eersteKeerChecklist');
+  if (box) box.style.display = 'none';
+};
+window.maakProbleemtekst = async function () {
+  const tekst = [
+    'Hulpvraag schooltool',
+    `E-mailadres: ${auth.currentUser?.email || 'onbekend'}`,
+    `Pagina: ${location.href}`,
+    `Tijdstip: ${new Date().toLocaleString('nl-BE')}`,
+    `Browser: ${navigator.userAgent}`,
+    '',
+    'Wat deed ik?',
+    '',
+    'Wat gebeurde er?',
+    '',
+    'Wat verwachtte ik?'
+  ].join('\n');
+  const veld = document.getElementById('probleemtekst');
+  if (veld) veld.value = tekst;
+  try { await navigator.clipboard.writeText(tekst); alert('De probleemtekst is gekopieerd. Vul de drie vragen nog aan.'); }
+  catch { alert('De probleemtekst staat klaar. Selecteer en kopieer hem uit het tekstvak.'); }
 };
 
 // Zet gesimuleerde rol om naar isSchoolBreed / isSecretariaat / heeftKlasbeheer

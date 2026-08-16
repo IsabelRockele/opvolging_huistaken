@@ -71,6 +71,7 @@
     .wegwijzer-kaart summary::-webkit-details-marker{display:none}.wegwijzer-kaart summary::after{content:'+';margin-left:auto;font-size:20px;color:#55705c}.wegwijzer-kaart[open] summary::after{content:'−'}
     .wegwijzer-inhoud{padding:0 16px 16px;border-top:1px solid #edf0ee}.wegwijzer-inhoud ol{padding-left:20px;line-height:1.6}.wegwijzer-inhoud li+li{margin-top:5px}
     .wegwijzer-waarschuwing{background:#fff8e6;border-left:4px solid #e0a229;padding:10px 12px;border-radius:8px;margin:10px 0}
+    .scherm-laden{position:fixed;inset:0;background:rgba(244,247,251,.9);z-index:10000;display:none;align-items:center;justify-content:center;backdrop-filter:blur(2px)}.scherm-laden.show{display:flex}.scherm-laden-kaart{width:min(360px,88vw);background:#fff;border:1px solid #d7e0e9;border-radius:16px;padding:20px;text-align:center;box-shadow:0 12px 40px #31445b2b}.laadbalk{height:7px;background:#e8edf2;border-radius:99px;overflow:hidden;margin-top:13px}.laadbalk::after{content:'';display:block;width:42%;height:100%;background:#4f8b68;border-radius:99px;animation:laadSchuif 1s ease-in-out infinite}@keyframes laadSchuif{0%{transform:translateX(-110%)}100%{transform:translateX(340%)}}
 
     #navRefter{background:#fdf4e0;border-left-color:#d99040;color:#7a5010}
     #navRefter .sb-icon{color:#d99040}
@@ -839,6 +840,7 @@
   </style>
 </head>
 <body>
+  <div id="schermLaden" class="scherm-laden"><div class="scherm-laden-kaart"><strong id="schermLadenTitel">Even laden…</strong><p class="muted small" style="margin:6px 0 0">De juiste gegevens worden klaargezet.</p><div class="laadbalk"></div></div></div>
 
   <!-- TOPBAR -->
   <header id="topbar">
@@ -932,6 +934,8 @@
     const esc = v => String(v ?? "").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;");
     const uid = () => Math.random().toString(36).slice(2,9) + Date.now().toString(36).slice(-4);
     const $ = id => document.getElementById(id);
+    function toonSchermLaden(titel="Even laden…"){const laag=$("schermLaden");if(!laag)return;$("schermLadenTitel").textContent=titel;laag.classList.add("show")}
+    function verbergSchermLaden(){requestAnimationFrame(()=>$("schermLaden")?.classList.remove("show"))}
     function huidigSchooljaar(){
       const now = new Date();
       const start = now.getMonth() >= 7 ? now.getFullYear() : now.getFullYear() - 1;
@@ -1094,6 +1098,7 @@
     }
 
     window.openClass = async function(klas){
+      toonSchermLaden(`${klas} laden…`);
       activeClass = klas;
       if(isSecretary()){
         tab = "administratie";
@@ -1113,11 +1118,13 @@
             setStatus("Nieuwe klaslijst");
             render();
             renderKlasPills();
+            verbergSchermLaden();
           }else{
             data = null;
             $("messages").innerHTML = "";
             toonKlasNietGestart(activeClass);
             setStatus("Nog niet gestart");
+            verbergSchermLaden();
           }
           return;
         }
@@ -1129,10 +1136,12 @@
         setActiveNav(tab);
         render();
         renderKlasPills();
+        verbergSchermLaden();
       }, err => {
         console.error(err);
         $("content").innerHTML = `<div class="panel"><h2>Laden mislukt</h2><p class="muted">${esc(err.message)}</p></div>`;
         setStatus("Fout");
+        verbergSchermLaden();
       });
     };
 
@@ -2800,11 +2809,13 @@
     });
 
     $("schooljaarInput").addEventListener("change", async () => {
+      toonSchermLaden("Schooljaar laden…");
       schooljaar = $("schooljaarInput").value.trim() || schooljaar;
       await loadAllowedClasses();
       activeClass = allowedClasses[0] || "";
       renderScope();
       if(activeClass) await openClass(activeClass);
+      else verbergSchermLaden();
     });
 
     $("logoutBtn").addEventListener("click", () => signOut(auth).then(() => location.href="index.html"));
