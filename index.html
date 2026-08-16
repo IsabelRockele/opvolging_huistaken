@@ -1160,7 +1160,18 @@
         <details><summary>Afwezigheden en ziektebriefjes</summary><div class="beheer-hulp-inhoud"><ul><li>Klik op een Z-, P- of B-vak om een X te plaatsen of opnieuw te verwijderen.</li><li>Wijzigingen worden automatisch bewaard.</li><li>Zonder vooraf ingevulde naam krijg je één blanco A4 met vier briefjes.</li></ul></div></details>
         <details><summary>Naametiketten en afdrukken</summary><div class="beheer-hulp-inhoud"><ul><li>Kies klas, schrijfwijze, lettergrootte en eventueel vet.</li><li>Open het gedownloade document in Word.</li><li>Druk af op A4 en kies <strong>ware grootte/100%</strong>.</li></ul></div></details>
         <details><summary>Ik zie mijn klas of tools niet</summary><div class="beheer-hulp-inhoud"><ol><li>Controleer het ingelogde e-mailadres.</li><li>Vernieuw met <strong>Ctrl + F5</strong> en log opnieuw in.</li><li>Vraag de beheerder om schooljaar, klas en klasmailkoppeling te controleren.</li></ol></div></details>
-        <details id="hulpberichtDetails"><summary>Hulp vragen met de juiste informatie</summary><div class="beheer-hulp-inhoud"><p>Het hulpbericht bevat automatisch pagina, e-mailadres, tijdstip en browserinformatie. Vul zelf nog in wat je deed, wat er gebeurde en wat je verwachtte.</p><textarea id="probleemtekst" class="probleemtekst" placeholder="Het hulpbericht verschijnt hier."></textarea><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px"><button onclick="kopieerHulpbericht()">Tekst kopiëren</button><button onclick="mailHulpbericht()">E-mail aan beheerder voorbereiden</button></div><p style="margin-top:8px"><small>De e-mail wordt alleen voorbereid. Controleer de tekst en klik daarna zelf op Verzenden.</small></p></div></details>
+        <details id="hulpberichtDetails"><summary>Een probleem melden aan de beheerder</summary><div class="beheer-hulp-inhoud">
+          <p style="margin-top:0"><strong>Vul deze drie vakken kort in.</strong> Je e-mailadres, deze pagina en het tijdstip worden automatisch toegevoegd.</p>
+          <label for="hulpWatDoen"><strong>1. Wat wilde je doen?</strong></label>
+          <textarea id="hulpWatDoen" class="probleemtekst" style="min-height:62px" placeholder="Bijvoorbeeld: Ik wilde de naametiketten van mijn klas afdrukken."></textarea>
+          <label for="hulpWatMis" style="display:block;margin-top:10px"><strong>2. Wat ging er mis?</strong></label>
+          <textarea id="hulpWatMis" class="probleemtekst" style="min-height:62px" placeholder="Bijvoorbeeld: Na het klikken gebeurde er niets."></textarea>
+          <label for="hulpVerwacht" style="display:block;margin-top:10px"><strong>3. Wat had je verwacht?</strong></label>
+          <textarea id="hulpVerwacht" class="probleemtekst" style="min-height:62px" placeholder="Bijvoorbeeld: Ik verwachtte dat het afdrukbestand geopend werd."></textarea>
+          <textarea id="probleemtekst" hidden aria-hidden="true"></textarea>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px"><button onclick="mailHulpbericht()" style="background:#356d4c;color:white;border-color:#356d4c;font-weight:800">✉ Hulpbericht mailen aan beheerder</button><button onclick="kopieerHulpbericht()">Tekst kopiëren</button></div>
+          <p style="margin:8px 0 0"><small>Je e-mailprogramma opent met het volledige bericht. Controleer het en klik daar zelf op <strong>Verzenden</strong>.</small></p>
+        </div></details>
       </div>
     </section>
   </div>
@@ -1242,6 +1253,6 @@
 
 
 
-  <script type="module" src="script.js?v=20260816-2"></script>
+  <script type="module" src="script.js?v=20260816-3"></script>
 </body>
 </html>

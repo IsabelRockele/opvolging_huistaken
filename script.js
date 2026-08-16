@@ -212,7 +212,6 @@ window.sluitGebruikersHulp = function () { document.getElementById('gebruikersHu
 window.openHulpbericht = function () {
   const onderdeel = document.getElementById('hulpberichtDetails');
   if (onderdeel) { onderdeel.open = true; }
-  window.maakProbleemtekst();
   setTimeout(() => onderdeel?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 0);
 };
 window.sluitEersteKeerChecklist = function () {
@@ -224,32 +223,45 @@ window.sluitEersteKeerChecklist = function () {
   if (hulpbalk) hulpbalk.style.display = 'flex';
 };
 window.maakProbleemtekst = function () {
+  const watDoen = document.getElementById('hulpWatDoen')?.value.trim() || '(niet ingevuld)';
+  const watMis = document.getElementById('hulpWatMis')?.value.trim() || '(niet ingevuld)';
+  const verwacht = document.getElementById('hulpVerwacht')?.value.trim() || '(niet ingevuld)';
   const tekst = [
     'Hulpbericht schooltool',
+    '',
+    'Wat wilde ik doen?',
+    watDoen,
+    '',
+    'Wat ging er mis?',
+    watMis,
+    '',
+    'Wat had ik verwacht?',
+    verwacht,
+    '',
+    'Automatische gegevens:',
     `E-mailadres: ${auth.currentUser?.email || 'onbekend'}`,
     `Pagina: ${location.href}`,
     `Tijdstip: ${new Date().toLocaleString('nl-BE')}`,
-    `Browser: ${navigator.userAgent}`,
-    '',
-    'Wat deed ik?',
-    '',
-    'Wat gebeurde er?',
-    '',
-    'Wat verwachtte ik?'
+    `Browser: ${navigator.userAgent}`
   ].join('\n');
   const veld = document.getElementById('probleemtekst');
   if (veld) veld.value = tekst;
   return tekst;
 };
 window.kopieerHulpbericht = async function () {
-  const veld = document.getElementById('probleemtekst');
-  const tekst = veld?.value || window.maakProbleemtekst();
+  const tekst = window.maakProbleemtekst();
   try { await navigator.clipboard.writeText(tekst); alert('Het hulpbericht is gekopieerd.'); }
-  catch { veld?.focus(); veld?.select(); alert('Automatisch kopiëren is geblokkeerd. De tekst is geselecteerd; kies nu Kopiëren.'); }
+  catch { alert('Automatisch kopiëren is geblokkeerd. Gebruik dan de knop om het hulpbericht via e-mail te openen.'); }
 };
 window.mailHulpbericht = function () {
-  const veld = document.getElementById('probleemtekst');
-  const tekst = veld?.value || window.maakProbleemtekst();
+  const watDoen = document.getElementById('hulpWatDoen')?.value.trim();
+  const watMis = document.getElementById('hulpWatMis')?.value.trim();
+  if (!watDoen || !watMis) {
+    alert('Vul eerst in wat je wilde doen en wat er misging.');
+    (!watDoen ? document.getElementById('hulpWatDoen') : document.getElementById('hulpWatMis'))?.focus();
+    return;
+  }
+  const tekst = window.maakProbleemtekst();
   const onderwerp = 'Hulpvraag schooltool - ' + (auth.currentUser?.email || 'onbekende gebruiker');
   window.location.href = `mailto:isabel.rockele@bsdelinde.net?subject=${encodeURIComponent(onderwerp)}&body=${encodeURIComponent(tekst)}`;
 };
