@@ -1151,7 +1151,7 @@
           <strong>Ik vond ${esc(klas)} wel in een ander schooljaar.</strong>
           <p class="muted">Waarschijnlijk staat je huidige klaslijst nog onder het verkeerde schooljaar. Je kan de klaslijst veilig kopieren naar ${esc(schooljaar)}. Bestaande gegevens in het andere schooljaar blijven staan.</p>
           <div class="row">${kandidaten.map(k => `<button class="green" onclick="kopieerKlasUitAnderSchooljaar('${esc(k.jaar)}','${esc(klas)}')">Kopieer uit ${esc(k.jaar)} (${k.aantal} leerlingen)</button>`).join("")}</div>
-        </div>` : `<p class="muted">${isSecretary() ? "Ga naar Administratie > Klaslijsten en gebruik Klassen beheren om de klas te starten." : ""}</p>`}
+        </div>` : (isSecretary()?`<p class="muted"><strong>Je bent al op de juiste plaats.</strong> Klik hierboven op de groene knop om de klaslijst te starten.</p>`:"")}
       </div>`;
     }
 
