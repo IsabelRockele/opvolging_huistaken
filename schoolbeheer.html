@@ -1095,6 +1095,11 @@
 
     window.openClass = async function(klas){
       activeClass = klas;
+      if(isSecretary()){
+        tab = "administratie";
+        adminPanel = "klaslijsten";
+        classListMode = "";
+      }
       schooljaar = $("schooljaarInput").value.trim() || schooljaar;
       renderScope();
       if(unsub) unsub();
@@ -1792,7 +1797,7 @@
       if(adminPanel==="klasleerkrachten") renderLeerkrachtenHuidigSchooljaar();
       if(adminPanel==="nieuw schooljaar") renderNewYearHome();
     }
-    window.openAdmin = p => { adminPanel = p; renderAdmin(); };
+    window.openAdmin = p => { adminPanel = p; if(p==="klaslijsten") classListMode=""; renderAdmin(); };
 
     function wegwijzerKaart(icoon,titel,korteUitleg,stappen,actie="",waarschuwing=""){
       return `<details class="wegwijzer-kaart"><summary><span style="font-size:22px">${icoon}</span><span>${esc(titel)}<small class="muted" style="display:block;font-weight:500;margin-top:2px">${esc(korteUitleg)}</small></span></summary><div class="wegwijzer-inhoud">${waarschuwing?`<div class="wegwijzer-waarschuwing">${waarschuwing}</div>`:""}<ol>${stappen.map(s=>`<li>${s}</li>`).join("")}</ol>${actie}</div></details>`;
