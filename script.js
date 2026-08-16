@@ -16,6 +16,16 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 export { db };
 
+function toonPortaalLaden(isLaden, fout=false) {
+  const keuzes = document.querySelector('#ingelogd-kaart .portaal-keuzes');
+  const melding = document.getElementById('portaalLaadmelding');
+  if (keuzes) keuzes.style.display = isLaden ? 'none' : '';
+  if (melding) {
+    melding.style.display = isLaden || fout ? '' : 'none';
+    if (fout) melding.innerHTML = '<strong style="display:block;color:#8a3b35;font-size:18px;margin-bottom:6px">De persoonlijke tools konden niet volledig worden geladen.</strong>Vernieuw de pagina. Blijft dit terugkomen, controleer dan de internetverbinding en klasmailkoppeling.';
+  }
+}
+
 onAuthStateChanged(auth, (user) => {
   if (!user) {
     const authBox = document.getElementById('auth');
@@ -40,6 +50,9 @@ onAuthStateChanged(auth, (user) => {
     }
     if (kaart) {
       if (emailSpan) emailSpan.textContent = user.email || '';
+      toonPortaalLaden(true);
+      const publiekeAgendaLinks = document.getElementById('publiekeAgendaLinks');
+      if (publiekeAgendaLinks) publiekeAgendaLinks.style.display = 'none';
       kaart.style.display = '';
       document.body.classList.add('start-ingelogd');
       const authBox = document.getElementById('auth');
@@ -89,7 +102,7 @@ function pasKnoppenToe(huistakenKnop, overgangKnop, schoolbeheerKnop, bestelling
   if (schoolbeheerKnop) schoolbeheerKnop.style.display = (isSecretariaat || isSchoolBreed || heeftKlasbeheer) ? '' : 'none';
   if (bestellingenKnop) bestellingenKnop.style.display = (isSecretariaat || heeftKlasbeheer) ? '' : 'none';
   const publiekeAgendaLinks = document.getElementById('publiekeAgendaLinks');
-  if (publiekeAgendaLinks) publiekeAgendaLinks.style.display = isSecretariaat ? 'none' : '';
+  if (publiekeAgendaLinks) publiekeAgendaLinks.style.display = 'none';
 
   // Secretariaat houdt Klasorganisatie bewust eenvoudig: alleen afwezigheidsattesten.
   const organisatieTegels = document.querySelectorAll('.organisatieblok .portaal-tegel');
@@ -212,6 +225,7 @@ async function toonSchooloverzichtKnopAlsNodig(user) {
       pasKnoppenToe(huistakenKnop, overgangKnop, schoolbeheerKnop, bestellingenKnop, oudercontactKnop, schoolKnop, groeigroepenKnop, zorgoverlegKnop, huiswerkklasKnop,
         klasafsprakenKnop,
         cached.isSchoolBreed, cached.isSecretariaat, cached.heeftKlasbeheer);
+      toonPortaalLaden(false);
       if (klasafsprakenKnop) klasafsprakenKnop.style.display = magKlasafsprakenTesten(user) ? '' : 'none';
     }
   } catch (e) { /* cache onleesbaar, gewoon doorgaan */ }
@@ -219,7 +233,12 @@ async function toonSchooloverzichtKnopAlsNodig(user) {
   // Haal verse rol op van Firestore op de achtergrond en update + sla op in cache
   try {
     const rolRef = doc(db, "schoolrollen", user.uid);
-    const rolSnap = await getDoc(rolRef);
+    const email = (user.email || '').toLowerCase();
+    const uidQuery = query(collection(db, "klasleerkrachten"), where("leerkracht_uids", "array-contains", user.uid));
+    const emailQuery = query(collection(db, "klasleerkrachten"), where("leerkracht_emails", "array-contains", email));
+    const [rolResult, uidResult, emailResult] = await Promise.allSettled([getDoc(rolRef), getDocs(uidQuery), getDocs(emailQuery)]);
+    if (rolResult.status !== 'fulfilled') throw rolResult.reason;
+    const rolSnap = rolResult.value;
     const rol = rolSnap.exists() ? String(rolSnap.data().rol || '').toLowerCase() : '';
     const isBeheerder = rol === 'beheerder';
 
@@ -237,6 +256,7 @@ async function toonSchooloverzichtKnopAlsNodig(user) {
         klasafsprakenKnop,
         isSchoolBreed, isSecretariaat, heeftKlasbeheer);
       if (klasafsprakenKnop) klasafsprakenKnop.style.display = magKlasafsprakenTesten(user) ? '' : 'none';
+      toonPortaalLaden(false);
       return;
     }
 
@@ -245,10 +265,7 @@ async function toonSchooloverzichtKnopAlsNodig(user) {
 
     let heeftKlasbeheer = false;
     if (!isSecretariaat) {
-      const email = (user.email || '').toLowerCase();
-      const uidQuery = query(collection(db, "klasleerkrachten"), where("leerkracht_uids", "array-contains", user.uid));
-      const emailQuery = query(collection(db, "klasleerkrachten"), where("leerkracht_emails", "array-contains", email));
-      const snaps = await Promise.all([getDocs(uidQuery), getDocs(emailQuery)]);
+      const snaps = [uidResult, emailResult].filter(result => result.status === 'fulfilled').map(result => result.value);
       heeftKlasbeheer = snaps.some(snap => !snap.empty);
     }
 
@@ -260,11 +277,13 @@ async function toonSchooloverzichtKnopAlsNodig(user) {
       klasafsprakenKnop,
       isSchoolBreed, isSecretariaat, heeftKlasbeheer);
     if (klasafsprakenKnop) klasafsprakenKnop.style.display = magKlasafsprakenTesten(user) ? '' : 'none';
+    toonPortaalLaden(false);
 
   } catch (err) {
     console.error('Rol controleren mislukt:', err);
     if (schoolbeheerKnop) schoolbeheerKnop.style.display = 'none';
     if (bestellingenKnop) bestellingenKnop.style.display = 'none';
+    toonPortaalLaden(false, true);
   }
 }
 
