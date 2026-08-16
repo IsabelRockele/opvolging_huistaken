@@ -75,7 +75,7 @@
   </section>
   <section class="notice">
     <strong>Werking:</strong>
-    <span class="muted" id="workHelp">Klasleerkrachten duiden in Klaslijsten bij hun eigen klas aan welke kinderen naar de huiswerkklas gaan. Hier verschijnen alleen die kinderen. De begeleider voegt bovenaan de datum toe en vinkt de aanwezigen aan.</span>
+    <span class="muted" id="workHelp">Klasleerkrachten duiden in Klaslijsten bij hun eigen klas aan welke kinderen naar de huiswerkklas gaan. Ontbreekt een leerling? Voeg die eerst toe via <a href="schoolbeheer.html" target="_blank" rel="noopener">Klaslijsten → Nieuwe leerling</a>. Hier verschijnen alleen kinderen die daar voor de huiswerkklas zijn aangeduid.</span>
   </section>
   <section class="panel list-panel">
     <div class="bar">
@@ -176,9 +176,9 @@ function renderRoleTools(){
   $("secretaryTools").style.display=secretary?"grid":"none";
   $("dateInput").closest("label").style.display=secretary?"none":"block";
   $("addDateBtn").style.display=secretary?"none":"inline-block";
-  $("workHelp").textContent=secretary
+  $("workHelp").innerHTML=secretary
     ? "Secretariaat ziet hier de aanwezigheden voor de facturatie. Verwerk tot een datum of verwerk de hele maand; die dagen worden dan geblokkeerd voor klasleerkrachten. Secretariaat kan fouten wel nog aanpassen."
-    : "Klasleerkrachten duiden in Klaslijsten bij hun eigen klas aan welke kinderen naar de huiswerkklas gaan. Hier verschijnen alleen die kinderen. De begeleider voegt bovenaan de datum toe en vinkt de aanwezigen aan.";
+    : 'Klasleerkrachten duiden in Klaslijsten bij hun eigen klas aan welke kinderen naar de huiswerkklas gaan. Ontbreekt een leerling? Voeg die eerst toe via <a href="schoolbeheer.html" target="_blank" rel="noopener">Klaslijsten → Nieuwe leerling</a>. Hier verschijnen alleen kinderen die daar voor de huiswerkklas zijn aangeduid.';
 }
 function render(){ $("status").textContent=`${schooljaar} - ${month}`; renderRoleTools(); renderTable(); }
 function collect(){

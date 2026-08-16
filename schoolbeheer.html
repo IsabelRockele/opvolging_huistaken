@@ -981,7 +981,7 @@
 
     const helpTexts = {
       administratie: `<h3>Uitleg administratie</h3><ul><li><strong>Klaslijsten</strong>: leerlingen toevoegen, namen verbeteren, kind van collega aanduiden en uitschrijven.</li><li><strong>Vrije dagen</strong>: extra vrije dagen of studiedagen ingeven. Weekends en woensdagen zijn automatisch grijs.</li><li><strong>Meldingen</strong>: secretariaat stuurt taken naar klassen. Leerkrachten vinken aan wanneer het klaar is.</li><li><strong>Nieuw schooljaar</strong>: leerlingen doorschuiven, zittenblijvers aanduiden en klasleerkrachten klaarzetten.</li></ul>`,
-      klaslijst: `<h3>Uitleg klaslijst</h3><ul><li>Gebruik <strong>Klaslijst plakken</strong> vooral bij een volledig nieuwe klas.</li><li>Gebruik <strong>Nieuwe leerling</strong> voor een leerling die later start.</li><li><strong>Standaard</strong> betekent: startdatum 1/09 van het schooljaar en einddatum 30/06 van dat schooljaar.</li><li>Namen kan je rechtstreeks in de tabel verbeteren.</li><li>Uitschrijven bewaart oudere gegevens voor lijsten en afrekeningen.</li></ul>`,
+      klaslijst: `<h3>Uitleg klaslijst</h3><ul><li>Gebruik <strong>Klaslijst plakken</strong> vooral bij een volledig nieuwe klas.</li><li>Gebruik <strong>Nieuwe leerling</strong> voor een leerling die later start of nog ontbreekt.</li><li>Een hier toegevoegde leerling verschijnt ook in afwezigheden, etiketten en andere gekoppelde tools. Bestaande overgangsfiches worden niet overschreven; alleen de ontbrekende naam wordt toegevoegd.</li><li><strong>Standaard</strong> betekent: startdatum 1/09 van het schooljaar en einddatum 30/06 van dat schooljaar.</li><li>Namen kan je rechtstreeks in de tabel verbeteren.</li><li>Uitschrijven bewaart oudere gegevens voor lijsten en afrekeningen.</li></ul>`,
       refter: `<h3>Uitleg refter</h3><ul><li>Leerkrachten vinken enkel kinderen aan die afwezig zijn.</li><li>Grijze dagen tellen niet mee.</li><li>Kinderen van collega's krijgen een zachte kleur en betalen geen refter.</li><li>Als secretariaat <strong>Verwerkt tot</strong> invult, worden die dagen vergrendeld bij de leerkracht.</li></ul>`,
       activiteiten: `<h3>Uitleg activiteiten</h3><ul><li>Leerkrachten voegen de activiteit toe met datum en prijs.</li><li>Daarna vinken ze alleen afwezige leerlingen aan.</li><li>Secretariaat ziet groen voor aanwezig en rood voor afwezig.</li><li>Wanneer secretariaat verwerkt aanvinkt, kan de leerkracht die activiteit niet meer wijzigen.</li></ul>`,
       aankopen: `<h3>Uitleg aankopen</h3><ul><li>Leerkrachten voegen aankopen toe zoals badmuts of turnshirt.</li><li>De prijs kan bij het toevoegen nog aangepast worden.</li><li>Secretariaat kan aankopen nakijken en als verwerkt aanduiden.</li></ul>`,
@@ -1906,7 +1906,7 @@
       }
       if(classListMode === "nieuw"){
         toolPanel = `<section class="class-tool-panel no-print">
-          <div class="bar"><div><h3>Nieuwe leerling</h3><p class="muted small">Voor een leerling die later instroomt of nog ontbrak.</p></div><button class="small white right" onclick="openClassListTool('')">Sluiten</button></div>
+          <div class="bar"><div><h3>Nieuwe leerling</h3><p class="muted small">Voor een leerling die later instroomt of nog ontbrak. De naam wordt centraal bewaard en verschijnt ook in de andere gekoppelde tools.</p></div><button class="small white right" onclick="openClassListTool('')">Sluiten</button></div>
           <div class="student-add-form">
             <label>Achternaam<input id="newLast"></label>
             <label>Voornaam<input id="newFirst"></label>
