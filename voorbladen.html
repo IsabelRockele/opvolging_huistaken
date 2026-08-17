@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="nl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Voorbladen rapport en toonmap · De Linde</title>
+  <style>
+    :root{--ink:#263238;--muted:#68757d;--green:#3a7c22;--green2:#eaf4e6;--paper:#fff;--bg:#f4f0e7;--line:#d8d3c8}
+    *{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;color:var(--ink);background:var(--bg)}
+    header{background:#386b4a;color:#fff;padding:15px 22px;display:flex;align-items:center;gap:14px;box-shadow:0 2px 10px #0002}header img{width:44px;height:44px;object-fit:contain;background:#fff;border-radius:10px;padding:4px}header h1{font-size:21px;margin:0}header p{margin:3px 0 0;opacity:.86;font-size:13px}header a{margin-left:auto;color:#fff;text-decoration:none;border:1px solid #ffffff66;padding:8px 12px;border-radius:9px;font-weight:700}
+    main{max-width:1180px;margin:24px auto;padding:0 18px 40px;display:grid;grid-template-columns:minmax(320px,410px) 1fr;gap:22px}.panel{background:var(--paper);border:1px solid var(--line);border-radius:16px;padding:20px;box-shadow:0 6px 18px #584e3812}.panel h2{margin:0 0 8px;font-size:21px}.muted{color:var(--muted);line-height:1.45}label{display:block;font-size:13px;font-weight:700;margin-top:14px}select,input{width:100%;margin-top:6px;border:1px solid #bfc7c1;border-radius:9px;padding:10px 11px;font:inherit;background:#fff}
+    .status{margin-top:14px;padding:10px 12px;border-radius:9px;background:#f3f5f3;font-size:13px;line-height:1.4}.namen-kop{display:flex;align-items:center;gap:7px;margin-top:14px}.namen-kop strong{font-size:13px}.mini{border:0;border-radius:8px;padding:6px 9px;background:#eef2ef;color:#386b4a;font-size:11px;font-weight:700;cursor:pointer}.namen{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;margin-top:8px;max-height:300px;overflow:auto}.naam{display:flex;align-items:center;gap:7px;background:#f5f7f5;border:1px solid #e1e6e2;border-radius:9px;padding:7px 9px;font-size:12px;font-weight:400;margin:0;cursor:pointer}.naam:has(input:checked){background:var(--green2);border-color:#a9c4af}.naam input{width:auto;margin:0}.downloadrij{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:16px}button.primary{border:0;border-radius:10px;padding:12px 10px;background:#386b4a;color:#fff;font:700 14px Arial;cursor:pointer}button:disabled{opacity:.5;cursor:not-allowed}.uitleg{font-size:12px;color:var(--muted);margin-top:12px;line-height:1.45}
+    .preview-kop{display:flex;justify-content:space-between;gap:12px}.badge{background:var(--green2);color:var(--green);border-radius:999px;padding:6px 10px;font-size:12px;font-weight:700;white-space:nowrap}.papier-wrap{margin-top:15px;background:#dedbd3;padding:18px;border-radius:12px}.papier{width:min(100%,520px);aspect-ratio:210/297;background:#fff;margin:auto;box-shadow:0 2px 9px #0002;display:flex;flex-direction:column;align-items:center;color:var(--green);padding:5% 4% 4%}.papier .titel{font-size:clamp(42px,8vw,78px);line-height:1;margin-top:1%;white-space:nowrap}.papier .jaar{font-size:clamp(24px,4vw,38px);margin-top:7%}.papier img{width:58%;margin-top:8%}.papier .leerling{align-self:stretch;margin-top:auto;font-size:clamp(18px,3vw,29px);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    @media(max-width:820px){main{grid-template-columns:1fr}.downloadrij{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+  <header><img src="afbeeldingen/schoollogo.png" alt="Logo"><div><h1>Voorbladen rapport en toonmap</h1><p>Automatisch één A4 per gekozen leerling</p></div><a href="index.html">Keuzescherm</a></header>
+  <main>
+    <section class="panel">
+      <h2>Voorbladen maken</h2>
+      <p class="muted">Het schooljaar en de volledige namen komen automatisch uit de centrale klaslijst.</p>
+      <label>Schooljaar<input id="schooljaar" autocomplete="off"></label>
+      <label>Klas<select id="klas"><option>Even laden…</option></select></label>
+      <div id="status" class="status">Je toegang en klaslijst worden gecontroleerd.</div>
+      <div class="namen-kop"><strong>Kinderen voor deze afdruk</strong><button id="selecteerAlles" class="mini" type="button">Hele klas</button><button id="selecteerGeen" class="mini" type="button">Geen</button></div>
+      <div id="namen" class="namen"></div>
+      <div class="downloadrij"><button id="downloadRapport" class="primary" disabled>Rapportvoorbladen downloaden</button><button id="downloadToonmap" class="primary" disabled>Toonmapvoorbladen downloaden</button></div>
+      <p class="uitleg"><strong>Nieuwe leerling?</strong> Voeg de leerling eerst toe via Klaslijsten. Kies hier daarna opnieuw de klas en vink alleen die leerling aan.</p>
+      <p class="uitleg">Open het gedownloade bestand in Word. Iedere gekozen leerling krijgt één afzonderlijke pagina.</p>
+    </section>
+    <section class="panel">
+      <div class="preview-kop"><div><h2>Voorbeeld</h2><p class="muted" style="margin:4px 0 0">Het eerste geselecteerde kind wordt getoond.</p></div><span id="bladBadge" class="badge">0 bladen</span></div>
+      <label>Voorbeeld bekijken<select id="voorbeeldType"><option value="Rapport">Rapport</option><option value="Toonmap">Toonmap</option></select></label>
+      <div class="papier-wrap"><div class="papier"><div id="voorbeeldTitel" class="titel">Rapport</div><div id="voorbeeldJaar" class="jaar"></div><img src="afbeeldingen/schoollogo.png" alt="Schoollogo"><div id="voorbeeldNaam" class="leerling">Naam:</div></div></div>
+    </section>
+  </main>
+  <script type="module" src="voorbladen.js?v=20260817-1"></script>
+</body>
+</html>
