@@ -1,6 +1,6 @@
 {
-  "short_name": "Huiswerkapp",
-  "name": "Huistaken Opvolg App",
+  "short_name": "Schooltools",
+  "name": "Schooltools De Linde",
   "icons": [
     {
       "src": "icon-192x192.png",
@@ -16,6 +16,6 @@
   "start_url": "index.html",
   "scope": "index.html",
   "display": "standalone",
-  "background_color": "#f6f6f6",
-  "theme_color": "#4A90E2"
+  "background_color": "#ffffff",
+  "theme_color": "#187633"
 }
