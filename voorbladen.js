@@ -16,7 +16,7 @@ function leerlingId(s,i){return String(s.id||`${achternaam(s)}_${voornaam(s)}_${
 function actief(s){const jaar=$('schooljaar').value.trim(),datum=`${jaar.slice(0,4)}-09-15`;return(!s.start||s.start<=datum)&&(!s.end||s.end>=datum)}
 function gekozen(){return leerlingen.map((s,i)=>({id:leerlingId(s,i),naam:volledigeNaam(s)})).filter(x=>geselecteerd.has(x.id)&&x.naam)}
 function magAlleKlassen(){return role==='zorgleerkracht'}
-function magGebruiken(){return role==='zorgleerkracht'||role==='klasleerkracht'}
+function magGebruiken(){return role==='zorgleerkracht'||!['secretariaat','directie','zorgcoordinator','beheerder'].includes(role)}
 
 function render(){
   const opties=leerlingen.map((s,i)=>({id:leerlingId(s,i),naam:volledigeNaam(s)})),keuze=gekozen();
