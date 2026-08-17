@@ -11,6 +11,7 @@ function huidigSchooljaar(){const n=new Date(),s=n.getMonth()>=7?n.getFullYear()
 function esc(v){return String(v??"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;")}
 function isBreed(){return ["beheerder","secretariaat","directie","zorgcoordinator","zorgleerkracht"].includes(role)}
 function voornaam(s){
+  const roepnaam=String(s.roepnaam||s.callingName||"").trim(); if(roepnaam)return roepnaam;
   const direct=String(s.first||s.firstName||s.voornaam||"").trim(); if(direct)return direct;
   const volledig=String(s.naam||s.name||"").trim(); if(!volledig)return "";
   if(volledig.includes(","))return volledig.split(",").slice(1).join(",").trim();

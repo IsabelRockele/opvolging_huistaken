@@ -944,7 +944,8 @@
     let user = null, role = "", allowedClasses = [], allClasses = [...DEFAULT_CLASSES],
         activeClass = "", schooljaar = huidigSchooljaar(), data = null, unsub = null,
         activityMonth = "", purchaseMonth = "",
-        tab = "administratie", adminPanel = "wegwijzer", classListMode = "", saveTimer = null;
+        tab = "administratie", adminPanel = "wegwijzer", classListMode = "", saveTimer = null,
+        excelImportVoorbeeld = [], excelImportBestandsnaam = "";
     $("schooljaarInput").value = schooljaar;
 
     async function schoolbeheerVeiligheidskopie(ref, reden, forceer=false){
@@ -1830,7 +1831,7 @@
             "Kies links de klas waarin de leerling start.","Open <strong>Klaslijsten</strong> en kies <strong>Nieuwe leerling</strong>.","Vul voornaam, achternaam en startdatum in.","Controleer de naam en bewaar. De leerling verschijnt ook automatisch bij etiketten en afwezigheden."
           ],`<button class="green" onclick="gaNaarSecretariaatTaak('nieuwe-leerling')">Ga naar Nieuwe leerling</button>`)}
           ${wegwijzerKaart("📊","Een Excel-klaslijst verwerken","Een officiële lijst toevoegen of vergelijken.",[
-            "Kies eerst het juiste schooljaar en de juiste klas.","Open <strong>Klaslijsten → Excel importeren</strong> en selecteer het bestand.","Gebruik <strong>Namen toevoegen</strong> als alleen ontbrekende leerlingen moeten bijkomen.","Gebruik <strong>Officiële klaslijst veilig vervangen</strong> alleen wanneer het Excelbestand de volledige officiële klas bevat.","Lees het controle-overzicht en typ pas daarna de gevraagde bevestiging."
+            "Kies eerst het juiste schooljaar en de juiste klas.","Open <strong>Klaslijsten → Excel importeren</strong> en selecteer het bestand.","Klik op <strong>Bestand lezen en namen controleren</strong>. Kijk achternaam, officiële voornaam en eventuele roepnaam rij per rij na.","Gebruik <strong>Gecontroleerde namen toevoegen</strong> als alleen ontbrekende leerlingen moeten bijkomen.","Gebruik <strong>Officiële klaslijst veilig vervangen</strong> alleen wanneer het Excelbestand de volledige officiële klas bevat.","Lees het laatste controle-overzicht en typ pas daarna de gevraagde bevestiging."
           ],`<button class="green" onclick="gaNaarSecretariaatTaak('excel')">Ga naar Excel importeren</button>`,`Een leerling die ontbreekt in de officiële Excel wordt niet gewist. Die wordt inactief bewaard, zodat oude betalingen en registraties raadpleegbaar blijven.`)}
           ${wegwijzerKaart("➡️","Leerlingen naar een andere klas","Binnen hetzelfde gekozen schooljaar, bijvoorbeeld van 2A naar 3A bij een verkeerd geplaatste oude klaslijst.",[
             "Kies schooljaar <strong>2026-2027</strong> en open <strong>2A</strong>.","Open <strong>Klaslijsten → Leerlingen naar andere klas</strong> en kies <strong>3A</strong>.","Vink alleen de zittenblijver aan bij <strong>Blijft in 2A</strong>.","Maak het controle-overzicht en bevestig met <strong>VERPLAATSEN</strong>.","Controleer 2A en 3A. Meteen na de bewerking kun je ze nog ongedaan maken."
@@ -1920,14 +1921,14 @@
       }
       if(classListMode === "excel" && canManageClasses){
         toolPanel = `<section class="class-tool-panel no-print">
-          <div class="bar"><div><h3>Excel of CSV importeren</h3><p class="muted small">Voor ${esc(activeClass)} in ${esc(schooljaar)}. Gebruik kolommen Voornaam + Achternaam, of één kolom Naam. Staat er een kolom Klas in het bestand, dan worden alleen rijen voor ${esc(activeClass)} meegenomen.</p></div><button class="small white right" onclick="openClassListTool('')">Sluiten</button></div>
+          <div class="bar"><div><h3>Excel of CSV importeren</h3><p class="muted small">Voor ${esc(activeClass)} in ${esc(schooljaar)}. Aparte kolommen Achternaam en Voornaam worden automatisch herkend. Bij één kolom Naam controleer je eerst zelf de verdeling. De kolom Nr. wordt genegeerd.</p></div><button class="small white right" onclick="openClassListTool('')">Sluiten</button></div>
           <div class="notice"><strong>Veilig aanvullen.</strong><p class="muted">Bestaande leerlingen en ingevulde gegevens blijven staan. Alleen namen die nog niet in deze klaslijst staan worden toegevoegd.</p></div>
           <div class="row">
             <label>Excel- of CSV-bestand<input id="excelKlasFile" type="file" accept=".xlsx,.xls,.csv"></label>
-            <button class="green" onclick="importExcelKlaslijst()">Namen uit bestand toevoegen</button>
-            <button class="danger" onclick="vervangKlaslijstUitExcel()">Officiële klaslijst veilig vervangen</button>
+            <button class="green" onclick="controleerExcelKlaslijst()">1. Bestand lezen en namen controleren</button>
           </div>
           <div id="excelImportResult" class="muted" style="margin-top:10px"></div>
+          <div id="excelImportVoorbeeld" style="margin-top:12px"></div>
         </section>`;
       }
       if(classListMode === "verplaatsen" && canManageClasses){
@@ -1987,7 +1988,7 @@
     function parseName(line){ line=line.trim(); if(!line)return null; if(line.includes(",")){ const [last,first]=line.split(","); return {last:last.trim(),first:first.trim()}; } const parts=line.split(/\s+/); return {first:parts.shift(),last:parts.join(" ")}; }
     window.importNames = () => { $("pasteNames").value.split(/\r?\n/).map(parseName).filter(Boolean).forEach(n=>addStudentObj(n.last,n.first,false,startDate())); markDirty(); render(); };
     window.addStudent = () => { addStudentObj($("newLast").value,$("newFirst").value,$("newColleague").checked,$("newStart").value||startDate()); markDirty(); render(); };
-    function addStudentObj(last,first,colleague,start){ if(!last||!first)return; if(data.leerlingen.some(s=>(s.last||"").toLowerCase()===last.toLowerCase()&&(s.first||"").toLowerCase()===first.toLowerCase()))return; data.leerlingen.push({id:uid(),last,first,colleague,start,end:endDate()}); }
+    function addStudentObj(last,first,colleague,start,roepnaam=""){ if(!last||!first)return; if(data.leerlingen.some(s=>(s.last||"").toLowerCase()===last.toLowerCase()&&(s.first||"").toLowerCase()===first.toLowerCase()))return; data.leerlingen.push({id:uid(),last,first,roepnaam:String(roepnaam||"").trim(),colleague,start,end:endDate()}); }
     function normaliseerKolomNaam(value){
       return String(value||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().replace(/[^a-z0-9]+/g,"");
     }
@@ -2001,12 +2002,15 @@
     function excelRijNaarNaam(row){
       const klas=waardeUitExcelRij(row,["klas","klasgroep","groep","class"]);
       if(klas && klas.toUpperCase()!==activeClass.toUpperCase()) return null;
-      const first=waardeUitExcelRij(row,["voornaam","roepnaam","first","firstname"]);
+      const first=waardeUitExcelRij(row,["voornaam","voornamen","officielevoornaam","first","firstname"]);
       const last=waardeUitExcelRij(row,["achternaam","familienaam","naamfamilie","last","lastname"]);
-      if(first || last) return {first,last};
+      const roepnaam=waardeUitExcelRij(row,["roepnaam","gebruiktenaam","callingname"]);
+      if(first || last) return {first,last,roepnaam,bron:"aparte kolommen"};
       const full=waardeUitExcelRij(row,["naam","leerling","leerlingnaam","volledigenaam","naam leerling"]);
-      const parsed=parseName(full);
-      return parsed ? {first:parsed.first,last:parsed.last} : null;
+      if(!full) return null;
+      if(full.includes(",")){const [familie,...voornamen]=full.split(",");return {last:familie.trim(),first:voornamen.join(",").trim(),roepnaam:"",bron:"één kolom met komma"};}
+      const delen=full.trim().split(/\s+/);
+      return {last:delen.shift()||"",first:delen.join(" "),roepnaam:"",bron:"één kolom – controleer samengestelde namen"};
     }
     async function leesExcelRijen(file){
       if(typeof XLSX==="undefined") throw new Error("De Excel-lezer is niet geladen. Controleer de internetverbinding en herlaad de pagina.");
@@ -2016,7 +2020,15 @@
       if(!sheetName) return [];
       return XLSX.utils.sheet_to_json(workbook.Sheets[sheetName],{defval:""});
     }
-    window.importExcelKlaslijst = async function(){
+    function renderExcelImportVoorbeeld(){
+      const doel=$("excelImportVoorbeeld"); if(!doel)return;
+      if(!excelImportVoorbeeld.length){doel.innerHTML="";return;}
+      doel.innerHTML=`<div class="notice"><strong>Controleer vóór je bewaart</strong><p class="muted">Bij aparte kolommen staat de verdeling meestal al juist. Bij één kolom Naam is alleen een eerste voorstel mogelijk. Verbeter hier bijvoorbeeld <strong>De Bondt | Storm</strong> en vul desgewenst een korte roepnaam in, zoals <strong>Haroun</strong>.</p></div>
+        <div class="table-wrap" style="margin-top:10px"><table><thead><tr><th>Rij</th><th>Achternaam</th><th>Officiële voornaam/voornamen</th><th>Roepnaam (optioneel)</th><th>Herkenning</th></tr></thead><tbody>${excelImportVoorbeeld.map((x,i)=>`<tr><td>${i+1}</td><td><input value="${esc(x.last)}" oninput="wijzigExcelVoorbeeld(${i},'last',this.value)"></td><td><input value="${esc(x.first)}" oninput="wijzigExcelVoorbeeld(${i},'first',this.value)"></td><td><input value="${esc(x.roepnaam||'')}" placeholder="bv. Haroun" oninput="wijzigExcelVoorbeeld(${i},'roepnaam',this.value)"></td><td class="small">${esc(x.bron||'')}</td></tr>`).join("")}</tbody></table></div>
+        <div class="row" style="margin-top:12px"><button class="green" onclick="bevestigExcelImport('toevoegen')">2. Gecontroleerde namen toevoegen</button><button class="danger" onclick="bevestigExcelImport('vervangen')">2. Officiële klaslijst veilig vervangen</button></div>`;
+    }
+    window.wijzigExcelVoorbeeld=(index,veld,waarde)=>{if(excelImportVoorbeeld[index]&&["last","first","roepnaam"].includes(veld))excelImportVoorbeeld[index][veld]=String(waarde||"").trim();};
+    window.controleerExcelKlaslijst = async function(){
       if(!isSecretary()) return alert("Alleen secretariaat kan Excelbestanden importeren.");
       if(!data) return;
       const file=$("excelKlasFile")?.files?.[0];
@@ -2025,31 +2037,30 @@
       if(result) result.textContent="Bestand lezen...";
       try{
         const rows=await leesExcelRijen(file);
-        let added=0,skipped=0;
-        rows.forEach(row=>{
-          const item=excelRijNaarNaam(row);
-          if(!item || (!item.first && !item.last)){ skipped++; return; }
-          const before=data.leerlingen.length;
-          addStudentObj(item.last,item.first,false,startDate());
-          if(data.leerlingen.length>before) added++; else skipped++;
-        });
-        data.leerlingen.sort((a,b)=>name(a).localeCompare(name(b),"nl"));
-        await saveNow();
-        render();
-        alert(`${added} leerling(en) toegevoegd uit ${file.name}. ${skipped} rij(en) overgeslagen omdat ze leeg waren, bij een andere klas hoorden of al bestonden.`);
+        excelImportVoorbeeld=rows.map(excelRijNaarNaam).filter(x=>x&&(x.first||x.last));excelImportBestandsnaam=file.name;
+        if(!excelImportVoorbeeld.length)throw new Error(`Geen geldige namen voor ${activeClass} gevonden.`);
+        if(result)result.textContent=`${excelImportVoorbeeld.length} naam/namen gelezen uit ${file.name}. Controleer de tabel hieronder.`;
+        renderExcelImportVoorbeeld();
       }catch(err){
         console.error(err);
         if(result) result.textContent="Import mislukt.";
         alert(`Excel importeren lukte niet.\n\n${err.message||err}`);
       }
     };
-    window.vervangKlaslijstUitExcel = async function(){
-      if(!isSecretary()||!data) return;
-      const file=$("excelKlasFile")?.files?.[0]; if(!file) return alert("Kies eerst een Excel- of CSV-bestand.");
+    window.bevestigExcelImport = async function(modus){
+      if(!isSecretary()||!data)return;
+      let officieel=excelImportVoorbeeld.map(x=>({first:String(x.first||"").trim(),last:String(x.last||"").trim(),roepnaam:String(x.roepnaam||"").trim()})).filter(x=>x.first&&x.last);
+      const onvolledig=excelImportVoorbeeld.length-officieel.length;
+      if(onvolledig)return alert(`${onvolledig} rij(en) hebben nog geen achternaam én voornaam. Vul die eerst aan.`);
+      if(!officieel.length)return alert("Er staan nog geen gecontroleerde namen klaar.");
+      officieel=[...new Map(officieel.map(x=>[classNameKey(x.first,x.last),x])).values()];
+      if(modus==="toevoegen"){
+        let toegevoegd=0,overgeslagen=0;
+        officieel.forEach(x=>{const voor=data.leerlingen.length;addStudentObj(x.last,x.first,false,startDate(),x.roepnaam);data.leerlingen.length>voor?toegevoegd++:overgeslagen++;});
+        data.leerlingen.sort((a,b)=>name(a).localeCompare(name(b),"nl"));await saveNow();render();alert(`${toegevoegd} leerling(en) toegevoegd uit ${excelImportBestandsnaam}. ${overgeslagen} bestaande naam/namen overgeslagen.`);return;
+      }
       try{
-        const rows=await leesExcelRijen(file), officieel=[],gezien=new Set();
-        rows.forEach(row=>{const item=excelRijNaarNaam(row);if(!item||(!item.first&&!item.last))return;const key=classNameKey(item.first,item.last);if(key&&!gezien.has(key)){gezien.add(key);officieel.push(item);}});
-        if(!officieel.length) return alert(`Geen geldige namen voor ${activeClass} gevonden in dit bestand.`);
+        const gezien=new Set(officieel.map(x=>classNameKey(x.first,x.last)));
         const actieve=activeStudents(),bestaande=new Map((data.leerlingen||[]).map(s=>[classNameKey(s.first||s.firstName,s.last||s.lastName),s]));
         const toevoegen=officieel.filter(x=>!bestaande.has(classNameKey(x.first,x.last)));
         const inactiefMaken=actieve.filter(s=>!gezien.has(classNameKey(s.first||s.firstName,s.last||s.lastName)));
@@ -2059,8 +2070,8 @@
         const bevestig=prompt(`Typ VERVANG KLASLIJST om de actieve lijst van ${activeClass} veilig te vervangen.`); if(bevestig!=="VERVANG KLASLIJST") return;
         const grens=`${Number(schooljaar.slice(0,4))}-08-31`;
         inactiefMaken.forEach(s=>{s.oorspronkelijkeStart=s.start||startDate();s.end=grens;s.startNiet=true;s.startNietReden="niet in officiële Excel-lijst";s.bijgewerktOp=new Date().toISOString();});
-        toevoegen.forEach(x=>data.leerlingen.push({id:uid(),first:x.first,last:x.last,colleague:false,start:startDate(),end:endDate(),bron:"officiële Excel-import"}));
-        officieel.forEach(x=>{const s=data.leerlingen.find(y=>classNameKey(y.first||y.firstName,y.last||y.lastName)===classNameKey(x.first,x.last));if(s){s.start=startDate();s.end=endDate();delete s.startNiet;delete s.startNietReden;}});
+        toevoegen.forEach(x=>data.leerlingen.push({id:uid(),first:x.first,last:x.last,roepnaam:x.roepnaam||"",colleague:false,start:startDate(),end:endDate(),bron:"officiële Excel-import"}));
+        officieel.forEach(x=>{const s=data.leerlingen.find(y=>classNameKey(y.first||y.firstName,y.last||y.lastName)===classNameKey(x.first,x.last));if(s){s.start=startDate();s.end=endDate();if(x.roepnaam)s.roepnaam=x.roepnaam;delete s.startNiet;delete s.startNietReden;}});
         data.leerlingen.sort((a,b)=>name(a).localeCompare(name(b),"nl")); await saveNow(); render(); alert(`Officiële klaslijst bewaard. ${toevoegen.length} toegevoegd en ${inactiefMaken.length} veilig inactief gemaakt.`);
       }catch(err){console.error(err);alert(`Klaslijst vervangen lukte niet.\n\n${err.message||err}`);}
     };
@@ -2218,9 +2229,10 @@
       return match ? `${match[3]}/${match[2]}/${match[1]}` : esc(value || "");
     }
     function studentTable(){
-      return `<div class="table-wrap"><table><thead><tr><th>Achternaam</th><th>Voornaam</th><th class="check-col">Kind collega</th><th class="homework-cell">Huiswerkklas<span class="th-sub">deelname en betaling</span></th><th>Start</th><th>Einde</th><th></th></tr></thead><tbody>${activeStudents().map(s=>`<tr class="${s.colleague?"colleague":""}">
+      return `<div class="table-wrap"><table><thead><tr><th>Achternaam</th><th>Officiële voornaam</th><th>Roepnaam<span class="th-sub">optioneel</span></th><th class="check-col">Kind collega</th><th class="homework-cell">Huiswerkklas<span class="th-sub">deelname en betaling</span></th><th>Start</th><th>Einde</th><th></th></tr></thead><tbody>${activeStudents().map(s=>`<tr class="${s.colleague?"colleague":""}">
         <td><input class="name-input" value="${esc(s.last||"")}" onchange="updateStudent('${s.id}','last',this.value)"></td>
         <td><input class="name-input" value="${esc(s.first||"")}" onchange="updateStudent('${s.id}','first',this.value)"></td>
+        <td><input class="name-input" value="${esc(s.roepnaam||"")}" placeholder="bv. Haroun" onchange="updateStudent('${s.id}','roepnaam',this.value)"></td>
         <td class="check-col"><input type="checkbox" ${s.colleague?"checked":""} onchange="toggleColleague('${s.id}',this.checked)"></td>
         <td class="homework-cell"><label><input data-homework-main type="checkbox" ${s.homeworkClass?"checked":""} onchange="toggleHomeworkClass('${s.id}',this.checked,this)"> komt naar huiswerkklas</label><label><input data-homework-free type="checkbox" ${s.homeworkClassFree?"checked":""} onchange="toggleHomeworkClassFree('${s.id}',this.checked,this)"> gratis via schooladvies</label></td>
         <td><input type="date" value="${esc(s.start||startDate())}" onchange="updateStudent('${s.id}','start',this.value)" title="Startdatum: ${formatDate(s.start||startDate())}"></td>
