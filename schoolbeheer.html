@@ -150,10 +150,12 @@
     .tag{display:inline-block;border-radius:999px;background:#edf2f8;padding:4px 8px;font-size:12px;margin-left:6px}
     .tag.green{background:#d8f5e9}.tag.done{background:#c9efd9}
     .th-sub{display:block;margin-top:3px;font-size:10px;font-weight:600;text-transform:none;letter-spacing:0;color:var(--muted)}
-    .homework-cell{min-width:220px;text-align:left!important}
-    .homework-options{display:grid;grid-template-columns:1fr 1fr;gap:7px 12px;align-items:center}
-    .homework-cell label{display:flex;align-items:center;gap:6px;margin:0;font-size:12px;font-weight:700;color:var(--ink);white-space:nowrap}
-    .homework-cell label.volledige-rij{grid-column:1/-1}
+    .homework-cell{min-width:245px;text-align:left!important}
+    .homework-options{display:grid;grid-template-columns:1fr 1fr;gap:7px;align-items:center}
+    .homework-cell label{display:flex;align-items:center;justify-content:flex-start;gap:7px;margin:0;font-size:12px;font-weight:700;color:var(--ink);white-space:nowrap}
+    .homework-cell label input[type="checkbox"]{display:inline-block!important;margin:0!important;flex:0 0 18px}
+    .homework-day-choice{border:1px solid #c9d8e7;border-radius:9px;padding:7px 8px;background:#f7fafc}
+    .homework-free-choice{grid-column:1/-1;border-top:1px solid var(--line);padding:7px 2px 0!important;margin-top:1px!important}
     .kolommen-kiezer{position:relative;margin-left:auto}
     .kolommen-kiezer summary{cursor:pointer;list-style:none;border:1px solid var(--line);border-radius:10px;padding:7px 11px;background:#fff;font-weight:700;font-size:13px}
     .kolommen-kiezer[open] .kolommen-menu{display:grid}
@@ -2357,7 +2359,7 @@
         ${activeClass==="K1"?optioneleKolom('groep',`<td><strong data-kleutergroep-id="${esc(s.id)}">${esc(kleutergroepVoor(s)||"—")}</strong></td>`):""}
         ${optioneleKolom('oudste',`<td class="check-col"><input type="checkbox" ${s.oudsteGezin?"checked":""} onchange="toggleOudsteGezin('${s.id}',this.checked)" title="Oudste kind van het gezin op school"></td>`)}
         ${optioneleKolom('collega',`<td class="check-col"><input type="checkbox" ${s.colleague?"checked":""} onchange="toggleColleague('${s.id}',this.checked)"></td>`)}
-        ${optioneleKolom('huiswerk',`<td class="homework-cell"><div class="homework-options"><label class="volledige-rij"><input data-homework-main type="checkbox" ${s.homeworkClass?"checked":""} onchange="toggleHomeworkClass('${s.id}',this.checked,this)"> deelname</label><label><input data-homework-day="dinsdag" type="checkbox" ${s.homeworkClassDays?.dinsdag?"checked":""} onchange="toggleHomeworkClassDay('${s.id}','dinsdag',this.checked,this)"> dinsdag</label><label><input data-homework-day="donderdag" type="checkbox" ${s.homeworkClassDays?.donderdag?"checked":""} onchange="toggleHomeworkClassDay('${s.id}','donderdag',this.checked,this)"> donderdag</label><label class="volledige-rij"><input data-homework-free type="checkbox" ${s.homeworkClassFree?"checked":""} onchange="toggleHomeworkClassFree('${s.id}',this.checked,this)"> gratis via schooladvies</label></div></td>`)}
+        ${optioneleKolom('huiswerk',`<td class="homework-cell"><div class="homework-options"><label class="homework-day-choice"><input data-homework-day="dinsdag" type="checkbox" ${s.homeworkClassDays?.dinsdag?"checked":""} onchange="toggleHomeworkClassDay('${s.id}','dinsdag',this.checked,this)"> Dinsdag</label><label class="homework-day-choice"><input data-homework-day="donderdag" type="checkbox" ${s.homeworkClassDays?.donderdag?"checked":""} onchange="toggleHomeworkClassDay('${s.id}','donderdag',this.checked,this)"> Donderdag</label><label class="homework-free-choice"><input data-homework-free type="checkbox" ${s.homeworkClassFree?"checked":""} onchange="toggleHomeworkClassFree('${s.id}',this.checked,this)"> Gratis via schooladvies</label></div></td>`)}
         ${optioneleKolom('start',`<td><input type="date" value="${esc(s.start||startDate())}" onchange="updateStudent('${s.id}','start',this.value)" title="Startdatum: ${formatDate(s.start||startDate())}"></td>`)}
         ${optioneleKolom('einde',`<td><input type="date" value="${esc(s.end||endDate())}" onchange="updateStudent('${s.id}','end',this.value)" title="Einddatum: ${formatDate(s.end||endDate())}"></td>`)}
         <td><button class="small pink" onclick="leaveStudent('${s.id}')">uitschrijven</button>${isSecretary()?` <button class="small danger" onclick="startNietOpSchool('${s.id}')">start niet</button>`:""}</td>
