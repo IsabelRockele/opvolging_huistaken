@@ -931,6 +931,7 @@
     const auth = getAuth(app);
     const db = getFirestore(app);
     const DEFAULT_CLASSES = ["K1","K2","K3","1A","2A","3A","4A","5A","6A"];
+    function vergelijkKlassen(a,b){const sleutel=v=>{const s=String(v||"").toUpperCase(),k=s.match(/^K(\d+)(.*)$/),l=s.match(/^(\d+)(.*)$/);return k?[0,Number(k[1]),k[2]]:l?[1,Number(l[1]),l[2]]:[2,999,s]};const x=sleutel(a),y=sleutel(b);return x[0]-y[0]||x[1]-y[1]||x[2].localeCompare(y[2],"nl");}
     const esc = v => String(v ?? "").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;");
     const uid = () => Math.random().toString(36).slice(2,9) + Date.now().toString(36).slice(-4);
     const $ = id => document.getElementById(id);
@@ -1076,7 +1077,7 @@
     async function loadClassesFromFirebase(){
       const docs = await getDocs(collection(db, "schoolbeheer", schooljaar, "klassen"));
       const found = docs.docs.map(d => d.id);
-      allClasses = [...new Set([...DEFAULT_CLASSES, ...found])].sort((a,b)=>a.localeCompare(b,"nl",{numeric:true}));
+      allClasses = [...new Set([...DEFAULT_CLASSES, ...found])].sort(vergelijkKlassen);
     }
 
     async function loadAllowedClasses(){
@@ -1094,7 +1095,7 @@
         const item = d.data();
         if(String(item.schooljaar || schooljaar) === schooljaar && item.klas) found.add(String(item.klas).trim());
       }));
-      allowedClasses = [...found].sort((a,b)=>a.localeCompare(b,"nl",{numeric:true}));
+      allowedClasses = [...found].sort(vergelijkKlassen);
       allClasses = [...new Set([...DEFAULT_CLASSES, ...allowedClasses])];
     }
 
@@ -1215,7 +1216,7 @@
       if(!bestaand.exists()) await setDoc(ref, emptyClassDoc(nieuweKlas));
       $("nieuweKlasInput").value = "";
       if(!allClasses.includes(nieuweKlas)) allClasses.push(nieuweKlas);
-      allClasses.sort((a,b)=>a.localeCompare(b,"nl",{numeric:true}));
+      allClasses.sort(vergelijkKlassen);
       allowedClasses = [...allClasses];
       await openClass(nieuweKlas);
     }
@@ -2259,7 +2260,7 @@
       try{
         const snap=await getDocs(collection(db,"schoolbeheer",schooljaar,"klassen")),datum=`${schooljaar.slice(0,4)}-09-15`,regels=[];
         snap.docs.forEach(d=>{const aantal=(d.data().leerlingen||[]).filter(s=>(!s.start||s.start<=datum)&&(!s.end||s.end>=datum)&&s.oudsteGezin).length;regels.push({klas:d.id,aantal});});
-        regels.sort((a,b)=>a.klas.localeCompare(b.klas,"nl",{numeric:true}));
+        regels.sort((a,b)=>vergelijkKlassen(a.klas,b.klas));
         const kleuters=regels.filter(x=>/^K[123]$/i.test(x.klas)).reduce((n,x)=>n+x.aantal,0),lager=regels.filter(x=>/^[1-6][A-Z]?$/i.test(x.klas)).reduce((n,x)=>n+x.aantal,0),totaal=regels.reduce((n,x)=>n+x.aantal,0);
         if(doel)doel.innerHTML=`<div style="margin-top:10px"><strong>Hele school: ${totaal}</strong> &nbsp; Kleuters: ${kleuters} &nbsp; Lagere school: ${lager}<br><span class="muted small">${regels.map(x=>`${esc(x.klas)}: ${x.aantal}`).join(" · ")}</span></div>`;
       }catch(err){console.error(err);if(doel)doel.innerHTML='<p class="muted">De schooltotalen konden niet geladen worden.</p>';}
@@ -2845,7 +2846,7 @@
       }
 
       if(!allClasses.includes(klas)){
-        allClasses = [...allClasses, klas].sort((a,b)=>a.localeCompare(b,"nl",{numeric:true}));
+        allClasses = [...allClasses, klas].sort(vergelijkKlassen);
       }
       alert(`${klas} is klaargezet voor ${nieuwJaar} met ${email}.`);
       await renderLeerkrachtenVolgendJaarOnly();

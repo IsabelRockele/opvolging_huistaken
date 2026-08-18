@@ -32,6 +32,7 @@ const schooljaar = (() => {
 })();
 const schooljaarKey = schooljaar.replace(/[^a-z0-9]+/gi, "_");
 const SCHOOLBREDE_ROLLEN = ['directie', 'zorgcoordinator', 'zorgleerkracht', 'beheerder'];
+function vergelijkKlassen(a,b){const sleutel=v=>{const s=String(v||'').toUpperCase(),k=s.match(/^K(\d+)(.*)$/),l=s.match(/^(\d+)(.*)$/);return k?[0,+k[1],k[2]]:l?[1,+l[1],l[2]]:[2,999,s]};const x=sleutel(a),y=sleutel(b);return x[0]-y[0]||x[1]-y[1]||x[2].localeCompare(y[2],'nl')}
 
 async function dashboardVeiligheidskopie(ref, reden) {
   return probeerVeiligheidskopie(ref, {
@@ -89,7 +90,7 @@ async function bepaalDashboardToegang(params) {
   const gevraagdeKlas = beheerKlasId || beheerKlasLabel;
   const eigenKlas = eigenKlassen.has(gevraagdeKlas)
     ? gevraagdeKlas
-    : [...eigenKlassen].sort((a,b) => a.localeCompare(b, 'nl', { numeric:true }))[0] || '';
+    : [...eigenKlassen].sort(vergelijkKlassen)[0] || '';
   beheerKlasId = eigenKlas;
   beheerKlasLabel = eigenKlas;
   beheerNaamLabel = '';
@@ -254,7 +255,7 @@ async function laadKlassenNavigatie() {
     });
 
     if (klassen.length < 2) return;
-    klassen.sort((a, b) => a.klasId.localeCompare(b.klasId, 'nl', { numeric: true }));
+    klassen.sort((a, b) => vergelijkKlassen(a.klasId,b.klasId));
 
     const nav = document.getElementById('klassennavigatie');
     const knoppen = document.getElementById('klassennavigatie-knoppen');
@@ -303,7 +304,7 @@ async function bepaalDashboardKlas() {
   } catch (err) {
     console.warn("Klas zoeken voor dashboard mislukt", err);
   }
-  gevonden.sort((a,b)=>a.localeCompare(b,'nl',{numeric:true}));
+  gevonden.sort(vergelijkKlassen);
   beheerKlasId = gevonden[0] || '';
   return beheerKlasId;
 }

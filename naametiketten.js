@@ -5,6 +5,7 @@ import { getFirestore, collection, doc, getDoc, getDocs, query, where } from "ht
 const firebaseConfig={apiKey:"AIzaSyA7KxXMvZ4dzBQDut3CMyWUblLte2tFzoQ",authDomain:"huiswerkapp-a311e.firebaseapp.com",projectId:"huiswerkapp-a311e",storageBucket:"huiswerkapp-a311e.appspot.com",messagingSenderId:"797169941164",appId:"1:797169941164:web:511d9618079f1378d0fd09"};
 const app=getApps().length?getApp():initializeApp(firebaseConfig), auth=getAuth(app), db=getFirestore(app);
 const $=id=>document.getElementById(id), DEFAULT_CLASSES=["K1","K2","K3","1A","2A","3A","4A","5A","6A"];
+function vergelijkKlassen(a,b){const sleutel=v=>{const s=String(v||'').toUpperCase(),k=s.match(/^K(\d+)(.*)$/),l=s.match(/^(\d+)(.*)$/);return k?[0,+k[1],k[2]]:l?[1,+l[1],l[2]]:[2,999,s]};const x=sleutel(a),y=sleutel(b);return x[0]-y[0]||x[1]-y[1]||x[2].localeCompare(y[2],'nl')}
 let user=null,role="",klassen=[],leerlingen=[],geselecteerd=new Set();
 
 function huidigSchooljaar(){const n=new Date(),s=n.getMonth()>=7?n.getFullYear():n.getFullYear()-1;return `${s}-${s+1}`}
@@ -66,7 +67,7 @@ async function laadKlassen(){
   const jaar=$('schooljaar').value.trim();
   if(isBreed()){const snap=await getDocs(collection(db,'schoolbeheer',jaar,'klassen'));klassen=[...new Set([...DEFAULT_CLASSES,...snap.docs.map(d=>d.id)])]}
   else{const email=(user.email||'').toLowerCase(),qs=await Promise.all([getDocs(query(collection(db,'klasleerkrachten'),where('leerkracht_uids','array-contains',user.uid))),getDocs(query(collection(db,'klasleerkrachten'),where('leerkracht_emails','array-contains',email)))]);const set=new Set();qs.forEach(q=>q.docs.forEach(d=>{const x=d.data();if(String(x.schooljaar||jaar)===jaar&&x.klas)set.add(String(x.klas).trim())}));klassen=[...set]}
-  klassen.sort((a,b)=>a.localeCompare(b,'nl',{numeric:true}));$('klas').innerHTML=klassen.map(k=>`<option>${esc(k)}</option>`).join('')||'<option value="">Geen klas</option>';await laadLeerlingen();
+  klassen.sort(vergelijkKlassen);$('klas').innerHTML=klassen.map(k=>`<option>${esc(k)}</option>`).join('')||'<option value="">Geen klas</option>';await laadLeerlingen();
 }
 async function laadLeerlingen(){const klas=$('klas').value,jaar=$('schooljaar').value.trim();leerlingen=[];if(klas){const s=await getDoc(doc(db,'schoolbeheer',jaar,'klassen',klas));if(s.exists())leerlingen=(s.data().leerlingen||[]).filter(actief).sort((a,b)=>voornaam(a).localeCompare(voornaam(b),'nl'))}geselecteerd=new Set(leerlingen.map(leerlingId));render()}
 
