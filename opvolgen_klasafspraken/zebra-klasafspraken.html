@@ -758,15 +758,17 @@ function bewaarTotVoorSchooljaar(jaar) {
 }
 
 function leerlingNaam(leerling) {
-  const voornaam = leerling.first || leerling.firstName || leerling.voornaam || '';
+  const voornaam = leerling.roepnaam || leerling.callName || leerling.call_name || leerling.first || leerling.firstName || leerling.voornaam || '';
   const achternaam = leerling.last || leerling.lastName || leerling.achternaam || '';
   return `${achternaam}, ${voornaam}`.replace(/^, /, '').replace(/, $/, '') || leerling.naam || '';
 }
 
 function actieveLeerlingen(leerlingen) {
-  const vandaag = new Date().toISOString().slice(0, 10);
+  const beginJaar = `${String(remote.schooljaar || huidigSchooljaar()).slice(0, 4)}-09-01`;
+  const eindJaar = `${Number(String(remote.schooljaar || huidigSchooljaar()).slice(0, 4)) + 1}-08-31`;
   return (leerlingen || [])
-    .filter(l => (!l.start || l.start <= vandaag) && (!l.end || l.end >= vandaag))
+    // Ook vóór 1 september moet de reeds klaargezette klaslijst zichtbaar zijn.
+    .filter(l => (!l.start || l.start <= eindJaar) && (!l.end || l.end >= beginJaar))
     .map(leerlingNaam)
     .filter(Boolean)
     .sort((a, b) => a.localeCompare(b, 'nl'));
@@ -915,8 +917,9 @@ async function laadKlasafsprakenVoorGebruiker(user) {
     fs.getDocs(fs.query(fs.collection(remote.db, 'klasleerkrachten'), fs.where('leerkracht_emails', 'array-contains', email)))
   ]);
   const klasDoc = resultaten.flatMap(snap => snap.docs)
-    .map(d => d.data())
-    .find(d => String(d.schooljaar || remote.schooljaar) === remote.schooljaar && (d.klas || d.klasId));
+    .map(d => ({ id:d.id, ...d.data() }))
+    .filter(d => d.actief !== false && String(d.schooljaar || d.id.split('_')[0] || '') === remote.schooljaar && (d.klas || d.klasId))
+    .sort((a, b) => String(a.id).localeCompare(String(b.id), 'nl'))[0];
   if (!klasDoc) return;
   remote.klas = String(klasDoc.klas || klasDoc.klasId);
   remote.ref = fs.doc(remote.db, 'klasafspraken', remote.schooljaar, 'klassen', remote.klas);

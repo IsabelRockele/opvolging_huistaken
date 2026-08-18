@@ -444,11 +444,19 @@ function slimmeNaamKey(naam) {
   return String(naam || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim().split(/\s+/).filter(Boolean).sort().join('|');
 }
 function leerlingNaamSchoolbeheer(s) {
-  const first = (s.firstName || s.first || s.voornaam || '').trim();
+  const first = (s.roepnaam || s.callName || s.call_name || s.firstName || s.first || s.voornaam || '').trim();
   const last = (s.lastName || s.last || s.achternaam || '').trim();
   const direct = (s.naam || s.name || s.fullName || s.volledigeNaam || '').trim();
   if (first || last) return `${first} ${last}`.trim();
   return direct;
+}
+function leerlingNaamvariantenSchoolbeheer(s) {
+  const last = (s.lastName || s.last || s.achternaam || '').trim();
+  const voornamen = [s.roepnaam, s.callName, s.call_name, s.firstName, s.first, s.voornaam]
+    .map(v => String(v || '').trim()).filter(Boolean);
+  const direct = [s.naam, s.name, s.fullName, s.volledigeNaam]
+    .map(v => String(v || '').trim()).filter(Boolean);
+  return [...new Set([...voornamen.map(first => `${first} ${last}`.trim()), ...direct].map(naamKey).filter(Boolean))];
 }
 function voegLeerlingenZonderDubbelToe(nieuweLeerlingen) {
   const bestaande = new Set(state.leerlingen.map(l => naamKey(l.naam)));
@@ -456,6 +464,16 @@ function voegLeerlingenZonderDubbelToe(nieuweLeerlingen) {
   nieuweLeerlingen.forEach(l => {
     const naam = String(l.naam || '').trim();
     const key = naamKey(naam);
+    const varianten = new Set([key, ...(l.naamVarianten || [])].filter(Boolean));
+    const match = state.leerlingen.find(bestaand =>
+      (l.schoolbeheerId && bestaand.schoolbeheerId === l.schoolbeheerId) ||
+      varianten.has(naamKey(bestaand.naam))
+    );
+    if (match) {
+      // Bestaande zichtbare naam en oudercontactgegevens blijven onaangeroerd.
+      if (l.schoolbeheerId && !match.schoolbeheerId) match.schoolbeheerId = l.schoolbeheerId;
+      return;
+    }
     if (!naam || bestaande.has(key)) return;
     bestaande.add(key);
     state.leerlingen.push(l);
@@ -578,10 +596,18 @@ async function laadLeerlingenUitSchoolbeheer() {
   try {
     const snap = await getDoc(doc(db, "schoolbeheer", schooljaar, "klassen", klas));
     if (!snap.exists()) return 0;
+    const beginJaar = `${String(schooljaar).slice(0,4)}-09-01`;
+    const eindJaar = `${Number(String(schooljaar).slice(0,4)) + 1}-08-31`;
     const leerlingen = (snap.data().leerlingen || [])
+      .filter(s => (!s.start || s.start <= eindJaar) && (!s.end || s.end >= beginJaar))
       .map(s => {
         const naam = leerlingNaamSchoolbeheer(s);
-        return naam ? { id: `schoolbeheer_${klas}_${s.id || naamKey(naam)}`, naam, schoolbeheerId: s.id || '' } : null;
+        return naam ? {
+          id: `schoolbeheer_${klas}_${s.id || naamKey(naam)}`,
+          naam,
+          schoolbeheerId: s.id || '',
+          naamVarianten: leerlingNaamvariantenSchoolbeheer(s)
+        } : null;
       })
       .filter(Boolean);
     return voegLeerlingenZonderDubbelToe(leerlingen);
@@ -668,7 +694,9 @@ async function bepaalEigenKlasVoorOudercontact() {
     const emailQuery = query(collection(db, "klasleerkrachten"), where("leerkracht_emails", "array-contains", email));
     const snaps = await Promise.all([getDocs(uidQuery), getDocs(emailQuery)]);
     snaps.forEach(snap => snap.forEach(d => {
-      if (!gevonden.some(x => x.id === d.id)) gevonden.push({ id: d.id, ...d.data() });
+      const item = { id: d.id, ...d.data() };
+      const itemJaar = String(item.schooljaar || d.id.split('_')[0] || '');
+      if (item.actief !== false && itemJaar === schooljaar && !gevonden.some(x => x.id === d.id)) gevonden.push(item);
     }));
   } catch(e) {
     console.error('Eigen klas zoeken mislukt:', e);
