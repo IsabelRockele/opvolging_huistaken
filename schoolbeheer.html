@@ -2012,13 +2012,25 @@
       const delen=full.trim().split(/\s+/);
       return {last:delen.shift()||"",first:delen.join(" "),roepnaam:"",bron:"één kolom – controleer samengestelde namen"};
     }
-    async function leesExcelRijen(file){
-      if(typeof XLSX==="undefined") throw new Error("De Excel-lezer is niet geladen. Controleer de internetverbinding en herlaad de pagina.");
-      const buffer=await file.arrayBuffer();
-      const workbook=XLSX.read(buffer,{type:"array"});
-      const sheetName=workbook.SheetNames[0];
-      if(!sheetName) return [];
-      const matrix=XLSX.utils.sheet_to_json(workbook.Sheets[sheetName],{header:1,defval:"",raw:false});
+    function csvNaarMatrix(tekst){
+      tekst=String(tekst||"").replace(/^\uFEFF/,"");
+      const eersteRegels=tekst.split(/\r?\n/).slice(0,12).join("\n");
+      const delimiter=(eersteRegels.match(/;/g)||[]).length>=(eersteRegels.match(/,/g)||[]).length?";":",";
+      const matrix=[];let rij=[],veld="",inAanhaling=false;
+      for(let i=0;i<tekst.length;i++){
+        const teken=tekst[i];
+        if(teken==='"'){
+          if(inAanhaling&&tekst[i+1]==='"'){veld+='"';i++;}else inAanhaling=!inAanhaling;
+        }else if(teken===delimiter&&!inAanhaling){rij.push(veld);veld="";
+        }else if((teken==='\n'||teken==='\r')&&!inAanhaling){
+          if(teken==='\r'&&tekst[i+1]==='\n')i++;
+          rij.push(veld);matrix.push(rij);rij=[];veld="";
+        }else veld+=teken;
+      }
+      if(veld||rij.length){rij.push(veld);matrix.push(rij);}
+      return matrix;
+    }
+    function matrixNaarExcelRijen(matrix){
       const herkenbareKoppen=new Set(["naam","leerling","leerlingnaam","volledigenaam","voornaam","voornamen","achternaam","familienaam","roepnaam"]);
       const kopRijIndex=matrix.findIndex(rij=>(rij||[]).some(cel=>herkenbareKoppen.has(normaliseerKolomNaam(cel))));
       if(kopRijIndex<0) throw new Error("De titelrij met Naam, Voornaam of Achternaam werd niet gevonden. Controleer of die kolomtitels in het bestand staan.");
@@ -2029,6 +2041,16 @@
         const tekst=Object.values(row).map(v=>String(v||"").trim()).filter(Boolean).join(" ");
         return tekst&&!/^totaal\b/i.test(tekst)&&!/^aantal\b/i.test(tekst);
       });
+    }
+    async function leesExcelRijen(file){
+      if(/\.csv$/i.test(file.name||"")) return matrixNaarExcelRijen(csvNaarMatrix(await file.text()));
+      if(typeof XLSX==="undefined") throw new Error("De Excel-lezer is niet geladen. Controleer de internetverbinding en herlaad de pagina.");
+      const buffer=await file.arrayBuffer();
+      const workbook=XLSX.read(buffer,{type:"array"});
+      const sheetName=workbook.SheetNames[0];
+      if(!sheetName) return [];
+      const matrix=XLSX.utils.sheet_to_json(workbook.Sheets[sheetName],{header:1,defval:"",raw:false});
+      return matrixNaarExcelRijen(matrix);
     }
     function renderExcelImportVoorbeeld(){
       const doel=$("excelImportVoorbeeld"); if(!doel)return;
