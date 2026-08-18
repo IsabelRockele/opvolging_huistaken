@@ -124,8 +124,26 @@
         }
 
         document.getElementById('status').textContent = `Ingelogd met schoolbrede rol: ${role}`;
-        const snap = await getDocs(query(collection(db, 'klasleerkrachten'), where('actief', '==', true)));
-        allClasses = uniekeKlassen(snap.docs.map(d => ({ id: d.id, ...d.data() })))
+        const [koppelingenSnap, klaslijstenSnap] = await Promise.all([
+          getDocs(query(collection(db, 'klasleerkrachten'), where('actief', '==', true))),
+          getDocs(collection(db, 'schoolbeheer', schooljaar, 'klassen'))
+        ]);
+        const koppelingen = koppelingenSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+        const perKlas = new Map(uniekeKlassen(koppelingen).map(item => [klasKey(item), item]));
+        klaslijstenSnap.docs.forEach(d => {
+          const key = String(d.id || '').trim().toLowerCase();
+          if (!key) return;
+          if (!perKlas.has(key)) perKlas.set(key, {
+            id: d.id,
+            klas: d.id,
+            leerjaar: d.id,
+            schooljaar,
+            leerkracht_uids: [],
+            leerkracht_emails: [],
+            leerkracht_namen: []
+          });
+        });
+        allClasses = [...perKlas.values()]
           .sort((a, b) => String(a.klas || a.id).localeCompare(String(b.klas || b.id), 'nl', { numeric: true }));
         renderClasses();
       } catch (err) {
@@ -183,8 +201,9 @@
         const uid = uids[0] || '';
         const klasId = klas.klas || klas.id;
         let openUrl = '';
-        if (mode === 'overgang' && uid) {
-          openUrl = `overgangsbespreking.html?beheerUid=${encodeURIComponent(uid)}&klas=${encodeURIComponent(klasId)}&naam=${encodeURIComponent(namen)}`;
+        if (mode === 'overgang') {
+          const klasProject = uid ? '' : '&klasProject=1';
+          openUrl = `overgangsbespreking.html?beheerUid=${encodeURIComponent(uid)}&klas=${encodeURIComponent(klasId)}&naam=${encodeURIComponent(namen)}${klasProject}`;
         } else if (mode === 'oudercontact') {
           const klasProject = uid ? '' : '&klasProject=1';
           openUrl = `oudercontact.html?beheerUid=${encodeURIComponent(uid)}&klas=${encodeURIComponent(klasId)}&klasId=${encodeURIComponent(klasId)}&naam=${encodeURIComponent(namen)}${klasProject}`;
@@ -198,7 +217,7 @@
             <div class="meta">${esc(klas.leerjaar || '')} - ${esc(namen)}<br>${esc(emails)}</div>
           </div>
           <div class="actions">
-            ${openUrl ? `<a class="button" href="${openUrl}">${openLabel}</a>` : '<span class="meta">Geen UID gekoppeld</span>'}
+            ${openUrl ? `<a class="button" href="${openUrl}">${openLabel}</a>` : '<span class="meta">Nog geen leerkracht gekoppeld</span>'}
           </div>
         </article>`;
       }).join('');

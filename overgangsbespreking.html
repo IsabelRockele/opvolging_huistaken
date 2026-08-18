@@ -2743,10 +2743,19 @@ function zorggroepenKorteHtml(s) {
 }
 
 function schoolbeheerNaamNaarRij(s) {
-  const firstName = (s.firstName || s.first || s.voornaam || '').trim();
+  const officialFirstName = (s.firstName || s.first || s.voornaam || '').trim();
+  const callName = (s.callName || s.roepnaam || s.roepNaam || s.nickname || '').trim();
+  const firstName = callName || officialFirstName;
   const lastName = (s.lastName || s.last || s.achternaam || '').trim();
-  if (firstName || lastName) return { firstName, lastName };
-  return normalizeNameFromLine(s.name || s.naam || s.fullName || s.volledigeNaam || '');
+  if (firstName || lastName) return {
+    firstName,
+    officialFirstName,
+    callName,
+    lastName,
+    schoolbeheerId: String(s.id || s.schoolbeheerId || '').trim()
+  };
+  const parsed = normalizeNameFromLine(s.name || s.naam || s.fullName || s.volledigeNaam || '');
+  return parsed ? {...parsed, officialFirstName: parsed.firstName, callName: '', schoolbeheerId: String(s.id || s.schoolbeheerId || '').trim()} : null;
 }
 
 function nieuweLegeStudent(row, source = '') {
@@ -2789,6 +2798,7 @@ function nieuweLegeStudent(row, source = '') {
     socialNote: '',
     notes: '',
     badmuts: '',
+    schoolbeheerId: row.schoolbeheerId || '',
     source
   };
 }
@@ -2815,24 +2825,46 @@ async function vulOntbrekendeLeerlingenUitSchoolbeheer() {
   const klas = bron.klas || '';
   if (!klas) return { added: 0, klas: '' };
 
+  const schoolStart = `${String(schooljaar).slice(0,4)}-09-01`;
+  const schoolEnd = `${String(schooljaar).slice(5,9)}-06-30`;
   const rows = (bron.leerlingen || [])
+    .filter(s => (!s.start || s.start <= schoolEnd) && (!s.end || s.end >= schoolStart))
     .map(schoolbeheerNaamNaarRij)
     .filter(row => row && (row.firstName || row.lastName));
-  const existing = new Set(state.students.map(s => studentNameKey(s.firstName, s.lastName)));
+  const norm = naamZoekKey;
+  const bestaandeOpId = new Map(state.students.filter(s => s.schoolbeheerId).map(s => [String(s.schoolbeheerId), s]));
+  const zoekBestaandeFiche = row => {
+    if (row.schoolbeheerId && bestaandeOpId.has(String(row.schoolbeheerId))) return bestaandeOpId.get(String(row.schoolbeheerId));
+    const achternaam = norm(row.lastName);
+    const voornamen = new Set([row.firstName, row.officialFirstName, row.callName].map(norm).filter(Boolean));
+    if (!achternaam || !voornamen.size) return null;
+    return state.students.find(s => norm(s.lastName) === achternaam && voornamen.has(norm(s.firstName))) || null;
+  };
   const excluded = new Set(Array.isArray(state.excludedSchoolbeheerKeys) ? state.excludedSchoolbeheerKeys : []);
   let added = 0;
+  let linked = 0;
   rows.forEach(row => {
-    const key = studentNameKey(row.firstName, row.lastName);
-    if (excluded.has(key)) return;
-    if (existing.has(key)) return;
-    existing.add(key);
+    const uitsluitKeys = [row.firstName, row.officialFirstName, row.callName].filter(Boolean).map(first => studentNameKey(first, row.lastName));
+    if (uitsluitKeys.some(key => excluded.has(key))) return;
+    const bestaand = zoekBestaandeFiche(row);
+    if (bestaand) {
+      // Alleen de stabiele koppeling aanvullen. Een bestaande roepnaam,
+      // officiële naam en alle reeds ingevulde fichevelden blijven ongewijzigd.
+      if (!bestaand.schoolbeheerId && row.schoolbeheerId) {
+        bestaand.schoolbeheerId = row.schoolbeheerId;
+        bestaandeOpId.set(String(row.schoolbeheerId), bestaand);
+        linked++;
+      }
+      return;
+    }
     state.students.push(nieuweLegeStudent(row, 'schoolbeheer'));
+    if (row.schoolbeheerId) bestaandeOpId.set(String(row.schoolbeheerId), state.students.at(-1));
     added++;
   });
   if (added) {
     state.students.sort((a, b) => (a.lastName || '').localeCompare(b.lastName || '', 'nl') || (a.firstName || '').localeCompare(b.firstName || '', 'nl'));
   }
-  return { added, klas };
+  return { added, linked, klas };
 }
 
 async function addStudentsFromClassList() {
@@ -3602,7 +3634,7 @@ async function loadFirebaseProjectOnStart() {
     renderStudents();
     if (typeof renderGroups === 'function') renderGroups();
     updateBadges();
-    if (sync.added) {
+    if (sync.added || sync.linked) {
       await window.firebaseOvergang.saveProject(collectProjectData());
     }
     markClean();
