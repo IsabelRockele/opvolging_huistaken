@@ -331,6 +331,12 @@
       background:#fffdf0;
       border-color:#f2d36b;
     }
+    .import-keuzes{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:14px}
+    .import-keuze{border:1px solid var(--line);border-radius:14px;padding:14px;background:#fff}
+    .import-keuze.aanbevolen{background:#effaf5;border-color:#80c9a9}
+    .import-keuze.waarschuwing{background:#fff8ed;border-color:#e6b25e}
+    .import-keuze h4{margin:0 0 6px;font-size:16px}.import-keuze p{margin:0 0 10px;line-height:1.4}
+    @media(max-width:760px){.import-keuzes{grid-template-columns:1fr}}
     .student-add-actions{
       display:flex;
       align-items:center;
@@ -1832,7 +1838,7 @@
             "Kies links de klas waarin de leerling start.","Open <strong>Klaslijsten</strong> en kies <strong>Nieuwe leerling</strong>.","Vul voornaam, achternaam en startdatum in.","Controleer de naam en bewaar. De leerling verschijnt ook automatisch bij etiketten en afwezigheden."
           ],`<button class="green" onclick="gaNaarSecretariaatTaak('nieuwe-leerling')">Ga naar Nieuwe leerling</button>`)}
           ${wegwijzerKaart("📊","Een Excel-klaslijst verwerken","Een officiële lijst toevoegen of vergelijken.",[
-            "Kies eerst het juiste schooljaar en de juiste klas.","Open <strong>Klaslijsten → Excel importeren</strong> en selecteer het bestand.","Klik op <strong>Bestand lezen en namen controleren</strong>. Kijk achternaam, officiële voornaam en eventuele roepnaam rij per rij na.","Gebruik <strong>Gecontroleerde namen toevoegen</strong> als alleen ontbrekende leerlingen moeten bijkomen.","Gebruik <strong>Officiële klaslijst veilig vervangen</strong> alleen wanneer het Excelbestand de volledige officiële klas bevat.","Lees het laatste controle-overzicht en typ pas daarna de gevraagde bevestiging."
+            "Kies eerst het juiste schooljaar en de juiste klas.","Open <strong>Klaslijsten → Excel importeren</strong> en selecteer het bestand.","Klik op <strong>Bestand lezen en namen controleren</strong>. Kijk achternaam, officiële voornaam en eventuele roepnaam rij per rij na.","Kies meestal <strong>Ontbrekende namen toevoegen</strong>: bestaande leerlingen blijven dan altijd staan.","Kies <strong>Volledige officiële lijst overnemen</strong> alleen wanneer het bestand werkelijk de volledige klas bevat. Ontbrekende leerlingen worden dan veilig inactief.","Lees het laatste controle-overzicht en typ pas daarna de gevraagde bevestiging."
           ],`<button class="green" onclick="gaNaarSecretariaatTaak('excel')">Ga naar Excel importeren</button>`,`Een leerling die ontbreekt in de officiële Excel wordt niet gewist. Die wordt inactief bewaard, zodat oude betalingen en registraties raadpleegbaar blijven.`)}
           ${wegwijzerKaart("➡️","Leerlingen naar een andere klas","Binnen hetzelfde gekozen schooljaar, bijvoorbeeld van 2A naar 3A bij een verkeerd geplaatste oude klaslijst.",[
             "Kies schooljaar <strong>2026-2027</strong> en open <strong>2A</strong>.","Open <strong>Klaslijsten → Leerlingen naar andere klas</strong> en kies <strong>3A</strong>.","Vink alleen de zittenblijver aan bij <strong>Blijft in 2A</strong>.","Maak het controle-overzicht en bevestig met <strong>VERPLAATSEN</strong>.","Controleer 2A en 3A. Meteen na de bewerking kun je ze nog ongedaan maken."
@@ -2066,9 +2072,12 @@
     function renderExcelImportVoorbeeld(){
       const doel=$("excelImportVoorbeeld"); if(!doel)return;
       if(!excelImportVoorbeeld.length){doel.innerHTML="";return;}
-      doel.innerHTML=`<div class="notice"><strong>Controleer vóór je bewaart</strong><p class="muted">Bij aparte kolommen staat de verdeling meestal al juist. Bij één kolom Naam is alleen een eerste voorstel mogelijk. Verbeter hier bijvoorbeeld <strong>De Bondt | Storm</strong> en vul desgewenst een korte roepnaam in, zoals <strong>Haroun</strong>.</p></div>
+      doel.innerHTML=`<div class="notice"><strong>Stap 2: controleer eerst iedere naam</strong><p class="muted">Pas hier indien nodig achternaam, officiële voornaam, roepnaam of geboortejaar aan. Er wordt nog niets in de klaslijst bewaard totdat je onderaan bewust één van de twee keuzes maakt.</p></div>
         <div class="table-wrap" style="margin-top:10px"><table><thead><tr><th>Rij</th><th>Achternaam</th><th>Officiële voornaam/voornamen</th><th>Roepnaam (optioneel)</th><th>Geboortejaar</th><th>Herkenning</th></tr></thead><tbody>${excelImportVoorbeeld.map((x,i)=>`<tr><td>${i+1}</td><td><input value="${esc(x.last)}" oninput="wijzigExcelVoorbeeld(${i},'last',this.value)"></td><td><input value="${esc(x.first)}" oninput="wijzigExcelVoorbeeld(${i},'first',this.value)"></td><td><input value="${esc(x.roepnaam||'')}" placeholder="bv. Haroun" oninput="wijzigExcelVoorbeeld(${i},'roepnaam',this.value)"></td><td><input type="number" min="2015" max="2030" value="${esc(x.geboortejaar||'')}" oninput="wijzigExcelVoorbeeld(${i},'geboortejaar',this.value)"></td><td class="small">${esc(x.bron||'')}</td></tr>`).join("")}</tbody></table></div>
-        <div class="row" style="margin-top:12px"><button class="green" onclick="bevestigExcelImport('toevoegen')">2. Gecontroleerde namen toevoegen</button><button class="danger" onclick="bevestigExcelImport('vervangen')">2. Officiële klaslijst veilig vervangen</button></div>`;
+        <div class="import-keuzes">
+          <section class="import-keuze aanbevolen"><h4>Gewone keuze — veilig aanvullen</h4><p>Voegt alleen leerlingen toe die nog ontbreken. Iedereen die al in de klaslijst staat, blijft staan. Gebruik dit bij een nieuwe of nog onvolledige klaslijst.</p><button class="green" onclick="bevestigExcelImport('toevoegen')">Ontbrekende namen toevoegen</button></section>
+          <section class="import-keuze waarschuwing"><h4>Alleen bij een volledige officiële lijst</h4><p>Maakt de actieve klas gelijk aan dit bestand. Leerlingen die niet in het bestand staan worden inactief, maar hun historiek blijft bewaard.</p><button class="danger" onclick="bevestigExcelImport('vervangen')">Volledige officiële lijst overnemen</button></section>
+        </div>`;
     }
     window.wijzigExcelVoorbeeld=(index,veld,waarde)=>{if(excelImportVoorbeeld[index]&&["last","first","roepnaam","geboortejaar"].includes(veld))excelImportVoorbeeld[index][veld]=String(waarde||"").trim();};
     window.controleerExcelKlaslijst = async function(){
