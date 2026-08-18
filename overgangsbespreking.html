@@ -2829,8 +2829,18 @@ async function vulOntbrekendeLeerlingenUitSchoolbeheer() {
   const klas = bron.klas || '';
   if (!klas) return { added: 0, klas: '' };
 
-  const schoolStart = `${String(schooljaar).slice(0,4)}-09-01`;
-  const schoolEnd = `${String(schooljaar).slice(5,9)}-06-30`;
+  // Dit gewone scriptblok kan niet rechtstreeks aan de `schooljaar`-constante
+  // uit het Firebase-moduleblok. Bepaal daarom hier veilig dezelfde waarde.
+  const gevraagdJaar = new URLSearchParams(window.location.search).get('schooljaar');
+  const overgangJaar = /^\d{4}-\d{4}$/.test(String(gevraagdJaar || '').trim())
+    ? String(gevraagdJaar).trim()
+    : (() => {
+        const nu = new Date();
+        const start = nu.getMonth() >= 8 ? nu.getFullYear() : nu.getFullYear() - 1;
+        return `${start}-${start + 1}`;
+      })();
+  const schoolStart = `${overgangJaar.slice(0,4)}-09-01`;
+  const schoolEnd = `${overgangJaar.slice(5,9)}-06-30`;
   const rows = (bron.leerlingen || [])
     .filter(s => (!s.start || s.start <= schoolEnd) && (!s.end || s.end >= schoolStart))
     .map(schoolbeheerNaamNaarRij)
