@@ -555,11 +555,11 @@
         <span id="saveStatusText">Nog niets opgeslagen</span>
       </div>
       <button id="saveBtn" class="secondary small">💾 Opslaan</button>
-      <label style="padding:7px 14px;border-radius:12px;cursor:pointer;font-weight:800;font-size:13px;margin:0;background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.25)">
+      <label title="Een eerder geëxporteerd JSON-reservebestand openen om eerst te controleren" style="padding:7px 14px;border-radius:12px;cursor:pointer;font-weight:800;font-size:13px;margin:0;background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.25)">
         📂 Importeren
         <input id="importFile" class="hidden" type="file" accept=".json,.txt,application/json,text/plain,*/*" onclick="this.value=''">
       </label>
-      <button id="exportJsonBtn" type="button" style="background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.25);font-size:13px;padding:7px 14px">&#128190; Exporteren</button>
+      <button id="exportJsonBtn" type="button" title="Een extra JSON-reservekopie downloaden; de gegevens in de tool veranderen niet" style="background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.25);font-size:13px;padding:7px 14px">&#128190; Exporteren</button>
       <button id="terugNaarStartBtn" type="button" onclick="window.location.href='index.html'" style="background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.35);color:#fff;border-radius:10px;padding:6px 14px;font-size:13px;cursor:pointer;font-weight:700">🏠 Keuzescherm</button>
       <button id="andereOvergangKlasBtn" type="button" style="display:none;background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.35);color:#fff;border-radius:10px;padding:6px 14px;font-size:13px;cursor:pointer;font-weight:700">🏫 Andere klas</button>
       <button id="klasKoppelingenBtn" type="button" style="display:none;background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.35);color:#fff;border-radius:10px;padding:6px 14px;font-size:13px;cursor:pointer;font-weight:700">🔗 Klaskoppelingen</button>
@@ -581,6 +581,16 @@
   <section class="panel" style="background:#eef7f1;border-color:#c9ded0;padding:12px 15px">
     <strong>Zo werk je hier:</strong> open <strong>Leerlingenfiches</strong>, kies een leerling en vul de fiche aan. Namen komen uit Klaslijsten; alleen ontbrekende leerlingen worden toegevoegd. Bestaande fiches en roepnamen worden niet overschreven. Controleer bovenaan of <strong>Opgeslagen</strong> verschijnt.
   </section>
+
+  <details class="panel" style="padding:12px 15px">
+    <summary style="cursor:pointer;font-weight:800;color:#244f37">Wat doen Importeren en Exporteren?</summary>
+    <div class="help" style="margin-top:10px;line-height:1.55">
+      <p style="margin:0 0 9px"><strong>Exporteren = een extra reservekopie maken.</strong> De tool downloadt een JSON-bestand met de leerlingenfiches en de ingevulde overgangsgegevens die nu op het scherm staan. Er wordt niets verwijderd of gewijzigd. Bewaar dit bestand veilig in de schoolmap op OneDrive of Google Drive, want het bevat leerlinggegevens.</p>
+      <p style="margin:0 0 9px"><strong>Importeren = zo'n reservekopie opnieuw openen.</strong> Kies alleen een JSON-bestand dat eerder met deze tool werd geëxporteerd. Het bestand vervangt eerst alleen de inhoud die je op dit scherm ziet; het wordt nog niet onmiddellijk in Firebase bewaard.</p>
+      <ol style="margin:0 0 9px;padding-left:22px"><li>Klik op <strong>Importeren</strong> en kies het juiste JSON-bestand.</li><li>Controleer klas, schooljaar, namen en enkele ingevulde fiches.</li><li>Klopt alles? Klik dan bewust bovenaan op <strong>Opslaan</strong>.</li><li>Verkeerd bestand gekozen? Sla niet op en vernieuw de pagina om de bewaarde Firebase-versie opnieuw te laden.</li></ol>
+      <p style="margin:0"><strong>Niet hetzelfde als de klaslijst aanvullen:</strong> gebruik daarvoor <strong>Alleen ontbrekende namen toevoegen</strong>. Die knop laat bestaande fiches en roepnamen staan.</p>
+    </div>
+  </details>
 
   <div class="tab-panel" data-panel="settings">
     <section class="panel">
@@ -3479,6 +3489,7 @@ function exportJSONOnly(asNewVersion = false) {
   }
   a.click();
   URL.revokeObjectURL(a.href);
+  setFirebaseStatus('JSON-reservekopie gedownload. De gegevens in Firebase zijn niet gewijzigd.');
 }function loadJSON(e) {
   const f = e.target.files[0];
   if (!f) return;
@@ -3535,7 +3546,9 @@ function exportJSONOnly(asNewVersion = false) {
         groups: data.groups || [], locks: data.locks || {}, excludedSchoolbeheerKeys: data.excludedSchoolbeheerKeys || []
       });
       e.target.value = '';
-      writeSettings(); renderStudents(); renderGroups(); updateBadges(); markClean();
+      writeSettings(); renderStudents(); renderGroups(); updateBadges(); markDirty();
+      setFirebaseStatus('Reservebestand ingelezen als controleversie. Controleer alles en klik daarna bewust op Opslaan.');
+      alert('Reservebestand ingelezen als controleversie.\n\nControleer eerst klas, schooljaar, namen en enkele fiches. Klik alleen op Opslaan wanneer alles klopt.');
     } catch (err) { console.error('Import fout:', err); alert('Dit JSON-bestand kon niet gelezen worden.\n\n' + err.message + '\n\nTip: controleer of het bestand eindigt op .json en eerder met deze tool werd aangemaakt.'); }
   };
   r.readAsText(f);
