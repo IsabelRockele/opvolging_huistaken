@@ -116,7 +116,13 @@ function pasKnoppenToe(huistakenKnop, overgangKnop, schoolbeheerKnop, bestelling
   }
   if (hulpbalk) hulpbalk.style.display = magGebruikershulp && !toonChecklist ? 'flex' : 'none';
 
-  // Secretariaat houdt Klasorganisatie bewust eenvoudig: alleen afwezigheidsattesten.
+  // Secretariaat ziet geen aparte rubriek Klasorganisatie; Afwezigheidsattesten verhuist naar School en administratie.
+  const organisatieGrid = document.getElementById('organisatiePortaalGrid');
+  const administratieGrid = document.getElementById('administratiePortaalGrid');
+  if (afwezigheidsattestenKnop) {
+    if (isSecretariaat && administratieGrid) administratieGrid.appendChild(afwezigheidsattestenKnop);
+    else if (!isSecretariaat && organisatieGrid) organisatieGrid.appendChild(afwezigheidsattestenKnop);
+  }
   const organisatieTegels = document.querySelectorAll('.organisatieblok .portaal-tegel');
   if (isSecretariaat) {
     organisatieTegels.forEach(tegel => { tegel.style.display = 'none'; });
