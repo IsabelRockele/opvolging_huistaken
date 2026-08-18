@@ -959,7 +959,7 @@
         activeClass = "", schooljaar = huidigSchooljaar(), data = null, unsub = null,
         activityMonth = "", purchaseMonth = "",
         tab = "administratie", adminPanel = "wegwijzer", classListMode = "", saveTimer = null,
-        excelImportVoorbeeld = [], excelImportBestandsnaam = "";
+        excelImportVoorbeeld = [], excelImportBestandsnaam = "", lokaleBewaringTot = 0;
     $("schooljaarInput").value = schooljaar;
 
     async function schoolbeheerVeiligheidskopie(ref, reden, forceer=false){
@@ -1149,8 +1149,12 @@
         if(!isSecretary() && tab === "administratie") tab = "klaslijst";
         setStatus("Bewaard", true);
         setActiveNav(tab);
-        render();
-        renderKlasPills();
+        if(Date.now()>=lokaleBewaringTot){
+          const positie=window.scrollY;
+          render();
+          renderKlasPills();
+          requestAnimationFrame(()=>window.scrollTo({top:positie,left:0,behavior:"auto"}));
+        }
         verbergSchermLaden();
       }, err => {
         console.error(err);
@@ -1262,7 +1266,7 @@
     }
 
     function markDirty(){ setStatus("Wijzigingen..."); clearTimeout(saveTimer); saveTimer = setTimeout(saveNow, 600); }
-    async function saveNow(){ if(!data) return; data.bewaarTot = bewaarTotVoorSchooljaar(); data.bewaartermijnJaren = BEWAAR_JAREN_SCHOOLBEHEER; data.bijgewerktOp = new Date().toISOString(); await setDoc(classRef(), data); setStatus("Bewaard", true); }
+    async function saveNow(){ if(!data) return; lokaleBewaringTot=Date.now()+2500; data.bewaarTot = bewaarTotVoorSchooljaar(); data.bewaartermijnJaren = BEWAAR_JAREN_SCHOOLBEHEER; data.bijgewerktOp = new Date().toISOString(); await setDoc(classRef(), data); setStatus("Bewaard", true); }
 
     function render(){
       if(!data) return;
@@ -2269,7 +2273,7 @@
         if(result) result.textContent="Ophalen mislukt.";
       }
     };
-    window.updateStudent = (id,field,value) => { const s=data.leerlingen.find(x=>x.id===id); if(s){ s[field]=value; markDirty(); if(field==="geboortejaar")render(); } };
+    window.updateStudent = (id,field,value) => { const s=data.leerlingen.find(x=>x.id===id); if(s){ s[field]=value; markDirty(); if(field==="geboortejaar"){const groep=document.querySelector(`[data-kleutergroep-id="${CSS.escape(id)}"]`);if(groep)groep.textContent=kleutergroepVoor(s)||"—";const vak=$("oudstenKlasSamenvatting");if(vak)vak.outerHTML=oudstenKlasSamenvatting();} } };
     function kleutergroepVoor(s){
       if(!/^K1$/i.test(activeClass)||!s.geboortejaar)return "";
       const start=Number(schooljaar.slice(0,4)),jaar=Number(s.geboortejaar);
@@ -2350,7 +2354,7 @@
         <td><input class="name-input" value="${esc(s.first||"")}" onchange="updateStudent('${s.id}','first',this.value)"></td>
         ${optioneleKolom('roepnaam',`<td><input class="name-input" value="${esc(s.roepnaam||"")}" placeholder="bv. Haroun" onchange="updateStudent('${s.id}','roepnaam',this.value)"></td>`)}
         ${optioneleKolom('geboortejaar',`<td><input type="number" min="2015" max="2030" value="${esc(s.geboortejaar||"")}" placeholder="jjjj" onchange="updateStudent('${s.id}','geboortejaar',this.value)"></td>`)}
-        ${activeClass==="K1"?optioneleKolom('groep',`<td><strong>${esc(kleutergroepVoor(s)||"—")}</strong></td>`):""}
+        ${activeClass==="K1"?optioneleKolom('groep',`<td><strong data-kleutergroep-id="${esc(s.id)}">${esc(kleutergroepVoor(s)||"—")}</strong></td>`):""}
         ${optioneleKolom('oudste',`<td class="check-col"><input type="checkbox" ${s.oudsteGezin?"checked":""} onchange="toggleOudsteGezin('${s.id}',this.checked)" title="Oudste kind van het gezin op school"></td>`)}
         ${optioneleKolom('collega',`<td class="check-col"><input type="checkbox" ${s.colleague?"checked":""} onchange="toggleColleague('${s.id}',this.checked)"></td>`)}
         ${optioneleKolom('huiswerk',`<td class="homework-cell"><div class="homework-options"><label class="volledige-rij"><input data-homework-main type="checkbox" ${s.homeworkClass?"checked":""} onchange="toggleHomeworkClass('${s.id}',this.checked,this)"> deelname</label><label><input data-homework-day="dinsdag" type="checkbox" ${s.homeworkClassDays?.dinsdag?"checked":""} onchange="toggleHomeworkClassDay('${s.id}','dinsdag',this.checked,this)"> dinsdag</label><label><input data-homework-day="donderdag" type="checkbox" ${s.homeworkClassDays?.donderdag?"checked":""} onchange="toggleHomeworkClassDay('${s.id}','donderdag',this.checked,this)"> donderdag</label><label class="volledige-rij"><input data-homework-free type="checkbox" ${s.homeworkClassFree?"checked":""} onchange="toggleHomeworkClassFree('${s.id}',this.checked,this)"> gratis via schooladvies</label></div></td>`)}
