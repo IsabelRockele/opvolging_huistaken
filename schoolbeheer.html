@@ -2042,8 +2042,13 @@
         return tekst&&!/^totaal\b/i.test(tekst)&&!/^aantal\b/i.test(tekst);
       });
     }
+    async function leesCsvTekst(file){
+      const buffer=await file.arrayBuffer();
+      try{return new TextDecoder("utf-8",{fatal:true}).decode(buffer);}
+      catch{return new TextDecoder("windows-1252").decode(buffer);}
+    }
     async function leesExcelRijen(file){
-      if(/\.csv$/i.test(file.name||"")) return matrixNaarExcelRijen(csvNaarMatrix(await file.text()));
+      if(/\.csv$/i.test(file.name||"")) return matrixNaarExcelRijen(csvNaarMatrix(await leesCsvTekst(file)));
       if(typeof XLSX==="undefined") throw new Error("De Excel-lezer is niet geladen. Controleer de internetverbinding en herlaad de pagina.");
       const buffer=await file.arrayBuffer();
       const workbook=XLSX.read(buffer,{type:"array"});
