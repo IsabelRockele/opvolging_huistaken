@@ -968,7 +968,7 @@
         activeClass = "", schooljaar = huidigSchooljaar(), data = null, unsub = null,
         activityMonth = "", purchaseMonth = "",
         tab = "administratie", adminPanel = "wegwijzer", classListMode = "", saveTimer = null,
-        excelImportVoorbeeld = [], excelImportBestandsnaam = "", lokaleBewaringTot = 0;
+        excelImportVoorbeeld = [], excelImportBestandsnaam = "", kalenderImportVoorbeeld = [], lokaleBewaringTot = 0;
     $("schooljaarInput").value = schooljaar;
 
     async function schoolbeheerVeiligheidskopie(ref, reden, forceer=false){
@@ -1082,8 +1082,9 @@
 
     function renderKlasPills(){
       const lijst = canOpenAllClasses() ? allClasses : allowedClasses;
+      const toonActieveKlas = tab !== "administratie" || adminPanel === "klaslijsten";
       $("klasPills").innerHTML = lijst.map(k =>
-        `<button class="sb-klas-btn ${k===activeClass?"active":""}" onclick="openClass('${esc(k)}')">${esc(k)}</button>`
+        `<button class="sb-klas-btn ${toonActieveKlas&&k===activeClass?"active":""}" onclick="openClass('${esc(k)}')">${esc(k)}</button>`
       ).join("");
     }
 
@@ -1123,10 +1124,10 @@
       allClasses = [...new Set([...DEFAULT_CLASSES, ...allowedClasses])];
     }
 
-    window.openClass = async function(klas){
+    window.openClass = async function(klas, behoudAlgemeen=false){
       toonSchermLaden(`${klas} laden…`);
       activeClass = klas;
-      if(isSecretary()){
+      if(isSecretary() && !behoudAlgemeen){
         tab = "administratie";
         adminPanel = "klaslijsten";
         classListMode = "";
@@ -1831,16 +1832,17 @@
     function renderAdmin(){
       $("content").innerHTML = `
         <div class="panel">
-          <h2>Administratie <span class="muted" style="font-weight:400;font-size:16px">— ${esc(activeClass)}</span></h2>
+          <h2>Administratie <span class="muted" style="font-weight:400;font-size:16px">— ${adminPanel==="klaslijsten"?esc(activeClass):"schoolbreed"}</span></h2>
           <p class="muted">Kies één taak. Bij Hulp &amp; stappenplan staat alle uitleg rustig per onderwerp samengeklapt.</p>
           <div class="subnav no-print">
-            ${[...(isSecretary()?["wegwijzer"]:[]),"klaslijsten","vrije dagen","meldingen",...(isSecretary()?["klasleerkrachten"]:[]),"nieuw schooljaar"].map(p=>`<button class="${adminPanel===p?"active":""}" onclick="openAdmin('${p}')">${p==="wegwijzer"?"❓ Hulp & stappenplan":p[0].toUpperCase()+p.slice(1)}</button>`).join("")}
+            ${[...(isSecretary()?["wegwijzer"]:[]),"klaslijsten","vrije dagen",...(isSecretary()?["jaarkalender & activiteiten"]:[]),"meldingen",...(isSecretary()?["klasleerkrachten"]:[]),"nieuw schooljaar"].map(p=>`<button class="${adminPanel===p?"active":""}" onclick="openAdmin('${p}')">${p==="wegwijzer"?"❓ Hulp & stappenplan":p[0].toUpperCase()+p.slice(1)}</button>`).join("")}
           </div>
           <div id="adminBody"></div>
         </div>`;
       if(adminPanel==="wegwijzer") renderSecretariaatWegwijzer();
       if(adminPanel==="klaslijsten") renderAdminClasslists();
       if(adminPanel==="vrije dagen") renderFreeDays(true);
+      if(adminPanel==="jaarkalender & activiteiten") renderKalenderVoorbereiding();
       if(adminPanel==="meldingen") renderMessageAdmin();
       if(adminPanel==="klasleerkrachten") renderLeerkrachtenHuidigSchooljaar();
       if(adminPanel==="nieuw schooljaar") renderNewYearHome();
@@ -1875,6 +1877,9 @@
           ${wegwijzerKaart("🏷️","Naametiketten afdrukken","Voor de hele klas, twee kinderen per blad of één kind.",[
             "Open Naametiketten en kies schooljaar en klas.","Kies hoofdletter of kleine letter, lettergrootte en eventueel vetgedrukt.","Kies één blad per kind, twee kinderen per blad of alle namen aansluitend.","Selecteer de hele klas of één leerling en download het Worddocument.","Open het bestand in Word en druk af op ware grootte (100%)."
           ],`<button class="green" onclick="window.open('naametiketten.html','_blank')">Open Naametiketten</button>`)}
+          ${wegwijzerKaart("📅","Jaarkalender en activiteiten voorbereiden","Vrije dagen en activiteiten eerst schoolbreed klaarzetten.",[
+            "Open <strong>Jaarkalender & activiteiten</strong> onder Administratie.","Kies het Excelbestand van de jaarkalender en klik op <strong>Bestand lezen en controleren</strong>.","Controleer de voorgestelde vrije dagen en activiteiten. Pas bij activiteiten eventueel de klassen aan.","Oudercontacten, rapporten, infoavonden en toetsen worden niet overgenomen.","Bewaar pas daarna de goedgekeurde regels. Links bij <strong>Activiteiten</strong> kun je het resultaat per klas bekijken."
+          ],`<button class="green" onclick="openAdmin('jaarkalender & activiteiten')">Open Jaarkalender & activiteiten</button>`)}
           ${wegwijzerKaart("🩺","Afwezigheden en ziektebriefjes","Z/P/B opvolgen en vier briefjes per leerling afdrukken.",[
             "Open Afwezigheden en kies schooljaar en klas.","Klik één keer op een vakje om een X te plaatsen; klik nogmaals om die X te verwijderen.","Iedere wijziging wordt automatisch in Firebase bewaard. Wacht tot rechtsboven <strong>bewaard</strong> staat.","Kies bij ziektebriefjes de hele klas of één leerling.","Download en druk het liggende document af."
           ],`<button class="green" onclick="window.open('afwezigheidsattesten.html','_blank')">Open Afwezigheden</button>`)}
@@ -2699,6 +2704,84 @@
       renderAdmin();
     };
 
+    function kalenderKlasVoorstel(tekst){
+      const t=String(tekst||"").toLocaleLowerCase("nl"), set=new Set();
+      for(const m of t.matchAll(/\bk\s*([123])\b/g)) set.add(`K${m[1]}`);
+      for(const m of t.matchAll(/\bl\s*([1-6])\b/g)) set.add(`${m[1]}A`);
+      if(/kleuters?|kleuterschool|\bks\b/.test(t)) ["K1","K2","K3"].forEach(k=>set.add(k));
+      if(/(eerste|1ste|1e)\s*graad/.test(t)) ["1A","2A"].forEach(k=>set.add(k));
+      if(/(tweede|2de|2e)\s*graad/.test(t)) ["3A","4A"].forEach(k=>set.add(k));
+      if(/(derde|3de|3e)\s*graad/.test(t)) ["5A","6A"].forEach(k=>set.add(k));
+      return [...set].filter(k=>allClasses.includes(k));
+    }
+    function kalenderSoort(tekst){
+      const t=String(tekst||"").toLocaleLowerCase("nl");
+      if(/vakantie|pedagogische studiedag|wapenstilstand|hemelvaart|brugdag|pinkstermaandag|dag van de arbeid/.test(t)) return "vrij";
+      if(/oudercontact|rapport|infoavond|toets|schoolfotograaf|proclamatie|laatste huiswerkklas|infodag/.test(t)) return "overslaan";
+      if(t.includes("zwemmen")) return kalenderKlasVoorstel(t).some(k=>/^K/.test(k)) ? "activiteit" : "overslaan";
+      if(/toneel|film|rollebolle|musical|bingo|strapdag|uitstap|schoolreis/.test(t)) return "activiteit";
+      return "overslaan";
+    }
+    function isoKalenderDatum(year,month,day){
+      const d=new Date(Date.UTC(year,month-1,day));
+      return d.getUTCFullYear()===year&&d.getUTCMonth()===month-1&&d.getUTCDate()===day ? `${year}-${String(month).padStart(2,"0")}-${String(day).padStart(2,"0")}` : "";
+    }
+    function leesJaarkalenderMatrix(matrix){
+      const start=Number(schooljaar.slice(0,4)), pairs=[[1,2,9,start],[3,4,10,start],[5,6,11,start],[7,8,12,start],[9,10,1,start+1],[11,12,2,start+1],[13,14,3,start+1],[15,16,4,start+1],[17,18,5,start+1],[19,20,6,start+1]], rows=[];
+      for(const [dateCol,eventCol,month,year] of pairs){
+        let day=0;
+        for(let r=3;r<matrix.length;r++){
+          const rawDay=String(matrix[r]?.[dateCol]??"").trim(), n=Number(rawDay.replace(",","."));
+          if(Number.isInteger(n)&&n>=1&&n<=31) day=n;
+          const text=String(matrix[r]?.[eventCol]??"").replace(/\s+/g," ").trim();
+          if(!day||!text) continue;
+          const type=kalenderSoort(text), date=isoKalenderDatum(year,month,day);
+          if(type==="overslaan"||!date) continue;
+          const classes=type==="vrij"?[...allClasses]:kalenderKlasVoorstel(text).filter(k=>!text.toLocaleLowerCase("nl").includes("zwemmen")||/^K/.test(k));
+          rows.push({id:uid(),type,date,text,classes,selected:true});
+        }
+      }
+      return rows.filter((row,i,list)=>list.findIndex(x=>x.type===row.type&&x.date===row.date&&x.text.toLocaleLowerCase("nl")===row.text.toLocaleLowerCase("nl"))===i);
+    }
+    function kalenderKlassenHtml(prefix,selected=[]){
+      return `<div class="class-picks" style="display:flex;gap:7px;flex-wrap:wrap">${allClasses.map(k=>`<label style="max-width:none"><input class="${prefix}" type="checkbox" value="${esc(k)}" ${selected.includes(k)?"checked":""}> ${esc(k)}</label>`).join("")}</div>`;
+    }
+    function renderKalenderVoorbereiding(){
+      const preview=kalenderImportVoorbeeld.length?`<div class="notice" style="margin-top:16px"><strong>Controleer vóór het bewaren</strong><p class="muted">Vrije dagen gelden voor de hele school. Bij activiteiten kun je de voorgestelde klassen aanpassen. Zwemmen wordt alleen voor K1, K2 of K3 voorgesteld.</p></div><div class="table-wrap"><table><thead><tr><th>Invoeren</th><th>Datum</th><th>Soort</th><th>Omschrijving</th><th>Klassen</th></tr></thead><tbody>${kalenderImportVoorbeeld.map(r=>`<tr><td><input class="kalRow" data-id="${r.id}" type="checkbox" ${r.selected?"checked":""}></td><td>${esc(r.date)}</td><td>${r.type==="vrij"?'<span class="tag done">vrije dag</span>':'<span class="tag">activiteit</span>'}</td><td>${esc(r.text)}</td><td>${r.type==="vrij"?"Hele school":kalenderKlassenHtml(`kalClass-${r.id}`,r.classes)}</td></tr>`).join("")}</tbody></table></div><button class="primary" style="margin-top:12px" onclick="bewaarJaarkalenderVoorstellen()">Goedgekeurde regels bewaren</button>`:"";
+      $("adminBody").innerHTML=`<h3>Jaarkalender en activiteiten voorbereiden</h3><p class="muted">Hier doet het secretariaat het voorbereidende werk voor de hele school. Links bij <strong>Activiteiten</strong> bekijk en verwerk je daarna alleen het resultaat per klas.</p>
+        <div class="notice" style="background:#f5fbf8;border-color:#9dcdb6"><strong>1. Jaarkalender inlezen</strong><p class="muted">De tool neemt echte vrije dagen en mogelijke uitstappen over in een controlelijst. Oudercontacten, rapporten, infoavonden en toetsen worden genegeerd.</p><div class="row"><label>Excel-jaarkalender<input id="kalenderFile" type="file" accept=".xlsx,.xls"></label><button class="primary" onclick="leesJaarkalenderBestand()">Bestand lezen en controleren</button></div></div>
+        ${preview}
+        <div class="notice" style="margin-top:18px;background:#fffaf0;border-color:#e8c56d"><strong>2. Zelf een activiteit aanvullen</strong><p class="muted">Gebruik dit voor een activiteit die niet in de jaarkalender staat.</p><div class="row"><label>Naam<input id="prepActName" placeholder="bv. Toneelvoorstelling"></label><label style="max-width:190px">Datum<input id="prepActDate" type="date"></label><label style="max-width:150px">Prijs per leerling (&euro;)<input id="prepActPrice" type="number" min="0" step="0.01" value="0"></label><div style="width:100%"><strong>Klassen</strong>${kalenderKlassenHtml("prepActClass",[])}</div><button class="primary" onclick="bewaarVoorbereideActiviteit()">Activiteit bewaren bij gekozen klassen</button></div></div>`;
+    }
+    window.leesJaarkalenderBestand=async()=>{
+      const file=$("kalenderFile")?.files?.[0]; if(!file)return alert("Kies eerst het Excelbestand met de jaarkalender.");
+      if(typeof XLSX==="undefined")return alert("De Excel-lezer is nog niet geladen. Herlaad de pagina en probeer opnieuw.");
+      try{toonSchermLaden("Jaarkalender lezen…");const wb=XLSX.read(await file.arrayBuffer(),{type:"array"}),sheet=wb.Sheets[wb.SheetNames[0]],matrix=XLSX.utils.sheet_to_json(sheet,{header:1,defval:"",raw:false});kalenderImportVoorbeeld=leesJaarkalenderMatrix(matrix);renderKalenderVoorbereiding();if(!kalenderImportVoorbeeld.length)alert("Er werden geen herkenbare vrije dagen of activiteiten gevonden.");}catch(err){console.error(err);alert("De jaarkalender kon niet worden gelezen.");}finally{verbergSchermLaden();}
+    };
+    async function bewaarKalenderItems(items){
+      const perKlas=new Map();
+      for(const item of items) for(const klas of item.classes||[]) { if(!perKlas.has(klas))perKlas.set(klas,[]);perKlas.get(klas).push(item); }
+      for(const [klas,regels] of perKlas){
+        const ref=classRef(klas),snap=await getDoc(ref),kd=snap.exists()?snap.data():emptyClassDoc(klas);kd.vrijeDagen||=[];kd.activiteiten||=[];
+        for(const r of regels){
+          if(r.type==="vrij"){if(!kd.vrijeDagen.some(v=>v.start===r.date&&v.end===r.date))kd.vrijeDagen.push({naam:r.text,start:r.date,end:r.date,aangemaaktDoor:user.email||""});}
+          else if(!kd.activiteiten.some(a=>a.date===r.date&&String(a.name||"").toLocaleLowerCase("nl")===r.text.toLocaleLowerCase("nl")))kd.activiteiten.push({id:uid(),name:r.text,date:r.date,price:Number(r.price||0),absent:{},processed:false,aangemaaktDoor:user.email||"",aangemaaktOp:new Date().toISOString()});
+        }
+        await setDoc(ref,kd);
+        if(klas===activeClass)data=kd;
+      }
+    }
+    window.bewaarJaarkalenderVoorstellen=async()=>{
+      const items=kalenderImportVoorbeeld.filter(r=>document.querySelector(`.kalRow[data-id="${r.id}"]`)?.checked).map(r=>({...r,classes:r.type==="vrij"?[...allClasses]:[...document.querySelectorAll(`.kalClass-${r.id}:checked`)].map(x=>x.value)})).filter(r=>r.classes.length);
+      if(!items.length)return alert("Vink minstens één regel met een klas aan.");
+      try{toonSchermLaden("Jaarkalender bewaren…");await bewaarKalenderItems(items);kalenderImportVoorbeeld=[];renderKalenderVoorbereiding();alert("De goedgekeurde vrije dagen en activiteiten zijn bij de gekozen klassen bewaard.");}catch(err){console.error(err);alert("Niet alles kon worden bewaard. Probeer opnieuw of stuur een hulpbericht.");}finally{verbergSchermLaden();}
+    };
+    window.bewaarVoorbereideActiviteit=async()=>{
+      const text=$("prepActName")?.value.trim(),date=$("prepActDate")?.value,price=Number($("prepActPrice")?.value||0),classes=[...document.querySelectorAll(".prepActClass:checked")].map(x=>x.value);
+      if(!text||!date)return alert("Vul naam en datum in.");if(!classes.length)return alert("Kies minstens één klas.");
+      try{toonSchermLaden("Activiteit bewaren…");await bewaarKalenderItems([{type:"activiteit",text,date,price,classes}]);renderKalenderVoorbereiding();alert("De activiteit staat bij de gekozen klassen.");}catch(err){console.error(err);alert("De activiteit kon niet worden bewaard.");}finally{verbergSchermLaden();}
+    };
+
     function renderFreeDays(inAdmin=false){
       const target = inAdmin ? "adminBody" : "content";
       $(target).innerHTML = `<h3>Vrije dagen</h3><p class="muted">Weekends en woensdagen zijn automatisch grijs.</p><div class="table-wrap"><table><thead><tr><th>Naam</th><th>Van</th><th>Tot</th></tr></thead><tbody>${data.vrijeDagen.map(d=>`<tr><td>${esc(d.naam)}</td><td>${d.start}</td><td>${d.end}</td></tr>`).join("")}</tbody></table></div><div class="row no-print" style="margin-top:14px"><label>Naam<input id="freeName" placeholder="Pedagogische studiedag"></label><label>Van<input id="freeStart" type="date"></label><label>Tot<input id="freeEnd" type="date"></label><button class="primary" onclick="addFreeDay()">Vrije dag toevoegen</button></div>`;
@@ -3064,6 +3147,8 @@
     document.querySelectorAll(".sb-item").forEach(el => {
       el.addEventListener("click", () => {
         tab = el.dataset.tab;
+        if(tab === "administratie" && isSecretary()) adminPanel = "wegwijzer";
+        renderKlasPills();
         render();
       });
     });
@@ -3074,7 +3159,7 @@
       await loadAllowedClasses();
       activeClass = allowedClasses[0] || "";
       renderScope();
-      if(activeClass) await openClass(activeClass);
+      if(activeClass) await openClass(activeClass, isSecretary());
       else verbergSchermLaden();
     });
 
@@ -3093,7 +3178,7 @@
         }
         activeClass = allowedClasses[0] || DEFAULT_CLASSES[0];
         renderScope();
-        await openClass(activeClass);
+        await openClass(activeClass, isSecretary());
       }catch(err){
         console.error(err);
         $("content").innerHTML = `<div class="panel"><h2>Laden mislukt</h2><p class="muted">${esc(err.message)}</p></div>`;
