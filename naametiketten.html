@@ -48,6 +48,7 @@
         <div class="tekst-toolbar" aria-label="Tekstopmaak"><button type="button" onmousedown="event.preventDefault()" onclick="maakTekstOp('bold')" title="Geselecteerde tekst vet maken"><strong>B</strong></button><button type="button" onmousedown="event.preventDefault()" onclick="maakTekstOp('underline')" title="Geselecteerde tekst onderstrepen"><u>U</u></button></div>
         <div id="eigenTekst" class="tekst-editor" contenteditable="true" role="textbox" aria-multiline="true" data-placeholder="Typ hier de tekst. Selecteer een stukje voor vet of onderstrepen."></div>
         <label>Lettergrootte tekst<input id="tekstLettergrootte" type="number" min="8" max="36" step="1" value="14"></label>
+        <label>Tekst uitlijnen<select id="tekstUitlijning"><option value="center">Centreren</option><option value="left">Links uitlijnen</option></select></label>
         <div id="pasMelding" class="pas-melding">Typ tekst om te controleren of die past.</div>
         <p class="uitleg">De tekst wordt indien nodig automatisch verkleind tot minimaal 8 pt. Rondom blijft een veilige binnenmarge vrij zodat de printer niets afsnijdt.</p>
       </div>
@@ -72,6 +73,6 @@
       <div class="preview-waarschuwing"><strong>Let op:</strong> dit voorbeeld is bewust verkleind om een volledig A4 op het scherm te tonen. Beoordeel de uiteindelijke lettergrootte in Word; druk af op <strong>100%/werkelijke grootte</strong>.</div>
     </section>
   </main>
-  <script type="module" src="naametiketten.js?v=20260818-2"></script>
+  <script type="module" src="naametiketten.js?v=20260818-3"></script>
 </body>
 </html>
