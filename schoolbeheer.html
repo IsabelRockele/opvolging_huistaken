@@ -150,8 +150,15 @@
     .tag{display:inline-block;border-radius:999px;background:#edf2f8;padding:4px 8px;font-size:12px;margin-left:6px}
     .tag.green{background:#d8f5e9}.tag.done{background:#c9efd9}
     .th-sub{display:block;margin-top:3px;font-size:10px;font-weight:600;text-transform:none;letter-spacing:0;color:var(--muted)}
-    .homework-cell{min-width:170px;text-align:left!important}
-    .homework-cell label{display:flex;align-items:center;gap:8px;margin:4px 0;font-size:12px;font-weight:800;color:var(--ink)}
+    .homework-cell{min-width:220px;text-align:left!important}
+    .homework-options{display:grid;grid-template-columns:1fr 1fr;gap:7px 12px;align-items:center}
+    .homework-cell label{display:flex;align-items:center;gap:6px;margin:0;font-size:12px;font-weight:700;color:var(--ink);white-space:nowrap}
+    .homework-cell label.volledige-rij{grid-column:1/-1}
+    .kolommen-kiezer{position:relative;margin-left:auto}
+    .kolommen-kiezer summary{cursor:pointer;list-style:none;border:1px solid var(--line);border-radius:10px;padding:7px 11px;background:#fff;font-weight:700;font-size:13px}
+    .kolommen-kiezer[open] .kolommen-menu{display:grid}
+    .kolommen-menu{position:absolute;right:0;top:40px;z-index:20;display:none;grid-template-columns:1fr 1fr;gap:8px 14px;min-width:330px;padding:14px;background:#fff;border:1px solid var(--line);border-radius:12px;box-shadow:0 10px 28px rgba(11,35,65,.16)}
+    .kolommen-menu label{display:flex;align-items:center;gap:7px;font-size:13px;font-weight:700;white-space:nowrap}
     .mf-klas { margin-bottom: 32px; }
     .mf-klas-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:6px; }
     .mf-klas-header h3 { margin:0; font-size:1.15rem; }
@@ -1977,6 +1984,7 @@
         <div class="class-list-heading">
           <h3>Leerlingen</h3>
           <span class="muted small">${activeStudents().length} leerling(en)</span>
+          ${kolommenKiezer()}
         </div>
         ${oudstenKlasSamenvatting()}
         ${studentTable()}
@@ -2315,18 +2323,28 @@
       const match = String(value || "").match(/^(\d{4})-(\d{2})-(\d{2})$/);
       return match ? `${match[3]}/${match[2]}/${match[1]}` : esc(value || "");
     }
+    const klasKolommen=[['roepnaam','Roepnaam'],['geboortejaar','Geboortejaar'],['groep','K0/K1-groep'],['oudste','Oudste gezin'],['collega','Kind collega'],['huiswerk','Huiswerkklas'],['start','Startdatum'],['einde','Einddatum']];
+    function kolomVoorkeurSleutel(){return `lindeVerborgenKlasKolommen_${user?.uid||'gebruiker'}`;}
+    function verborgenKlasKolommen(){try{return new Set(JSON.parse(localStorage.getItem(kolomVoorkeurSleutel())||'[]'));}catch{return new Set();}}
+    function toonKlasKolom(key){return !verborgenKlasKolommen().has(key);}
+    function optioneleKolom(key,html){return toonKlasKolom(key)?html:"";}
+    function kolommenKiezer(){
+      if(!isSecretary())return "";const verborgen=verborgenKlasKolommen();
+      return `<details class="kolommen-kiezer no-print"><summary>Kolommen kiezen</summary><div class="kolommen-menu"><span class="muted small" style="grid-column:1/-1">Je keuze wordt op dit toestel onthouden.</span>${klasKolommen.map(([key,label])=>`<label><input type="checkbox" ${!verborgen.has(key)?'checked':''} onchange="wijzigKlasKolom('${key}',this.checked)"> ${label}</label>`).join('')}</div></details>`;
+    }
+    window.wijzigKlasKolom=(key,zichbaar)=>{const verborgen=verborgenKlasKolommen();zichbaar?verborgen.delete(key):verborgen.add(key);localStorage.setItem(kolomVoorkeurSleutel(),JSON.stringify([...verborgen]));render();setTimeout(()=>{const keuze=document.querySelector('.kolommen-kiezer');if(keuze)keuze.open=true;},0);};
     function studentTable(){
-      return `<div class="table-wrap"><table><thead><tr><th>Achternaam</th><th>Officiële voornaam</th><th>Roepnaam<span class="th-sub">optioneel</span></th><th>Geboortejaar</th>${activeClass==="K1"?"<th>Groep</th>":""}<th class="check-col">Oudste<br>gezin</th><th class="check-col">Kind collega</th><th class="homework-cell">Huiswerkklas<span class="th-sub">deelname en betaling</span></th><th>Start</th><th>Einde</th><th></th></tr></thead><tbody>${activeStudents().map(s=>`<tr class="${s.colleague?"colleague":""}">
+      return `<div class="table-wrap"><table><thead><tr><th>Achternaam</th><th>Officiële voornaam</th>${optioneleKolom('roepnaam','<th>Roepnaam<span class="th-sub">optioneel</span></th>')}${optioneleKolom('geboortejaar','<th>Geboortejaar</th>')}${activeClass==="K1"?optioneleKolom('groep','<th>Groep</th>'):""}${optioneleKolom('oudste','<th class="check-col">Oudste<br>gezin</th>')}${optioneleKolom('collega','<th class="check-col">Kind collega</th>')}${optioneleKolom('huiswerk','<th class="homework-cell">Huiswerkklas<span class="th-sub">deelname en betaling</span></th>')}${optioneleKolom('start','<th>Start</th>')}${optioneleKolom('einde','<th>Einde</th>')}<th></th></tr></thead><tbody>${activeStudents().map(s=>`<tr class="${s.colleague?"colleague":""}">
         <td><input class="name-input" value="${esc(s.last||"")}" onchange="updateStudent('${s.id}','last',this.value)"></td>
         <td><input class="name-input" value="${esc(s.first||"")}" onchange="updateStudent('${s.id}','first',this.value)"></td>
-        <td><input class="name-input" value="${esc(s.roepnaam||"")}" placeholder="bv. Haroun" onchange="updateStudent('${s.id}','roepnaam',this.value)"></td>
-        <td><input type="number" min="2015" max="2030" value="${esc(s.geboortejaar||"")}" placeholder="jjjj" onchange="updateStudent('${s.id}','geboortejaar',this.value)"></td>
-        ${activeClass==="K1"?`<td><strong>${esc(kleutergroepVoor(s)||"—")}</strong></td>`:""}
-        <td class="check-col"><input type="checkbox" ${s.oudsteGezin?"checked":""} onchange="toggleOudsteGezin('${s.id}',this.checked)" title="Oudste kind van het gezin op school"></td>
-        <td class="check-col"><input type="checkbox" ${s.colleague?"checked":""} onchange="toggleColleague('${s.id}',this.checked)"></td>
-        <td class="homework-cell"><label><input data-homework-main type="checkbox" ${s.homeworkClass?"checked":""} onchange="toggleHomeworkClass('${s.id}',this.checked,this)"> komt naar huiswerkklas</label><label><input data-homework-day="dinsdag" type="checkbox" ${s.homeworkClassDays?.dinsdag?"checked":""} onchange="toggleHomeworkClassDay('${s.id}','dinsdag',this.checked,this)"> dinsdag</label><label><input data-homework-day="donderdag" type="checkbox" ${s.homeworkClassDays?.donderdag?"checked":""} onchange="toggleHomeworkClassDay('${s.id}','donderdag',this.checked,this)"> donderdag</label><label><input data-homework-free type="checkbox" ${s.homeworkClassFree?"checked":""} onchange="toggleHomeworkClassFree('${s.id}',this.checked,this)"> gratis via schooladvies</label></td>
-        <td><input type="date" value="${esc(s.start||startDate())}" onchange="updateStudent('${s.id}','start',this.value)" title="Startdatum: ${formatDate(s.start||startDate())}"></td>
-        <td><input type="date" value="${esc(s.end||endDate())}" onchange="updateStudent('${s.id}','end',this.value)" title="Einddatum: ${formatDate(s.end||endDate())}"></td>
+        ${optioneleKolom('roepnaam',`<td><input class="name-input" value="${esc(s.roepnaam||"")}" placeholder="bv. Haroun" onchange="updateStudent('${s.id}','roepnaam',this.value)"></td>`)}
+        ${optioneleKolom('geboortejaar',`<td><input type="number" min="2015" max="2030" value="${esc(s.geboortejaar||"")}" placeholder="jjjj" onchange="updateStudent('${s.id}','geboortejaar',this.value)"></td>`)}
+        ${activeClass==="K1"?optioneleKolom('groep',`<td><strong>${esc(kleutergroepVoor(s)||"—")}</strong></td>`):""}
+        ${optioneleKolom('oudste',`<td class="check-col"><input type="checkbox" ${s.oudsteGezin?"checked":""} onchange="toggleOudsteGezin('${s.id}',this.checked)" title="Oudste kind van het gezin op school"></td>`)}
+        ${optioneleKolom('collega',`<td class="check-col"><input type="checkbox" ${s.colleague?"checked":""} onchange="toggleColleague('${s.id}',this.checked)"></td>`)}
+        ${optioneleKolom('huiswerk',`<td class="homework-cell"><div class="homework-options"><label class="volledige-rij"><input data-homework-main type="checkbox" ${s.homeworkClass?"checked":""} onchange="toggleHomeworkClass('${s.id}',this.checked,this)"> deelname</label><label><input data-homework-day="dinsdag" type="checkbox" ${s.homeworkClassDays?.dinsdag?"checked":""} onchange="toggleHomeworkClassDay('${s.id}','dinsdag',this.checked,this)"> dinsdag</label><label><input data-homework-day="donderdag" type="checkbox" ${s.homeworkClassDays?.donderdag?"checked":""} onchange="toggleHomeworkClassDay('${s.id}','donderdag',this.checked,this)"> donderdag</label><label class="volledige-rij"><input data-homework-free type="checkbox" ${s.homeworkClassFree?"checked":""} onchange="toggleHomeworkClassFree('${s.id}',this.checked,this)"> gratis via schooladvies</label></div></td>`)}
+        ${optioneleKolom('start',`<td><input type="date" value="${esc(s.start||startDate())}" onchange="updateStudent('${s.id}','start',this.value)" title="Startdatum: ${formatDate(s.start||startDate())}"></td>`)}
+        ${optioneleKolom('einde',`<td><input type="date" value="${esc(s.end||endDate())}" onchange="updateStudent('${s.id}','end',this.value)" title="Einddatum: ${formatDate(s.end||endDate())}"></td>`)}
         <td><button class="small pink" onclick="leaveStudent('${s.id}')">uitschrijven</button>${isSecretary()?` <button class="small danger" onclick="startNietOpSchool('${s.id}')">start niet</button>`:""}</td>
       </tr>`).join("")}</tbody></table></div>`;
     }
