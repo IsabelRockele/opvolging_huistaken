@@ -1007,7 +1007,7 @@
       administratie: `<h3>Uitleg administratie</h3><ul><li><strong>Klaslijsten</strong>: leerlingen toevoegen, namen verbeteren, kind van collega aanduiden en uitschrijven.</li><li><strong>Vrije dagen</strong>: extra vrije dagen of studiedagen ingeven. Weekends en woensdagen zijn automatisch grijs.</li><li><strong>Meldingen</strong>: secretariaat stuurt taken naar klassen. Leerkrachten vinken aan wanneer het klaar is.</li><li><strong>Nieuw schooljaar</strong>: leerlingen doorschuiven, zittenblijvers aanduiden en klasleerkrachten klaarzetten.</li></ul>`,
       klaslijst: `<h3>Uitleg klaslijst</h3><ul><li>Gebruik <strong>Klaslijst plakken</strong> vooral bij een volledig nieuwe klas.</li><li>Gebruik <strong>Nieuwe leerling</strong> voor een leerling die later start of nog ontbreekt.</li><li>Een hier toegevoegde leerling verschijnt ook in afwezigheden, etiketten en andere gekoppelde tools. Bestaande overgangsfiches worden niet overschreven; alleen de ontbrekende naam wordt toegevoegd.</li><li><strong>Standaard</strong> betekent: startdatum 1/09 van het schooljaar en einddatum 30/06 van dat schooljaar.</li><li>Namen kan je rechtstreeks in de tabel verbeteren.</li><li>Uitschrijven bewaart oudere gegevens voor lijsten en afrekeningen.</li></ul>`,
       refter: `<h3>Uitleg refter</h3><ul><li>Leerkrachten vinken enkel kinderen aan die afwezig zijn.</li><li>Grijze dagen tellen niet mee.</li><li>Kinderen van collega's krijgen een zachte kleur en betalen geen refter.</li><li>Als secretariaat <strong>Verwerkt tot</strong> invult, worden die dagen vergrendeld bij de leerkracht.</li></ul>`,
-      activiteiten: `<h3>Uitleg activiteiten</h3><ul><li>Leerkrachten voegen de activiteit toe met datum en prijs.</li><li>Daarna vinken ze alleen afwezige leerlingen aan.</li><li>Secretariaat ziet groen voor aanwezig en rood voor afwezig.</li><li>Wanneer secretariaat verwerkt aanvinkt, kan de leerkracht die activiteit niet meer wijzigen.</li></ul>`,
+      activiteiten: `<h3>Uitleg activiteiten</h3><ul><li>Leerkrachten kunnen een activiteit voor hun eigen klas toevoegen.</li><li>Secretariaat kan dezelfde activiteit in één keer voor één of meerdere klassen aanmaken.</li><li>Gebruik dit alleen voor echte activiteiten of uitstappen. Oudercontacten, rapporten en infoavonden horen hier niet thuis.</li><li>Daarna vinken leerkrachten alleen afwezige leerlingen aan.</li><li>Secretariaat ziet groen voor aanwezig en rood voor afwezig.</li><li>Wanneer secretariaat verwerkt aanvinkt, kan de leerkracht die activiteit niet meer wijzigen.</li></ul>`,
       aankopen: `<h3>Uitleg aankopen</h3><ul><li>Leerkrachten voegen aankopen toe zoals badmuts of turnshirt.</li><li>De prijs kan bij het toevoegen nog aangepast worden.</li><li>Secretariaat kan aankopen nakijken en als verwerkt aanduiden.</li></ul>`,
       werkboeken: `<h3>Uitleg werkboeken</h3><ul><li>Dit onderdeel werken we later verder uit.</li><li>Hier komt het overzicht voor werkboeken en materiaalbestellingen.</li></ul>`
     };
@@ -2541,11 +2541,64 @@
 
     function renderActivities(){
       activityMonth = $("actMonth")?.value || activityMonth || schoolMonths()[0];
-      $("content").innerHTML = `<div class="panel"><div class="bar"><div><h2>Activiteiten <span class="muted" style="font-weight:400">${esc(activeClass)}</span></h2><p class="muted">${isSecretary()?"Secretariaat kijkt na: groen is aanwezig, rood is afwezig.":"Voeg activiteiten toe en vink afwezigen aan."}</p></div><label class="right no-print" style="max-width:180px">Maand<input id="actMonth" type="month" value="${activityMonth}" onchange="wisselActiviteitenMaand(this.value)"></label>${screenTools("activiteiten")}</div>${helpPanel("activiteiten")}${!isSecretary()?`<div class="row no-print"><label>Activiteit<input id="actName"></label><label>Datum<input id="actDate" type="date" value="${activityMonth}-01"></label><label>Prijs<input id="actPrice" type="number" value="0"></label><button class="primary" onclick="addActivity()">Activiteit toevoegen</button></div>`:""}${activitiesTable()}</div>`;
+      const klasKeuze = isSecretary() ? `<div style="width:100%;margin-top:8px">
+        <div class="bar" style="margin-bottom:6px"><strong>Voor welke klassen?</strong><div class="actions"><button type="button" class="white small" onclick="kiesAlleActiviteitKlassen(true)">Alle klassen</button><button type="button" class="white small" onclick="kiesAlleActiviteitKlassen(false)">Geen</button></div></div>
+        <div class="class-picks" style="display:flex;gap:8px;flex-wrap:wrap">${allClasses.map(k=>`<label style="max-width:none"><input class="actClass" type="checkbox" value="${esc(k)}" ${k===activeClass?"checked":""}> ${esc(k)}</label>`).join("")}</div>
+      </div>` : "";
+      const invoer = `<div class="notice no-print" style="margin:14px 0;background:#f5fbf8;border-color:#9dcdb6">
+        <strong>Nieuwe activiteit of uitstap</strong>
+        <p class="muted">${isSecretary()?"Kies één of meerdere klassen. De activiteit verschijnt daarna bij elke gekozen klas.":"De activiteit wordt toegevoegd aan je eigen klas."} Oudercontacten en rapporten voer je hier niet in.</p>
+        <div class="row"><label>Naam activiteit<input id="actName" placeholder="bv. Toneelvoorstelling"></label><label style="max-width:190px">Datum<input id="actDate" type="date" value="${activityMonth}-01"></label><label style="max-width:150px">Prijs per leerling (&euro;)<input id="actPrice" type="number" min="0" step="0.01" value="0"></label>${klasKeuze}<button class="primary" onclick="addActivity()">${isSecretary()?"Toevoegen aan gekozen klassen":"Activiteit toevoegen"}</button></div>
+      </div>`;
+      $("content").innerHTML = `<div class="panel"><div class="bar"><div><h2>Activiteiten <span class="muted" style="font-weight:400">${esc(activeClass)}</span></h2><p class="muted">${isSecretary()?"Maak activiteiten aan of kijk aanwezigheid en verwerking na.":"Voeg activiteiten toe en vink afwezigen aan."}</p></div><label class="right no-print" style="max-width:180px">Maand<input id="actMonth" type="month" value="${activityMonth}" onchange="wisselActiviteitenMaand(this.value)"></label>${screenTools("activiteiten")}</div>${helpPanel("activiteiten")}${invoer}${activitiesTable()}</div>`;
     }
     function activitiesTable(){ const list=data.activiteiten.filter(a => String(a.date||"").slice(0,7) === activityMonth), students=activeStudents(`${activityMonth}-15`); return list.length ? `<div class="table-wrap" style="margin-top:14px"><table><thead><tr><th>Leerling</th>${list.map(a=>`<th>${esc(a.name)}<br><span class="muted">${a.date} - &euro;${Number(a.price||0).toFixed(2)}</span>${a.processed?'<br><span class="tag done">verwerkt</span>':''}${isSecretary()?`<br><button class="small" onclick="toggleActProcessed('${a.id}')">${a.processed?'heropen':'verwerk'}</button>`:""}</th>`).join("")}</tr></thead><tbody>${students.map(s=>`<tr><td><strong>${esc(name(s))}</strong></td>${list.map(a=>{const absent=!!a.absent?.[s.id]; if(isSecretary())return`<td class="activity-col ${a.processed?"locked":""}">${absent?'<span class="status-dot absent">&#10006;</span>':'<span class="status-dot present">&#10003;</span>'}</td>`; return`<td class="activity-col ${a.processed?"locked":""}"><input class="absence-check" type="checkbox" ${absent?"checked":""} ${a.processed?"disabled":""} onchange="toggleActAbsent('${a.id}','${s.id}',this.checked)">${a.processed?'<span class="teacher-lock"> &#128274;</span>':''}</td>`}).join("")}</tr>`).join("")}</tbody></table></div>` : `<div class="notice">Nog geen activiteiten ingevoerd voor deze maand.${!isSecretary()?" Gebruik hierboven 'Activiteit toevoegen'.":""}</div>`; }
     window.wisselActiviteitenMaand = value => { activityMonth = value; renderActivities(); };
-    window.addActivity = () => { if(isSecretary())return; if(!$("actName").value.trim())return; data.activiteiten.push({id:uid(),name:$("actName").value.trim(),date:$("actDate").value,price:Number($("actPrice").value||0),absent:{},processed:false}); markDirty(); renderActivities(); };
+    window.kiesAlleActiviteitKlassen = checked => document.querySelectorAll(".actClass").forEach(el => { el.checked = checked; });
+    window.addActivity = async () => {
+      const naam = $("actName")?.value.trim() || "";
+      const datum = $("actDate")?.value || "";
+      const prijs = Number($("actPrice")?.value || 0);
+      if(!naam) return alert("Vul eerst de naam van de activiteit in.");
+      if(!datum) return alert("Kies eerst de datum van de activiteit.");
+      if(prijs < 0) return alert("De prijs kan niet negatief zijn.");
+      const klassen = isSecretary()
+        ? [...document.querySelectorAll(".actClass:checked")].map(el => el.value)
+        : [activeClass];
+      if(!klassen.length) return alert("Kies minstens één klas.");
+      const activityId = uid();
+      const nieuw = {id:activityId,name:naam,date:datum,price:prijs,absent:{},processed:false,aangemaaktDoor:user.email||"",aangemaaktOp:new Date().toISOString()};
+      toonSchermLaden(klassen.length > 1 ? `Activiteit toevoegen aan ${klassen.length} klassen…` : "Activiteit toevoegen…");
+      try{
+        let toegevoegd = 0, overgeslagen = 0;
+        for(const klas of klassen){
+          const ref = classRef(klas);
+          let klasDoc;
+          if(klas === activeClass){
+            klasDoc = data;
+          }else{
+            const snap = await getDoc(ref);
+            klasDoc = snap.exists() ? snap.data() : emptyClassDoc(klas);
+          }
+          klasDoc.activiteiten ||= [];
+          const dubbel = klasDoc.activiteiten.some(a => String(a.name||"").trim().toLocaleLowerCase("nl") === naam.toLocaleLowerCase("nl") && a.date === datum);
+          if(dubbel){ overgeslagen++; continue; }
+          klasDoc.activiteiten.push({...nieuw,id:klas===activeClass?activityId:uid()});
+          klasDoc.bijgewerktOp = new Date().toISOString();
+          if(klas === activeClass) await saveNow();
+          else await setDoc(ref, klasDoc);
+          toegevoegd++;
+        }
+        activityMonth = datum.slice(0,7);
+        renderActivities();
+        alert(`${toegevoegd} klas(sen) bijgewerkt.${overgeslagen?` ${overgeslagen} klas(sen) overgeslagen omdat dezelfde activiteit daar al bestond.`:""}`);
+      }catch(err){
+        console.error(err);
+        alert("De activiteit kon niet overal worden bewaard. Probeer opnieuw of stuur een hulpbericht naar de beheerder.");
+      }finally{
+        verbergSchermLaden();
+      }
+    };
     window.toggleActProcessed = id => { if(!isSecretary())return; const a=data.activiteiten.find(x=>x.id===id); if(a)a.processed=!a.processed; markDirty(); renderActivities(); };
     window.toggleActAbsent = (aid,sid,checked) => { const a=data.activiteiten.find(x=>x.id===aid); a.absent ||= {}; a.absent[sid]=checked; markDirty(); };
 
