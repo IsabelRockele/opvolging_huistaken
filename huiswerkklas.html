@@ -151,11 +151,11 @@ function localRows(){
   allClasses.forEach(klas=>(classStudents[klas]||[]).forEach(s=>{
     const key=studentKey(klas,s), existing=hw.enrolled[key]||{};
     if(s.homeworkClass || existing.active){
-      rows.push({key,klas,name:name(s),local:ownClasses.includes(klas),active:true,free:!!(s.homeworkClassFree||existing.free)});
+      rows.push({key,klas,name:name(s),local:ownClasses.includes(klas),active:true,free:!!(s.homeworkClassFree||existing.free),days:s.homeworkClassDays||existing.days||{}});
     }
   }));
   Object.entries(hw.enrolled||{}).forEach(([key,v])=>{
-    if(v?.active!==false && !rows.some(r=>r.key===key))rows.push({key,klas:v.klas||"",name:v.name||"",local:false,active:true,free:!!v.free});
+    if(v?.active!==false && !rows.some(r=>r.key===key))rows.push({key,klas:v.klas||"",name:v.name||"",local:false,active:true,free:!!v.free,days:v.days||{}});
   });
   return rows.sort((a,b)=>(a.klas||"").localeCompare(b.klas||"","nl",{numeric:true})||(a.name||"").localeCompare(b.name||"","nl"));
 }
@@ -167,7 +167,7 @@ function renderTable(){
   const enrolledCount=rows.filter(r=>r.active).length;
   $("countTag").textContent=`${enrolledCount} leerling${enrolledCount===1?"":"en"}`;
   if(!rows.length){$("homeworkTable").innerHTML=`<div class="empty">Geen leerlingen gevonden.</div>`;return;}
-  $("homeworkTable").innerHTML=`<div class="table-wrap"><table><thead><tr><th class="class-col">Klas</th><th class="name-col">Leerling</th>${dates.map(d=>`<th class="date-col">${esc(d.slice(8,10)+"/"+d.slice(5,7))}${isSecretariaat()?`<label class="lock-note"><input type="checkbox" data-lock-date="${esc(d)}" ${hw.processedDates?.[d]?"checked":""}> verwerkt</label>`:hw.processedDates?.[d]?`<span class="lock-note">verwerkt</span>`:""}</th>`).join("")}<th class="total-col">Totaal</th></tr></thead><tbody>${rows.map(r=>{const total=dates.reduce((sum,d)=>sum+(hw.attendance?.[d]?.[r.key]?1:0),0);return `<tr class="${r.free?"free-row":""}"><td class="class-col"><span class="class-chip"><span class="stripe-dot" style="background:${colorForClass(r.klas)}"></span>${esc(r.klas)}</span></td><td class="name-col"><strong>${esc(r.name)}</strong>${r.free?'<span class="pay-badge">gratis</span>':''}</td>${dates.map(d=>{const locked=!!hw.processedDates?.[d]&&!isSecretariaat();return `<td class="date-col"><input type="checkbox" data-present="${esc(r.key)}" data-date="${esc(d)}" ${hw.attendance?.[d]?.[r.key]?"checked":""} ${locked?"disabled":""}></td>`;}).join("")}<td class="total-col">${total}</td></tr>`;}).join("")}</tbody></table></div>`;
+  $("homeworkTable").innerHTML=`<div class="table-wrap"><table><thead><tr><th class="class-col">Klas</th><th class="name-col">Leerling</th>${dates.map(d=>`<th class="date-col">${esc(d.slice(8,10)+"/"+d.slice(5,7))}${isSecretariaat()?`<label class="lock-note"><input type="checkbox" data-lock-date="${esc(d)}" ${hw.processedDates?.[d]?"checked":""}> verwerkt</label>`:hw.processedDates?.[d]?`<span class="lock-note">verwerkt</span>`:""}</th>`).join("")}<th class="total-col">Totaal</th></tr></thead><tbody>${rows.map(r=>{const total=dates.reduce((sum,d)=>sum+(hw.attendance?.[d]?.[r.key]?1:0),0),dagen=[r.days?.dinsdag?'di':'',r.days?.donderdag?'do':''].filter(Boolean).join(' + ');return `<tr class="${r.free?"free-row":""}"><td class="class-col"><span class="class-chip"><span class="stripe-dot" style="background:${colorForClass(r.klas)}"></span>${esc(r.klas)}</span></td><td class="name-col"><strong>${esc(r.name)}</strong>${dagen?`<span class="pay-badge">${dagen}</span>`:''}${r.free?'<span class="pay-badge">gratis</span>':''}</td>${dates.map(d=>{const locked=!!hw.processedDates?.[d]&&!isSecretariaat();return `<td class="date-col"><input type="checkbox" data-present="${esc(r.key)}" data-date="${esc(d)}" ${hw.attendance?.[d]?.[r.key]?"checked":""} ${locked?"disabled":""}></td>`;}).join("")}<td class="total-col">${total}</td></tr>`;}).join("")}</tbody></table></div>`;
   document.querySelectorAll("[data-present]").forEach(ch=>ch.onchange=()=>autoSave());
   document.querySelectorAll("[data-lock-date]").forEach(ch=>ch.onchange=()=>autoSave());
 }
@@ -182,7 +182,7 @@ function renderRoleTools(){
 }
 function render(){ $("status").textContent=`${schooljaar} - ${month}`; renderRoleTools(); renderTable(); }
 function collect(){
-  localRows().forEach(r=>{hw.enrolled[r.key]={active:true,klas:r.klas,name:r.name,free:r.free};});
+  localRows().forEach(r=>{hw.enrolled[r.key]={active:true,klas:r.klas,name:r.name,free:r.free,days:r.days||{}};});
   document.querySelectorAll("[data-present]").forEach(ch=>{const d=ch.dataset.date;hw.attendance[d]||={};hw.attendance[d][ch.dataset.present]=ch.checked;});
   document.querySelectorAll("[data-lock-date]").forEach(ch=>{hw.processedDates[ch.dataset.lockDate]=ch.checked;});
 }

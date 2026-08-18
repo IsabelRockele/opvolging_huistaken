@@ -2272,11 +2272,21 @@
         s.homeworkClass=checked;
         if(!checked){
           s.homeworkClassFree=false;
+          s.homeworkClassDays={dinsdag:false,donderdag:false};
           const free=el?.closest(".homework-cell")?.querySelector("[data-homework-free]");
           if(free) free.checked=false;
+          el?.closest(".homework-cell")?.querySelectorAll("[data-homework-day]").forEach(v=>v.checked=false);
         }
         markDirty();
       }
+    };
+    window.toggleHomeworkClassDay=(id,dag,checked,el)=>{
+      const s=data.leerlingen.find(x=>x.id===id);if(!s)return;
+      s.homeworkClassDays||={dinsdag:false,donderdag:false};s.homeworkClassDays[dag]=checked;
+      s.homeworkClass=!!(s.homeworkClassDays.dinsdag||s.homeworkClassDays.donderdag);
+      const hoofd=el?.closest(".homework-cell")?.querySelector("[data-homework-main]");if(hoofd)hoofd.checked=s.homeworkClass;
+      if(!s.homeworkClass){s.homeworkClassFree=false;const gratis=el?.closest(".homework-cell")?.querySelector("[data-homework-free]");if(gratis)gratis.checked=false;}
+      markDirty();
     };
     window.toggleHomeworkClassFree = (id,checked,el) => {
       const s=data.leerlingen.find(x=>x.id===id);
@@ -2304,7 +2314,7 @@
         ${activeClass==="K1"?`<td><strong>${esc(kleutergroepVoor(s)||"—")}</strong></td>`:""}
         <td class="check-col"><input type="checkbox" ${s.oudsteGezin?"checked":""} onchange="toggleOudsteGezin('${s.id}',this.checked)" title="Oudste kind van het gezin op school"></td>
         <td class="check-col"><input type="checkbox" ${s.colleague?"checked":""} onchange="toggleColleague('${s.id}',this.checked)"></td>
-        <td class="homework-cell"><label><input data-homework-main type="checkbox" ${s.homeworkClass?"checked":""} onchange="toggleHomeworkClass('${s.id}',this.checked,this)"> komt naar huiswerkklas</label><label><input data-homework-free type="checkbox" ${s.homeworkClassFree?"checked":""} onchange="toggleHomeworkClassFree('${s.id}',this.checked,this)"> gratis via schooladvies</label></td>
+        <td class="homework-cell"><label><input data-homework-main type="checkbox" ${s.homeworkClass?"checked":""} onchange="toggleHomeworkClass('${s.id}',this.checked,this)"> komt naar huiswerkklas</label><label><input data-homework-day="dinsdag" type="checkbox" ${s.homeworkClassDays?.dinsdag?"checked":""} onchange="toggleHomeworkClassDay('${s.id}','dinsdag',this.checked,this)"> dinsdag</label><label><input data-homework-day="donderdag" type="checkbox" ${s.homeworkClassDays?.donderdag?"checked":""} onchange="toggleHomeworkClassDay('${s.id}','donderdag',this.checked,this)"> donderdag</label><label><input data-homework-free type="checkbox" ${s.homeworkClassFree?"checked":""} onchange="toggleHomeworkClassFree('${s.id}',this.checked,this)"> gratis via schooladvies</label></td>
         <td><input type="date" value="${esc(s.start||startDate())}" onchange="updateStudent('${s.id}','start',this.value)" title="Startdatum: ${formatDate(s.start||startDate())}"></td>
         <td><input type="date" value="${esc(s.end||endDate())}" onchange="updateStudent('${s.id}','end',this.value)" title="Einddatum: ${formatDate(s.end||endDate())}"></td>
         <td><button class="small pink" onclick="leaveStudent('${s.id}')">uitschrijven</button>${isSecretary()?` <button class="small danger" onclick="startNietOpSchool('${s.id}')">start niet</button>`:""}</td>
@@ -2604,6 +2614,7 @@
       id:uid(),previousStudentId:s.id||"",first:s.first||s.firstName||"",last:s.last||s.lastName||"",
       roepnaam:s.roepnaam||s.callingName||"",geboortejaar:String(s.geboortejaar||""),oudsteGezin:!!s.oudsteGezin,
       colleague:!!s.colleague,homeworkClass:!!s.homeworkClass,homeworkClassFree:!!s.homeworkClassFree,
+      homeworkClassDays:{dinsdag:!!s.homeworkClassDays?.dinsdag,donderdag:!!s.homeworkClassDays?.donderdag},
       start:`${doelSchooljaar.slice(0,4)}-09-01`,end:`${doelSchooljaar.slice(5,9)}-06-30`
     }; }
     async function voegLeerlingenToeAanNieuwSchooljaar(doelSchooljaar,klas,leerlingen){
