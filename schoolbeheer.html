@@ -85,6 +85,10 @@
     #navAankopen .sb-icon{color:#c05a7a}
     #navAankopen.active{background:#f5d0dc;border-left-color:#8a2a4a}
 
+    #navOudsten{background:#edf7f1;border-left-color:#4f9a70;color:#285c3e}
+    #navOudsten .sb-icon{color:#4f9a70}
+    #navOudsten.active{background:#d8efe1;border-left-color:#2f7951}
+
 
     .sb-item .sb-icon{font-size:17px;width:20px;text-align:center;flex-shrink:0}
     .sb-divider{height:1px;background:var(--line);margin:4px 12px}
@@ -912,6 +916,9 @@
         <div class="sb-item" data-tab="maximumfactuur" id="navMaximumfactuur">
           <span class="sb-icon">&#128179;</span> Maximumfactuur
         </div>
+        <div class="sb-item secretary-label" data-tab="oudsten" id="navOudsten">
+          <span class="sb-icon">&#9993;</span> Klasoudsten
+        </div>
 
       </div>
 
@@ -1284,6 +1291,7 @@
       if(tab==="activiteiten") renderActivities();
       if(tab==="aankopen") renderPurchases();
       if(tab==="maximumfactuur") renderMaximumfactuur();
+      if(tab==="oudsten") renderOudstenOverzicht();
     }
 
     // ── MAXIMUMFACTUUR (code ook beschikbaar in maximumfactuur.js) ──
@@ -2288,7 +2296,8 @@
     function oudstenKlasSamenvatting(){
       const lijst=activeStudents().filter(s=>s.oudsteGezin);
       const kleuters=activeClass==="K1"?activeStudents().reduce((t,s)=>{const g=kleutergroepVoor(s);if(g==="K0")t.k0++;if(g==="K1")t.k1++;return t},{k0:0,k1:0}):null;
-      return `<section id="oudstenKlasSamenvatting" class="notice no-print" style="margin:0 0 12px"><strong>Oudsten voor brieven: ${lijst.length}</strong>${lijst.length?`<p class="muted">${lijst.map(name).map(esc).join(" · ")}</p>`:`<p class="muted">Nog niemand aangeduid als oudste van het gezin op school.</p>`}${kleuters?`<p><strong>K0:</strong> ${kleuters.k0} (geboortejaar ${Number(schooljaar.slice(0,4))-2}) &nbsp; <strong>K1:</strong> ${kleuters.k1} (geboortejaar ${Number(schooljaar.slice(0,4))-3})</p>`:""}${isSecretary()?`<button class="small white" onclick="toonSchoolOudstenOverzicht()">Totalen hele school bekijken</button><div id="schoolOudstenResultaat"></div>`:""}</section>`;
+      const toonNamen=!isSecretary()&&!isSchoolBreedRole();
+      return `<section id="oudstenKlasSamenvatting" class="notice no-print" style="margin:0 0 12px"><strong>Oudsten voor brieven: ${lijst.length}</strong>${toonNamen?(lijst.length?`<p class="muted">${lijst.map(name).map(esc).join(" · ")}</p>`:`<p class="muted">Nog niemand aangeduid als oudste van het gezin op school.</p>`):""}${kleuters?`<p><strong>K0:</strong> ${kleuters.k0} (geboortejaar ${Number(schooljaar.slice(0,4))-2}) &nbsp; <strong>K1:</strong> ${kleuters.k1} (geboortejaar ${Number(schooljaar.slice(0,4))-3})</p>`:""}</section>`;
     }
     window.toggleOudsteGezin=(id,checked)=>{const s=data.leerlingen.find(x=>x.id===id);if(!s)return;s.oudsteGezin=checked;markDirty();const vak=$("oudstenKlasSamenvatting");if(vak)vak.outerHTML=oudstenKlasSamenvatting();};
     window.toonSchoolOudstenOverzicht=async function(){
@@ -2302,6 +2311,18 @@
         if(doel)doel.innerHTML=`<div style="margin-top:10px"><strong>Hele school: ${totaal}</strong> &nbsp; Kleuters: ${kleuters} &nbsp; Lagere school: ${lager}<br><span class="muted small">${regels.map(x=>`${esc(x.klas)}: ${x.aantal}`).join(" · ")}</span></div>`;
       }catch(err){console.error(err);if(doel)doel.innerHTML='<p class="muted">De schooltotalen konden niet geladen worden.</p>';}
     };
+    async function renderOudstenOverzicht(){
+      $("content").innerHTML=`<div class="panel"><div class="bar"><div><h2>Klasoudsten</h2><p class="muted">Aantal kinderen dat aangeduid is om brieven mee te krijgen. Namen raadpleegt de klasleerkracht in de eigen klaslijst.</p></div>${screenTools("klaslijst")}</div><div id="oudstenSchoolInhoud" class="notice" style="margin-top:16px">Overzicht laden…</div></div>`;
+      try{
+        const snap=await getDocs(collection(db,"schoolbeheer",schooljaar,"klassen")),datum=`${schooljaar.slice(0,4)}-09-15`,perKlas=new Map();
+        snap.docs.forEach(d=>{const leerlingen=(d.data().leerlingen||[]).filter(s=>(!s.start||s.start<=datum)&&(!s.end||s.end>=datum));perKlas.set(d.id,leerlingen.filter(s=>s.oudsteGezin).length);});
+        const klassen=[...new Set([...DEFAULT_CLASSES,...perKlas.keys()])].sort(vergelijkKlassen),regels=klassen.map(klas=>({klas,aantal:perKlas.get(klas)||0}));
+        const kleuters=regels.filter(x=>/^K/i.test(x.klas)).reduce((n,x)=>n+x.aantal,0),lager=regels.filter(x=>/^[1-6]/.test(x.klas)).reduce((n,x)=>n+x.aantal,0),totaal=kleuters+lager;
+        const doel=$("oudstenSchoolInhoud");if(!doel)return;
+        doel.className="";
+        doel.innerHTML=`<div class="table-wrap"><table style="min-width:420px"><thead><tr><th>Klas</th><th style="text-align:center">Aantal oudsten</th></tr></thead><tbody>${regels.map(x=>`<tr><td><strong>${esc(x.klas)}</strong></td><td style="text-align:center;font-size:18px;font-weight:800">${x.aantal}</td></tr>`).join("")}</tbody><tfoot><tr><td><strong>Totaal kleuters</strong></td><td style="text-align:center"><strong>${kleuters}</strong></td></tr><tr><td><strong>Totaal lagere school</strong></td><td style="text-align:center"><strong>${lager}</strong></td></tr><tr style="background:#e5f4eb"><td><strong>Totaal hele school</strong></td><td style="text-align:center;font-size:20px"><strong>${totaal}</strong></td></tr></tfoot></table></div>`;
+      }catch(err){console.error(err);const doel=$("oudstenSchoolInhoud");if(doel)doel.textContent="Het overzicht kon niet geladen worden.";}
+    }
     window.toggleColleague = (id,checked) => { const s=data.leerlingen.find(x=>x.id===id); if(s)s.colleague=checked; markDirty(); };
     window.toggleHomeworkClass = (id,checked,el) => {
       const s=data.leerlingen.find(x=>x.id===id);
