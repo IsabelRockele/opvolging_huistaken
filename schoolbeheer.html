@@ -245,6 +245,13 @@
       margin-left:auto;
       margin-right:auto;
     }
+    .activity-table thead th:not(:first-child){
+      text-align:center!important;
+      vertical-align:middle!important;
+    }
+    .activity-table thead th:not(:first-child) .actions{
+      justify-content:center!important;
+    }
     /* codex-classlist-layout-fix */
     .class-admin-compact{
       background:#fffdf0;
@@ -2561,7 +2568,7 @@
     function activitiesTable(){
       const maandLijst=data.activiteiten.filter(a => String(a.date||"").slice(0,7) === activityMonth);
       const list=maandLijst.filter(a=>!a.cancelled), cancelled=maandLijst.filter(a=>a.cancelled), students=activeStudents(`${activityMonth}-15`);
-      const actiefHtml = list.length ? `<div class="table-wrap" style="margin-top:14px"><table><thead><tr><th>Leerling</th>${list.map(a=>`<th>${esc(a.name)}<br><span class="muted">${esc(a.date)} - &euro;${Number(a.price||0).toFixed(2)}</span>${a.processed?'<br><span class="tag done">verwerkt</span>':''}<br><span class="actions no-print" style="justify-content:center">${isSecretary()?`<button class="small" onclick="toggleActProcessed('${a.id}')">${a.processed?'heropen':'verwerk'}</button>`:""}<button class="small pink" onclick="cancelActivity('${a.id}')">Annuleren</button></span></th>`).join("")}</tr></thead><tbody>${students.map(s=>`<tr><td><strong>${esc(name(s))}</strong></td>${list.map(a=>{const absent=!!a.absent?.[s.id]; if(isSecretary())return`<td class="activity-col ${a.processed?"locked":""}">${absent?'<span class="status-dot absent">&#10006;</span>':'<span class="status-dot present">&#10003;</span>'}</td>`; return`<td class="activity-col ${a.processed?"locked":""}"><input class="absence-check" type="checkbox" ${absent?"checked":""} ${a.processed?"disabled":""} onchange="toggleActAbsent('${a.id}','${s.id}',this.checked)">${a.processed?'<span class="teacher-lock"> &#128274;</span>':''}</td>`}).join("")}</tr>`).join("")}</tbody></table></div>` : `<div class="notice">Nog geen actieve activiteiten ingevoerd voor deze maand.${!isSecretary()?" Gebruik hierboven 'Activiteit toevoegen'.":""}</div>`;
+      const actiefHtml = list.length ? `<div class="table-wrap" style="margin-top:14px"><table class="activity-table"><thead><tr><th>Leerling</th>${list.map(a=>`<th class="activity-col">${esc(a.name)}<br><span class="muted">${esc(a.date)} - &euro;${Number(a.price||0).toFixed(2)}</span>${a.processed?'<br><span class="tag done">verwerkt</span>':''}<br><span class="actions no-print">${isSecretary()?`<button class="small" onclick="toggleActProcessed('${a.id}')">${a.processed?'heropen':'verwerk'}</button>`:""}<button class="small pink" onclick="cancelActivity('${a.id}')">Annuleren</button></span></th>`).join("")}</tr></thead><tbody>${students.map(s=>`<tr><td><strong>${esc(name(s))}</strong></td>${list.map(a=>{const absent=!!a.absent?.[s.id]; if(isSecretary())return`<td class="activity-col ${a.processed?"locked":""}">${absent?'<span class="status-dot absent">&#10006;</span>':'<span class="status-dot present">&#10003;</span>'}</td>`; return`<td class="activity-col ${a.processed?"locked":""}"><input class="absence-check" type="checkbox" ${absent?"checked":""} ${a.processed?"disabled":""} onchange="toggleActAbsent('${a.id}','${s.id}',this.checked)">${a.processed?'<span class="teacher-lock"> &#128274;</span>':''}</td>`}).join("")}</tr>`).join("")}</tbody></table></div>` : `<div class="notice">Nog geen actieve activiteiten ingevoerd voor deze maand.${!isSecretary()?" Gebruik hierboven 'Activiteit toevoegen'.":""}</div>`;
       const geannuleerdHtml = cancelled.length ? `<div class="notice" style="margin-top:14px;background:#fff4f4;border-color:#e7b3b3"><strong>Geannuleerde activiteiten — worden niet aangerekend</strong><ul style="margin-bottom:0">${cancelled.map(a=>`<li><strong>${esc(a.name)}</strong> (${esc(a.date)}): ${esc(a.cancelReason||"Geen reden bewaard")}${isSecretary()?` <button class="white small no-print" onclick="restoreActivity('${a.id}')">Opnieuw activeren</button>`:""}</li>`).join("")}</ul></div>` : "";
       return actiefHtml + geannuleerdHtml;
     }
