@@ -2018,7 +2018,17 @@
       const workbook=XLSX.read(buffer,{type:"array"});
       const sheetName=workbook.SheetNames[0];
       if(!sheetName) return [];
-      return XLSX.utils.sheet_to_json(workbook.Sheets[sheetName],{defval:""});
+      const matrix=XLSX.utils.sheet_to_json(workbook.Sheets[sheetName],{header:1,defval:"",raw:false});
+      const herkenbareKoppen=new Set(["naam","leerling","leerlingnaam","volledigenaam","voornaam","voornamen","achternaam","familienaam","roepnaam"]);
+      const kopRijIndex=matrix.findIndex(rij=>(rij||[]).some(cel=>herkenbareKoppen.has(normaliseerKolomNaam(cel))));
+      if(kopRijIndex<0) throw new Error("De titelrij met Naam, Voornaam of Achternaam werd niet gevonden. Controleer of die kolomtitels in het bestand staan.");
+      const koppen=(matrix[kopRijIndex]||[]).map((cel,index)=>String(cel||"").trim()||`Kolom ${index+1}`);
+      return matrix.slice(kopRijIndex+1).map(rij=>{
+        const object={};koppen.forEach((kop,index)=>object[kop]=rij?.[index]??"");return object;
+      }).filter(row=>{
+        const tekst=Object.values(row).map(v=>String(v||"").trim()).filter(Boolean).join(" ");
+        return tekst&&!/^totaal\b/i.test(tekst)&&!/^aantal\b/i.test(tekst);
+      });
     }
     function renderExcelImportVoorbeeld(){
       const doel=$("excelImportVoorbeeld"); if(!doel)return;
