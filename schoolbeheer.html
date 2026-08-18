@@ -1911,10 +1911,12 @@
           <div class="student-add-form">
             <label>Achternaam<input id="newLast"></label>
             <label>Voornaam<input id="newFirst"></label>
+            <label>Geboortejaar<input id="newBirthYear" type="number" min="2015" max="2030" placeholder="jjjj"></label>
             <label>Startdatum<input id="newStart" type="date" value="${startDate()}"></label>
           </div>
           <div class="student-add-actions">
             <label class="check-label"><input id="newColleague" type="checkbox"> <span>kind van collega, gratis refter</span></label>
+            <label class="check-label"><input id="newOldest" type="checkbox"> <span>oudste van het gezin op school</span></label>
             <button class="green" onclick="addStudent()">Leerling toevoegen</button>
           </div>
         </section>`;
@@ -1969,6 +1971,7 @@
           <h3>Leerlingen</h3>
           <span class="muted small">${activeStudents().length} leerling(en)</span>
         </div>
+        ${oudstenKlasSamenvatting()}
         ${studentTable()}
         ${inactieveLeerlingenTabel()}`;
     }
@@ -1987,8 +1990,8 @@
     };
     function parseName(line){ line=line.trim(); if(!line)return null; if(line.includes(",")){ const [last,first]=line.split(","); return {last:last.trim(),first:first.trim()}; } const parts=line.split(/\s+/); return {first:parts.shift(),last:parts.join(" ")}; }
     window.importNames = () => { $("pasteNames").value.split(/\r?\n/).map(parseName).filter(Boolean).forEach(n=>addStudentObj(n.last,n.first,false,startDate())); markDirty(); render(); };
-    window.addStudent = () => { addStudentObj($("newLast").value,$("newFirst").value,$("newColleague").checked,$("newStart").value||startDate()); markDirty(); render(); };
-    function addStudentObj(last,first,colleague,start,roepnaam=""){ if(!last||!first)return; if(data.leerlingen.some(s=>(s.last||"").toLowerCase()===last.toLowerCase()&&(s.first||"").toLowerCase()===first.toLowerCase()))return; data.leerlingen.push({id:uid(),last,first,roepnaam:String(roepnaam||"").trim(),colleague,start,end:endDate()}); }
+    window.addStudent = () => { addStudentObj($("newLast").value,$("newFirst").value,$("newColleague").checked,$("newStart").value||startDate(),"",$("newBirthYear").value,$("newOldest").checked); markDirty(); render(); };
+    function addStudentObj(last,first,colleague,start,roepnaam="",geboortejaar="",oudsteGezin=false){ if(!last||!first)return; if(data.leerlingen.some(s=>(s.last||"").toLowerCase()===last.toLowerCase()&&(s.first||"").toLowerCase()===first.toLowerCase()))return; data.leerlingen.push({id:uid(),last,first,roepnaam:String(roepnaam||"").trim(),geboortejaar:String(geboortejaar||"").trim(),oudsteGezin:!!oudsteGezin,colleague,start,end:endDate()}); }
     function normaliseerKolomNaam(value){
       return String(value||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().replace(/[^a-z0-9]+/g,"");
     }
@@ -2005,12 +2008,14 @@
       const first=waardeUitExcelRij(row,["voornaam","voornamen","officielevoornaam","first","firstname"]);
       const last=waardeUitExcelRij(row,["achternaam","familienaam","naamfamilie","last","lastname"]);
       const roepnaam=waardeUitExcelRij(row,["roepnaam","gebruiktenaam","callingname"]);
-      if(first || last) return {first,last,roepnaam,bron:"aparte kolommen"};
+      const geboorteWaarde=waardeUitExcelRij(row,["geboortejaar","geboorte jaar","geboren","birthyear","geboortedatum"]);
+      const geboortejaar=(geboorteWaarde.match(/(?:19|20)\d{2}/)||[])[0]||"";
+      if(first || last) return {first,last,roepnaam,geboortejaar,bron:"aparte kolommen"};
       const full=waardeUitExcelRij(row,["naam","leerling","leerlingnaam","volledigenaam","naam leerling"]);
       if(!full) return null;
-      if(full.includes(",")){const [familie,...voornamen]=full.split(",");return {last:familie.trim(),first:voornamen.join(",").trim(),roepnaam:"",bron:"één kolom met komma"};}
+      if(full.includes(",")){const [familie,...voornamen]=full.split(",");return {last:familie.trim(),first:voornamen.join(",").trim(),roepnaam:"",geboortejaar,bron:"één kolom met komma"};}
       const delen=full.trim().split(/\s+/);
-      return {last:delen.shift()||"",first:delen.join(" "),roepnaam:"",bron:"één kolom – controleer samengestelde namen"};
+      return {last:delen.shift()||"",first:delen.join(" "),roepnaam:"",geboortejaar,bron:"één kolom – controleer samengestelde namen"};
     }
     function csvNaarMatrix(tekst){
       tekst=String(tekst||"").replace(/^\uFEFF/,"");
@@ -2031,7 +2036,7 @@
       return matrix;
     }
     function matrixNaarExcelRijen(matrix){
-      const herkenbareKoppen=new Set(["naam","leerling","leerlingnaam","volledigenaam","voornaam","voornamen","achternaam","familienaam","roepnaam"]);
+      const herkenbareKoppen=new Set(["naam","leerling","leerlingnaam","volledigenaam","voornaam","voornamen","achternaam","familienaam","roepnaam","geboortejaar","geboortedatum"]);
       const kopRijIndex=matrix.findIndex(rij=>(rij||[]).some(cel=>herkenbareKoppen.has(normaliseerKolomNaam(cel))));
       if(kopRijIndex<0) throw new Error("De titelrij met Naam, Voornaam of Achternaam werd niet gevonden. Controleer of die kolomtitels in het bestand staan.");
       const koppen=(matrix[kopRijIndex]||[]).map((cel,index)=>String(cel||"").trim()||`Kolom ${index+1}`);
@@ -2061,10 +2066,10 @@
       const doel=$("excelImportVoorbeeld"); if(!doel)return;
       if(!excelImportVoorbeeld.length){doel.innerHTML="";return;}
       doel.innerHTML=`<div class="notice"><strong>Controleer vóór je bewaart</strong><p class="muted">Bij aparte kolommen staat de verdeling meestal al juist. Bij één kolom Naam is alleen een eerste voorstel mogelijk. Verbeter hier bijvoorbeeld <strong>De Bondt | Storm</strong> en vul desgewenst een korte roepnaam in, zoals <strong>Haroun</strong>.</p></div>
-        <div class="table-wrap" style="margin-top:10px"><table><thead><tr><th>Rij</th><th>Achternaam</th><th>Officiële voornaam/voornamen</th><th>Roepnaam (optioneel)</th><th>Herkenning</th></tr></thead><tbody>${excelImportVoorbeeld.map((x,i)=>`<tr><td>${i+1}</td><td><input value="${esc(x.last)}" oninput="wijzigExcelVoorbeeld(${i},'last',this.value)"></td><td><input value="${esc(x.first)}" oninput="wijzigExcelVoorbeeld(${i},'first',this.value)"></td><td><input value="${esc(x.roepnaam||'')}" placeholder="bv. Haroun" oninput="wijzigExcelVoorbeeld(${i},'roepnaam',this.value)"></td><td class="small">${esc(x.bron||'')}</td></tr>`).join("")}</tbody></table></div>
+        <div class="table-wrap" style="margin-top:10px"><table><thead><tr><th>Rij</th><th>Achternaam</th><th>Officiële voornaam/voornamen</th><th>Roepnaam (optioneel)</th><th>Geboortejaar</th><th>Herkenning</th></tr></thead><tbody>${excelImportVoorbeeld.map((x,i)=>`<tr><td>${i+1}</td><td><input value="${esc(x.last)}" oninput="wijzigExcelVoorbeeld(${i},'last',this.value)"></td><td><input value="${esc(x.first)}" oninput="wijzigExcelVoorbeeld(${i},'first',this.value)"></td><td><input value="${esc(x.roepnaam||'')}" placeholder="bv. Haroun" oninput="wijzigExcelVoorbeeld(${i},'roepnaam',this.value)"></td><td><input type="number" min="2015" max="2030" value="${esc(x.geboortejaar||'')}" oninput="wijzigExcelVoorbeeld(${i},'geboortejaar',this.value)"></td><td class="small">${esc(x.bron||'')}</td></tr>`).join("")}</tbody></table></div>
         <div class="row" style="margin-top:12px"><button class="green" onclick="bevestigExcelImport('toevoegen')">2. Gecontroleerde namen toevoegen</button><button class="danger" onclick="bevestigExcelImport('vervangen')">2. Officiële klaslijst veilig vervangen</button></div>`;
     }
-    window.wijzigExcelVoorbeeld=(index,veld,waarde)=>{if(excelImportVoorbeeld[index]&&["last","first","roepnaam"].includes(veld))excelImportVoorbeeld[index][veld]=String(waarde||"").trim();};
+    window.wijzigExcelVoorbeeld=(index,veld,waarde)=>{if(excelImportVoorbeeld[index]&&["last","first","roepnaam","geboortejaar"].includes(veld))excelImportVoorbeeld[index][veld]=String(waarde||"").trim();};
     window.controleerExcelKlaslijst = async function(){
       if(!isSecretary()) return alert("Alleen secretariaat kan Excelbestanden importeren.");
       if(!data) return;
@@ -2086,14 +2091,14 @@
     };
     window.bevestigExcelImport = async function(modus){
       if(!isSecretary()||!data)return;
-      let officieel=excelImportVoorbeeld.map(x=>({first:String(x.first||"").trim(),last:String(x.last||"").trim(),roepnaam:String(x.roepnaam||"").trim()})).filter(x=>x.first&&x.last);
+      let officieel=excelImportVoorbeeld.map(x=>({first:String(x.first||"").trim(),last:String(x.last||"").trim(),roepnaam:String(x.roepnaam||"").trim(),geboortejaar:String(x.geboortejaar||"").trim()})).filter(x=>x.first&&x.last);
       const onvolledig=excelImportVoorbeeld.length-officieel.length;
       if(onvolledig)return alert(`${onvolledig} rij(en) hebben nog geen achternaam én voornaam. Vul die eerst aan.`);
       if(!officieel.length)return alert("Er staan nog geen gecontroleerde namen klaar.");
       officieel=[...new Map(officieel.map(x=>[classNameKey(x.first,x.last),x])).values()];
       if(modus==="toevoegen"){
         let toegevoegd=0,overgeslagen=0;
-        officieel.forEach(x=>{const voor=data.leerlingen.length;addStudentObj(x.last,x.first,false,startDate(),x.roepnaam);data.leerlingen.length>voor?toegevoegd++:overgeslagen++;});
+        officieel.forEach(x=>{const voor=data.leerlingen.length;addStudentObj(x.last,x.first,false,startDate(),x.roepnaam,x.geboortejaar);data.leerlingen.length>voor?toegevoegd++:overgeslagen++;});
         data.leerlingen.sort((a,b)=>name(a).localeCompare(name(b),"nl"));await saveNow();render();alert(`${toegevoegd} leerling(en) toegevoegd uit ${excelImportBestandsnaam}. ${overgeslagen} bestaande naam/namen overgeslagen.`);return;
       }
       try{
@@ -2107,8 +2112,8 @@
         const bevestig=prompt(`Typ VERVANG KLASLIJST om de actieve lijst van ${activeClass} veilig te vervangen.`); if(bevestig!=="VERVANG KLASLIJST") return;
         const grens=`${Number(schooljaar.slice(0,4))}-08-31`;
         inactiefMaken.forEach(s=>{s.oorspronkelijkeStart=s.start||startDate();s.end=grens;s.startNiet=true;s.startNietReden="niet in officiële Excel-lijst";s.bijgewerktOp=new Date().toISOString();});
-        toevoegen.forEach(x=>data.leerlingen.push({id:uid(),first:x.first,last:x.last,roepnaam:x.roepnaam||"",colleague:false,start:startDate(),end:endDate(),bron:"officiële Excel-import"}));
-        officieel.forEach(x=>{const s=data.leerlingen.find(y=>classNameKey(y.first||y.firstName,y.last||y.lastName)===classNameKey(x.first,x.last));if(s){s.start=startDate();s.end=endDate();if(x.roepnaam)s.roepnaam=x.roepnaam;delete s.startNiet;delete s.startNietReden;}});
+        toevoegen.forEach(x=>data.leerlingen.push({id:uid(),first:x.first,last:x.last,roepnaam:x.roepnaam||"",geboortejaar:x.geboortejaar||"",oudsteGezin:false,colleague:false,start:startDate(),end:endDate(),bron:"officiële Excel-import"}));
+        officieel.forEach(x=>{const s=data.leerlingen.find(y=>classNameKey(y.first||y.firstName,y.last||y.lastName)===classNameKey(x.first,x.last));if(s){s.start=startDate();s.end=endDate();if(x.roepnaam)s.roepnaam=x.roepnaam;if(x.geboortejaar)s.geboortejaar=x.geboortejaar;delete s.startNiet;delete s.startNietReden;}});
         data.leerlingen.sort((a,b)=>name(a).localeCompare(name(b),"nl")); await saveNow(); render(); alert(`Officiële klaslijst bewaard. ${toevoegen.length} toegevoegd en ${inactiefMaken.length} veilig inactief gemaakt.`);
       }catch(err){console.error(err);alert(`Klaslijst vervangen lukte niet.\n\n${err.message||err}`);}
     };
@@ -2234,7 +2239,31 @@
         if(result) result.textContent="Ophalen mislukt.";
       }
     };
-    window.updateStudent = (id,field,value) => { const s=data.leerlingen.find(x=>x.id===id); if(s){ s[field]=value; markDirty(); } };
+    window.updateStudent = (id,field,value) => { const s=data.leerlingen.find(x=>x.id===id); if(s){ s[field]=value; markDirty(); if(field==="geboortejaar")render(); } };
+    function kleutergroepVoor(s){
+      if(!/^K1$/i.test(activeClass)||!s.geboortejaar)return "";
+      const start=Number(schooljaar.slice(0,4)),jaar=Number(s.geboortejaar);
+      if(jaar===start-2)return "K0";
+      if(jaar===start-3)return "K1";
+      return "controleer";
+    }
+    function oudstenKlasSamenvatting(){
+      const lijst=activeStudents().filter(s=>s.oudsteGezin);
+      const kleuters=activeClass==="K1"?activeStudents().reduce((t,s)=>{const g=kleutergroepVoor(s);if(g==="K0")t.k0++;if(g==="K1")t.k1++;return t},{k0:0,k1:0}):null;
+      return `<section id="oudstenKlasSamenvatting" class="notice no-print" style="margin:0 0 12px"><strong>Oudsten voor brieven: ${lijst.length}</strong>${lijst.length?`<p class="muted">${lijst.map(name).map(esc).join(" · ")}</p>`:`<p class="muted">Nog niemand aangeduid als oudste van het gezin op school.</p>`}${kleuters?`<p><strong>K0:</strong> ${kleuters.k0} (geboortejaar ${Number(schooljaar.slice(0,4))-2}) &nbsp; <strong>K1:</strong> ${kleuters.k1} (geboortejaar ${Number(schooljaar.slice(0,4))-3})</p>`:""}${isSecretary()?`<button class="small white" onclick="toonSchoolOudstenOverzicht()">Totalen hele school bekijken</button><div id="schoolOudstenResultaat"></div>`:""}</section>`;
+    }
+    window.toggleOudsteGezin=(id,checked)=>{const s=data.leerlingen.find(x=>x.id===id);if(!s)return;s.oudsteGezin=checked;markDirty();const vak=$("oudstenKlasSamenvatting");if(vak)vak.outerHTML=oudstenKlasSamenvatting();};
+    window.toonSchoolOudstenOverzicht=async function(){
+      if(!isSecretary())return;
+      const doel=$("schoolOudstenResultaat");if(doel)doel.innerHTML='<p class="muted">Totalen laden…</p>';
+      try{
+        const snap=await getDocs(collection(db,"schoolbeheer",schooljaar,"klassen")),datum=`${schooljaar.slice(0,4)}-09-15`,regels=[];
+        snap.docs.forEach(d=>{const aantal=(d.data().leerlingen||[]).filter(s=>(!s.start||s.start<=datum)&&(!s.end||s.end>=datum)&&s.oudsteGezin).length;regels.push({klas:d.id,aantal});});
+        regels.sort((a,b)=>a.klas.localeCompare(b.klas,"nl",{numeric:true}));
+        const kleuters=regels.filter(x=>/^K[123]$/i.test(x.klas)).reduce((n,x)=>n+x.aantal,0),lager=regels.filter(x=>/^[1-6][A-Z]?$/i.test(x.klas)).reduce((n,x)=>n+x.aantal,0),totaal=regels.reduce((n,x)=>n+x.aantal,0);
+        if(doel)doel.innerHTML=`<div style="margin-top:10px"><strong>Hele school: ${totaal}</strong> &nbsp; Kleuters: ${kleuters} &nbsp; Lagere school: ${lager}<br><span class="muted small">${regels.map(x=>`${esc(x.klas)}: ${x.aantal}`).join(" · ")}</span></div>`;
+      }catch(err){console.error(err);if(doel)doel.innerHTML='<p class="muted">De schooltotalen konden niet geladen worden.</p>';}
+    };
     window.toggleColleague = (id,checked) => { const s=data.leerlingen.find(x=>x.id===id); if(s)s.colleague=checked; markDirty(); };
     window.toggleHomeworkClass = (id,checked,el) => {
       const s=data.leerlingen.find(x=>x.id===id);
@@ -2266,10 +2295,13 @@
       return match ? `${match[3]}/${match[2]}/${match[1]}` : esc(value || "");
     }
     function studentTable(){
-      return `<div class="table-wrap"><table><thead><tr><th>Achternaam</th><th>Officiële voornaam</th><th>Roepnaam<span class="th-sub">optioneel</span></th><th class="check-col">Kind collega</th><th class="homework-cell">Huiswerkklas<span class="th-sub">deelname en betaling</span></th><th>Start</th><th>Einde</th><th></th></tr></thead><tbody>${activeStudents().map(s=>`<tr class="${s.colleague?"colleague":""}">
+      return `<div class="table-wrap"><table><thead><tr><th>Achternaam</th><th>Officiële voornaam</th><th>Roepnaam<span class="th-sub">optioneel</span></th><th>Geboortejaar</th>${activeClass==="K1"?"<th>Groep</th>":""}<th class="check-col">Oudste<br>gezin</th><th class="check-col">Kind collega</th><th class="homework-cell">Huiswerkklas<span class="th-sub">deelname en betaling</span></th><th>Start</th><th>Einde</th><th></th></tr></thead><tbody>${activeStudents().map(s=>`<tr class="${s.colleague?"colleague":""}">
         <td><input class="name-input" value="${esc(s.last||"")}" onchange="updateStudent('${s.id}','last',this.value)"></td>
         <td><input class="name-input" value="${esc(s.first||"")}" onchange="updateStudent('${s.id}','first',this.value)"></td>
         <td><input class="name-input" value="${esc(s.roepnaam||"")}" placeholder="bv. Haroun" onchange="updateStudent('${s.id}','roepnaam',this.value)"></td>
+        <td><input type="number" min="2015" max="2030" value="${esc(s.geboortejaar||"")}" placeholder="jjjj" onchange="updateStudent('${s.id}','geboortejaar',this.value)"></td>
+        ${activeClass==="K1"?`<td><strong>${esc(kleutergroepVoor(s)||"—")}</strong></td>`:""}
+        <td class="check-col"><input type="checkbox" ${s.oudsteGezin?"checked":""} onchange="toggleOudsteGezin('${s.id}',this.checked)" title="Oudste kind van het gezin op school"></td>
         <td class="check-col"><input type="checkbox" ${s.colleague?"checked":""} onchange="toggleColleague('${s.id}',this.checked)"></td>
         <td class="homework-cell"><label><input data-homework-main type="checkbox" ${s.homeworkClass?"checked":""} onchange="toggleHomeworkClass('${s.id}',this.checked,this)"> komt naar huiswerkklas</label><label><input data-homework-free type="checkbox" ${s.homeworkClassFree?"checked":""} onchange="toggleHomeworkClassFree('${s.id}',this.checked,this)"> gratis via schooladvies</label></td>
         <td><input type="date" value="${esc(s.start||startDate())}" onchange="updateStudent('${s.id}','start',this.value)" title="Startdatum: ${formatDate(s.start||startDate())}"></td>
