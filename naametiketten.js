@@ -40,10 +40,29 @@ function etikettenNamen(){
 function gekozenNamen(){return etikettenNamen().filter(x=>geselecteerd.has(x.id)).map(x=>x.naam)}
 function inhoud(){return document.querySelector('input[name="inhoud"]:checked')?.value||'namen'}
 function isTekst(){return inhoud()==='tekst'}
-function eigenTekst(){return $('eigenTekst').value.replace(/\r/g,'').trim()}
+function eigenTekst(){return String($('eigenTekst').innerText||'').replace(/\u00a0/g,' ').replace(/\r/g,'').trim()}
+function tekstSegmenten(){
+  const uit=[];
+  function voegTekst(tekst,vet,onderstreept){if(!tekst)return;uit.push({tekst,vet,onderstreept})}
+  function wandel(node,vet=false,onderstreept=false){
+    if(node.nodeType===Node.TEXT_NODE){voegTekst(node.nodeValue,vet,onderstreept);return}
+    if(node.nodeType!==Node.ELEMENT_NODE)return;
+    const tag=node.tagName.toLowerCase(),stijl=node.style||{};
+    const nuVet=vet||tag==='b'||tag==='strong'||stijl.fontWeight==='bold'||Number(stijl.fontWeight)>=600;
+    const nuOnder=onderstreept||tag==='u'||String(stijl.textDecoration||'').includes('underline');
+    if(tag==='br'){uit.push({nieuweregel:true});return}
+    const blok=tag==='div'||tag==='p';if(blok&&uit.length&&!uit.at(-1).nieuweregel)uit.push({nieuweregel:true});
+    [...node.childNodes].forEach(kind=>wandel(kind,nuVet,nuOnder));
+    if(blok&&uit.length&&!uit.at(-1).nieuweregel)uit.push({nieuweregel:true});
+  }
+  [...$('eigenTekst').childNodes].forEach(node=>wandel(node));
+  while(uit.at(-1)?.nieuweregel)uit.pop();return uit;
+}
+function tekstPreviewHtml(){return tekstSegmenten().map(s=>s.nieuweregel?'<br>':`${s.vet?'<strong>':''}${s.onderstreept?'<u>':''}${esc(s.tekst)}${s.onderstreept?'</u>':''}${s.vet?'</strong>':''}`).join('')}
+window.maakTekstOp=function(opdracht){$('eigenTekst').focus();document.execCommand(opdracht,false,null);render()}
 function actief(s){const jaar=$('schooljaar').value.trim(),datum=`${jaar.slice(0,4)}-09-15`;return(!s.start||s.start<=datum)&&(!s.end||s.end>=datum)}
 function modus(){return document.querySelector('input[name="modus"]:checked').value}
-function basisGrootte(){return isTekst()?Math.max(8,Math.min(36,Number($('tekstLettergrootte').value)||18)):Math.max(26,Math.min(48,Number($('lettergrootte').value)||48))}
+function basisGrootte(){return isTekst()?Math.max(8,Math.min(36,Number($('tekstLettergrootte').value)||14)):Math.max(26,Math.min(48,Number($('lettergrootte').value)||48))}
 function isVet(){return $('vetgedrukt').checked}
 function bladen(){
   if(isTekst()){const tekst=eigenTekst();return tekst?[Array(24).fill(tekst)]:[]}
@@ -52,19 +71,21 @@ function bladen(){
   if(modus()==="halfblad"){const uit=[];for(let i=0;i<namen.length;i+=2)uit.push([...Array(12).fill(namen[i]),...Array(12).fill(namen[i+1]||"")]);return uit}
   const uit=[];for(let i=0;i<namen.length;i+=24)uit.push([...namen.slice(i,i+24),...Array(Math.max(0,24-namen.slice(i,i+24).length)).fill("")]);return uit;
 }
+function berekenTekstPasvorm(naam){
+  const basis=basisGrootte(),canvas=puntgrootte.canvas||(puntgrootte.canvas=document.createElement('canvas')),ctx=canvas.getContext('2d'),deelsVet=tekstSegmenten().some(s=>s.vet);
+  for(let grootte=basis;grootte>=8;grootte--){
+    ctx.font=`${isVet()||deelsVet?'bold ':''}${grootte}pt Arial`;let regelAantal=0,onbreekbaarTeBreed=false;
+    String(naam).split('\n').forEach(bronregel=>{
+      const woorden=bronregel.split(/\s+/).filter(Boolean);if(!woorden.length){regelAantal++;return}
+      let regel='';woorden.forEach(woord=>{if(ctx.measureText(woord).width>190)onbreekbaarTeBreed=true;const voorstel=regel?`${regel} ${woord}`:woord;if(regel&&ctx.measureText(voorstel).width>190){regelAantal++;regel=woord}else regel=voorstel});if(regel)regelAantal++;
+    });
+    if(!onbreekbaarTeBreed&&regelAantal*grootte*1.18<=72)return {past:true,grootte,aangevraagd:basis,regels:regelAantal};
+  }
+  return {past:false,grootte:8,aangevraagd:basis};
+}
 function puntgrootte(naam){
   const basis=basisGrootte();if(!naam)return basis; const canvas=puntgrootte.canvas||(puntgrootte.canvas=document.createElement('canvas')),ctx=canvas.getContext('2d');
-  if(isTekst()){
-    for(let grootte=basis;grootte>=8;grootte--){
-      ctx.font=`${isVet()?'bold ':''}${grootte}pt Arial`;let regelAantal=0,onbreekbaarTeBreed=false;
-      String(naam).split('\n').forEach(bronregel=>{
-        const woorden=bronregel.split(/\s+/).filter(Boolean);if(!woorden.length){regelAantal++;return}
-        let regel='';woorden.forEach(woord=>{if(ctx.measureText(woord).width>190)onbreekbaarTeBreed=true;const voorstel=regel?`${regel} ${woord}`:woord;if(regel&&ctx.measureText(voorstel).width>190){regelAantal++;regel=woord}else regel=voorstel});if(regel)regelAantal++;
-      });
-      if(!onbreekbaarTeBreed&&regelAantal*grootte*1.18<=72)return grootte;
-    }
-    return 8;
-  }
+  if(isTekst())return berekenTekstPasvorm(naam).grootte;
   ctx.font=`${isVet()?'bold ':''}${basis}pt Arial`;const breedte=ctx.measureText(naam).width,maximum=225;
   return Math.max(26,Math.min(basis,Math.floor(basis*maximum/Math.max(breedte,1))));
 }
@@ -73,11 +94,21 @@ function render(){
   $('naamOpties').classList.toggle('verborgen',isTekst());$('naamVerdeling').classList.toggle('verborgen',isTekst());$('tekstOpties').classList.toggle('verborgen',!isTekst());
   $('namen').innerHTML=opties.map(x=>`<label class="naam"><input type="checkbox" data-leerling-id="${esc(x.id)}" ${geselecteerd.has(x.id)?'checked':''}><span>${esc(x.naam)}</span></label>`).join('');
   $('namen').querySelectorAll('input[data-leerling-id]').forEach(v=>v.addEventListener('change',()=>{v.checked?geselecteerd.add(v.dataset.leerlingId):geselecteerd.delete(v.dataset.leerlingId);render()}));
-  $('preview').innerHTML=pagina.map(n=>`<div class="etiket" style="font-size:${Math.max(7,puntgrootte(n)*.32)}px;font-weight:${isVet()?700:400}">${esc(n)}</div>`).join('');
+  const previewInhoud=isTekst()?tekstPreviewHtml():null;
+  $('preview').innerHTML=pagina.map(n=>`<div class="etiket" style="font-size:${Math.max(7,puntgrootte(n)*.32)}px;font-weight:${isVet()?700:400}">${isTekst()?previewInhoud:esc(n)}</div>`).join('');
   $('letterInfo').textContent=`Verkleind schermvoorbeeld · Word: Arial ${basisGrootte()} pt${isVet()?' vet':''}${isTekst()?'; indien nodig automatisch kleiner.':'; lange namen worden automatisch verkleind.'}`;
   $('bladBadge').textContent=`${bladen().length} ${bladen().length===1?'blad':'bladen'}`;
-  $('download').disabled=isTekst()?!eigenTekst():!namen.length;
-  $('status').textContent=isTekst()?(eigenTekst()?'Eén A4 met 24 identieke tekstetiketten staat klaar.':'Typ eerst de tekst die op ieder etiket moet komen.'):leerlingen.length?`${namen.length} van ${leerlingen.length} actieve leerling${leerlingen.length===1?'':'en'} geselecteerd in ${$('klas').value}.`:'Geen actieve leerlingen gevonden in deze klaslijst.';
+  const teLang=isTekst()&&eigenTekst().length>240,pasvorm=isTekst()&&eigenTekst()?berekenTekstPasvorm(eigenTekst()):null;
+  $('download').disabled=isTekst()?(!eigenTekst()||teLang||!pasvorm?.past):!namen.length;
+  if(isTekst()){
+    $('pasMelding').className='pas-melding';
+    if(teLang){$('pasMelding').classList.add('fout');$('pasMelding').textContent='Te veel tekst (maximaal 240 tekens). Maak de tekst korter.'}
+    else if(!eigenTekst())$('pasMelding').textContent='Typ tekst om te controleren of die past.';
+    else if(!pasvorm.past){$('pasMelding').classList.add('fout');$('pasMelding').textContent='Deze tekst past zelfs niet veilig op 8 pt. Maak de tekst korter of gebruik minder regels.'}
+    else if(pasvorm.grootte<pasvorm.aangevraagd){$('pasMelding').classList.add('kleiner');$('pasMelding').textContent=`De tekst past en wordt automatisch verkleind van ${pasvorm.aangevraagd} pt naar ${pasvorm.grootte} pt.`}
+    else $('pasMelding').textContent=`De tekst past veilig op ${pasvorm.grootte} pt.`;
+  }
+  $('status').textContent=isTekst()?(eigenTekst()?(teLang||!pasvorm?.past?'Pas de tekst aan voordat je downloadt.':'Eén A4 met 24 identieke tekstetiketten staat klaar.'):'Typ eerst de tekst die op ieder etiket moet komen.'):leerlingen.length?`${namen.length} van ${leerlingen.length} actieve leerling${leerlingen.length===1?'':'en'} geselecteerd in ${$('klas').value}.`:'Geen actieve leerlingen gevonden in deze klaslijst.';
 }
 async function laadRol(){const s=await getDoc(doc(db,'schoolrollen',user.uid));role=s.exists()?String(s.data().rol||'').toLowerCase():'';if(role==='beheerder'){const sim=localStorage.getItem('lindeSimuleerRol_'+user.uid);if(sim)role=sim}}
 async function laadKlassen(){
@@ -89,8 +120,8 @@ async function laadKlassen(){
 async function laadLeerlingen(){const klas=$('klas').value,jaar=$('schooljaar').value.trim();leerlingen=[];if(klas){const s=await getDoc(doc(db,'schoolbeheer',jaar,'klassen',klas));if(s.exists())leerlingen=(s.data().leerlingen||[]).filter(actief).sort((a,b)=>voornaam(a).localeCompare(voornaam(b),'nl'))}geselecteerd=new Set(leerlingen.map(leerlingId));render()}
 
 function xml(v){return String(v??'').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&apos;')}
-function tekstRunsXml(tekst,half){return String(tekst||'').split('\n').map((regel,i)=>`${i?'<w:r><w:br/></w:r>':''}<w:r><w:rPr><w:rFonts w:ascii="Arial" w:hAnsi="Arial"/>${isVet()?'<w:b/>':''}<w:sz w:val="${half}"/><w:szCs w:val="${half}"/></w:rPr><w:t xml:space="preserve">${xml(regel)}</w:t></w:r>`).join('')}
-function celXml(naam){const half=puntgrootte(naam)*2;if(isTekst())return `<w:tc><w:tcPr><w:tcW w:w="3968" w:type="dxa"/><w:vAlign w:val="center"/><w:tcMar><w:top w:w="180" w:type="dxa"/><w:left w:w="283" w:type="dxa"/><w:bottom w:w="180" w:type="dxa"/><w:right w:w="283" w:type="dxa"/></w:tcMar></w:tcPr><w:p><w:pPr><w:spacing w:before="0" w:after="0"/><w:jc w:val="center"/></w:pPr>${naam?tekstRunsXml(naam,half):''}</w:p></w:tc>`;return `<w:tc><w:tcPr><w:tcW w:w="3968" w:type="dxa"/></w:tcPr><w:p><w:pPr><w:ind w:right="258"/><w:jc w:val="center"/></w:pPr></w:p><w:p><w:pPr><w:ind w:left="258" w:right="258"/><w:jc w:val="center"/></w:pPr></w:p><w:p><w:pPr><w:ind w:left="258" w:right="258"/><w:jc w:val="center"/></w:pPr>${naam?tekstRunsXml(naam,half):''}</w:p></w:tc>`}
+function tekstRunsXml(tekst,half){if(!isTekst())return `<w:r><w:rPr><w:rFonts w:ascii="Arial" w:hAnsi="Arial"/>${isVet()?'<w:b/>':''}<w:sz w:val="${half}"/><w:szCs w:val="${half}"/></w:rPr><w:t xml:space="preserve">${xml(tekst)}</w:t></w:r>`;return tekstSegmenten().map(s=>s.nieuweregel?'<w:r><w:br/></w:r>':`<w:r><w:rPr><w:rFonts w:ascii="Arial" w:hAnsi="Arial"/>${isVet()||s.vet?'<w:b/>':''}${s.onderstreept?'<w:u w:val="single"/>':''}<w:sz w:val="${half}"/><w:szCs w:val="${half}"/></w:rPr><w:t xml:space="preserve">${xml(s.tekst)}</w:t></w:r>`).join('')}
+function celXml(naam){const half=puntgrootte(naam)*2;if(isTekst())return `<w:tc><w:tcPr><w:tcW w:w="3968" w:type="dxa"/><w:tcMar><w:top w:w="180" w:type="dxa"/><w:left w:w="283" w:type="dxa"/><w:bottom w:w="180" w:type="dxa"/><w:right w:w="283" w:type="dxa"/></w:tcMar><w:vAlign w:val="center"/></w:tcPr><w:p><w:pPr><w:spacing w:before="0" w:after="0"/><w:ind w:left="283" w:right="283"/><w:jc w:val="center"/></w:pPr>${naam?tekstRunsXml(naam,half):''}</w:p></w:tc>`;return `<w:tc><w:tcPr><w:tcW w:w="3968" w:type="dxa"/></w:tcPr><w:p><w:pPr><w:ind w:right="258"/><w:jc w:val="center"/></w:pPr></w:p><w:p><w:pPr><w:ind w:left="258" w:right="258"/><w:jc w:val="center"/></w:pPr></w:p><w:p><w:pPr><w:ind w:left="258" w:right="258"/><w:jc w:val="center"/></w:pPr>${naam?tekstRunsXml(naam,half):''}</w:p></w:tc>`}
 function tabelXml(namen){let r='',rijHoogte=isTekst()?1900:2098;for(let y=0;y<8;y++)r+=`<w:tr><w:trPr><w:cantSplit/><w:trHeight w:hRule="exact" w:val="${rijHoogte}"/></w:trPr>${namen.slice(y*3,y*3+3).map(celXml).join('')}</w:tr>`;return `<w:tbl><w:tblPr><w:tblW w:w="0" w:type="auto"/><w:tblInd w:w="-15" w:type="dxa"/><w:tblBorders><w:top w:val="none"/><w:left w:val="none"/><w:bottom w:val="none"/><w:right w:val="none"/><w:insideH w:val="none"/><w:insideV w:val="none"/></w:tblBorders><w:tblLayout w:type="fixed"/><w:tblCellMar><w:left w:w="15" w:type="dxa"/><w:right w:w="15" w:type="dxa"/></w:tblCellMar></w:tblPr><w:tblGrid><w:gridCol w:w="3968"/><w:gridCol w:w="3968"/><w:gridCol w:w="3968"/></w:tblGrid>${r}</w:tbl>`}
 function kleinAlinea(extra=''){return `<w:p><w:pPr><w:spacing w:before="0" w:after="0" w:line="1" w:lineRule="exact"/></w:pPr><w:r><w:rPr><w:sz w:val="2"/><w:szCs w:val="2"/></w:rPr>${extra}</w:r></w:p>`}
 function documentXml(paginas){const inhoud=paginas.map((p,i)=>tabelXml(p)+(i<paginas.length-1?kleinAlinea('<w:br w:type="page"/>'):'')).join('');return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body>${inhoud}${kleinAlinea()}<w:sectPr><w:type w:val="continuous"/><w:pgSz w:w="11906" w:h="16838"/><w:pgMar w:top="0" w:right="0" w:bottom="0" w:left="0" w:header="708" w:footer="708" w:gutter="0"/><w:cols w:space="708"/></w:sectPr></w:body></w:document>`}

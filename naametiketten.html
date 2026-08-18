@@ -19,6 +19,7 @@
     .preview-kop{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}.badge{background:var(--green2);color:var(--green);border-radius:999px;padding:6px 10px;font-size:12px;font-weight:700;white-space:nowrap}
     .vel-wrap{overflow:auto;margin-top:15px;background:#dedbd3;padding:18px;border-radius:12px}.vel{width:min(100%,630px);aspect-ratio:210/297;background:#fff;display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(8,1fr);margin:auto;box-shadow:0 2px 9px #0002}.etiket{display:flex;align-items:center;justify-content:center;text-align:center;overflow:hidden;border:1px dashed #ddd;font-family:Arial,sans-serif;line-height:1.08;white-space:pre-wrap;overflow-wrap:anywhere;padding:5% 7%}
     .werkwijze{background:#eef7f1;border:1px solid #c9ded0;border-radius:12px;padding:10px 12px;margin:0 0 14px;font-size:13px;line-height:1.45}.verborgen{display:none!important}.preview-waarschuwing{margin-top:10px;background:#fff8dd;border:1px solid #e7cb6d;border-radius:10px;padding:9px 11px;font-size:12px;line-height:1.4;color:#5f5840}
+    .tekst-toolbar{display:flex;gap:7px;margin-top:6px}.tekst-toolbar button{width:42px;padding:7px;background:#eef2ef;color:#263238;border:1px solid #bdc9c0;border-radius:8px}.tekst-toolbar button:hover{background:#dfece3}.tekst-editor{min-height:115px;margin-top:6px;border:1px solid #bfc7c1;border-radius:9px;padding:10px 11px;background:#fff;font:14px/1.35 Arial,sans-serif;overflow:auto;white-space:pre-wrap}.tekst-editor:empty::before{content:attr(data-placeholder);color:#8a9590}.pas-melding{margin-top:8px;border-radius:9px;padding:8px 10px;font-size:12px;line-height:1.4;background:#e8f5ec;color:#265b39}.pas-melding.kleiner{background:#fff5cc;color:#705500}.pas-melding.fout{background:#ffe0e0;color:#8d1d1d;font-weight:700}
     .uitleg{font-size:12px;color:var(--muted);margin-top:12px;line-height:1.45}
     @media(max-width:820px){main{grid-template-columns:1fr}.vel{min-width:520px}}
   </style>
@@ -43,9 +44,12 @@
         <label>Lettergrootte<input id="lettergrootte" type="number" min="26" max="48" step="1" value="48"></label>
       </div>
       <div id="tekstOpties" class="verborgen">
-        <label>Tekst voor ieder etiket<textarea id="eigenTekst" maxlength="240" placeholder="Typ hier de tekst. Je mag ook meerdere korte regels gebruiken."></textarea></label>
-        <label>Lettergrootte tekst<input id="tekstLettergrootte" type="number" min="8" max="36" step="1" value="18"></label>
-        <p class="uitleg">De tekst wordt automatisch verder verkleind wanneer dat nodig is. Rondom blijft een veilige binnenmarge vrij zodat de printer niets afsnijdt.</p>
+        <label>Tekst voor ieder etiket</label>
+        <div class="tekst-toolbar" aria-label="Tekstopmaak"><button type="button" onmousedown="event.preventDefault()" onclick="maakTekstOp('bold')" title="Geselecteerde tekst vet maken"><strong>B</strong></button><button type="button" onmousedown="event.preventDefault()" onclick="maakTekstOp('underline')" title="Geselecteerde tekst onderstrepen"><u>U</u></button></div>
+        <div id="eigenTekst" class="tekst-editor" contenteditable="true" role="textbox" aria-multiline="true" data-placeholder="Typ hier de tekst. Selecteer een stukje voor vet of onderstrepen."></div>
+        <label>Lettergrootte tekst<input id="tekstLettergrootte" type="number" min="8" max="36" step="1" value="14"></label>
+        <div id="pasMelding" class="pas-melding">Typ tekst om te controleren of die past.</div>
+        <p class="uitleg">De tekst wordt indien nodig automatisch verkleind tot minimaal 8 pt. Rondom blijft een veilige binnenmarge vrij zodat de printer niets afsnijdt.</p>
       </div>
       <label class="keuze" style="margin-top:10px"><input id="vetgedrukt" type="checkbox"><span><strong>Vetgedrukt</strong><span>Standaard uit; zet dit aan als je dikkere letters wilt.</span></span></label>
       <div id="naamVerdeling">
@@ -68,6 +72,6 @@
       <div class="preview-waarschuwing"><strong>Let op:</strong> dit voorbeeld is bewust verkleind om een volledig A4 op het scherm te tonen. Beoordeel de uiteindelijke lettergrootte in Word; druk af op <strong>100%/werkelijke grootte</strong>.</div>
     </section>
   </main>
-  <script type="module" src="naametiketten.js?v=20260818-1"></script>
+  <script type="module" src="naametiketten.js?v=20260818-2"></script>
 </body>
 </html>
