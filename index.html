@@ -911,6 +911,49 @@
   gap: 10px;
   margin: 0 0 12px;
   color: var(--tekst);
+  cursor: pointer;
+  border-radius: 12px;
+  padding: 8px 10px;
+  transition: background .15s ease;
+}
+
+#ingelogd-kaart.startportaal .portaal-sectie-kop:hover,
+#ingelogd-kaart.startportaal .portaal-sectie-kop:focus-visible {
+  background: rgba(255,255,255,.82);
+  outline: none;
+}
+
+#ingelogd-kaart.startportaal .portaal-sectie-kop::after {
+  content: "−";
+  margin-left: auto;
+  width: 30px;
+  height: 30px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: #fff;
+  border: 1px solid var(--rand);
+  font-size: 20px;
+  font-weight: 900;
+}
+
+#ingelogd-kaart.startportaal .portaal-sectie.is-collapsed .portaal-sectie-kop {
+  margin-bottom: 0;
+}
+
+#ingelogd-kaart.startportaal .portaal-sectie.is-collapsed .portaal-sectie-kop::after {
+  content: "+";
+}
+
+#ingelogd-kaart.startportaal .portaal-sectie.is-collapsed .portaal-sectie-grid {
+  display: none !important;
+}
+
+#ingelogd-kaart.startportaal .portaal-sectie.is-collapsed {
+  padding-top: 10px;
+  padding-bottom: 10px;
+  box-shadow: none;
+  background: rgba(255,255,255,.48);
 }
 
 #ingelogd-kaart.startportaal .portaal-sectie-kop h2 {

@@ -76,6 +76,38 @@ function magKlasafsprakenTesten(user) {
   return String(user?.email || '').toLowerCase() === 'isabel.rockele@bsdelinde.net';
 }
 
+function pasRustigePortaalrubriekenToe(rolNaam, isSecretariaat, heeftKlasbeheer, isSchoolBreed) {
+  const secties = [...document.querySelectorAll('#ingelogd-kaart .portaal-sectie')];
+  const sleutelVan = sectie => sectie.classList.contains('zorgblok') ? 'zorg' : sectie.classList.contains('organisatieblok') ? 'organisatie' : 'administratie';
+  const zichtbareTegels = sectie => [...sectie.querySelectorAll('.portaal-tegel')].some(tegel => tegel.style.display !== 'none');
+  const rolSleutel = rolNaam || (isSecretariaat ? 'secretariaat' : heeftKlasbeheer ? 'klasleerkracht' : isSchoolBreed ? 'schoolbreed' : 'gebruiker');
+  const opslagSleutel = 'lindeOpenRubriek_' + rolSleutel;
+  const standaard = isSecretariaat ? 'administratie' : heeftKlasbeheer ? 'organisatie' : isSchoolBreed ? 'zorg' : 'organisatie';
+  let gekozen = localStorage.getItem(opslagSleutel) || standaard;
+  const zichtbareSecties = secties.filter(zichtbareTegels);
+  if (!zichtbareSecties.some(s => sleutelVan(s) === gekozen)) gekozen = sleutelVan(zichtbareSecties[0] || secties[0]);
+
+  secties.forEach(sectie => {
+    const kop = sectie.querySelector('.portaal-sectie-kop');
+    if (!kop) return;
+    const sleutel = sleutelVan(sectie);
+    sectie.classList.toggle('is-collapsed', sleutel !== gekozen);
+    kop.setAttribute('role', 'button');
+    kop.setAttribute('tabindex', '0');
+    kop.setAttribute('aria-expanded', String(sleutel === gekozen));
+    const open = () => {
+      secties.forEach(andere => {
+        const actief = andere === sectie;
+        andere.classList.toggle('is-collapsed', !actief);
+        andere.querySelector('.portaal-sectie-kop')?.setAttribute('aria-expanded', String(actief));
+      });
+      localStorage.setItem(opslagSleutel, sleutel);
+    };
+    kop.onclick = open;
+    kop.onkeydown = event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); open(); } };
+  });
+}
+
 function pasKnoppenToe(huistakenKnop, overgangKnop, schoolbeheerKnop, bestellingenKnop, oudercontactKnop, schoolKnop, groeigroepenKnop, zorgoverlegKnop, huiswerkklasKnop, klasafsprakenKnop, isSchoolBreed, isSecretariaat, heeftKlasbeheer, rolNaam = '') {
   function vulTegel(tegel, href, icoon, titel, tekst) {
     if (!tegel) return;
@@ -131,6 +163,8 @@ function pasKnoppenToe(huistakenKnop, overgangKnop, schoolbeheerKnop, bestelling
     // Tegels zonder rolgestuurde id (zoals klasagenda) opnieuw zichtbaar maken bij een rolwissel.
     organisatieTegels.forEach(tegel => { if (!tegel.id) tegel.style.display = ''; });
   }
+
+  pasRustigePortaalrubriekenToe(rolNaam, isSecretariaat, heeftKlasbeheer, isSchoolBreed);
 
   if (isSecretariaat) {
     if (huistakenKnop) huistakenKnop.style.display = 'none';
