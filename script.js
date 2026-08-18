@@ -91,6 +91,15 @@ function pasRustigePortaalrubriekenToe(rolNaam, isSecretariaat, heeftKlasbeheer,
     const kop = sectie.querySelector('.portaal-sectie-kop');
     if (!kop) return;
     const sleutel = sleutelVan(sectie);
+    const inhoud = [...sectie.querySelectorAll('.portaal-tegel')]
+      .filter(tegel => tegel.style.display !== 'none')
+      .map(tegel => tegel.querySelector('.portaal-title')?.textContent.trim())
+      .filter(Boolean);
+    const samenvatting = kop.querySelector(':scope > span');
+    if (samenvatting) {
+      samenvatting.textContent = inhoud.join(' • ');
+      samenvatting.title = inhoud.join(', ');
+    }
     sectie.classList.toggle('is-collapsed', sleutel !== gekozen);
     kop.setAttribute('role', 'button');
     kop.setAttribute('tabindex', '0');
