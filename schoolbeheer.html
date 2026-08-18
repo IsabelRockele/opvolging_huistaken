@@ -2017,6 +2017,17 @@
       }
       return "";
     }
+    function splitsNaamMetFamilienaamEerst(volledigeNaam){
+      const delen=String(volledigeNaam||"").trim().split(/\s+/).filter(Boolean);
+      if(delen.length<2)return {last:delen[0]||"",first:""};
+      const eerste=delen[0].toLocaleLowerCase("nl"),tweede=(delen[1]||"").toLocaleLowerCase("nl");
+      let aantal=1;
+      if(["de","den","der","het","ten","ter","von"].includes(eerste))aantal=2;
+      if(eerste==="van")aantal=["de","den","der","het"].includes(tweede)?3:2;
+      if(["vande","vanden","vander"].includes(eerste))aantal=2;
+      aantal=Math.min(aantal,delen.length-1);
+      return {last:delen.slice(0,aantal).join(" "),first:delen.slice(aantal).join(" ")};
+    }
     function excelRijNaarNaam(row){
       const klas=waardeUitExcelRij(row,["klas","klasgroep","groep","class"]);
       if(klas && klas.toUpperCase()!==activeClass.toUpperCase()) return null;
@@ -2029,8 +2040,8 @@
       const full=waardeUitExcelRij(row,["naam","leerling","leerlingnaam","volledigenaam","naam leerling"]);
       if(!full) return null;
       if(full.includes(",")){const [familie,...voornamen]=full.split(",");return {last:familie.trim(),first:voornamen.join(",").trim(),roepnaam:"",geboortejaar,bron:"één kolom met komma"};}
-      const delen=full.trim().split(/\s+/);
-      return {last:delen.shift()||"",first:delen.join(" "),roepnaam:"",geboortejaar,bron:"één kolom – controleer samengestelde namen"};
+      const verdeeld=splitsNaamMetFamilienaamEerst(full);
+      return {...verdeeld,roepnaam:"",geboortejaar,bron:"één kolom – samengestelde familienamen herkend; controleer"};
     }
     function csvNaarMatrix(tekst){
       tekst=String(tekst||"").replace(/^\uFEFF/,"");
