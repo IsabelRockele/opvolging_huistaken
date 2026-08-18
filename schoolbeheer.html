@@ -1007,7 +1007,7 @@
       administratie: `<h3>Uitleg administratie</h3><ul><li><strong>Klaslijsten</strong>: leerlingen toevoegen, namen verbeteren, kind van collega aanduiden en uitschrijven.</li><li><strong>Vrije dagen</strong>: extra vrije dagen of studiedagen ingeven. Weekends en woensdagen zijn automatisch grijs.</li><li><strong>Meldingen</strong>: secretariaat stuurt taken naar klassen. Leerkrachten vinken aan wanneer het klaar is.</li><li><strong>Nieuw schooljaar</strong>: leerlingen doorschuiven, zittenblijvers aanduiden en klasleerkrachten klaarzetten.</li></ul>`,
       klaslijst: `<h3>Uitleg klaslijst</h3><ul><li>Gebruik <strong>Klaslijst plakken</strong> vooral bij een volledig nieuwe klas.</li><li>Gebruik <strong>Nieuwe leerling</strong> voor een leerling die later start of nog ontbreekt.</li><li>Een hier toegevoegde leerling verschijnt ook in afwezigheden, etiketten en andere gekoppelde tools. Bestaande overgangsfiches worden niet overschreven; alleen de ontbrekende naam wordt toegevoegd.</li><li><strong>Standaard</strong> betekent: startdatum 1/09 van het schooljaar en einddatum 30/06 van dat schooljaar.</li><li>Namen kan je rechtstreeks in de tabel verbeteren.</li><li>Uitschrijven bewaart oudere gegevens voor lijsten en afrekeningen.</li></ul>`,
       refter: `<h3>Uitleg refter</h3><ul><li>Leerkrachten vinken enkel kinderen aan die afwezig zijn.</li><li>Grijze dagen tellen niet mee.</li><li>Kinderen van collega's krijgen een zachte kleur en betalen geen refter.</li><li>Als secretariaat <strong>Verwerkt tot</strong> invult, worden die dagen vergrendeld bij de leerkracht.</li></ul>`,
-      activiteiten: `<h3>Uitleg activiteiten</h3><ul><li>Leerkrachten kunnen een activiteit voor hun eigen klas toevoegen.</li><li>Secretariaat kan dezelfde activiteit in één keer voor één of meerdere klassen aanmaken.</li><li>Gebruik dit alleen voor echte activiteiten of uitstappen. Oudercontacten, rapporten en infoavonden horen hier niet thuis.</li><li>Daarna vinken leerkrachten alleen afwezige leerlingen aan.</li><li>Secretariaat ziet groen voor aanwezig en rood voor afwezig.</li><li>Wanneer secretariaat verwerkt aanvinkt, kan de leerkracht die activiteit niet meer wijzigen.</li></ul>`,
+      activiteiten: `<h3>Uitleg activiteiten</h3><ul><li>Leerkrachten kunnen een activiteit voor hun eigen klas toevoegen.</li><li>Secretariaat kan dezelfde activiteit in één keer voor één of meerdere klassen aanmaken.</li><li>Gebruik dit alleen voor echte activiteiten of uitstappen. Oudercontacten, rapporten en infoavonden horen hier niet thuis.</li><li>Daarna vinken leerkrachten alleen afwezige leerlingen aan.</li><li>Gaat een activiteit niet door? Klik op <strong>Annuleren</strong> en vul verplicht een reden in. De activiteit wordt dan niet aangerekend, maar blijft met de reden bewaard.</li><li>Secretariaat ziet groen voor aanwezig en rood voor afwezig.</li><li>Wanneer secretariaat verwerkt aanvinkt, kan de leerkracht die activiteit niet meer wijzigen.</li></ul>`,
       aankopen: `<h3>Uitleg aankopen</h3><ul><li>Leerkrachten voegen aankopen toe zoals badmuts of turnshirt.</li><li>De prijs kan bij het toevoegen nog aangepast worden.</li><li>Secretariaat kan aankopen nakijken en als verwerkt aanduiden.</li></ul>`,
       werkboeken: `<h3>Uitleg werkboeken</h3><ul><li>Dit onderdeel werken we later verder uit.</li><li>Hier komt het overzicht voor werkboeken en materiaalbestellingen.</li></ul>`
     };
@@ -1370,7 +1370,7 @@
         if (!kd) return `<div class="mf-klas"><h3>Klas ${esc(klas)}</h3><p class="muted">Geen data beschikbaar.</p></div>`;
 
         const activiteiten = [...(kd.activiteiten || [])]
-          .filter(a => (a.naam || a.name) && Number(a.prijs || a.price || 0) > 0)
+          .filter(a => !a.cancelled && (a.naam || a.name) && Number(a.prijs || a.price || 0) > 0)
           .sort((a, b) => (a.datum || a.date || "").localeCompare(b.datum || b.date || ""));
         const vastePosten = kd.vastePosten || [];
         const totaal = [...vastePosten, ...activiteiten].reduce((s, p) => s + Number(p.prijs || p.price || 0), 0);
@@ -1592,7 +1592,7 @@
 
         var kd = klassenData[klas] || {};
         var activiteiten = (kd.activiteiten || []).filter(function(a) {
-          return (a.naam || a.name) && Number(a.prijs || a.price || 0) > 0;
+          return !a.cancelled && (a.naam || a.name) && Number(a.prijs || a.price || 0) > 0;
         }).sort(function(a, b) {
           return (a.datum || a.date || "").localeCompare(b.datum || b.date || "");
         });
@@ -2552,7 +2552,13 @@
       </div>`;
       $("content").innerHTML = `<div class="panel"><div class="bar"><div><h2>Activiteiten <span class="muted" style="font-weight:400">${esc(activeClass)}</span></h2><p class="muted">${isSecretary()?"Maak activiteiten aan of kijk aanwezigheid en verwerking na.":"Voeg activiteiten toe en vink afwezigen aan."}</p></div><label class="right no-print" style="max-width:180px">Maand<input id="actMonth" type="month" value="${activityMonth}" onchange="wisselActiviteitenMaand(this.value)"></label>${screenTools("activiteiten")}</div>${helpPanel("activiteiten")}${invoer}${activitiesTable()}</div>`;
     }
-    function activitiesTable(){ const list=data.activiteiten.filter(a => String(a.date||"").slice(0,7) === activityMonth), students=activeStudents(`${activityMonth}-15`); return list.length ? `<div class="table-wrap" style="margin-top:14px"><table><thead><tr><th>Leerling</th>${list.map(a=>`<th>${esc(a.name)}<br><span class="muted">${a.date} - &euro;${Number(a.price||0).toFixed(2)}</span>${a.processed?'<br><span class="tag done">verwerkt</span>':''}${isSecretary()?`<br><button class="small" onclick="toggleActProcessed('${a.id}')">${a.processed?'heropen':'verwerk'}</button>`:""}</th>`).join("")}</tr></thead><tbody>${students.map(s=>`<tr><td><strong>${esc(name(s))}</strong></td>${list.map(a=>{const absent=!!a.absent?.[s.id]; if(isSecretary())return`<td class="activity-col ${a.processed?"locked":""}">${absent?'<span class="status-dot absent">&#10006;</span>':'<span class="status-dot present">&#10003;</span>'}</td>`; return`<td class="activity-col ${a.processed?"locked":""}"><input class="absence-check" type="checkbox" ${absent?"checked":""} ${a.processed?"disabled":""} onchange="toggleActAbsent('${a.id}','${s.id}',this.checked)">${a.processed?'<span class="teacher-lock"> &#128274;</span>':''}</td>`}).join("")}</tr>`).join("")}</tbody></table></div>` : `<div class="notice">Nog geen activiteiten ingevoerd voor deze maand.${!isSecretary()?" Gebruik hierboven 'Activiteit toevoegen'.":""}</div>`; }
+    function activitiesTable(){
+      const maandLijst=data.activiteiten.filter(a => String(a.date||"").slice(0,7) === activityMonth);
+      const list=maandLijst.filter(a=>!a.cancelled), cancelled=maandLijst.filter(a=>a.cancelled), students=activeStudents(`${activityMonth}-15`);
+      const actiefHtml = list.length ? `<div class="table-wrap" style="margin-top:14px"><table><thead><tr><th>Leerling</th>${list.map(a=>`<th>${esc(a.name)}<br><span class="muted">${esc(a.date)} - &euro;${Number(a.price||0).toFixed(2)}</span>${a.processed?'<br><span class="tag done">verwerkt</span>':''}<br><span class="actions no-print" style="justify-content:center">${isSecretary()?`<button class="small" onclick="toggleActProcessed('${a.id}')">${a.processed?'heropen':'verwerk'}</button>`:""}<button class="small pink" onclick="cancelActivity('${a.id}')">Annuleren</button></span></th>`).join("")}</tr></thead><tbody>${students.map(s=>`<tr><td><strong>${esc(name(s))}</strong></td>${list.map(a=>{const absent=!!a.absent?.[s.id]; if(isSecretary())return`<td class="activity-col ${a.processed?"locked":""}">${absent?'<span class="status-dot absent">&#10006;</span>':'<span class="status-dot present">&#10003;</span>'}</td>`; return`<td class="activity-col ${a.processed?"locked":""}"><input class="absence-check" type="checkbox" ${absent?"checked":""} ${a.processed?"disabled":""} onchange="toggleActAbsent('${a.id}','${s.id}',this.checked)">${a.processed?'<span class="teacher-lock"> &#128274;</span>':''}</td>`}).join("")}</tr>`).join("")}</tbody></table></div>` : `<div class="notice">Nog geen actieve activiteiten ingevoerd voor deze maand.${!isSecretary()?" Gebruik hierboven 'Activiteit toevoegen'.":""}</div>`;
+      const geannuleerdHtml = cancelled.length ? `<div class="notice" style="margin-top:14px;background:#fff4f4;border-color:#e7b3b3"><strong>Geannuleerde activiteiten — worden niet aangerekend</strong><ul style="margin-bottom:0">${cancelled.map(a=>`<li><strong>${esc(a.name)}</strong> (${esc(a.date)}): ${esc(a.cancelReason||"Geen reden bewaard")}${isSecretary()?` <button class="white small no-print" onclick="restoreActivity('${a.id}')">Opnieuw activeren</button>`:""}</li>`).join("")}</ul></div>` : "";
+      return actiefHtml + geannuleerdHtml;
+    }
     window.wisselActiviteitenMaand = value => { activityMonth = value; renderActivities(); };
     window.kiesAlleActiviteitKlassen = checked => document.querySelectorAll(".actClass").forEach(el => { el.checked = checked; });
     window.addActivity = async () => {
@@ -2601,6 +2607,20 @@
     };
     window.toggleActProcessed = id => { if(!isSecretary())return; const a=data.activiteiten.find(x=>x.id===id); if(a)a.processed=!a.processed; markDirty(); renderActivities(); };
     window.toggleActAbsent = (aid,sid,checked) => { const a=data.activiteiten.find(x=>x.id===aid); a.absent ||= {}; a.absent[sid]=checked; markDirty(); };
+    window.cancelActivity = id => {
+      const a=data.activiteiten.find(x=>x.id===id); if(!a)return;
+      const reden=prompt(`Waarom gaat "${a.name}" niet door?\n\nEen reden is verplicht, bijvoorbeeld: te voet gegaan.`)?.trim();
+      if(!reden)return alert("De activiteit werd niet geannuleerd. Vul eerst een reden in.");
+      a.cancelled=true; a.cancelReason=reden; a.cancelledBy=user.email||user.uid||""; a.cancelledAt=new Date().toISOString(); a.processed=false;
+      markDirty(); renderActivities();
+    };
+    window.restoreActivity = id => {
+      if(!isSecretary())return;
+      const a=data.activiteiten.find(x=>x.id===id); if(!a)return;
+      if(!confirm(`"${a.name}" opnieuw activeren?`))return;
+      a.cancelled=false; a.hersteldDoor=user.email||user.uid||""; a.hersteldOp=new Date().toISOString();
+      markDirty(); renderActivities();
+    };
 
     function renderPurchases(){
       purchaseMonth = $("buyMonth")?.value || purchaseMonth || schoolMonths()[0];
