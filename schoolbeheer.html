@@ -2341,7 +2341,7 @@
       return match ? `${match[3]}/${match[2]}/${match[1]}` : esc(value || "");
     }
     const klasKolommen=[['roepnaam','Roepnaam'],['geboortejaar','Geboortejaar'],['groep','K0/K1-groep'],['oudste','Oudste gezin'],['collega','Kind collega'],['huiswerk','Huiswerkklas'],['start','Startdatum'],['einde','Einddatum']];
-    function kolomVoorkeurSleutel(){return `lindeVerborgenKlasKolommen_${user?.uid||'gebruiker'}`;}
+    function kolomVoorkeurSleutel(){return `lindeVerborgenKlasKolommen_${user?.uid||'gebruiker'}_${role||'klasleerkracht'}`;}
     function verborgenKlasKolommen(){try{return new Set(JSON.parse(localStorage.getItem(kolomVoorkeurSleutel())||'[]'));}catch{return new Set();}}
     function toonKlasKolom(key){return !verborgenKlasKolommen().has(key);}
     function optioneleKolom(key,html){return toonKlasKolom(key)?html:"";}
