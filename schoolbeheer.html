@@ -2369,8 +2369,29 @@
       const actief=new Set(activeStudents().map(s=>s.id));
       const lijst=(data?.leerlingen||[]).filter(s=>!actief.has(s.id)).sort((a,b)=>name(a).localeCompare(name(b),"nl"));
       if(!lijst.length) return "";
-      return `<details class="notice no-print" style="margin-top:14px"><summary><strong>Niet-actieve of uitgeschreven leerlingen (${lijst.length})</strong></summary><p class="muted">Deze leerlingen blijven bewaard voor historiek, afrekeningen en eerdere registraties.</p><div class="table-wrap"><table><thead><tr><th>Leerling</th><th>Start</th><th>Einde</th><th>Reden</th><th></th></tr></thead><tbody>${lijst.map(s=>`<tr><td>${esc(name(s))}</td><td>${formatDate(s.start)}</td><td>${formatDate(s.end)}</td><td>${esc(s.startNietReden||s.uitschrijfReden||(s.verhuisdNaar?`verplaatst naar ${s.verhuisdNaar}`:""))}</td><td>${isSecretary()?`<button class="small green" onclick="heractiveerLeerling('${s.id}')">opnieuw activeren</button>`:""}</td></tr>`).join("")}</tbody></table></div></details>`;
+      const opruimbaar=lijst.filter(s=>!leerlingHeeftGekoppeldeHistoriek(s));
+      return `<details class="notice no-print" style="margin-top:14px"><summary><strong>Niet-actieve of uitgeschreven leerlingen (${lijst.length})</strong></summary><p class="muted">Deze leerlingen blijven normaal bewaard voor historiek, afrekeningen en eerdere registraties.</p>${isSecretary()&&opruimbaar.length?`<div class="notice" style="background:#fff3f3;border-color:#e6a2a2"><strong>Foutieve invoer opruimen</strong><p class="muted">${opruimbaar.length} leerling(en) hebben geen gekoppelde registraties en kunnen definitief verwijderd worden. Leerlingen met historiek worden automatisch beschermd.</p><button class="danger" onclick="ruimFoutieveInactieveLeerlingenOp()">${opruimbaar.length} foutieve niet-actieve naam/namen opruimen</button></div>`:""}<div class="table-wrap"><table><thead><tr><th>Leerling</th><th>Start</th><th>Einde</th><th>Reden</th><th></th></tr></thead><tbody>${lijst.map(s=>`<tr><td>${esc(name(s))}</td><td>${formatDate(s.start)}</td><td>${formatDate(s.end)}</td><td>${esc(s.startNietReden||s.uitschrijfReden||(s.verhuisdNaar?`verplaatst naar ${s.verhuisdNaar}`:""))}</td><td>${isSecretary()?`<button class="small green" onclick="heractiveerLeerling('${s.id}')">opnieuw activeren</button>${leerlingHeeftGekoppeldeHistoriek(s)?' <span class="tag">historiek beschermd</span>':''}`:""}</td></tr>`).join("")}</tbody></table></div></details>`;
     }
+    function leerlingHeeftGekoppeldeHistoriek(s){
+      if(!s?.id)return false;
+      const zonderLeerlingen={...data,leerlingen:[]};
+      return JSON.stringify(zonderLeerlingen).includes(`"${s.id}"`);
+    }
+    window.ruimFoutieveInactieveLeerlingenOp=async function(){
+      if(!isSecretary()||!data)return;
+      const actieveIds=new Set(activeStudents().map(s=>s.id));
+      const inactief=(data.leerlingen||[]).filter(s=>!actieveIds.has(s.id));
+      const opruimbaar=inactief.filter(s=>!leerlingHeeftGekoppeldeHistoriek(s)),beschermd=inactief.length-opruimbaar.length;
+      if(!opruimbaar.length)return alert("Er zijn geen niet-actieve leerlingen zonder historiek om op te ruimen.");
+      const overzicht=`${opruimbaar.length} foutieve niet-actieve leerling(en) worden definitief verwijderd.\n${beschermd} leerling(en) met historiek blijven beschermd.\n\nTe verwijderen:\n${opruimbaar.map(name).join("\n")}`;
+      if(!confirm(overzicht))return;
+      const bevestiging=prompt(`Typ OPRUIMEN om ${opruimbaar.length} foutieve naam/namen definitief te verwijderen.`);
+      if(bevestiging!=="OPRUIMEN")return;
+      const wissen=new Set(opruimbaar.map(s=>s.id));
+      data.leerlingen=data.leerlingen.filter(s=>!wissen.has(s.id));
+      await saveNow();render();
+      alert(`${opruimbaar.length} foutieve niet-actieve leerling(en) verwijderd. ${beschermd} leerling(en) met historiek bleven beschermd.`);
+    };
     window.startNietOpSchool = id => {
       if(!isSecretary()) return;
       const s=data.leerlingen.find(x=>x.id===id); if(!s) return;
