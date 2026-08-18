@@ -966,7 +966,7 @@
     }
     let user = null, role = "", allowedClasses = [], allClasses = [...DEFAULT_CLASSES],
         activeClass = "", schooljaar = huidigSchooljaar(), data = null, unsub = null,
-        activityMonth = "", purchaseMonth = "",
+        activityMonth = "", purchaseMonth = "", gekozenRefterMaand = "",
         tab = "administratie", adminPanel = "wegwijzer", classListMode = "", saveTimer = null,
         excelImportVoorbeeld = [], excelImportBestandsnaam = "", kalenderImportVoorbeeld = [], lokaleBewaringTot = 0;
     $("schooljaarInput").value = schooljaar;
@@ -1035,8 +1035,8 @@
       return !!laatste && !!verwerkt && verwerkt >= laatste;
     }
     function standaardRefterMaand(){
-      const gekozen = $("refterMonth")?.value;
-      if(gekozen) return gekozen;
+      const gekozen = $("refterMonth")?.value || gekozenRefterMaand;
+      if(gekozen && schoolMonths().includes(gekozen)) return gekozen;
       return schoolMonths().find(m => !refterMaandVolledigVerwerkt(m)) || schoolMonths().at(-1);
     }
     function setStatus(text, saved=false){
@@ -2528,7 +2528,7 @@
     };
 
     function renderRefter(){
-      const month=standaardRefterMaand();
+      const month=standaardRefterMaand(); gekozenRefterMaand=month;
       const days=daysInMonth(month), students=activeStudents(`${month}-15`), m=data.refter[month] ||= {}, processedUntil=processedInMonth(month);
       const volledig = refterMaandVolledigVerwerkt(month);
       const refterFreeForm = `<div class="notice no-print" style="margin:14px 0;background:#fff8e6;border-color:#f0bd4f">
@@ -2540,8 +2540,9 @@
           <button class="green" onclick="addRefterVrijeDag()">Datum markeren</button>
         </div>
       </div>`;
-      $("content").innerHTML = `<div class="panel"><div class="bar"><div><h2>Refter <span class="muted" style="font-weight:400">${esc(activeClass)}</span></h2><p class="muted">Leerkracht vinkt enkel afwezigheden aan.${volledig ? " Deze maand is volledig verwerkt." : ""}</p></div><label class="right no-print" style="max-width:180px">Maand<input id="refterMonth" type="month" value="${month}" onchange="renderRefter()"></label>${isSecretary()?`<label class="no-print" style="max-width:190px">Verwerkt tot<input type="date" value="${processedUntil}" min="${month}-01" max="${month}-${String(days.length).padStart(2,"0")}" onchange="setProcessedRefter(this.value)"></label>`:""}${screenTools("refter")}</div>${helpPanel("refter")}${refterFreeForm}${refterVrijeDagenBlok(month)}<div class="table-wrap refter-print-wrap"><table class="refter-print-table"><colgroup><col class="refter-name-col">${days.map(()=>`<col class="refter-day-col">`).join("")}</colgroup><thead><tr><th>Leerling</th>${days.map(d=>{const freeInfo=refterVrijeDagVoor(d.date);const free=isFree(d.date);const locked=processedUntil&&d.date<=processedUntil&&!free;return`<th class="day ${free?"grey":""} ${locked?"locked-head":""}" title="${freeInfo?esc(freeInfo.reason||freeInfo.reden||"Geen refter voor de hele klas"):""}">${d.day}${freeInfo?'<br><span class="tag">geen refter</span>':locked&&!isSecretary()?'<br><span class="teacher-lock">&#128274;</span>':locked?'<br><span class="tag done">verwerkt</span>':""}</th>`}).join("")}</tr></thead><tbody>${students.map(s=>`<tr class="${s.colleague?"colleague":""}"><td><strong>${esc(name(s))}</strong>${s.colleague?'<span class="tag green">collega</span>':''}</td>${days.map(d=>{const freeInfo=refterVrijeDagVoor(d.date);const free=isFree(d.date);const locked=processedUntil&&d.date<=processedUntil;if(free)return`<td class="day grey" title="${freeInfo?esc(freeInfo.reason||freeInfo.reden||"Geen refter voor de hele klas"):"Vrije dag"}">-</td>`;if(s.colleague)return`<td class="day collega-dag" title="Kind van collega — geen refter">-</td>`;return`<td class="day ${locked?"locked":""}"><input type="checkbox" ${m[s.id]?.[d.date]?"checked":""} ${locked&&!isSecretary()?"disabled":""} onchange="toggleRefter('${month}','${s.id}','${d.date}',this.checked)">${locked&&!isSecretary()?'<br><span class="teacher-lock">&#128274;</span>':locked?'<br><span class="tag done">verwerkt</span>':''}</td>`}).join("")}</tr>`).join("")}</tbody></table></div></div>`;
+      $("content").innerHTML = `<div class="panel"><div class="bar"><div><h2>Refter <span class="muted" style="font-weight:400">${esc(activeClass)}</span></h2><p class="muted">Leerkracht vinkt enkel afwezigheden aan.${volledig ? " Deze maand is volledig verwerkt." : ""}</p></div><label class="right no-print" style="max-width:180px">Maand<input id="refterMonth" type="month" value="${month}" onchange="wisselRefterMaand(this.value)"></label>${isSecretary()?`<label class="no-print" style="max-width:190px">Verwerkt tot<input type="date" value="${processedUntil}" min="${month}-01" max="${month}-${String(days.length).padStart(2,"0")}" onchange="setProcessedRefter(this.value)"></label>`:""}${screenTools("refter")}</div>${helpPanel("refter")}${refterFreeForm}${refterVrijeDagenBlok(month)}<div class="table-wrap refter-print-wrap"><table class="refter-print-table"><colgroup><col class="refter-name-col">${days.map(()=>`<col class="refter-day-col">`).join("")}</colgroup><thead><tr><th>Leerling</th>${days.map(d=>{const freeInfo=refterVrijeDagVoor(d.date);const free=isFree(d.date);const locked=processedUntil&&d.date<=processedUntil&&!free;return`<th class="day ${free?"grey":""} ${locked?"locked-head":""}" title="${freeInfo?esc(freeInfo.reason||freeInfo.reden||"Geen refter voor de hele klas"):""}">${d.day}${freeInfo?'<br><span class="tag">geen refter</span>':locked&&!isSecretary()?'<br><span class="teacher-lock">&#128274;</span>':locked?'<br><span class="tag done">verwerkt</span>':""}</th>`}).join("")}</tr></thead><tbody>${students.map(s=>`<tr class="${s.colleague?"colleague":""}"><td><strong>${esc(name(s))}</strong>${s.colleague?'<span class="tag green">collega</span>':''}</td>${days.map(d=>{const freeInfo=refterVrijeDagVoor(d.date);const free=isFree(d.date);const locked=processedUntil&&d.date<=processedUntil;if(free)return`<td class="day grey" title="${freeInfo?esc(freeInfo.reason||freeInfo.reden||"Geen refter voor de hele klas"):"Vrije dag"}">-</td>`;if(s.colleague)return`<td class="day collega-dag" title="Kind van collega — geen refter">-</td>`;return`<td class="day ${locked?"locked":""}"><input type="checkbox" ${m[s.id]?.[d.date]?"checked":""} ${locked&&!isSecretary()?"disabled":""} onchange="toggleRefter('${month}','${s.id}','${d.date}',this.checked)">${locked&&!isSecretary()?'<br><span class="teacher-lock">&#128274;</span>':locked?'<br><span class="tag done">verwerkt</span>':''}</td>`}).join("")}</tr>`).join("")}</tbody></table></div></div>`;
     }
+    window.wisselRefterMaand=value=>{gekozenRefterMaand=value;renderRefter();};
     window.toggleRefter = (month,sid,date,checked) => { const m=data.refter[month] ||= {}; m[sid] ||= {}; m[sid][date]=checked; markDirty(); };
 
     function renderActivities(){
@@ -2752,7 +2753,7 @@
         <div class="notice" style="background:#f5fbf8;border-color:#9dcdb6"><strong>1. Jaarkalender inlezen</strong><p class="muted">De tool neemt echte vrije dagen en mogelijke uitstappen over in een controlelijst. Oudercontacten, rapporten, infoavonden en toetsen worden genegeerd.</p><div class="row"><label>Excel-jaarkalender<input id="kalenderFile" type="file" accept=".xlsx,.xls"></label><button class="primary" onclick="leesJaarkalenderBestand()">Bestand lezen en controleren</button></div></div>
         ${preview}
         <div class="notice" style="margin-top:18px;background:#fffaf0;border-color:#e8c56d"><strong>2. Zelf een activiteit aanvullen</strong><p class="muted">Gebruik dit voor een activiteit die niet in de jaarkalender staat.</p><div class="row"><label>Naam<input id="prepActName" placeholder="bv. Toneelvoorstelling"></label><label style="max-width:190px">Datum<input id="prepActDate" type="date"></label><label style="max-width:150px">Prijs per leerling (&euro;)<input id="prepActPrice" type="number" min="0" step="0.01" value="0"></label><div style="width:100%"><strong>Klassen</strong>${kalenderKlassenHtml("prepActClass",[])}</div><button class="primary" onclick="bewaarVoorbereideActiviteit()">Activiteit bewaren bij gekozen klassen</button></div></div>
-        <section style="margin-top:22px"><div class="bar"><div><h3 style="margin:0">Reeds bewaard voor ${esc(schooljaar)}</h3><p class="muted">Blijvend controle-overzicht van de voorbereide vrije dagen en activiteiten.</p></div><button class="white small no-print" onclick="laadKalenderBewaarOverzicht()">Overzicht vernieuwen</button></div><div id="kalenderBewaarOverzicht"><div class="notice">Overzicht laden…</div></div></section>`;
+        <section style="margin-top:22px"><div class="bar"><div><h3 style="margin:0">Reeds bewaard voor ${esc(schooljaar)}</h3><p class="muted">Blijvend controle-overzicht van de voorbereide vrije dagen en activiteiten.</p></div><div class="actions"><button class="white small no-print" onclick="laadKalenderBewaarOverzicht()">Overzicht vernieuwen</button><button class="pink small no-print" onclick="laatsteKalenderImportOngedaanMaken()">Laatste kalenderimport ongedaan maken</button></div></div><div id="kalenderBewaarOverzicht"><div class="notice">Overzicht laden…</div></div></section>`;
       setTimeout(()=>laadKalenderBewaarOverzicht(),0);
     }
     window.laadKalenderBewaarOverzicht=async()=>{
@@ -2771,14 +2772,14 @@
       if(typeof XLSX==="undefined")return alert("De Excel-lezer is nog niet geladen. Herlaad de pagina en probeer opnieuw.");
       try{toonSchermLaden("Jaarkalender lezen…");const wb=XLSX.read(await file.arrayBuffer(),{type:"array"}),sheet=wb.Sheets[wb.SheetNames[0]],matrix=XLSX.utils.sheet_to_json(sheet,{header:1,defval:"",raw:false});kalenderImportVoorbeeld=leesJaarkalenderMatrix(matrix);renderKalenderVoorbereiding();if(!kalenderImportVoorbeeld.length)alert("Er werden geen herkenbare vrije dagen of activiteiten gevonden.");}catch(err){console.error(err);alert("De jaarkalender kon niet worden gelezen.");}finally{verbergSchermLaden();}
     };
-    async function bewaarKalenderItems(items){
+    async function bewaarKalenderItems(items,meta={}){
       const perKlas=new Map();
       for(const item of items) for(const klas of item.classes||[]) { if(!perKlas.has(klas))perKlas.set(klas,[]);perKlas.get(klas).push(item); }
       for(const [klas,regels] of perKlas){
         const ref=classRef(klas),snap=await getDoc(ref),kd=snap.exists()?snap.data():emptyClassDoc(klas);kd.vrijeDagen||=[];kd.activiteiten||=[];
         for(const r of regels){
-          if(r.type==="vrij"){if(!kd.vrijeDagen.some(v=>v.start===r.date&&v.end===r.date))kd.vrijeDagen.push({naam:r.text,start:r.date,end:r.date,aangemaaktDoor:user.email||""});}
-          else if(!kd.activiteiten.some(a=>a.date===r.date&&String(a.name||"").toLocaleLowerCase("nl")===r.text.toLocaleLowerCase("nl")))kd.activiteiten.push({id:uid(),name:r.text,date:r.date,price:Number(r.price||0),absent:{},processed:false,aangemaaktDoor:user.email||"",aangemaaktOp:new Date().toISOString()});
+          if(r.type==="vrij"){if(!kd.vrijeDagen.some(v=>v.start===r.date&&v.end===r.date))kd.vrijeDagen.push({naam:r.text,start:r.date,end:r.date,aangemaaktDoor:user.email||"",...meta});}
+          else if(!kd.activiteiten.some(a=>a.date===r.date&&String(a.name||"").toLocaleLowerCase("nl")===r.text.toLocaleLowerCase("nl")))kd.activiteiten.push({id:uid(),name:r.text,date:r.date,price:Number(r.price||0),absent:{},processed:false,aangemaaktDoor:user.email||"",aangemaaktOp:new Date().toISOString(),...meta});
         }
         await setDoc(ref,kd);
         if(klas===activeClass)data=kd;
@@ -2787,12 +2788,25 @@
     window.bewaarJaarkalenderVoorstellen=async()=>{
       const items=kalenderImportVoorbeeld.filter(r=>document.querySelector(`.kalRow[data-id="${r.id}"]`)?.checked).map(r=>({...r,classes:r.type==="vrij"?[...allClasses]:[...document.querySelectorAll(`.kalClass-${r.id}:checked`)].map(x=>x.value)})).filter(r=>r.classes.length);
       if(!items.length)return alert("Vink minstens één regel met een klas aan.");
-      try{toonSchermLaden("Jaarkalender bewaren…");await bewaarKalenderItems(items);kalenderImportVoorbeeld=[];renderKalenderVoorbereiding();alert("De goedgekeurde vrije dagen en activiteiten zijn bij de gekozen klassen bewaard.");}catch(err){console.error(err);alert("Niet alles kon worden bewaard. Probeer opnieuw of stuur een hulpbericht.");}finally{verbergSchermLaden();}
+      try{toonSchermLaden("Jaarkalender bewaren…");const importId=uid(),importedAt=new Date().toISOString();await bewaarKalenderItems(items,{source:"jaarkalender",importId,importedAt});kalenderImportVoorbeeld=[];renderKalenderVoorbereiding();alert("De goedgekeurde vrije dagen en activiteiten zijn bij de gekozen klassen bewaard.");}catch(err){console.error(err);alert("Niet alles kon worden bewaard. Probeer opnieuw of stuur een hulpbericht.");}finally{verbergSchermLaden();}
     };
     window.bewaarVoorbereideActiviteit=async()=>{
       const text=$("prepActName")?.value.trim(),date=$("prepActDate")?.value,price=Number($("prepActPrice")?.value||0),classes=[...document.querySelectorAll(".prepActClass:checked")].map(x=>x.value);
       if(!text||!date)return alert("Vul naam en datum in.");if(!classes.length)return alert("Kies minstens één klas.");
-      try{toonSchermLaden("Activiteit bewaren…");await bewaarKalenderItems([{type:"activiteit",text,date,price,classes}]);renderKalenderVoorbereiding();alert("De activiteit staat bij de gekozen klassen.");}catch(err){console.error(err);alert("De activiteit kon niet worden bewaard.");}finally{verbergSchermLaden();}
+      try{toonSchermLaden("Activiteit bewaren…");await bewaarKalenderItems([{type:"activiteit",text,date,price,classes}],{source:"handmatig-secretariaat"});renderKalenderVoorbereiding();alert("De activiteit staat bij de gekozen klassen.");}catch(err){console.error(err);alert("De activiteit kon niet worden bewaard.");}finally{verbergSchermLaden();}
+    };
+    window.laatsteKalenderImportOngedaanMaken=async()=>{
+      try{
+        toonSchermLaden("Laatste kalenderimport zoeken…");
+        const docs=await Promise.all(allClasses.map(async klas=>({klas,ref:classRef(klas),snap:await getDoc(classRef(klas))}))),imports=new Map();
+        for(const {snap} of docs){if(!snap.exists())continue;const kd=snap.data();for(const x of [...(kd.vrijeDagen||[]),...(kd.activiteiten||[])])if(x.source==="jaarkalender"&&x.importId)imports.set(x.importId,x.importedAt||"");}
+        const laatste=[...imports.entries()].sort((a,b)=>b[1].localeCompare(a[1]))[0];
+        if(!laatste){alert("Er is nog geen herkenbare kalenderimport die automatisch kan worden teruggedraaid. Eerdere invoer van vóór deze functie blijft veilig staan.");return;}
+        const [importId,tijdstip]=laatste;
+        if(!confirm(`De laatste kalenderimport van ${tijdstip?new Date(tijdstip).toLocaleString("nl-BE"):"dit schooljaar"} ongedaan maken?\n\nAlleen vrije dagen en activiteiten uit precies die import worden verwijderd. Handmatige invoer en klasregistraties blijven staan.`))return;
+        for(const {klas,ref,snap} of docs){if(!snap.exists())continue;const kd=snap.data(),voorVrij=(kd.vrijeDagen||[]).length,voorAct=(kd.activiteiten||[]).length;kd.vrijeDagen=(kd.vrijeDagen||[]).filter(x=>x.importId!==importId);kd.activiteiten=(kd.activiteiten||[]).filter(x=>x.importId!==importId);if(kd.vrijeDagen.length!==voorVrij||kd.activiteiten.length!==voorAct){await setDoc(ref,kd);if(klas===activeClass)data=kd;}}
+        renderKalenderVoorbereiding();alert("De laatste kalenderimport is veilig ongedaan gemaakt.");
+      }catch(err){console.error(err);alert("De kalenderimport kon niet worden teruggedraaid.");}finally{verbergSchermLaden();}
     };
 
     function renderFreeDays(inAdmin=false){
