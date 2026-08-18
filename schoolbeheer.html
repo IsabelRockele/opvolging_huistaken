@@ -2562,7 +2562,7 @@
     async function renderNewYear(){
       const bron=$("newYearBronKlas")?.value||activeClass||allClasses[0]||"";
       const voorstel=volgendeKlasVoor(bron);
-      const doel=$("newYearDoelKlas")?.value||(voorstel&&voorstel!=="uit school"?voorstel:"");
+      const doel=$("newYearDoelKlas")?.value||voorstel||"";
       const leerlingen=bron?await laadLeerlingenVoorKlas(bron):[];
       const bestaatNiet=leerlingen===null;
       const lijst=leerlingen||[];
@@ -2599,7 +2599,12 @@
       $("newYearResult").scrollIntoView({behavior:"smooth", block:"start"});
     };
     function volgendSchooljaarVan(huidig){ const start=Number(String(huidig||schooljaar).slice(0,4))+1; return `${start}-${start+1}`; }
-    function studentVoorNieuwSchooljaar(s,doelSchooljaar){ return {id:uid(),previousStudentId:s.id||"",first:s.first||s.firstName||"",last:s.last||s.lastName||"",colleague:!!s.colleague,start:`${doelSchooljaar.slice(0,4)}-09-01`,end:`${doelSchooljaar.slice(5,9)}-06-30`}; }
+    function studentVoorNieuwSchooljaar(s,doelSchooljaar){ return {
+      id:uid(),previousStudentId:s.id||"",first:s.first||s.firstName||"",last:s.last||s.lastName||"",
+      roepnaam:s.roepnaam||s.callingName||"",geboortejaar:String(s.geboortejaar||""),oudsteGezin:!!s.oudsteGezin,
+      colleague:!!s.colleague,homeworkClass:!!s.homeworkClass,homeworkClassFree:!!s.homeworkClassFree,
+      start:`${doelSchooljaar.slice(0,4)}-09-01`,end:`${doelSchooljaar.slice(5,9)}-06-30`
+    }; }
     async function voegLeerlingenToeAanNieuwSchooljaar(doelSchooljaar,klas,leerlingen){
       if(!klas||klas==="uit school"||!leerlingen.length) return;
       const ref=doc(db,"schoolbeheer",doelSchooljaar,"klassen",klas);
