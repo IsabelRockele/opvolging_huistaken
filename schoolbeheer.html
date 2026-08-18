@@ -916,8 +916,8 @@
         <div class="sb-item" data-tab="maximumfactuur" id="navMaximumfactuur">
           <span class="sb-icon">&#128179;</span> Maximumfactuur
         </div>
-        <div class="sb-item secretary-label" data-tab="oudsten" id="navOudsten">
-          <span class="sb-icon">&#9993;</span> Klasoudsten
+        <div class="sb-item" data-tab="oudsten" id="navOudsten">
+          <span class="sb-icon">&#9993;</span> Schooloverzicht
         </div>
 
       </div>
@@ -2312,7 +2312,7 @@
       }catch(err){console.error(err);if(doel)doel.innerHTML='<p class="muted">De schooltotalen konden niet geladen worden.</p>';}
     };
     async function renderOudstenOverzicht(){
-      $("content").innerHTML=`<div class="panel"><div class="bar"><div><h2>Klasoudsten</h2><p class="muted">Aantal kinderen dat aangeduid is om brieven mee te krijgen. Namen raadpleegt de klasleerkracht in de eigen klaslijst.</p></div>${screenTools("klaslijst")}</div><div id="oudstenSchoolInhoud" class="notice" style="margin-top:16px">Overzicht laden…</div></div>`;
+      $("content").innerHTML=`<div class="panel"><div class="bar"><div><h2>Schooloverzicht</h2><p class="muted">Aantal leerlingen en aangeduide oudsten per klas in ${esc(schooljaar)}. Dit overzicht bevat bewust geen leerlingnamen.</p></div>${screenTools("klaslijst")}</div><div id="oudstenSchoolInhoud" class="notice" style="margin-top:16px">Overzicht laden…</div></div>`;
       try{
         const snap=await getDocs(collection(db,"schoolbeheer",schooljaar,"klassen")),datum=`${schooljaar.slice(0,4)}-09-15`,perKlas=new Map();
         snap.docs.forEach(d=>{const leerlingen=(d.data().leerlingen||[]).filter(s=>(!s.start||s.start<=datum)&&(!s.end||s.end>=datum));perKlas.set(d.id,{leerlingen:leerlingen.length,oudsten:leerlingen.filter(s=>s.oudsteGezin).length});});
@@ -2321,7 +2321,7 @@
         const doel=$("oudstenSchoolInhoud");if(!doel)return;
         doel.className="";
         doel.innerHTML=`<div class="table-wrap"><table style="min-width:520px"><thead><tr><th>Klas</th><th style="text-align:center">Totaal leerlingen</th><th style="text-align:center">Aantal oudsten</th></tr></thead><tbody>${regels.map(x=>`<tr><td><strong>${esc(x.klas)}</strong></td><td style="text-align:center;font-size:18px">${x.leerlingen}</td><td style="text-align:center;font-size:18px;font-weight:800">${x.oudsten}</td></tr>`).join("")}</tbody><tfoot><tr><td><strong>Totaal kleuters</strong></td><td style="text-align:center"><strong>${kleuters.leerlingen}</strong></td><td style="text-align:center"><strong>${kleuters.oudsten}</strong></td></tr><tr><td><strong>Totaal lagere school</strong></td><td style="text-align:center"><strong>${lager.leerlingen}</strong></td><td style="text-align:center"><strong>${lager.oudsten}</strong></td></tr><tr style="background:#e5f4eb"><td><strong>Totaal hele school</strong></td><td style="text-align:center;font-size:20px"><strong>${totaal.leerlingen}</strong></td><td style="text-align:center;font-size:20px"><strong>${totaal.oudsten}</strong></td></tr></tfoot></table></div>`;
-      }catch(err){console.error(err);const doel=$("oudstenSchoolInhoud");if(doel)doel.textContent="Het overzicht kon niet geladen worden.";}
+      }catch(err){console.error(err);const doel=$("oudstenSchoolInhoud");if(doel)doel.innerHTML="<strong>Het schooloverzicht kon niet geladen worden.</strong><p class='muted'>Meld dit aan de beheerder. Mogelijk moet de leestoegang voor de schooltotalen nog worden toegestaan.</p>";}
     }
     window.toggleColleague = (id,checked) => { const s=data.leerlingen.find(x=>x.id===id); if(s)s.colleague=checked; markDirty(); };
     window.toggleHomeworkClass = (id,checked,el) => {
