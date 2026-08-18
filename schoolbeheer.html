@@ -1054,7 +1054,9 @@
       return `${start}-${start + 1}`;
     }
     function name(s){ const last = s.last || s.lastName || ""; const first = s.first || s.firstName || ""; return `${last}, ${first}`.replace(/^, /,"").replace(/, $/,""); }
-    function activeStudents(date=`${schooljaar.slice(0,4)}-09-15`){ return (data?.leerlingen||[]).filter(s => (!s.start || s.start <= date) && (!s.end || s.end >= date)).sort((a,b)=>name(a).localeCompare(name(b),"nl")); }
+    function leerlingSorteersleutel(s){const last=s.last||s.lastName||"",first=s.first||s.firstName||"";return `${last}${first}`.normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9]/gi,"").toLocaleLowerCase("nl");}
+    function vergelijkLeerlingen(a,b){return leerlingSorteersleutel(a).localeCompare(leerlingSorteersleutel(b),"nl");}
+    function activeStudents(date=`${schooljaar.slice(0,4)}-09-15`){ return (data?.leerlingen||[]).filter(s => (!s.start || s.start <= date) && (!s.end || s.end >= date)).sort(vergelijkLeerlingen); }
 
     function setActiveNav(tabName){
       document.querySelectorAll(".sb-item").forEach(el => {
@@ -2135,7 +2137,7 @@
       if(modus==="toevoegen"){
         let toegevoegd=0,overgeslagen=0;
         officieel.forEach(x=>{const voor=data.leerlingen.length;addStudentObj(x.last,x.first,false,startDate(),x.roepnaam,x.geboortejaar);data.leerlingen.length>voor?toegevoegd++:overgeslagen++;});
-        data.leerlingen.sort((a,b)=>name(a).localeCompare(name(b),"nl"));await saveNow();render();alert(`${toegevoegd} leerling(en) toegevoegd uit ${excelImportBestandsnaam}. ${overgeslagen} bestaande naam/namen overgeslagen.`);return;
+        data.leerlingen.sort(vergelijkLeerlingen);await saveNow();render();alert(`${toegevoegd} leerling(en) toegevoegd uit ${excelImportBestandsnaam}. ${overgeslagen} bestaande naam/namen overgeslagen.`);return;
       }
       try{
         const gezien=new Set(officieel.map(x=>classNameKey(x.first,x.last)));
@@ -2150,7 +2152,7 @@
         inactiefMaken.forEach(s=>{s.oorspronkelijkeStart=s.start||startDate();s.end=grens;s.startNiet=true;s.startNietReden="niet in officiële Excel-lijst";s.bijgewerktOp=new Date().toISOString();});
         toevoegen.forEach(x=>data.leerlingen.push({id:uid(),first:x.first,last:x.last,roepnaam:x.roepnaam||"",geboortejaar:x.geboortejaar||"",oudsteGezin:false,colleague:false,start:startDate(),end:endDate(),bron:"officiële Excel-import"}));
         officieel.forEach(x=>{const s=data.leerlingen.find(y=>classNameKey(y.first||y.firstName,y.last||y.lastName)===classNameKey(x.first,x.last));if(s){s.start=startDate();s.end=endDate();if(x.roepnaam)s.roepnaam=x.roepnaam;if(x.geboortejaar)s.geboortejaar=x.geboortejaar;delete s.startNiet;delete s.startNietReden;}});
-        data.leerlingen.sort((a,b)=>name(a).localeCompare(name(b),"nl")); await saveNow(); render(); alert(`Officiële klaslijst bewaard. ${toevoegen.length} toegevoegd en ${inactiefMaken.length} veilig inactief gemaakt.`);
+        data.leerlingen.sort(vergelijkLeerlingen); await saveNow(); render(); alert(`Officiële klaslijst bewaard. ${toevoegen.length} toegevoegd en ${inactiefMaken.length} veilig inactief gemaakt.`);
       }catch(err){console.error(err);alert(`Klaslijst vervangen lukte niet.\n\n${err.message||err}`);}
     };
     function classNameKey(first,last){
@@ -2214,7 +2216,7 @@
         targetData.leerlingen.push({id:uid(),first:row.first,last:row.last,colleague:false,start:startDate(),end:endDate(),bron:"dashboard"});
         added++;
       });
-      targetData.leerlingen.sort((a,b)=>name(a).localeCompare(name(b),"nl"));
+      targetData.leerlingen.sort(vergelijkLeerlingen);
       return {added,skipped};
     }
     window.startKlasUitDashboard = async function(klas){
@@ -2367,7 +2369,7 @@
     }
     function inactieveLeerlingenTabel(){
       const actief=new Set(activeStudents().map(s=>s.id));
-      const lijst=(data?.leerlingen||[]).filter(s=>!actief.has(s.id)).sort((a,b)=>name(a).localeCompare(name(b),"nl"));
+      const lijst=(data?.leerlingen||[]).filter(s=>!actief.has(s.id)).sort(vergelijkLeerlingen);
       if(!lijst.length) return "";
       const opruimbaar=lijst.filter(s=>!leerlingHeeftGekoppeldeHistoriek(s));
       return `<details class="notice no-print" style="margin-top:14px"><summary><strong>Niet-actieve of uitgeschreven leerlingen (${lijst.length})</strong></summary><p class="muted">Deze leerlingen blijven normaal bewaard voor historiek, afrekeningen en eerdere registraties.</p>${isSecretary()&&opruimbaar.length?`<div class="notice" style="background:#fff3f3;border-color:#e6a2a2"><strong>Foutieve invoer opruimen</strong><p class="muted">${opruimbaar.length} leerling(en) hebben geen gekoppelde registraties en kunnen definitief verwijderd worden. Leerlingen met historiek worden automatisch beschermd.</p><button class="danger" onclick="ruimFoutieveInactieveLeerlingenOp()">${opruimbaar.length} foutieve niet-actieve naam/namen opruimen</button></div>`:""}<div class="table-wrap"><table><thead><tr><th>Leerling</th><th>Start</th><th>Einde</th><th>Reden</th><th></th></tr></thead><tbody>${lijst.map(s=>`<tr><td>${esc(name(s))}</td><td>${formatDate(s.start)}</td><td>${formatDate(s.end)}</td><td>${esc(s.startNietReden||s.uitschrijfReden||(s.verhuisdNaar?`verplaatst naar ${s.verhuisdNaar}`:""))}</td><td>${isSecretary()?`<button class="small green" onclick="heractiveerLeerling('${s.id}')">opnieuw activeren</button>${leerlingHeeftGekoppeldeHistoriek(s)?' <span class="tag">historiek beschermd</span>':''}`:""}</td></tr>`).join("")}</tbody></table></div></details>`;
@@ -2433,7 +2435,7 @@
         const key=classNameKey(s.first||s.firstName,s.last||s.lastName); if(bestaande.has(key)) return; bestaande.add(key);
         doelNa.leerlingen.push({...structuredClone(s),id:uid(),sourceStudentId:s.id,bronKlas:activeClass,start:startDate(),end:endDate(),verhuisdOp:new Date().toISOString()});
       });
-      doelNa.leerlingen.sort((a,b)=>name(a).localeCompare(name(b),"nl")); bronNa.bijgewerktOp=doelNa.bijgewerktOp=new Date().toISOString();
+      doelNa.leerlingen.sort(vergelijkLeerlingen); bronNa.bijgewerktOp=doelNa.bijgewerktOp=new Date().toISOString();
       await Promise.all([schoolbeheerVeiligheidskopie(bronRef,"Vóór leerlingen verplaatsen",true),schoolbeheerVeiligheidskopie(doelRef,"Vóór leerlingen ontvangen",true)]);
       const batch=writeBatch(db); batch.set(bronRef,bronNa,{merge:true}); batch.set(doelRef,doelNa,{merge:true}); await batch.commit();
       laatsteZelfdeJaarVerplaatsing={bronRef,doelRef,bronVoor,doelVoor}; data=bronNa; render();
@@ -2631,10 +2633,10 @@
     window.terugNaarNieuwSchooljaarHome = terugNaarNieuwSchooljaarHome;
     function volgendeKlasVoor(klas){ const map={"K1":"K2","K2":"K3","K3":"1A","1A":"2A","2A":"3A","3A":"4A","4A":"5A","5A":"6A","6A":"uit school"}; return map[klas]||""; }
     async function laadLeerlingenVoorKlas(klas){
-      if(klas===activeClass&&data?.leerlingen?.length) return [...data.leerlingen].sort((a,b)=>name(a).localeCompare(name(b),"nl"));
+      if(klas===activeClass&&data?.leerlingen?.length) return [...data.leerlingen].sort(vergelijkLeerlingen);
       const snap=await getDoc(classRef(klas));
       if(!snap.exists()) return null;
-      return [...(snap.data().leerlingen||[])].sort((a,b)=>name(a).localeCompare(name(b),"nl"));
+      return [...(snap.data().leerlingen||[])].sort(vergelijkLeerlingen);
     }
     async function renderNewYear(){
       const bron=$("newYearBronKlas")?.value||activeClass||allClasses[0]||"";
@@ -2692,7 +2694,7 @@
       item.leerlingen||=[]; item.refter||={}; item.refterVrijeDagen||=[]; item.activiteiten||=[]; item.aankopen||=[]; item.vrijeDagen||=[...standardFree]; item.messages||=[]; item.processed||={refter:""};
       item.bewaarTot=bewaarTotVoorSchooljaar(doelSchooljaar); item.bewaartermijnJaren=BEWAAR_JAREN_SCHOOLBEHEER;
       leerlingen.forEach(s=>{ const nieuw=studentVoorNieuwSchooljaar(s,doelSchooljaar); if(!item.leerlingen.some(b=>name(b).toLowerCase()===name(nieuw).toLowerCase())) item.leerlingen.push(nieuw); });
-      item.leerlingen.sort((a,b)=>name(a).localeCompare(name(b),"nl"));
+      item.leerlingen.sort(vergelijkLeerlingen);
       item.bijgewerktOp=new Date().toISOString();
       await setDoc(ref,item);
     }
@@ -2706,7 +2708,7 @@
       item.bewaarTot=bewaarTotVoorSchooljaar(jaar); item.bewaartermijnJaren=BEWAAR_JAREN_SCHOOLBEHEER;
       const bestaand=new Set(item.leerlingen.map(s=>name(s).trim().toLocaleLowerCase("nl")));
       leerlingen.forEach(s=>{const nieuw=studentVoorNieuwSchooljaar(s,jaar),sleutel=name(nieuw).trim().toLocaleLowerCase("nl");if(sleutel&&!bestaand.has(sleutel)){item.leerlingen.push(nieuw);bestaand.add(sleutel)}});
-      item.leerlingen.sort((a,b)=>name(a).localeCompare(name(b),"nl")); item.bijgewerktOp=new Date().toISOString();
+      item.leerlingen.sort(vergelijkLeerlingen); item.bijgewerktOp=new Date().toISOString();
       return {ref,voor,item};
     }
     window.doorschuivingBewarenNieuwSchooljaar = async function(){
