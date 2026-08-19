@@ -215,6 +215,9 @@
     .message-status span.done{background:#d8f5e9}
     .message-status span.open{background:#fff5c8}
     .message-status span.late{background:#ffd8d8}
+    .jaarovergang-keuze{display:flex!important;flex-direction:column;align-items:stretch;gap:8px;cursor:pointer;border:2px solid #b8d7c5!important;transition:transform .12s ease,box-shadow .12s ease!important}
+    .jaarovergang-keuze:hover,.jaarovergang-keuze:focus{transform:translateY(-2px);box-shadow:0 7px 18px rgba(34,88,58,.16)!important;outline:3px solid rgba(47,116,80,.16)}
+    .jaarovergang-open{display:block;margin-top:auto;background:#2f7450;color:#fff;border-radius:11px;padding:11px 14px;text-align:center;font-weight:800;font-size:16px}
     @media(max-width:900px){.message-admin-layout{grid-template-columns:1fr}.message-actions{justify-content:flex-start}}
     /* codex-checkbox-centering-fix */
     th.check-col,
@@ -2957,13 +2960,15 @@
         </section>
         <p class="muted"><strong>Goed om te weten:</strong> bestaande lijsten en leerlinggegevens worden niet overschreven. Ontbrekende leerlingen kun je later nog via Excel of Nieuwe leerling toevoegen.</p>
         <div class="grid" style="margin-top:14px">
-          <button class="panel" style="text-align:left;box-shadow:none" onclick="newYearMode='klaslijsten'; renderNewYear()">
+          <button class="panel jaarovergang-keuze" style="text-align:left;box-shadow:none" onclick="newYearMode='klaslijsten'; renderNewYear()">
             <h3>Leerlingen doorschuiven naar ${esc(volgendJaar)}</h3>
             <p class="muted">Begin hiermee. Kies een bronklas en doelklas, duid alleen uitzonderingen aan en controleer vóór het bewaren.</p>
+            <span class="jaarovergang-open">Open leerlingen doorschuiven →</span>
           </button>
-          <button class="panel" style="text-align:left;box-shadow:none" onclick="newYearMode='leerkrachten'; renderLeerkrachtenVolgendJaarOnly()">
+          <button class="panel jaarovergang-keuze" style="text-align:left;box-shadow:none" onclick="newYearMode='leerkrachten'; renderLeerkrachtenVolgendJaarOnly()">
             <h3>Klasleerkrachten koppelen aan ${esc(volgendJaar)}</h3>
             <p class="muted">Bevestig wie bij welke klas hoort of vul wijzigingen in.</p>
+            <span class="jaarovergang-open">Open klasleerkrachten koppelen →</span>
           </button>
         </div>`;
     }
