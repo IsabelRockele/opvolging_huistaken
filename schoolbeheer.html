@@ -1936,7 +1936,7 @@
         <div class="wegwijzer-keuzes" style="margin-top:16px">
           <button class="wegwijzer-keuze" onclick="openAdmin('klaslijsten')"><span class="icoon">👧</span><span><strong>Klaslijsten en leerlingen</strong><small>Toon alle klassen en beheer leerlingen, Excel en klasverplaatsingen</small></span></button>
           <button class="wegwijzer-keuze" onclick="openAdmin('meldingen')"><span class="icoon">📣</span><span><strong>Meldingen maken</strong><small>Stuur een bericht naar gekozen klassen en zorgleerkrachten</small></span></button>
-          <button class="wegwijzer-keuze" onclick="openAdmin('nieuw schooljaar')"><span class="icoon">🗓️</span><span><strong>Volgend schooljaar maken</strong><small>Pas op het einde van ${esc(schooljaar)}: lijsten en leerkrachten voor ${esc(volgendSchooljaarVan(schooljaar))}</small></span></button>
+          <button class="wegwijzer-keuze" onclick="openAdmin('nieuw schooljaar')"><span class="icoon">🗓️</span><span><strong>Volgend schooljaar voorbereiden</strong><small>Schuif leerlingen door en koppel daarna de leerkrachten voor het nieuwe schooljaar</small></span></button>
           <button class="wegwijzer-keuze" onclick="openAdmin('jaarkalender & activiteiten')"><span class="icoon">📅</span><span><strong>Jaarkalender en activiteiten</strong><small>Kalender inlezen en schoolbreed voorbereiden</small></span></button>
           <button class="wegwijzer-keuze" onclick="openAdmin('klasleerkrachten')"><span class="icoon">👩‍🏫</span><span><strong>Klasleerkrachten</strong><small>Leerkrachten en klasmails koppelen</small></span></button>
           <button class="wegwijzer-keuze" onclick="openAdmin('vrije dagen')"><span class="icoon">🏖️</span><span><strong>Vrije dagen</strong><small>Vakanties en pedagogische studiedagen beheren</small></span></button>
@@ -2945,12 +2945,21 @@
       const volgendJaar=volgendSchooljaarVan(schooljaar);
       $("adminBody").innerHTML = `
         <h3>Van ${esc(schooljaar)} naar ${esc(volgendJaar)}</h3>
-        <div class="notice"><strong>Wanneer gebruik je dit?</strong><p class="muted" style="margin-bottom:0">Pas op het einde van ${esc(schooljaar)}, wanneer je de klaslijsten voor ${esc(volgendJaar)} wilt maken. Staan de lijsten voor ${esc(schooljaar)} al juist? Dan hoef je hier nu niets te doen.</p></div>
-        <p class="muted">De twee taken hieronder staan los van elkaar. Je kunt eerst de leerlingen doorschuiven of eerst de leerkrachten koppelen.</p>
+        <div class="notice" style="background:#fff8d8;border-color:#e4bd3b"><strong>Gebruik dit één keer bij iedere jaarovergang</strong><p class="muted" style="margin-bottom:0">Doe dit pas wanneer de huidige klaslijsten volledig en juist zijn en je de lijsten voor het volgende schooljaar wilt klaarzetten. Het schooljaar links is altijd het <strong>huidige/bronschooljaar</strong>; de tool maakt daarna veilig het volgende schooljaar aan.</p></div>
+        <section class="panel" style="box-shadow:none;margin-top:14px;background:#f7fbf9">
+          <h3 style="margin-top:0">Zo werkt het</h3>
+          <ol style="margin-bottom:0;line-height:1.65">
+            <li>Controleer links of het juiste <strong>huidige schooljaar</strong> gekozen is.</li>
+            <li>Open <strong>Leerlingen doorschuiven</strong>. Kies telkens de huidige klas en de klas waarin de leerlingen volgend jaar komen.</li>
+            <li>Duid alleen de uitzonderingen aan: een <strong>zittenblijver</strong> blijft in de huidige klas en een <strong>schoolverlater</strong> gaat niet mee. In K1 duid je de kinderen aan die nog in K1 blijven; alleen de anderen gaan naar K2.</li>
+            <li>Controleer het overzicht en bewaar. Koppel daarna via <strong>Klasleerkrachten</strong> de juiste leerkracht en klasmail aan iedere klas van het nieuwe schooljaar.</li>
+          </ol>
+        </section>
+        <p class="muted"><strong>Goed om te weten:</strong> bestaande lijsten en leerlinggegevens worden niet overschreven. Ontbrekende leerlingen kun je later nog via Excel of Nieuwe leerling toevoegen.</p>
         <div class="grid" style="margin-top:14px">
           <button class="panel" style="text-align:left;box-shadow:none" onclick="newYearMode='klaslijsten'; renderNewYear()">
             <h3>Leerlingen doorschuiven naar ${esc(volgendJaar)}</h3>
-            <p class="muted">Vertrek vanuit de bestaande lijsten van ${esc(schooljaar)}. Duid aan wie in dezelfde klas blijft of de school verlaat.</p>
+            <p class="muted">Begin hiermee. Kies een bronklas en doelklas, duid alleen uitzonderingen aan en controleer vóór het bewaren.</p>
           </button>
           <button class="panel" style="text-align:left;box-shadow:none" onclick="newYearMode='leerkrachten'; renderLeerkrachtenVolgendJaarOnly()">
             <h3>Klasleerkrachten koppelen aan ${esc(volgendJaar)}</h3>
