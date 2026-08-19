@@ -90,6 +90,12 @@ function puntgrootte(naam){
   ctx.font=`${isVet()?'bold ':''}${basis}pt Arial`;const breedte=ctx.measureText(naam).width,maximum=225;
   return Math.max(26,Math.min(basis,Math.floor(basis*maximum/Math.max(breedte,1))));
 }
+function previewLettergrootte(punten){
+  // Het voorbeeldblad heeft de A4-verhouding. A4 is 595,28 punten breed,
+  // waardoor deze schaal dezelfde verhouding tussen etiket en letter bewaart als Word.
+  const bladBreedte=$('preview')?.clientWidth||630;
+  return Math.max(4,Number(punten||0)*(bladBreedte/595.28));
+}
 function render(){
   const opties=etikettenNamen(),namen=gekozenNamen().filter(Boolean),pagina=bladen()[0]||Array(24).fill("");
   $('naamOpties').classList.toggle('verborgen',isTekst());$('naamVerdeling').classList.toggle('verborgen',isTekst());$('tekstOpties').classList.toggle('verborgen',!isTekst());
@@ -97,8 +103,8 @@ function render(){
   $('namen').querySelectorAll('input[data-leerling-id]').forEach(v=>v.addEventListener('change',()=>{v.checked?geselecteerd.add(v.dataset.leerlingId):geselecteerd.delete(v.dataset.leerlingId);render()}));
   const previewInhoud=isTekst()?tekstPreviewHtml():null;
   const uitlijning=tekstUitlijning();
-  $('preview').innerHTML=pagina.map(n=>`<div class="etiket" style="font-size:${Math.max(7,puntgrootte(n)*.32)}px;font-weight:${isVet()?700:400};text-align:${uitlijning};justify-content:${uitlijning==='left'?'flex-start':'center'}">${isTekst()?previewInhoud:esc(n)}</div>`).join('');
-  $('letterInfo').textContent=`Verkleind schermvoorbeeld · Word: Arial ${basisGrootte()} pt${isVet()?' vet':''}${isTekst()?'; indien nodig automatisch kleiner.':'; lange namen worden automatisch verkleind.'}`;
+  $('preview').innerHTML=pagina.map(n=>`<div class="etiket" style="font-size:${previewLettergrootte(puntgrootte(n)).toFixed(2)}px;font-weight:${isVet()?700:400};text-align:${uitlijning};justify-content:${uitlijning==='left'?'flex-start':'center'}">${isTekst()?previewInhoud:esc(n)}</div>`).join('');
+  $('letterInfo').textContent=`Voorbeeld op schaal · Word: Arial ${basisGrootte()} pt${isVet()?' vet':''}${isTekst()?'; indien nodig automatisch kleiner.':'; lange namen worden automatisch verkleind.'}`;
   $('bladBadge').textContent=`${bladen().length} ${bladen().length===1?'blad':'bladen'}`;
   const teLang=isTekst()&&eigenTekst().length>240,pasvorm=isTekst()&&eigenTekst()?berekenTekstPasvorm(eigenTekst()):null;
   $('download').disabled=isTekst()?(!eigenTekst()||teLang||!pasvorm?.past):!namen.length;
@@ -142,4 +148,5 @@ function maakDocx(){const paginas=bladen();if(!paginas.length)return;const besta
 }
 
 $('schooljaar').value=huidigSchooljaar();$('klas').addEventListener('change',laadLeerlingen);$('schooljaar').addEventListener('change',laadKlassen);$('schrijfwijze').addEventListener('change',render);$('lettergrootte').addEventListener('input',render);$('tekstLettergrootte').addEventListener('input',render);$('tekstUitlijning').addEventListener('change',render);$('eigenTekst').addEventListener('input',render);$('vetgedrukt').addEventListener('change',render);document.querySelectorAll('input[name="inhoud"],input[name="modus"]').forEach(x=>x.addEventListener('change',render));$('selecteerAlles').addEventListener('click',()=>{geselecteerd=new Set(etikettenNamen().map(x=>x.id));render()});$('selecteerGeen').addEventListener('click',()=>{geselecteerd.clear();render()});$('download').addEventListener('click',maakDocx);
+let previewResizeTimer;window.addEventListener('resize',()=>{clearTimeout(previewResizeTimer);previewResizeTimer=setTimeout(render,120)});
 onAuthStateChanged(auth,async u=>{if(!u){location.href='index.html';return}user=u;try{await laadRol();await laadKlassen()}catch(e){console.error(e);$('status').textContent='De klaslijst kon niet worden geladen: '+e.message}});
