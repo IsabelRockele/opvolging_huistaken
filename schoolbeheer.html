@@ -1875,14 +1875,12 @@
     function renderAdmin(){
       werkRustigeSecretariaatSidebarBij();
       const adminTabs=[...(isSecretary()?["wegwijzer"]:[]),"klaslijsten","vrije dagen",...(isSecretary()?["jaarkalender & activiteiten"]:[]),"meldingen",...(isSecretary()?["klasleerkrachten"]:[]),"nieuw schooljaar"];
-      const toonVolledigeNavigatie=adminPanel!=="wegwijzer"||adminNavigatieOpen;
+      const toonVolledigeNavigatie=adminPanel!=="wegwijzer";
       $("content").innerHTML = `
         <div class="panel">
-          <h2>${adminPanel==="wegwijzer"?"Stap 1 — Kies wat je wilt doen":"Administratie"} <span class="muted" style="font-weight:400;font-size:16px">— ${adminPanel==="wegwijzer"?"je hoeft nog geen klas te kiezen":adminPanel==="klaslijsten"?esc(activeClass):"schoolbreed"}</span></h2>
-          <p class="muted">${adminPanel==="wegwijzer"?"Begin hieronder met één van de drie groepen. De klassen verschijnen pas wanneer je ze nodig hebt.":"Je ziet nu alleen het gekozen onderdeel. Kies links een klas als deze taak voor één klas geldt."}</p>
-          <div class="subnav no-print">
-            ${toonVolledigeNavigatie?adminTabs.map(p=>`<button class="${adminPanel===p?"active":""}" onclick="openAdmin('${p}')">${p==="wegwijzer"?"❓ Hulp & stappenplan":p[0].toUpperCase()+p.slice(1)}</button>`).join(""):`<button class="active" onclick="toonAlleAdministratietaken()">☰ Ik weet al wat ik nodig heb: toon alle administratietaken</button>`}
-          </div>
+          <h2>${adminPanel==="wegwijzer"?"Administratie — Kies een taak":"Administratie"} <span class="muted" style="font-weight:400;font-size:16px">— ${adminPanel==="wegwijzer"?"":adminPanel==="klaslijsten"?esc(activeClass):"schoolbreed"}</span></h2>
+          <p class="muted">${adminPanel==="wegwijzer"?"Klik op wat je wilt doen. Je gaat onmiddellijk naar het juiste scherm.":"Je ziet nu alleen het gekozen onderdeel. Kies links een klas als deze taak voor één klas geldt."}</p>
+          ${toonVolledigeNavigatie?`<div class="subnav no-print">${adminTabs.map(p=>`<button class="${adminPanel===p?"active":""}" onclick="openAdmin('${p}')">${p==="wegwijzer"?"← Administratiestart":p[0].toUpperCase()+p.slice(1)}</button>`).join("")}</div>`:""}
           <div id="adminBody"></div>
         </div>`;
       if(adminPanel==="wegwijzer") renderSecretariaatWegwijzer();
@@ -1901,6 +1899,16 @@
       return `<details class="wegwijzer-kaart ${wegwijzerCategorie===categorie?"":"wegwijzer-verborgen"}"><summary><span style="font-size:22px">${icoon}</span><span>${esc(titel)}<small class="muted" style="display:block;font-weight:500;margin-top:2px">${esc(korteUitleg)}</small></span></summary><div class="wegwijzer-inhoud">${waarschuwing?`<div class="wegwijzer-waarschuwing">${waarschuwing}</div>`:""}<ol>${stappen.map(s=>`<li>${s}</li>`).join("")}</ol>${actie}</div></details>`;
     }
     function renderSecretariaatWegwijzer(){
+      $("adminBody").innerHTML=`
+        <div class="wegwijzer-keuzes" style="margin-top:16px">
+          <button class="wegwijzer-keuze" onclick="openAdmin('klaslijsten')"><span class="icoon">👧</span><span><strong>Klaslijsten en leerlingen</strong><small>Toon alle klassen en beheer leerlingen, Excel en klasverplaatsingen</small></span></button>
+          <button class="wegwijzer-keuze" onclick="openAdmin('nieuw schooljaar')"><span class="icoon">🗓️</span><span><strong>Nieuw schooljaar</strong><small>Leerlingen doorschuiven en klasleerkrachten voorbereiden</small></span></button>
+          <button class="wegwijzer-keuze" onclick="openAdmin('jaarkalender & activiteiten')"><span class="icoon">📅</span><span><strong>Jaarkalender en activiteiten</strong><small>Kalender inlezen en schoolbreed voorbereiden</small></span></button>
+          <button class="wegwijzer-keuze" onclick="openAdmin('klasleerkrachten')"><span class="icoon">👩‍🏫</span><span><strong>Klasleerkrachten</strong><small>Leerkrachten en klasmails koppelen</small></span></button>
+          <button class="wegwijzer-keuze" onclick="openAdmin('vrije dagen')"><span class="icoon">🏖️</span><span><strong>Vrije dagen</strong><small>Vakanties en pedagogische studiedagen beheren</small></span></button>
+          <button class="wegwijzer-keuze" onclick="window.open('afwezigheidsattesten.html','_blank')"><span class="icoon">🩺</span><span><strong>Afwezigheidsattesten</strong><small>Z/P/B opvolgen en ziektebriefjes afdrukken</small></span></button>
+        </div>`;
+      return;
       $("adminBody").innerHTML=`
         <section class="wegwijzer-intro"><h3 style="margin-top:0">Waarmee wil je beginnen?</h3><p style="margin-bottom:0">Kies eerst één groep. Je krijgt daarna alleen de uitleg te zien die daarbij hoort. Controleer vóór een wijziging altijd het juiste <strong>schooljaar</strong> en de juiste <strong>klas</strong>.</p></section>
         <div class="wegwijzer-keuzes">
