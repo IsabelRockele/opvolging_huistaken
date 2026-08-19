@@ -71,6 +71,12 @@
     .wegwijzer-kaart summary::-webkit-details-marker{display:none}.wegwijzer-kaart summary::after{content:'+';margin-left:auto;font-size:20px;color:#55705c}.wegwijzer-kaart[open] summary::after{content:'−'}
     .wegwijzer-inhoud{padding:0 16px 16px;border-top:1px solid #edf0ee}.wegwijzer-inhoud ol{padding-left:20px;line-height:1.6}.wegwijzer-inhoud li+li{margin-top:5px}
     .wegwijzer-waarschuwing{background:#fff8e6;border-left:4px solid #e0a229;padding:10px 12px;border-radius:8px;margin:10px 0}
+    .wegwijzer-keuzes{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-bottom:16px}
+    .wegwijzer-keuze{border:1px solid #d6e1da;background:#fff;border-radius:14px;padding:15px;text-align:left;cursor:pointer;color:#173424;display:flex;gap:11px;align-items:center;min-height:76px}
+    .wegwijzer-keuze:hover,.wegwijzer-keuze.active{border-color:#5c9870;background:#edf7f0;box-shadow:0 4px 12px #214f3020}
+    .wegwijzer-keuze .icoon{font-size:25px}.wegwijzer-keuze strong,.wegwijzer-keuze small{display:block}.wegwijzer-keuze small{font-weight:500;color:#63736a;margin-top:3px;line-height:1.3}
+    .wegwijzer-terug{margin:0 0 12px}.wegwijzer-verborgen{display:none!important}
+    @media(max-width:900px){.wegwijzer-keuzes{grid-template-columns:1fr}}
     .scherm-laden{position:fixed;inset:0;background:rgba(244,247,251,.9);z-index:10000;display:none;align-items:center;justify-content:center;backdrop-filter:blur(2px)}.scherm-laden.show{display:flex}.scherm-laden-kaart{width:min(360px,88vw);background:#fff;border:1px solid #d7e0e9;border-radius:16px;padding:20px;text-align:center;box-shadow:0 12px 40px #31445b2b}.laadbalk{height:7px;background:#e8edf2;border-radius:99px;overflow:hidden;margin-top:13px}.laadbalk::after{content:'';display:block;width:42%;height:100%;background:#4f8b68;border-radius:99px;animation:laadSchuif 1s ease-in-out infinite}@keyframes laadSchuif{0%{transform:translateX(-110%)}100%{transform:translateX(340%)}}
 
     #navRefter{background:#fdf4e0;border-left-color:#d99040;color:#7a5010}
@@ -906,20 +912,22 @@
         <input id="schooljaarInput">
       </div>
 
-      <div class="sb-divider" style="margin-top:10px"></div>
+      <div class="sb-divider" id="klasDividerBoven" style="margin-top:10px"></div>
 
-      <div class="sb-klas-wrap no-print">
+      <div class="sb-klas-wrap no-print" id="klasSectie">
         <div class="sb-label">Klas</div>
         <div class="sb-klas-grid" id="klasPills"></div>
       </div>
 
-      <div class="sb-divider"></div>
+      <div class="sb-divider" id="klasDividerOnder"></div>
 
       <div class="sb-section">
         <div class="sb-label">Modules</div>
         <div class="sb-item secretary-label" data-tab="administratie" id="navAdministratie">
           <span class="sb-icon">&#128196;</span> Administratie
         </div>
+        <button id="andereModulesKnop" class="secretary-label hidden" type="button" onclick="wisselSecretariaatModules()" style="margin:10px 14px 4px;width:calc(100% - 28px);padding:8px 10px;border-radius:10px;background:#fff;border:1px solid #d7e0ec;font-size:12px">Andere onderdelen tonen</button>
+        <div id="andereModules">
         <div class="sb-item teacher-label hidden" data-tab="klaslijst" id="navKlaslijst">
           <span class="sb-icon">&#128100;</span> Klaslijst
         </div>
@@ -937,6 +945,7 @@
         </div>
         <div class="sb-item" data-tab="oudsten" id="navOudsten">
           <span class="sb-icon">&#9993;</span> Schooloverzicht
+        </div>
         </div>
 
       </div>
@@ -1097,7 +1106,21 @@
       document.querySelectorAll(".secretary-label").forEach(x => x.classList.toggle("hidden", !isSecretary()));
       renderKlasPills();
       setActiveNav(tab);
+      werkRustigeSecretariaatSidebarBij();
     }
+
+    let secretariaatModulesOpen=false;
+    function werkRustigeSecretariaatSidebarBij(){
+      const secretariaat=isSecretary();
+      const klasNodig=!secretariaat||tab!=="administratie"||adminPanel==="klaslijsten";
+      $("klasSectie")?.classList.toggle("hidden",!klasNodig);
+      $("klasDividerBoven")?.classList.toggle("hidden",!klasNodig);
+      $("klasDividerOnder")?.classList.toggle("hidden",!klasNodig);
+      $("andereModulesKnop")?.classList.toggle("hidden",!secretariaat);
+      $("andereModules")?.classList.toggle("hidden",secretariaat&&!secretariaatModulesOpen);
+      if($("andereModulesKnop"))$("andereModulesKnop").textContent=secretariaatModulesOpen?"Andere onderdelen verbergen":"Andere onderdelen tonen";
+    }
+    window.wisselSecretariaatModules=function(){secretariaatModulesOpen=!secretariaatModulesOpen;werkRustigeSecretariaatSidebarBij()};
 
     function renderKlasPills(){
       const lijst = canOpenAllClasses() ? allClasses : allowedClasses;
@@ -1848,13 +1871,17 @@
       renderAdmin();
     };
 
+    let adminNavigatieOpen=false;
     function renderAdmin(){
+      werkRustigeSecretariaatSidebarBij();
+      const adminTabs=[...(isSecretary()?["wegwijzer"]:[]),"klaslijsten","vrije dagen",...(isSecretary()?["jaarkalender & activiteiten"]:[]),"meldingen",...(isSecretary()?["klasleerkrachten"]:[]),"nieuw schooljaar"];
+      const toonVolledigeNavigatie=adminPanel!=="wegwijzer"||adminNavigatieOpen;
       $("content").innerHTML = `
         <div class="panel">
-          <h2>Administratie <span class="muted" style="font-weight:400;font-size:16px">— ${adminPanel==="klaslijsten"?esc(activeClass):"schoolbreed"}</span></h2>
-          <p class="muted">Kies één taak. Bij Hulp &amp; stappenplan staat alle uitleg rustig per onderwerp samengeklapt.</p>
+          <h2>${adminPanel==="wegwijzer"?"Stap 1 — Kies wat je wilt doen":"Administratie"} <span class="muted" style="font-weight:400;font-size:16px">— ${adminPanel==="wegwijzer"?"je hoeft nog geen klas te kiezen":adminPanel==="klaslijsten"?esc(activeClass):"schoolbreed"}</span></h2>
+          <p class="muted">${adminPanel==="wegwijzer"?"Begin hieronder met één van de drie groepen. De klassen verschijnen pas wanneer je ze nodig hebt.":"Je ziet nu alleen het gekozen onderdeel. Kies links een klas als deze taak voor één klas geldt."}</p>
           <div class="subnav no-print">
-            ${[...(isSecretary()?["wegwijzer"]:[]),"klaslijsten","vrije dagen",...(isSecretary()?["jaarkalender & activiteiten"]:[]),"meldingen",...(isSecretary()?["klasleerkrachten"]:[]),"nieuw schooljaar"].map(p=>`<button class="${adminPanel===p?"active":""}" onclick="openAdmin('${p}')">${p==="wegwijzer"?"❓ Hulp & stappenplan":p[0].toUpperCase()+p.slice(1)}</button>`).join("")}
+            ${toonVolledigeNavigatie?adminTabs.map(p=>`<button class="${adminPanel===p?"active":""}" onclick="openAdmin('${p}')">${p==="wegwijzer"?"❓ Hulp & stappenplan":p[0].toUpperCase()+p.slice(1)}</button>`).join(""):`<button class="active" onclick="toonAlleAdministratietaken()">☰ Ik weet al wat ik nodig heb: toon alle administratietaken</button>`}
           </div>
           <div id="adminBody"></div>
         </div>`;
@@ -1866,50 +1893,59 @@
       if(adminPanel==="klasleerkrachten") renderLeerkrachtenHuidigSchooljaar();
       if(adminPanel==="nieuw schooljaar") renderNewYearHome();
     }
-    window.openAdmin = p => { adminPanel = p; if(p==="klaslijsten") classListMode=""; renderAdmin(); };
+    window.openAdmin = p => { adminPanel = p; if(p==="klaslijsten") classListMode=""; renderKlasPills(); renderAdmin(); };
+    window.toonAlleAdministratietaken=()=>{adminNavigatieOpen=true;renderAdmin()};
 
-    function wegwijzerKaart(icoon,titel,korteUitleg,stappen,actie="",waarschuwing=""){
-      return `<details class="wegwijzer-kaart"><summary><span style="font-size:22px">${icoon}</span><span>${esc(titel)}<small class="muted" style="display:block;font-weight:500;margin-top:2px">${esc(korteUitleg)}</small></span></summary><div class="wegwijzer-inhoud">${waarschuwing?`<div class="wegwijzer-waarschuwing">${waarschuwing}</div>`:""}<ol>${stappen.map(s=>`<li>${s}</li>`).join("")}</ol>${actie}</div></details>`;
+    let wegwijzerCategorie="";
+    function wegwijzerKaart(icoon,titel,korteUitleg,stappen,actie="",waarschuwing="",categorie=""){
+      return `<details class="wegwijzer-kaart ${wegwijzerCategorie===categorie?"":"wegwijzer-verborgen"}"><summary><span style="font-size:22px">${icoon}</span><span>${esc(titel)}<small class="muted" style="display:block;font-weight:500;margin-top:2px">${esc(korteUitleg)}</small></span></summary><div class="wegwijzer-inhoud">${waarschuwing?`<div class="wegwijzer-waarschuwing">${waarschuwing}</div>`:""}<ol>${stappen.map(s=>`<li>${s}</li>`).join("")}</ol>${actie}</div></details>`;
     }
     function renderSecretariaatWegwijzer(){
       $("adminBody").innerHTML=`
-        <section class="wegwijzer-intro"><h3 style="margin-top:0">Waarmee wil je beginnen?</h3><p style="margin-bottom:0">Klik alleen de taak open die je nu nodig hebt. Kies bovenaan eerst het juiste <strong>schooljaar</strong> en links de juiste <strong>klas</strong>. Bij twijfel verander je niets en open je eerst het stappenplan.</p></section>
+        <section class="wegwijzer-intro"><h3 style="margin-top:0">Waarmee wil je beginnen?</h3><p style="margin-bottom:0">Kies eerst één groep. Je krijgt daarna alleen de uitleg te zien die daarbij hoort. Controleer vóór een wijziging altijd het juiste <strong>schooljaar</strong> en de juiste <strong>klas</strong>.</p></section>
+        <div class="wegwijzer-keuzes">
+          <button class="wegwijzer-keuze ${wegwijzerCategorie==="klaslijsten"?"active":""}" onclick="toonWegwijzerCategorie('klaslijsten')"><span class="icoon">👧</span><span><strong>Klaslijsten en leerlingen</strong><small>Starten, importeren, toevoegen, verplaatsen of corrigeren</small></span></button>
+          <button class="wegwijzer-keuze ${wegwijzerCategorie==="voorbereiden"?"active":""}" onclick="toonWegwijzerCategorie('voorbereiden')"><span class="icoon">🗓️</span><span><strong>Schooljaar voorbereiden</strong><small>Doorschuiven, jaarkalender en schoolbrede activiteiten</small></span></button>
+          <button class="wegwijzer-keuze ${wegwijzerCategorie==="dagelijks"?"active":""}" onclick="toonWegwijzerCategorie('dagelijks')"><span class="icoon">📋</span><span><strong>Afdrukken en opvolgen</strong><small>Etiketten, afwezigheden en ziektebriefjes</small></span></button>
+        </div>
+        ${wegwijzerCategorie?`<button class="white small wegwijzer-terug" onclick="toonWegwijzerCategorie('')">← Alleen de drie groepen tonen</button>`:""}
         <div class="wegwijzer-grid">
           ${wegwijzerKaart("🏫","Een klaslijst starten","Voor K1, K2, K3 en alle lagere-schoolklassen.",[
             "Kies bovenaan het juiste schooljaar en klik links op de klas.","Heeft de klas nog geen leerlingen? Dan verschijnt automatisch <strong>Nieuwe klaslijst maken</strong>.","Kies <strong>Start met Excel</strong>, <strong>Start met lijst plakken</strong> of <strong>Voeg eerste leerling toe</strong>.","Controleer daarna de namen in de gewone klaslijst."
-          ],`<button class="green" onclick="gaNaarSecretariaatTaak('klaslijsten')">Ga naar Klaslijsten</button>`)}
+          ],`<button class="green" onclick="gaNaarSecretariaatTaak('klaslijsten')">Ga naar Klaslijsten</button>`,"","klaslijsten")}
           ${wegwijzerKaart("👧","Een nieuwe leerling toevoegen","Voor een leerling die later bij de klas komt.",[
             "Kies links de klas waarin de leerling start.","Open <strong>Klaslijsten</strong> en kies <strong>Nieuwe leerling</strong>.","Vul voornaam, achternaam en startdatum in.","Controleer de naam en bewaar. De leerling verschijnt ook automatisch bij etiketten en afwezigheden."
-          ],`<button class="green" onclick="gaNaarSecretariaatTaak('nieuwe-leerling')">Ga naar Nieuwe leerling</button>`)}
+          ],`<button class="green" onclick="gaNaarSecretariaatTaak('nieuwe-leerling')">Ga naar Nieuwe leerling</button>`,"","klaslijsten")}
           ${wegwijzerKaart("📊","Een Excel-klaslijst verwerken","Een officiële lijst toevoegen of vergelijken.",[
             "Kies eerst het juiste schooljaar en de juiste klas.","Open <strong>Klaslijsten → Excel importeren</strong> en selecteer het bestand.","Klik op <strong>Bestand lezen en namen controleren</strong>. Kijk achternaam, officiële voornaam en eventuele roepnaam rij per rij na.","Kies meestal <strong>Ontbrekende namen toevoegen</strong>: bestaande leerlingen blijven dan altijd staan.","Kies <strong>Volledige officiële lijst overnemen</strong> alleen wanneer het bestand werkelijk de volledige klas bevat. Ontbrekende leerlingen worden dan veilig inactief.","Lees het laatste controle-overzicht en typ pas daarna de gevraagde bevestiging."
-          ],`<button class="green" onclick="gaNaarSecretariaatTaak('excel')">Ga naar Excel importeren</button>`,`Een leerling die ontbreekt in de officiële Excel wordt niet gewist. Die wordt inactief bewaard, zodat oude betalingen en registraties raadpleegbaar blijven.`)}
+          ],`<button class="green" onclick="gaNaarSecretariaatTaak('excel')">Ga naar Excel importeren</button>`,`Een leerling die ontbreekt in de officiële Excel wordt niet gewist. Die wordt inactief bewaard, zodat oude betalingen en registraties raadpleegbaar blijven.`,"klaslijsten")}
           ${wegwijzerKaart("➡️","Leerlingen naar een andere klas","Binnen hetzelfde gekozen schooljaar, bijvoorbeeld van 2A naar 3A bij een verkeerd geplaatste oude klaslijst.",[
             "Kies schooljaar <strong>2026-2027</strong> en open <strong>2A</strong>.","Open <strong>Klaslijsten → Leerlingen naar andere klas</strong> en kies <strong>3A</strong>.","Vink alleen de zittenblijver aan bij <strong>Blijft in 2A</strong>.","Maak het controle-overzicht en bevestig met <strong>VERPLAATSEN</strong>.","Controleer 2A en 3A. Meteen na de bewerking kun je ze nog ongedaan maken."
-          ],`<button class="green" onclick="gaNaarSecretariaatTaak('verplaatsen')">Ga naar Leerlingen naar andere klas</button>`)}
+          ],`<button class="green" onclick="gaNaarSecretariaatTaak('verplaatsen')">Ga naar Leerlingen naar andere klas</button>`,"","klaslijsten")}
           ${wegwijzerKaart("🗓️","Een nieuw schooljaar voorbereiden","Leerlingen doorschuiven, laten zitten of als schoolverlater bewaren.",[
             "Open <strong>Nieuw schooljaar → Klaslijsten voorbereiden</strong>.","Kies bronklas en doelklas.","Vink alleen uitzonderingen aan: <strong>Blijft zitten</strong> of <strong>Verlaat school</strong>.","Bekijk eerst de controlelijst en bewaar daarna de doorschuiving.","Koppel vervolgens bij <strong>Klasleerkrachten</strong> de juiste leerkracht aan elke nieuwe klas."
-          ],`<button class="green" onclick="gaNaarSecretariaatTaak('nieuw-schooljaar')">Ga naar Nieuw schooljaar</button>`,`Gebruik dit alleen wanneer je echt van het ene schooljaar naar het volgende gaat. Voor de huidige verkeerde 2A-lijst gebruik je “Leerlingen naar andere klas”.`)}
+          ],`<button class="green" onclick="gaNaarSecretariaatTaak('nieuw-schooljaar')">Ga naar Nieuw schooljaar</button>`,`Gebruik dit alleen wanneer je echt van het ene schooljaar naar het volgende gaat. Voor de huidige verkeerde 2A-lijst gebruik je “Leerlingen naar andere klas”.`,"voorbereiden")}
           ${wegwijzerKaart("🚪","Een leerling die niet start of vertrekt","De leerling verdwijnt uit de actieve lijst, maar de historiek blijft bestaan.",[
             "Open de juiste klas bij <strong>Klaslijsten</strong>.","Kies <strong>Start niet</strong> als het kind vóór de start afhaakt.","Kies <strong>Uitschrijven</strong> als het kind tijdens het schooljaar vertrekt.","Vul de reden of datum in. Onderaan blijft de leerling zichtbaar bij de niet-actieve leerlingen."
-          ],`<button class="green" onclick="gaNaarSecretariaatTaak('klaslijsten')">Ga naar Klaslijsten</button>`)}
+          ],`<button class="green" onclick="gaNaarSecretariaatTaak('klaslijsten')">Ga naar Klaslijsten</button>`,"","klaslijsten")}
           ${wegwijzerKaart("🏷️","Naametiketten afdrukken","Voor de hele klas, twee kinderen per blad of één kind.",[
             "Open Naametiketten en kies schooljaar en klas.","Kies hoofdletter of kleine letter, lettergrootte en eventueel vetgedrukt.","Kies één blad per kind, twee kinderen per blad of alle namen aansluitend.","Selecteer de hele klas of één leerling en download het Worddocument.","Open het bestand in Word en druk af op ware grootte (100%)."
-          ],`<button class="green" onclick="window.open('naametiketten.html','_blank')">Open Naametiketten</button>`)}
+          ],`<button class="green" onclick="window.open('naametiketten.html','_blank')">Open Naametiketten</button>`,"","dagelijks")}
           ${wegwijzerKaart("📅","Jaarkalender en activiteiten voorbereiden","Vrije dagen en activiteiten eerst schoolbreed klaarzetten.",[
             "Open <strong>Jaarkalender & activiteiten</strong> onder Administratie.","Kies het Excelbestand van de jaarkalender en klik op <strong>Bestand lezen en controleren</strong>.","Controleer de voorgestelde vrije dagen en activiteiten. Pas bij activiteiten eventueel de klassen aan.","Oudercontacten, rapporten, infoavonden en toetsen worden niet overgenomen.","Bewaar pas daarna de goedgekeurde regels. Links bij <strong>Activiteiten</strong> kun je het resultaat per klas bekijken."
-          ],`<button class="green" onclick="openAdmin('jaarkalender & activiteiten')">Open Jaarkalender & activiteiten</button>`)}
+          ],`<button class="green" onclick="openAdmin('jaarkalender & activiteiten')">Open Jaarkalender & activiteiten</button>`,"","voorbereiden")}
           ${wegwijzerKaart("🩺","Afwezigheden en ziektebriefjes","Z/P/B opvolgen en vier briefjes per leerling afdrukken.",[
             "Open Afwezigheden en kies schooljaar en klas.","Klik één keer op een vakje om een X te plaatsen; klik nogmaals om die X te verwijderen.","Iedere wijziging wordt automatisch in Firebase bewaard. Wacht tot rechtsboven <strong>bewaard</strong> staat.","Kies bij ziektebriefjes de hele klas of één leerling.","Download en druk het liggende document af."
-          ],`<button class="green" onclick="window.open('afwezigheidsattesten.html','_blank')">Open Afwezigheden</button>`)}
+          ],`<button class="green" onclick="window.open('afwezigheidsattesten.html','_blank')">Open Afwezigheden</button>`,"","dagelijks")}
           ${wegwijzerKaart("↩️","Een fout herstellen","Wat te doen wanneer je net iets verkeerd hebt uitgevoerd.",[
             "Gebruik onmiddellijk de knop <strong>Ongedaan maken</strong> die na verplaatsen of doorschuiven verschijnt.","Wis een leerling niet om een fout te herstellen.","Controleer daarna opnieuw bronklas en doelklas.","Lukt het niet, noteer schooljaar, klas en leerlingnaam voordat je hulp vraagt."
-          ],"",`Bij klasverplaatsingen en jaarovergangen wordt eerst een veiligheidskopie gemaakt.`)}
+          ],"",`Bij klasverplaatsingen en jaarovergangen wordt eerst een veiligheidskopie gemaakt.`,"klaslijsten")}
         </div>`;
     }
+    window.toonWegwijzerCategorie=function(categorie){wegwijzerCategorie=categorie;renderSecretariaatWegwijzer()};
     window.gaNaarSecretariaatTaak=function(taak){
-      if(["nieuwe-leerling","excel","verplaatsen","klaslijsten"].includes(taak)){adminPanel="klaslijsten";classListMode=taak==="nieuwe-leerling"?"nieuw":taak==="klaslijsten"?"":taak;renderAdmin();return}
-      if(taak==="nieuw-schooljaar"){adminPanel="nieuw schooljaar";renderAdmin()}
+      if(["nieuwe-leerling","excel","verplaatsen","klaslijsten"].includes(taak)){adminPanel="klaslijsten";classListMode=taak==="nieuwe-leerling"?"nieuw":taak==="klaslijsten"?"":taak;renderKlasPills();renderAdmin();return}
+      if(taak==="nieuw-schooljaar"){adminPanel="nieuw schooljaar";renderKlasPills();renderAdmin()}
     };
 
             function renderAdminClasslists(){
@@ -3201,7 +3237,7 @@
     document.querySelectorAll(".sb-item").forEach(el => {
       el.addEventListener("click", () => {
         tab = el.dataset.tab;
-        if(tab === "administratie" && isSecretary()) adminPanel = "wegwijzer";
+        if(tab === "administratie" && isSecretary()){adminPanel = "wegwijzer";adminNavigatieOpen=false;secretariaatModulesOpen=false;}
         renderKlasPills();
         render();
       });
