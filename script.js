@@ -184,7 +184,16 @@ function pasKnoppenToe(huistakenKnop, overgangKnop, schoolbeheerKnop, bestelling
   if (afwezigheidsattestenKnop) afwezigheidsattestenKnop.style.display = magAfwezigheidsattesten && !isSecretariaat ? '' : 'none';
   const voorbladenKnop = document.getElementById('voorbladenKeuzeKnop');
   if (voorbladenKnop) voorbladenKnop.style.display = (heeftKlasbeheer || rolNaam === 'zorgleerkracht') ? '' : 'none';
-  if (schoolbeheerKnop) schoolbeheerKnop.style.display = (isSecretariaat || isSchoolBreed || heeftKlasbeheer) ? '' : 'none';
+  if (schoolbeheerKnop) {
+    schoolbeheerKnop.style.display = (isSecretariaat || isSchoolBreed || heeftKlasbeheer) ? '' : 'none';
+    if (isSecretariaat) {
+      vulTegel(schoolbeheerKnop, 'schoolbeheer.html', '📋', 'Administratie & meldingen', 'Beheer klaslijsten, stuur meldingen, koppel leerkrachten en bereid het schooljaar voor.');
+    } else if (isSchoolBreed) {
+      vulTegel(schoolbeheerKnop, 'schoolbeheer.html', '🏫', 'Klaslijsten & opvolging', 'Bekijk per klas de lijsten, meldingen, refter, activiteiten en aankopen.');
+    } else {
+      vulTegel(schoolbeheerKnop, 'schoolbeheer.html', '🏫', 'Mijn klasorganisatie', 'Open je klaslijst, meldingen, refter, activiteiten en aankopen.');
+    }
+  }
   if (bestellingenKnop) bestellingenKnop.style.display = (isSecretariaat || heeftKlasbeheer) ? '' : 'none';
   const publiekeAgendaLinks = document.getElementById('publiekeAgendaLinks');
   if (publiekeAgendaLinks) publiekeAgendaLinks.style.display = 'none';
