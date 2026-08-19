@@ -197,6 +197,9 @@
 
     /* melding-balk */
     #messages .notice{margin-bottom:8px}
+    #messages .task-notice{border:2px solid #e1a900;background:#fff4bf;box-shadow:0 5px 16px rgba(91,65,0,.13);padding:16px 18px}
+    #messages .task-notice strong{font-size:18px;color:#463500}
+    #messages .task-notice .message-actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
     /* schoolbeheer-meldingenbeheer-codex */
     .message-admin-layout{display:grid;grid-template-columns:minmax(280px,.9fr) minmax(320px,1.1fr);gap:16px;align-items:start;margin-top:10px}
     .message-admin-card{border:1px solid var(--line);border-radius:16px;background:#fbfcfe;padding:16px}
@@ -1808,27 +1811,41 @@
     function messageKey(m){ return m.groupId || m.id; }
 
     function renderMessages(){
+      const vandaag = new Date().toISOString().slice(0,10);
       const zorgRol = ["zorgcoordinator","zorgleerkracht","beheerder"].includes(role);
       const activeMessages = (data.messages||[]).filter(m=>{
         if(m.archived) return false;
+        if(m.visibleUntil && m.visibleUntil < vandaag) return false;
         if(!Array.isArray(m.targetClasses) && typeof m.targetCare === "undefined") return true;
         if(isSecretary()) return true;
         if(zorgRol) return m.targetCare === true;
         return (m.targetClasses||[]).includes(activeClass);
       });
       const herstel = datumHerstelNotice();
-      $("messages").innerHTML = herstel + activeMessages.map(m=>`
-        <div class="notice ${messageIsLate(m)?"message-card late":""}"><div class="bar">
+      $("messages").innerHTML = herstel + activeMessages.map(m=>{
+        const eigenZorgStatus=zorgRol&&!isSecretary()?(m.careAcks?.[user.uid]?.status||""):"";
+        const huidigeStatus=eigenZorgStatus||(m.done||m.ackStatus==="done"?"done":m.ackStatus==="read"?"read":"");
+        return `
+        <div class="notice task-notice ${messageIsLate(m)?"message-card late":""}"><div class="bar">
           <div>
+            <span class="tag" style="margin:0 6px 5px 0">Melding</span>
             <strong>${esc(m.text)}</strong>
-            <span class="muted">tegen ${esc(m.due || "")}</span>
+            ${m.due?`<div class="muted">In orde tegen ${esc(m.due)}</div>`:""}
+            ${m.visibleUntil?`<div class="muted">Blijft zichtbaar tot en met ${esc(m.visibleUntil)}</div>`:""}
             ${messageIsLate(m)?`<span class="tag pink">te laat</span>`:""}
-            ${m.done?`<span class="tag done">in orde</span>`:""}
+            ${huidigeStatus==="done"?`<span class="tag done">in orde</span>`:huidigeStatus==="read"?`<span class="tag">gelezen</span>`:""}
           </div>
-          ${isSecretary()?`<span class="right muted">${m.done?"In orde":"Nog niet in orde"}</span>`:
-          `<label class="right"><input type="checkbox" ${m.done?"checked":""} onchange="doneMsg('${m.id}',this.checked)"> in orde</label>`}
-        </div></div>`).join("");
+          ${isSecretary()?`<span class="right muted">${huidigeStatus==="done"?"Uitgevoerd":huidigeStatus==="read"?"Gelezen":m.responseType==="read"?"Nog niet gelezen":"Nog niet uitgevoerd"}</span>`:
+          `<div class="message-actions right">${m.responseType==="read"?`<button class="small ${huidigeStatus==="read"?"green":"white"}" onclick="setMsgStatus('${m.id}','read')">Ik heb dit gelezen</button>`:`<button class="small ${huidigeStatus==="done"?"green":"white"}" onclick="setMsgStatus('${m.id}','done')">Ik heb dit uitgevoerd</button>`}</div>`}
+        </div></div>`}).join("");
     }
+    window.setMsgStatus = (id,status) => {
+      const m=data.messages.find(x=>x.id===id);
+      const zorgRol=["zorgcoordinator","zorgleerkracht"].includes(role);
+      if(m&&zorgRol){m.careAcks||={};m.careAcks[user.uid]={status,email:user.email||"",at:new Date().toISOString()};}
+      else if(m){ m.ackStatus=status; m.done=status==="done"; m.readAt=status?new Date().toISOString():""; m.doneAt=status==="done"?new Date().toISOString():""; }
+      markDirty(); renderMessages();
+    };
     window.doneMsg = (id,checked) => {
       const m=data.messages.find(x=>x.id===id);
       if(m){ m.done=checked; m.doneAt=checked ? new Date().toISOString() : ""; }
@@ -1872,6 +1889,15 @@
       await updateMessageInClasses(m, "delete");
       renderMessages();
       renderAdmin();
+    };
+    let messageAdminGroups = new Map();
+    window.deleteMessageGroup = async key => {
+      const m=messageAdminGroups.get(key);
+      if(!m || !isSecretary()) return;
+      if(!confirm("Deze melding definitief verwijderen bij alle ontvangers? Ze kan daarna niet worden teruggezet.")) return;
+      toonSchermLaden("Melding verwijderen…");
+      try{ await updateMessageInClasses(m,"delete"); renderAdmin(); }
+      finally{ verbergSchermLaden(); }
     };
 
     let adminNavigatieOpen=false;
@@ -2723,9 +2749,11 @@
             <h3>Nieuwe melding maken</h3>
             <p class="muted">Iedereen staat standaard aangevinkt. Vink alleen ontvangers uit voor wie de melding niet geldt.</p>
             <div class="row">
-              <label>Tekst<input id="msgText" placeholder="Refterlijst invullen"></label>
-              <label>Tegen<input id="msgDue" type="date" value="${schooljaar.slice(0,4)}-09-25"></label>
+              <label style="max-width:none;flex-basis:100%">Melding<textarea id="msgText" rows="5" placeholder="Typ hier de volledige melding. Je mag meerdere zinnen gebruiken."></textarea></label>
+              <label>In orde tegen<input id="msgDue" type="date"></label>
+              <label>Zichtbaar tot en met<input id="msgVisibleUntil" type="date" value="${new Date(Date.now()+7*864e5).toISOString().slice(0,10)}"></label>
             </div>
+            <fieldset style="border:1px solid var(--line);border-radius:12px;padding:10px 14px;margin:12px 0"><legend style="font-weight:800">Wat moeten de ontvangers bevestigen?</legend><label style="display:inline-flex;align-items:center;gap:7px;max-width:none;margin-right:20px"><input type="radio" name="msgResponseType" value="read"> Ik heb dit gelezen</label><label style="display:inline-flex;align-items:center;gap:7px;max-width:none"><input type="radio" name="msgResponseType" value="done" checked> Ik heb dit uitgevoerd</label></fieldset>
             <div class="class-picks" style="display:flex;gap:8px;flex-wrap:wrap;margin:12px 0">
               ${allClasses.map(k=>`<label><input class="msgClass" type="checkbox" value="${esc(k)}" checked> ${esc(k)}</label>`).join("")}
               <label style="background:#fff4bf;border-color:#e4bd3b"><input id="msgCare" type="checkbox" checked> Zorgleerkrachten</label>
@@ -2733,35 +2761,47 @@
             <button class="primary" onclick="addMessage()">Melding plaatsen</button>
           </section>
           <section class="message-admin-card">
-            <h3>Actieve meldingen voor ${esc(activeClass)}</h3>
-            <p class="muted">Hier ziet secretariaat wat bij deze klas nog open staat. Verwijderen gebeurt meteen overal waar dezelfde melding staat.</p>
+            <h3>Opvolging van de meldingen</h3>
+            <p class="muted">Je ziet per klas of de melding nog niet gelezen, gelezen of in orde is. Definitief verwijderen haalt ze meteen bij iedereen weg.</p>
             <div id="msgAdminList" class="message-list"></div>
           </section>
         </div>`;
       renderMessageAdminList();
     }
-    function renderMessageAdminList(){
+    async function renderMessageAdminList(){
       const box = $("msgAdminList");
       if(!box) return;
-      const list = (data.messages||[]).slice().sort((a,b)=>(a.archived===b.archived?0:a.archived?1:-1) || String(a.due||"").localeCompare(String(b.due||"")));
+      box.innerHTML = `<div class="notice">Meldingen en antwoorden laden…</div>`;
+      const documenten = await Promise.all(allClasses.map(async klas=>{const snap=await getDoc(classRef(klas));return {klas,messages:snap.exists()?(snap.data().messages||[]):[]}}));
+      const groepen=new Map();
+      for(const {klas,messages} of documenten) for(const m of messages){
+        if(m.archived) continue;
+        const key=messageKey(m); if(!groepen.has(key)) groepen.set(key,{...m,statussen:[]});
+        const groep=groepen.get(key),doelklassen=Array.isArray(m.targetClasses)?m.targetClasses:[klas];
+        if(doelklassen.includes(klas)) groep.statussen.push({klas,status:m.done||m.ackStatus==="done"?"done":m.ackStatus==="read"?"read":"open"});
+        groep.careAcks={...(groep.careAcks||{}),...(m.careAcks||{})};
+      }
+      messageAdminGroups=groepen;
+      const list=[...groepen.entries()].sort((a,b)=>String(b[1].createdAt||"").localeCompare(String(a[1].createdAt||"")));
       if(!list.length){
-        box.innerHTML = `<div class="empty">Nog geen meldingen voor ${esc(activeClass)}.</div>`;
+        box.innerHTML = `<div class="empty">Nog geen actieve meldingen.</div>`;
         return;
       }
-      box.innerHTML = list.map(m => `
+      box.innerHTML = list.map(([key,m]) => `
         <div class="message-card ${messageIsLate(m)?"late":""} ${m.archived?"archived":""}">
           <div class="bar">
             <div>
               <strong>${esc(m.text)}</strong>
-              <div class="muted">Tegen ${esc(m.due || "")}${m.archived ? " - archief" : ""}</div>
+              <div class="muted">${m.due?`In orde tegen ${esc(m.due)} · `:""}${m.visibleUntil?`zichtbaar tot en met ${esc(m.visibleUntil)}`:"blijft zichtbaar"}</div>
+              <div class="muted">Voor: ${esc([...(m.targetClasses||[]),...(m.targetCare?["zorgleerkrachten"]:[])].join(", "))}</div>
             </div>
             <div class="message-actions">
-              <button class="small" onclick="archiveMsg('${m.id}')">Archiveren</button>
-              <button class="small pink" onclick="deleteMsg('${m.id}')">Verwijderen</button>
+              <button class="small pink" onclick="deleteMessageGroup('${esc(key)}')">Definitief verwijderen</button>
             </div>
           </div>
           <div class="message-status">
-            <span class="${m.done?"done":messageIsLate(m)?"late":"open"}">${esc(activeClass)} ${m.done?"in orde":messageIsLate(m)?"te laat":"open"}</span>
+            ${m.statussen.map(s=>`<span class="${s.status}">${esc(s.klas)}: ${s.status==="done"?"uitgevoerd":s.status==="read"?"gelezen":m.responseType==="read"?"nog niet gelezen":"nog niet uitgevoerd"}</span>`).join("")}
+            ${m.targetCare?(Object.values(m.careAcks||{}).length?Object.values(m.careAcks||{}).map(a=>`<span class="${a.status||"open"}">Zorg ${esc(a.email||"")}: ${a.status==="done"?"uitgevoerd":a.status==="read"?"gelezen":m.responseType==="read"?"nog niet gelezen":"nog niet uitgevoerd"}</span>`).join(""):`<span class="open">Zorgleerkrachten: ${m.responseType==="read"?"nog niet gelezen":"nog niet uitgevoerd"}</span>`):""}
           </div>
         </div>`).join("");
     }
@@ -2772,6 +2812,10 @@
       if(!selected.length && !targetCare) return alert("Vink minstens één klas of de zorgleerkrachten aan.");
       const text = $("msgText").value.trim();
       const due = $("msgDue").value;
+      const visibleUntil = $("msgVisibleUntil").value;
+      const responseType = document.querySelector('input[name="msgResponseType"]:checked')?.value || "done";
+      if(!visibleUntil) return alert("Kies tot en met welke dag de melding zichtbaar mag blijven.");
+      if(due && visibleUntil < due) return alert("De melding moet minstens zichtbaar blijven tot de datum waarop ze in orde moet zijn.");
       const groupId = uid();
       const opslagKlassen = targetCare ? allClasses : selected;
       for(const klas of opslagKlassen){
@@ -2779,7 +2823,7 @@
         const snap = await getDoc(ref);
         const item = snap.exists() ? snap.data() : emptyClassDoc(klas);
         item.messages ||= [];
-        item.messages.push({id:uid(),groupId,text,due,targetClasses:[...selected],targetCare,done:false,archived:false,createdAt:new Date().toISOString()});
+        item.messages.push({id:uid(),groupId,text,due,visibleUntil,responseType,targetClasses:[...selected],targetCare,ackStatus:"",done:false,archived:false,createdAt:new Date().toISOString()});
         await setDoc(ref,item);
       }
       const ontvangers = [...selected, ...(targetCare?["zorgleerkrachten"]:[])];

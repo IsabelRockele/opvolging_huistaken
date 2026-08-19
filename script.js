@@ -76,6 +76,47 @@ function magKlasafsprakenTesten(user) {
   return String(user?.email || '').toLowerCase() === 'isabel.rockele@bsdelinde.net';
 }
 
+function huidigSchooljaarVoorMeldingen() {
+  const now = new Date();
+  const start = now.getMonth() >= 7 ? now.getFullYear() : now.getFullYear() - 1;
+  return `${start}-${start + 1}`;
+}
+
+async function toonOpvallendeStartmeldingen(user, rol, koppelingSnaps = []) {
+  const bestaand = document.getElementById('portaalActieveMeldingen');
+  if (bestaand) bestaand.remove();
+  if (!user || rol === 'secretariaat') return;
+  const zorgRol = ['beheerder', 'zorgcoordinator', 'zorgleerkracht'].includes(rol);
+  const schooljaar = huidigSchooljaarVoorMeldingen();
+  const gekoppeld = new Set();
+  koppelingSnaps.forEach(snap => snap?.docs?.forEach(d => {
+    const x = d.data() || {};
+    if (x.schooljaar === schooljaar && x.klas) gekoppeld.add(String(x.klas).toUpperCase());
+    else if (d.id.startsWith(schooljaar + '_')) gekoppeld.add(d.id.slice(schooljaar.length + 1).toUpperCase());
+  }));
+  const klassen = zorgRol ? ['K1','K2','K3','1A','2A','3A','4A','5A','6A'] : [...gekoppeld];
+  if (!klassen.length) return;
+  const vandaag = new Date().toISOString().slice(0,10);
+  const docs = await Promise.all(klassen.map(async klas => ({klas,snap:await getDoc(doc(db,'schoolbeheer',schooljaar,'klassen',klas))})));
+  const meldingen = new Map();
+  docs.forEach(({klas,snap}) => {
+    if (!snap.exists()) return;
+    (snap.data().messages || []).forEach(m => {
+      if (m.archived || (m.visibleUntil && m.visibleUntil < vandaag)) return;
+      const oud = !Array.isArray(m.targetClasses) && typeof m.targetCare === 'undefined';
+      const bestemd = oud || (zorgRol ? m.targetCare === true : (m.targetClasses || []).includes(klas));
+      if (bestemd) meldingen.set(m.groupId || m.id, m);
+    });
+  });
+  if (!meldingen.size) return;
+  const blok = document.createElement('div');
+  blok.id = 'portaalActieveMeldingen';
+  blok.style.cssText = 'margin:0 0 18px;background:#fff4bf;border:2px solid #e1a900;border-radius:16px;padding:16px 18px;box-shadow:0 5px 16px rgba(91,65,0,.13);color:#463500';
+  const regels = [...meldingen.values()].slice(0,3).map(m => `<li style="margin:5px 0"><strong>${String(m.text||'').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;')}</strong>${m.due?` <span style="font-size:14px">(in orde tegen ${m.due})</span>`:''}</li>`).join('');
+  blok.innerHTML = `<div style="display:flex;gap:14px;align-items:center;justify-content:space-between;flex-wrap:wrap"><div><strong style="font-size:20px">📣 Nieuwe melding${meldingen.size===1?'':'en'}</strong><ul style="margin:7px 0 0;padding-left:22px">${regels}</ul>${meldingen.size>3?`<div style="font-size:14px">en nog ${meldingen.size-3} andere</div>`:''}</div><a href="schoolbeheer.html" target="_blank" rel="noopener" style="background:#2f7450;color:white;text-decoration:none;font-weight:800;padding:11px 16px;border-radius:12px">Bekijken en antwoorden</a></div>`;
+  document.getElementById('portaalHulpbalk')?.insertAdjacentElement('beforebegin', blok);
+}
+
 function pasRustigePortaalrubriekenToe(rolNaam, isSecretariaat, heeftKlasbeheer, isSchoolBreed) {
   const secties = [...document.querySelectorAll('#ingelogd-kaart .portaal-sectie')];
   const sleutelVan = sectie => sectie.classList.contains('zorgblok') ? 'zorg' : sectie.classList.contains('organisatieblok') ? 'organisatie' : 'administratie';
@@ -392,6 +433,7 @@ async function toonSchooloverzichtKnopAlsNodig(user) {
         isSchoolBreed, isSecretariaat, heeftKlasbeheer, gesimuleerdRol);
       if (klasafsprakenKnop) klasafsprakenKnop.style.display = magKlasafsprakenTesten(user) ? '' : 'none';
       toonPortaalLaden(false);
+      toonOpvallendeStartmeldingen(user, gesimuleerdRol, [uidResult.value, emailResult.value].filter(Boolean)).catch(console.warn);
       return;
     }
 
@@ -413,6 +455,7 @@ async function toonSchooloverzichtKnopAlsNodig(user) {
       isSchoolBreed, isSecretariaat, heeftKlasbeheer, rol);
     if (klasafsprakenKnop) klasafsprakenKnop.style.display = magKlasafsprakenTesten(user) ? '' : 'none';
     toonPortaalLaden(false);
+    toonOpvallendeStartmeldingen(user, rol, [uidResult.value, emailResult.value].filter(Boolean)).catch(console.warn);
 
   } catch (err) {
     console.error('Rol controleren mislukt:', err);
