@@ -1032,7 +1032,7 @@
     ];
 
     const helpTexts = {
-      administratie: `<h3>Uitleg administratie</h3><ul><li><strong>Klaslijsten</strong>: leerlingen toevoegen, namen verbeteren, kind van collega aanduiden en uitschrijven.</li><li><strong>Vrije dagen</strong>: extra vrije dagen of studiedagen ingeven. Weekends en woensdagen zijn automatisch grijs.</li><li><strong>Meldingen</strong>: secretariaat stuurt taken naar klassen. Leerkrachten vinken aan wanneer het klaar is.</li><li><strong>Nieuw schooljaar</strong>: leerlingen doorschuiven, zittenblijvers aanduiden en klasleerkrachten klaarzetten.</li></ul>`,
+      administratie: `<h3>Uitleg administratie</h3><ul><li><strong>Klaslijsten</strong>: leerlingen toevoegen, namen verbeteren, kind van collega aanduiden en uitschrijven.</li><li><strong>Vrije dagen</strong>: extra vrije dagen of studiedagen ingeven. Weekends en woensdagen zijn automatisch grijs.</li><li><strong>Meldingen</strong>: secretariaat stuurt taken naar klassen. Leerkrachten vinken aan wanneer het klaar is.</li><li><strong>Volgend schooljaar</strong>: pas op het einde van het jaar de bestaande leerlingen doorschuiven, uitzonderingen aanduiden en klasleerkrachten voor het nieuwe jaar koppelen.</li></ul>`,
       klaslijst: `<h3>Uitleg klaslijst</h3><ul><li>Gebruik <strong>Klaslijst plakken</strong> vooral bij een volledig nieuwe klas.</li><li>Gebruik <strong>Nieuwe leerling</strong> voor een leerling die later start of nog ontbreekt.</li><li>Een hier toegevoegde leerling verschijnt ook in afwezigheden, etiketten en andere gekoppelde tools. Bestaande overgangsfiches worden niet overschreven; alleen de ontbrekende naam wordt toegevoegd.</li><li><strong>Standaard</strong> betekent: startdatum 1/09 van het schooljaar en einddatum 30/06 van dat schooljaar.</li><li>Namen kan je rechtstreeks in de tabel verbeteren.</li><li>Uitschrijven bewaart oudere gegevens voor lijsten en afrekeningen.</li></ul>`,
       refter: `<h3>Uitleg refter</h3><ul><li>Leerkrachten vinken enkel kinderen aan die afwezig zijn.</li><li>Grijze dagen tellen niet mee.</li><li>Kinderen van collega's krijgen een zachte kleur en betalen geen refter.</li><li>Als secretariaat <strong>Verwerkt tot</strong> invult, worden die dagen vergrendeld bij de leerkracht.</li></ul>`,
       activiteiten: `<h3>Uitleg activiteiten</h3><ul><li>Leerkrachten kunnen een activiteit voor hun eigen klas toevoegen.</li><li>Secretariaat kan dezelfde activiteit in één keer voor één of meerdere klassen aanmaken.</li><li>Gebruik dit alleen voor echte activiteiten of uitstappen. Oudercontacten, rapporten en infoavonden horen hier niet thuis.</li><li>De leerkracht vinkt alleen afwezige leerlingen aan. Is niemand afwezig, dan blijven alle vakjes leeg.</li><li>Daarna klikt de leerkracht op <strong>Aanwezigheden bevestigen</strong>. Pas vanaf dan ziet het secretariaat groen voor aanwezig en rood voor afwezig.</li><li>Gaat een activiteit niet door? Klik op <strong>Annuleren</strong> en vul verplicht een reden in. De activiteit wordt dan niet aangerekend, maar blijft met de reden bewaard.</li><li>Wanneer secretariaat verwerkt aanvinkt, kan de leerkracht die activiteit niet meer wijzigen.</li></ul>`,
@@ -1902,7 +1902,7 @@
       $("adminBody").innerHTML=`
         <div class="wegwijzer-keuzes" style="margin-top:16px">
           <button class="wegwijzer-keuze" onclick="openAdmin('klaslijsten')"><span class="icoon">👧</span><span><strong>Klaslijsten en leerlingen</strong><small>Toon alle klassen en beheer leerlingen, Excel en klasverplaatsingen</small></span></button>
-          <button class="wegwijzer-keuze" onclick="openAdmin('nieuw schooljaar')"><span class="icoon">🗓️</span><span><strong>Nieuw schooljaar</strong><small>Leerlingen doorschuiven en klasleerkrachten voorbereiden</small></span></button>
+          <button class="wegwijzer-keuze" onclick="openAdmin('nieuw schooljaar')"><span class="icoon">🗓️</span><span><strong>Volgend schooljaar maken</strong><small>Pas op het einde van ${esc(schooljaar)}: lijsten en leerkrachten voor ${esc(volgendSchooljaarVan(schooljaar))}</small></span></button>
           <button class="wegwijzer-keuze" onclick="openAdmin('jaarkalender & activiteiten')"><span class="icoon">📅</span><span><strong>Jaarkalender en activiteiten</strong><small>Kalender inlezen en schoolbreed voorbereiden</small></span></button>
           <button class="wegwijzer-keuze" onclick="openAdmin('klasleerkrachten')"><span class="icoon">👩‍🏫</span><span><strong>Klasleerkrachten</strong><small>Leerkrachten en klasmails koppelen</small></span></button>
           <button class="wegwijzer-keuze" onclick="openAdmin('vrije dagen')"><span class="icoon">🏖️</span><span><strong>Vrije dagen</strong><small>Vakanties en pedagogische studiedagen beheren</small></span></button>
@@ -2887,17 +2887,19 @@
     window.addFreeDay = () => { if(!$("freeName").value||!$("freeStart").value)return; data.vrijeDagen.push({naam:$("freeName").value,start:$("freeStart").value,end:$("freeEnd").value||$("freeStart").value}); markDirty(); renderAdmin(); };
 
     function renderNewYearHome(){
+      const volgendJaar=volgendSchooljaarVan(schooljaar);
       $("adminBody").innerHTML = `
-        <h3>Nieuw schooljaar</h3>
-        <p class="muted">Bereid eerst de klaslijsten voor. Daarna bevestig je welke leerkracht volgend schooljaar bij welke klas hoort.</p>
+        <h3>Van ${esc(schooljaar)} naar ${esc(volgendJaar)}</h3>
+        <div class="notice"><strong>Wanneer gebruik je dit?</strong><p class="muted" style="margin-bottom:0">Pas op het einde van ${esc(schooljaar)}, wanneer je de klaslijsten voor ${esc(volgendJaar)} wilt maken. Staan de lijsten voor ${esc(schooljaar)} al juist? Dan hoef je hier nu niets te doen.</p></div>
+        <p class="muted">De twee taken hieronder staan los van elkaar. Je kunt eerst de leerlingen doorschuiven of eerst de leerkrachten koppelen.</p>
         <div class="grid" style="margin-top:14px">
           <button class="panel" style="text-align:left;box-shadow:none" onclick="newYearMode='klaslijsten'; renderNewYear()">
-            <h3>Klaslijsten voorbereiden</h3>
-            <p class="muted">Leerlingen doorschuiven, zittenblijvers aanduiden en controleren.</p>
+            <h3>Leerlingen doorschuiven naar ${esc(volgendJaar)}</h3>
+            <p class="muted">Vertrek vanuit de bestaande lijsten van ${esc(schooljaar)}. Duid aan wie in dezelfde klas blijft of de school verlaat.</p>
           </button>
           <button class="panel" style="text-align:left;box-shadow:none" onclick="newYearMode='leerkrachten'; renderLeerkrachtenVolgendJaarOnly()">
-            <h3>Klasleerkrachten voorbereiden</h3>
-            <p class="muted">Bevestigen dat leerkrachten in dezelfde klas blijven, of wijzigingen invullen.</p>
+            <h3>Klasleerkrachten koppelen aan ${esc(volgendJaar)}</h3>
+            <p class="muted">Bevestig wie bij welke klas hoort of vul wijzigingen in.</p>
           </button>
         </div>`;
     }
@@ -2914,6 +2916,7 @@
       return [...(snap.data().leerlingen||[])].sort(vergelijkLeerlingen);
     }
     async function renderNewYear(){
+      const volgendJaar=volgendSchooljaarVan(schooljaar);
       const bron=$("newYearBronKlas")?.value||activeClass||allClasses[0]||"";
       const voorstel=volgendeKlasVoor(bron);
       const doel=$("newYearDoelKlas")?.value||voorstel||"";
@@ -2921,18 +2924,18 @@
       const bestaatNiet=leerlingen===null;
       const lijst=leerlingen||[];
       $("adminBody").innerHTML = `
-        <button class="white no-print" onclick="terugNaarNieuwSchooljaarHome()">Terug naar keuzes</button><h3>Klaslijsten voorbereiden</h3>
-        <p class="muted">Kies eerst de klas waarvan je de leerlingen wil overhevelen.</p>
-        <div class="notice">Standaard schuift iedereen door naar de doelklas. Wie je aanvinkt als zittenblijver blijft in ${esc(bron||"de bronklas")}.</div>
+        <button class="white no-print" onclick="terugNaarNieuwSchooljaarHome()">Terug naar keuzes</button><h3>Leerlingen van ${esc(schooljaar)} doorschuiven naar ${esc(volgendJaar)}</h3>
+        <p class="muted">Kies een huidige klas en de klas waarin deze leerlingen volgend schooljaar terechtkomen.</p>
+        <div class="notice"><strong>Veilig aanvullen.</strong> Standaard gaat iedereen naar de doelklas in ${esc(volgendJaar)}. Vink alleen uitzonderingen aan. Bestaan er al leerlingen in de doelklas, dan blijven die staan en worden alleen ontbrekende namen toegevoegd.<br><strong>K1:</strong> een K0-kind dat volgend jaar gewoon in K1 blijft, vink je aan bij <em>Blijft in dezelfde klas</em>; dit betekent hier niet dat het kind een jaar moet overdoen.</div>
         <div class="step-grid no-print">
-          <div class="step-card"><h3>Stap 1: bronklas</h3><label>Welke klas?<select id="newYearBronKlas">${allClasses.map(k=>`<option value="${esc(k)}" ${k===bron?"selected":""}>${esc(k)}</option>`).join("")}</select></label></div>
-          <div class="step-card"><h3>Stap 2: doelklas</h3><label>Overhevelen naar<select id="newYearDoelKlas">${["", ...allClasses,"uit school"].map(k=>`<option value="${esc(k)}" ${k===doel?"selected":""}>${k?esc(k):"Kies doelklas"}</option>`).join("")}</select></label></div>
+          <div class="step-card"><h3>Stap 1: huidige klas</h3><label>Klas in ${esc(schooljaar)}<select id="newYearBronKlas">${allClasses.map(k=>`<option value="${esc(k)}" ${k===bron?"selected":""}>${esc(k)}</option>`).join("")}</select></label></div>
+          <div class="step-card"><h3>Stap 2: klas volgend jaar</h3><label>Klas in ${esc(volgendJaar)}<select id="newYearDoelKlas">${["", ...allClasses,"uit school"].map(k=>`<option value="${esc(k)}" ${k===doel?"selected":""}>${k?esc(k):"Kies klas in "+volgendJaar}</option>`).join("")}</select></label></div>
           <div class="action-row no-print"><button class="primary" onclick="renderNewYear()">Leerlingen tonen</button><button class="green" onclick="maakNieuwSchooljaarOverzicht()">Controlelijst maken</button></div>
         </div>
         <div id="newYearResult" style="margin:14px 0"></div>
         ${bestaatNiet?`<div class="notice">Deze klas is nog niet gestart.</div>`:""}
         <div class="table-wrap" style="margin-top:14px">
-          <table><thead><tr><th>Leerling uit ${esc(bron)}</th><th class="check-col">Blijft zitten</th><th class="check-col">Verlaat school</th><th>Gaat standaard naar</th></tr></thead>
+          <table><thead><tr><th>Leerling uit ${esc(bron)} (${esc(schooljaar)})</th><th class="check-col">Blijft in dezelfde klas</th><th class="check-col">Verlaat school</th><th>Gaat standaard naar in ${esc(volgendJaar)}</th></tr></thead>
           <tbody>${lijst.map(s=>`<tr><td><strong>${esc(name(s))}</strong></td><td class="check-col"><input type="checkbox" class="blijverCheck" data-id="${esc(s.id)}" data-name="${esc(name(s))}" onchange="wisselJaarovergangUitzondering(this,'blijft')"></td><td class="check-col"><input type="checkbox" class="verlaatSchoolCheck" data-id="${esc(s.id)}" data-name="${esc(name(s))}" onchange="wisselJaarovergangUitzondering(this,'verlaat')"></td><td>${esc(doel||"-")}</td></tr>`).join()||`<tr><td colspan="4">${bestaatNiet?"Klas nog niet gestart.":"Geen leerlingen."}</td></tr>`}</tbody>
           </table>
         </div>`;
@@ -2949,7 +2952,7 @@
       document.querySelectorAll(".blijverCheck").forEach(ch=>{if(ch.checked)blijven.push(ch.dataset.name)});document.querySelectorAll(".verlaatSchoolCheck").forEach(ch=>{if(ch.checked)verlaat.push(ch.dataset.name)});document.querySelectorAll(".blijverCheck").forEach(ch=>{const weg=document.querySelector(`.verlaatSchoolCheck[data-id="${CSS.escape(ch.dataset.id)}"]`)?.checked;if(!ch.checked&&!weg)doorgaan.push(ch.dataset.name)});
       const nieuwJaar=volgendSchooljaarVan(schooljaar),doelSnap=doel!=="uit school"?await getDoc(doc(db,"schoolbeheer",nieuwJaar,"klassen",doel)):null,bestaand=doelSnap?.exists()?(doelSnap.data().leerlingen||[]):[];
       const bestaandeKeys=new Set(bestaand.map(s=>name(s).toLowerCase())),dubbels=doorgaan.filter(n=>bestaandeKeys.has(n.toLowerCase()));
-      $("newYearResult").innerHTML = `<section class="notice"><h3>Controle-overzicht voor ${esc(nieuwJaar)}</h3><p><strong>${esc(bron)}</strong> → <strong>${esc(doel)}</strong></p><p class="muted">In de doelklas staan al ${bestaand.length} leerling(en). ${dubbels.length} naam/namen worden niet dubbel toegevoegd.</p><div class="grid"><div><h3>Naar ${esc(doel)}</h3>${doorgaan.length?`<ul>${doorgaan.map(n=>`<li>${esc(n)}${dubbels.includes(n)?" (bestaat al)":""}</li>`).join("")}</ul>`:`<p class="muted">Geen leerlingen.</p>`}</div><div><h3>Blijft in ${esc(bron)}</h3>${blijven.length?`<ul>${blijven.map(n=>`<li>${esc(n)}</li>`).join("")}</ul>`:`<p class="muted">Geen zittenblijvers.</p>`}</div><div><h3>Verlaat school</h3>${verlaat.length?`<ul>${verlaat.map(n=>`<li>${esc(n)}</li>`).join("")}</ul>`:`<p class="muted">Niemand aangeduid.</p>`}</div></div><p class="muted">De oude klas en alle oude betalingen blijven raadpleegbaar.</p><button class="danger" onclick="doorschuivingBewarenNieuwSchooljaar()">Doorschuiving bewaren</button></section>`;
+      $("newYearResult").innerHTML = `<section class="notice"><h3>Controle-overzicht voor ${esc(nieuwJaar)}</h3><p><strong>${esc(bron)}</strong> in ${esc(schooljaar)} → <strong>${esc(doel)}</strong> in ${esc(nieuwJaar)}</p><p class="muted">In de doelklas staan al ${bestaand.length} leerling(en). ${dubbels.length} naam/namen worden niet dubbel toegevoegd.</p><div class="grid"><div><h3>Naar ${esc(doel)}</h3>${doorgaan.length?`<ul>${doorgaan.map(n=>`<li>${esc(n)}${dubbels.includes(n)?" (bestaat al)":""}</li>`).join("")}</ul>`:`<p class="muted">Geen leerlingen.</p>`}</div><div><h3>Blijft in ${esc(bron)}</h3>${blijven.length?`<ul>${blijven.map(n=>`<li>${esc(n)}</li>`).join("")}</ul>`:`<p class="muted">Niemand aangeduid om in dezelfde klas te blijven.</p>`}</div><div><h3>Verlaat school</h3>${verlaat.length?`<ul>${verlaat.map(n=>`<li>${esc(n)}</li>`).join("")}</ul>`:`<p class="muted">Niemand aangeduid.</p>`}</div></div><p class="muted">De lijsten van ${esc(schooljaar)} en alle oude betalingen blijven raadpleegbaar. Een reeds bestaande doelklas in ${esc(nieuwJaar)} wordt alleen aangevuld.</p><button class="green" onclick="doorschuivingBewarenNieuwSchooljaar()">Bewaren in ${esc(nieuwJaar)}</button></section>`;
       $("newYearResult").scrollIntoView({behavior:"smooth", block:"start"});
     };
     function volgendSchooljaarVan(huidig){ const start=Number(String(huidig||schooljaar).slice(0,4))+1; return `${start}-${start+1}`; }
@@ -3013,7 +3016,7 @@
       for(const bestemming of bestemmingen) await schoolbeheerVeiligheidskopie(bestemming.ref,`Voor jaarovergang vanuit ${bron}`,true);
       const batch=writeBatch(db); batch.set(bronRef,bronNa,{merge:true}); bestemmingen.forEach(x=>batch.set(x.ref,x.item,{merge:true})); await batch.commit();
       laatsteJaarovergang={bronRef,bronVoor,bestemmingen:bestemmingen.map(x=>({ref:x.ref,voor:x.voor}))};
-      $("newYearResult").innerHTML=`<section class="success"><strong>Doorschuiving veilig bewaard in ${esc(nieuwJaar)}.</strong><p>${naarDoel.length} naar ${esc(doel)}, ${blijven.length} zittenblijver(s) in ${esc(bron)} en ${verlaten.length} schoolverlater(s). De oude klasgegevens zijn niet verwijderd.</p><button class="white" onclick="maakLaatsteJaarovergangOngedaan()">Deze jaarovergang ongedaan maken</button></section>`;
+      $("newYearResult").innerHTML=`<section class="success"><strong>Doorschuiving veilig bewaard in ${esc(nieuwJaar)}.</strong><p>${naarDoel.length} naar ${esc(doel)}, ${blijven.length} blijven in ${esc(bron)} en ${verlaten.length} verlaten de school. De klasgegevens van ${esc(schooljaar)} zijn niet verwijderd.</p><button class="white" onclick="maakLaatsteJaarovergangOngedaan()">Deze jaarovergang ongedaan maken</button></section>`;
     };
     window.maakLaatsteJaarovergangOngedaan=async function(){
       if(!laatsteJaarovergang||!confirm("Deze zojuist uitgevoerde jaarovergang ongedaan maken?"))return;
