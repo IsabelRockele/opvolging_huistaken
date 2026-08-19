@@ -139,7 +139,8 @@ function pasKnoppenToe(huistakenKnop, overgangKnop, schoolbeheerKnop, bestelling
   const naametikettenKnop = document.getElementById('naametikettenKeuzeKnop');
   if (naametikettenKnop) naametikettenKnop.style.display = (isSchoolBreed || isSecretariaat || heeftKlasbeheer) ? '' : 'none';
   const afwezigheidsattestenKnop = document.getElementById('afwezigheidsattestenKeuzeKnop');
-  if (afwezigheidsattestenKnop) afwezigheidsattestenKnop.style.display = (isSchoolBreed || isSecretariaat || heeftKlasbeheer) ? '' : 'none';
+  const magAfwezigheidsattesten = heeftKlasbeheer || ['beheerder','zorgcoordinator','zorgleerkracht'].includes(rolNaam);
+  if (afwezigheidsattestenKnop) afwezigheidsattestenKnop.style.display = magAfwezigheidsattesten && !isSecretariaat ? '' : 'none';
   const voorbladenKnop = document.getElementById('voorbladenKeuzeKnop');
   if (voorbladenKnop) voorbladenKnop.style.display = (heeftKlasbeheer || rolNaam === 'zorgleerkracht') ? '' : 'none';
   if (schoolbeheerKnop) schoolbeheerKnop.style.display = (isSecretariaat || isSchoolBreed || heeftKlasbeheer) ? '' : 'none';
@@ -157,17 +158,15 @@ function pasKnoppenToe(huistakenKnop, overgangKnop, schoolbeheerKnop, bestelling
   }
   if (hulpbalk) hulpbalk.style.display = magGebruikershulp && !toonChecklist ? 'flex' : 'none';
 
-  // Secretariaat ziet geen aparte rubriek Klasorganisatie; Afwezigheidsattesten verhuist naar School en administratie.
+  // Afwezigheidsattesten horen alleen bij klasleerkrachten en zorgrollen.
   const organisatieGrid = document.getElementById('organisatiePortaalGrid');
-  const administratieGrid = document.getElementById('administratiePortaalGrid');
   if (afwezigheidsattestenKnop) {
-    if (isSecretariaat && administratieGrid) administratieGrid.appendChild(afwezigheidsattestenKnop);
-    else if (!isSecretariaat && organisatieGrid) organisatieGrid.appendChild(afwezigheidsattestenKnop);
+    if (organisatieGrid) organisatieGrid.appendChild(afwezigheidsattestenKnop);
   }
   const organisatieTegels = document.querySelectorAll('.organisatieblok .portaal-tegel');
   if (isSecretariaat) {
     organisatieTegels.forEach(tegel => { tegel.style.display = 'none'; });
-    if (afwezigheidsattestenKnop) afwezigheidsattestenKnop.style.display = '';
+    if (afwezigheidsattestenKnop) afwezigheidsattestenKnop.style.display = 'none';
   } else {
     // Tegels zonder rolgestuurde id (zoals klasagenda) opnieuw zichtbaar maken bij een rolwissel.
     organisatieTegels.forEach(tegel => { if (!tegel.id) tegel.style.display = ''; });
