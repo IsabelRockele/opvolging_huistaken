@@ -1808,7 +1808,14 @@
     function messageKey(m){ return m.groupId || m.id; }
 
     function renderMessages(){
-      const activeMessages = (data.messages||[]).filter(m=>!m.archived);
+      const zorgRol = ["zorgcoordinator","zorgleerkracht","beheerder"].includes(role);
+      const activeMessages = (data.messages||[]).filter(m=>{
+        if(m.archived) return false;
+        if(!Array.isArray(m.targetClasses) && typeof m.targetCare === "undefined") return true;
+        if(isSecretary()) return true;
+        if(zorgRol) return m.targetCare === true;
+        return (m.targetClasses||[]).includes(activeClass);
+      });
       const herstel = datumHerstelNotice();
       $("messages").innerHTML = herstel + activeMessages.map(m=>`
         <div class="notice ${messageIsLate(m)?"message-card late":""}"><div class="bar">
@@ -1902,6 +1909,7 @@
       $("adminBody").innerHTML=`
         <div class="wegwijzer-keuzes" style="margin-top:16px">
           <button class="wegwijzer-keuze" onclick="openAdmin('klaslijsten')"><span class="icoon">👧</span><span><strong>Klaslijsten en leerlingen</strong><small>Toon alle klassen en beheer leerlingen, Excel en klasverplaatsingen</small></span></button>
+          <button class="wegwijzer-keuze" onclick="openAdmin('meldingen')"><span class="icoon">📣</span><span><strong>Meldingen maken</strong><small>Stuur een bericht naar gekozen klassen en zorgleerkrachten</small></span></button>
           <button class="wegwijzer-keuze" onclick="openAdmin('nieuw schooljaar')"><span class="icoon">🗓️</span><span><strong>Volgend schooljaar maken</strong><small>Pas op het einde van ${esc(schooljaar)}: lijsten en leerkrachten voor ${esc(volgendSchooljaarVan(schooljaar))}</small></span></button>
           <button class="wegwijzer-keuze" onclick="openAdmin('jaarkalender & activiteiten')"><span class="icoon">📅</span><span><strong>Jaarkalender en activiteiten</strong><small>Kalender inlezen en schoolbreed voorbereiden</small></span></button>
           <button class="wegwijzer-keuze" onclick="openAdmin('klasleerkrachten')"><span class="icoon">👩‍🏫</span><span><strong>Klasleerkrachten</strong><small>Leerkrachten en klasmails koppelen</small></span></button>
@@ -2713,13 +2721,14 @@
         <div class="message-admin-layout">
           <section class="message-admin-card">
             <h3>Nieuwe melding maken</h3>
-            <p class="muted">Klik op Melding plaatsen om ze zichtbaar te maken bij de aangevinkte klassen.</p>
+            <p class="muted">Iedereen staat standaard aangevinkt. Vink alleen ontvangers uit voor wie de melding niet geldt.</p>
             <div class="row">
               <label>Tekst<input id="msgText" placeholder="Refterlijst invullen"></label>
               <label>Tegen<input id="msgDue" type="date" value="${schooljaar.slice(0,4)}-09-25"></label>
             </div>
             <div class="class-picks" style="display:flex;gap:8px;flex-wrap:wrap;margin:12px 0">
               ${allClasses.map(k=>`<label><input class="msgClass" type="checkbox" value="${esc(k)}" checked> ${esc(k)}</label>`).join("")}
+              <label style="background:#fff4bf;border-color:#e4bd3b"><input id="msgCare" type="checkbox" checked> Zorgleerkrachten</label>
             </div>
             <button class="primary" onclick="addMessage()">Melding plaatsen</button>
           </section>
@@ -2759,19 +2768,22 @@
     window.addMessage = async () => {
       if(!isSecretary() || !$("msgText").value.trim()) return;
       const selected = [...document.querySelectorAll(".msgClass:checked")].map(x=>x.value);
-      if(!selected.length) return alert("Vink minstens een klas aan.");
+      const targetCare = $("msgCare")?.checked === true;
+      if(!selected.length && !targetCare) return alert("Vink minstens één klas of de zorgleerkrachten aan.");
       const text = $("msgText").value.trim();
       const due = $("msgDue").value;
       const groupId = uid();
-      for(const klas of selected){
+      const opslagKlassen = targetCare ? allClasses : selected;
+      for(const klas of opslagKlassen){
         const ref = classRef(klas);
         const snap = await getDoc(ref);
         const item = snap.exists() ? snap.data() : emptyClassDoc(klas);
         item.messages ||= [];
-        item.messages.push({id:uid(),groupId,text,due,done:false,archived:false,createdAt:new Date().toISOString()});
+        item.messages.push({id:uid(),groupId,text,due,targetClasses:[...selected],targetCare,done:false,archived:false,createdAt:new Date().toISOString()});
         await setDoc(ref,item);
       }
-      alert("Melding geplaatst.");
+      const ontvangers = [...selected, ...(targetCare?["zorgleerkrachten"]:[])];
+      alert(`Melding geplaatst voor: ${ontvangers.join(", ")}.`);
       renderAdmin();
     };
 
