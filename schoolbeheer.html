@@ -926,7 +926,6 @@
         <div class="sb-item secretary-label" data-tab="administratie" id="navAdministratie">
           <span class="sb-icon">&#128196;</span> Administratie
         </div>
-        <button id="andereModulesKnop" class="secretary-label hidden" type="button" onclick="wisselSecretariaatModules()" style="margin:10px 14px 4px;width:calc(100% - 28px);padding:8px 10px;border-radius:10px;background:#fff;border:1px solid #d7e0ec;font-size:12px">Andere onderdelen tonen</button>
         <div id="andereModules">
         <div class="sb-item teacher-label hidden" data-tab="klaslijst" id="navKlaslijst">
           <span class="sb-icon">&#128100;</span> Klaslijst
@@ -1116,11 +1115,8 @@
       $("klasSectie")?.classList.toggle("hidden",!klasNodig);
       $("klasDividerBoven")?.classList.toggle("hidden",!klasNodig);
       $("klasDividerOnder")?.classList.toggle("hidden",!klasNodig);
-      $("andereModulesKnop")?.classList.toggle("hidden",!secretariaat);
       $("andereModules")?.classList.toggle("hidden",secretariaat&&!secretariaatModulesOpen);
-      if($("andereModulesKnop"))$("andereModulesKnop").textContent=secretariaatModulesOpen?"Andere onderdelen verbergen":"Andere onderdelen tonen";
     }
-    window.wisselSecretariaatModules=function(){secretariaatModulesOpen=!secretariaatModulesOpen;werkRustigeSecretariaatSidebarBij()};
 
     function renderKlasPills(){
       const lijst = canOpenAllClasses() ? allClasses : allowedClasses;
@@ -1874,13 +1870,12 @@
     let adminNavigatieOpen=false;
     function renderAdmin(){
       werkRustigeSecretariaatSidebarBij();
-      const adminTabs=[...(isSecretary()?["wegwijzer"]:[]),"klaslijsten","vrije dagen",...(isSecretary()?["jaarkalender & activiteiten"]:[]),"meldingen",...(isSecretary()?["klasleerkrachten"]:[]),"nieuw schooljaar"];
       const toonVolledigeNavigatie=adminPanel!=="wegwijzer";
       $("content").innerHTML = `
         <div class="panel">
           <h2>${adminPanel==="wegwijzer"?"Administratie — Kies een taak":"Administratie"} <span class="muted" style="font-weight:400;font-size:16px">— ${adminPanel==="wegwijzer"?"":adminPanel==="klaslijsten"?esc(activeClass):"schoolbreed"}</span></h2>
           <p class="muted">${adminPanel==="wegwijzer"?"Klik op wat je wilt doen. Je gaat onmiddellijk naar het juiste scherm.":"Je ziet nu alleen het gekozen onderdeel. Kies links een klas als deze taak voor één klas geldt."}</p>
-          ${toonVolledigeNavigatie?`<div class="subnav no-print">${adminTabs.map(p=>`<button class="${adminPanel===p?"active":""}" onclick="openAdmin('${p}')">${p==="wegwijzer"?"← Administratiestart":p[0].toUpperCase()+p.slice(1)}</button>`).join("")}</div>`:""}
+          ${toonVolledigeNavigatie?`<div class="subnav no-print"><button onclick="openAdmin('wegwijzer')">← Terug naar administratiestart</button></div>`:""}
           <div id="adminBody"></div>
         </div>`;
       if(adminPanel==="wegwijzer") renderSecretariaatWegwijzer();
@@ -1891,7 +1886,12 @@
       if(adminPanel==="klasleerkrachten") renderLeerkrachtenHuidigSchooljaar();
       if(adminPanel==="nieuw schooljaar") renderNewYearHome();
     }
-    window.openAdmin = p => { adminPanel = p; if(p==="klaslijsten") classListMode=""; renderKlasPills(); renderAdmin(); };
+    window.openAdmin = p => {
+      adminPanel = p;
+      if(p==="klaslijsten"){classListMode="";secretariaatModulesOpen=true;}
+      if(p==="wegwijzer")secretariaatModulesOpen=false;
+      renderKlasPills();renderAdmin();
+    };
     window.toonAlleAdministratietaken=()=>{adminNavigatieOpen=true;renderAdmin()};
 
     let wegwijzerCategorie="";
