@@ -660,6 +660,7 @@ requestAnimationFrame(() => {
   const btnBold=$('#btnBold'), btnItalic=$('#btnItalic'), btnUnderline=$('#btnUnderline'), btnHighlight=$('#btnHighlight');
   const textColor = $('#textColor');
   let lastTextRange = null;
+  let lastTextRangeAt = 0;
   const btnApplyColor = $('#btnApplyColor');
   const btnCopyDay=$('#btnCopyDay'), btnCopyMon=$('#btnCopyMon');
   const btnExport=$('#btnExport'), btnImport=$('#btnImport'), fileImport=$('#fileImport'), btnPrint=$('#btnPrint');
@@ -860,20 +861,32 @@ function toonMiniBar(el){
   let _savedRange = null;
   function saveSelection(){
     const sel = window.getSelection();
-    if (sel && sel.rangeCount > 0){
-      _savedRange = sel.getRangeAt(0).cloneRange(); // ook collapsed cursor opslaan
+    if (sel && sel.rangeCount > 0 && !sel.isCollapsed && inEditable(sel.anchorNode)){
+      _savedRange = sel.getRangeAt(0).cloneRange();
+    } else if (lastTextRange && Date.now() - lastTextRangeAt < 10000){
+      _savedRange = lastTextRange.cloneRange();
+    } else {
+      _savedRange = null;
     }
   }
   function restoreSelection(){
-    if (!_savedRange) return;
+    let range = _savedRange;
+    const current = window.getSelection();
+    if (current && current.rangeCount > 0 && !current.isCollapsed && inEditable(current.anchorNode)){
+      range = current.getRangeAt(0).cloneRange();
+    } else if (!range && lastTextRange && Date.now() - lastTextRangeAt < 10000){
+      range = lastTextRange.cloneRange();
+    }
+    if (!range || range.collapsed) return false;
     const sel = window.getSelection();
     sel.removeAllRanges();
-    sel.addRange(_savedRange);
+    sel.addRange(range);
+    return true;
   }
   miniBar.addEventListener('pointerdown', e => {
     saveSelection();
     e.stopPropagation();
-  });
+  }, true);
 
   // Knoppen
   function mtExec(cmd){ document.execCommand(cmd); }
@@ -923,12 +936,7 @@ function toonMiniBar(el){
   function applyFontSizePt(pt){
     const sel = window.getSelection();
     if (!sel || sel.rangeCount === 0) return;
-    if (sel.isCollapsed){
-      // Lege regel: zet font-size op het block-element zodat de spatie verkleint
-      const block = getCaretBlock();
-      if (block && block.contentEditable !== 'true') block.style.fontSize = pt + 'pt';
-      return;
-    }
+    if (sel.isCollapsed) return;
     const range = sel.getRangeAt(0);
     const span = document.createElement('span');
     span.style.fontSize = pt + 'pt';
@@ -1253,6 +1261,11 @@ function toonMiniBar(el){
   function applyGapToDay(day,pt){ day.style.setProperty('--task-gap',pt+'pt'); }
 
   planFS.addEventListener('change',()=>{
+    if (restoreLastTextSelectionIn(document.body)){
+      applyFontSizePt(parseInt(planFS.value));
+      pushSnapshot();
+      return;
+    }
     if(activeDay){
       applyFsToDay(activeDay, planFS.value);
       /* laat “Ik denk aan” dezelfde grootte volgen */
@@ -1335,11 +1348,31 @@ function toonMiniBar(el){
     const el = (node.nodeType === 1 ? node : node.parentElement);
     return el ? el.closest('[contenteditable]') : null;
   }
+  function restoreLastTextSelectionIn(host){
+    if (!lastTextRange || !host || Date.now() - lastTextRangeAt >= 10000) return false;
+    const node = lastTextRange.commonAncestorContainer;
+    const el = node.nodeType === 1 ? node : node.parentElement;
+    if (!el || !host.contains(el) || lastTextRange.collapsed) return false;
+    const sel = window.getSelection();
+    sel.removeAllRanges();
+    sel.addRange(lastTextRange.cloneRange());
+    return true;
+  }
+  document.addEventListener('pointerdown', e=>{
+    if (e.target.closest && e.target.closest('[contenteditable]') && !e.target.closest('#miniToolbar')){
+      lastTextRange = null;
+      lastTextRangeAt = 0;
+      _savedRange = null;
+    }
+  }, true);
   document.addEventListener('selectionchange', ()=>{
     const sel = window.getSelection();
     if (!sel || !sel.rangeCount) return;
     const ed = inEditable(sel.anchorNode);
-    if (ed) lastTextRange = sel.getRangeAt(0).cloneRange();
+    if (ed && !sel.isCollapsed){
+      lastTextRange = sel.getRangeAt(0).cloneRange();
+      lastTextRangeAt = Date.now();
+    }
   });
 
   // Als je de keuzelijst opent, bewaar nog eens expliciet de huidige selectie
