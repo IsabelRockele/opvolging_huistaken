@@ -463,7 +463,9 @@
         <button type="button" id="btnApplyColor">Pas toe</button>
       </label>
       <span class="sep"></span>
+      <button id="btnCopyDay" title="Kopieer de volledige inhoud en opmaak van één dag naar een andere dag">📋 Kopieer naar andere dag</button>
       <button id="btnCopyMon" hidden aria-hidden="true" style="display:none">Kopieer maandag</button>
+      <button id="btnUndo" title="Ga terug naar de vorige wijziging" disabled>↩ Ongedaan maken</button>
       <button id="btnDelPicto" title="Geselecteerd pictogram verwijderen">Verwijder picto</button>
       <span class="sep"></span>
       <button id="btnExport">Export</button>
@@ -494,7 +496,6 @@
   <button id="btnItalic" hidden></button>
   <button id="btnUnderline" hidden></button>
   <button id="btnHighlight" hidden></button>
-  <button id="btnUndo" hidden></button>
   <select id="bulletSize" hidden><option value="12">klein</option><option value="14" selected>middel</option><option value="16">groot</option></select>
   <select id="taskGap" hidden><option value="4">4pt</option><option value="5">5pt</option><option value="6" selected>6pt</option></select>
   <button id="applyAllGap" hidden></button>
@@ -657,7 +658,7 @@ requestAnimationFrame(() => {
   const textColor = $('#textColor');
   let lastTextRange = null;
   const btnApplyColor = $('#btnApplyColor');
-  const btnCopyMon=$('#btnCopyMon');
+  const btnCopyDay=$('#btnCopyDay'), btnCopyMon=$('#btnCopyMon');
   const btnExport=$('#btnExport'), btnImport=$('#btnImport'), fileImport=$('#fileImport'), btnPrint=$('#btnPrint');
   const monthBox=$('#monthBox'), classIconSlot=$('#classIconSlot');
   const btnUndo=$('#btnUndo'), btnDelPicto=$('#btnDelPicto');
@@ -1105,8 +1106,16 @@ function toonMiniBar(el){
 
   function pushSnapshot(){
     if(!isApplying) undoStack.push(snapshot());
+    updateUndoButton();
     scheduleLayoutSync();                // ← direct her-equalizen na elke wijziging
     if(!isApplying && _initDone) autosave();
+  }
+  function updateUndoButton(){
+    if (!btnUndo) return;
+    btnUndo.disabled = undoStack.length < 2;
+    btnUndo.title = btnUndo.disabled
+      ? 'Er is nog geen wijziging om ongedaan te maken'
+      : 'Ga één wijziging terug';
   }
   function doUndo(){
     if(undoStack.length<2) return;
@@ -1117,6 +1126,8 @@ function toonMiniBar(el){
     applyPanelPictos(prev.meta && prev.meta.panelPictos ? prev.meta.panelPictos : []);
     isApplying=false;
     scheduleLayoutSync();
+    updateUndoButton();
+    if (_initDone) autosave();
   }
   btnUndo.addEventListener('click', doUndo);
 
@@ -1449,6 +1460,47 @@ function toonMiniBar(el){
     pushSnapshot();
   }
   swimChk.addEventListener('change', ()=> toggleSwimWeek(swimChk.checked));
+
+  /* Volledige daginhoud veilig kopiëren, inclusief bolletjes en opmaak */
+  btnCopyDay.addEventListener('click', ()=>{
+    const DAGEN = ['maandag','dinsdag','woensdag','donderdag','vrijdag'];
+    const actief = activeDay ? Number(activeDay.dataset.dayIndex) : 0;
+    const bronStart = (actief >= 0 && actief < 5) ? actief : 0;
+    const doelStart = bronStart < 4 ? bronStart + 1 : 0;
+    const overlay = document.createElement('div');
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,.48);z-index:10020;display:flex;align-items:center;justify-content:center;padding:1rem';
+    const opties = DAGEN.map((naam,i)=>`<option value="${i}">${naam}</option>`).join('');
+    overlay.innerHTML = `<div role="dialog" aria-modal="true" aria-labelledby="copyDayTitle" style="background:#fff;border-radius:16px;padding:1.5rem;max-width:520px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.22);font-family:Arial,sans-serif">
+      <h2 id="copyDayTitle" style="margin:0 0 .45rem;font-size:1.25rem">Inhoud naar de juiste dag kopiëren</h2>
+      <p style="margin:0 0 1.1rem;color:#475569;line-height:1.45">Tekst, bolletjes, opmaak en pictogrammen gaan mee. De datum van de doeldag blijft behouden.</p>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
+        <label style="font-weight:700">Van welke dag?<select id="copyDayFrom" style="display:block;width:100%;margin-top:.35rem;padding:.65rem;border:1px solid #cbd5e1;border-radius:8px;font:inherit">${opties}</select></label>
+        <label style="font-weight:700">Naar welke dag?<select id="copyDayTo" style="display:block;width:100%;margin-top:.35rem;padding:.65rem;border:1px solid #cbd5e1;border-radius:8px;font:inherit">${opties}</select></label>
+      </div>
+      <p style="margin:1rem 0 0;padding:.65rem .75rem;background:#fff7ed;border:1px solid #fed7aa;border-radius:8px;color:#9a3412;font-size:.9rem"><strong>Let op:</strong> wat nu in de doeldag staat, wordt vervangen.</p>
+      <div style="display:flex;justify-content:flex-end;gap:.7rem;margin-top:1rem"><button type="button" id="copyDayCancel" style="padding:.65rem 1rem;border:1px solid #cbd5e1;background:#fff;border-radius:8px;font-weight:700;cursor:pointer">Annuleren</button><button type="button" id="copyDayConfirm" style="padding:.65rem 1rem;border:1px solid #0a66c2;background:#0a66c2;color:#fff;border-radius:8px;font-weight:700;cursor:pointer">Kopiëren en vervangen</button></div>
+    </div>`;
+    document.body.appendChild(overlay);
+    const van = overlay.querySelector('#copyDayFrom');
+    const naar = overlay.querySelector('#copyDayTo');
+    van.value = String(bronStart); naar.value = String(doelStart);
+    const sluit = ()=> overlay.remove();
+    overlay.querySelector('#copyDayCancel').addEventListener('click', sluit);
+    overlay.addEventListener('click', e=>{ if(e.target === overlay) sluit(); });
+    overlay.querySelector('#copyDayConfirm').addEventListener('click', ()=>{
+      const bron = Number(van.value), doel = Number(naar.value);
+      if (bron === doel) { alert('Kies twee verschillende dagen.'); return; }
+      const bronDag = document.querySelector(`.day[data-day-index="${bron}"]`);
+      const doelDag = document.querySelector(`.day[data-day-index="${doel}"]`);
+      const inhoud = captureDay(bronDag);
+      delete inhoud.date;
+      isApplying = true;
+      applyDay(doelDag, inhoud);
+      isApplying = false;
+      pushSnapshot();
+      sluit();
+    });
+  });
 
   /* Kopieer maandag → andere werkdagen, incl. breng-grootte */
  btnCopyMon.addEventListener('click',()=>{ if (btnCopyMon.hidden) return; 
