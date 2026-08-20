@@ -179,6 +179,8 @@ function pasKnoppenToe(huistakenKnop, overgangKnop, schoolbeheerKnop, bestelling
   if (klasafsprakenKnop) klasafsprakenKnop.style.display = 'none';
   const naametikettenKnop = document.getElementById('naametikettenKeuzeKnop');
   if (naametikettenKnop) naametikettenKnop.style.display = (isSchoolBreed || isSecretariaat || heeftKlasbeheer) ? '' : 'none';
+  const klasnummersKnop = document.getElementById('klasnummersKeuzeKnop');
+  if (klasnummersKnop) klasnummersKnop.style.display = (isSchoolBreed || heeftKlasbeheer) && !isSecretariaat ? '' : 'none';
   const afwezigheidsattestenKnop = document.getElementById('afwezigheidsattestenKeuzeKnop');
   const magAfwezigheidsattesten = heeftKlasbeheer || ['beheerder','zorgcoordinator','zorgleerkracht'].includes(rolNaam);
   if (afwezigheidsattestenKnop) afwezigheidsattestenKnop.style.display = magAfwezigheidsattesten && !isSecretariaat ? '' : 'none';
@@ -398,6 +400,8 @@ async function toonSchooloverzichtKnopAlsNodig(user) {
   if (huiswerkklasKnop) huiswerkklasKnop.style.display = 'none';
   if (klasafsprakenKnop) klasafsprakenKnop.style.display = magKlasafsprakenTesten(user) ? '' : 'none';
   if (naametikettenKnop) naametikettenKnop.style.display = 'none';
+  const klasnummersKnop = document.getElementById('klasnummersKeuzeKnop');
+  if (klasnummersKnop) klasnummersKnop.style.display = 'none';
   if (afwezigheidsattestenKnop) afwezigheidsattestenKnop.style.display = 'none';
   if (voorbladenKnop) voorbladenKnop.style.display = 'none';
   if (!user) return;

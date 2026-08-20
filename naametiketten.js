@@ -24,6 +24,9 @@ function achternaam(s){
   if(volledig.includes(","))return volledig.split(",")[0].trim();
   return volledig.split(/\s+/).slice(1).join(" ").trim();
 }
+function vergelijkOpAchternaam(a,b){
+  return achternaam(a).localeCompare(achternaam(b),'nl',{sensitivity:'base'}) || voornaam(a).localeCompare(voornaam(b),'nl',{sensitivity:'base'});
+}
 function leerlingId(s,index){return String(s.id||`${voornaam(s)}_${achternaam(s)}_${index}`)}
 function basisVoornaam(s){
   const naam=voornaam(s); if($('schrijfwijze').value==='klein')return naam.toLocaleLowerCase('nl');
@@ -125,7 +128,7 @@ async function laadKlassen(){
   else{const email=(user.email||'').toLowerCase(),qs=await Promise.all([getDocs(query(collection(db,'klasleerkrachten'),where('leerkracht_uids','array-contains',user.uid))),getDocs(query(collection(db,'klasleerkrachten'),where('leerkracht_emails','array-contains',email)))]);const set=new Set();qs.forEach(q=>q.docs.forEach(d=>{const x=d.data();if(String(x.schooljaar||jaar)===jaar&&x.klas)set.add(String(x.klas).trim())}));klassen=[...set]}
   klassen.sort(vergelijkKlassen);$('klas').innerHTML=klassen.map(k=>`<option>${esc(k)}</option>`).join('')||'<option value="">Geen klas</option>';await laadLeerlingen();
 }
-async function laadLeerlingen(){const klas=$('klas').value,jaar=$('schooljaar').value.trim();leerlingen=[];if(klas){const s=await getDoc(doc(db,'schoolbeheer',jaar,'klassen',klas));if(s.exists())leerlingen=(s.data().leerlingen||[]).filter(actief).sort((a,b)=>voornaam(a).localeCompare(voornaam(b),'nl'))}geselecteerd=new Set(leerlingen.map(leerlingId));render()}
+async function laadLeerlingen(){const klas=$('klas').value,jaar=$('schooljaar').value.trim();leerlingen=[];if(klas){const s=await getDoc(doc(db,'schoolbeheer',jaar,'klassen',klas));if(s.exists())leerlingen=(s.data().leerlingen||[]).filter(actief).sort(vergelijkOpAchternaam)}geselecteerd=new Set(leerlingen.map(leerlingId));render()}
 
 function xml(v){return String(v??'').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&apos;')}
 function tekstRunsXml(tekst,half){if(!isTekst())return `<w:r><w:rPr><w:rFonts w:ascii="Arial" w:hAnsi="Arial"/>${isVet()?'<w:b/>':''}<w:sz w:val="${half}"/><w:szCs w:val="${half}"/></w:rPr><w:t xml:space="preserve">${xml(tekst)}</w:t></w:r>`;return tekstSegmenten().map(s=>s.nieuweregel?'<w:r><w:br/></w:r>':`<w:r><w:rPr><w:rFonts w:ascii="Arial" w:hAnsi="Arial"/>${isVet()||s.vet?'<w:b/>':''}${s.onderstreept?'<w:u w:val="single"/>':''}<w:sz w:val="${half}"/><w:szCs w:val="${half}"/></w:rPr><w:t xml:space="preserve">${xml(s.tekst)}</w:t></w:r>`).join('')}
