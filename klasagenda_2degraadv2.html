@@ -143,6 +143,8 @@
   .dateWrap{display:flex;align-items:center;gap:4px;position:relative}
   .dDate{font-variant-numeric:tabular-nums;white-space:nowrap;font-size:10pt;cursor:pointer}
   .datePicker{position:absolute;opacity:0;width:1px;height:1px;pointer-events:none}
+  .copy-day-quick{border:1px solid #9ca3af;background:#fff;border-radius:6px;padding:2px 6px;font:700 9pt Arial;cursor:pointer;color:#334155;white-space:nowrap}
+  .copy-day-quick:hover{background:#e8f1fb;border-color:#0a66c2;color:#0a66c2}
 
   .body{display:flex;flex-direction:column;padding:2mm;gap:1mm;flex:1;overflow:visible;position: relative;}
   .cell h3{margin:0 0 .3mm;font-size:10.2pt}
@@ -424,6 +426,7 @@
     .panelBody:empty::before{ display:none; }
     .picto-free .handle, .picto-free.selected { display:none !important; outline:none !important; }
     .tasklist .liDel{ display:none !important; }
+    .copy-day-quick{ display:none !important; }
     .day.overflowing{
   box-shadow:none !important;
 }
@@ -1137,7 +1140,7 @@ function toonMiniBar(el){
         <span class="hdrEnv">${ENVELOPE_SVG}</span>
         <div class="dn">${name}</div>
       </div>
-      <div class="dateWrap"><span class="dDate">01 / 09</span><input class="datePicker" type="date"></div>
+      <div class="dateWrap"><span class="dDate">01 / 09</span><input class="datePicker" type="date"><button type="button" class="copy-day-quick" title="Kopieer alles van deze dag, ook de bolletjes">📋 Kopieer dag</button></div>
     </header>`;
   }
 
@@ -1500,6 +1503,17 @@ function toonMiniBar(el){
       pushSnapshot();
       sluit();
     });
+  });
+
+  document.addEventListener('click', e=>{
+    const knop = e.target.closest && e.target.closest('.copy-day-quick');
+    if (!knop) return;
+    e.preventDefault();
+    e.stopPropagation();
+    const dag = knop.closest('.day');
+    if (!dag) return;
+    setActiveDay(dag);
+    btnCopyDay.click();
   });
 
   /* Kopieer maandag → andere werkdagen, incl. breng-grootte */
