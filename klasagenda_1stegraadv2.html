@@ -295,22 +295,23 @@
   white-space:pre-wrap;
 }
 
-/* Fix: reserveer binnen panelBody een "gat" met dezelfde afmetingen als
-   .sign, zodat tekst rond én onder het handtekeningvak vloeit.
-   .sign zelf wordt hieronder absoluut gepositioneerd op exact dezelfde plek. */
+/* Reserveer alleen rechtsonder ruimte voor het handtekeningvak.
+   Boven het vak gebruikt tekst de volledige breedte; lager vloeit ze links ernaast. */
 .panelBody::before{
   content:"";
   float:right;
-  width: calc(70mm + 14px);   /* .sign width + .sign margin-left */
-  height: calc(22mm + 16px);  /* .sign height + margin top+bottom */
+  width:70mm;
+  height:100%;
+  shape-outside:polygon(0 calc(100% - 24mm),100% calc(100% - 24mm),100% 100%,0 100%);
+  shape-margin:14px;
 }
 
 .sign{
   /* Absoluut i.p.v. float, zodat .panelBody::before de tekst-flow bepaalt */
   position:absolute;
-  top:2mm;            /* = .panelInner padding */
+  bottom:2mm;         /* rechtsonder in het mededelingenvak */
   right:2mm;          /* = .panelInner padding */
-  margin:10px 0 6px 14px;
+  margin:0;
 
   border:2.6px solid var(--line);
   border-radius:7px;
@@ -380,9 +381,9 @@
     }
 
     /* 2. Zorg dat mededelingen NOOIT een scrollbalk tonen op papier */
-    .panelBody {
+.panelBody {
   overflow: hidden !important; 
-  height: auto !important; 
+  height: 100% !important; /* nodig om de uitsparing rechtsonder ook op papier te behouden */
   min-height: 0 !important;
 }
 
@@ -393,9 +394,10 @@
 
 .sign{
   position:absolute !important;
-  top:2mm !important;
+  top:auto !important;
+  bottom:2mm !important;
   right:2mm !important;
-  margin:10px 0 6px 14px !important;
+  margin:0 !important;
 }
 
     /* Dagvakken strikt begrenzen */
