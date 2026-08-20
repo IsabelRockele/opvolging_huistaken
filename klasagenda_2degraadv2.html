@@ -964,6 +964,15 @@ function toonMiniBar(el){
     }
     sel.value = best;
   }
+  function syncFontSizeControlsFromSelection(){
+    const sel = window.getSelection();
+    if (!sel || sel.rangeCount === 0 || sel.isCollapsed || !inEditable(sel.anchorNode)) return;
+    updateFontsizeSelect();
+    const ptValue = getSelectionFontSize() + 'pt';
+    const bestaatBovenaan = [...planFS.options].some(opt => opt.value === ptValue);
+    if (bestaatBovenaan) planFS.value = ptValue;
+    else planFS.selectedIndex = -1;
+  }
 
   document.getElementById('mt-smaller').addEventListener('click', ()=>{
     restoreSelection();
@@ -1372,6 +1381,7 @@ function toonMiniBar(el){
     if (ed && !sel.isCollapsed){
       lastTextRange = sel.getRangeAt(0).cloneRange();
       lastTextRangeAt = Date.now();
+      syncFontSizeControlsFromSelection();
     }
   });
 
