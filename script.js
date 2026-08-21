@@ -1,5 +1,5 @@
 ﻿import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, sendPasswordResetEmail, signOut, updatePassword } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, sendPasswordResetEmail, signOut, updatePassword, updateEmail, reauthenticateWithCredential, EmailAuthProvider } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import { getFirestore, doc, getDoc, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -586,4 +586,48 @@ window.uitloggenVanIndex = function () {
     .catch((err) => {
       alert('Uitloggen lukte niet: ' + err.message);
     });
+};
+
+window.wijzigEmailVanStart = async function () {
+  const user = auth.currentUser;
+  if (!user?.email) {
+    alert("Log eerst in om het e-mailadres te wijzigen.");
+    return;
+  }
+
+  const nieuwEmail = (prompt("Vul het nieuwe e-mailadres in.", user.email) || "").trim().toLowerCase();
+  if (!nieuwEmail || nieuwEmail === user.email.toLowerCase()) return;
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(nieuwEmail)) {
+    alert("Dit lijkt geen geldig e-mailadres. Controleer het adres en probeer opnieuw.");
+    return;
+  }
+
+  if (!confirm(
+    `Je wijzigt je inlogadres van ${user.email} naar ${nieuwEmail}.\n\n` +
+    "Je gegevens blijven behouden. De beheerder moet hetzelfde nieuwe adres ook bij jouw klas invullen. Doorgaan?"
+  )) return;
+
+  const huidigWachtwoord = prompt("Vul ter beveiliging het wachtwoord van je huidige account in.");
+  if (!huidigWachtwoord) return;
+
+  try {
+    const credential = EmailAuthProvider.credential(user.email, huidigWachtwoord);
+    await reauthenticateWithCredential(user, credential);
+    await updateEmail(user, nieuwEmail);
+    alert(
+      `Het inlogadres is gewijzigd naar ${nieuwEmail}.\n\n` +
+      "Geef dit adres door aan de beheerder, zodat zij het ook bij jouw klas invult. Log daarna opnieuw in met het nieuwe adres en je bestaande wachtwoord."
+    );
+    await signOut(auth);
+  } catch (err) {
+    const meldingen = {
+      "auth/email-already-in-use": "Dit e-mailadres wordt al door een ander account gebruikt.",
+      "auth/invalid-credential": "Het huidige wachtwoord is niet juist.",
+      "auth/wrong-password": "Het huidige wachtwoord is niet juist.",
+      "auth/invalid-email": "Het nieuwe e-mailadres is niet geldig.",
+      "auth/too-many-requests": "Er zijn te veel pogingen gedaan. Wacht even en probeer later opnieuw.",
+      "auth/operation-not-allowed": "Firebase laat deze wijziging momenteel niet toe. Neem contact op met de beheerder."
+    };
+    alert("E-mailadres wijzigen lukte niet.\n\n" + (meldingen[err.code] || err.message));
+  }
 };
