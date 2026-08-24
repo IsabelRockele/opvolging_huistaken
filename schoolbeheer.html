@@ -149,6 +149,16 @@
     .refter-afwezig-vak input:checked + .refter-afwezig-teken::after{content:'×';transform:translateY(-1px)}
     .refter-afwezig-vak input:focus-visible + .refter-afwezig-teken{outline:3px solid #86b7e7;outline-offset:2px}
     .refter-afwezig-vak:has(input:disabled){cursor:not-allowed;opacity:.78}
+    input.absence-check{
+      appearance:none;-webkit-appearance:none;width:22px!important;height:22px!important;
+      border:2px solid #8b98a8;border-radius:5px;background:#fff;cursor:pointer;
+    }
+    input.absence-check:checked{
+      background-color:#d74747;border-color:#a82525;
+      background-image:linear-gradient(45deg,transparent 43%,#fff 44%,#fff 56%,transparent 57%),linear-gradient(-45deg,transparent 43%,#fff 44%,#fff 56%,transparent 57%);
+    }
+    input.absence-check:focus-visible{outline:3px solid #86b7e7;outline-offset:2px}
+    input.absence-check:disabled{cursor:not-allowed;opacity:.78}
     .check-label{display:inline-flex!important;align-items:center;gap:8px;margin:10px 0!important}
     .check-label input[type="checkbox"]{flex:0 0 auto}
     textarea{min-height:96px;resize:vertical}
