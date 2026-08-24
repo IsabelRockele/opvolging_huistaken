@@ -1281,7 +1281,7 @@
     window.openClass = async function(klas, behoudAlgemeen=false){
       toonSchermLaden(`${klas} laden…`);
       activeClass = klas;
-      if(isSecretary() && !behoudAlgemeen){
+      if(isSecretary() && !behoudAlgemeen && tab === "administratie"){
         tab = "administratie";
         adminPanel = "klaslijsten";
         classListMode = "";
