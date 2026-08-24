@@ -2686,12 +2686,12 @@
     function testMaandGegevens(month){return data.testModes?.[month]||null;}
     function testModeBlok(month){
       const test=testMaandGegevens(month);
-      if(test)return `<div class="notice no-print" style="margin:14px 0;background:#fff1c7;border:2px solid #e0a600"><strong>🧪 TEST actief voor ${esc(activeClass)} — ${esc(month)}</strong><p class="muted">Refterregistraties, controles van activiteiten en eventuele annuleringen zijn nu zichtbaar voor het secretariaat als proef. Gebruik ondertussen geen echte registraties in deze maand. Na de controle kan deze test volledig worden teruggezet.</p><button class="pink" onclick="resetTestMaand('${month}')">Testgegevens veilig leegmaken en vorige toestand herstellen</button></div>`;
+      if(test)return `<div class="notice no-print" style="margin:14px 0;background:#fff1c7;border:2px solid #e0a600"><strong>🧪 TEST actief voor ${esc(activeClass)} — ${esc(month)}</strong><p class="muted"><strong>Vul de refter en activiteiten nu gerust volledig in zoals je dat tijdens een echte schoolweek zou doen.</strong> Alles wat je tijdens deze proef invult, is zichtbaar voor het secretariaat. Na de gezamenlijke controle zet <strong>TEST WISSEN</strong> de maand terug naar de toestand van vóór de test. Begin daarom pas daarna met de werkelijke septemberregistraties.</p><button class="pink" onclick="resetTestMaand('${month}')">Testgegevens veilig leegmaken en vorige toestand herstellen</button></div>`;
       return `<div class="notice no-print" style="margin:14px 0;background:#f7f7ff;border-color:#b8b6df"><strong>Een proef doen met secretariaat?</strong><p class="muted">Start een tijdelijke test voor deze klas en maand. Secretariaat ziet daarna dezelfde refter- en activiteitengegevens als bij echt gebruik. Na afloop kun je alles van de test veilig terugzetten.</p><button class="white" onclick="startTestMaand('${month}')">🧪 Test voor ${esc(month)} starten</button></div>`;
     }
     window.startTestMaand = month => {
       if(testMaandGegevens(month))return;
-      if(!confirm(`Testmodus starten voor ${activeClass} — ${month}?\n\nDe huidige toestand wordt bewaard. Voer tijdens deze korte test geen echte registraties voor deze maand in.`))return;
+      if(!confirm(`Testmodus starten voor ${activeClass} — ${month}?\n\nDe huidige toestand wordt veilig bewaard. Vul daarna alles in zoals je het tijdens een echte schoolweek zou doen. Na de proef kun je alle testgegevens terug wissen en wordt deze oorspronkelijke toestand hersteld.`))return;
       data.testModes||={};
       data.testModes[month]={
         gestartDoor:user.email||user.uid||"",gestartOp:new Date().toISOString(),
