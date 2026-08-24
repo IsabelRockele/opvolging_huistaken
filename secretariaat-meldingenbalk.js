@@ -1,6 +1,6 @@
 import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-import { getFirestore, doc, getDoc, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getFirestore, doc, collection, query, where, getDocs, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyA7KxXMvZ4dzBQDut3CMyWUblLte2tFzoQ",
@@ -87,19 +87,24 @@ async function laadMeldingen(user){
   });
   const teLezen = zorgRol ? ALLE_KLASSEN : [...klassen];
   if(!teLezen.length) return;
-  const vandaag = new Date().toISOString().slice(0,10);
-  const documenten = await Promise.all(teLezen.map(klas=>getDoc(doc(db,"schoolbeheer",huidigSchooljaar(),"klassen",klas))));
-  const uniek = new Map();
-  documenten.forEach(snap=>{
-    if(!snap.exists()) return;
-    (snap.data().messages||[]).forEach(m=>{
-      if(m.archived||(m.visibleUntil&&m.visibleUntil<vandaag)) return;
-      const oud=!Array.isArray(m.targetClasses)&&typeof m.targetCare==="undefined";
-      if(oud||(zorgRol?m.targetCare===true:true)) uniek.set(m.groupId||m.id,{...m,_afgehandeld:isAfgehandeld(m,user,zorgRol)});
+  const klasDocumenten=new Map();
+  const werkBalkBij=()=>{
+    const vandaag=new Date().toISOString().slice(0,10),uniek=new Map();
+    klasDocumenten.forEach(snap=>{
+      if(!snap?.exists())return;
+      (snap.data().messages||[]).forEach(m=>{
+        if(m.archived||(m.visibleUntil&&m.visibleUntil<vandaag))return;
+        const oud=!Array.isArray(m.targetClasses)&&typeof m.targetCare==="undefined";
+        if(oud||(zorgRol?m.targetCare===true:true))uniek.set(m.groupId||m.id,{...m,_afgehandeld:isAfgehandeld(m,user,zorgRol)});
+      });
     });
+    const meldingen=[...uniek.values()],openAantal=meldingen.filter(m=>!m._afgehandeld).length;
+    plaatsBalk(meldingen,openAantal);
+    try{if(openAantal&&navigator.setAppBadge)navigator.setAppBadge(openAantal).catch(()=>{});else if(navigator.clearAppBadge)navigator.clearAppBadge().catch(()=>{});}catch(_){}
+  };
+  teLezen.forEach(klas=>{
+    onSnapshot(doc(db,"schoolbeheer",huidigSchooljaar(),"klassen",klas),snap=>{klasDocumenten.set(klas,snap);werkBalkBij();},err=>console.warn(`Meldingen voor ${klas} konden niet live worden gevolgd.`,err));
   });
-  const meldingen=[...uniek.values()];
-  plaatsBalk(meldingen,meldingen.filter(m=>!m._afgehandeld).length);
 }
 
 onAuthStateChanged(auth,user=>{if(user) laadMeldingen(user).catch(err=>console.warn("Meldingenbalk kon niet laden",err));});
