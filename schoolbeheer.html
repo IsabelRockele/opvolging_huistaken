@@ -1529,7 +1529,14 @@
     window.openLeerlingenVoorKlas=()=>{tab="leerlingen";adminPanel="klaslijsten";classListMode="";render()};
     window.terugNaarKlasMaanden=()=>{tab="klasstart";renderKlasPills();render()};
     function renderLeerlingenStart(){
-      $("content").innerHTML=`<div class="panel" style="max-width:900px"><div class="notice" style="padding:26px;background:#f2faf5;border-color:#9bc9ad"><h2 style="margin-top:0">Welkom bij Leerlingenbeheer</h2><p style="font-size:18px;line-height:1.55;margin-bottom:8px">Kies links de klas die je wilt openen.</p><p class="muted" style="margin-bottom:0">Daarna kun je de leerlingen bekijken, een nieuwe leerling toevoegen, een Excelbestand inlezen of leerlingen naar een andere klas verplaatsen.</p></div></div>`;
+      $("content").innerHTML=`<div class="panel" style="max-width:900px"><div class="notice" style="padding:26px;background:#f2faf5;border-color:#9bc9ad"><h2 style="margin-top:0">Welkom bij Leerlingenbeheer</h2><p style="font-size:18px;line-height:1.55;margin-bottom:8px">Kies links de klas die je wilt openen.</p><p class="muted">Daarna kun je de leerlingen bekijken, een nieuwe leerling toevoegen, een Excelbestand inlezen of leerlingen naar een andere klas verplaatsen.</p><details style="margin-top:20px;background:#fff;border:1px solid #bad8c5;border-radius:13px;padding:0 16px"><summary style="cursor:pointer;padding:14px 0;font-weight:850;color:#245f40">❓ Wat vind ik waar?</summary><div style="border-top:1px solid #d9e8df;padding:14px 0 17px;display:grid;gap:12px">
+        <div><strong>De klassen bovenaan</strong><br><span class="muted">Klik een klas aan om haar leerlingenlijst te openen en namen te beheren.</span></div>
+        <div><strong>Administratie</strong><br><span class="muted">Voor algemene taken zoals meldingen, vrije dagen, de jaarkalender, klasleerkrachten en het volgende schooljaar.</span></div>
+        <div><strong>Maximumfactuur</strong><br><span class="muted">Bekijk betalende activiteiten en het totaal per leerling.</span></div>
+        <div><strong>Schooloverzicht</strong><br><span class="muted">Bekijk het aantal leerlingen en aangeduide oudsten per klas en voor de hele school.</span></div>
+        <div><strong>Leerlingen</strong><br><span class="muted">Voeg leerlingen toe, verbeter namen, lees Excel in of verplaats leerlingen naar een andere klas.</span></div>
+        <div><strong>Opvolging</strong><br><span class="muted">Doorloop per maand en per klas de refterlijsten, activiteiten en aankopen. Geel betekent dat er nog iets verwerkt moet worden.</span></div>
+      </div></details></div></div>`;
     }
     window.openLeerlingenKlas=async klas=>{await openClass(klas,true);tab="leerlingen";adminPanel="klaslijsten";classListMode="";renderKlasPills();render()};
     window.toonLeerlingenStart=()=>{tab="leerlingenstart";classListMode="";renderKlasPills();render()};
