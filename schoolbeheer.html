@@ -1100,6 +1100,11 @@
       const end = Number(String(schooljaar).slice(5,9));
       return [`${start}-09`,`${start}-10`,`${start}-11`,`${start}-12`,`${end}-01`,`${end}-02`,`${end}-03`,`${end}-04`,`${end}-05`,`${end}-06`];
     }
+    function huidigeSchoolMaand(){
+      const maanden=schoolMonths(),vandaag=new Date(),maand=`${vandaag.getFullYear()}-${String(vandaag.getMonth()+1).padStart(2,"0")}`;
+      if(maanden.includes(maand))return maand;
+      return maand<maanden[0]?maanden[0]:maanden.at(-1);
+    }
     function laatsteOpenRefterDag(month){
       return [...daysInMonth(month)].reverse().find(d => !isFree(d.date))?.date || "";
     }
@@ -2854,7 +2859,7 @@
     window.toggleRefter = (month,sid,date,checked) => { const m=data.refter[month] ||= {}; m[sid] ||= {}; m[sid][date]=checked; markDirty(); };
 
     function renderActivities(){
-      activityMonth = $("actMonth")?.value || activityMonth || schoolMonths()[0];
+      activityMonth = $("actMonth")?.value || huidigeSchoolMaand();
       const klasKeuze = isSecretary() ? `<div style="width:100%;margin-top:8px">
         <div class="bar" style="margin-bottom:6px"><strong>Voor welke klassen?</strong><div class="actions"><button type="button" class="white small" onclick="kiesAlleActiviteitKlassen(true)">Alle klassen</button><button type="button" class="white small" onclick="kiesAlleActiviteitKlassen(false)">Geen</button></div></div>
         <div class="class-picks" style="display:flex;gap:8px;flex-wrap:wrap">${allClasses.map(k=>`<label style="max-width:none"><input class="actClass" type="checkbox" value="${esc(k)}" ${k===activeClass?"checked":""}> ${esc(k)}</label>`).join("")}</div>
@@ -2864,7 +2869,7 @@
         <p class="muted">${isSecretary()?"Kies één of meerdere klassen. De activiteit verschijnt daarna bij elke gekozen klas.":"De activiteit wordt toegevoegd aan je eigen klas."} Oudercontacten en rapporten voer je hier niet in.</p>
         <div class="row"><label>Naam activiteit<input id="actName" placeholder="bv. Toneelvoorstelling"></label><label style="max-width:190px">Datum<input id="actDate" type="date" value="${activityMonth}-01"></label><label style="max-width:150px">Prijs per leerling (&euro;)<input id="actPrice" type="number" min="0" step="0.01" value="0"></label>${klasKeuze}<button class="primary" onclick="addActivity()">${isSecretary()?"Toevoegen aan gekozen klassen":"Activiteit toevoegen"}</button></div>
       </div>`;
-      const werkwijze=isSecretary()?`<div class="notice"><strong>Controle voor secretariaat</strong><p class="muted">Je ziet pas groen of rood nadat de leerkracht de afwezigheden heeft nagekeken en bevestigd. Niet-aangevinkte leerlingen gelden dan als aanwezig.</p></div>`:`<div class="notice" style="background:#eef7f1;border-color:#94c7a8"><strong>Zo vul je dit in</strong><p class="muted"><strong>Vink alleen de afwezige leerlingen aan.</strong> Laat alle aanwezige leerlingen leeg. Klik daarna bij iedere activiteit op <strong>Afwezigheden nagekeken en bevestigen</strong>. Was niemand afwezig? Laat alles leeg en bevestig toch.</p></div>`;
+      const werkwijze=isSecretary()?`<div class="notice"><strong>Controle voor secretariaat</strong><p class="muted">Je ziet pas groen of rood nadat de leerkracht de afwezigheden heeft nagekeken en bevestigd. Niet-aangevinkte leerlingen gelden dan als aanwezig.</p></div>`:`<div class="notice" style="background:#fff4bf;border:2px solid #dfa900"><strong style="font-size:18px">⚠ Vergeet niet te bevestigen</strong><ol style="margin:8px 0 0;padding-left:22px"><li>Vink <strong>alleen de afwezige leerlingen</strong> aan. Lege vakjes betekenen aanwezig.</li><li>Klik daarna bij <strong>iedere activiteit</strong> op <strong>Afwezigheden nagekeken en bevestigen</strong>.</li><li>Ook wanneer niemand afwezig was, moet je de lege lijst bevestigen.</li></ol><p style="margin:9px 0 0"><strong>Zonder deze bevestiging kan het secretariaat de activiteit niet verwerken.</strong></p></div>`;
       $("content").innerHTML = `<div class="panel"><div class="bar"><div><h2>Activiteiten <span class="muted" style="font-weight:400">${esc(activeClass)}</span></h2><p class="muted">${isSecretary()?"Kijk de bevestigde afwezigheden na en verwerk de activiteit.":"Duid uitsluitend de afwezige leerlingen aan."}</p></div><label class="right no-print" style="max-width:180px">Maand<input id="actMonth" type="month" value="${activityMonth}" onchange="wisselActiviteitenMaand(this.value)"></label>${screenTools("activiteiten")}</div>${helpPanel("activiteiten")}${testModeBlok(activityMonth)}${werkwijze}${invoer}${activitiesTable()}</div>`;
     }
     function activiteitTellingen(a){
