@@ -1239,7 +1239,7 @@
       document.querySelectorAll(".secretary-label").forEach(x => x.classList.toggle("hidden", !isSecretary()));
       ["navRefter","navActiviteiten","navAankopen"].forEach(id=>$(id)?.classList.toggle("hidden",isSecretary()));
       renderKlasPills();
-      setActiveNav(tab);
+      setActiveNav(tab==="leerlingenstart"?"leerlingen":tab);
       werkRustigeSecretariaatSidebarBij();
     }
 
@@ -1255,7 +1255,7 @@
 
     function renderKlasPills(){
       const lijst = canOpenAllClasses() ? allClasses : allowedClasses;
-      const toonActieveKlas = tab !== "administratie" || adminPanel === "klaslijsten";
+      const toonActieveKlas = (tab !== "administratie" && tab !== "leerlingenstart") || adminPanel === "klaslijsten"&&tab!=="leerlingenstart";
       $("klasPills").innerHTML = lijst.map(k => {
         const maanden=actieveTestKlassen.get(k)||[];
         const openAantal=secretariaatOpenAantal(liveKlasDocumenten.get(k));
@@ -1321,6 +1321,7 @@
     window.openClass = async function(klas, behoudAlgemeen=false){
       toonSchermLaden(`${klas} laden…`);
       activeClass = klas;
+      if(isSecretary()&&tab==="leerlingenstart")tab="leerlingen";
       const blijfInOnderdeel=["refter","activiteiten","aankopen","leerlingen"].includes(tab);
       if(isSecretary() && !behoudAlgemeen && !blijfInOnderdeel){
         tab = "klasstart";
@@ -1360,7 +1361,7 @@
         if(isSecretary() && tab === "klaslijst") tab = "administratie";
         if(!isSecretary() && tab === "administratie") tab = "klaslijst";
         setStatus("Bewaard", true);
-        setActiveNav(tab);
+        setActiveNav(tab==="leerlingenstart"?"leerlingen":tab);
         if(Date.now()>=lokaleBewaringTot||activiteitVerwerkingGewijzigd||aankoopVerwerkingGewijzigd){
           const positie=window.scrollY;
           render();
@@ -1527,8 +1528,13 @@
     };
     window.openLeerlingenVoorKlas=()=>{tab="leerlingen";adminPanel="klaslijsten";classListMode="";render()};
     window.terugNaarKlasMaanden=()=>{tab="klasstart";renderKlasPills();render()};
+    function renderLeerlingenStart(){
+      $("content").innerHTML=`<div class="panel" style="max-width:900px"><div class="notice" style="padding:26px;background:#f2faf5;border-color:#9bc9ad"><h2 style="margin-top:0">Welkom bij Leerlingenbeheer</h2><p style="font-size:18px;line-height:1.55;margin-bottom:8px">Kies links de klas die je wilt openen.</p><p class="muted" style="margin-bottom:0">Daarna kun je de leerlingen bekijken, een nieuwe leerling toevoegen, een Excelbestand inlezen of leerlingen naar een andere klas verplaatsen.</p></div></div>`;
+    }
+    window.openLeerlingenKlas=async klas=>{await openClass(klas,true);tab="leerlingen";adminPanel="klaslijsten";classListMode="";renderKlasPills();render()};
+    window.toonLeerlingenStart=()=>{tab="leerlingenstart";classListMode="";renderKlasPills();render()};
     function renderLeerlingenSecretariaat(){
-      $("content").innerHTML=`<div class="panel"><div class="bar"><div><h2>Leerlingen — ${esc(activeClass)}</h2><p class="muted">Gebruik dit scherm alleen wanneer je leerlingen wilt toevoegen, verbeteren, importeren of verplaatsen.</p></div><button class="white" onclick="terugNaarKlasMaanden()">← Naar maandoverzicht</button></div><div id="leerlingenSecretariaatBody"></div></div>`;
+      $("content").innerHTML=`<div class="panel"><div class="bar"><div><h2>Leerlingen — ${esc(activeClass)}</h2><p class="muted">Gebruik dit scherm alleen wanneer je leerlingen wilt toevoegen, verbeteren, importeren of verplaatsen.</p></div><div class="actions"><button class="white" onclick="toonLeerlingenStart()">← Alle klassen</button><button class="white" onclick="terugNaarKlasMaanden()">📁 Maanden ${esc(activeClass)}</button></div></div><div id="leerlingenSecretariaatBody"></div></div>`;
       const tijdelijk=document.createElement("div");tijdelijk.id="adminBody";$("leerlingenSecretariaatBody").appendChild(tijdelijk);
       renderAdminClasslists();
     }
@@ -1545,7 +1551,7 @@
       if(!data) return;
       if(!isSecretary() && tab === "administratie") tab = "klaslijst";
       if(isSecretary() && tab === "klaslijst") tab = "administratie";
-      setActiveNav(tab);
+      setActiveNav(tab==="leerlingenstart"?"leerlingen":tab);
       renderMessages();
       if(tab==="administratie") renderAdmin();
       if(tab==="klaslijst") renderClassList();
@@ -1555,6 +1561,7 @@
       if(tab==="maximumfactuur") renderMaximumfactuur();
       if(tab==="oudsten") renderOudstenOverzicht();
       if(tab==="klasstart") renderKlasStart();
+      if(tab==="leerlingenstart") renderLeerlingenStart();
       if(tab==="leerlingen") renderLeerlingenSecretariaat();
       if(tab==="opvolging") renderOpvolging();
     }
@@ -2143,9 +2150,9 @@
     let adminNavigatieOpen=false;
     function renderAdmin(){
       if(adminPanel==="klaslijsten"){
-        tab="leerlingen";
+        tab="leerlingenstart";
         setActiveNav("leerlingen");
-        renderLeerlingenSecretariaat();
+        renderLeerlingenStart();
         return;
       }
       werkRustigeSecretariaatSidebarBij();
@@ -2167,7 +2174,7 @@
     }
     window.openAdmin = p => {
       if(p==="klaslijsten"){
-        tab="leerlingen";adminPanel="klaslijsten";classListMode="";secretariaatModulesOpen=true;
+        tab="leerlingenstart";adminPanel="klaslijsten";classListMode="";secretariaatModulesOpen=true;
         renderKlasPills();render();return;
       }
       adminPanel = p;
@@ -2234,7 +2241,7 @@
     }
     window.toonWegwijzerCategorie=function(categorie){wegwijzerCategorie=categorie;renderSecretariaatWegwijzer()};
     window.gaNaarSecretariaatTaak=function(taak){
-      if(["nieuwe-leerling","excel","verplaatsen","klaslijsten"].includes(taak)){tab="leerlingen";adminPanel="klaslijsten";classListMode=taak==="nieuwe-leerling"?"nieuw":taak==="klaslijsten"?"":taak;secretariaatModulesOpen=true;renderKlasPills();render();return}
+      if(["nieuwe-leerling","excel","verplaatsen","klaslijsten"].includes(taak)){tab="leerlingenstart";adminPanel="klaslijsten";classListMode=taak==="nieuwe-leerling"?"nieuw":taak==="klaslijsten"?"":taak;secretariaatModulesOpen=true;renderKlasPills();render();return}
       if(taak==="nieuw-schooljaar"){adminPanel="nieuw schooljaar";renderKlasPills();renderAdmin()}
     };
 
@@ -3820,6 +3827,7 @@
       el.addEventListener("click", () => {
         const vorigeTab = tab;
         tab = el.dataset.tab;
+        if(isSecretary()&&tab==="leerlingen")tab="leerlingenstart";
         if(tab === "refter" && vorigeTab !== "refter") gekozenRefterWeek = "";
         if(tab === "administratie" && isSecretary()){adminPanel = "wegwijzer";adminNavigatieOpen=false;secretariaatModulesOpen=false;}
         renderKlasPills();
