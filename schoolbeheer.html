@@ -242,6 +242,12 @@
     #messages .task-notice{border:2px solid #e1a900;background:#fff4bf;box-shadow:0 5px 16px rgba(91,65,0,.13);padding:16px 18px}
     #messages .task-notice strong{font-size:18px;color:#463500}
     #messages .task-notice .message-actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+    #meldingMenuWrap{position:relative;flex:0 0 auto}
+    #meldingMenuKnop{position:relative;min-width:42px;padding:6px 10px!important;font-size:20px!important}
+    #meldingMenuAantal{position:absolute;right:-7px;top:-8px;min-width:19px;height:19px;padding:0 4px;box-sizing:border-box;border-radius:999px;background:#e23d3d;color:#fff;font:bold 12px/19px Arial;text-align:center;box-shadow:0 0 0 2px #fff}
+    #meldingMenu{position:absolute;right:0;top:calc(100% + 9px);width:min(480px,calc(100vw - 30px));max-height:72vh;overflow:auto;padding:12px;background:#fff;border:2px solid #d6a400;border-radius:14px;box-shadow:0 12px 30px rgba(23,28,36,.28);color:var(--ink);z-index:1000}
+    #meldingMenu .task-notice{margin:8px 0;box-shadow:none;padding:12px}
+    #meldingMenuKop{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:6px}
     /* schoolbeheer-meldingenbeheer-codex */
     .message-admin-layout{display:grid;grid-template-columns:minmax(280px,.9fr) minmax(320px,1.1fr);gap:16px;align-items:start;margin-top:10px}
     .message-admin-card{border:1px solid var(--line);border-radius:16px;background:#fbfcfe;padding:16px}
@@ -944,6 +950,7 @@
     </div>
     <span id="topMeta" class="meta" style="margin-left:8px">Laden...</span>
     <div class="tools no-print">
+      <div id="meldingMenuWrap"><button id="meldingMenuKnop" type="button" onclick="toggleMeldingMenu(event)" title="Meldingen" aria-expanded="false">📣<span id="meldingMenuAantal" hidden>0</span></button><div id="meldingMenu" hidden></div></div>
       <span class="pill-status" id="status">Laden...</span>
       <button onclick="location.href='index.html'" style="background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.35);color:#fff;border-radius:10px;padding:6px 14px;font-size:13px;cursor:pointer;font-weight:700">🏠 Keuzescherm</button>
       <button onclick="window.print()">Afdrukken</button>
@@ -1890,19 +1897,20 @@
         if(zorgRol) return m.targetCare === true;
         return (m.targetClasses||[]).includes(activeClass);
       });
+      const openAantal=activeMessages.filter(m=>{
+        const zorgStatus=zorgRol&&!isSecretary()?(m.careAcks?.[user.uid]?.status||""):"";
+        const status=zorgStatus||(m.done||m.ackStatus==="done"?"done":m.ackStatus==="read"?"read":"");
+        return m.responseType==="read"?!["read","done"].includes(status):status!=="done";
+      }).length;
       if(!isSecretary()){
-        const openAantal=activeMessages.filter(m=>{
-          const zorgStatus=zorgRol?(m.careAcks?.[user.uid]?.status||""):"";
-          const status=zorgStatus||(m.done||m.ackStatus==="done"?"done":m.ackStatus==="read"?"read":"");
-          return m.responseType==="read"?!["read","done"].includes(status):status!=="done";
-        }).length;
         try{
           if(openAantal&&navigator.setAppBadge)navigator.setAppBadge(openAantal).catch(()=>{});
           else if(navigator.clearAppBadge)navigator.clearAppBadge().catch(()=>{});
         }catch(_){}
       }
       const herstel = datumHerstelNotice();
-      $("messages").innerHTML = herstel + activeMessages.map(m=>{
+      $("messages").innerHTML = herstel;
+      const meldingHtml=activeMessages.map(m=>{
         const eigenZorgStatus=zorgRol&&!isSecretary()?(m.careAcks?.[user.uid]?.status||""):"";
         const huidigeStatus=eigenZorgStatus||(m.done||m.ackStatus==="done"?"done":m.ackStatus==="read"?"read":"");
         return `
@@ -1918,7 +1926,12 @@
           ${isSecretary()?`<span class="right muted">${huidigeStatus==="done"?"Uitgevoerd":huidigeStatus==="read"?"Gelezen":m.responseType==="read"?"Nog niet gelezen":"Nog niet uitgevoerd"}</span>`:
           `<div class="message-actions right">${m.responseType==="read"?`<button class="small ${huidigeStatus==="read"?"green":"white"}" onclick="setMsgStatus('${m.id}','read')">Ik heb dit gelezen</button>`:`<button class="small ${huidigeStatus==="done"?"green":"white"}" onclick="setMsgStatus('${m.id}','done')">Ik heb dit uitgevoerd</button>`}</div>`}
         </div></div>`}).join("");
+      const badge=$("meldingMenuAantal"),menu=$("meldingMenu");
+      if(badge){badge.textContent=String(openAantal);badge.hidden=openAantal===0;}
+      if(menu)menu.innerHTML=`<div id="meldingMenuKop"><strong>📣 Meldingen ${esc(activeClass)}</strong><button class="white small" onclick="toggleMeldingMenu(event,false)">Sluiten</button></div>${meldingHtml||'<p class="muted">Geen actieve meldingen voor deze klas.</p>'}`;
     }
+    window.toggleMeldingMenu=(event,force)=>{event?.stopPropagation();const menu=$("meldingMenu"),knop=$("meldingMenuKnop");if(!menu)return;menu.hidden=typeof force==="boolean"?!force:!menu.hidden;knop?.setAttribute("aria-expanded",String(!menu.hidden));};
+    document.addEventListener("click",event=>{const wrap=$("meldingMenuWrap"),menu=$("meldingMenu");if(wrap&&menu&&!wrap.contains(event.target)){menu.hidden=true;$("meldingMenuKnop")?.setAttribute("aria-expanded","false");}});
     window.setMsgStatus = (id,status) => {
       const m=data.messages.find(x=>x.id===id);
       const zorgRol=["zorgcoordinator","zorgleerkracht"].includes(role);
