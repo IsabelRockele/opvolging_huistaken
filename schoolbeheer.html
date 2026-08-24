@@ -2955,8 +2955,9 @@
         return `<details class="secretariaat-activiteit ${a.processed?'processed':'pending'}">
           <summary><span><strong>${esc(a.name)}</strong><br><span class="muted">${esc(a.date)} · &euro;${Number(a.price||0).toFixed(2)} · ${esc(activeClass)}</span><span class="activiteit-tellingen">${bevestigd?`<span class="activiteit-telling">${telling.aanwezig} aanwezig</span><span class="activiteit-telling afwezig">${telling.afwezigen.length} afwezig</span>`:'<span class="tag">wacht op bevestiging leerkracht</span>'}${a.processed?'<span class="tag done">✓ verwerkt</span>':'<span class="tag">nog te verwerken</span>'}</span></span></summary>
           <div class="secretariaat-activiteit-body">
-            <div class="actions no-print"><button class="${a.processed?'white':'green'}" ${!bevestigd&&!a.processed?'disabled title="Wacht op bevestiging van de leerkracht"':''} onclick="toggleActProcessed('${a.id}')">${a.processed?'Opnieuw openen':'Activiteit verwerken'}</button><button class="small pink" onclick="cancelActivity('${a.id}')">Annuleren</button></div>
-            ${bevestigd?`<div class="secretariaat-activiteit-inhoud"><div class="table-wrap"><table><thead><tr><th>Leerling</th><th style="text-align:center">Afwezig</th></tr></thead><tbody>${telling.leerlingen.map(s=>{const afwezig=!!a.absent?.[s.id];return`<tr><td><strong>${esc(name(s))}</strong></td><td style="text-align:center"><input class="absence-check" type="checkbox" ${afwezig?'checked':''} disabled aria-label="${afwezig?'Afwezig':'Aanwezig'}"></td></tr>`}).join('')}</tbody></table></div><aside class="afwezigen-samenvatting"><strong>Afwezige leerlingen (${telling.afwezigen.length})</strong>${afwezigeNamen.length?`<ul>${afwezigeNamen.map(n=>`<li>${esc(n)}</li>`).join('')}</ul>`:'<p>Niemand afwezig.</p>'}</aside></div>`:'<div class="notice"><strong>Nog niet bevestigd door de leerkracht.</strong><p class="muted">Wacht met verwerken tot de leerkracht de afwezigheden heeft nagekeken.</p></div>'}
+            ${a.processed?'<div class="notice" style="margin-top:0;background:#e9f6ee;border-color:#86bf9b"><strong>🔒 Deze activiteit is al verwerkt.</strong><p class="muted">Je bekijkt het afgesloten overzicht. Maak de verwerking alleen ongedaan wanneer er werkelijk nog iets gecorrigeerd moet worden.</p></div>':''}
+            <div class="actions no-print"><button class="${a.processed?'white':'green'}" ${!bevestigd&&!a.processed?'disabled title="Wacht op bevestiging van de leerkracht"':''} onclick="toggleActProcessed('${a.id}')">${a.processed?'Verwerking ongedaan maken':'Activiteit verwerken'}</button><button class="small pink" onclick="cancelActivity('${a.id}')">Annuleren</button></div>
+            ${bevestigd?`<div class="secretariaat-activiteit-inhoud"><div class="table-wrap no-scroll-mirror"><table><thead><tr><th>Leerling</th><th style="text-align:center">Afwezig</th></tr></thead><tbody>${telling.leerlingen.map(s=>{const afwezig=!!a.absent?.[s.id];return`<tr><td><strong>${esc(name(s))}</strong></td><td style="text-align:center"><input class="absence-check" type="checkbox" ${afwezig?'checked':''} disabled aria-label="${afwezig?'Afwezig':'Aanwezig'}"></td></tr>`}).join('')}</tbody></table></div><aside class="afwezigen-samenvatting"><strong>Afwezige leerlingen (${telling.afwezigen.length})</strong>${afwezigeNamen.length?`<ul>${afwezigeNamen.map(n=>`<li>${esc(n)}</li>`).join('')}</ul>`:'<p>Niemand afwezig.</p>'}</aside></div>`:'<div class="notice"><strong>Nog niet bevestigd door de leerkracht.</strong><p class="muted">Wacht met verwerken tot de leerkracht de afwezigheden heeft nagekeken.</p></div>'}
           </div></details>`;
       }).join('')}</div>`;
     }
@@ -3014,7 +3015,7 @@
         verbergSchermLaden();
       }
     };
-    window.toggleActProcessed = async id => { if(!isSecretary())return; const a=data.activiteiten.find(x=>x.id===id); if(!a)return;if(!a.processed&&!a.attendanceConfirmed)return alert("De klasleerkracht heeft de afwezigheden nog niet nagekeken en bevestigd.");if(a.processed&&!confirm(`Deze activiteit is al verwerkt.\n\nWeet je zeker dat je ze opnieuw wilt openen? De klas- en zorgleerkracht kunnen de afwezigheden daarna opnieuw wijzigen.`))return;a.processed=!a.processed;renderActivities();setStatus("Wijzigingen...");await saveNow(); };
+    window.toggleActProcessed = async id => { if(!isSecretary())return; const a=data.activiteiten.find(x=>x.id===id); if(!a)return;if(!a.processed&&!a.attendanceConfirmed)return alert("De klasleerkracht heeft de afwezigheden nog niet nagekeken en bevestigd.");if(a.processed&&!confirm(`Deze activiteit is al verwerkt.\n\nWeet je zeker dat je de verwerking ongedaan wilt maken? De klas- en zorgleerkracht kunnen de afwezigheden daarna opnieuw wijzigen.`))return;a.processed=!a.processed;renderActivities();setStatus("Wijzigingen...");await saveNow(); };
     window.toggleActAbsent = (aid,sid,checked) => { const a=data.activiteiten.find(x=>x.id===aid); if(!a)return;a.absent ||= {}; a.absent[sid]=checked;a.attendanceConfirmed=false;a.attendanceConfirmedAt="";a.attendanceConfirmedBy="";const status=$("act-confirm-state-"+aid);if(status){status.textContent="afwezigheden nog niet bevestigd";status.classList.remove("done");}markDirty(); };
     window.confirmActivityAttendance = id => {
       if(isSecretary())return;
@@ -3693,6 +3694,7 @@
   <script>
   function installScrollMirrors(){
     document.querySelectorAll('.table-wrap').forEach(wrap => {
+      if(wrap.classList.contains('no-scroll-mirror')) return;
       // Niet twee keer installeren
       if(wrap.previousElementSibling?.classList?.contains('scroll-mirror-top')) return;
 
