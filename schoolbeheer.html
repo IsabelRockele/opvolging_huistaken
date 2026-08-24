@@ -1054,6 +1054,7 @@
         excelImportVoorbeeld = [], excelImportBestandsnaam = "", kalenderImportVoorbeeld = [], lokaleBewaringTot = 0;
     let testOverzichtUnsub = null;
     const actieveTestKlassen = new Map();
+    const liveKlasDocumenten = new Map();
     $("schooljaarInput").value = schooljaar;
 
     async function schoolbeheerVeiligheidskopie(ref, reden, forceer=false){
@@ -1194,14 +1195,18 @@
     function startTestOverzichtListener(){
       if(testOverzichtUnsub){testOverzichtUnsub();testOverzichtUnsub=null;}
       actieveTestKlassen.clear();
+      liveKlasDocumenten.clear();
       if(!isSecretary()){renderKlasPills();return;}
       testOverzichtUnsub=onSnapshot(collection(db,"schoolbeheer",schooljaar,"klassen"),snap=>{
         actieveTestKlassen.clear();
+        liveKlasDocumenten.clear();
         snap.docs.forEach(d=>{
-          const maanden=Object.keys(d.data()?.testModes||{}).sort();
+          const klasData=d.data()||{};liveKlasDocumenten.set(d.id,klasData);
+          const maanden=Object.keys(klasData.testModes||{}).sort();
           if(maanden.length)actieveTestKlassen.set(d.id,maanden);
         });
         renderKlasPills();
+        if(tab==="refter"&&$("refterWeekKlassen"))laadRefterWeekStatus(standaardRefterWeek()).catch(console.warn);
       },err=>console.warn("Testoverzicht laden mislukt",err));
     }
 
@@ -2786,7 +2791,9 @@
     async function laadRefterWeekStatus(weekStart){
       if(!isSecretary())return;
       const box=$("refterWeekKlassen");if(!box)return;
-      const resultaten=await Promise.all(allClasses.map(async klas=>{const snap=await getDoc(classRef(klas));return{klas,verwerkt:snap.exists()&&refterWeekVerwerkt(weekStart,snap.data())};}));
+      const resultaten=liveKlasDocumenten.size
+        ? allClasses.map(klas=>({klas,verwerkt:liveKlasDocumenten.has(klas)&&refterWeekVerwerkt(weekStart,liveKlasDocumenten.get(klas))}))
+        : await Promise.all(allClasses.map(async klas=>{const snap=await getDoc(classRef(klas));return{klas,verwerkt:snap.exists()&&refterWeekVerwerkt(weekStart,snap.data())};}));
       if(!$("refterWeekKlassen")||standaardRefterWeek()!==weekStart)return;
       box.innerHTML=resultaten.map(x=>`<button class="small ${x.verwerkt?'green':'white'}" onclick="openClass('${esc(x.klas)}',true)">${x.verwerkt?'✓':'○'} ${esc(x.klas)}</button>`).join("");
     }
