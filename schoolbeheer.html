@@ -1558,6 +1558,7 @@
       if(!data) return;
       if(!isSecretary() && tab === "administratie") tab = "klaslijst";
       if(isSecretary() && tab === "klaslijst") tab = "administratie";
+      werkRustigeSecretariaatSidebarBij();
       setActiveNav(tab==="leerlingenstart"?"leerlingen":tab);
       renderMessages();
       if(tab==="administratie") renderAdmin();
