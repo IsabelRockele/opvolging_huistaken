@@ -3550,7 +3550,9 @@
     // Sidebar navigatie
     document.querySelectorAll(".sb-item").forEach(el => {
       el.addEventListener("click", () => {
+        const vorigeTab = tab;
         tab = el.dataset.tab;
+        if(tab === "refter" && vorigeTab !== "refter") gekozenRefterWeek = "";
         if(tab === "administratie" && isSecretary()){adminPanel = "wegwijzer";adminNavigatieOpen=false;secretariaatModulesOpen=false;}
         renderKlasPills();
         render();
