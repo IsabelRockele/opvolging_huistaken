@@ -179,6 +179,9 @@ function pasKnoppenToe(huistakenKnop, overgangKnop, schoolbeheerKnop, bestelling
   if (klasafsprakenKnop) klasafsprakenKnop.style.display = 'none';
   const naametikettenKnop = document.getElementById('naametikettenKeuzeKnop');
   if (naametikettenKnop) naametikettenKnop.style.display = (isSchoolBreed || isSecretariaat || heeftKlasbeheer) ? '' : 'none';
+  const woSpelenKnop = document.getElementById('woSpelenKeuzeKnop');
+  const magWoSpelen = heeftKlasbeheer || ['zorgleerkracht', 'zorgcoordinator'].includes(rolNaam);
+  if (woSpelenKnop) woSpelenKnop.style.display = magWoSpelen ? '' : 'none';
   const klasnummersKnop = document.getElementById('klasnummersKeuzeKnop');
   if (klasnummersKnop) klasnummersKnop.style.display = (isSchoolBreed || heeftKlasbeheer) && !isSecretariaat ? '' : 'none';
   const afwezigheidsattestenKnop = document.getElementById('afwezigheidsattestenKeuzeKnop');
@@ -389,6 +392,7 @@ async function toonSchooloverzichtKnopAlsNodig(user) {
   const huiswerkklasKnop = document.getElementById('huiswerkklasKeuzeKnop');
   const klasafsprakenKnop = document.getElementById('klasafsprakenKeuzeKnop');
   const naametikettenKnop = document.getElementById('naametikettenKeuzeKnop');
+  const woSpelenKnop = document.getElementById('woSpelenKeuzeKnop');
   const afwezigheidsattestenKnop = document.getElementById('afwezigheidsattestenKeuzeKnop');
   const voorbladenKnop = document.getElementById('voorbladenKeuzeKnop');
   if (schoolKnop) schoolKnop.style.display = 'none';
@@ -400,6 +404,7 @@ async function toonSchooloverzichtKnopAlsNodig(user) {
   if (huiswerkklasKnop) huiswerkklasKnop.style.display = 'none';
   if (klasafsprakenKnop) klasafsprakenKnop.style.display = magKlasafsprakenTesten(user) ? '' : 'none';
   if (naametikettenKnop) naametikettenKnop.style.display = 'none';
+  if (woSpelenKnop) woSpelenKnop.style.display = 'none';
   const klasnummersKnop = document.getElementById('klasnummersKeuzeKnop');
   if (klasnummersKnop) klasnummersKnop.style.display = 'none';
   if (afwezigheidsattestenKnop) afwezigheidsattestenKnop.style.display = 'none';
