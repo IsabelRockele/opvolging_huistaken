@@ -228,6 +228,12 @@
     .activiteit-telling{padding:6px 10px;border-radius:999px;font-weight:800;background:#e7f5ec;color:#176f3b}
     .activiteit-telling.afwezig{background:#ffe0e0;color:#a72d27}
     .afwezigen-samenvatting{padding:12px 14px;background:#fff3f3;border:1px solid #efb7b7;border-radius:11px;margin:12px 0}
+    .secretariaat-activiteit-inhoud{display:grid;grid-template-columns:minmax(0,1fr) minmax(220px,300px);gap:16px;align-items:start;margin-top:14px}
+    .secretariaat-activiteit-inhoud .table-wrap{max-height:none!important;overflow:visible!important;margin:0!important}
+    .afwezigen-samenvatting{margin:0;position:sticky;top:10px}
+    .afwezigen-samenvatting ul{margin:8px 0 0;padding-left:20px}
+    .afwezigen-samenvatting li{margin:5px 0;font-weight:700}
+    @media(max-width:900px){.secretariaat-activiteit-inhoud{grid-template-columns:1fr}.afwezigen-samenvatting{position:static}}
     .absence-check{width:22px;height:22px;accent-color:#e25a5a}
     .subnav{display:flex;gap:7px;flex-wrap:wrap;margin:12px 0}.subnav button{padding:8px 13px;border-radius:12px;font-size:14px}
     .subnav button.active{background:var(--yellow);box-shadow:inset 0 0 0 1px var(--yellow-dark)}
@@ -1289,13 +1295,16 @@
           }
           return;
         }
-        data = snap.data();
+        const nieuwData=snap.data();
+        const vorigeVerwerking=new Map((data?.activiteiten||[]).map(a=>[a.id,!!a.processed]));
+        const activiteitVerwerkingGewijzigd=(nieuwData.activiteiten||[]).some(a=>vorigeVerwerking.has(a.id)&&vorigeVerwerking.get(a.id)!==!!a.processed);
+        data = nieuwData;
         normalize();
         if(isSecretary() && tab === "klaslijst") tab = "administratie";
         if(!isSecretary() && tab === "administratie") tab = "klaslijst";
         setStatus("Bewaard", true);
         setActiveNav(tab);
-        if(Date.now()>=lokaleBewaringTot){
+        if(Date.now()>=lokaleBewaringTot||activiteitVerwerkingGewijzigd){
           const positie=window.scrollY;
           render();
           renderKlasPills();
@@ -2916,17 +2925,20 @@
       const leerlingen=activeStudents(a.date||`${activityMonth}-15`),afwezigen=leerlingen.filter(s=>!!a.absent?.[s.id]);
       return{leerlingen,afwezigen,aanwezig:Math.max(0,leerlingen.length-afwezigen.length)};
     }
+    function naamZonderKomma(s){
+      const last=s.last||s.lastName||"",first=s.first||s.firstName||"";
+      return `${last} ${first}`.trim();
+    }
     function secretariaatActiviteitenHtml(list){
       if(!list.length)return `<div class="notice">Nog geen actieve activiteiten ingevoerd voor deze maand.</div>`;
       return `<div class="secretariaat-activiteiten">${list.map(a=>{
         const telling=activiteitTellingen(a),bevestigd=!!a.attendanceConfirmed;
-        const afwezigeNamen=telling.afwezigen.map(s=>name(s));
+        const afwezigeNamen=telling.afwezigen.map(s=>naamZonderKomma(s));
         return `<details class="secretariaat-activiteit ${a.processed?'processed':'pending'}">
           <summary><span><strong>${esc(a.name)}</strong><br><span class="muted">${esc(a.date)} · &euro;${Number(a.price||0).toFixed(2)} · ${esc(activeClass)}</span><span class="activiteit-tellingen">${bevestigd?`<span class="activiteit-telling">${telling.aanwezig} aanwezig</span><span class="activiteit-telling afwezig">${telling.afwezigen.length} afwezig</span>`:'<span class="tag">wacht op bevestiging leerkracht</span>'}${a.processed?'<span class="tag done">✓ verwerkt</span>':'<span class="tag">nog te verwerken</span>'}</span></span></summary>
           <div class="secretariaat-activiteit-body">
-            ${bevestigd?`<div class="afwezigen-samenvatting"><strong>Afwezige leerlingen (${telling.afwezigen.length})</strong><div>${afwezigeNamen.length?afwezigeNamen.map(esc).join(', '):'Niemand afwezig.'}</div></div>`:'<div class="notice"><strong>Nog niet bevestigd door de leerkracht.</strong><p class="muted">Wacht met verwerken tot de leerkracht de afwezigheden heeft nagekeken.</p></div>'}
             <div class="actions no-print"><button class="${a.processed?'white':'green'}" ${!bevestigd&&!a.processed?'disabled title="Wacht op bevestiging van de leerkracht"':''} onclick="toggleActProcessed('${a.id}')">${a.processed?'Opnieuw openen':'Activiteit verwerken'}</button><button class="small pink" onclick="cancelActivity('${a.id}')">Annuleren</button></div>
-            <div class="table-wrap" style="margin-top:14px"><table><thead><tr><th>Leerling</th><th>Status</th></tr></thead><tbody>${telling.leerlingen.map(s=>{const afwezig=!!a.absent?.[s.id];return`<tr><td><strong>${esc(name(s))}</strong></td><td>${!bevestigd?'<span class="muted">wacht op bevestiging</span>':afwezig?'<span class="status-dot absent">&#10006;</span> afwezig':'<span class="status-dot present">&#10003;</span> aanwezig'}</td></tr>`}).join('')}</tbody></table></div>
+            ${bevestigd?`<div class="secretariaat-activiteit-inhoud"><div class="table-wrap"><table><thead><tr><th>Leerling</th><th style="text-align:center">Afwezig</th></tr></thead><tbody>${telling.leerlingen.map(s=>{const afwezig=!!a.absent?.[s.id];return`<tr><td><strong>${esc(name(s))}</strong></td><td style="text-align:center"><input class="absence-check" type="checkbox" ${afwezig?'checked':''} disabled aria-label="${afwezig?'Afwezig':'Aanwezig'}"></td></tr>`}).join('')}</tbody></table></div><aside class="afwezigen-samenvatting"><strong>Afwezige leerlingen (${telling.afwezigen.length})</strong>${afwezigeNamen.length?`<ul>${afwezigeNamen.map(n=>`<li>${esc(n)}</li>`).join('')}</ul>`:'<p>Niemand afwezig.</p>'}</aside></div>`:'<div class="notice"><strong>Nog niet bevestigd door de leerkracht.</strong><p class="muted">Wacht met verwerken tot de leerkracht de afwezigheden heeft nagekeken.</p></div>'}
           </div></details>`;
       }).join('')}</div>`;
     }
@@ -2984,7 +2996,7 @@
         verbergSchermLaden();
       }
     };
-    window.toggleActProcessed = id => { if(!isSecretary())return; const a=data.activiteiten.find(x=>x.id===id); if(!a)return;if(!a.processed&&!a.attendanceConfirmed)return alert("De klasleerkracht heeft de afwezigheden nog niet nagekeken en bevestigd.");a.processed=!a.processed; markDirty(); renderActivities(); };
+    window.toggleActProcessed = async id => { if(!isSecretary())return; const a=data.activiteiten.find(x=>x.id===id); if(!a)return;if(!a.processed&&!a.attendanceConfirmed)return alert("De klasleerkracht heeft de afwezigheden nog niet nagekeken en bevestigd.");if(a.processed&&!confirm(`Deze activiteit is al verwerkt.\n\nWeet je zeker dat je ze opnieuw wilt openen? De klas- en zorgleerkracht kunnen de afwezigheden daarna opnieuw wijzigen.`))return;a.processed=!a.processed;renderActivities();setStatus("Wijzigingen...");await saveNow(); };
     window.toggleActAbsent = (aid,sid,checked) => { const a=data.activiteiten.find(x=>x.id===aid); if(!a)return;a.absent ||= {}; a.absent[sid]=checked;a.attendanceConfirmed=false;a.attendanceConfirmedAt="";a.attendanceConfirmedBy="";const status=$("act-confirm-state-"+aid);if(status){status.textContent="afwezigheden nog niet bevestigd";status.classList.remove("done");}markDirty(); };
     window.confirmActivityAttendance = id => {
       if(isSecretary())return;
