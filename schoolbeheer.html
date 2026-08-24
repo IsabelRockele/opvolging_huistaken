@@ -90,6 +90,26 @@
     #navAankopen{background:#faedf2;border-left-color:#c05a7a;color:#7a2a4a}
     #navAankopen .sb-icon{color:#c05a7a}
     #navAankopen.active{background:#f5d0dc;border-left-color:#8a2a4a}
+    #navLeerlingen{background:#edf7f1;border-left-color:#4c9b70;color:#245f40}
+    #navLeerlingen.active{background:#d8efe2;border-left-color:#28794d}
+    #navOpvolging{background:#fff7df;border-left-color:#d5a52c;color:#71570d}
+    #navOpvolging.active{background:#ffedb4;border-left-color:#a87900}
+    .maandmappen{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px;margin-top:18px}
+    .maandmap{border:1px solid #cbd8e6;border-radius:15px;background:#fff;overflow:hidden;box-shadow:0 3px 10px rgba(31,55,80,.05)}
+    .maandmap.heeft-open{border:2px solid #e0a600;background:#fffaf0}
+    .maandmap summary{cursor:pointer;list-style:none;padding:17px 18px;font-size:18px;font-weight:850;display:flex;align-items:center;justify-content:space-between;gap:10px}
+    .maandmap summary::-webkit-details-marker{display:none}
+    .maandmap summary::before{content:'📁';font-size:25px;margin-right:7px}
+    .maandmap[open] summary::before{content:'📂'}
+    .maandmap-status{font-size:12px;border-radius:999px;background:#fff0b8;color:#765300;padding:5px 8px;white-space:nowrap}
+    .maandmap-inhoud{border-top:1px solid #d9e2ec;padding:12px;display:grid;gap:9px}
+    .maandmap-knop{width:100%;display:flex;align-items:center;justify-content:space-between;text-align:left;background:#f6f8fb;border:1px solid #d5dfe9;color:#17324d;padding:12px 13px;border-radius:11px}
+    .maandmap-knop.nieuw{background:#fff0bd;border-color:#dca900;color:#684d00}
+    .maandmap-knop.verwerkt{background:#edf8f1;border-color:#acd4bc;color:#22633f}
+    .maandmap-knop small{display:block;font-weight:600;opacity:.82;margin-top:2px}
+    .opvolg-keuzes{display:grid;grid-template-columns:repeat(3,minmax(220px,1fr));gap:15px;margin-top:16px}
+    .opvolg-keuzes button.heeft-open{background:#fff0b8;border-color:#dca900;color:#674c00}
+    @media(max-width:900px){.opvolg-keuzes{grid-template-columns:1fr}.maandmappen{grid-template-columns:1fr 1fr}}
 
     #navOudsten{background:#edf7f1;border-left-color:#4f9a70;color:#285c3e}
     #navOudsten .sb-icon{color:#4f9a70}
@@ -1045,6 +1065,12 @@
         <div class="sb-item" data-tab="oudsten" id="navOudsten">
           <span class="sb-icon">&#9993;</span> Schooloverzicht
         </div>
+        <div class="sb-item secretary-only" data-tab="leerlingen" id="navLeerlingen">
+          <span class="sb-icon">&#128101;</span> Leerlingen
+        </div>
+        <div class="sb-item secretary-only" data-tab="opvolging" id="navOpvolging">
+          <span class="sb-icon">&#128194;</span> Opvolging
+        </div>
         </div>
 
       </div>
@@ -1093,7 +1119,7 @@
     }
     let user = null, role = "", allowedClasses = [], allClasses = [...DEFAULT_CLASSES],
         activeClass = "", schooljaar = huidigSchooljaar(), data = null, unsub = null,
-        activityMonth = "", purchaseMonth = "", gekozenRefterMaand = "", gekozenRefterWeek = "",
+        activityMonth = "", purchaseMonth = "", gekozenRefterMaand = "", gekozenRefterWeek = "", opvolgMaand = "",
         tab = "administratie", adminPanel = "wegwijzer", classListMode = "", saveTimer = null,
         excelImportVoorbeeld = [], excelImportBestandsnaam = "", kalenderImportVoorbeeld = [], lokaleBewaringTot = 0;
     let testOverzichtUnsub = null;
@@ -1142,7 +1168,7 @@
       werkboeken: `<h3>Uitleg werkboeken</h3><ul><li>Dit onderdeel werken we later verder uit.</li><li>Hier komt het overzicht voor werkboeken en materiaalbestellingen.</li></ul>`
     };
     function screenTools(key){
-      return `<div class="screen-tools no-print"><button class="white small" onclick="toggleHelp('${key}')">? Uitleg</button><button class="white small" onclick="window.print()">PDF / afdrukken</button></div>`;
+      return `<div class="screen-tools no-print">${isSecretary()&&["refter","activiteiten","aankopen"].includes(key)?`<button class="white small" onclick="terugNaarKlasMaanden()">📁 Maanden ${esc(activeClass)}</button>`:""}<button class="white small" onclick="toggleHelp('${key}')">? Uitleg</button><button class="white small" onclick="window.print()">PDF / afdrukken</button></div>`;
     }
     function helpPanel(key){
       return `<section id="help-${key}" class="help-panel">${helpTexts[key] || ""}</section>`;
@@ -1211,6 +1237,7 @@
       document.querySelectorAll(".secretary-only").forEach(x => x.classList.toggle("hidden", !isSecretary()));
       document.querySelectorAll(".teacher-label").forEach(x => x.classList.toggle("hidden", isSecretary()));
       document.querySelectorAll(".secretary-label").forEach(x => x.classList.toggle("hidden", !isSecretary()));
+      ["navRefter","navActiviteiten","navAankopen"].forEach(id=>$(id)?.classList.toggle("hidden",isSecretary()));
       renderKlasPills();
       setActiveNav(tab);
       werkRustigeSecretariaatSidebarBij();
@@ -1223,7 +1250,7 @@
       $("klasSectie")?.classList.toggle("hidden",!klasNodig);
       $("klasDividerBoven")?.classList.toggle("hidden",!klasNodig);
       $("klasDividerOnder")?.classList.toggle("hidden",!klasNodig);
-      $("andereModules")?.classList.toggle("hidden",secretariaat&&!secretariaatModulesOpen);
+      $("andereModules")?.classList.toggle("hidden",secretariaat&&!secretariaatModulesOpen&&tab==="administratie");
     }
 
     function renderKlasPills(){
@@ -1231,8 +1258,9 @@
       const toonActieveKlas = tab !== "administratie" || adminPanel === "klaslijsten";
       $("klasPills").innerHTML = lijst.map(k => {
         const maanden=actieveTestKlassen.get(k)||[];
+        const openAantal=secretariaatOpenAantal(liveKlasDocumenten.get(k));
         const testTitel=maanden.length?`Test actief voor ${maanden.join(", ")}`:"";
-        return `<button class="sb-klas-btn ${toonActieveKlas&&k===activeClass?"active":""} ${maanden.length?"has-test":""}" ${testTitel?`title="${esc(testTitel)}"`:""} onclick="openClass('${esc(k)}')">${esc(k)}${maanden.length?'<span class="sb-test-badge" aria-label="Test actief">🧪</span>':""}</button>`;
+        return `<button class="sb-klas-btn ${toonActieveKlas&&k===activeClass?"active":""} ${maanden.length?"has-test":""}" ${testTitel?`title="${esc(testTitel)}"`:openAantal?`title="${openAantal} onderdeel(en) vragen opvolging"`:""} onclick="openClass('${esc(k)}')">${esc(k)}${openAantal?'<span aria-label="Nieuwe opvolging"> ●</span>':""}${maanden.length?'<span class="sb-test-badge" aria-label="Test actief">🧪</span>':""}</button>`;
       }).join("");
     }
 
@@ -1293,10 +1321,11 @@
     window.openClass = async function(klas, behoudAlgemeen=false){
       toonSchermLaden(`${klas} laden…`);
       activeClass = klas;
-      if(isSecretary() && !behoudAlgemeen && tab === "administratie"){
-        tab = "administratie";
-        adminPanel = "klaslijsten";
+      const blijfInOnderdeel=["refter","activiteiten","aankopen","leerlingen"].includes(tab);
+      if(isSecretary() && !behoudAlgemeen && !blijfInOnderdeel){
+        tab = "klasstart";
         classListMode = "";
+        secretariaatModulesOpen=true;
       }
       schooljaar = $("schooljaarInput").value.trim() || schooljaar;
       renderScope();
@@ -1451,6 +1480,67 @@
     function markDirty(){ setStatus("Wijzigingen..."); clearTimeout(saveTimer); saveTimer = setTimeout(saveNow, 600); }
     async function saveNow(){ if(!data) return; lokaleBewaringTot=Date.now()+2500; data.bewaarTot = bewaarTotVoorSchooljaar(); data.bewaartermijnJaren = BEWAAR_JAREN_SCHOOLBEHEER; data.bijgewerktOp = new Date().toISOString(); await setDoc(classRef(), data); setStatus("Bewaard", true); }
 
+    function maandNaam(month){
+      const d=new Date(`${month}-15T12:00:00`);
+      return d.toLocaleDateString("nl-BE",{month:"long",year:"numeric"}).replace(/^./,x=>x.toUpperCase());
+    }
+    function maandStatus(bron,month){
+      bron ||= {};
+      const activiteiten=(bron.activiteiten||[]).filter(a=>!a.cancelled&&String(a.date||"").slice(0,7)===month);
+      const activiteitOpen=activiteiten.filter(a=>a.attendanceConfirmed&&!a.processed).length;
+      const aankopen=(bron.aankopen||[]).filter(p=>String(p.date||"").slice(0,7)===month);
+      const aankoopOpen=aankopen.filter(p=>!p.processed).length;
+      const refterMaand=bron.refter?.[month]||{};
+      const refterDatums=new Set();
+      Object.values(refterMaand).forEach(perLeerling=>Object.entries(perLeerling||{}).forEach(([datum,afwezig])=>{if(afwezig)refterDatums.add(datum)}));
+      const refterOpen=[...refterDatums].filter(datum=>{
+        const week=maandagVan(datum),weken=bron.processed?.refterWeken||{};
+        if(weken[week])return false;
+        const legacy=bron.processed?.refter||"";
+        return !legacy||datum>legacy;
+      }).length;
+      const verwerkteRefterWeken=Object.keys(bron.processed?.refterWeken||{}).filter(week=>Array.from({length:5},(_,i)=>datumPlusDagen(week,i)).some(d=>d.slice(0,7)===month)).length;
+      return {refterOpen,activiteitOpen,aankoopOpen,totaal:refterOpen+activiteitOpen+aankoopOpen,
+        activiteitAantal:activiteiten.length,aankoopAantal:aankopen.length,refterAantal:refterDatums.size+verwerkteRefterWeken};
+    }
+    function secretariaatOpenAantal(bron){return schoolMonths().reduce((n,m)=>n+maandStatus(bron,m).totaal,0)}
+    function onderdeelStatusTekst(soort,status){
+      const open=status[`${soort}Open`]||0,aantal=status[`${soort}Aantal`]||0;
+      if(open)return `${open} nieuw${open===1?"":"e"}`;
+      if(aantal)return "verwerkt / nagekeken";
+      return "nog niets ingevuld";
+    }
+    function renderKlasStart(){
+      const months=schoolMonths();
+      $("content").innerHTML=`<div class="panel"><div class="bar"><div><h2>${esc(activeClass)} — maandoverzicht</h2><p class="muted">Open een maand en kies daarna Refter, Activiteiten of Aankopen. Een gele map bevat iets dat nog opgevolgd moet worden.</p></div><button class="white no-print" onclick="openLeerlingenVoorKlas()">👥 Leerlingen beheren</button></div>
+        <div class="maandmappen">${months.map(month=>{const s=maandStatus(data,month);return`<details class="maandmap ${s.totaal?'heeft-open':''}"><summary><span>${esc(maandNaam(month))}</span>${s.totaal?`<span class="maandmap-status">${s.totaal} nieuw</span>`:""}</summary><div class="maandmap-inhoud">
+          <button class="maandmap-knop ${s.refterOpen?'nieuw':s.refterAantal?'verwerkt':''}" onclick="openMaandOnderdeel('refter','${month}')"><span>🍽️ Refter<small>${esc(onderdeelStatusTekst('refter',s))}</small></span><span>›</span></button>
+          <button class="maandmap-knop ${s.activiteitOpen?'nieuw':s.activiteitAantal?'verwerkt':''}" onclick="openMaandOnderdeel('activiteiten','${month}')"><span>🚌 Activiteiten<small>${esc(onderdeelStatusTekst('activiteit',s))}</small></span><span>›</span></button>
+          <button class="maandmap-knop ${s.aankoopOpen?'nieuw':s.aankoopAantal?'verwerkt':''}" onclick="openMaandOnderdeel('aankopen','${month}')"><span>🛍️ Aankopen<small>${esc(onderdeelStatusTekst('aankoop',s))}</small></span><span>›</span></button>
+        </div></details>`}).join("")}</div></div>`;
+    }
+    window.openMaandOnderdeel=(soort,month)=>{
+      if(soort==="refter")gekozenRefterWeek=geldigeRefterWeek(`${month}-15`)||maandagVan(`${month}-15`);
+      if(soort==="activiteiten")activityMonth=month;
+      if(soort==="aankopen")purchaseMonth=month;
+      tab=soort;setActiveNav("");render();
+    };
+    window.openLeerlingenVoorKlas=()=>{tab="leerlingen";adminPanel="klaslijsten";classListMode="";render()};
+    window.terugNaarKlasMaanden=()=>{tab="klasstart";renderKlasPills();render()};
+    function renderLeerlingenSecretariaat(){
+      $("content").innerHTML=`<div class="panel"><div class="bar"><div><h2>Leerlingen — ${esc(activeClass)}</h2><p class="muted">Gebruik dit scherm alleen wanneer je leerlingen wilt toevoegen, verbeteren, importeren of verplaatsen.</p></div><button class="white" onclick="terugNaarKlasMaanden()">← Naar maandoverzicht</button></div><div id="leerlingenSecretariaatBody"></div></div>`;
+      const tijdelijk=document.createElement("div");tijdelijk.id="adminBody";$("leerlingenSecretariaatBody").appendChild(tijdelijk);
+      renderAdminClasslists();
+    }
+    function renderOpvolging(){
+      const bron=new Map(liveKlasDocumenten);if(data)bron.set(activeClass,data);
+      const month=schoolMonths().includes(opvolgMaand)?opvolgMaand:huidigeSchoolMaand();opvolgMaand=month;
+      const kaart=(soort,icoon,titel)=>`<section class="notice"><h3>${icoon} ${titel}</h3><p class="muted">Open een klas voor ${esc(maandNaam(month))}. Geel betekent dat er nog iets verwerkt moet worden.</p><div class="actions">${allClasses.map(k=>{const s=maandStatus(bron.get(k),month),open=s[`${soort}Open`]||0,aantal=s[`${soort}Aantal`]||0;return`<button class="${open?'heeft-open':'white'}" onclick="openOpvolgingKlas('${k}','${soort}','${month}')">${open?'● ':aantal?'✓ ':''}${k}${open?` — ${open} nieuw`:aantal?' — bekeken':''}</button>`}).join("")}</div></section>`;
+      $("content").innerHTML=`<div class="panel"><div class="bar"><div><h2>Schoolbreed opvolgen</h2><p class="muted">Kies een maand en doorloop daarna alle klassen voor Refter, Activiteiten of Aankopen. Ook verwerkte lijsten blijven openklikken.</p></div><label style="max-width:220px">Maand<select onchange="kiesOpvolgMaand(this.value)">${schoolMonths().map(m=>`<option value="${m}" ${m===month?'selected':''}>${esc(maandNaam(m))}</option>`).join("")}</select></label></div><div class="opvolg-keuzes">${kaart('refter','🍽️','Refterlijsten')}${kaart('activiteit','🚌','Activiteiten')}${kaart('aankoop','🛍️','Aankopen')}</div></div>`;
+    }
+    window.kiesOpvolgMaand=month=>{opvolgMaand=month;renderOpvolging()};
+    window.openOpvolgingKlas=async(klas,soort,month)=>{await openClass(klas,true);openMaandOnderdeel(soort==="activiteit"?"activiteiten":soort==="aankoop"?"aankopen":soort,month)};
+
     function render(){
       if(!data) return;
       if(!isSecretary() && tab === "administratie") tab = "klaslijst";
@@ -1464,6 +1554,9 @@
       if(tab==="aankopen") renderPurchases();
       if(tab==="maximumfactuur") renderMaximumfactuur();
       if(tab==="oudsten") renderOudstenOverzicht();
+      if(tab==="klasstart") renderKlasStart();
+      if(tab==="leerlingen") renderLeerlingenSecretariaat();
+      if(tab==="opvolging") renderOpvolging();
     }
 
     // ── MAXIMUMFACTUUR (code ook beschikbaar in maximumfactuur.js) ──
