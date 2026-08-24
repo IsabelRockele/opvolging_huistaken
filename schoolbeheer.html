@@ -108,6 +108,9 @@
     }
     .sb-klas-btn.active{background:#6b5d52;color:#fff;border-color:#6b5d52}
     .sb-klas-btn:hover:not(.active){background:#dde5f0}
+    .sb-klas-btn.has-test{border:2px solid #d99b00;background:#fff1b8;box-shadow:0 0 0 2px rgba(217,155,0,.12)}
+    .sb-klas-btn.has-test.active{background:#6b5d52;border-color:#ffc928;box-shadow:0 0 0 3px rgba(255,201,40,.35)}
+    .sb-test-badge{display:inline-block;margin-left:3px;font-size:12px;line-height:1}
 
     /* schooljaar input */
     .sb-schooljaar{padding:12px 14px 4px}
@@ -1002,6 +1005,8 @@
         activityMonth = "", purchaseMonth = "", gekozenRefterMaand = "",
         tab = "administratie", adminPanel = "wegwijzer", classListMode = "", saveTimer = null,
         excelImportVoorbeeld = [], excelImportBestandsnaam = "", kalenderImportVoorbeeld = [], lokaleBewaringTot = 0;
+    let testOverzichtUnsub = null;
+    const actieveTestKlassen = new Map();
     $("schooljaarInput").value = schooljaar;
 
     async function schoolbeheerVeiligheidskopie(ref, reden, forceer=false){
@@ -1127,9 +1132,25 @@
     function renderKlasPills(){
       const lijst = canOpenAllClasses() ? allClasses : allowedClasses;
       const toonActieveKlas = tab !== "administratie" || adminPanel === "klaslijsten";
-      $("klasPills").innerHTML = lijst.map(k =>
-        `<button class="sb-klas-btn ${toonActieveKlas&&k===activeClass?"active":""}" onclick="openClass('${esc(k)}')">${esc(k)}</button>`
-      ).join("");
+      $("klasPills").innerHTML = lijst.map(k => {
+        const maanden=actieveTestKlassen.get(k)||[];
+        const testTitel=maanden.length?`Test actief voor ${maanden.join(", ")}`:"";
+        return `<button class="sb-klas-btn ${toonActieveKlas&&k===activeClass?"active":""} ${maanden.length?"has-test":""}" ${testTitel?`title="${esc(testTitel)}"`:""} onclick="openClass('${esc(k)}')">${esc(k)}${maanden.length?'<span class="sb-test-badge" aria-label="Test actief">🧪</span>':""}</button>`;
+      }).join("");
+    }
+
+    function startTestOverzichtListener(){
+      if(testOverzichtUnsub){testOverzichtUnsub();testOverzichtUnsub=null;}
+      actieveTestKlassen.clear();
+      if(!isSecretary()){renderKlasPills();return;}
+      testOverzichtUnsub=onSnapshot(collection(db,"schoolbeheer",schooljaar,"klassen"),snap=>{
+        actieveTestKlassen.clear();
+        snap.docs.forEach(d=>{
+          const maanden=Object.keys(d.data()?.testModes||{}).sort();
+          if(maanden.length)actieveTestKlassen.set(d.id,maanden);
+        });
+        renderKlasPills();
+      },err=>console.warn("Testoverzicht laden mislukt",err));
     }
 
     async function loadRole(){
@@ -3422,6 +3443,7 @@
       toonSchermLaden("Schooljaar laden…");
       schooljaar = $("schooljaarInput").value.trim() || schooljaar;
       await loadAllowedClasses();
+      startTestOverzichtListener();
       activeClass = allowedClasses[0] || "";
       renderScope();
       if(activeClass) await openClass(activeClass, isSecretary());
@@ -3436,6 +3458,7 @@
       try{
         await loadRole();
         await loadAllowedClasses();
+        startTestOverzichtListener();
         if(!isSecretary() && !allowedClasses.length){
           $("content").innerHTML = `<div class="panel"><h2>Geen klas gevonden</h2><p class="muted">Je account is nog niet gekoppeld in klasleerkrachten.</p></div>`;
           setStatus("Geen klas");
