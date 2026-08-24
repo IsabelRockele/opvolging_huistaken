@@ -342,6 +342,12 @@
     .activity-kop-status .tag,.activity-kop-status .activiteit-telling{margin:0!important;font-size:11px;padding:4px 7px}
     .activity-kop .actions{gap:5px!important;flex-wrap:nowrap!important;margin-top:2px}
     .activity-kop .actions button{padding:6px 8px!important;font-size:12px!important}
+    .aankoop-groepen{display:grid;gap:12px;margin-top:14px}
+    .aankoop-groep{border:1px solid #ccd8e6;border-radius:13px;background:#fff;overflow:hidden}
+    .aankoop-groep-kop{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:11px 14px;background:#eef4fa}
+    .aankoop-groep-lijst{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:0}
+    .aankoop-groep-leerling{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 14px;border-top:1px solid #e2e8f0}
+    .aankoop-groep-leerling label{display:flex;align-items:center;gap:8px;font-weight:700;max-width:none;margin:0}
     /* codex-classlist-layout-fix */
     .class-admin-compact{
       background:#fffdf0;
@@ -1298,13 +1304,15 @@
         const nieuwData=snap.data();
         const vorigeVerwerking=new Map((data?.activiteiten||[]).map(a=>[a.id,!!a.processed]));
         const activiteitVerwerkingGewijzigd=(nieuwData.activiteiten||[]).some(a=>vorigeVerwerking.has(a.id)&&vorigeVerwerking.get(a.id)!==!!a.processed);
+        const vorigeAankoopVerwerking=new Map((data?.aankopen||[]).map(p=>[p.id,!!p.processed]));
+        const aankoopVerwerkingGewijzigd=(nieuwData.aankopen||[]).some(p=>vorigeAankoopVerwerking.has(p.id)&&vorigeAankoopVerwerking.get(p.id)!==!!p.processed);
         data = nieuwData;
         normalize();
         if(isSecretary() && tab === "klaslijst") tab = "administratie";
         if(!isSecretary() && tab === "administratie") tab = "klaslijst";
         setStatus("Bewaard", true);
         setActiveNav(tab);
-        if(Date.now()>=lokaleBewaringTot||activiteitVerwerkingGewijzigd){
+        if(Date.now()>=lokaleBewaringTot||activiteitVerwerkingGewijzigd||aankoopVerwerkingGewijzigd){
           const positie=window.scrollY;
           render();
           renderKlasPills();
@@ -2825,9 +2833,9 @@
         const eersteCutoff=datumPlusDagen(eersteRefterVerwerkingsWoensdag(),-1);
         const voorstel=processedInMonth(month)||(eersteCutoff.startsWith(month)?eersteCutoff:`${month}-07`);
         const secretariaatTest=onderdeel==="refter"&&isSecretary()?`<p class="muted"><strong>Test ook de weekverwerking:</strong> gebruik hieronder de groene knop <strong>Deze schoolweek verwerken en vergrendelen</strong>. De gekozen week staat dan onmiddellijk op slot bij klas- en zorgleerkrachten.</p>`:"";
-        return `<div class="notice no-print" style="margin:14px 0;background:#fff1c7;border:2px solid #e0a600"><strong>🧪 TEST actief voor ${esc(activeClass)} — ${esc(month)}</strong><p class="muted"><strong>Vul de refter en activiteiten nu gerust volledig in zoals je dat tijdens een echte schoolweek zou doen.</strong> Alles wat je tijdens deze proef invult, is zichtbaar voor het secretariaat. Na de gezamenlijke controle zet <strong>TEST WISSEN</strong> de maand terug naar de toestand van vóór de test. Begin daarom pas daarna met de werkelijke septemberregistraties.</p>${secretariaatTest}<button class="pink" onclick="resetTestMaand('${month}')">Testgegevens veilig leegmaken en vorige toestand herstellen</button></div>`;
+        return `<div class="notice no-print" style="margin:14px 0;background:#fff1c7;border:2px solid #e0a600"><strong>🧪 TEST actief voor ${esc(activeClass)} — ${esc(month)}</strong><p class="muted"><strong>Vul refter, activiteiten en aankopen nu gerust volledig in zoals je dat tijdens het echte gebruik zou doen.</strong> Alles wat je tijdens deze proef invult, is zichtbaar voor het secretariaat. Betalende testactiviteiten verschijnen automatisch ook tijdelijk bij <strong>Maximumfactuur</strong>; losse aankopen worden daar niet bij opgeteld. Na de gezamenlijke controle zet <strong>TEST WISSEN</strong> alles terug naar de toestand van vóór de test. Begin daarom pas daarna met de werkelijke septemberregistraties.</p>${secretariaatTest}<button class="pink" onclick="resetTestMaand('${month}')">Testgegevens veilig leegmaken en vorige toestand herstellen</button></div>`;
       }
-      return `<div class="notice no-print" style="margin:14px 0;background:#f7f7ff;border-color:#b8b6df"><strong>Een proef doen met secretariaat?</strong><p class="muted">Start een tijdelijke test voor deze klas en maand. Secretariaat ziet daarna dezelfde refter- en activiteitengegevens als bij echt gebruik. Na afloop kun je alles van de test veilig terugzetten.</p><button class="white" onclick="startTestMaand('${month}')">🧪 Test voor ${esc(month)} starten</button></div>`;
+      return `<div class="notice no-print" style="margin:14px 0;background:#f7f7ff;border-color:#b8b6df"><strong>Een proef doen met secretariaat?</strong><p class="muted">Start een tijdelijke test voor deze klas en maand. Secretariaat ziet daarna dezelfde refter-, activiteiten- en aankoopgegevens als bij echt gebruik. Na afloop kun je alles van de test veilig terugzetten.</p><button class="white" onclick="startTestMaand('${month}')">🧪 Test voor ${esc(month)} starten</button></div>`;
     }
     window.verwerkRefterTest = month => {
       if(!isSecretary()||!testMaandGegevens(month))return;
@@ -2846,6 +2854,7 @@
         refterBefore:structuredClone(data.refter?.[month]||{}),
         processedBefore:structuredClone(data.processed||{refter:""}),
         activitiesBefore:structuredClone((data.activiteiten||[]).filter(a=>String(a.date||"").slice(0,7)===month)),
+        purchasesBefore:structuredClone((data.aankopen||[]).filter(p=>String(p.date||"").slice(0,7)===month)),
         refterVrijeDagenBefore:structuredClone((data.refterVrijeDagen||[]).filter(v=>String(v.date||v.datum||v.start||"").slice(0,7)===month))
       };
       markDirty();render();
@@ -2857,6 +2866,7 @@
       data.refter||={};data.refter[month]=structuredClone(test.refterBefore||{});
       data.processed=structuredClone(test.processedBefore||{refter:""});
       data.activiteiten=[...(data.activiteiten||[]).filter(a=>String(a.date||"").slice(0,7)!==month),...structuredClone(test.activitiesBefore||[])];
+      if(Object.prototype.hasOwnProperty.call(test,"purchasesBefore"))data.aankopen=[...(data.aankopen||[]).filter(p=>String(p.date||"").slice(0,7)!==month),...structuredClone(test.purchasesBefore||[])];
       data.refterVrijeDagen=[...(data.refterVrijeDagen||[]).filter(v=>String(v.date||v.datum||v.start||"").slice(0,7)!==month),...structuredClone(test.refterVrijeDagenBefore||[])];
       delete data.testModes[month];
       markDirty();render();alert(`De testgegevens van ${activeClass} voor ${month} zijn verwijderd. De toestand van vóór de test is hersteld.`);
@@ -3024,12 +3034,24 @@
     function renderPurchases(){
       purchaseMonth = $("buyMonth")?.value || purchaseMonth || schoolMonths()[0];
       const students=activeStudents(`${purchaseMonth}-15`);
-      $("content").innerHTML = `<div class="panel"><div class="bar"><div><h2>Aankopen <span class="muted" style="font-weight:400">${esc(activeClass)}</span></h2><p class="muted">${isSecretary()?"Secretariaat kijkt na en vinkt verwerkt aan.":"Voeg aankopen toe wanneer een kind iets koopt."}</p></div><label class="right no-print" style="max-width:180px">Maand<input id="buyMonth" type="month" value="${purchaseMonth}" onchange="wisselAankopenMaand(this.value)"></label>${screenTools("aankopen")}</div>${helpPanel("aankopen")}${!isSecretary()?`<div class="row no-print"><label>Leerling<select id="buyStudent">${students.map(s=>`<option value="${s.id}">${esc(name(s))}</option>`).join("")}</select></label><label>Aankoop<select id="buyType" onchange="buyPrice.value=this.value==='turnshirt'?8:1"><option value="badmuts">Badmuts - &euro;1</option><option value="turnshirt">Turn t-shirt - &euro;8</option><option value="ander">Andere</option></select></label><label>Prijs<input id="buyPrice" type="number" value="1"></label><label>Datum<input id="buyDate" type="date" value="${purchaseMonth}-01"></label><button class="primary" onclick="addPurchase()">Aankoop toevoegen</button></div>`:""}${purchaseTable()}</div>`;
+      const actieveTest=testMaandGegevens(purchaseMonth);
+      if(actieveTest&&!Object.prototype.hasOwnProperty.call(actieveTest,"purchasesBefore")){actieveTest.purchasesBefore=structuredClone((data.aankopen||[]).filter(p=>String(p.date||"").slice(0,7)===purchaseMonth));markDirty();}
+      $("content").innerHTML = `<div class="panel"><div class="bar"><div><h2>Aankopen <span class="muted" style="font-weight:400">${esc(activeClass)}</span></h2><p class="muted">${isSecretary()?"Secretariaat kijkt na en vinkt verwerkt aan.":"Voeg aankopen toe wanneer een kind iets koopt."}</p></div><label class="right no-print" style="max-width:180px">Maand<input id="buyMonth" type="month" value="${purchaseMonth}" onchange="wisselAankopenMaand(this.value)"></label>${screenTools("aankopen")}</div>${helpPanel("aankopen")}${testModeBlok(purchaseMonth,"aankopen")}${!isSecretary()?`<div class="row no-print"><label>Leerling<select id="buyStudent">${students.map(s=>`<option value="${s.id}">${esc(name(s))}</option>`).join("")}</select></label><label>Aankoop<select id="buyType" onchange="buyPrice.value=this.value==='turnshirt'?8:1"><option value="badmuts">Badmuts - &euro;1</option><option value="turnshirt">Turn t-shirt - &euro;8</option><option value="ander">Andere</option></select></label><label>Prijs<input id="buyPrice" type="number" value="1"></label><label>Datum<input id="buyDate" type="date" value="${purchaseMonth}-01"></label><button class="primary" onclick="addPurchase()">Aankoop toevoegen</button></div>`:""}${purchaseTable()}</div>`;
     }
     window.addPurchase = () => { if(isSecretary())return; data.aankopen.push({id:uid(),studentId:$("buyStudent").value,type:$("buyType").value,price:Number($("buyPrice").value||0),date:$("buyDate").value,processed:false}); markDirty(); renderPurchases(); };
-    function purchaseTable(){ const students=Object.fromEntries(data.leerlingen.map(s=>[s.id,name(s)])), list=data.aankopen.filter(p => String(p.date||"").slice(0,7) === purchaseMonth); return list.length ? `<div class="table-wrap" style="margin-top:14px"><table><thead><tr><th>Leerling</th><th>Aankoop</th><th>Datum</th><th>Prijs</th><th>Verwerkt</th></tr></thead><tbody>${list.map(p=>`<tr class="${p.processed?"locked":""}"><td>${esc(students[p.studentId]||"")}</td><td>${esc(p.type)}</td><td>${esc(p.date)}</td><td>&euro;${Number(p.price||0).toFixed(2)}</td><td>${isSecretary()?`<input type="checkbox" ${p.processed?"checked":""} onchange="togglePurchase('${p.id}',this.checked)">`:p.processed?"ja":"nee"}</td></tr>`).join("")}</tbody></table></div>` : `<div class="notice">Nog geen aankopen ingevoerd voor deze maand.${!isSecretary()?" Gebruik hierboven 'Aankoop toevoegen'.":""}</div>`; }
+    function purchaseTable(){
+      const studentMap=Object.fromEntries(data.leerlingen.map(s=>[s.id,s])),list=data.aankopen.filter(p=>String(p.date||"").slice(0,7)===purchaseMonth);
+      if(!list.length)return `<div class="notice">Nog geen aankopen ingevoerd voor deze maand.${!isSecretary()?" Gebruik hierboven 'Aankoop toevoegen'.":""}</div>`;
+      if(isSecretary()){
+        const labels={badmuts:"Badmuts",turnshirt:"Turn-T-shirt",ander:"Andere aankoop"},groepen=new Map();
+        list.forEach(p=>{const prijs=Number(p.price||0),sleutel=`${p.type||"ander"}|${prijs.toFixed(2)}`;if(!groepen.has(sleutel))groepen.set(sleutel,{type:p.type||"ander",prijs,items:[]});groepen.get(sleutel).items.push(p);});
+        return `<div class="aankoop-groepen">${[...groepen.values()].sort((a,b)=>(labels[a.type]||a.type).localeCompare(labels[b.type]||b.type,"nl")||a.prijs-b.prijs).map(g=>{const verwerkt=g.items.filter(p=>p.processed).length;return`<section class="aankoop-groep"><div class="aankoop-groep-kop"><span><strong>${esc(labels[g.type]||g.type)}</strong> · &euro;${g.prijs.toFixed(2)}</span><span class="tag ${verwerkt===g.items.length?'done':''}">${verwerkt}/${g.items.length} verwerkt</span></div><div class="aankoop-groep-lijst">${g.items.sort((a,b)=>naamZonderKomma(studentMap[a.studentId]||{}).localeCompare(naamZonderKomma(studentMap[b.studentId]||{}),"nl")).map(p=>`<div class="aankoop-groep-leerling ${p.processed?'locked':''}"><span><strong>${esc(naamZonderKomma(studentMap[p.studentId]||{}))}</strong><br><small class="muted">${esc(p.date||"")}</small></span><label><input type="checkbox" ${p.processed?'checked':''} onchange="togglePurchase('${p.id}',this.checked)"> verwerkt</label></div>`).join("")}</div></section>`}).join("")}</div>`;
+      }
+      const students=Object.fromEntries(data.leerlingen.map(s=>[s.id,name(s)]));
+      return `<div class="table-wrap" style="margin-top:14px"><table><thead><tr><th>Leerling</th><th>Aankoop</th><th>Datum</th><th>Prijs</th><th>Verwerkt</th></tr></thead><tbody>${list.map(p=>`<tr class="${p.processed?"locked":""}"><td>${esc(students[p.studentId]||"")}</td><td>${esc(p.type)}</td><td>${esc(p.date)}</td><td>&euro;${Number(p.price||0).toFixed(2)}</td><td>${p.processed?"ja":"nee"}</td></tr>`).join("")}</tbody></table></div>`;
+    }
     window.wisselAankopenMaand = value => { purchaseMonth = value; renderPurchases(); };
-    window.togglePurchase = (id,checked) => { if(!isSecretary())return; const p=data.aankopen.find(x=>x.id===id); if(p)p.processed=checked; markDirty(); renderPurchases(); };
+    window.togglePurchase = async (id,checked) => { if(!isSecretary())return; const p=data.aankopen.find(x=>x.id===id); if(!p)return;p.processed=checked;renderPurchases();setStatus("Wijzigingen...");await saveNow(); };
 
     function renderMessageAdmin(){
       $("adminBody").innerHTML = `
