@@ -2142,6 +2142,12 @@
 
     let adminNavigatieOpen=false;
     function renderAdmin(){
+      if(adminPanel==="klaslijsten"){
+        tab="leerlingen";
+        setActiveNav("leerlingen");
+        renderLeerlingenSecretariaat();
+        return;
+      }
       werkRustigeSecretariaatSidebarBij();
       const toonVolledigeNavigatie=adminPanel!=="wegwijzer";
       $("content").innerHTML = `
@@ -2160,8 +2166,11 @@
       if(adminPanel==="nieuw schooljaar") renderNewYearHome();
     }
     window.openAdmin = p => {
+      if(p==="klaslijsten"){
+        tab="leerlingen";adminPanel="klaslijsten";classListMode="";secretariaatModulesOpen=true;
+        renderKlasPills();render();return;
+      }
       adminPanel = p;
-      if(p==="klaslijsten"){classListMode="";secretariaatModulesOpen=true;}
       if(p==="wegwijzer")secretariaatModulesOpen=false;
       renderKlasPills();renderAdmin();
     };
@@ -2225,7 +2234,7 @@
     }
     window.toonWegwijzerCategorie=function(categorie){wegwijzerCategorie=categorie;renderSecretariaatWegwijzer()};
     window.gaNaarSecretariaatTaak=function(taak){
-      if(["nieuwe-leerling","excel","verplaatsen","klaslijsten"].includes(taak)){adminPanel="klaslijsten";classListMode=taak==="nieuwe-leerling"?"nieuw":taak==="klaslijsten"?"":taak;renderKlasPills();renderAdmin();return}
+      if(["nieuwe-leerling","excel","verplaatsen","klaslijsten"].includes(taak)){tab="leerlingen";adminPanel="klaslijsten";classListMode=taak==="nieuwe-leerling"?"nieuw":taak==="klaslijsten"?"":taak;secretariaatModulesOpen=true;renderKlasPills();render();return}
       if(taak==="nieuw-schooljaar"){adminPanel="nieuw schooljaar";renderKlasPills();renderAdmin()}
     };
 
