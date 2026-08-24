@@ -143,6 +143,9 @@ async function toonOpvallendeStartmeldingen(user, rol, koppelingSnaps = [], plan
   });
   zetAppMeldingenBadge(meldingen.size);
   if (!meldingen.size) return;
+  // Op het keuzescherm toont de gedeelde meldingenmodule voortaan alleen het
+  // compacte icoon in de hoofdbalk. De oude grote gele kaart blijft weg.
+  return;
   const blok = document.createElement('div');
   blok.id = 'portaalActieveMeldingen';
   blok.style.cssText = 'margin:0 0 18px;background:#fff4bf;border:2px solid #e1a900;border-radius:16px;padding:16px 18px;box-shadow:0 5px 16px rgba(91,65,0,.13);color:#463500';

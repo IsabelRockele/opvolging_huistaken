@@ -38,15 +38,15 @@ function isAfgehandeld(melding,user,zorgRol){
   return melding.responseType === "read" ? ["read","done"].includes(status) : status === "done";
 }
 
-function plaatsBalk(meldingen){
+function plaatsBalk(meldingen,openAantal){
   document.getElementById("secretariaatMeldingenbalk")?.remove();
   if (!meldingen.length) return;
   const blok = document.createElement("aside");
   blok.id = "secretariaatMeldingenbalk";
   blok.setAttribute("aria-live","polite");
-  const regels = meldingen.slice(0,3).map(m => `<li><strong>${esc(m.text)}</strong>${m.due ? `<small>In orde tegen ${esc(m.due)}</small>` : ""}</li>`).join("");
+  const regels = meldingen.slice(0,3).map(m => `<li><strong>${esc(m.text)}</strong>${m._afgehandeld?'<small style="color:#267346;font-weight:700">✓ in orde</small>':m.due ? `<small>In orde tegen ${esc(m.due)}</small>` : ""}</li>`).join("");
   blok.innerHTML = `
-    <button type="button" class="smb-icoon" aria-expanded="false" title="${meldingen.length} open melding${meldingen.length===1?"":"en"} van het secretariaat">📣<span>${meldingen.length}</span></button>
+    <button type="button" class="smb-icoon" aria-expanded="false" title="${openAantal?`${openAantal} melding${openAantal===1?"":"en"} nog te lezen of uit te voeren`:`${meldingen.length} recente melding${meldingen.length===1?"":"en"}`}">📣${openAantal?`<span>${openAantal}</span>`:""}</button>
     <div class="smb-inhoud" hidden>
       <div class="smb-kop"><strong>Meldingen van het secretariaat</strong><button type="button" class="smb-sluit" aria-label="Meldingen sluiten">×</button></div>
       <ul>${regels}</ul>
@@ -60,7 +60,7 @@ function plaatsBalk(meldingen){
     style.textContent = `#secretariaatMeldingenbalk{box-sizing:border-box;position:relative;z-index:9998;margin-left:auto;color:#453400;font-family:Arial,sans-serif;flex:0 0 auto}#secretariaatMeldingenbalk .smb-icoon{position:relative;display:flex;align-items:center;justify-content:center;width:42px;height:38px;border:1px solid rgba(255,255,255,.5);border-radius:10px;background:rgba(255,255,255,.18);font-size:21px;cursor:pointer}#secretariaatMeldingenbalk .smb-icoon span{position:absolute;right:-6px;top:-7px;min-width:19px;height:19px;padding:0 4px;box-sizing:border-box;border-radius:999px;background:#e33d3d;color:#fff;font:bold 12px/19px Arial;text-align:center;box-shadow:0 0 0 2px #fff}#secretariaatMeldingenbalk .smb-inhoud{position:absolute;right:0;top:calc(100% + 9px);width:min(430px,calc(100vw - 24px));max-height:70vh;overflow:auto;padding:14px 16px;background:#fff9dc;border:2px solid #d59b00;border-radius:14px;box-shadow:0 10px 30px rgba(37,28,0,.28);color:#453400}#secretariaatMeldingenbalk .smb-kop{display:flex;justify-content:space-between;align-items:center;gap:16px;font-size:17px}#secretariaatMeldingenbalk ul{margin:10px 0;padding-left:22px}#secretariaatMeldingenbalk li+li{margin-top:8px}#secretariaatMeldingenbalk li small{display:block;font-weight:400}#secretariaatMeldingenbalk a{display:inline-block;background:#356d4c;color:#fff;text-decoration:none;font-weight:800;padding:8px 12px;border-radius:9px}#secretariaatMeldingenbalk button{font-family:inherit}.smb-sluit{width:31px;height:31px;background:#fff;border:1px solid #9f780b;border-radius:8px;color:#453400;font-size:22px;line-height:1;cursor:pointer}.smb-uitleg{display:block;margin-top:8px}@media print{#secretariaatMeldingenbalk{display:none!important}}`;
     document.head.appendChild(style);
   }
-  const anker = document.querySelector("header .tools, header .actions, header, .topbar, #topbar");
+  const anker = document.querySelector(".banner-account, header .tools, header .actions, header, .topbar, #topbar");
   if(anker) anker.appendChild(blok); else document.body.insertAdjacentElement("afterbegin",blok);
   const icoon=blok.querySelector(".smb-icoon"),inhoud=blok.querySelector(".smb-inhoud");
   const sluit=()=>{inhoud.hidden=true;icoon.setAttribute("aria-expanded","false")};
@@ -93,12 +93,13 @@ async function laadMeldingen(user){
   documenten.forEach(snap=>{
     if(!snap.exists()) return;
     (snap.data().messages||[]).forEach(m=>{
-      if(m.archived||(m.visibleUntil&&m.visibleUntil<vandaag)||isAfgehandeld(m,user,zorgRol)) return;
+      if(m.archived||(m.visibleUntil&&m.visibleUntil<vandaag)) return;
       const oud=!Array.isArray(m.targetClasses)&&typeof m.targetCare==="undefined";
-      if(oud||(zorgRol?m.targetCare===true:true)) uniek.set(m.groupId||m.id,m);
+      if(oud||(zorgRol?m.targetCare===true:true)) uniek.set(m.groupId||m.id,{...m,_afgehandeld:isAfgehandeld(m,user,zorgRol)});
     });
   });
-  plaatsBalk([...uniek.values()]);
+  const meldingen=[...uniek.values()];
+  plaatsBalk(meldingen,meldingen.filter(m=>!m._afgehandeld).length);
 }
 
 onAuthStateChanged(auth,user=>{if(user) laadMeldingen(user).catch(err=>console.warn("Meldingenbalk kon niet laden",err));});
