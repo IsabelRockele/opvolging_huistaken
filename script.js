@@ -82,10 +82,34 @@ function huidigSchooljaarVoorMeldingen() {
   return `${start}-${start + 1}`;
 }
 
-async function toonOpvallendeStartmeldingen(user, rol, koppelingSnaps = []) {
+let meldingenControleTimer = null;
+function zetAppMeldingenBadge(aantal = 0) {
+  try {
+    if (aantal > 0 && navigator.setAppBadge) navigator.setAppBadge(aantal).catch(() => {});
+    else if (navigator.clearAppBadge) navigator.clearAppBadge().catch(() => {});
+  } catch (_) {}
+}
+function meldingIsAfgehandeldVoor(m, user, zorgRol) {
+  const status = zorgRol
+    ? (m.careAcks?.[user.uid]?.status || '')
+    : (m.done || m.ackStatus === 'done' ? 'done' : m.ackStatus === 'read' ? 'read' : '');
+  return m.responseType === 'read' ? ['read', 'done'].includes(status) : status === 'done';
+}
+
+async function toonOpvallendeStartmeldingen(user, rol, koppelingSnaps = [], planHerhaling = true) {
+  if (planHerhaling) {
+    clearInterval(meldingenControleTimer);
+    meldingenControleTimer = setInterval(
+      () => toonOpvallendeStartmeldingen(user, rol, koppelingSnaps, false).catch(console.warn),
+      5 * 60 * 1000
+    );
+  }
   const bestaand = document.getElementById('portaalActieveMeldingen');
   if (bestaand) bestaand.remove();
-  if (!user || rol === 'secretariaat') return;
+  if (!user || rol === 'secretariaat') {
+    zetAppMeldingenBadge(0);
+    return;
+  }
   const zorgRol = ['beheerder', 'zorgcoordinator', 'zorgleerkracht'].includes(rol);
   const schooljaar = huidigSchooljaarVoorMeldingen();
   const gekoppeld = new Set();
@@ -95,19 +119,29 @@ async function toonOpvallendeStartmeldingen(user, rol, koppelingSnaps = []) {
     else if (d.id.startsWith(schooljaar + '_')) gekoppeld.add(d.id.slice(schooljaar.length + 1).toUpperCase());
   }));
   const klassen = zorgRol ? ['K1','K2','K3','1A','2A','3A','4A','5A','6A'] : [...gekoppeld];
-  if (!klassen.length) return;
+  if (!klassen.length) {
+    zetAppMeldingenBadge(0);
+    return;
+  }
   const vandaag = new Date().toISOString().slice(0,10);
   const docs = await Promise.all(klassen.map(async klas => ({klas,snap:await getDoc(doc(db,'schoolbeheer',schooljaar,'klassen',klas))})));
-  const meldingen = new Map();
+  const kandidaten = [];
   docs.forEach(({klas,snap}) => {
     if (!snap.exists()) return;
     (snap.data().messages || []).forEach(m => {
       if (m.archived || (m.visibleUntil && m.visibleUntil < vandaag)) return;
       const oud = !Array.isArray(m.targetClasses) && typeof m.targetCare === 'undefined';
       const bestemd = oud || (zorgRol ? m.targetCare === true : (m.targetClasses || []).includes(klas));
-      if (bestemd) meldingen.set(m.groupId || m.id, m);
+      if (bestemd) kandidaten.push(m);
     });
   });
+  const afgehandeldeGroepen = new Set(kandidaten.filter(m => meldingIsAfgehandeldVoor(m, user, zorgRol)).map(m => m.groupId || m.id));
+  const meldingen = new Map();
+  kandidaten.forEach(m => {
+    const sleutel = m.groupId || m.id;
+    if (!afgehandeldeGroepen.has(sleutel)) meldingen.set(sleutel, m);
+  });
+  zetAppMeldingenBadge(meldingen.size);
   if (!meldingen.size) return;
   const blok = document.createElement('div');
   blok.id = 'portaalActieveMeldingen';
@@ -561,6 +595,8 @@ if ('serviceWorker' in navigator) {
 }
 
 window.uitloggenVanIndex = function () {
+  clearInterval(meldingenControleTimer);
+  zetAppMeldingenBadge(0);
   signOut(auth)
     .then(() => {
       const kaart = document.getElementById('ingelogd-kaart');

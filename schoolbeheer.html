@@ -1824,6 +1824,17 @@
         if(zorgRol) return m.targetCare === true;
         return (m.targetClasses||[]).includes(activeClass);
       });
+      if(!isSecretary()){
+        const openAantal=activeMessages.filter(m=>{
+          const zorgStatus=zorgRol?(m.careAcks?.[user.uid]?.status||""):"";
+          const status=zorgStatus||(m.done||m.ackStatus==="done"?"done":m.ackStatus==="read"?"read":"");
+          return m.responseType==="read"?!["read","done"].includes(status):status!=="done";
+        }).length;
+        try{
+          if(openAantal&&navigator.setAppBadge)navigator.setAppBadge(openAantal).catch(()=>{});
+          else if(navigator.clearAppBadge)navigator.clearAppBadge().catch(()=>{});
+        }catch(_){}
+      }
       const herstel = datumHerstelNotice();
       $("messages").innerHTML = herstel + activeMessages.map(m=>{
         const eigenZorgStatus=zorgRol&&!isSecretary()?(m.careAcks?.[user.uid]?.status||""):"";
