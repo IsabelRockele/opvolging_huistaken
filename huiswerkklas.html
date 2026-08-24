@@ -20,7 +20,7 @@
     label{display:block;font-weight:800;font-size:12px;color:#4b3b2d;margin-bottom:4px}
     input,select{font:inherit;width:100%;border:1px solid var(--line);border-radius:10px;padding:8px 10px;background:#fff}
     input[type="checkbox"]{width:19px;height:19px;accent-color:#2f8f67}
-    .toolbar{display:grid;grid-template-columns:160px 165px 180px auto auto;gap:10px;align-items:end}
+    .toolbar{display:grid;grid-template-columns:150px 155px 170px auto auto minmax(145px,180px) auto;gap:10px;align-items:end}
     .muted{color:var(--muted);font-size:13px;line-height:1.45}.notice{background:#fff8d6;border:1px solid #f2c94c;border-radius:10px;padding:10px 12px;margin-bottom:12px}
     .two{display:grid;grid-template-columns:minmax(300px,.9fr) minmax(420px,1.1fr);gap:14px;align-items:start}
     .class-block{border:1px solid var(--line);border-radius:14px;overflow:hidden;margin:12px 0;background:#fff}
@@ -66,6 +66,8 @@
       <label>Datum toevoegen<input id="dateInput" type="date"></label>
       <button class="secondary" id="saveBtn">Bewaren</button>
       <button class="white" id="addDateBtn">Datum toevoegen</button>
+      <label>PDF voor<select id="pdfScope"></select></label>
+      <button class="white" id="pdfBtn">📄 PDF deelnemers per dag</button>
     </div>
     <div class="toolbar" id="secretaryTools" style="display:none;margin-top:12px">
       <label>Verwerk tot datum<input id="processedUntilInput" type="date"></label>
@@ -81,13 +83,14 @@
     <div class="bar">
       <div>
         <h2>Huiswerkklas per maand</h2>
-        <p class="muted">Alleen kinderen die in Klaslijsten aangeduid zijn voor de huiswerkklas verschijnen hier. Kinderen met schooladvies staan als gratis gemarkeerd.</p>
+        <p class="muted">Alleen kinderen die in Klaslijsten aangeduid zijn voor de huiswerkklas verschijnen hier. Kinderen met schooladvies staan als gratis gemarkeerd. Kies bovenaan bij <strong>PDF voor</strong> één klas voor een compact klasblad of <strong>Alle klassen</strong> voor het schoolbrede overzicht per dag.</p>
       </div>
       <span class="tag right" id="countTag">0 leerlingen</span>
     </div>
     <div id="homeworkTable"></div>
   </section>
 </main>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script type="module">
 import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
@@ -179,6 +182,8 @@ function renderRoleTools(){
   $("workHelp").innerHTML=secretary
     ? "Secretariaat ziet hier de aanwezigheden voor de facturatie. Verwerk tot een datum of verwerk de hele maand; die dagen worden dan geblokkeerd voor klasleerkrachten. Secretariaat kan fouten wel nog aanpassen."
     : 'Klasleerkrachten duiden in Klaslijsten bij hun eigen klas aan welke kinderen naar de huiswerkklas gaan. Ontbreekt een leerling? Voeg die eerst toe via <a href="schoolbeheer.html" target="_blank" rel="noopener">Klaslijsten → Nieuwe leerling</a>. Hier verschijnen alleen kinderen die daar voor de huiswerkklas zijn aangeduid.';
+  const toegelatenKlassen=(isSchoolBreed()||secretary)?allClasses:ownClasses;
+  $("pdfScope").innerHTML=`${(isSchoolBreed()||secretary)?'<option value="all">Alle klassen</option>':''}${toegelatenKlassen.map(k=>`<option value="${esc(k)}">Klas ${esc(k)}</option>`).join("")}`;
 }
 function render(){ $("status").textContent=`${schooljaar} - ${month}`; renderRoleTools(); renderTable(); }
 function collect(){
@@ -224,6 +229,59 @@ async function processWholeMonth(){
   (hw.dates||[]).forEach(d=>{ hw.processedDates[d]=true; });
   await save();
 }
+function pdfLeerlingNaam(naam){return String(naam||"").replace(",","").trim();}
+function downloadParticipantsPdf(){
+  if(!window.jspdf?.jsPDF)return alert("De PDF-module is nog niet geladen. Probeer over enkele seconden opnieuw.");
+  const scope=$("pdfScope")?.value||"all",rows=localRows().filter(r=>scope==="all"||r.klas===scope),{jsPDF}=window.jspdf,pdf=new jsPDF({orientation:"portrait",unit:"mm",format:"a4"});
+  const pageW=210,pageH=297,marge=14,colGap=8,colW=(pageW-(marge*2)-colGap)/2,colX=[marge,marge+colW+colGap],topY=42,bottomY=282;
+  const dagen=[{key:"dinsdag",label:"Dinsdag"},{key:"donderdag",label:"Donderdag"}];
+  function paginakop(label,totaal,vervolg=false){
+    pdf.setFillColor(107,93,82);pdf.rect(0,0,pageW,25,"F");
+    pdf.setTextColor(255,255,255);pdf.setFont("helvetica","bold");pdf.setFontSize(17);pdf.text("Huiswerkklas",marge,11);
+    pdf.setFontSize(10);pdf.setFont("helvetica","normal");pdf.text(`Schooljaar ${schooljaar}`,marge,18);
+    pdf.setTextColor(44,31,14);pdf.setFont("helvetica","bold");pdf.setFontSize(15);pdf.text(`${label}${vervolg?" - vervolg":""}`,marge,34);
+    pdf.setFontSize(10);pdf.setFont("helvetica","normal");pdf.text(`${totaal} deelnemer${totaal===1?"":"s"}`,pageW-marge,34,{align:"right"});
+  }
+  if(scope!=="all"){
+    const uniekeLeerlingen=new Set(rows.map(r=>r.key)).size;
+    paginakop(`Klas ${scope}`,uniekeLeerlingen);
+    dagen.forEach((dag,index)=>{
+      const x=colX[index],deelnemers=rows.filter(r=>!!r.days?.[dag.key]);let y=44;
+      pdf.setFillColor(238,243,249);pdf.roundedRect(x,y,colW,10,2,2,"F");pdf.setTextColor(51,75,112);pdf.setFont("helvetica","bold");pdf.setFontSize(12);pdf.text(`${dag.label}  -  ${deelnemers.length}`,x+4,y+6.7);y+=13;
+      if(!deelnemers.length){pdf.setTextColor(117,104,85);pdf.setFont("helvetica","normal");pdf.setFontSize(10);pdf.text("Geen deelnemers.",x+3,y+4);return;}
+      deelnemers.forEach((r,nr)=>{pdf.setTextColor(44,31,14);pdf.setFont("helvetica","normal");pdf.setFontSize(10);pdf.text(`${nr+1}. ${pdfLeerlingNaam(r.name)}${r.free?"  (gratis)":""}`,x+3,y+3.8,{maxWidth:colW-6});pdf.setDrawColor(232,226,216);pdf.line(x+2,y+5,x+colW-2,y+5);y+=6;});
+    });
+    pdf.setTextColor(117,104,85);pdf.setFontSize(8);pdf.text("GO! Basisschool De Linde",pageW/2,pageH-7,{align:"center"});
+    pdf.save(`huiswerkklas_${scope}_${schooljaar}.pdf`);return;
+  }
+  dagen.forEach((dag,dagIndex)=>{
+    const deelnemers=rows.filter(r=>!!r.days?.[dag.key]);
+    if(dagIndex)pdf.addPage();
+    paginakop(dag.label,deelnemers.length);
+    if(!deelnemers.length){pdf.setFontSize(11);pdf.setTextColor(117,104,85);pdf.text("Geen leerlingen aangeduid voor deze dag.",marge,48);return;}
+    const groepen=allClasses.map(klas=>({klas,leerlingen:deelnemers.filter(r=>r.klas===klas)})).filter(g=>g.leerlingen.length);
+    let kolom=0,y=topY;
+    function volgendeKolom(){
+      if(kolom===0){kolom=1;y=topY;}
+      else{pdf.addPage();paginakop(dag.label,deelnemers.length,true);kolom=0;y=topY;}
+    }
+    groepen.forEach(g=>{
+      if(y+14>bottomY)volgendeKolom();
+      const x=colX[kolom];
+      pdf.setFillColor(238,243,249);pdf.roundedRect(x,y,colW,8,2,2,"F");
+      pdf.setTextColor(51,75,112);pdf.setFont("helvetica","bold");pdf.setFontSize(11);pdf.text(`${g.klas}  -  ${g.leerlingen.length} leerling${g.leerlingen.length===1?"":"en"}`,x+3,y+5.5);y+=10;
+      g.leerlingen.forEach((r,index)=>{
+        if(y+6>bottomY){volgendeKolom();const nx=colX[kolom];pdf.setFillColor(238,243,249);pdf.roundedRect(nx,y,colW,8,2,2,"F");pdf.setTextColor(51,75,112);pdf.setFont("helvetica","bold");pdf.setFontSize(10);pdf.text(`${g.klas} - vervolg`,nx+3,y+5.5);y+=10;}
+        const lx=colX[kolom];pdf.setTextColor(44,31,14);pdf.setFont("helvetica","normal");pdf.setFontSize(10);pdf.text(`${index+1}. ${pdfLeerlingNaam(r.name)}${r.free?"  (gratis)":""}`,lx+3,y+3.8,{maxWidth:colW-6});
+        pdf.setDrawColor(232,226,216);pdf.line(lx+2,y+5,lx+colW-2,y+5);y+=6;
+      });
+      y+=4;
+    });
+  });
+  const pages=pdf.getNumberOfPages();
+  for(let i=1;i<=pages;i++){pdf.setPage(i);pdf.setTextColor(117,104,85);pdf.setFont("helvetica","normal");pdf.setFontSize(8);pdf.text(`GO! Basisschool De Linde  •  pagina ${i} van ${pages}`,pageW/2,pageH-7,{align:"center"});}
+  pdf.save(`huiswerkklas_alle_klassen_${schooljaar}.pdf`);
+}
 onAuthStateChanged(auth,async u=>{
   if(!u){location.href="index.html";return;}
   user=u; $("schooljaarInput").value=schooljaar; $("monthInput").value=month; $("dateInput").value=date;
@@ -232,6 +290,7 @@ onAuthStateChanged(auth,async u=>{
   $("addDateBtn").onclick=addDate;
   $("processUntilBtn").onclick=processUntil;
   $("processMonthBtn").onclick=processWholeMonth;
+  $("pdfBtn").onclick=downloadParticipantsPdf;
   $("schooljaarInput").onchange=loadData; $("monthInput").onchange=loadData; $("dateInput").onchange=()=>{date=$("dateInput").value;};
   $("logoutBtn").onclick=()=>signOut(auth).then(()=>location.href="index.html");
   await loadData();
