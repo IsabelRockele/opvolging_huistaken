@@ -95,9 +95,10 @@
     #navOpvolging{background:#fff7df;border-left-color:#d5a52c;color:#71570d}
     #navOpvolging.active{background:#ffedb4;border-left-color:#a87900}
     .maandmappen{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px;margin-top:18px}
-    .maandmap{border:1px solid #cbd8e6;border-radius:15px;background:#fff;overflow:hidden;box-shadow:0 3px 10px rgba(31,55,80,.05)}
+    .maandmap{border:1px solid #cbd8e6;border-radius:15px;background:#fff;overflow:hidden;box-shadow:0 3px 10px rgba(31,55,80,.05);min-height:126px}
     .maandmap.heeft-open{border:2px solid #e0a600;background:#fffaf0}
-    .maandmap summary{cursor:pointer;list-style:none;padding:29px 18px 17px;font-size:18px;font-weight:850;display:flex;align-items:center;gap:10px;position:relative;min-height:78px}
+    .maandmap summary{cursor:pointer;list-style:none;padding:29px 18px 17px;font-size:18px;font-weight:850;display:flex;align-items:center;gap:10px;position:relative;height:124px;box-sizing:border-box}
+    .maandmap[open] summary{height:124px}
     .maandmap summary::-webkit-details-marker{display:none}
     .maandmap summary::before{content:'📁';font-size:25px;margin-right:7px}
     .maandmap[open] summary::before{content:'📂'}
