@@ -89,12 +89,12 @@
     },
     "schooloverzicht.html": {
       titel: "Zo gebruik je het schooloverzicht",
-      kort: "Kies links een klas of zoek een naam; dit scherm is alleen een overzicht.",
+      kort: "Kies hieronder een klas of gebruik de zoekbalk om snel de juiste klas te vinden.",
       stappen: [
-        "Gebruik zoeken om snel een klas of onderdeel te vinden.",
-        "Open een klas om de gegevens te bekijken waarvoor je toegang hebt.",
-        "Je wijzigt of verwijdert hier geen leerlinggegevens.",
-        "Ontbreekt een naam? Pas de centrale klaslijst aan via Klaslijsten."
+        "Gebruik de zoekbalk om te zoeken op klas, leerjaar of leerkracht.",
+        "Klik bij de gewenste klas op de gele knop om het gekozen onderdeel te openen.",
+        "In het volgende scherm kun je de klasgegevens bekijken of aanvullen waarvoor je toegang hebt.",
+        "Ontbreekt een leerling of klopt een naam niet? Pas de centrale klaslijst aan via Klaslijsten."
       ]
     }
   };
