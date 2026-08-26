@@ -226,6 +226,8 @@ function pasKnoppenToe(huistakenKnop, overgangKnop, schoolbeheerKnop, bestelling
   if (afwezigheidsattestenKnop) afwezigheidsattestenKnop.style.display = magAfwezigheidsattesten && !isSecretariaat ? '' : 'none';
   const voorbladenKnop = document.getElementById('voorbladenKeuzeKnop');
   if (voorbladenKnop) voorbladenKnop.style.display = (heeftKlasbeheer || rolNaam === 'zorgleerkracht') ? '' : 'none';
+  const gokOverzichtKnop = document.getElementById('gokOverzichtKeuzeKnop');
+  if (gokOverzichtKnop) gokOverzichtKnop.style.display = !isSecretariaat && (heeftKlasbeheer || isSchoolBreed) ? '' : 'none';
   if (schoolbeheerKnop) {
     schoolbeheerKnop.style.display = (isSecretariaat || isSchoolBreed || heeftKlasbeheer) ? '' : 'none';
     if (isSecretariaat) {

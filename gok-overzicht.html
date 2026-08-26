@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>GOK-overzicht - De Linde</title>
+  <link rel="manifest" href="manifest.json">
+  <script src="tool-wegwijzer.js" defer></script>
+  <style>
+    :root{--ink:#26332b;--muted:#66756c;--green:#356d4c;--green-soft:#edf7f0;--brown:#6b5d52;--cream:#faf6ef;--line:#d7ddd9;--blue:#4f8fcf;--blue-soft:#eef6ff;--gold:#f5d58e;--white:#fff}
+    *{box-sizing:border-box}body{margin:0;background:var(--cream);color:var(--ink);font-family:'Segoe UI',Arial,sans-serif}button,input,textarea{font:inherit}
+    header{display:flex;align-items:center;gap:14px;flex-wrap:wrap;background:var(--brown);color:#fff;padding:16px 24px;box-shadow:0 3px 12px #0002}header img{width:48px;height:48px;object-fit:contain;background:#fff;border-radius:9px;padding:3px}header h1{margin:0;font-size:23px}header p{margin:2px 0 0;opacity:.85}.header-actions{margin-left:auto;display:flex;gap:8px}.header-actions a,.header-actions button{border:1px solid #ffffff66;border-radius:9px;background:#ffffff18;color:#fff;padding:8px 13px;text-decoration:none;font-weight:750;cursor:pointer}
+    main{max-width:1280px;margin:22px auto;padding:0 18px 40px}.panel{background:#fff;border:1px solid var(--line);border-radius:16px;padding:20px;box-shadow:0 4px 16px #5b514315}.intro{display:flex;align-items:flex-start;gap:16px}.intro h2{margin:0 0 4px}.intro p{margin:0;color:var(--muted)}.status{margin-left:auto;border-radius:999px;background:var(--green-soft);color:var(--green);font-weight:800;padding:7px 11px;white-space:nowrap}
+    .notice{margin:14px 0;padding:12px 14px;border:1px solid #bdd7c5;border-left:5px solid var(--green);border-radius:11px;background:var(--green-soft);line-height:1.45}.notice.directie{background:#f3f5f8;border-color:#c7d0dc;border-left-color:#64748b}
+    .klassen{display:flex;flex-wrap:wrap;gap:8px;margin:16px 0}.klassen button{border:1px solid var(--line);border-radius:10px;background:#fff;padding:9px 12px;font-weight:800;cursor:pointer}.klassen button.active{background:var(--green);border-color:var(--green);color:#fff}.klassen small{display:block;font-weight:500;opacity:.8;margin-top:2px}
+    .werkbalk{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin:16px 0}.werkbalk input{flex:1;min-width:230px;border:1px solid var(--line);border-radius:10px;padding:10px 12px}.werkbalk button{border:1px solid var(--line);background:#fff;border-radius:10px;padding:9px 12px;font-weight:800;cursor:pointer}.werkbalk button.active{background:var(--green);color:#fff;border-color:var(--green)}
+    .leerling{border:1px solid var(--line);border-radius:13px;background:#fff;margin:0 0 10px;overflow:hidden}.leerling.gok{border-color:#9fc5eb;background:var(--blue-soft)}.leerling summary{list-style:none;display:flex;align-items:center;gap:12px;padding:14px 16px;cursor:pointer}.leerling summary::-webkit-details-marker{display:none}.leerlingnaam{display:flex;align-items:center;gap:9px;font-weight:800}.leerlingnaam input{width:19px;height:19px}.badge{margin-left:auto;border-radius:999px;padding:5px 9px;font-size:12px;font-weight:850;background:#edf0ee;color:#536159}.gok .badge{background:#d9ebff;color:#1d4e89}.openhint{font-size:12px;color:var(--muted)}.details{border-top:1px solid var(--line);padding:15px 18px;background:#fff}.kenmerken{display:grid;gap:9px;margin:12px 0}.kenmerken label{display:flex;align-items:flex-start;gap:8px;font-weight:650}.kenmerken input{width:18px;height:18px;margin-top:1px}.small{font-size:13px;color:var(--muted)}textarea{width:100%;min-height:78px;border:1px solid var(--line);border-radius:9px;padding:9px;margin-top:5px;resize:vertical}.empty{text-align:center;padding:30px;color:var(--muted)}
+    .loading{padding:45px;text-align:center;font-weight:750;color:var(--muted)}@media(max-width:700px){header{padding:13px}.header-actions{width:100%;margin-left:0}.intro{display:block}.status{display:inline-block;margin:10px 0 0}.openhint{display:none}}
+  </style>
+</head>
+<body>
+  <header>
+    <img src="afbeeldingen/schoollogo.png" alt="Logo De Linde" onerror="this.style.display='none'">
+    <div><h1>GOK-overzicht</h1><p>Leerling en zorg - gedeeld met de overgangsbespreking</p></div>
+    <div class="header-actions"><a href="index.html">&#127968; Keuzescherm</a><button id="logoutBtn">Uitloggen</button></div>
+  </header>
+  <main>
+    <section class="panel">
+      <div class="intro"><div><h2 id="titel">Even laden</h2><p id="ondertitel">We controleren je rol en klassen.</p></div><span id="status" class="status">Laden...</span></div>
+      <div id="rolInfo"></div>
+      <div id="klassen" class="klassen"></div>
+      <div id="inhoud" class="loading">De gegevens worden opgehaald.</div>
+    </section>
+  </main>
+  <script type="module">
+    import {initializeApp,getApps,getApp} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import {getAuth,onAuthStateChanged,signOut} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+    import {getFirestore,doc,getDoc,getDocs,collection,query,where,onSnapshot,runTransaction} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    const firebaseConfig={apiKey:"AIzaSyA7KxXMvZ4dzBQDut3CMyWUblLte2tFzoQ",authDomain:"huiswerkapp-a311e.firebaseapp.com",projectId:"huiswerkapp-a311e",storageBucket:"huiswerkapp-a311e.appspot.com",messagingSenderId:"797169941164",appId:"1:797169941164:web:511d9618079f1378d0fd09"};
+    const app=getApps().length?getApp():initializeApp(firebaseConfig),auth=getAuth(app),db=getFirestore(app);
+    const $=id=>document.getElementById(id),esc=v=>String(v??"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;");
+    const DEFAULT_CLASSES=["K1","K2","K3","1A","2A","3A","4A","5A","6A"],KENMERKEN=[["diploma_moeder","Moeder heeft geen diploma secundair onderwijs"],["thuistaal","Thuistaal is niet het Nederlands"],["schooltoelage","Gezin ontvangt schooltoelage / participatietoelage"]];
+    let user=null,role="",schooljaar=huidigSchooljaar(),klassen=[],actieveKlas="",klasData=null,unsub=null,filter="alle",zoek="",aantallen=new Map();
+    function huidigSchooljaar(){const n=new Date(),s=n.getMonth()>=7?n.getFullYear():n.getFullYear()-1;return `${s}-${s+1}`}
+    function klasSort(a,b){const key=v=>{const s=String(v).toUpperCase(),k=s.match(/^K(\d+)(.*)$/),l=s.match(/^(\d+)(.*)$/);return k?[0,+k[1],k[2]]:l?[1,+l[1],l[2]]:[2,999,s]},x=key(a),y=key(b);return x[0]-y[0]||x[1]-y[1]||x[2].localeCompare(y[2],"nl")}
+    function naam(s){return `${s.last||s.lastName||""}, ${s.first||s.firstName||""}`.replace(/^, /,"").replace(/, $/,"")}
+    function actief(s){const start=`${schooljaar.slice(0,4)}-09-01`,einde=`${schooljaar.slice(5,9)}-06-30`;return (!s.start||s.start<=einde)&&(!s.end||s.end>=start)}
+    function schoolbreed(){return ["beheerder","directie","zorgcoordinator","zorgleerkracht"].includes(role)}
+    function magWijzigen(){return role!=="directie"&&role!=="secretariaat"}
+    async function laadRol(){const snap=await getDoc(doc(db,"schoolrollen",user.uid));role=snap.exists()?String(snap.data().rol||"").trim().toLowerCase():"";if(role==="beheerder"){const sim=localStorage.getItem("lindeSimuleerRol_"+user.uid);if(["klasleerkracht","zorgleerkracht","secretariaat","beheerder"].includes(sim))role=sim}}
+    async function laadKlassen(){
+      if(schoolbreed()){
+        const snap=await getDocs(collection(db,"schoolbeheer",schooljaar,"klassen"));klassen=[...new Set([...DEFAULT_CLASSES,...snap.docs.map(d=>d.id)])].sort(klasSort);aantallen.clear();snap.docs.forEach(d=>aantallen.set(d.id,(d.data().leerlingen||[]).filter(s=>actief(s)&&s.gok==="ja").length));return;
+      }
+      const email=(user.email||"").toLowerCase(),qUid=query(collection(db,"klasleerkrachten"),where("leerkracht_uids","array-contains",user.uid)),qMail=query(collection(db,"klasleerkrachten"),where("leerkracht_emails","array-contains",email));
+      const snaps=await Promise.all([getDocs(qUid),getDocs(qMail)]),set=new Set();snaps.forEach(s=>s.docs.forEach(d=>{const x=d.data();if(String(x.schooljaar||schooljaar)===schooljaar&&x.klas)set.add(String(x.klas).trim())}));klassen=[...set].sort(klasSort);
+    }
+    function renderKlassen(){$("klassen").innerHTML=klassen.map(k=>`<button class="${k===actieveKlas?'active':''}" onclick="openKlas('${esc(k)}')">${esc(k)}${schoolbreed()?`<small>${aantallen.get(k)||0} GOK</small>`:""}</button>`).join("")}
+    function wijzigInfo(s){if(!s.gokUpdatedAt)return "Nog geen wijzigingsinformatie";const d=new Date(s.gokUpdatedAt),wanneer=Number.isNaN(d.getTime())?"":d.toLocaleString("nl-BE",{dateStyle:"short",timeStyle:"short"});return `Laatst gewijzigd${wanneer?` op ${wanneer}`:""}${s.gokUpdatedBy?` door ${s.gokUpdatedBy}`:""}`}
+    function render(){
+      if(!klasData)return;const alle=(klasData.leerlingen||[]).filter(actief).sort((a,b)=>naam(a).localeCompare(naam(b),"nl")),gokAantal=alle.filter(s=>s.gok==="ja").length,q=zoek.toLocaleLowerCase("nl"),lijst=alle.filter(s=>(filter!=="gok"||s.gok==="ja")&&(!q||naam(s).toLocaleLowerCase("nl").includes(q)));
+      aantallen.set(actieveKlas,gokAantal);renderKlassen();$("titel").textContent=`GOK-overzicht - ${actieveKlas}`;$("ondertitel").textContent=`${gokAantal} van ${alle.length} actieve leerlingen aangeduid als GOK`;$("status").textContent="Bewaard";
+      const regels=lijst.map(s=>{const gok=s.gok==="ja",ken=new Set(Array.isArray(s.gokKenmerken)?s.gokKenmerken:[]);return `<details class="leerling ${gok?'gok':''}"><summary><label class="leerlingnaam" onclick="event.stopPropagation()"><input type="checkbox" ${gok?'checked':''} ${magWijzigen()?'':'disabled'} onchange="wijzigGok('${esc(s.id)}','gok',this.checked)">${esc(naam(s))}</label><span class="badge">${gok?'GOK':'geen GOK'}</span><span class="openhint">Details &#9662;</span></summary><div class="details"><strong>Officiële SES-indicatoren</strong><div class="kenmerken">${KENMERKEN.map(([key,label])=>`<label><input type="checkbox" ${ken.has(key)?'checked':''} ${magWijzigen()?'':'disabled'} onchange="wijzigGok('${esc(s.id)}','kenmerk',this.checked,'${key}')"> ${label}</label>`).join("")}</div><p class="small">Thuistaal telt enkel mee in combinatie met minstens één ander kenmerk.</p><label><strong>Extra toelichting (optioneel)</strong><textarea ${magWijzigen()?'':'disabled'} onchange="wijzigGok('${esc(s.id)}','notitie',this.value)">${esc(s.gokNote||"")}</textarea></label><p class="small">${esc(wijzigInfo(s))}</p></div></details>`}).join("");
+      $("inhoud").className="";$("inhoud").innerHTML=`<div class="werkbalk"><input aria-label="Zoek leerling" placeholder="Zoek een leerling..." value="${esc(zoek)}" oninput="zoekGok(this.value)"><button class="${filter==='alle'?'active':''}" onclick="kiesFilter('alle')">Alle leerlingen</button><button class="${filter==='gok'?'active':''}" onclick="kiesFilter('gok')">Alleen GOK (${gokAantal})</button></div>${regels||'<div class="empty">Geen leerlingen voor deze filter.</div>'}`;
+    }
+    window.kiesFilter=f=>{filter=f==="gok"?"gok":"alle";render()};window.zoekGok=v=>{zoek=v;render()};
+    window.openKlas=klas=>{actieveKlas=klas;renderKlassen();$("inhoud").className="loading";$("inhoud").textContent=`${klas} wordt geladen...`;if(unsub)unsub();unsub=onSnapshot(doc(db,"schoolbeheer",schooljaar,"klassen",klas),snap=>{klasData=snap.exists()?snap.data():{leerlingen:[]};render()},err=>{$("inhoud").textContent="Laden mislukt: "+err.message})};
+    window.wijzigGok=async(id,soort,value,kenmerk="")=>{
+      if(!magWijzigen())return;$("status").textContent="Wijzigingen...";const ref=doc(db,"schoolbeheer",schooljaar,"klassen",actieveKlas);
+      try{await runTransaction(db,async tx=>{const snap=await tx.get(ref);if(!snap.exists())throw new Error("Klaslijst bestaat niet");const item=snap.data(),leerlingen=[...(item.leerlingen||[])],i=leerlingen.findIndex(s=>String(s.id)===String(id));if(i<0)throw new Error("Leerling niet gevonden");const s={...leerlingen[i]},set=new Set(Array.isArray(s.gokKenmerken)?s.gokKenmerken:[]);if(soort==="gok")s.gok=value?"ja":"nee";if(soort==="kenmerk"){value?set.add(kenmerk):set.delete(kenmerk);s.gokKenmerken=[...set];s.gok="ja"}if(soort==="notitie"){s.gokNote=String(value||"").trim();if(s.gokNote)s.gok="ja"}s.gokUpdatedAt=new Date().toISOString();s.gokUpdatedBy=user.email||user.uid;leerlingen[i]=s;tx.update(ref,{leerlingen,bijgewerktOp:new Date().toISOString()})})}catch(err){alert("De GOK-wijziging kon niet worden bewaard: "+err.message);$("status").textContent="Fout"}
+    };
+    $("logoutBtn").onclick=()=>signOut(auth).then(()=>location.href="index.html");
+    onAuthStateChanged(auth,async u=>{if(!u){location.href="index.html";return}user=u;try{await laadRol();if(role==="secretariaat")throw new Error("Deze zorginformatie is niet beschikbaar voor secretariaat.");await laadKlassen();if(!klassen.length)throw new Error("Er is geen klas aan dit account gekoppeld.");$("rolInfo").innerHTML=role==="directie"?'<div class="notice directie"><strong>Opvolgweergave voor directie.</strong> Je kunt alle klassen bekijken. Wijzigen gebeurt door de klas- of zorgleerkracht.</div>':'<div class="notice"><strong>Eén gedeelde registratie.</strong> Wat je hier wijzigt, verschijnt ook in de overgangsbespreking en omgekeerd.</div>';actieveKlas=klassen[0];renderKlassen();openKlas(actieveKlas)}catch(err){$("titel").textContent="Geen toegang";$("ondertitel").textContent=err.message;$("status").textContent="Geblokkeerd";$("inhoud").textContent=""}});
+  </script>
+</body>
+</html>

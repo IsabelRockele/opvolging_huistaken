@@ -2766,10 +2766,14 @@ function schoolbeheerNaamNaarRij(s) {
     officialFirstName,
     callName,
     lastName,
-    schoolbeheerId: String(s.id || s.schoolbeheerId || '').trim()
+    schoolbeheerId: String(s.id || s.schoolbeheerId || '').trim(),
+    hasGokData: Object.prototype.hasOwnProperty.call(s, 'gok') || Object.prototype.hasOwnProperty.call(s, 'gokKenmerken') || Object.prototype.hasOwnProperty.call(s, 'gokNote'),
+    gok: s.gok === 'ja' ? 'ja' : 'nee',
+    gokKenmerken: Array.isArray(s.gokKenmerken) ? [...s.gokKenmerken] : [],
+    gokNote: String(s.gokNote || '')
   };
   const parsed = normalizeNameFromLine(s.name || s.naam || s.fullName || s.volledigeNaam || '');
-  return parsed ? {...parsed, officialFirstName: parsed.firstName, callName: '', schoolbeheerId: String(s.id || s.schoolbeheerId || '').trim()} : null;
+  return parsed ? {...parsed, officialFirstName: parsed.firstName, callName: '', schoolbeheerId: String(s.id || s.schoolbeheerId || '').trim(), hasGokData: false, gok: 'nee', gokKenmerken: [], gokNote: ''} : null;
 }
 
 function nieuweLegeStudent(row, source = '') {
@@ -2797,7 +2801,9 @@ function nieuweLegeStudent(row, source = '') {
     behaviorNote: '',
     care: 'laag',
     iac: 'nee',
-    gok: 'nee',
+    gok: row.hasGokData && row.gok === 'ja' ? 'ja' : 'nee',
+    gokKenmerken: row.hasGokData && Array.isArray(row.gokKenmerken) ? [...row.gokKenmerken] : [],
+    gokNote: row.hasGokData ? String(row.gokNote || '') : '',
     extraCare: 'nee',
     careNote: '',
     allergies: '',
@@ -2867,6 +2873,7 @@ async function vulOntbrekendeLeerlingenUitSchoolbeheer() {
   const excluded = new Set(Array.isArray(state.excludedSchoolbeheerKeys) ? state.excludedSchoolbeheerKeys : []);
   let added = 0;
   let linked = 0;
+  let gokUpdated = 0;
   rows.forEach(row => {
     const uitsluitKeys = [row.firstName, row.officialFirstName, row.callName].filter(Boolean).map(first => studentNameKey(first, row.lastName));
     if (uitsluitKeys.some(key => excluded.has(key))) return;
@@ -2879,6 +2886,15 @@ async function vulOntbrekendeLeerlingenUitSchoolbeheer() {
         bestaandeOpId.set(String(row.schoolbeheerId), bestaand);
         linked++;
       }
+      if (row.hasGokData) {
+        const centraalGok = row.gok === 'ja' ? 'ja' : 'nee';
+        const centraalKenmerken = Array.isArray(row.gokKenmerken) ? [...row.gokKenmerken] : [];
+        const centraalNote = String(row.gokNote || '');
+        if (bestaand.gok !== centraalGok || JSON.stringify(bestaand.gokKenmerken || []) !== JSON.stringify(centraalKenmerken) || String(bestaand.gokNote || '') !== centraalNote) gokUpdated++;
+        bestaand.gok = centraalGok;
+        bestaand.gokKenmerken = centraalKenmerken;
+        bestaand.gokNote = centraalNote;
+      }
       return;
     }
     state.students.push(nieuweLegeStudent(row, 'schoolbeheer'));
@@ -2888,7 +2904,7 @@ async function vulOntbrekendeLeerlingenUitSchoolbeheer() {
   if (added) {
     state.students.sort((a, b) => (a.lastName || '').localeCompare(b.lastName || '', 'nl') || (a.firstName || '').localeCompare(b.firstName || '', 'nl'));
   }
-  return { added, linked, klas };
+  return { added, linked, gokUpdated, klas };
 }
 
 async function addStudentsFromClassList() {
@@ -3661,7 +3677,7 @@ async function loadFirebaseProjectOnStart() {
     renderStudents();
     if (typeof renderGroups === 'function') renderGroups();
     updateBadges();
-    if (sync.added || sync.linked) {
+    if (sync.added || sync.linked || sync.gokUpdated) {
       await window.firebaseOvergang.saveProject(collectProjectData());
     }
     markClean();

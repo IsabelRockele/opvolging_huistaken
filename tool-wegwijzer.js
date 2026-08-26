@@ -25,6 +25,17 @@
         "Een leerling ontbreekt? Voeg die eerst toe via Klaslijsten → Nieuwe leerling."
       ]
     },
+    "gok-overzicht.html": {
+      titel: "Zo gebruik je het GOK-overzicht",
+      kort: "Kies een klas, vink GOK aan en open alleen details wanneer je de kenmerken nodig hebt.",
+      stappen: [
+        "Kies bovenaan de juiste klas. Klasleerkrachten zien hun eigen klas; zorg en directie kunnen tussen klassen wisselen.",
+        "Vink een leerling aan als GOK-leerling.",
+        "Open Details om de officiële SES-indicatoren of een korte toelichting aan te vullen.",
+        "Wijzigingen worden centraal bewaard en verschijnen ook in de overgangsbespreking.",
+        "Directie kan de lijsten bekijken voor opvolging, maar wijzigt ze niet."
+      ]
+    },
     "voorbladen.html": {
       titel: "Zo maak je voorbladen",
       kort: "Kies één leerling of de hele klas en download daarna het gewenste Word-bestand.",
