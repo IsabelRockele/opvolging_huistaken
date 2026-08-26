@@ -2858,7 +2858,7 @@ async function vulOntbrekendeLeerlingenUitSchoolbeheer() {
     ? String(gevraagdJaar).trim()
     : (() => {
         const nu = new Date();
-        const start = nu.getMonth() >= 8 ? nu.getFullYear() : nu.getFullYear() - 1;
+        const start = nu.getMonth() >= 7 ? nu.getFullYear() : nu.getFullYear() - 1;
         return `${start}-${start + 1}`;
       })();
   const schoolStart = `${overgangJaar.slice(0,4)}-09-01`;

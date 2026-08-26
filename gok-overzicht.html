@@ -63,6 +63,11 @@
       koppelingen.docs.forEach(d=>{const x=d.data()||{},k=String(x.klasId||x.klas||d.id.replace(schooljaar+"_","")).trim();if(k===klas&&String(x.schooljaar||schooljaar)===schooljaar)(x.leerkracht_uids||[]).forEach(uid=>uids.add(String(uid)))});
       const klasKey=String(klas).replace(/[^a-z0-9_-]+/gi,"_"),refs=[...uids].map(uid=>doc(db,"overgangsbesprekingen",schooljaar,"projecten",uid));refs.push(doc(db,"overgangsbesprekingen",schooljaar,"projecten",`klas_${klasKey}`));
       const snaps=await Promise.all(refs.map(ref=>getDoc(ref).catch(()=>null))),bronnen=snaps.filter(s=>s?.exists()).map(s=>s.data()).filter(x=>Array.isArray(x.students));
+      // Oude werkfiches kunnen nog onder de vorige leerkracht of vorige klas
+      // bewaard zijn. De leerlingnaam/vaste id bepaalt verderop veilig welke
+      // GOK-info werkelijk bij deze klaslijst hoort.
+      const projectSnaps=await Promise.all([vorigSchooljaar(schooljaar),schooljaar].map(jaar=>getDocs(collection(db,"overgangsbesprekingen",jaar,"projecten")).catch(()=>null)));
+      projectSnaps.forEach(snap=>snap?.docs?.forEach(d=>{const x=d.data()||{};if(Array.isArray(x.students))bronnen.push(x)}));
       // Een klas die in juni is doorgestuurd, staat nog in een overdrachtsdossier
       // van het vorige schooljaar. Neem de GOK-gegevens ook daaruit over.
       const dossierQueries=[];
