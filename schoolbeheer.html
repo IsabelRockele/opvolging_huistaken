@@ -1263,7 +1263,8 @@
         const maanden=actieveTestKlassen.get(k)||[];
         const openAantal=secretariaatOpenAantal(liveKlasDocumenten.get(k));
         const testTitel=maanden.length?`Test actief voor ${maanden.join(", ")}`:"";
-        return `<button class="sb-klas-btn ${toonActieveKlas&&k===activeClass?"active":""} ${maanden.length?"has-test":""}" ${testTitel?`title="${esc(testTitel)}"`:openAantal?`title="${openAantal} onderdeel(en) vragen opvolging"`:""} onclick="openKlasMaanden('${esc(k)}')">${esc(k)}${openAantal?'<span aria-label="Nieuwe opvolging"> ●</span>':""}${maanden.length?'<span class="sb-test-badge" aria-label="Test actief">🧪</span>':""}</button>`;
+        const klasOpenen=isSecretary()?`openKlasMaanden('${esc(k)}')`:`openClass('${esc(k)}')`;
+        return `<button class="sb-klas-btn ${toonActieveKlas&&k===activeClass?"active":""} ${maanden.length?"has-test":""}" ${testTitel?`title="${esc(testTitel)}"`:openAantal?`title="${openAantal} onderdeel(en) vragen opvolging"`:""} onclick="${klasOpenen}">${esc(k)}${openAantal?'<span aria-label="Nieuwe opvolging"> ●</span>':""}${maanden.length?'<span class="sb-test-badge" aria-label="Test actief">🧪</span>':""}</button>`;
       }).join("");
     }
 
