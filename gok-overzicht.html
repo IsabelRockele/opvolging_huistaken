@@ -41,6 +41,7 @@
     const $=id=>document.getElementById(id),esc=v=>String(v??"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;");
     const DEFAULT_CLASSES=["K1","K2","K3","1A","2A","3A","4A","5A","6A"],KENMERKEN=[["diploma_moeder","Moeder heeft geen diploma secundair onderwijs"],["thuistaal","Thuistaal is niet het Nederlands"],["schooltoelage","Gezin ontvangt schooltoelage / participatietoelage"]];
     let user=null,role="",schooljaar=huidigSchooljaar(),klassen=[],actieveKlas="",klasData=null,unsub=null,filter="alle",zoek="",aantallen=new Map();
+    const gemigreerdeKlassen=new Set();
     function huidigSchooljaar(){const n=new Date(),s=n.getMonth()>=7?n.getFullYear():n.getFullYear()-1;return `${s}-${s+1}`}
     function klasSort(a,b){const key=v=>{const s=String(v).toUpperCase(),k=s.match(/^K(\d+)(.*)$/),l=s.match(/^(\d+)(.*)$/);return k?[0,+k[1],k[2]]:l?[1,+l[1],l[2]]:[2,999,s]},x=key(a),y=key(b);return x[0]-y[0]||x[1]-y[1]||x[2].localeCompare(y[2],"nl")}
     function naam(s){return `${s.last||s.lastName||""}, ${s.first||s.firstName||""}`.replace(/^, /,"").replace(/, $/,"")}
@@ -55,6 +56,21 @@
       const email=(user.email||"").toLowerCase(),qUid=query(collection(db,"klasleerkrachten"),where("leerkracht_uids","array-contains",user.uid)),qMail=query(collection(db,"klasleerkrachten"),where("leerkracht_emails","array-contains",email));
       const snaps=await Promise.all([getDocs(qUid),getDocs(qMail)]),set=new Set();snaps.forEach(s=>s.docs.forEach(d=>{const x=d.data();if(String(x.schooljaar||schooljaar)===schooljaar&&x.klas)set.add(String(x.klas).trim())}));klassen=[...set].sort(klasSort);
     }
+    function leerlingKey(s){return `${String(s.first||s.firstName||"").trim()}|${String(s.last||s.lastName||"").trim()}`.toLocaleLowerCase("nl").replace(/\s+/g," ")}
+    async function oudeOvergangProjectenVoorKlas(klas){
+      const koppelingen=await getDocs(collection(db,"klasleerkrachten")),uids=new Set();
+      koppelingen.docs.forEach(d=>{const x=d.data()||{},k=String(x.klasId||x.klas||d.id.replace(schooljaar+"_","")).trim();if(k===klas&&String(x.schooljaar||schooljaar)===schooljaar)(x.leerkracht_uids||[]).forEach(uid=>uids.add(String(uid)))});
+      const klasKey=String(klas).replace(/[^a-z0-9_-]+/gi,"_"),refs=[...uids].map(uid=>doc(db,"overgangsbesprekingen",schooljaar,"projecten",uid));refs.push(doc(db,"overgangsbesprekingen",schooljaar,"projecten",`klas_${klasKey}`));
+      const snaps=await Promise.all(refs.map(ref=>getDoc(ref).catch(()=>null)));return snaps.filter(s=>s?.exists()).map(s=>s.data()).filter(x=>Array.isArray(x.students));
+    }
+    async function migreerOudeGokGegevens(klas){
+      if(gemigreerdeKlassen.has(klas))return 0;gemigreerdeKlassen.add(klas);
+      const projecten=await oudeOvergangProjectenVoorKlas(klas);if(!projecten.length)return 0;
+      const oud=new Map();projecten.forEach(p=>(p.students||[]).forEach(s=>{const inhoud=s.gok==="ja"||(Array.isArray(s.gokKenmerken)&&s.gokKenmerken.length)||String(s.gokNote||"").trim();if(!inhoud)return;const keys=[String(s.schoolbeheerId||"").trim()?`id:${String(s.schoolbeheerId).trim()}`:"",`naam:${leerlingKey(s)}`].filter(Boolean);keys.forEach(key=>{const bestaand=oud.get(key);if(!bestaand||s.gok==="ja")oud.set(key,s)})}));if(!oud.size)return 0;
+      let overgenomen=0;const ref=doc(db,"schoolbeheer",schooljaar,"klassen",klas);
+      await runTransaction(db,async tx=>{const snap=await tx.get(ref);if(!snap.exists())return;const item=snap.data(),leerlingen=(item.leerlingen||[]).map(l=>{if(Object.prototype.hasOwnProperty.call(l,"gok")||Object.prototype.hasOwnProperty.call(l,"gokKenmerken")||Object.prototype.hasOwnProperty.call(l,"gokNote"))return l;const bron=oud.get(`id:${String(l.id||"").trim()}`)||oud.get(`naam:${leerlingKey(l)}`);if(!bron)return l;overgenomen++;return {...l,gok:bron.gok==="ja"?"ja":"nee",gokKenmerken:Array.isArray(bron.gokKenmerken)?[...bron.gokKenmerken]:[],gokNote:String(bron.gokNote||""),gokUpdatedAt:new Date().toISOString(),gokUpdatedBy:"overgenomen uit bestaande overgangsbespreking"}});if(overgenomen)tx.update(ref,{leerlingen,bijgewerktOp:new Date().toISOString()})});
+      return overgenomen;
+    }
     function renderKlassen(){$("klassen").innerHTML=klassen.map(k=>`<button class="${k===actieveKlas?'active':''}" onclick="openKlas('${esc(k)}')">${esc(k)}${schoolbreed()?`<small>${aantallen.get(k)||0} GOK</small>`:""}</button>`).join("")}
     function wijzigInfo(s){if(!s.gokUpdatedAt)return "Nog geen wijzigingsinformatie";const d=new Date(s.gokUpdatedAt),wanneer=Number.isNaN(d.getTime())?"":d.toLocaleString("nl-BE",{dateStyle:"short",timeStyle:"short"});return `Laatst gewijzigd${wanneer?` op ${wanneer}`:""}${s.gokUpdatedBy?` door ${s.gokUpdatedBy}`:""}`}
     function render(){
@@ -64,7 +80,7 @@
       $("inhoud").className="";$("inhoud").innerHTML=`<div class="werkbalk"><input aria-label="Zoek leerling" placeholder="Zoek een leerling..." value="${esc(zoek)}" oninput="zoekGok(this.value)"><button class="${filter==='alle'?'active':''}" onclick="kiesFilter('alle')">Alle leerlingen</button><button class="${filter==='gok'?'active':''}" onclick="kiesFilter('gok')">Alleen GOK (${gokAantal})</button></div>${regels||'<div class="empty">Geen leerlingen voor deze filter.</div>'}`;
     }
     window.kiesFilter=f=>{filter=f==="gok"?"gok":"alle";render()};window.zoekGok=v=>{zoek=v;render()};
-    window.openKlas=klas=>{actieveKlas=klas;renderKlassen();$("inhoud").className="loading";$("inhoud").textContent=`${klas} wordt geladen...`;if(unsub)unsub();unsub=onSnapshot(doc(db,"schoolbeheer",schooljaar,"klassen",klas),snap=>{klasData=snap.exists()?snap.data():{leerlingen:[]};render()},err=>{$("inhoud").textContent="Laden mislukt: "+err.message})};
+    window.openKlas=async klas=>{actieveKlas=klas;renderKlassen();$("inhoud").className="loading";$("inhoud").textContent=`${klas} wordt geladen...`;if(unsub)unsub();try{const overgenomen=await migreerOudeGokGegevens(klas);if(overgenomen)$("status").textContent=`${overgenomen} oude GOK-aanduiding${overgenomen===1?'':'en'} overgenomen`}catch(err){console.warn("Oude GOK-gegevens overnemen mislukt",err)}unsub=onSnapshot(doc(db,"schoolbeheer",schooljaar,"klassen",klas),snap=>{klasData=snap.exists()?snap.data():{leerlingen:[]};render()},err=>{$("inhoud").textContent="Laden mislukt: "+err.message})};
     window.wijzigGok=async(id,soort,value,kenmerk="")=>{
       if(!magWijzigen())return;$("status").textContent="Wijzigingen...";const ref=doc(db,"schoolbeheer",schooljaar,"klassen",actieveKlas);
       try{await runTransaction(db,async tx=>{const snap=await tx.get(ref);if(!snap.exists())throw new Error("Klaslijst bestaat niet");const item=snap.data(),leerlingen=[...(item.leerlingen||[])],i=leerlingen.findIndex(s=>String(s.id)===String(id));if(i<0)throw new Error("Leerling niet gevonden");const s={...leerlingen[i]},set=new Set(Array.isArray(s.gokKenmerken)?s.gokKenmerken:[]);if(soort==="gok")s.gok=value?"ja":"nee";if(soort==="kenmerk"){value?set.add(kenmerk):set.delete(kenmerk);s.gokKenmerken=[...set];s.gok="ja"}if(soort==="notitie"){s.gokNote=String(value||"").trim();if(s.gokNote)s.gok="ja"}s.gokUpdatedAt=new Date().toISOString();s.gokUpdatedBy=user.email||user.uid;leerlingen[i]=s;tx.update(ref,{leerlingen,bijgewerktOp:new Date().toISOString()})})}catch(err){alert("De GOK-wijziging kon niet worden bewaard: "+err.message);$("status").textContent="Fout"}
