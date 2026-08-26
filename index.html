@@ -544,6 +544,9 @@
     }
 
     .knop-banner {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
       padding: 8px 16px;
       font-size: 0.88em;
       font-weight: 700;
@@ -555,6 +558,7 @@
       font-family: inherit;
       transition: background 0.15s;
       white-space: nowrap;
+      text-decoration: none;
     }
     .knop-banner:hover {
       background: rgba(255,255,255,0.32);
@@ -1071,7 +1075,7 @@
 }
   </style>
   <style>
-    #ingelogd-kaart.startportaal>.portaal-hulpbalk,#ingelogd-kaart.startportaal>.eerste-check{flex:1 1 100%;width:100%;max-width:1380px;margin:0 auto 14px}.portaal-hulpbalk{display:none;align-items:center;gap:10px;justify-content:space-between;background:#eef7f1;border:1px solid #c9ded0;border-radius:14px;padding:10px 13px}.portaal-hulpbalk button,.eerste-check button{border:0;border-radius:10px;padding:8px 12px;background:#356d4c;color:#fff;font-weight:800;cursor:pointer}.eerste-check{display:none;align-items:center;gap:12px;background:#fff8dd;border:1px solid #e7cb6d;border-radius:14px;padding:11px 13px}.eerste-check span{flex:1;color:#5f5840}.eerste-check .later{background:#fff;color:#49604f;border:1px solid #bdcabf}.probleemtekst{width:100%;min-height:105px;margin-top:8px;padding:9px;border:1px solid #ccd7d0;border-radius:9px;font:12px monospace}@media(max-width:700px){.portaal-hulpbalk,.eerste-check{align-items:flex-start;flex-direction:column}}
+    #ingelogd-kaart.startportaal>.portaal-hulpbalk,#ingelogd-kaart.startportaal>.eerste-check{flex:1 1 100%;width:100%;max-width:1380px;margin:0 auto 14px}.portaal-hulpbalk{display:none;align-items:center;gap:10px;justify-content:space-between;background:#eef7f1;border:1px solid #c9ded0;border-radius:14px;padding:10px 13px}.portaal-hulpacties{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.portaal-hulpbalk button,.portaal-hulpbalk .portaal-pdfknop,.eerste-check button{border:0;border-radius:10px;padding:8px 12px;background:#356d4c;color:#fff;font-weight:800;cursor:pointer;font:inherit;text-decoration:none;white-space:nowrap}.portaal-hulpbalk .portaal-pdfknop{background:#6b5d52}.portaal-hulpbalk button:hover,.portaal-hulpbalk .portaal-pdfknop:hover{filter:brightness(1.08);transform:translateY(-1px)}.eerste-check{display:none;align-items:center;gap:12px;background:#fff8dd;border:1px solid #e7cb6d;border-radius:14px;padding:11px 13px}.eerste-check span{flex:1;color:#5f5840}.eerste-check .later{background:#fff;color:#49604f;border:1px solid #bdcabf}.probleemtekst{width:100%;min-height:105px;margin-top:8px;padding:9px;border:1px solid #ccd7d0;border-radius:9px;font:12px monospace}@media(max-width:700px){.portaal-hulpbalk,.eerste-check{align-items:flex-start;flex-direction:column}.portaal-hulpacties{width:100%}.portaal-hulpbalk button,.portaal-hulpbalk .portaal-pdfknop{flex:1;text-align:center}}
   </style>
 </head>
 <body>
@@ -1089,6 +1093,7 @@
       </div>
       <button class="knop-banner" onclick="wijzigWachtwoordVanStart()">Wachtwoord wijzigen</button>
       <button class="knop-banner" onclick="wijzigEmailVanStart()">E-mailadres wijzigen</button>
+      <a class="knop-banner" href="output/pdf/wegwijzer_schooltools_de_linde.pdf" target="_blank" rel="noopener" title="Open de gids om hem te lezen, downloaden of afdrukken">📘 PDF-gids</a>
       <button class="knop-banner" onclick="uitloggenVanIndex()">Uitloggen</button>
     </div>
   </div>
@@ -1099,7 +1104,13 @@
   <div id="ingelogd-kaart" class="ingelogd-kaart startportaal" style="display:none;">
     <span id="ingelogd-email" style="display:none;"></span>
     <div id="portaalLaadmelding" style="display:none;background:#fff;border:1px solid #dbe4df;border-radius:16px;padding:26px;text-align:center;color:#52645a"><strong style="display:block;color:#244f38;font-size:18px;margin-bottom:6px">Je persoonlijke tools worden geladen…</strong>We controleren je rol en gekoppelde klas. Dit kan bij de eerste keer enkele seconden duren.</div>
-    <div id="portaalHulpbalk" class="portaal-hulpbalk"><span><strong>Waar moet je zijn?</strong> Open één rubriek en kies de taak die je wilt uitvoeren. In iedere tool zie je waar de namen vandaan komen en of je werk bewaard is.</span><button onclick="openGebruikersHulp()">❓ Uitleg &amp; hulp</button></div>
+    <div id="portaalHulpbalk" class="portaal-hulpbalk">
+      <span><strong>Waar moet je zijn?</strong> Open één rubriek en kies de taak die je wilt uitvoeren. In iedere tool zie je waar de namen vandaan komen en of je werk bewaard is.</span>
+      <div class="portaal-hulpacties">
+        <a class="portaal-pdfknop" href="output/pdf/wegwijzer_schooltools_de_linde.pdf" target="_blank" rel="noopener" title="Open de gids om hem te lezen, downloaden of afdrukken">📘 PDF-gids openen / afdrukken</a>
+        <button onclick="openGebruikersHulp()">❓ Uitleg &amp; hulp</button>
+      </div>
+    </div>
     <div id="eersteKeerChecklist" class="eerste-check"><strong>Welkom!</strong><span>Bekijk de korte starttips. Klik op <strong>Niet meer tonen</strong> wanneer je deze herinnering niet meer nodig hebt.</span><button onclick="openGebruikersHulp()">❓ Starttips bekijken</button><button class="later" onclick="sluitEersteKeerChecklist()">Niet meer tonen</button></div>
     <div class="portaal-keuzes" aria-label="Keuzescherm">
       <section class="portaal-sectie zorgblok">
