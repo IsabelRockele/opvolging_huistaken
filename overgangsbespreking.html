@@ -1161,9 +1161,8 @@ const schooljaar = (() => {
   const gevraagd = overgangParams.get('schooljaar');
   if (geldigSchooljaar(gevraagd)) return gevraagd;
   const now = new Date();
-  // Augustus hoort nog bij het aflopende schooljaar: overgangsdossiers worden
-  // vaak tijdens de zomervakantie afgewerkt. Schakel pas op 1 september om.
-  const y = now.getMonth() >= 8 ? now.getFullYear() : now.getFullYear() - 1;
+  // Vanaf augustus werken leerkrachten al in de klas van het nieuwe schooljaar.
+  const y = now.getMonth() >= 7 ? now.getFullYear() : now.getFullYear() - 1;
   return `${y}-${y + 1}`;
 })();
 const BEWAAR_JAREN_OVERGANG = 12; // Maximum: K1 tot einde lager onderwijs plus marge.
@@ -1658,9 +1657,8 @@ const sfSchooljaar = (() => {
   const gevraagd = new URLSearchParams(window.location.search).get('schooljaar');
   if (sfGeldigSchooljaar(gevraagd)) return gevraagd;
   const now = new Date();
-  // Houd augustus bij het aflopende schooljaar, zodat bestaande overdrachten
-  // en klaskoppelingen tijdens de zomervakantie zichtbaar blijven.
-  const y = now.getMonth() >= 8 ? now.getFullYear() : now.getFullYear() - 1;
+  // Vanaf augustus werken leerkrachten al in de klas van het nieuwe schooljaar.
+  const y = now.getMonth() >= 7 ? now.getFullYear() : now.getFullYear() - 1;
   return `${y}-${y + 1}`;
 })();
 

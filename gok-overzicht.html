@@ -43,6 +43,7 @@
     let user=null,role="",schooljaar=huidigSchooljaar(),klassen=[],actieveKlas="",klasData=null,unsub=null,filter="alle",zoek="",aantallen=new Map();
     const gemigreerdeKlassen=new Set();
     function huidigSchooljaar(){const n=new Date(),s=n.getMonth()>=7?n.getFullYear():n.getFullYear()-1;return `${s}-${s+1}`}
+    function vorigSchooljaar(jaar){const m=String(jaar||"").match(/^(\d{4})-(\d{4})$/);return m?`${Number(m[1])-1}-${Number(m[2])-1}`:jaar}
     function klasSort(a,b){const key=v=>{const s=String(v).toUpperCase(),k=s.match(/^K(\d+)(.*)$/),l=s.match(/^(\d+)(.*)$/);return k?[0,+k[1],k[2]]:l?[1,+l[1],l[2]]:[2,999,s]},x=key(a),y=key(b);return x[0]-y[0]||x[1]-y[1]||x[2].localeCompare(y[2],"nl")}
     function naam(s){return `${s.last||s.lastName||""}, ${s.first||s.firstName||""}`.replace(/^, /,"").replace(/, $/,"")}
     function actief(s){const start=`${schooljaar.slice(0,4)}-09-01`,einde=`${schooljaar.slice(5,9)}-06-30`;return (!s.start||s.start<=einde)&&(!s.end||s.end>=start)}
@@ -61,7 +62,18 @@
       const koppelingen=await getDocs(collection(db,"klasleerkrachten")),uids=new Set();
       koppelingen.docs.forEach(d=>{const x=d.data()||{},k=String(x.klasId||x.klas||d.id.replace(schooljaar+"_","")).trim();if(k===klas&&String(x.schooljaar||schooljaar)===schooljaar)(x.leerkracht_uids||[]).forEach(uid=>uids.add(String(uid)))});
       const klasKey=String(klas).replace(/[^a-z0-9_-]+/gi,"_"),refs=[...uids].map(uid=>doc(db,"overgangsbesprekingen",schooljaar,"projecten",uid));refs.push(doc(db,"overgangsbesprekingen",schooljaar,"projecten",`klas_${klasKey}`));
-      const snaps=await Promise.all(refs.map(ref=>getDoc(ref).catch(()=>null)));return snaps.filter(s=>s?.exists()).map(s=>s.data()).filter(x=>Array.isArray(x.students));
+      const snaps=await Promise.all(refs.map(ref=>getDoc(ref).catch(()=>null))),bronnen=snaps.filter(s=>s?.exists()).map(s=>s.data()).filter(x=>Array.isArray(x.students));
+      // Een klas die in juni is doorgestuurd, staat nog in een overdrachtsdossier
+      // van het vorige schooljaar. Neem de GOK-gegevens ook daaruit over.
+      const dossierQueries=[];
+      [vorigSchooljaar(schooljaar),schooljaar].forEach(jaar=>{
+        const col=collection(db,"overgangsbesprekingen",jaar,"dossiers");
+        dossierQueries.push(getDocs(query(col,where("volgende_klas","==",klas))).catch(()=>null));
+        dossierQueries.push(getDocs(query(col,where("naar_leerjaar","==",klas))).catch(()=>null));
+      });
+      const dossierSnaps=await Promise.all(dossierQueries),gezien=new Set();
+      dossierSnaps.forEach(snap=>snap?.docs?.forEach(d=>{if(gezien.has(d.ref.path))return;gezien.add(d.ref.path);const x=d.data()||{},doel=String(x.doel_schooljaar||"");if(doel&&doel!==schooljaar)return;if(Array.isArray(x.students))bronnen.push(x)}));
+      return bronnen;
     }
     async function migreerOudeGokGegevens(klas){
       if(gemigreerdeKlassen.has(klas))return 0;gemigreerdeKlassen.add(klas);
