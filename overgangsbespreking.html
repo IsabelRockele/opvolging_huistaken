@@ -1133,7 +1133,7 @@
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-import { getFirestore, collection, doc, getDoc, getDocs, query, setDoc as firestoreSetDoc, serverTimestamp, where } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getFirestore, collection, doc, getDoc, getDocs, onSnapshot, query, setDoc as firestoreSetDoc, serverTimestamp, where } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 import { probeerVeiligheidskopie } from "./firebase-veiligheid.js";
 
 const firebaseConfig = {
@@ -1531,6 +1531,14 @@ window.firebaseOvergang = {
     if (!klas) return { klas: '', leerlingen: [] };
     const snap = await getDoc(doc(db, "schoolbeheer", schooljaar, "klassen", klas));
     return { klas, leerlingen: snap.exists() ? (snap.data().leerlingen || []) : [] };
+  },
+  async watchSchoolbeheerLeerlingen(callback) {
+    await ready;
+    const klas = await bepaalSchoolbeheerKlas();
+    if (!klas || typeof callback !== 'function') return () => {};
+    return onSnapshot(doc(db, "schoolbeheer", schooljaar, "klassen", klas), snap => {
+      callback({ klas, leerlingen: snap.exists() ? (snap.data().leerlingen || []) : [] });
+    }, err => console.warn('Live GOK-koppeling kon niet worden geladen:', err));
   },
   async addSchoolbeheerLeerlingen(rows) {
     await ready;
@@ -2907,6 +2915,36 @@ async function vulOntbrekendeLeerlingenUitSchoolbeheer() {
   return { added, linked, gokUpdated, klas };
 }
 
+let liveGokUnsub = null;
+async function startLiveGokSync() {
+  if (!window.firebaseOvergang || typeof window.firebaseOvergang.watchSchoolbeheerLeerlingen !== 'function') return;
+  if (liveGokUnsub) { liveGokUnsub(); liveGokUnsub = null; }
+  liveGokUnsub = await window.firebaseOvergang.watchSchoolbeheerLeerlingen(bron => {
+    let gewijzigd = 0;
+    (bron.leerlingen || []).map(schoolbeheerNaamNaarRij).filter(Boolean).forEach(row => {
+      if (!row.hasGokData) return;
+      const bestaand = state.students.find(s =>
+        (row.schoolbeheerId && String(s.schoolbeheerId || '') === String(row.schoolbeheerId)) ||
+        (naamZoekKey(s.firstName) === naamZoekKey(row.firstName) && naamZoekKey(s.lastName) === naamZoekKey(row.lastName))
+      );
+      if (!bestaand) return;
+      const gok = row.gok === 'ja' ? 'ja' : 'nee';
+      const kenmerken = Array.isArray(row.gokKenmerken) ? [...row.gokKenmerken] : [];
+      const note = String(row.gokNote || '');
+      if (bestaand.gok === gok && JSON.stringify(bestaand.gokKenmerken || []) === JSON.stringify(kenmerken) && String(bestaand.gokNote || '') === note) return;
+      bestaand.gok = gok;
+      bestaand.gokKenmerken = kenmerken;
+      bestaand.gokNote = note;
+      gewijzigd++;
+    });
+    if (gewijzigd) {
+      renderStudents();
+      updateBadges();
+      setFirebaseStatus(`${gewijzigd} GOK-fiche${gewijzigd === 1 ? '' : 's'} live bijgewerkt vanuit het GOK-overzicht.`);
+    }
+  });
+}
+
 async function addStudentsFromClassList() {
   const input = $('klaslijstInput');
   if (!input) return;
@@ -3663,6 +3701,7 @@ async function loadFirebaseProjectOnStart() {
       } else {
         setFirebaseStatus(sync.klas ? `Geen opgeslagen overgang gevonden. Klaslijst ${sync.klas} bevat geen nieuwe namen.${Array.isArray(zorgResult) ? ` ${zorggroepen.length} groeigroep(en) gekoppeld.` : ' Groeigroepen konden niet geladen worden.'}` : 'Geen opgeslagen overgang gevonden en geen klas gekoppeld.');
       }
+      await startLiveGokSync();
       return;
     }
     if (!applyProjectData(data)) {
@@ -3680,6 +3719,7 @@ async function loadFirebaseProjectOnStart() {
     if (sync.added || sync.linked || sync.gokUpdated) {
       await window.firebaseOvergang.saveProject(collectProjectData());
     }
+    await startLiveGokSync();
     markClean();
     const aantal = state.students.length;
     const kopieMelding = jaarovergangKopie.copied ? ` Veilige kopie gemaakt voor ${jaarovergangKopie.schooljaar}.` : '';
