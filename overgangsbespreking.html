@@ -504,10 +504,14 @@
   .overdracht-paneel{padding:20px 24px;background:#fff;overflow-y:auto}
   .overdracht-paneel-leeg{color:var(--muted);font-size:13px;padding-top:20px}
   .overdracht-paneel-titel{font-size:16px;font-weight:900;margin-bottom:14px;padding-bottom:10px;border-bottom:2px solid var(--border)}
-  .zorg-klasnavigatie{display:none;align-items:center;justify-content:space-between;gap:14px;margin:0 0 16px;padding:12px 16px;background:#eef8f1;border:1px solid #a8ceb3;border-left:5px solid #397a50;border-radius:13px}
+  .zorg-klasnavigatie{display:none;align-items:center;gap:14px;margin:0 0 16px;padding:12px 16px;background:#eef8f1;border:1px solid #a8ceb3;border-left:5px solid #397a50;border-radius:13px}
   .zorg-klasnavigatie strong{font-size:16px;color:#173b25}
   .zorg-klasnavigatie span{color:#52675a;font-size:13px}
   .zorg-klasnavigatie button{white-space:nowrap;background:#397a50;color:#fff;border:0;border-radius:10px;padding:10px 16px;font-weight:800;cursor:pointer}
+  .zorg-klasbuttons{display:flex;flex-wrap:wrap;gap:7px;margin-left:auto;justify-content:flex-end}
+  .zorg-klasbuttons button{min-width:48px;padding:9px 12px;background:#fff;color:#285c3a;border:1px solid #9dc7aa}
+  .zorg-klasbuttons button.active{background:#397a50;color:#fff;border-color:#397a50;box-shadow:0 0 0 2px rgba(57,122,80,.15)}
+  body.zorg-overgang-rol #overgangStartUitleg,body.zorg-overgang-rol #overgangImportUitleg,body.zorg-overgang-rol #headerImportBtn,body.zorg-overgang-rol #exportJsonBtn,body.zorg-overgang-rol #andereOvergangKlasBtn,body.zorg-overgang-rol #klasKoppelingenBtn{display:none!important}
   @media(max-width:700px){.zorg-klasnavigatie{align-items:stretch;flex-direction:column}.zorg-klasnavigatie button{width:100%}}
   /* Huidige klas weergave */
   .sf-huidig-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:8px;margin-top:8px}
@@ -560,7 +564,7 @@
         <span id="saveStatusText">Nog niets opgeslagen</span>
       </div>
       <button id="saveBtn" class="secondary small">💾 Opslaan</button>
-      <label title="Een eerder geëxporteerd JSON-reservebestand openen om eerst te controleren" style="padding:7px 14px;border-radius:12px;cursor:pointer;font-weight:800;font-size:13px;margin:0;background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.25)">
+      <label id="headerImportBtn" title="Een eerder geëxporteerd JSON-reservebestand openen om eerst te controleren" style="padding:7px 14px;border-radius:12px;cursor:pointer;font-weight:800;font-size:13px;margin:0;background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.25)">
         📂 Importeren
         <input id="importFile" class="hidden" type="file" accept=".json,.txt,application/json,text/plain,*/*" onclick="this.value=''">
       </label>
@@ -585,14 +589,14 @@
 
   <div id="zorgKlasNavigatie" class="zorg-klasnavigatie">
     <div><strong id="zorgKlasNavigatieTitel">Je bekijkt een klas</strong><br><span id="zorgKlasNavigatieSub">Wissel hier rechtstreeks naar een andere klas.</span></div>
-    <button type="button" onclick="openOvergangKlasKiezer()">🏫 Andere klas openen</button>
+    <div id="zorgKlasButtons" class="zorg-klasbuttons"><span>Klassen laden…</span></div>
   </div>
 
-  <section class="panel" style="background:#eef7f1;border-color:#c9ded0;padding:12px 15px">
+  <section id="overgangStartUitleg" class="panel" style="background:#eef7f1;border-color:#c9ded0;padding:12px 15px">
     <strong>Zo werk je hier:</strong> open <strong>Leerlingenfiches</strong>, kies een leerling en vul de fiche aan. Namen komen uit Klaslijsten; alleen ontbrekende leerlingen worden toegevoegd. Bestaande fiches en roepnamen worden niet overschreven. Controleer bovenaan of <strong>Opgeslagen</strong> verschijnt.
   </section>
 
-  <details class="panel" style="padding:12px 15px">
+  <details id="overgangImportUitleg" class="panel" style="padding:12px 15px">
     <summary style="cursor:pointer;font-weight:800;color:#244f37">Wat doen Importeren en Exporteren?</summary>
     <div class="help" style="margin-top:10px;line-height:1.55">
       <p style="margin:0 0 9px"><strong>Exporteren = een extra reservekopie maken.</strong> De tool downloadt een JSON-bestand met de leerlingenfiches en de ingevulde overgangsgegevens die nu op het scherm staan. Er wordt niets verwijderd of gewijzigd. Bewaar dit bestand veilig in de schoolmap op OneDrive of Google Drive, want het bevat leerlinggegevens.</p>
@@ -1328,11 +1332,12 @@ ready.then(async () => {
   const rol = await huidigeOvergangRol();
   const btn = document.getElementById("andereOvergangKlasBtn");
   if (btn && schoolbredeRollenOvergang.includes(rol)) {
-    btn.style.display = "";
     btn.onclick = () => window.openOvergangKlasKiezer();
   }
   const klasNav = document.getElementById("zorgKlasNavigatie");
   if (klasNav && schoolbredeRollenOvergang.includes(rol)) {
+    document.body.classList.add("schoolbrede-overgang-rol");
+    if (rol !== "beheerder") document.body.classList.add("zorg-overgang-rol");
     klasNav.style.display = "flex";
     const titel = document.getElementById("zorgKlasNavigatieTitel");
     const sub = document.getElementById("zorgKlasNavigatieSub");
@@ -1340,9 +1345,28 @@ ready.then(async () => {
     if (sub) sub.textContent = beheerNaamLabel
       ? `${beheerNaamLabel} · schooljaar ${schooljaar}`
       : `Schooljaar ${schooljaar} · wissel hier rechtstreeks naar een andere klas.`;
+    const knoppen = document.getElementById("zorgKlasButtons");
+    if (knoppen) {
+      try {
+        const klassen = await laadOvergangKlassen();
+        knoppen.innerHTML = klassen.map(k => {
+          const klasId = String(k.klasId || k.klas || k.id || "").trim();
+          const klasNaam = k.klasNaam || klasId;
+          const leerkrachten = Array.isArray(k.leerkracht_namen) ? k.leerkracht_namen.join(", ") : (Array.isArray(k.leerkracht_emails) ? k.leerkracht_emails.join(", ") : "");
+          const uids = Array.isArray(k.leerkracht_uids) ? k.leerkracht_uids : [];
+          const uid = k.eigenaar_uid || uids[0] || "";
+          const url = uid
+            ? `overgangsbespreking.html?beheerUid=${encodeURIComponent(uid)}&klas=${encodeURIComponent(klasId)}&naam=${encodeURIComponent(leerkrachten || klasNaam)}&schooljaar=${encodeURIComponent(schooljaar)}`
+            : `overgangsbespreking.html?klasProject=1&klas=${encodeURIComponent(klasId)}&naam=${encodeURIComponent(klasNaam)}&schooljaar=${encodeURIComponent(schooljaar)}`;
+          return `<button type="button" class="${klasId === beheerKlasLabel ? "active" : ""}" title="${ovEsc(klasNaam)} openen" onclick="window.location.href='${url}'">${ovEsc(klasNaam)}</button>`;
+        }).join("") || `<button type="button" onclick="openOvergangKlasKiezer()">Andere klas</button>`;
+      } catch (e) {
+        knoppen.innerHTML = `<button type="button" onclick="openOvergangKlasKiezer()">Andere klas openen</button>`;
+      }
+    }
   }
   const koppelBtn = document.getElementById("klasKoppelingenBtn");
-  if (koppelBtn && schoolbredeRollenOvergang.includes(rol)) {
+  if (koppelBtn && rol === "beheerder") {
     koppelBtn.style.display = "";
     koppelBtn.onclick = () => window.openKlasKoppelingenBeheer();
   }
