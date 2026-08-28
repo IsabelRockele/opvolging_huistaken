@@ -50,6 +50,9 @@
     .class-chip{display:inline-flex;align-items:center;gap:6px;border-radius:999px;background:#edf2f8;padding:4px 8px;font-weight:900}
     .stripe-dot{width:7px;height:22px;border-radius:999px;display:inline-block}
     .pay-badge{display:inline-block;margin-left:8px;border-radius:999px;background:#ffe0a3;color:#5f3d00;padding:3px 8px;font-size:11px;font-weight:800}
+    .pay-badge.paid{background:#e8f0f8;color:#36536f}.pay-badge.free{background:#dff3d8;color:#315b2b}
+    .planning-table{width:100%;min-width:620px}.planning-table th,.planning-table td{position:static!important}.planning-table th{text-align:center}.planning-table th:nth-child(1),.planning-table th:nth-child(2){text-align:left}.planning-table .day-check{text-align:center;font-size:20px;color:#2f7a50;font-weight:900}.planning-table .day-empty{text-align:center;color:#b7afa4}
+    .desktop-overview{display:block}
     .lock-note{display:block;font-size:11px;color:#756855;margin-top:3px;text-transform:none;letter-spacing:0}
     .list-panel{padding:14px 16px}
     .list-header{display:flex;align-items:end;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:8px}
@@ -65,7 +68,7 @@
     .mobile-person{display:flex;align-items:center;gap:10px;border-top:1px solid #eee5d8;padding:11px 3px}.mobile-person input{width:25px;height:25px;flex:0 0 auto}.mobile-person span{font-weight:800}.mobile-person small{display:block;color:var(--muted);font-weight:400;margin-top:2px}
     .mobile-supervisors{display:grid;gap:7px;margin:10px 0 15px}.mobile-supervisors label{display:flex;align-items:center;gap:9px;border:1px solid var(--line);border-radius:10px;padding:10px;font-size:14px;margin:0}.mobile-supervisors input{width:23px;height:23px;flex:0 0 auto}
     .mobile-help{margin-top:12px;border:1px solid var(--line);border-radius:10px;padding:0 11px;background:#fff}.mobile-help summary{padding:10px 0;font-weight:800;cursor:pointer}.mobile-help p{margin:0 0 11px}
-    @media(max-width:900px){main{padding:10px}.toolbar,.two{grid-template-columns:1fr}.right{margin-left:0}.attendance-row{grid-template-columns:10px 60px 1fr 32px}.mobile-today{display:block}.list-panel,.desktop-controls,.werking-notice{display:none!important}#supervisorPanel{display:none!important}header{padding:10px 12px}.brand img{width:44px;height:44px}}
+    @media(max-width:900px){main{padding:10px}.toolbar,.two{grid-template-columns:1fr}.right{margin-left:0}.attendance-row{grid-template-columns:10px 60px 1fr 32px}.mobile-today{display:block}.list-panel,.desktop-controls,.desktop-overview,.werking-notice{display:none!important}#supervisorPanel{display:none!important}header{padding:10px 12px}.brand img{width:44px;height:44px}}
   </style>
 </head>
 <body>
@@ -102,11 +105,15 @@
     <details class="mobile-help"><summary>Hoe werkt dit?</summary><p class="muted">Controleer de datum, vink de begeleiders en aanwezige kinderen aan en tik daarna op bewaren. Een verwerkte dag kan alleen door het secretariaat worden aangepast.</p></details>
     <button class="secondary mobile-save" id="mobileSaveBtn">✓ Aanwezigheden en begeleiders bewaren</button>
   </section>
+  <section class="panel desktop-overview" id="planningPanel">
+    <div class="bar"><div><h2 style="margin:0 0 4px">Wie gaat naar de huiswerkklas?</h2><p class="muted" style="margin:0">Overzicht van de vaste dagen en of een leerling gratis of betalend deelneemt.</p></div><button class="secondary right" id="openAttendanceBtn" style="display:none">Lijst invullen</button></div>
+    <div id="planningOverview"></div>
+  </section>
   <section class="panel" id="supervisorPanel" style="display:none">
     <div class="bar"><h2 style="margin:0">Begeleiders</h2><button class="white right" id="supervisorPdfBtn">📄 PDF begeleiders</button></div>
     <div id="supervisorDays"></div>
   </section>
-  <section class="panel list-panel">
+  <section class="panel list-panel" id="attendancePanel">
     <div class="bar">
       <div>
         <h2>Huiswerkklas per maand</h2>
@@ -128,7 +135,7 @@ const app=getApps().length?getApp():initializeApp(firebaseConfig), auth=getAuth(
 const DEFAULT_CLASSES=["K1","K2","K3","1A","2A","3A","4A","5A","6A"], COLORS=["#93c47d","#6fa8dc","#ffd966","#e6a5c8","#b4a7d6","#76a5af","#f6b26b","#8fce00","#c27ba0"];
 const SUPERVISORS=["Stevens Lara","Verheyden Leen","Boeykens Steffi","De Bruyn Lotte","Vanhorenbeeck Kelly","Bierbooms Laura"];
 const $=id=>document.getElementById(id), esc=v=>String(v??"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;");
-let user=null, role="", realRole="", demoMode=false, schooljaar=currentSchooljaar(), month=currentMonth(), date=todayIso(), mobileSelectedDate="", ownClasses=[], allClasses=[], classStudents={}, hw={enrolled:{},attendance:{},supervisors:{}};
+let user=null, role="", realRole="", demoMode=false, desktopEntryOpen=false, schooljaar=currentSchooljaar(), month=currentMonth(), date=todayIso(), mobileSelectedDate="", ownClasses=[], allClasses=[], classStudents={}, hw={enrolled:{},attendance:{},supervisors:{}};
 async function setDoc(ref,payload,options){
   await probeerVeiligheidskopie(ref,{reden:"Huiswerkklas vóór opslag",schooljaar,klas:"schoolbreed",gebruiker:user?.email||user?.uid||""},(melding,err)=>{console.warn(melding,err);const status=document.getElementById("status");if(status)status.textContent="Let op: reservekopie mislukt";});
   return firestoreSetDoc(ref,payload,options);
@@ -195,17 +202,28 @@ function enrolledList(){
   return Object.entries(hw.enrolled||{}).filter(([,v])=>v&&v.active!==false).map(([key,v])=>({key,...v})).sort((a,b)=>(a.klas||"").localeCompare(b.klas||"","nl",{numeric:true})||(a.name||"").localeCompare(b.name||"","nl"));
 }
 function gekozenWerkdatum(){const dates=[...(hw.dates||[])].sort();if(!dates.length)return "";if(dates.includes(date))return date;const gekozen=dates.filter(d=>d<=todayIso()).at(-1)||dates[0];date=gekozen;if($("dateInput"))$("dateInput").value=gekozen;return gekozen}
+function renderPlanningOverview(){
+  let rows=localRows();
+  if(role==="klasleerkracht"&&!demoMode)rows=rows.filter(r=>ownClasses.includes(r.klas));
+  const doel=$("planningOverview");
+  if(!rows.length){doel.innerHTML='<div class="empty">Er zijn nog geen leerlingen voor de huiswerkklas aangeduid.</div>';return}
+  doel.innerHTML=`<div class="table-wrap" style="max-height:none"><table class="planning-table"><thead><tr><th>Klas</th><th>Leerling</th><th>Dinsdag</th><th>Donderdag</th><th>Betaling</th></tr></thead><tbody>${rows.map(r=>`<tr class="${r.free?"free-row":""}"><td><span class="class-chip"><span class="stripe-dot" style="background:${colorForClass(r.klas)}"></span>${esc(r.klas)}</span></td><td><strong>${esc(r.name)}</strong></td><td class="${r.days?.dinsdag?"day-check":"day-empty"}">${r.days?.dinsdag?"✓":"—"}</td><td class="${r.days?.donderdag?"day-check":"day-empty"}">${r.days?.donderdag?"✓":"—"}</td><td><span class="pay-badge ${r.free?"free":"paid"}">${r.free?"Gratis":"Betalend"}</span></td></tr>`).join("")}</tbody></table></div>`;
+}
 function renderTable(){
   const rows=localRows(), gekozen=gekozenWerkdatum(),dates=gekozen?[gekozen]:[];
   const enrolledCount=rows.filter(r=>r.active).length;
   $("countTag").textContent=`${enrolledCount} leerling${enrolledCount===1?"":"en"}`;
   if(!rows.length){$("homeworkTable").innerHTML=`<div class="empty">Geen leerlingen gevonden.</div>`;return;}
-  $("homeworkTable").innerHTML=`<div class="table-wrap"><table><thead><tr><th class="class-col">Klas</th><th class="name-col">Leerling</th>${dates.map(d=>`<th class="date-col">${esc(d.slice(8,10)+"/"+d.slice(5,7))}${isSecretariaat()?`<label class="lock-note"><input type="checkbox" data-lock-date="${esc(d)}" ${hw.processedDates?.[d]?"checked":""}> verwerkt</label>`:hw.processedDates?.[d]?`<span class="lock-note">verwerkt</span>`:""}</th>`).join("")}<th class="total-col">Totaal</th></tr></thead><tbody>${rows.map(r=>{const total=dates.reduce((sum,d)=>sum+(hw.attendance?.[d]?.[r.key]?1:0),0),dagen=[r.days?.dinsdag?'di':'',r.days?.donderdag?'do':''].filter(Boolean).join(' + ');return `<tr class="${r.free?"free-row":""}"><td class="class-col"><span class="class-chip"><span class="stripe-dot" style="background:${colorForClass(r.klas)}"></span>${esc(r.klas)}</span></td><td class="name-col"><strong>${esc(r.name)}</strong>${dagen?`<span class="pay-badge">${dagen}</span>`:''}${r.free?'<span class="pay-badge">gratis</span>':''}</td>${dates.map(d=>{const locked=!!hw.processedDates?.[d]&&!isSecretariaat();return `<td class="date-col"><input type="checkbox" data-present="${esc(r.key)}" data-date="${esc(d)}" ${hw.attendance?.[d]?.[r.key]?"checked":""} ${locked?"disabled":""}></td>`;}).join("")}<td class="total-col">${total}</td></tr>`;}).join("")}</tbody></table></div>`;
+  $("homeworkTable").innerHTML=`<div class="table-wrap"><table><thead><tr><th class="class-col">Klas</th><th class="name-col">Leerling</th>${dates.map(d=>`<th class="date-col">${esc(d.slice(8,10)+"/"+d.slice(5,7))}${isSecretariaat()?`<label class="lock-note"><input type="checkbox" data-lock-date="${esc(d)}" ${hw.processedDates?.[d]?"checked":""}> verwerkt</label>`:hw.processedDates?.[d]?`<span class="lock-note">verwerkt</span>`:""}</th>`).join("")}<th class="total-col">Totaal</th></tr></thead><tbody>${rows.map(r=>{const total=dates.reduce((sum,d)=>sum+(hw.attendance?.[d]?.[r.key]?1:0),0),dagen=[r.days?.dinsdag?'di':'',r.days?.donderdag?'do':''].filter(Boolean).join(' + ');return `<tr class="${r.free?"free-row":""}"><td class="class-col"><span class="class-chip"><span class="stripe-dot" style="background:${colorForClass(r.klas)}"></span>${esc(r.klas)}</span></td><td class="name-col"><strong>${esc(r.name)}</strong>${dagen?`<span class="pay-badge">${dagen}</span>`:''}<span class="pay-badge ${r.free?"free":"paid"}">${r.free?"gratis":"betalend"}</span></td>${dates.map(d=>{const locked=!!hw.processedDates?.[d]&&!isSecretariaat();return `<td class="date-col"><input type="checkbox" data-present="${esc(r.key)}" data-date="${esc(d)}" ${hw.attendance?.[d]?.[r.key]?"checked":""} ${locked?"disabled":""}></td>`;}).join("")}<td class="total-col">${total}</td></tr>`;}).join("")}</tbody></table></div>`;
   document.querySelectorAll("[data-present]").forEach(ch=>ch.onchange=()=>autoSave());
   document.querySelectorAll("[data-lock-date]").forEach(ch=>ch.onchange=()=>autoSave());
 }
 function renderRoleTools(){
   const secretary=isSecretariaat();
+  const magLaptopInvullen=["klasleerkracht","zorgleerkracht","zorgcoordinator"].includes(role);
+  $("openAttendanceBtn").style.display=magLaptopInvullen?"inline-block":"none";
+  $("openAttendanceBtn").textContent=desktopEntryOpen?"Lijst sluiten":"Lijst invullen";
+  $("attendancePanel").style.display=(secretary||desktopEntryOpen)?"block":"none";
   const wegwijzer=document.querySelector(".tool-wegwijzer");if(wegwijzer)wegwijzer.style.display=secretary?"none":"block";
   $("workingNotice").style.display=secretary?"none":"block";
   $("secretaryTools").style.display=secretary?"grid":"none";
@@ -257,7 +275,7 @@ function renderMobileToday(){
   body.innerHTML=`<h3>Begeleiders vandaag</h3><div class="mobile-supervisors">${SUPERVISORS.map(n=>`<label><input type="checkbox" data-mobile-supervisor="${esc(n)}" ${gekozen.has(n)?"checked":""} ${locked?"disabled":""}> ${esc(n)}</label>`).join("")}</div><h3>Aanwezige kinderen (${rows.length})</h3>${locked?'<div class="notice"><strong>Deze datum is verwerkt en vergrendeld.</strong></div>':""}<div>${rows.map(r=>`<label class="mobile-person"><input type="checkbox" data-mobile-present="${esc(r.key)}" ${hw.attendance?.[mobileSelectedDate]?.[r.key]?"checked":""} ${locked?"disabled":""}><span>${esc(r.name)}<small>${esc(r.klas)}${r.free?" · gratis":""}</small></span></label>`).join("")||'<div class="empty">Geen verwachte kinderen voor deze dag.</div>'}</div>`;
   $("mobileSaveBtn").disabled=locked;
 }
-function render(){ $("status").textContent=demoMode?`TESTMODUS · ${schooljaar} - ${month}`:`${schooljaar} - ${month}`; renderRoleTools(); renderSupervisors(); renderTable(); renderMobileToday(); }
+function render(){ $("status").textContent=demoMode?`TESTMODUS · ${schooljaar} - ${month}`:`${schooljaar} - ${month}`; renderRoleTools(); renderPlanningOverview(); renderSupervisors(); renderTable(); renderMobileToday(); }
 function collectSupervisors(){
   document.querySelectorAll("[data-supervisor-date]").forEach(ch=>{const d=ch.dataset.supervisorDate,n=ch.dataset.supervisorName;hw.supervisors[d]||=[];const set=new Set(hw.supervisors[d]);ch.checked?set.add(n):set.delete(n);hw.supervisors[d]=[...set]});
   if(mobileSelectedDate){hw.supervisors[mobileSelectedDate]=[...document.querySelectorAll("[data-mobile-supervisor]:checked")].map(ch=>ch.dataset.mobileSupervisor)}
@@ -382,6 +400,7 @@ onAuthStateChanged(auth,async u=>{
   $("supervisorPdfBtn").onclick=downloadSupervisorsPdf;
   $("testPreviewBtn").onclick=toggleTestPreview;
   $("mobileTestBtn").onclick=toggleTestPreview;
+  $("openAttendanceBtn").onclick=()=>{desktopEntryOpen=!desktopEntryOpen;render();if(desktopEntryOpen)$("attendancePanel").scrollIntoView({behavior:"smooth",block:"start"});};
   $("mobileSaveBtn").onclick=save;
   $("schooljaarInput").onchange=loadData; $("monthInput").onchange=loadData; $("dateInput").onchange=()=>{date=$("dateInput").value;render();};
   $("logoutBtn").onclick=()=>signOut(auth).then(()=>location.href="index.html");
