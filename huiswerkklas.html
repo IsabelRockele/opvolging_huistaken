@@ -86,6 +86,7 @@
       <button class="white" id="addDateBtn">Datum toevoegen</button>
       <label class="secretary-advanced">PDF voor<select id="pdfScope"></select></label>
       <button class="white secretary-advanced" id="pdfBtn">📄 PDF deelnemers per dag</button>
+      <button class="white" id="planningTopBtn" style="display:none">Algemeen inschrijvingsoverzicht</button>
       <button class="white" id="secretaryOptionsBtn" style="display:none">Meer opties</button>
     </div>
     <div class="toolbar secretary-advanced" id="secretaryTools" style="display:none;margin-top:12px">
@@ -221,6 +222,9 @@ function renderTable(){
 }
 function renderRoleTools(){
   const secretary=isSecretariaat();
+  $("planningTopBtn").style.display=secretary?"inline-block":"none";
+  $("planningTopBtn").textContent=secretaryPlanningOpen?"Inschrijvingsoverzicht sluiten":"Algemeen inschrijvingsoverzicht";
+  $("planningPanel").style.display=(!secretary||secretaryPlanningOpen)?"block":"none";
   $("secretaryOptionsBtn").style.display=secretary?"inline-block":"none";
   $("secretaryOptionsBtn").textContent=secretaryMoreOpen?"Minder opties":"Meer opties";
   document.querySelectorAll(".secretary-advanced").forEach(el=>el.style.display=(!secretary||secretaryMoreOpen)?"":"none");
@@ -410,6 +414,7 @@ onAuthStateChanged(auth,async u=>{
   $("mobileTestBtn").onclick=toggleTestPreview;
   $("openAttendanceBtn").onclick=()=>{desktopEntryOpen=!desktopEntryOpen;render();if(desktopEntryOpen)$("attendancePanel").scrollIntoView({behavior:"smooth",block:"start"});};
   $("togglePlanningBtn").onclick=()=>{secretaryPlanningOpen=!secretaryPlanningOpen;render();};
+  $("planningTopBtn").onclick=()=>{secretaryPlanningOpen=!secretaryPlanningOpen;render();if(secretaryPlanningOpen)$("planningPanel").scrollIntoView({behavior:"smooth",block:"start"});};
   $("secretaryOptionsBtn").onclick=()=>{secretaryMoreOpen=!secretaryMoreOpen;render();};
   $("mobileSaveBtn").onclick=save;
   $("schooljaarInput").onchange=loadData; $("monthInput").onchange=loadData; $("dateInput").onchange=()=>{date=$("dateInput").value;render();};
