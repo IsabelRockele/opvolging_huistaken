@@ -125,6 +125,7 @@
   <section class="panel list-panel" id="attendancePanel">
     <div class="bar">
       <h2>Leerlingen</h2>
+      <label id="attendancePaidOnlyLabel" style="display:none;align-items:center;gap:8px;margin:0 0 0 auto;font-size:14px"><input id="attendancePaidOnlyCheckbox" type="checkbox" style="width:20px;flex:0 0 auto"> Alleen betalende tonen</label>
       <span class="tag right" id="countTag">0 leerlingen</span>
     </div>
     <div id="homeworkTable"></div>
@@ -141,7 +142,7 @@ const app=getApps().length?getApp():initializeApp(firebaseConfig), auth=getAuth(
 const DEFAULT_CLASSES=["K1","K2","K3","1A","2A","3A","4A","5A","6A"], COLORS=["#93c47d","#6fa8dc","#ffd966","#e6a5c8","#b4a7d6","#76a5af","#f6b26b","#8fce00","#c27ba0"];
 const SUPERVISORS=["Stevens Lara","Verheyden Leen","Boeykens Steffi","De Bruyn Lotte","Vanhorenbeeck Kelly","Bierbooms Laura"];
 const $=id=>document.getElementById(id), esc=v=>String(v??"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;");
-let user=null, role="", realRole="", demoMode=false, desktopEntryOpen=false, secretaryPlanningOpen=false, secretaryMoreOpen=false, planningPaidOnly=false, schooljaar=currentSchooljaar(), month=currentMonth(), date=todayIso(), mobileSelectedDate="", ownClasses=[], allClasses=[], classStudents={}, hw={enrolled:{},attendance:{},supervisors:{}};
+let user=null, role="", realRole="", demoMode=false, desktopEntryOpen=false, secretaryPlanningOpen=false, secretaryMoreOpen=false, planningPaidOnly=false, attendancePaidOnly=false, schooljaar=currentSchooljaar(), month=currentMonth(), date=todayIso(), mobileSelectedDate="", ownClasses=[], allClasses=[], classStudents={}, hw={enrolled:{},attendance:{},supervisors:{}};
 async function setDoc(ref,payload,options){
   await probeerVeiligheidskopie(ref,{reden:"Huiswerkklas vóór opslag",schooljaar,klas:"schoolbreed",gebruiker:user?.email||user?.uid||""},(melding,err)=>{console.warn(melding,err);const status=document.getElementById("status");if(status)status.textContent="Let op: reservekopie mislukt";});
   return firestoreSetDoc(ref,payload,options);
@@ -218,7 +219,8 @@ function renderPlanningOverview(){
   doel.innerHTML=`<div class="table-wrap" style="max-height:none"><table class="planning-table"><thead><tr><th>Klas</th><th>Leerling</th><th>Dinsdag</th><th>Donderdag</th><th>Betaling</th></tr></thead><tbody>${rows.map(r=>`<tr class="${r.free?"free-row":""}"><td><span class="class-chip"><span class="stripe-dot" style="background:${colorForClass(r.klas)}"></span>${esc(r.klas)}</span></td><td><strong>${esc(r.name)}</strong></td><td class="${r.days?.dinsdag?"day-check":"day-empty"}">${r.days?.dinsdag?"✓":"—"}</td><td class="${r.days?.donderdag?"day-check":"day-empty"}">${r.days?.donderdag?"✓":"—"}</td><td><span class="pay-badge ${r.free?"free":"paid"}">${r.free?"Gratis":"Betalend"}</span></td></tr>`).join("")}</tbody></table></div>`;
 }
 function renderTable(){
-  const gekozen=gekozenWerkdatum(),dag=gekozen?mobileDagSleutel(gekozen):"",alleRijen=localRows(),rows=dag?alleRijen.filter(r=>!!r.days?.[dag]):alleRijen,dates=gekozen?[gekozen]:[];
+  const gekozen=gekozenWerkdatum(),dag=gekozen?mobileDagSleutel(gekozen):"",alleRijen=localRows(),dagRijen=dag?alleRijen.filter(r=>!!r.days?.[dag]):alleRijen,rows=attendancePaidOnly?dagRijen.filter(r=>!r.free):dagRijen,dates=gekozen?[gekozen]:[];
+  $("attendancePaidOnlyCheckbox").checked=attendancePaidOnly;
   const enrolledCount=rows.filter(r=>r.active).length;
   $("countTag").textContent=`${enrolledCount} leerling${enrolledCount===1?"":"en"}`;
   if(!rows.length){$("homeworkTable").innerHTML=`<div class="empty">Geen leerlingen gevonden.</div>`;return;}
@@ -228,6 +230,7 @@ function renderTable(){
 }
 function renderRoleTools(){
   const secretary=isSecretariaat();
+  $("attendancePaidOnlyLabel").style.display=secretary?"flex":"none";
   $("planningTopBtn").style.display=secretary?"inline-block":"none";
   $("planningTopBtn").textContent=secretaryPlanningOpen?"Inschrijvingsoverzicht sluiten":"Algemeen inschrijvingsoverzicht";
   $("planningPanel").style.display=(!secretary||secretaryPlanningOpen)?"block":"none";
@@ -422,6 +425,7 @@ onAuthStateChanged(auth,async u=>{
   $("togglePlanningBtn").onclick=()=>{secretaryPlanningOpen=!secretaryPlanningOpen;render();};
   $("planningTopBtn").onclick=()=>{secretaryPlanningOpen=!secretaryPlanningOpen;render();if(secretaryPlanningOpen)$("planningPanel").scrollIntoView({behavior:"smooth",block:"start"});};
   $("paidOnlyCheckbox").onchange=()=>{planningPaidOnly=$("paidOnlyCheckbox").checked;renderPlanningOverview();};
+  $("attendancePaidOnlyCheckbox").onchange=()=>{attendancePaidOnly=$("attendancePaidOnlyCheckbox").checked;renderTable();};
   $("secretaryOptionsBtn").onclick=()=>{secretaryMoreOpen=!secretaryMoreOpen;render();};
   $("mobileSaveBtn").onclick=save;
   $("schooljaarInput").onchange=loadData; $("monthInput").onchange=loadData; $("dateInput").onchange=()=>{date=$("dateInput").value;render();};
