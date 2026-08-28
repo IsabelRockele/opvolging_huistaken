@@ -990,6 +990,11 @@
     .table-wrap table tbody tr td:first-child{
       box-shadow: 2px 0 4px -1px rgba(0,0,0,.10);
     }
+    .scroll-mirror-top{display:block;height:20px;overflow-x:auto;overflow-y:hidden;margin:0 0 5px;border:1px solid var(--line);border-radius:9px;background:#f6f8fb;scrollbar-color:#7f8ea3 #e8edf4;scrollbar-width:auto}
+    .scroll-mirror-top>div{height:1px}
+    .student-list-wrap table thead tr th:last-child,
+    .student-list-wrap table tbody tr td:last-child{position:sticky;right:0;z-index:2;background:#fff;min-width:118px;box-shadow:-3px 0 5px -2px rgba(0,0,0,.16)}
+    .student-list-wrap table thead tr th:last-child{z-index:4;background:#eef3f9}
     /* Print: sticky uitschakelen */
     @media print{
       .table-wrap{
@@ -998,7 +1003,9 @@
       }
       .table-wrap table thead tr th,
       .table-wrap table thead tr th:first-child,
-      .table-wrap table tbody tr td:first-child{
+      .table-wrap table tbody tr td:first-child,
+      .student-list-wrap table thead tr th:last-child,
+      .student-list-wrap table tbody tr td:last-child{
         position: static!important;
         box-shadow: none!important;
       }
@@ -3949,6 +3956,8 @@
   function installScrollMirrors(){
     document.querySelectorAll('.table-wrap').forEach(wrap => {
       if(wrap.classList.contains('no-scroll-mirror')) return;
+      const koppen = [...wrap.querySelectorAll('thead th')].map(th => th.textContent.trim().toLowerCase());
+      if(koppen.includes('achternaam') && koppen.some(x => x.includes('officiële voornaam'))) wrap.classList.add('student-list-wrap');
       // Niet twee keer installeren
       if(wrap.previousElementSibling?.classList?.contains('scroll-mirror-top')) return;
 
