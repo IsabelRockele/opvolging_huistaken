@@ -133,6 +133,7 @@
       <h2>Leerlingen</h2>
       <label id="attendancePaidOnlyLabel" style="display:none;align-items:center;gap:8px;margin:0 0 0 auto;font-size:14px"><input id="attendancePaidOnlyCheckbox" type="checkbox" style="width:20px;flex:0 0 auto"> Alleen betalende tonen</label>
       <span class="tag right" id="countTag">0 leerlingen</span>
+      <button class="white" id="closeAttendanceBtn" style="display:none">← Terug naar overzicht</button>
     </div>
     <div id="homeworkTable"></div>
   </section>
@@ -165,7 +166,7 @@ function supervisorNames(){return supervisorConfig.length?supervisorConfig.map(x
 function supervisorConfigRef(){return doc(db,"huiswerkklas",schooljaar,"maanden","configuratie");}
 function supervisorKey(x){return String(x.uid||x.email||x.name||"").trim().toLowerCase();}
 function isConfiguredSupervisor(){const email=(user?.email||"").toLowerCase();return supervisorConfig.some(x=>(x.uid&&x.uid===user?.uid)||(x.email&&x.email.toLowerCase()===email));}
-function magAanwezighedenInvullen(){return isSecretariaat()||realRole==="beheerder"||!supervisorConfigIsExplicit||isConfiguredSupervisor();}
+function magAanwezighedenInvullen(){return isSecretariaat()||realRole==="beheerder"||isConfiguredSupervisor();}
 function colorForClass(klas){const i=Math.max(0,DEFAULT_CLASSES.indexOf(klas));return COLORS[i%COLORS.length];}
 function monthRef(){return doc(db,"huiswerkklas",schooljaar,"maanden",demoMode?`test-${user.uid}-${month}`:month);}
 function testModeKey(){return `lindeHuiswerkklasTest_${user?.uid||""}`;}
@@ -271,7 +272,7 @@ function renderRoleTools(){
   $("attendancePaidOnlyLabel").style.display=secretary?"flex":"none";
   $("planningTopBtn").style.display=secretary?"inline-block":"none";
   $("planningTopBtn").textContent=secretaryPlanningOpen?"Inschrijvingsoverzicht sluiten":"Algemeen inschrijvingsoverzicht";
-  $("planningPanel").style.display=(!secretary||secretaryPlanningOpen)?"block":"none";
+  $("planningPanel").style.display=(!secretary&&!desktopEntryOpen)||secretaryPlanningOpen?"block":"none";
   $("secretaryOptionsBtn").style.display=secretary?"inline-block":"none";
   $("secretaryOptionsBtn").textContent=secretaryMoreOpen?"Minder opties":"Meer opties";
   $("secretaryAdvancedPanel").style.display=(!secretary||secretaryMoreOpen)?"block":"none";
@@ -285,8 +286,9 @@ function renderRoleTools(){
   $("togglePlanningBtn").textContent=secretaryPlanningOpen?"Overzicht sluiten":"Overzicht openen";
   $("planningOverview").style.display=(!secretary||secretaryPlanningOpen)?"block":"none";
   $("openAttendanceBtn").style.display=magLaptopInvullen?"inline-block":"none";
-  $("openAttendanceBtn").textContent=desktopEntryOpen?"Lijst sluiten":"Lijst invullen";
+  $("openAttendanceBtn").textContent="Lijst invullen";
   $("attendancePanel").style.display=(secretary||desktopEntryOpen)?"block":"none";
+  $("closeAttendanceBtn").style.display=(!secretary&&desktopEntryOpen)?"inline-block":"none";
   const wegwijzer=document.querySelector(".tool-wegwijzer");if(wegwijzer)wegwijzer.style.display=secretary?"none":"block";
   $("workingNotice").style.display=secretary?"none":"block";
   $("dateInput").closest("label").style.display="block";
@@ -358,6 +360,11 @@ async function saveSupervisorConfig(){
 function mobileDagSleutel(d){const weekdag=new Date(`${d}T12:00:00`).getDay();return weekdag===2?"dinsdag":weekdag===4?"donderdag":"";}
 function renderMobileToday(){
   const dates=[...(hw.dates||[])].sort(),keuze=$("mobileDate"),body=$("mobileTodayBody");
+  if(!magAanwezighedenInvullen()){
+    keuze.innerHTML='<option>Geen toegang</option>';keuze.disabled=true;
+    body.innerHTML='<div class="notice"><strong>Alleen aangeduide begeleiders kunnen de huiswerkklas invullen.</strong><p class="muted">Vraag secretariaat of de beheerder om je bij Begeleiders aan te vinken wanneer je de huiswerkklas begeleidt.</p></div>';
+    $("mobileSaveBtn").disabled=true;return;
+  }
   if(!dates.length){keuze.innerHTML='<option>Geen datum</option>';keuze.disabled=true;body.innerHTML='<div class="empty">Er is nog geen huiswerkklasdatum toegevoegd.</div>';$("mobileSaveBtn").disabled=true;return}
   keuze.disabled=false;$("mobileSaveBtn").disabled=false;
   if(!dates.includes(mobileSelectedDate))mobileSelectedDate=dates.includes(todayIso())?todayIso():(dates.filter(d=>d<=todayIso()).at(-1)||dates[0]);
@@ -496,7 +503,8 @@ onAuthStateChanged(auth,async u=>{
   $("saveSupervisorConfigBtn").onclick=()=>saveSupervisorConfig().catch(err=>{console.error(err);alert("Begeleiders bewaren lukte niet: "+err.message);});
   $("testPreviewBtn").onclick=toggleTestPreview;
   $("mobileTestBtn").onclick=toggleTestPreview;
-  $("openAttendanceBtn").onclick=()=>{desktopEntryOpen=!desktopEntryOpen;render();if(desktopEntryOpen)$("attendancePanel").scrollIntoView({behavior:"smooth",block:"start"});};
+  $("openAttendanceBtn").onclick=()=>{if(!magAanwezighedenInvullen())return;desktopEntryOpen=true;render();window.scrollTo({top:0,left:0,behavior:"smooth"});};
+  $("closeAttendanceBtn").onclick=()=>{desktopEntryOpen=false;render();window.scrollTo({top:0,left:0,behavior:"smooth"});};
   $("togglePlanningBtn").onclick=()=>{secretaryPlanningOpen=!secretaryPlanningOpen;render();};
   $("planningTopBtn").onclick=()=>{secretaryPlanningOpen=!secretaryPlanningOpen;render();if(secretaryPlanningOpen)$("planningPanel").scrollIntoView({behavior:"smooth",block:"start"});};
   $("paidOnlyCheckbox").onchange=()=>{planningPaidOnly=$("paidOnlyCheckbox").checked;renderPlanningOverview();};
