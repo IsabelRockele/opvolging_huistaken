@@ -3298,9 +3298,16 @@
         return `<div class="aankoop-groepen">${[...groepen.values()].sort((a,b)=>(labels[a.type]||a.type).localeCompare(labels[b.type]||b.type,"nl")||a.prijs-b.prijs).map(g=>{const verwerkt=g.items.filter(p=>p.processed).length,allesVerwerkt=verwerkt===g.items.length,ids=encodeURIComponent(JSON.stringify(g.items.map(p=>p.id)));return`<section class="aankoop-groep"><div class="aankoop-groep-kop"><span><strong>${esc(labels[g.type]||g.type)}</strong> · &euro;${g.prijs.toFixed(2)}<br><small>${g.items.length} leerling${g.items.length===1?'':'en'}</small></span><button class="small ${allesVerwerkt?'white':'green'}" onclick="togglePurchaseGroup('${ids}',${allesVerwerkt?'false':'true'})">${allesVerwerkt?'✓ Verwerkt — ongedaan maken':'Alles verwerken'}</button></div><div class="aankoop-groep-lijst">${g.items.sort((a,b)=>naamZonderKomma(studentMap[a.studentId]||{}).localeCompare(naamZonderKomma(studentMap[b.studentId]||{}),"nl")).map(p=>`<div class="aankoop-groep-leerling ${p.processed?'locked':''}"><span><strong>${esc(naamZonderKomma(studentMap[p.studentId]||{}))}</strong>${p.processed?' <span class="tag done">✓</span>':''}<br><small class="muted">${esc(p.date||"")}</small></span></div>`).join("")}</div></section>`}).join("")}</div>`;
       }
       const students=Object.fromEntries(data.leerlingen.map(s=>[s.id,name(s)]));
-      return `<div class="table-wrap" style="margin-top:14px"><table><thead><tr><th>Leerling</th><th>Aankoop</th><th>Datum</th><th>Prijs</th><th>Verwerkt</th></tr></thead><tbody>${list.map(p=>`<tr class="${p.processed?"locked":""}"><td>${esc(students[p.studentId]||"")}</td><td>${esc(p.type)}</td><td>${esc(p.date)}</td><td>&euro;${Number(p.price||0).toFixed(2)}</td><td>${p.processed?"ja":"nee"}</td></tr>`).join("")}</tbody></table></div>`;
+      return `<div class="table-wrap" style="margin-top:14px"><table><thead><tr><th>Leerling</th><th>Aankoop</th><th>Datum</th><th>Prijs</th><th>Verwerkt</th><th class="no-print">Actie</th></tr></thead><tbody>${list.map(p=>`<tr class="${p.processed?"locked":""}"><td>${esc(students[p.studentId]||"")}</td><td>${esc(p.type)}</td><td>${esc(p.date)}</td><td>&euro;${Number(p.price||0).toFixed(2)}</td><td>${p.processed?"ja":"nee"}</td><td class="no-print"><button class="small white" onclick="deletePurchase('${esc(p.id)}')" ${p.processed?'disabled title="Vraag secretariaat om deze verwerkte aankoop te corrigeren"':''}>Verwijderen</button></td></tr>`).join("")}</tbody></table></div>`;
     }
     window.wisselAankopenMaand = value => { purchaseMonth = value; renderPurchases(); };
+    window.deletePurchase = id => {
+      const p=(data.aankopen||[]).find(x=>x.id===id);if(!p)return;
+      if(p.processed&&!isSecretary())return alert("Deze aankoop is al verwerkt. Vraag secretariaat om ze te corrigeren.");
+      const leerling=data.leerlingen.find(s=>s.id===p.studentId),leerlingNaam=leerling?name(leerling):"deze leerling";
+      if(!confirm(`De aankoop van ${leerlingNaam} op ${formatDate(p.date)} verwijderen?\n\nZe verdwijnt dan ook onmiddellijk uit het overzicht van secretariaat.`))return;
+      data.aankopen=data.aankopen.filter(x=>x.id!==id);markDirty();renderPurchases();
+    };
     window.togglePurchase = async (id,checked) => { if(!isSecretary())return; const p=data.aankopen.find(x=>x.id===id); if(!p)return;p.processed=checked;renderPurchases();setStatus("Wijzigingen...");await saveNow(); };
     window.togglePurchaseGroup=async(encodedIds,verwerken)=>{
       if(!isSecretary())return;const ids=JSON.parse(decodeURIComponent(encodedIds));
