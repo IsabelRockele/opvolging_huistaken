@@ -2757,6 +2757,34 @@
     };
     window.updateHomeworkClassStart=(id,value)=>{const s=data.leerlingen.find(x=>x.id===id);if(!s)return;s.homeworkClassStart=value||"";markDirty();};
     window.updateHomeworkClassEnd=(id,value)=>{const s=data.leerlingen.find(x=>x.id===id);if(!s)return;if(value&&s.homeworkClassStart&&value<s.homeworkClassStart){alert("De einddatum kan niet vóór de ingangsdatum liggen.");render();return;}s.homeworkClassEnd=value||"";markDirty();};
+    function huiswerkVandaag(){return isoDatum(new Date());}
+    function huiswerkHistoriek(s){return Array.isArray(s.homeworkClassHistory)?s.homeworkClassHistory:[];}
+    function huiswerkSamenvatting(s){
+      if(!s.homeworkClass){const laatste=[...huiswerkHistoriek(s)].sort((a,b)=>String(b.from||"").localeCompare(String(a.from||"")))[0];return laatste?.action==="stop"?`Gestopt vanaf ${formatDate(laatste.from)}`:"Niet ingeschreven";}
+      const dagen=[s.homeworkClassDays?.dinsdag?"dinsdag":"",s.homeworkClassDays?.donderdag?"donderdag":""].filter(Boolean).join(" en ")||"geen dagen";
+      return `${dagen} · ${s.homeworkClassFree?"gratis":"betalend"}${s.homeworkClassStart?` · vanaf ${formatDate(s.homeworkClassStart)}`:""}`;
+    }
+    window.openHomeworkEnrollment=(id)=>{
+      const s=data.leerlingen.find(x=>x.id===id);if(!s)return;
+      document.getElementById("huiswerkWijzigOverlay")?.remove();
+      const overlay=document.createElement("div");overlay.id="huiswerkWijzigOverlay";overlay.style.cssText="position:fixed;inset:0;background:rgba(25,35,45,.58);z-index:10000;padding:20px;overflow:auto";
+      const actief=!!s.homeworkClass,actie=actief?"wijzig":"start";
+      overlay.innerHTML=`<div style="max-width:620px;margin:40px auto;background:#fff;border-radius:18px;padding:22px;box-shadow:0 20px 60px rgba(0,0,0,.28)"><div class="bar"><div><h2 style="margin:0">${actief?"Huiswerkklas wijzigen":"Inschrijven voor huiswerkklas"}</h2><p class="muted" style="margin:5px 0 0"><strong>${esc(name(s))}</strong> · ${esc(activeClass)}</p></div><button class="white" onclick="document.getElementById('huiswerkWijzigOverlay').remove()">Sluiten</button></div><div class="notice" style="margin:14px 0"><strong>Nu:</strong> ${esc(huiswerkSamenvatting(s))}</div><div class="grid grid-2"><label>Wat verandert?<select id="hwChangeAction"><option value="start" ${actie==="start"?"selected":""}>Start of nieuwe planning</option><option value="change" ${actie==="wijzig"?"selected":""}>Dagen of betaling wijzigen</option>${actief?'<option value="stop">Stopt met huiswerkklas</option>':""}</select></label><label>Deze wijziging geldt vanaf<input id="hwChangeDate" type="date" value="${huiswerkVandaag()}"></label></div><div id="hwChangeChoices" class="notice" style="margin-top:14px"><strong>Nieuwe planning</strong><div class="homework-options" style="margin-top:10px"><label><input id="hwChangeTuesday" type="checkbox" ${s.homeworkClassDays?.dinsdag?"checked":""}> Dinsdag</label><label><input id="hwChangeThursday" type="checkbox" ${s.homeworkClassDays?.donderdag?"checked":""}> Donderdag</label><label><input id="hwChangeFree" type="checkbox" ${s.homeworkClassFree?"checked":""}> Gratis via schooladvies</label></div></div><div class="actions" style="margin-top:16px"><button class="green" onclick="saveHomeworkEnrollmentChange('${s.id}')">Controleer en bewaar</button><button class="white" onclick="document.getElementById('huiswerkWijzigOverlay').remove()">Annuleren</button></div><details style="margin-top:16px"><summary>Wijzigingshistoriek (${huiswerkHistoriek(s).length})</summary><div class="muted small" style="margin-top:8px">${huiswerkHistoriek(s).slice().sort((a,b)=>String(b.from||"").localeCompare(String(a.from||""))).map(h=>`${formatDate(h.from)} · ${h.action==="stop"?"gestopt":[h.days?.dinsdag?"dinsdag":"",h.days?.donderdag?"donderdag":""].filter(Boolean).join(" en ")+` · ${h.free?"gratis":"betalend"}`}`).join("<br>")||"Nog geen wijzigingen."}</div></details></div>`;
+      document.body.appendChild(overlay);const actieEl=document.getElementById("hwChangeAction"),keuzes=document.getElementById("hwChangeChoices");actieEl.onchange=()=>keuzes.style.display=actieEl.value==="stop"?"none":"block";actieEl.onchange();
+    };
+    window.saveHomeworkEnrollmentChange=(id)=>{
+      const s=data.leerlingen.find(x=>x.id===id);if(!s)return;const action=$("hwChangeAction").value,from=$("hwChangeDate").value;if(!from)return alert("Kies eerst vanaf welke datum de wijziging geldt.");
+      const days={dinsdag:!!$("hwChangeTuesday")?.checked,donderdag:!!$("hwChangeThursday")?.checked},free=!!$("hwChangeFree")?.checked;
+      if(action!=="stop"&&!days.dinsdag&&!days.donderdag)return alert("Vink dinsdag, donderdag of beide dagen aan.");
+      const beschrijving=action==="stop"?`stopt vanaf ${formatDate(from)}`:`gaat vanaf ${formatDate(from)} op ${[days.dinsdag?"dinsdag":"",days.donderdag?"donderdag":""].filter(Boolean).join(" en ")} en is ${free?"gratis":"betalend"}`;
+      if(!confirm(`${name(s)} ${beschrijving}.\n\nEerdere aanwezigheden en afrekeningen blijven ongewijzigd. Bewaren?`))return;
+      s.homeworkClassHistory=huiswerkHistoriek(s);
+      if(!s.homeworkClassHistory.length&&s.homeworkClass){s.homeworkClassHistory.push({from:s.homeworkClassStart||`${schooljaar.slice(0,4)}-09-01`,action:"start",days:{dinsdag:!!s.homeworkClassDays?.dinsdag,donderdag:!!s.homeworkClassDays?.donderdag},free:!!s.homeworkClassFree,changedAt:new Date().toISOString(),changedBy:"overgenomen bestaande inschrijving"});}
+      s.homeworkClassHistory.push({from,action,days,free,changedAt:new Date().toISOString(),changedBy:user?.email||user?.uid||""});s.homeworkClassHistory.sort((a,b)=>String(a.from||"").localeCompare(String(b.from||"")));
+      if(action==="stop"){s.homeworkClass=false;s.homeworkClassEnd=new Date(new Date(`${from}T12:00:00`).getTime()-86400000).toISOString().slice(0,10);}
+      else{s.homeworkClass=true;s.homeworkClassDays=days;s.homeworkClassFree=free;s.homeworkClassEnd="";if(!s.homeworkClassStart||from<s.homeworkClassStart)s.homeworkClassStart=from;}
+      markDirty();document.getElementById("huiswerkWijzigOverlay")?.remove();render();
+    };
     window.leaveStudent = id => { const d=prompt("Uitschrijfdatum?",`${schooljaar.slice(0,4)}-09-30`); if(!d)return; const s=data.leerlingen.find(x=>x.id===id); if(s)s.end=d; markDirty(); render(); };
     function formatDate(value){
       const match = String(value || "").match(/^(\d{4})-(\d{2})-(\d{2})$/);
@@ -2781,7 +2809,7 @@
         ${activeClass==="K1"?optioneleKolom('groep',`<td><strong data-kleutergroep-id="${esc(s.id)}">${esc(kleutergroepVoor(s)||"—")}</strong></td>`):""}
         ${optioneleKolom('oudste',`<td class="check-col"><input type="checkbox" ${s.oudsteGezin?"checked":""} onchange="toggleOudsteGezin('${s.id}',this.checked)" title="Oudste kind van het gezin op school"></td>`)}
         ${optioneleKolom('collega',`<td class="check-col"><input type="checkbox" ${s.colleague?"checked":""} onchange="toggleColleague('${s.id}',this.checked)"></td>`)}
-        ${optioneleKolom('huiswerk',`<td class="homework-cell"><div class="homework-options"><label class="homework-day-choice"><input data-homework-day="dinsdag" type="checkbox" ${s.homeworkClassDays?.dinsdag?"checked":""} onchange="toggleHomeworkClassDay('${s.id}','dinsdag',this.checked,this)"> Dinsdag</label><label class="homework-day-choice"><input data-homework-day="donderdag" type="checkbox" ${s.homeworkClassDays?.donderdag?"checked":""} onchange="toggleHomeworkClassDay('${s.id}','donderdag',this.checked,this)"> Donderdag</label><label class="homework-free-choice"><input data-homework-free type="checkbox" ${s.homeworkClassFree?"checked":""} onchange="toggleHomeworkClassFree('${s.id}',this.checked,this)"> Gratis via schooladvies</label><label class="homework-free-choice">Vanaf <input type="date" value="${esc(s.homeworkClassStart||"")}" onchange="updateHomeworkClassStart('${s.id}',this.value)" style="width:auto;padding:4px 6px"></label><label class="homework-free-choice">Tot en met <input type="date" value="${esc(s.homeworkClassEnd||"")}" onchange="updateHomeworkClassEnd('${s.id}',this.value)" style="width:auto;padding:4px 6px"></label></div></td>`)}
+        ${optioneleKolom('huiswerk',`<td class="homework-cell"><div><strong>${esc(huiswerkSamenvatting(s))}</strong><br><button class="small ${s.homeworkClass?"white":"green"}" style="margin-top:7px" onclick="openHomeworkEnrollment('${s.id}')">${s.homeworkClass?"Wijzigen":"Inschrijven"}</button></div></td>`)}
         ${optioneleKolom('start',`<td><input type="date" value="${esc(s.start||startDate())}" onchange="updateStudent('${s.id}','start',this.value)" title="Startdatum: ${formatDate(s.start||startDate())}"></td>`)}
         ${optioneleKolom('einde',`<td><input type="date" value="${esc(s.end||endDate())}" onchange="updateStudent('${s.id}','end',this.value)" title="Einddatum: ${formatDate(s.end||endDate())}"></td>`)}
         <td><button class="small pink" onclick="leaveStudent('${s.id}')">uitschrijven</button>${isSecretary()?` <button class="small danger" onclick="startNietOpSchool('${s.id}')">start niet</button>`:""}</td>
@@ -3583,6 +3611,7 @@
       homeworkClassDays:{dinsdag:!!s.homeworkClassDays?.dinsdag,donderdag:!!s.homeworkClassDays?.donderdag},
       homeworkClassStart:s.homeworkClass?`${doelSchooljaar.slice(0,4)}-09-01`:"",
       homeworkClassEnd:"",
+      homeworkClassHistory:[],
       start:`${doelSchooljaar.slice(0,4)}-09-01`,end:`${doelSchooljaar.slice(5,9)}-06-30`
     }; }
     async function voegLeerlingenToeAanNieuwSchooljaar(doelSchooljaar,klas,leerlingen){

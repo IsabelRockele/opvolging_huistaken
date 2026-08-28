@@ -227,15 +227,21 @@ function localRows(){
   const rows=[];
   allClasses.forEach(klas=>(classStudents[klas]||[]).forEach(s=>{
     const key=studentKey(klas,s), existing=hw.enrolled[key]||{};
-    if(s.homeworkClass || existing.active){
-      rows.push({key,klas,name:name(s),local:ownClasses.includes(klas),active:true,free:!!(s.homeworkClassFree||existing.free),days:s.homeworkClassDays||existing.days||{},start:s.homeworkClassStart||existing.start||"",end:s.homeworkClassEnd||existing.end||""});
+    if(s.homeworkClass || existing.active || (Array.isArray(s.homeworkClassHistory)&&s.homeworkClassHistory.length)){
+      rows.push({key,klas,name:name(s),local:ownClasses.includes(klas),active:true,free:!!(s.homeworkClassFree||existing.free),days:s.homeworkClassDays||existing.days||{},start:s.homeworkClassStart||existing.start||"",end:s.homeworkClassEnd||existing.end||"",history:Array.isArray(s.homeworkClassHistory)?s.homeworkClassHistory:(existing.history||[])});
     }
   }));
   Object.entries(hw.enrolled||{}).forEach(([key,v])=>{
-    if(v?.active!==false && !rows.some(r=>r.key===key))rows.push({key,klas:v.klas||"",name:v.name||"",local:false,active:true,free:!!v.free,days:v.days||{},start:v.start||"",end:v.end||""});
+    if(v?.active!==false && !rows.some(r=>r.key===key))rows.push({key,klas:v.klas||"",name:v.name||"",local:false,active:true,free:!!v.free,days:v.days||{},start:v.start||"",end:v.end||"",history:v.history||[]});
   });
   return rows.sort((a,b)=>(a.klas||"").localeCompare(b.klas||"","nl",{numeric:true})||(a.name||"").localeCompare(b.name||"","nl"));
 }
+function planningVoorDatum(r,d){
+  const historie=(r.history||[]).filter(h=>h.from&&h.from<=d).sort((a,b)=>String(a.from).localeCompare(String(b.from)));
+  const laatste=historie.at(-1);if(laatste)return laatste.action==="stop"?{active:false,days:{},free:!!laatste.free}:{active:true,days:laatste.days||{},free:!!laatste.free};
+  return {active:(!r.start||d>=r.start)&&(!r.end||d<=r.end),days:r.days||{},free:!!r.free};
+}
+function geplandOpDatum(r,d){const p=planningVoorDatum(r,d);return p.active&&!!p.days?.[mobileDagSleutel(d)];}
 function enrolledList(){
   return Object.entries(hw.enrolled||{}).filter(([,v])=>v&&v.active!==false).map(([key,v])=>({key,...v})).sort((a,b)=>(a.klas||"").localeCompare(b.klas||"","nl",{numeric:true})||(a.name||"").localeCompare(b.name||"","nl"));
 }
@@ -251,12 +257,12 @@ function renderPlanningOverview(){
   doel.innerHTML=`<div class="table-wrap" style="max-height:none"><table class="planning-table"><thead><tr><th>Klas</th><th>Leerling</th><th>Dinsdag</th><th>Donderdag</th><th>Periode</th><th>Betaling</th></tr></thead><tbody>${rows.map(r=>`<tr class="${r.free?"free-row":""}"><td><span class="class-chip"><span class="stripe-dot" style="background:${colorForClass(r.klas)}"></span>${esc(r.klas)}</span></td><td><strong>${esc(r.name)}</strong></td><td class="${r.days?.dinsdag?"day-check":"day-empty"}">${r.days?.dinsdag?"✓":"—"}</td><td class="${r.days?.donderdag?"day-check":"day-empty"}">${r.days?.donderdag?"✓":"—"}</td><td>${r.start?esc(r.start.slice(8,10)+"/"+r.start.slice(5,7)+"/"+r.start.slice(0,4)):"start schooljaar"}${r.end?` t.e.m. ${esc(r.end.slice(8,10)+"/"+r.end.slice(5,7)+"/"+r.end.slice(0,4))}`:""}</td><td><span class="pay-badge ${r.free?"free":"paid"}">${r.free?"Gratis":"Betalend"}</span></td></tr>`).join("")}</tbody></table></div>`;
 }
 function renderTable(){
-  const dates=zichtbareWerkdatums(),dag=dates.length===1?mobileDagSleutel(dates[0]):"",alleRijen=localRows(),dagRijen=dag?alleRijen.filter(r=>!!r.days?.[dag]&&(!r.start||dates[0]>=r.start)&&(!r.end||dates[0]<=r.end)):alleRijen,rows=attendancePaidOnly?dagRijen.filter(r=>!r.free):dagRijen;
+  const dates=zichtbareWerkdatums(),dag=dates.length===1?mobileDagSleutel(dates[0]):"",alleRijen=localRows(),dagRijen=dag?alleRijen.filter(r=>geplandOpDatum(r,dates[0])):alleRijen,rows=attendancePaidOnly?dagRijen.filter(r=>dates.length?!planningVoorDatum(r,dates[0]).free:!r.free):dagRijen;
   $("attendancePaidOnlyCheckbox").checked=attendancePaidOnly;
   const enrolledCount=rows.filter(r=>r.active).length;
   $("countTag").textContent=`${enrolledCount} leerling${enrolledCount===1?"":"en"}`;
   if(!rows.length){$("homeworkTable").innerHTML=`<div class="empty">Geen leerlingen gevonden.</div>`;return;}
-  $("homeworkTable").innerHTML=`<div class="table-wrap"><table><thead><tr><th class="class-col">Klas</th><th class="name-col">Leerling</th>${dates.map(d=>`<th class="date-col">${esc(d.slice(8,10)+"/"+d.slice(5,7))}${isSecretariaat()?`<label class="lock-note"><input type="checkbox" data-lock-date="${esc(d)}" ${hw.processedDates?.[d]?"checked":""}> verwerkt</label>`:hw.processedDates?.[d]?`<span class="lock-note">verwerkt</span>`:""}</th>`).join("")}<th class="total-col">Totaal</th></tr></thead><tbody>${rows.map(r=>{const total=dates.reduce((sum,d)=>sum+(hw.attendance?.[d]?.[r.key]&&(!r.start||d>=r.start)&&(!r.end||d<=r.end)?1:0),0),dagen=[r.days?.dinsdag?'di':'',r.days?.donderdag?'do':''].filter(Boolean).join(' + ');return `<tr class="${r.free?"free-row":""}"><td class="class-col"><span class="class-chip"><span class="stripe-dot" style="background:${colorForClass(r.klas)}"></span>${esc(r.klas)}</span></td><td class="name-col"><strong>${esc(r.name)}</strong>${dagen?`<span class="pay-badge">${dagen}</span>`:''}<span class="pay-badge ${r.free?"free":"paid"}">${r.free?"gratis":"betalend"}</span></td>${dates.map(d=>{const gepland=!!r.days?.[mobileDagSleutel(d)]&&(!r.start||d>=r.start)&&(!r.end||d<=r.end),locked=!!hw.processedDates?.[d]&&!isSecretariaat();return gepland?`<td class="date-col"><input type="checkbox" data-present="${esc(r.key)}" data-date="${esc(d)}" ${hw.attendance?.[d]?.[r.key]?"checked":""} ${locked?"disabled":""}></td>`:`<td class="date-col day-empty">—</td>`;}).join("")}<td class="total-col">${total}</td></tr>`;}).join("")}</tbody></table></div>`;
+  $("homeworkTable").innerHTML=`<div class="table-wrap"><table><thead><tr><th class="class-col">Klas</th><th class="name-col">Leerling</th>${dates.map(d=>`<th class="date-col">${esc(d.slice(8,10)+"/"+d.slice(5,7))}${isSecretariaat()?`<label class="lock-note"><input type="checkbox" data-lock-date="${esc(d)}" ${hw.processedDates?.[d]?"checked":""}> verwerkt</label>`:hw.processedDates?.[d]?`<span class="lock-note">verwerkt</span>`:""}</th>`).join("")}<th class="total-col">Totaal</th></tr></thead><tbody>${rows.map(r=>{const total=dates.reduce((sum,d)=>sum+(hw.attendance?.[d]?.[r.key]&&planningVoorDatum(r,d).active?1:0),0),dagen=[r.days?.dinsdag?'di':'',r.days?.donderdag?'do':''].filter(Boolean).join(' + ');return `<tr class="${r.free?"free-row":""}"><td class="class-col"><span class="class-chip"><span class="stripe-dot" style="background:${colorForClass(r.klas)}"></span>${esc(r.klas)}</span></td><td class="name-col"><strong>${esc(r.name)}</strong>${dagen?`<span class="pay-badge">${dagen}</span>`:''}<span class="pay-badge ${r.free?"free":"paid"}">${r.free?"gratis":"betalend"}</span></td>${dates.map(d=>{const gepland=geplandOpDatum(r,d),locked=!!hw.processedDates?.[d]&&!isSecretariaat();return gepland?`<td class="date-col"><input type="checkbox" data-present="${esc(r.key)}" data-date="${esc(d)}" ${hw.attendance?.[d]?.[r.key]?"checked":""} ${locked?"disabled":""}></td>`:`<td class="date-col day-empty">—</td>`;}).join("")}<td class="total-col">${total}</td></tr>`;}).join("")}</tbody></table></div>`;
   document.querySelectorAll("[data-present]").forEach(ch=>ch.onchange=()=>autoSave());
   document.querySelectorAll("[data-lock-date]").forEach(ch=>ch.onchange=()=>autoSave());
 }
@@ -352,7 +358,7 @@ function renderMobileToday(){
   if(!dates.includes(mobileSelectedDate))mobileSelectedDate=dates.includes(todayIso())?todayIso():(dates.filter(d=>d<=todayIso()).at(-1)||dates[0]);
   keuze.innerHTML=dates.map(d=>`<option value="${esc(d)}" ${d===mobileSelectedDate?"selected":""}>${esc(formatSupervisorDate(d))}</option>`).join("");
   keuze.onchange=()=>{mobileSelectedDate=keuze.value;renderMobileToday()};
-  const dag=mobileDagSleutel(mobileSelectedDate),alle=localRows(),gepland=alle.filter(r=>(dag?!!r.days?.[dag]:true)&&(!r.start||mobileSelectedDate>=r.start)&&(!r.end||mobileSelectedDate<=r.end)),zonderDagen=alle.filter(r=>!r.days?.dinsdag&&!r.days?.donderdag&&(!r.start||mobileSelectedDate>=r.start)&&(!r.end||mobileSelectedDate<=r.end)),rows=[...new Map([...gepland,...zonderDagen].map(r=>[r.key,r])).values()],locked=(!!hw.processedDates?.[mobileSelectedDate]&&!isSecretariaat())||!magAanwezighedenInvullen(),gekozen=new Set(hw.supervisors?.[mobileSelectedDate]||[]);
+  const dag=mobileDagSleutel(mobileSelectedDate),alle=localRows(),gepland=alle.filter(r=>dag?geplandOpDatum(r,mobileSelectedDate):planningVoorDatum(r,mobileSelectedDate).active),rows=[...new Map(gepland.map(r=>[r.key,r])).values()],locked=(!!hw.processedDates?.[mobileSelectedDate]&&!isSecretariaat())||!magAanwezighedenInvullen(),gekozen=new Set(hw.supervisors?.[mobileSelectedDate]||[]);
   body.innerHTML=`<h3>Begeleiders vandaag</h3><div class="mobile-supervisors">${supervisorNames().map(n=>`<label><input type="checkbox" data-mobile-supervisor="${esc(n)}" ${gekozen.has(n)?"checked":""} ${locked?"disabled":""}> ${esc(n)}</label>`).join("")}</div><h3>Aanwezige kinderen (${rows.length})</h3>${locked?'<div class="notice"><strong>Deze datum is verwerkt en vergrendeld.</strong></div>':""}<div>${rows.map(r=>`<label class="mobile-person"><input type="checkbox" data-mobile-present="${esc(r.key)}" ${hw.attendance?.[mobileSelectedDate]?.[r.key]?"checked":""} ${locked?"disabled":""}><span>${esc(r.name)}<small>${esc(r.klas)}${r.free?" · gratis":""}</small></span></label>`).join("")||'<div class="empty">Geen verwachte kinderen voor deze dag.</div>'}</div>`;
   $("mobileSaveBtn").disabled=locked;
 }
@@ -364,7 +370,7 @@ function collectSupervisors(){
 }
 function collect(){
   collectSupervisors();
-  localRows().forEach(r=>{hw.enrolled[r.key]={active:true,klas:r.klas,name:r.name,free:r.free,days:r.days||{},start:r.start||"",end:r.end||""};});
+  localRows().forEach(r=>{hw.enrolled[r.key]={active:true,klas:r.klas,name:r.name,free:r.free,days:r.days||{},start:r.start||"",end:r.end||"",history:r.history||[]};});
   document.querySelectorAll("[data-present]").forEach(ch=>{const d=ch.dataset.date;hw.attendance[d]||={};hw.attendance[d][ch.dataset.present]=ch.checked;});
   if(mobileSelectedDate){hw.attendance[mobileSelectedDate]||={};document.querySelectorAll("[data-mobile-present]").forEach(ch=>{hw.attendance[mobileSelectedDate][ch.dataset.mobilePresent]=ch.checked})}
   document.querySelectorAll("[data-lock-date]").forEach(ch=>{hw.processedDates[ch.dataset.lockDate]=ch.checked;});
