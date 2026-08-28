@@ -2908,7 +2908,7 @@
     function laatsteRefterWeek(){return maandagVan(endDate());}
     function geldigeRefterWeek(value){const week=maandagVan(value);return week>=eersteRefterWeek()&&week<=laatsteRefterWeek()?week:"";}
     function standaardRefterWeek(){
-      const gekozen=$("refterWeek")?.value||gekozenRefterWeek;
+      const gekozen=gekozenRefterWeek||$("refterWeek")?.value;
       if(gekozen&&geldigeRefterWeek(gekozen))return geldigeRefterWeek(gekozen);
       const vandaag=isoDatum(new Date());
       if(vandaag<startDate())return eersteRefterWeek();
