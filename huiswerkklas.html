@@ -58,6 +58,9 @@
     .begeleider-dag h3{margin:0 0 8px;font-size:15px}.begeleider-keuzes{display:grid;gap:6px}
     .begeleider-keuzes label{display:flex;align-items:center;gap:7px;margin:0;font-size:13px;font-weight:700}.begeleider-keuzes input{flex:0 0 auto}
     .begeleider-totalen{display:flex;flex-wrap:wrap;gap:7px;margin-top:12px}.begeleider-totaal{background:#eef3f9;border-radius:999px;padding:6px 10px;font-size:12px;font-weight:800}
+    .supervisor-table-wrap{overflow:auto;border:1px solid var(--line);border-radius:8px;background:#fff;margin-top:10px}
+    .supervisor-table-wrap table{width:max-content;min-width:max-content}
+    .teacher-icon{text-align:center;font-size:19px;background:#fff!important}
     .mobile-today{display:none}.mobile-save{position:sticky;bottom:10px;width:100%;font-size:17px;padding:13px;margin-top:14px;box-shadow:0 5px 18px #0003}
     .mobile-person{display:flex;align-items:center;gap:10px;border-top:1px solid #eee5d8;padding:11px 3px}.mobile-person input{width:25px;height:25px;flex:0 0 auto}.mobile-person span{font-weight:800}.mobile-person small{display:block;color:var(--muted);font-weight:400;margin-top:2px}
     .mobile-supervisors{display:grid;gap:7px;margin:10px 0 15px}.mobile-supervisors label{display:flex;align-items:center;gap:9px;border:1px solid var(--line);border-radius:10px;padding:10px;font-size:14px;margin:0}.mobile-supervisors input{width:23px;height:23px;flex:0 0 auto}
@@ -88,7 +91,7 @@
     </div>
     <div class="bar" style="margin-top:12px"><button class="white" id="testPreviewBtn" style="display:none">🧪 Testvoorbeeld tonen</button><a class="button white" id="qrSheetBtn" href="output/pdf/qr-huiswerkklas.pdf" target="_blank" rel="noopener" style="display:none">📱 QR-blad openen / afdrukken</a></div>
   </section>
-  <section class="notice werking-notice">
+  <section class="notice werking-notice" id="workingNotice">
     <strong>Werking:</strong>
     <span class="muted" id="workHelp">Klasleerkrachten duiden in Klaslijsten bij hun eigen klas aan welke kinderen naar de huiswerkklas gaan. Ontbreekt een leerling? Voeg die eerst toe via <a href="schoolbeheer.html" target="_blank" rel="noopener">Klaslijsten → Nieuwe leerling</a>. Hier verschijnen alleen kinderen die daar voor de huiswerkklas zijn aangeduid.</span>
   </section>
@@ -100,7 +103,7 @@
     <button class="secondary mobile-save" id="mobileSaveBtn">✓ Aanwezigheden en begeleiders bewaren</button>
   </section>
   <section class="panel" id="supervisorPanel" style="display:none">
-    <div class="bar"><div><h2 style="margin:0 0 4px">Begeleiders per datum</h2><p class="muted" style="margin:0">Vink per huiswerkklasdag aan welke leerkrachten begeleid hebben. Het maandtotaal wordt automatisch berekend.</p></div><button class="white right" id="supervisorPdfBtn">📄 PDF begeleiders</button></div>
+    <div class="bar"><h2 style="margin:0">Begeleiders</h2><button class="white right" id="supervisorPdfBtn">📄 PDF begeleiders</button></div>
     <div id="supervisorDays"></div>
   </section>
   <section class="panel list-panel">
@@ -203,6 +206,8 @@ function renderTable(){
 }
 function renderRoleTools(){
   const secretary=isSecretariaat();
+  const wegwijzer=document.querySelector(".tool-wegwijzer");if(wegwijzer)wegwijzer.style.display=secretary?"none":"block";
+  $("workingNotice").style.display=secretary?"none":"block";
   $("secretaryTools").style.display=secretary?"grid":"none";
   $("dateInput").closest("label").style.display="block";
   $("dateLabel").textContent=secretary?"Dag bekijken":"Datum kiezen / toevoegen";
@@ -232,7 +237,7 @@ function renderSupervisors(){
   if(!alleDatums.length){doel.innerHTML='<div class="empty">Voeg eerst een huiswerkklasdatum toe. Daarna kun je hier de begeleiders aanduiden.</div>';return}
   const totalen=Object.fromEntries(SUPERVISORS.map(n=>[n,0]));
   alleDatums.forEach(d=>(hw.supervisors?.[d]||[]).forEach(n=>{if(n in totalen)totalen[n]++}));
-  doel.innerHTML=`<div class="begeleiders-grid">${dates.map(d=>{const gekozen=new Set(hw.supervisors?.[d]||[]);return `<div class="begeleider-dag"><h3>${esc(formatSupervisorDate(d))}</h3><div class="begeleider-keuzes">${SUPERVISORS.map(n=>`<label><input type="checkbox" data-supervisor-date="${esc(d)}" data-supervisor-name="${esc(n)}" ${gekozen.has(n)?"checked":""}> ${esc(n)}</label>`).join("")}</div></div>`}).join("")}</div><div class="begeleider-totalen">${SUPERVISORS.map(n=>`<span class="begeleider-totaal">${esc(n)}: ${totalen[n]} keer</span>`).join("")}</div>`;
+  doel.innerHTML=`<div class="supervisor-table-wrap"><table><thead><tr><th class="class-col"></th><th class="name-col">Leerkracht</th>${dates.map(d=>`<th class="date-col">${esc(d.slice(8,10)+"/"+d.slice(5,7))}</th>`).join("")}<th class="total-col">Deze maand</th></tr></thead><tbody>${SUPERVISORS.map(n=>`<tr><td class="class-col teacher-icon">👩‍🏫</td><td class="name-col"><strong>${esc(n)}</strong></td>${dates.map(d=>`<td class="date-col"><input type="checkbox" data-supervisor-date="${esc(d)}" data-supervisor-name="${esc(n)}" ${(hw.supervisors?.[d]||[]).includes(n)?"checked":""}></td>`).join("")}<td class="total-col">${totalen[n]}</td></tr>`).join("")}</tbody></table></div>`;
   document.querySelectorAll("[data-supervisor-date]").forEach(ch=>ch.onchange=()=>{collectSupervisors();renderSupervisors();autoSave()});
 }
 function mobileDagSleutel(d){const weekdag=new Date(`${d}T12:00:00`).getDay();return weekdag===2?"dinsdag":weekdag===4?"donderdag":"";}
