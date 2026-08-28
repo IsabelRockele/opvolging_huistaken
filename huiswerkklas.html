@@ -112,6 +112,7 @@
   <section class="panel mobile-today" id="mobileTodayPanel">
     <div class="bar"><h2 style="margin:0">Huiswerkklas vandaag</h2><button class="white right" id="mobileTestBtn" style="display:none">🧪 Testmodus openen</button></div>
     <label>Datum<select id="mobileDate"></select></label>
+    <details class="mobile-help" id="mobileDateTools"><summary>Datum toevoegen of dag annuleren</summary><label>Nieuwe datum<input id="mobileNewDate" type="date"></label><div class="actions" style="margin:10px 0"><button class="white" id="mobileAddDateBtn">Datum toevoegen</button><button class="white" id="mobileCancelDateBtn" style="display:none">Deze dag gaat niet door</button></div></details>
     <div id="mobileTodayBody"></div>
     <details class="mobile-help"><summary>Hoe werkt dit?</summary><p class="muted">Controleer de datum, vink de begeleiders en aanwezige kinderen aan en tik daarna op bewaren. Een verwerkte dag kan alleen door het secretariaat worden aangepast.</p></details>
     <button class="secondary mobile-save" id="mobileSaveBtn">✓ Aanwezigheden en begeleiders bewaren</button>
@@ -367,22 +368,25 @@ async function saveSupervisorConfig(){
 }
 function mobileDagSleutel(d){const weekdag=new Date(`${d}T12:00:00`).getDay();return weekdag===2?"dinsdag":weekdag===4?"donderdag":"";}
 function renderMobileToday(){
-  const dates=[...(hw.dates||[])].sort(),keuze=$("mobileDate"),body=$("mobileTodayBody");
+  const dates=[...(hw.dates||[])].sort(),keuze=$("mobileDate"),body=$("mobileTodayBody"),nieuwDatum=$("mobileNewDate"),annuleerKnop=$("mobileCancelDateBtn");
+  if(nieuwDatum&&!nieuwDatum.value)nieuwDatum.value=todayIso();
   if(!magAanwezighedenInvullen()){
     keuze.innerHTML='<option>Geen toegang</option>';keuze.disabled=true;
     body.innerHTML='<div class="notice"><strong>Alleen aangeduide begeleiders kunnen de huiswerkklas invullen.</strong><p class="muted">Vraag secretariaat of de beheerder om je bij Begeleiders aan te vinken wanneer je de huiswerkklas begeleidt.</p></div>';
-    $("mobileSaveBtn").disabled=true;return;
+    $("mobileSaveBtn").disabled=true;$("mobileDateTools").style.display="none";return;
   }
-  if(!dates.length){keuze.innerHTML='<option>Geen datum</option>';keuze.disabled=true;body.innerHTML='<div class="empty">Er is nog geen huiswerkklasdatum toegevoegd.</div>';$("mobileSaveBtn").disabled=true;return}
+  $("mobileDateTools").style.display="block";
+  if(!dates.length){keuze.innerHTML='<option>Geen datum</option>';keuze.disabled=true;annuleerKnop.style.display="none";body.innerHTML='<div class="empty">Er is nog geen huiswerkklasdatum toegevoegd. Open hierboven Datum toevoegen of dag annuleren.</div>';$("mobileSaveBtn").disabled=true;return}
   keuze.disabled=false;$("mobileSaveBtn").disabled=false;
   if(!dates.includes(mobileSelectedDate))mobileSelectedDate=dates.includes(todayIso())?todayIso():(dates.filter(d=>d<=todayIso()).at(-1)||dates[0]);
   keuze.innerHTML=dates.map(d=>`<option value="${esc(d)}" ${d===mobileSelectedDate?"selected":""}>${esc(formatSupervisorDate(d))}${isCancelledDate(d)?" - gaat niet door":""}</option>`).join("");
   keuze.onchange=()=>{mobileSelectedDate=keuze.value;renderMobileToday()};
+  annuleerKnop.style.display="inline-block";annuleerKnop.textContent=isCancelledDate(mobileSelectedDate)?"Dag opnieuw activeren":"Deze dag gaat niet door";
   if(isCancelledDate(mobileSelectedDate)){body.innerHTML=`<div class="notice"><strong>Huiswerkklas gaat niet door op ${esc(formatSupervisorDate(mobileSelectedDate))}.</strong></div>`;$("mobileSaveBtn").disabled=true;return;}
   const dag=mobileDagSleutel(mobileSelectedDate),alle=localRows(),gepland=alle.filter(r=>dag?geplandOpDatum(r,mobileSelectedDate):planningVoorDatum(r,mobileSelectedDate).active),rows=[...new Map(gepland.map(r=>[r.key,r])).values()],locked=(!!hw.processedDates?.[mobileSelectedDate]&&!isSecretariaat())||!magAanwezighedenInvullen(),gekozen=new Set(hw.supervisors?.[mobileSelectedDate]||[]);
   const klasGroepen=[...new Map(rows.map(r=>[r.klas,rows.filter(x=>x.klas===r.klas)])).entries()];
   const kinderenHtml=klasGroepen.map(([klas,leerlingen])=>`<section class="mobile-class-group"><h4 class="mobile-class-heading"><span class="stripe-dot" style="background:${colorForClass(klas)}"></span>Klas ${esc(klas)} <small class="muted">(${leerlingen.length})</small></h4>${leerlingen.map(r=>`<label class="mobile-person"><input type="checkbox" data-mobile-present="${esc(r.key)}" ${hw.attendance?.[mobileSelectedDate]?.[r.key]?"checked":""} ${locked?"disabled":""}><span>${esc(r.name)}${r.free?'<small>gratis</small>':''}</span></label>`).join("")}</section>`).join("");
-  body.innerHTML=`<h3>Begeleiders vandaag</h3><div class="mobile-supervisors">${supervisorNames().map(n=>`<label><input type="checkbox" data-mobile-supervisor="${esc(n)}" ${gekozen.has(n)?"checked":""} ${locked?"disabled":""}> ${esc(n)}</label>`).join("")}</div><h3>Aanwezige kinderen (${rows.length})</h3>${locked?'<div class="notice"><strong>Deze datum is verwerkt en vergrendeld.</strong></div>':""}<div>${kinderenHtml||'<div class="empty">Geen verwachte kinderen voor deze dag.</div>'}</div>`;
+  body.innerHTML=`<details class="mobile-help" ${gekozen.size?'':'open'}><summary>Begeleiders vandaag (${gekozen.size} aangeduid)</summary><div class="mobile-supervisors">${supervisorNames().map(n=>`<label><input type="checkbox" data-mobile-supervisor="${esc(n)}" ${gekozen.has(n)?"checked":""} ${locked?"disabled":""}> ${esc(n)}</label>`).join("")}</div></details><h3>Aanwezige kinderen (${rows.length})</h3>${locked?'<div class="notice"><strong>Deze datum is verwerkt en vergrendeld.</strong></div>':""}<div>${kinderenHtml||'<div class="empty">Geen verwachte kinderen voor deze dag.</div>'}</div>`;
   $("mobileSaveBtn").disabled=locked;
 }
 function renderAttendanceSupervisorPicker(){
@@ -443,7 +447,11 @@ async function addDate(){
 }
 async function toggleCancelledDate(){
   if(!magAanwezighedenInvullen())return;
-  const d=$("dateInput").value||date;if(!(hw.dates||[]).includes(d))return alert("Voeg deze datum eerst toe.");
+  const d=$("dateInput").value||date;await toggleCancelledDateFor(d);
+}
+async function toggleCancelledDateFor(d){
+  if(!magAanwezighedenInvullen())return;
+  if(!(hw.dates||[]).includes(d))return alert("Voeg deze datum eerst toe.");
   hw.cancelledDates||={};
   if(isCancelledDate(d)){
     const oud=hw.cancelledDates[d]||{};
@@ -456,6 +464,14 @@ async function toggleCancelledDate(){
     hw.cancelledDates[d]={cancelledAt:new Date().toISOString(),cancelledBy:user.email||user.uid||"",attendance:hw.attendance?.[d]||{},supervisors:hw.supervisors?.[d]||[],processed:!!hw.processedDates?.[d]};
     delete hw.attendance[d];delete hw.supervisors[d];delete hw.processedDates[d];
   }
+  render();await save();
+}
+async function addMobileDate(){
+  if(!magAanwezighedenInvullen())return;
+  const d=$("mobileNewDate").value;if(!d)return alert("Kies eerst een datum.");
+  if(!mobileDagSleutel(d))return alert("De huiswerkklas kan alleen op een dinsdag of donderdag worden toegevoegd.");
+  const doelMaand=d.slice(0,7);if(doelMaand!==month)await openMonth(doelMaand);
+  hw.dates=[...new Set([...(hw.dates||[]),d])].sort();date=d;mobileSelectedDate=d;$("dateInput").value=d;
   render();await save();
 }
 function pdfLeerlingNaam(naam){return String(naam||"").replace(",","").trim();}
@@ -556,6 +572,8 @@ onAuthStateChanged(auth,async u=>{
   $("nextMonthBtn").onclick=()=>shiftMonth(1);
   $("currentMonthBtn").onclick=()=>openMonth(currentMonth());
   $("mobileSaveBtn").onclick=save;
+  $("mobileAddDateBtn").onclick=addMobileDate;
+  $("mobileCancelDateBtn").onclick=()=>toggleCancelledDateFor(mobileSelectedDate);
   $("schooljaarInput").onchange=loadData; $("monthInput").onchange=()=>openMonth($("monthInput").value); $("dateInput").onchange=()=>{date=$("dateInput").value;renderRoleTools();};
   $("logoutBtn").onclick=()=>signOut(auth).then(()=>location.href="index.html");
   await loadData();
