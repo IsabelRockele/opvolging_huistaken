@@ -3941,6 +3941,14 @@
           return;
         }
         activeClass = allowedClasses[0] || DEFAULT_CLASSES[0];
+        if(isSecretary()){
+          // Secretariaat werkt dagelijks vanuit de klasmappen. Leerlingenbeheer
+          // blijft een afzonderlijk onderdeel dat alleen bewust wordt geopend.
+          tab = "klasstart";
+          adminPanel = "wegwijzer";
+          classListMode = "";
+          secretariaatModulesOpen = true;
+        }
         renderScope();
         await openClass(activeClass, isSecretary());
       }catch(err){
