@@ -16,7 +16,7 @@
     .bar{display:flex;align-items:end;gap:10px;flex-wrap:wrap}.right{margin-left:auto}
     button,a.button{border:0;border-radius:12px;background:var(--yellow);color:var(--text);font-weight:800;padding:9px 14px;cursor:pointer;text-decoration:none;font:inherit}
     button.ghost,a.ghost{background:rgba(255,255,255,.16);color:#fff;border:1px solid rgba(255,255,255,.3)}
-    button.secondary{background:var(--mint)} button.white{background:#fff;border:1px solid var(--line)}
+    button.secondary{background:var(--mint)} button.white,a.button.white{background:#fff;border:1px solid var(--line)}
     label{display:block;font-weight:800;font-size:12px;color:#4b3b2d;margin-bottom:4px}
     input,select{font:inherit;width:100%;border:1px solid var(--line);border-radius:10px;padding:8px 10px;background:#fff}
     input[type="checkbox"]{width:19px;height:19px;accent-color:#2f8f67}
@@ -71,7 +71,7 @@
     <div class="toolbar">
       <label>Schooljaar<input id="schooljaarInput"></label>
       <label>Maand<input id="monthInput" type="month"></label>
-      <label>Datum toevoegen<input id="dateInput" type="date"></label>
+      <label><span id="dateLabel">Datum toevoegen</span><input id="dateInput" type="date"></label>
       <button class="secondary" id="saveBtn">Bewaren</button>
       <button class="white" id="addDateBtn">Datum toevoegen</button>
       <label>PDF voor<select id="pdfScope"></select></label>
@@ -82,7 +82,7 @@
       <button class="secondary" id="processUntilBtn">Verwerk tot datum</button>
       <button class="white" id="processMonthBtn">Hele maand verwerkt</button>
     </div>
-    <button class="white" id="testPreviewBtn" style="display:none;margin-top:12px">🧪 Testvoorbeeld tonen</button>
+    <div class="bar" style="margin-top:12px"><button class="white" id="testPreviewBtn" style="display:none">🧪 Testvoorbeeld tonen</button><a class="button white" id="qrSheetBtn" href="output/pdf/qr-huiswerkklas.pdf" target="_blank" rel="noopener" style="display:none">📱 QR-blad openen / afdrukken</a></div>
   </section>
   <section class="notice">
     <strong>Werking:</strong>
@@ -186,8 +186,9 @@ function localRows(){
 function enrolledList(){
   return Object.entries(hw.enrolled||{}).filter(([,v])=>v&&v.active!==false).map(([key,v])=>({key,...v})).sort((a,b)=>(a.klas||"").localeCompare(b.klas||"","nl",{numeric:true})||(a.name||"").localeCompare(b.name||"","nl"));
 }
+function gekozenWerkdatum(){const dates=[...(hw.dates||[])].sort();if(!dates.length)return "";if(dates.includes(date))return date;const gekozen=dates.filter(d=>d<=todayIso()).at(-1)||dates[0];date=gekozen;if($("dateInput"))$("dateInput").value=gekozen;return gekozen}
 function renderTable(){
-  const rows=localRows(), dates=[...(hw.dates||[])].sort();
+  const rows=localRows(), gekozen=gekozenWerkdatum(),dates=gekozen?[gekozen]:[];
   const enrolledCount=rows.filter(r=>r.active).length;
   $("countTag").textContent=`${enrolledCount} leerling${enrolledCount===1?"":"en"}`;
   if(!rows.length){$("homeworkTable").innerHTML=`<div class="empty">Geen leerlingen gevonden.</div>`;return;}
@@ -198,7 +199,8 @@ function renderTable(){
 function renderRoleTools(){
   const secretary=isSecretariaat();
   $("secretaryTools").style.display=secretary?"grid":"none";
-  $("dateInput").closest("label").style.display=secretary?"none":"block";
+  $("dateInput").closest("label").style.display="block";
+  $("dateLabel").textContent=secretary?"Dag bekijken":"Datum kiezen / toevoegen";
   $("addDateBtn").style.display=secretary?"none":"inline-block";
   $("workHelp").innerHTML=secretary
     ? "Secretariaat ziet hier de aanwezigheden voor de facturatie. Verwerk tot een datum of verwerk de hele maand; die dagen worden dan geblokkeerd voor klasleerkrachten. Secretariaat kan fouten wel nog aanpassen."
@@ -207,6 +209,7 @@ function renderRoleTools(){
   $("pdfScope").innerHTML=`${(isSchoolBreed()||secretary)?'<option value="all">Alle klassen</option>':''}${toegelatenKlassen.map(k=>`<option value="${esc(k)}">Klas ${esc(k)}</option>`).join("")}`;
   $("testPreviewBtn").style.display=realRole==="beheerder"?"inline-block":"none";
   $("testPreviewBtn").textContent=demoMode?"🧪 Testvoorbeeld sluiten":"🧪 Testvoorbeeld tonen";
+  $("qrSheetBtn").style.display=(realRole==="beheerder"||secretary)?"inline-flex":"none";
 }
 function demoDatums(){const [jaar,maand]=month.split("-").map(Number),uit=[];for(let dag=1;dag<=14&&uit.length<2;dag++){const d=new Date(jaar,maand-1,dag),w=d.getDay();if(w===2||w===4)uit.push(`${month}-${String(dag).padStart(2,"0")}`)}return uit}
 function toggleTestPreview(){
@@ -214,16 +217,16 @@ function toggleTestPreview(){
   if(demoMode){hw=demoBackup||{enrolled:{},attendance:{},dates:[],processedDates:{},supervisors:{}};demoBackup=null;demoMode=false;mobileSelectedDate="";render();return}
   demoBackup=structuredClone(hw);const dates=demoDatums(),namen=[["2A","Testleerling, Noor","dinsdag"],["2A","Voorbeeld, Adam","donderdag"],["3A","Oefenkind, Lina","dinsdag"],["3A","Demoleerling, Sam","donderdag"]],enrolled={};
   namen.forEach((x,i)=>{enrolled[`demo_${i}`]={active:true,klas:x[0],name:x[1],free:i===2,days:{dinsdag:x[2]==="dinsdag",donderdag:x[2]==="donderdag"}}});
-  hw={enrolled,attendance:{},dates,processedDates:{},supervisors:{}};demoMode=true;mobileSelectedDate=dates[0]||"";render();
+  hw={enrolled,attendance:{},dates,processedDates:{},supervisors:{}};demoMode=true;date=dates[0]||date;$("dateInput").value=date;mobileSelectedDate=dates[0]||"";render();
 }
 function formatSupervisorDate(d){const datum=new Date(`${d}T12:00:00`);return `${datum.toLocaleDateString("nl-BE",{weekday:"long"})} ${d.slice(8,10)}/${d.slice(5,7)}`;}
 function renderSupervisors(){
   const panel=$("supervisorPanel"),doel=$("supervisorDays");
   if(!isSecretariaat()){panel.style.display="none";return}
-  panel.style.display="block";const dates=[...(hw.dates||[])].sort();
-  if(!dates.length){doel.innerHTML='<div class="empty">Voeg eerst een huiswerkklasdatum toe. Daarna kun je hier de begeleiders aanduiden.</div>';return}
+  panel.style.display="block";const alleDatums=[...(hw.dates||[])].sort(),gekozen=gekozenWerkdatum(),dates=gekozen?[gekozen]:[];
+  if(!alleDatums.length){doel.innerHTML='<div class="empty">Voeg eerst een huiswerkklasdatum toe. Daarna kun je hier de begeleiders aanduiden.</div>';return}
   const totalen=Object.fromEntries(SUPERVISORS.map(n=>[n,0]));
-  dates.forEach(d=>(hw.supervisors?.[d]||[]).forEach(n=>{if(n in totalen)totalen[n]++}));
+  alleDatums.forEach(d=>(hw.supervisors?.[d]||[]).forEach(n=>{if(n in totalen)totalen[n]++}));
   doel.innerHTML=`<div class="begeleiders-grid">${dates.map(d=>{const gekozen=new Set(hw.supervisors?.[d]||[]);return `<div class="begeleider-dag"><h3>${esc(formatSupervisorDate(d))}</h3><div class="begeleider-keuzes">${SUPERVISORS.map(n=>`<label><input type="checkbox" data-supervisor-date="${esc(d)}" data-supervisor-name="${esc(n)}" ${gekozen.has(n)?"checked":""}> ${esc(n)}</label>`).join("")}</div></div>`}).join("")}</div><div class="begeleider-totalen">${SUPERVISORS.map(n=>`<span class="begeleider-totaal">${esc(n)}: ${totalen[n]} keer</span>`).join("")}</div>`;
   document.querySelectorAll("[data-supervisor-date]").forEach(ch=>ch.onchange=()=>{collectSupervisors();renderSupervisors();autoSave()});
 }
@@ -354,7 +357,7 @@ function downloadParticipantsPdf(){
   pdf.save(`huiswerkklas_alle_klassen_${schooljaar}.pdf`);
 }
 onAuthStateChanged(auth,async u=>{
-  if(!u){location.href="index.html";return;}
+  if(!u){location.href="index.html?naLogin=huiswerkklas";return;}
   user=u; $("schooljaarInput").value=schooljaar; $("monthInput").value=month; $("dateInput").value=date;
   await loadRole();
   $("saveBtn").onclick=save;
@@ -365,7 +368,7 @@ onAuthStateChanged(auth,async u=>{
   $("supervisorPdfBtn").onclick=downloadSupervisorsPdf;
   $("testPreviewBtn").onclick=toggleTestPreview;
   $("mobileSaveBtn").onclick=save;
-  $("schooljaarInput").onchange=loadData; $("monthInput").onchange=loadData; $("dateInput").onchange=()=>{date=$("dateInput").value;};
+  $("schooljaarInput").onchange=loadData; $("monthInput").onchange=loadData; $("dateInput").onchange=()=>{date=$("dateInput").value;render();};
   $("logoutBtn").onclick=()=>signOut(auth).then(()=>location.href="index.html");
   await loadData();
 });
