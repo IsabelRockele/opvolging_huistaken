@@ -79,20 +79,21 @@
 <main>
   <section class="panel desktop-controls">
     <div class="toolbar">
-      <label>Schooljaar<input id="schooljaarInput"></label>
+      <label class="secretary-advanced">Schooljaar<input id="schooljaarInput"></label>
       <label>Maand<input id="monthInput" type="month"></label>
       <label><span id="dateLabel">Datum toevoegen</span><input id="dateInput" type="date"></label>
       <button class="secondary" id="saveBtn">Bewaren</button>
       <button class="white" id="addDateBtn">Datum toevoegen</button>
-      <label>PDF voor<select id="pdfScope"></select></label>
-      <button class="white" id="pdfBtn">📄 PDF deelnemers per dag</button>
+      <label class="secretary-advanced">PDF voor<select id="pdfScope"></select></label>
+      <button class="white secretary-advanced" id="pdfBtn">📄 PDF deelnemers per dag</button>
+      <button class="white" id="secretaryOptionsBtn" style="display:none">Meer opties</button>
     </div>
-    <div class="toolbar" id="secretaryTools" style="display:none;margin-top:12px">
+    <div class="toolbar secretary-advanced" id="secretaryTools" style="display:none;margin-top:12px">
       <label>Verwerk tot datum<input id="processedUntilInput" type="date"></label>
       <button class="secondary" id="processUntilBtn">Verwerk tot datum</button>
       <button class="white" id="processMonthBtn">Hele maand verwerkt</button>
     </div>
-    <div class="bar" style="margin-top:12px"><button class="white" id="testPreviewBtn" style="display:none">🧪 Testvoorbeeld tonen</button><a class="button white" id="qrSheetBtn" href="output/pdf/qr-huiswerkklas.pdf" target="_blank" rel="noopener" style="display:none">📱 QR-blad openen / afdrukken</a></div>
+    <div class="bar secretary-advanced" id="extraDesktopTools" style="margin-top:12px"><button class="white" id="testPreviewBtn" style="display:none">🧪 Testvoorbeeld tonen</button><a class="button white" id="qrSheetBtn" href="output/pdf/qr-huiswerkklas.pdf" target="_blank" rel="noopener" style="display:none">📱 QR-blad openen / afdrukken</a></div>
   </section>
   <section class="notice werking-notice" id="workingNotice">
     <strong>Werking:</strong>
@@ -135,7 +136,7 @@ const app=getApps().length?getApp():initializeApp(firebaseConfig), auth=getAuth(
 const DEFAULT_CLASSES=["K1","K2","K3","1A","2A","3A","4A","5A","6A"], COLORS=["#93c47d","#6fa8dc","#ffd966","#e6a5c8","#b4a7d6","#76a5af","#f6b26b","#8fce00","#c27ba0"];
 const SUPERVISORS=["Stevens Lara","Verheyden Leen","Boeykens Steffi","De Bruyn Lotte","Vanhorenbeeck Kelly","Bierbooms Laura"];
 const $=id=>document.getElementById(id), esc=v=>String(v??"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;");
-let user=null, role="", realRole="", demoMode=false, desktopEntryOpen=false, secretaryPlanningOpen=false, schooljaar=currentSchooljaar(), month=currentMonth(), date=todayIso(), mobileSelectedDate="", ownClasses=[], allClasses=[], classStudents={}, hw={enrolled:{},attendance:{},supervisors:{}};
+let user=null, role="", realRole="", demoMode=false, desktopEntryOpen=false, secretaryPlanningOpen=false, secretaryMoreOpen=false, schooljaar=currentSchooljaar(), month=currentMonth(), date=todayIso(), mobileSelectedDate="", ownClasses=[], allClasses=[], classStudents={}, hw={enrolled:{},attendance:{},supervisors:{}};
 async function setDoc(ref,payload,options){
   await probeerVeiligheidskopie(ref,{reden:"Huiswerkklas vóór opslag",schooljaar,klas:"schoolbreed",gebruiker:user?.email||user?.uid||""},(melding,err)=>{console.warn(melding,err);const status=document.getElementById("status");if(status)status.textContent="Let op: reservekopie mislukt";});
   return firestoreSetDoc(ref,payload,options);
@@ -220,6 +221,9 @@ function renderTable(){
 }
 function renderRoleTools(){
   const secretary=isSecretariaat();
+  $("secretaryOptionsBtn").style.display=secretary?"inline-block":"none";
+  $("secretaryOptionsBtn").textContent=secretaryMoreOpen?"Minder opties":"Meer opties";
+  document.querySelectorAll(".secretary-advanced").forEach(el=>el.style.display=(!secretary||secretaryMoreOpen)?"":"none");
   const magLaptopInvullen=["klasleerkracht","zorgleerkracht","zorgcoordinator"].includes(role);
   $("togglePlanningBtn").style.display=secretary?"inline-block":"none";
   $("togglePlanningBtn").textContent=secretaryPlanningOpen?"Overzicht sluiten":"Overzicht openen";
@@ -229,7 +233,7 @@ function renderRoleTools(){
   $("attendancePanel").style.display=(secretary||desktopEntryOpen)?"block":"none";
   const wegwijzer=document.querySelector(".tool-wegwijzer");if(wegwijzer)wegwijzer.style.display=secretary?"none":"block";
   $("workingNotice").style.display=secretary?"none":"block";
-  $("secretaryTools").style.display=secretary?"grid":"none";
+  $("secretaryTools").style.display=(secretary&&secretaryMoreOpen)?"grid":"none";
   $("dateInput").closest("label").style.display="block";
   $("dateLabel").textContent=secretary?"Dag bekijken":"Datum kiezen / toevoegen";
   $("addDateBtn").style.display=secretary?"none":"inline-block";
@@ -406,6 +410,7 @@ onAuthStateChanged(auth,async u=>{
   $("mobileTestBtn").onclick=toggleTestPreview;
   $("openAttendanceBtn").onclick=()=>{desktopEntryOpen=!desktopEntryOpen;render();if(desktopEntryOpen)$("attendancePanel").scrollIntoView({behavior:"smooth",block:"start"});};
   $("togglePlanningBtn").onclick=()=>{secretaryPlanningOpen=!secretaryPlanningOpen;render();};
+  $("secretaryOptionsBtn").onclick=()=>{secretaryMoreOpen=!secretaryMoreOpen;render();};
   $("mobileSaveBtn").onclick=save;
   $("schooljaarInput").onchange=loadData; $("monthInput").onchange=loadData; $("dateInput").onchange=()=>{date=$("dateInput").value;render();};
   $("logoutBtn").onclick=()=>signOut(auth).then(()=>location.href="index.html");
