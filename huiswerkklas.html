@@ -106,7 +106,7 @@
     <button class="secondary mobile-save" id="mobileSaveBtn">✓ Aanwezigheden en begeleiders bewaren</button>
   </section>
   <section class="panel desktop-overview" id="planningPanel">
-    <div class="bar"><div><h2 style="margin:0 0 4px">Wie gaat naar de huiswerkklas?</h2><p class="muted" style="margin:0">Overzicht van de vaste dagen en of een leerling gratis of betalend deelneemt.</p></div><button class="secondary right" id="openAttendanceBtn" style="display:none">Lijst invullen</button></div>
+    <div class="bar"><div><h2 style="margin:0 0 4px">Algemeen overzicht inschrijvingen</h2><p class="muted" id="planningIntro" style="margin:0">Wie op dinsdag of donderdag komt en wie gratis of betalend deelneemt.</p></div><button class="white right" id="togglePlanningBtn" style="display:none">Overzicht openen</button><button class="secondary" id="openAttendanceBtn" style="display:none">Lijst invullen</button></div>
     <div id="planningOverview"></div>
   </section>
   <section class="panel" id="supervisorPanel" style="display:none">
@@ -135,7 +135,7 @@ const app=getApps().length?getApp():initializeApp(firebaseConfig), auth=getAuth(
 const DEFAULT_CLASSES=["K1","K2","K3","1A","2A","3A","4A","5A","6A"], COLORS=["#93c47d","#6fa8dc","#ffd966","#e6a5c8","#b4a7d6","#76a5af","#f6b26b","#8fce00","#c27ba0"];
 const SUPERVISORS=["Stevens Lara","Verheyden Leen","Boeykens Steffi","De Bruyn Lotte","Vanhorenbeeck Kelly","Bierbooms Laura"];
 const $=id=>document.getElementById(id), esc=v=>String(v??"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;");
-let user=null, role="", realRole="", demoMode=false, desktopEntryOpen=false, schooljaar=currentSchooljaar(), month=currentMonth(), date=todayIso(), mobileSelectedDate="", ownClasses=[], allClasses=[], classStudents={}, hw={enrolled:{},attendance:{},supervisors:{}};
+let user=null, role="", realRole="", demoMode=false, desktopEntryOpen=false, secretaryPlanningOpen=false, schooljaar=currentSchooljaar(), month=currentMonth(), date=todayIso(), mobileSelectedDate="", ownClasses=[], allClasses=[], classStudents={}, hw={enrolled:{},attendance:{},supervisors:{}};
 async function setDoc(ref,payload,options){
   await probeerVeiligheidskopie(ref,{reden:"Huiswerkklas vóór opslag",schooljaar,klas:"schoolbreed",gebruiker:user?.email||user?.uid||""},(melding,err)=>{console.warn(melding,err);const status=document.getElementById("status");if(status)status.textContent="Let op: reservekopie mislukt";});
   return firestoreSetDoc(ref,payload,options);
@@ -221,6 +221,9 @@ function renderTable(){
 function renderRoleTools(){
   const secretary=isSecretariaat();
   const magLaptopInvullen=["klasleerkracht","zorgleerkracht","zorgcoordinator"].includes(role);
+  $("togglePlanningBtn").style.display=secretary?"inline-block":"none";
+  $("togglePlanningBtn").textContent=secretaryPlanningOpen?"Overzicht sluiten":"Overzicht openen";
+  $("planningOverview").style.display=(!secretary||secretaryPlanningOpen)?"block":"none";
   $("openAttendanceBtn").style.display=magLaptopInvullen?"inline-block":"none";
   $("openAttendanceBtn").textContent=desktopEntryOpen?"Lijst sluiten":"Lijst invullen";
   $("attendancePanel").style.display=(secretary||desktopEntryOpen)?"block":"none";
@@ -402,6 +405,7 @@ onAuthStateChanged(auth,async u=>{
   $("testPreviewBtn").onclick=toggleTestPreview;
   $("mobileTestBtn").onclick=toggleTestPreview;
   $("openAttendanceBtn").onclick=()=>{desktopEntryOpen=!desktopEntryOpen;render();if(desktopEntryOpen)$("attendancePanel").scrollIntoView({behavior:"smooth",block:"start"});};
+  $("togglePlanningBtn").onclick=()=>{secretaryPlanningOpen=!secretaryPlanningOpen;render();};
   $("mobileSaveBtn").onclick=save;
   $("schooljaarInput").onchange=loadData; $("monthInput").onchange=loadData; $("dateInput").onchange=()=>{date=$("dateInput").value;render();};
   $("logoutBtn").onclick=()=>signOut(auth).then(()=>location.href="index.html");
