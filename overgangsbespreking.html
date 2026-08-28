@@ -1753,7 +1753,7 @@ window.overgangSchool = {
       const item = { id: d.id, ...d.data(), __dossierSchooljaar: dossierSchooljaar };
       resultaten.set(d.id, item);
     };
-    const isOpenDossier = item => !["overgenomen", "afgesloten", "opgeruimd", "verwijderd"].includes(String(item.status || "").toLowerCase());
+    const isZichtbaarDossier = item => !["afgesloten", "opgeruimd", "verwijderd"].includes(String(item.status || "").toLowerCase());
 
     if (eigenKlas) {
       for (const jaar of sfDossierLeesJaren()) {
@@ -1764,7 +1764,7 @@ window.overgangSchool = {
         snaps.forEach(snap => snap.docs.forEach(d => voegToe(d, jaar)));
       }
       return [...resultaten.values()].filter(item =>
-        isOpenDossier(item) && String(item.eigenaar_klas || item.van_leerjaar || "") !== eigenKlas
+        isZichtbaarDossier(item) && String(item.eigenaar_klas || item.van_leerjaar || "") !== eigenKlas
       );
     }
 
@@ -1803,7 +1803,7 @@ window.overgangSchool = {
         snaps.forEach(snap => snap.docs.forEach(d => voegToe(d, jaar)));
       }
     }
-    return [...resultaten.values()].filter(item => isOpenDossier(item) && item.eigenaar_uid !== sfUser.uid);
+    return [...resultaten.values()].filter(item => isZichtbaarDossier(item) && item.eigenaar_uid !== sfUser.uid);
   },
   async listOutgoing() {
     await sfReady;
@@ -5057,13 +5057,13 @@ function sfRenderDossierCard(dossier, mode) {
     : isOvergenomen
       ? `${students.length} leerling(en) overgedragen naar ${esc(doel)} · verwerkt`
       : `Naar ${esc(doel)} · ${students.length} leerling(en) · status: ${esc(status)}`;
-  const overneem = mode === 'incoming'
+  const overneem = mode === 'incoming' && !isOvergenomen
     ? `<button type="button" class="secondary" onclick="sfTakeOverDossier('${dossier.id}')">Activeren als werkklas ${esc(doelJaar)}</button>`
     : '';
   return `<div class="schoolflow-card">
     <div>
       <h3>${title}</h3>
-      <div class="schoolflow-meta">${meta}</div>
+      <div class="schoolflow-meta">${meta} · ${esc(dossier.bron_schooljaar || dossier.schooljaar || dossier.__dossierSchooljaar || '')} → ${esc(doelJaar)}</div>
       <div class="schoolflow-student-preview">${sfStudentNames(students)}</div>
     </div>
     <div class="actions">
@@ -5097,16 +5097,19 @@ async function sfShowIncoming() {
   sfBox('<h2>Overdrachten naar mij</h2><p>Even ophalen uit Firebase...</p>');
   try {
     sfIncomingCache = await window.overgangSchool.listIncoming();
-    const cards = sfIncomingCache.length
-      ? sfIncomingCache.map(d => sfRenderDossierCard(d, 'incoming')).join('')
+    const openDossiers = sfIncomingCache.filter(d => !['overgenomen','afgesloten'].includes(String(d.status || '').toLowerCase()));
+    const historiek = sfIncomingCache.filter(d => ['overgenomen','afgesloten'].includes(String(d.status || '').toLowerCase()));
+    const cards = openDossiers.length
+      ? openDossiers.map(d => sfRenderDossierCard(d, 'incoming')).join('')
       : `<div class="okbox" style="margin-top:8px">📭 Er staan nog geen overdrachten klaar voor jouw e-mailadres. Zodra een collega een overdracht naar jou stuurt, verschijnt die hier.</div>`;
+    const historiekHtml = historiek.length ? `<h3 style="margin:18px 0 8px">Eerder ontvangen — alleen bekijken</h3><p class="help">Deze overdrachten werden al geactiveerd. De oorspronkelijke volledige dossiers blijven hier veilig leesbaar.</p>${historiek.map(d => sfRenderDossierCard(d, 'incoming')).join('')}` : '';
     const actions = `<div class="warning" style="margin:8px 0 12px">
       <strong>Volgorde:</strong> neem een overdracht pas over wanneer je eigen oude klas al is doorgestuurd. Is deze klas al juist en wil je alleen oude/foutieve kaarten verbergen? Gebruik dan de knop hieronder.
       <div class="actions" style="margin-top:8px">
         <button type="button" class="ghost" onclick="sfClearTransferMessages('incoming')">Meldingen wissen</button>
       </div>
     </div>`;
-    sfBox(`<h2>Overdrachten naar mij</h2><p class="help">Met "Bekijken" lees je de overdracht zonder iets te wijzigen. Activeren bewaart de nieuwe klas apart in het volgende schooljaar en overschrijft je huidige klas niet.</p>${actions}<div class="schoolflow-list">${cards}</div>`);
+    sfBox(`<h2>Overdrachten naar mij</h2><p class="help">Met "Bekijken" lees je de overdracht zonder iets te wijzigen. Reeds overgenomen dossiers staan onderaan als veilige historiek.</p>${actions}<div class="schoolflow-list">${cards}${historiekHtml}</div>`);
   } catch (err) {
     sfBox(`<h2>Overdrachten naar mij</h2><div class="errorbox">Kon overdrachten niet laden: ${esc(err.message)}</div>`);
   }
@@ -5155,6 +5158,8 @@ function sfPreviewDossier(id, mode) {
   if (!dossier) return;
   const doelJaar = dossier.doel_schooljaar || window.overgangSchool.volgendSchooljaar(dossier.bron_schooljaar || dossier.schooljaar || dossier.__dossierSchooljaar);
   const students = sfSortedStudents(dossier.students || []);
+  const ingevuldeNotities = s => [s.readingNote,s.spellingNote,s.mathNote,s.writingNote,s.focusNote,s.behaviorNote,s.careNote,s.socialNote,s.notes,s.allergies,s.medicalNote,s.gokNote].filter(v=>String(v||'').trim()).length;
+  const badmutsLabel = value => ({rood:'Rood',blauw_ondiep:'Blauw ondiep',blauw_diep:'Blauw diep',groen:'Groen'}[value] || value || 'niet ingevuld');
   const rows = students.map(s => `<tr>
     <td><strong>${esc(s.lastName || '')}</strong>${s.lastName ? ', ' : ''}${esc(s.firstName || s.name || '')}</td>
     <td>${esc(s.reading || 'basis')} / ${esc(s.math || 'basis')}</td>
@@ -5165,14 +5170,17 @@ function sfPreviewDossier(id, mode) {
       s.care === 'hoog' ? 'hoge zorg' : '',
       s.allergies ? 'allergie' : '',
       s.medicalNote ? 'medisch' : ''
-    ].filter(Boolean).join(' Â· ') || '-'}</td>
+    ].filter(Boolean).join(' · ') || '-'}</td>
+    <td>${esc(badmutsLabel(s.badmuts))}</td>
+    <td>${Object.prototype.hasOwnProperty.call(s,'magOpFoto') ? (s.magOpFoto ? 'Ja' : 'Nee') : 'niet ingevuld'}</td>
+    <td>${ingevuldeNotities(s)}</td>
   </tr>`).join('');
   sfBox(`<h2>${esc(dossier.titel || 'Overdracht')}</h2>
     <p class="help">${students.length} leerling(en). Dit is een samenvatting. Bij overnemen komen de volledige fiches in je werkklas.</p>
-    <table class="student-table"><thead><tr><th>Naam</th><th>Vakken</th><th>Aandacht</th></tr></thead><tbody>${rows}</tbody></table>
+    <table class="student-table"><thead><tr><th>Naam</th><th>Vakken</th><th>Aandacht</th><th>Badmuts</th><th>Foto</th><th>Notities</th></tr></thead><tbody>${rows}</tbody></table>
     <div class="actions" style="margin-top:12px">
       <button type="button" class="ghost" onclick="${mode === 'incoming' ? 'sfShowIncoming()' : 'sfShowOutgoing()'}">Terug</button>
-      ${mode === 'incoming' ? `<button type="button" class="secondary" onclick="sfTakeOverDossier('${dossier.id}')">Activeren als werkklas ${esc(doelJaar)}</button>` : ''}
+      ${mode === 'incoming' && !['overgenomen','afgesloten'].includes(String(dossier.status || '').toLowerCase()) ? `<button type="button" class="secondary" onclick="sfTakeOverDossier('${dossier.id}')">Activeren als werkklas ${esc(doelJaar)}</button>` : ''}
     </div>`);
 }
 
@@ -5379,7 +5387,7 @@ function sfShowCurrentClass() {
 async function sfCheckIncomingBadge() {
   if (!window.overgangSchool || typeof window.overgangSchool.listIncoming !== 'function') return;
   try {
-    const list = await window.overgangSchool.listIncoming();
+    const list = (await window.overgangSchool.listIncoming()).filter(d => !['overgenomen','afgesloten'].includes(String(d.status || '').toLowerCase()));
     const badge = $('incomingBadge');
     const tabBadge = $('transferTabBadge');
     if (badge) { badge.style.display = list.length ? '' : 'none'; badge.textContent = list.length; }
