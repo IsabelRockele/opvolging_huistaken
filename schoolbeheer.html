@@ -1164,7 +1164,7 @@
 
     const helpTexts = {
       administratie: `<h3>Uitleg administratie</h3><ul><li><strong>Klaslijsten</strong>: leerlingen toevoegen, namen verbeteren, kind van collega aanduiden en uitschrijven.</li><li><strong>Vrije dagen</strong>: extra vrije dagen of studiedagen ingeven. Weekends en woensdagen zijn automatisch grijs.</li><li><strong>Meldingen</strong>: secretariaat stuurt taken naar klassen. Leerkrachten vinken aan wanneer het klaar is.</li><li><strong>Volgend schooljaar</strong>: pas op het einde van het jaar de bestaande leerlingen doorschuiven, uitzonderingen aanduiden en klasleerkrachten voor het nieuwe jaar koppelen.</li></ul>`,
-      klaslijst: `<h3>Uitleg klaslijst</h3><ul><li>Gebruik <strong>Klaslijst plakken</strong> vooral bij een volledig nieuwe klas.</li><li>Gebruik <strong>Nieuwe leerling</strong> voor een leerling die later start of nog ontbreekt.</li><li>Een hier toegevoegde leerling verschijnt ook in afwezigheden, etiketten en andere gekoppelde tools. Bestaande overgangsfiches worden niet overschreven; alleen de ontbrekende naam wordt toegevoegd.</li><li><strong>Standaard</strong> betekent: startdatum 1/09 van het schooljaar en einddatum 30/06 van dat schooljaar.</li><li>Namen kan je rechtstreeks in de tabel verbeteren.</li><li>Uitschrijven bewaart oudere gegevens voor lijsten en afrekeningen.</li></ul>`,
+      klaslijst: `<h3>Uitleg klaslijst</h3><ul><li>Met <strong>Klaslijst als Word</strong> download je een genummerd invulblad om af te drukken, bijvoorbeeld om tijdens het verbeteren tijdelijk punten te noteren.</li><li>Gebruik <strong>Klaslijst plakken</strong> vooral bij een volledig nieuwe klas.</li><li>Gebruik <strong>Nieuwe leerling</strong> voor een leerling die later start of nog ontbreekt.</li><li>Een hier toegevoegde leerling verschijnt ook in afwezigheden, etiketten en andere gekoppelde tools. Bestaande overgangsfiches worden niet overschreven; alleen de ontbrekende naam wordt toegevoegd.</li><li><strong>Standaard</strong> betekent: startdatum 1/09 van het schooljaar en einddatum 30/06 van dat schooljaar.</li><li>Namen kan je rechtstreeks in de tabel verbeteren.</li><li>Uitschrijven bewaart oudere gegevens voor lijsten en afrekeningen.</li></ul>`,
       refter: `<h3>Uitleg refter</h3><ul><li>Je ziet telkens één schoolweek van maandag tot en met vrijdag.</li><li>Leerkrachten vinken enkel kinderen aan die afwezig zijn. Een leeg vakje betekent aanwezig.</li><li>Controleer de afgelopen schoolweek uiterlijk vóór de verwerking op woensdag.</li><li>Secretariaat opent iedere klas en klikt bij die week op <strong>Deze schoolweek verwerken en vergrendelen</strong>.</li><li>Daarna staat de hele week op slot bij klas- en zorgleerkrachten. Alleen secretariaat kan nog corrigeren of de verwerking ongedaan maken.</li><li>Vakanties en pedagogische studiedagen uit de jaarkalender zijn automatisch grijs. Kinderen van collega's betalen geen refter.</li></ul>`,
       activiteiten: `<h3>Uitleg activiteiten</h3><ul><li>Leerkrachten kunnen een activiteit voor hun eigen klas toevoegen. Secretariaat kan dezelfde activiteit in één keer voor meerdere klassen aanmaken.</li><li>Gebruik dit alleen voor echte activiteiten of uitstappen. Oudercontacten, rapporten en infoavonden horen hier niet thuis.</li><li><strong>Kleuterzwemmen:</strong> zodra “zwemmen” wordt herkend, stelt de tool automatisch &euro;1,00 per leerling voor. Secretariaat kan de prijs controleren bij <strong>Administratie → Jaarkalender en activiteiten</strong>.</li><li><strong>Vink uitsluitend de afwezige leerlingen aan.</strong> Niet-aangevinkte leerlingen worden automatisch als aanwezig beschouwd.</li><li>Klik daarna op <strong>Afwezigheden nagekeken en bevestigen</strong>. Ook als niemand afwezig was, moet je één keer bevestigen.</li><li>Gaat een activiteit niet door? Klik op <strong>Annuleren</strong> en vul verplicht een reden in, bijvoorbeeld bij kleuterzwemmen: <em>te voet gegaan in plaats van met de bus</em>. De activiteit wordt dan niet aangerekend.</li><li>Wanneer secretariaat de activiteit verwerkt, kan de leerkracht ze niet meer wijzigen.</li></ul>`,
       aankopen: `<h3>Uitleg aankopen</h3><ol><li><strong>Voor één leerling:</strong> kies bovenaan de leerling, de aankoop, prijs en datum. Klik daarna op <strong>Aankoop voor deze leerling toevoegen</strong>.</li><li><strong>Voor meerdere leerlingen:</strong> open <strong>Dezelfde aankoop voor meerdere leerlingen</strong>. Klik op <strong>Hele klas aanvinken</strong> en vink daarna alleen de kinderen uit die niets kopen.</li><li>Kies één keer de aankoop, prijs en datum en klik op <strong>Aankoop voor gekozen leerlingen toevoegen</strong>. Controleer het vermelde aantal voordat je bevestigt.</li><li>Iedere gekozen leerling krijgt een afzonderlijke aankoop. Een kind kan dus later in dezelfde of een andere maand opnieuw bijvoorbeeld een badmuts kopen.</li><li>Secretariaat ziet per klas één kaart per soort en prijs, met daaronder alle namen. Met <strong>Alles verwerken</strong> wordt de volledige kaart in één keer afgewerkt.</li><li>Bovenaan ziet secretariaat aan de gele klasknoppen waar nog onverwerkte aankopen staan. De verwerkingsstatus verschijnt live bij de klas- en zorgleerkracht.</li></ol>`,
@@ -2277,7 +2277,26 @@
         ${isSecretary()?`<button class="green" onclick="herstelLeerlingDatumsHuidigSchooljaar()">Datums herstellen naar ${esc(schooljaar)}</button>`:""}
       </div>`;
     }
-    function renderClassList(){ $("content").innerHTML = `<div class="panel"><h2>Klaslijst <span class="muted" style="font-weight:400">${esc(activeClass)}</span></h2>${classListContent()}</div>`; }
+    function renderClassList(){ $("content").innerHTML = `<div class="panel"><div class="bar"><h2>Klaslijst <span class="muted" style="font-weight:400">${esc(activeClass)}</span></h2><button class="green no-print" onclick="downloadKlaslijstWord()">📄 Klaslijst als Word</button></div>${classListContent()}</div>`; }
+
+    async function klasleerkrachtNaamVoorWord(){
+      try{
+        const rechtstreeks=await getDoc(doc(db,"klasleerkrachten",`${schooljaar}_${activeClass}`));
+        if(rechtstreeks.exists()){
+          const namen=rechtstreeks.data().leerkracht_namen;
+          if(Array.isArray(namen)&&namen.length)return namen.filter(Boolean).join(" en ");
+        }
+      }catch(err){console.warn("Naam klasleerkracht ophalen mislukt",err)}
+      return user?.displayName||String(user?.email||"").split("@")[0]||"";
+    }
+    window.downloadKlaslijstWord=async function(){
+      const leerlingen=activeStudents();
+      if(!leerlingen.length)return alert("Er zijn geen actieve leerlingen om op de Word-klaslijst te zetten.");
+      try{
+        const leerkracht=await klasleerkrachtNaamVoorWord();
+        window.maakKlaslijstWord({klas:activeClass,leerkracht,schooljaar,leerlingen});
+      }catch(err){console.error(err);alert("De Word-klaslijst kon niet worden gemaakt: "+(err.message||err))}
+    };
 
     function legeKlasStartkaart(){
       if(!isSecretary()||(data?.leerlingen||[]).length) return "";
@@ -3934,6 +3953,7 @@
     installScrollMirrors();
   });
   </script>
+  <script src="klaslijst-word.js"></script>
   <!-- jsPDF voor PDF-download -->
   <script src="jspdf.umd.min.js"></script>
 </body>
