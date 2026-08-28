@@ -419,8 +419,8 @@ function downloadSupervisorsPdf(){
 }
 function downloadParticipantsPdf(){
   if(!window.jspdf?.jsPDF)return alert("De PDF-module is nog niet geladen. Probeer over enkele seconden opnieuw.");
-  const scope=$("pdfScope")?.value||"all",rows=localRows().filter(r=>scope==="all"||r.klas===scope),{jsPDF}=window.jspdf,pdf=new jsPDF({orientation:"portrait",unit:"mm",format:"a4"});
-  const pageW=210,pageH=297,marge=14,colGap=8,colW=(pageW-(marge*2)-colGap)/2,colX=[marge,marge+colW+colGap],topY=42,bottomY=282;
+  const scope=$("pdfScope")?.value||"all",rows=localRows().filter(r=>scope==="all"||r.klas===scope),{jsPDF}=window.jspdf,pdf=new jsPDF({orientation:"portrait",unit:"mm",format:scope==="all"?"a4":"a5"});
+  const pageW=pdf.internal.pageSize.getWidth(),pageH=pdf.internal.pageSize.getHeight(),marge=scope==="all"?14:10,colGap=8,colW=(pageW-(marge*2)-colGap)/2,colX=[marge,marge+colW+colGap],topY=42,bottomY=pageH-15;
   const dagen=[{key:"dinsdag",label:"Dinsdag"},{key:"donderdag",label:"Donderdag"}];
   function paginakop(label,totaal,vervolg=false){
     pdf.setFillColor(107,93,82);pdf.rect(0,0,pageW,25,"F");
@@ -432,19 +432,19 @@ function downloadParticipantsPdf(){
   if(scope!=="all"){
     const uniekeLeerlingen=new Set(rows.map(r=>r.key)).size;
     rows.sort((a,b)=>pdfLeerlingNaam(a.name).localeCompare(pdfLeerlingNaam(b.name),"nl"));
-    pdf.setTextColor(25,42,65);pdf.setFont("helvetica","bold");pdf.setFontSize(18);pdf.text("Huiswerkklas",marge,18);
-    pdf.setFontSize(13);pdf.text(`Klas ${scope}`,marge,27);
-    pdf.setFont("helvetica","normal");pdf.setFontSize(10);pdf.text(`Schooljaar ${schooljaar}`,pageW-marge,18,{align:"right"});
-    pdf.text(`${uniekeLeerlingen} deelnemer${uniekeLeerlingen===1?"":"s"}`,pageW-marge,27,{align:"right"});
-    const tabelX=marge,tabelY=36,naamW=132,dagW=25,rijH=8,tabelW=naamW+(2*dagW);
-    pdf.setFillColor(238,243,249);pdf.rect(tabelX,tabelY,tabelW,10,"F");
-    pdf.setDrawColor(155,170,188);pdf.setLineWidth(.35);pdf.rect(tabelX,tabelY,tabelW,10);
-    pdf.line(tabelX+naamW,tabelY,tabelX+naamW,tabelY+10);pdf.line(tabelX+naamW+dagW,tabelY,tabelX+naamW+dagW,tabelY+10);
-    pdf.setFont("helvetica","bold");pdf.setFontSize(10);pdf.text("Leerling",tabelX+3,tabelY+6.5);
-    pdf.setFontSize(9);pdf.text("Dinsdag",tabelX+naamW+(dagW/2),tabelY+6.5,{align:"center"});pdf.text("Donderdag",tabelX+naamW+dagW+(dagW/2),tabelY+6.5,{align:"center"});
+    pdf.setTextColor(25,42,65);pdf.setFont("helvetica","bold");pdf.setFontSize(15);pdf.text("Huiswerkklas",marge,14);
+    pdf.setFontSize(11);pdf.text(`Klas ${scope}`,marge,22);
+    pdf.setFont("helvetica","normal");pdf.setFontSize(8.5);pdf.text(`Schooljaar ${schooljaar}`,pageW-marge,14,{align:"right"});
+    pdf.text(`${uniekeLeerlingen} deelnemer${uniekeLeerlingen===1?"":"s"}`,pageW-marge,22,{align:"right"});
+    const tabelX=marge,tabelY=29,dagW=21,naamW=pageW-(marge*2)-(2*dagW),kopH=9,rijH=Math.min(7,Math.max(5,(pageH-tabelY-kopH-15)/Math.max(rows.length,1))),tabelW=naamW+(2*dagW);
+    pdf.setFillColor(238,243,249);pdf.rect(tabelX,tabelY,tabelW,kopH,"F");
+    pdf.setDrawColor(155,170,188);pdf.setLineWidth(.35);pdf.rect(tabelX,tabelY,tabelW,kopH);
+    pdf.line(tabelX+naamW,tabelY,tabelX+naamW,tabelY+kopH);pdf.line(tabelX+naamW+dagW,tabelY,tabelX+naamW+dagW,tabelY+kopH);
+    pdf.setFont("helvetica","bold");pdf.setFontSize(9);pdf.text("Leerling",tabelX+2.5,tabelY+6);
+    pdf.setFontSize(8);pdf.text("Dinsdag",tabelX+naamW+(dagW/2),tabelY+6,{align:"center"});pdf.text("Donderdag",tabelX+naamW+dagW+(dagW/2),tabelY+6,{align:"center"});
     const vink=(cx,cy)=>{pdf.setDrawColor(34,120,76);pdf.setLineWidth(.8);pdf.line(cx-3,cy,cx-1,cy+2.2);pdf.line(cx-1,cy+2.2,cx+3.5,cy-2.5);};
-    let y=tabelY+10;
-    rows.forEach(r=>{pdf.setDrawColor(190,199,210);pdf.setLineWidth(.25);pdf.rect(tabelX,y,tabelW,rijH);pdf.line(tabelX+naamW,y,tabelX+naamW,y+rijH);pdf.line(tabelX+naamW+dagW,y,tabelX+naamW+dagW,y+rijH);pdf.setTextColor(25,42,65);pdf.setFont("helvetica","normal");pdf.setFontSize(10);pdf.text(pdfLeerlingNaam(r.name),tabelX+3,y+5.4,{maxWidth:naamW-6});if(r.days?.dinsdag)vink(tabelX+naamW+(dagW/2),y+4);if(r.days?.donderdag)vink(tabelX+naamW+dagW+(dagW/2),y+4);y+=rijH;});
+    let y=tabelY+kopH;
+    rows.forEach(r=>{pdf.setDrawColor(190,199,210);pdf.setLineWidth(.25);pdf.rect(tabelX,y,tabelW,rijH);pdf.line(tabelX+naamW,y,tabelX+naamW,y+rijH);pdf.line(tabelX+naamW+dagW,y,tabelX+naamW+dagW,y+rijH);pdf.setTextColor(25,42,65);pdf.setFont("helvetica","normal");pdf.setFontSize(rijH<6?8:9);pdf.text(pdfLeerlingNaam(r.name),tabelX+2.5,y+(rijH/2)+1.6,{maxWidth:naamW-5});if(r.days?.dinsdag)vink(tabelX+naamW+(dagW/2),y+(rijH/2));if(r.days?.donderdag)vink(tabelX+naamW+dagW+(dagW/2),y+(rijH/2));y+=rijH;});
     pdf.setTextColor(105,115,128);pdf.setFontSize(8);pdf.text("GO! Basisschool De Linde",pageW/2,pageH-7,{align:"center"});
     pdf.save(`huiswerkklas_${scope}_${schooljaar}.pdf`);return;
   }
