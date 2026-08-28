@@ -203,7 +203,7 @@
         let openUrl = '';
         if (mode === 'overgang') {
           const klasProject = uid ? '' : '&klasProject=1';
-          openUrl = `overgangsbespreking.html?beheerUid=${encodeURIComponent(uid)}&klas=${encodeURIComponent(klasId)}&naam=${encodeURIComponent(namen)}${klasProject}`;
+          openUrl = `overgangsbespreking.html?beheerUid=${encodeURIComponent(uid)}&klas=${encodeURIComponent(klasId)}&naam=${encodeURIComponent(namen)}&schooljaar=${encodeURIComponent(schooljaar)}${klasProject}`;
         } else if (mode === 'oudercontact') {
           const klasProject = uid ? '' : '&klasProject=1';
           openUrl = `oudercontact.html?beheerUid=${encodeURIComponent(uid)}&klas=${encodeURIComponent(klasId)}&klasId=${encodeURIComponent(klasId)}&naam=${encodeURIComponent(namen)}${klasProject}`;
