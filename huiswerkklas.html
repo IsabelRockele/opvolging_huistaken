@@ -97,7 +97,7 @@
         <button class="white" id="openDayBtn" style="display:none">Dag openen</button>
         <button class="white teacher-extra" id="addDateBtn">Datum toevoegen</button>
         <label class="teacher-extra">PDF voor<select id="pdfScope"></select></label>
-        <button class="white teacher-extra" id="pdfBtn">📄 PDF deelnemers per dag</button>
+        <button class="white teacher-extra" id="pdfBtn">📄 Klasoverzicht downloaden (A5)</button>
         <a class="button white" id="qrSheetBtn" href="output/pdf/qr-huiswerkklas.pdf" target="_blank" rel="noopener" style="display:none">📱 QR-blad openen / afdrukken</a>
       </div>
       <div class="bar" id="extraDesktopTools" style="margin-top:12px"><button class="white" id="testPreviewBtn" style="display:none">🧪 Testvoorbeeld tonen</button></div>
@@ -297,12 +297,17 @@ function renderRoleTools(){
     : 'Klasleerkrachten duiden in Klaslijsten bij hun eigen klas aan welke kinderen naar de huiswerkklas gaan. Ontbreekt een leerling? Voeg die eerst toe via <a href="schoolbeheer.html" target="_blank" rel="noopener">Klaslijsten → Nieuwe leerling</a>. Hier verschijnen alleen kinderen die daar voor de huiswerkklas zijn aangeduid.';
   const toegelatenKlassen=(isSchoolBreed()||secretary)?allClasses:ownClasses;
   $("pdfScope").innerHTML=`${(isSchoolBreed()||secretary)?'<option value="all">Alle klassen</option>':''}${toegelatenKlassen.map(k=>`<option value="${esc(k)}">Klas ${esc(k)}</option>`).join("")}`;
+  updatePdfButton();
   $("testPreviewBtn").style.display=realRole==="beheerder"?"inline-block":"none";
   $("extraDesktopTools").style.display=realRole==="beheerder"?"flex":"none";
   $("testPreviewBtn").textContent=demoMode?"🧪 Testmodus sluiten":"🧪 Testmodus openen";
   $("mobileTestBtn").style.display=realRole==="beheerder"?"inline-block":"none";
   $("mobileTestBtn").textContent=demoMode?"🧪 Test sluiten":"🧪 Test openen";
   $("qrSheetBtn").style.display=(realRole==="beheerder"||secretary)?"inline-flex":"none";
+}
+function updatePdfButton(){
+  const scope=$("pdfScope")?.value||"all";
+  if($("pdfBtn"))$("pdfBtn").textContent=scope==="all"?"📄 Schooloverzicht downloaden (A4)":"📄 Klasoverzicht downloaden (A5)";
 }
 function demoDatums(){const [jaar,maand]=month.split("-").map(Number),uit=[];for(let dag=1;dag<=14&&uit.length<2;dag++){const d=new Date(jaar,maand-1,dag),w=d.getDay();if(w===2||w===4)uit.push(`${month}-${String(dag).padStart(2,"0")}`)}return uit}
 function maakTestgegevens(){
@@ -446,7 +451,7 @@ function downloadParticipantsPdf(){
     let y=tabelY+kopH;
     rows.forEach(r=>{pdf.setDrawColor(190,199,210);pdf.setLineWidth(.25);pdf.rect(tabelX,y,tabelW,rijH);pdf.line(tabelX+naamW,y,tabelX+naamW,y+rijH);pdf.line(tabelX+naamW+dagW,y,tabelX+naamW+dagW,y+rijH);pdf.setTextColor(25,42,65);pdf.setFont("helvetica","normal");pdf.setFontSize(rijH<6?8:9);pdf.text(pdfLeerlingNaam(r.name),tabelX+2.5,y+(rijH/2)+1.6,{maxWidth:naamW-5});if(r.days?.dinsdag)vink(tabelX+naamW+(dagW/2),y+(rijH/2));if(r.days?.donderdag)vink(tabelX+naamW+dagW+(dagW/2),y+(rijH/2));y+=rijH;});
     pdf.setTextColor(105,115,128);pdf.setFontSize(8);pdf.text("GO! Basisschool De Linde",pageW/2,pageH-7,{align:"center"});
-    pdf.save(`huiswerkklas_${scope}_${schooljaar}.pdf`);return;
+    pdf.save(`huiswerkklas_${scope}_A5_${schooljaar}.pdf`);return;
   }
   dagen.forEach((dag,dagIndex)=>{
     const deelnemers=rows.filter(r=>!!r.days?.[dag.key]);
@@ -484,6 +489,7 @@ onAuthStateChanged(auth,async u=>{
   $("saveBtn").onclick=save;
   $("addDateBtn").onclick=addDate;
   $("pdfBtn").onclick=downloadParticipantsPdf;
+  $("pdfScope").onchange=updatePdfButton;
   $("supervisorPdfBtn").onclick=downloadSupervisorsPdf;
   $("manageSupervisorsBtn").onclick=()=>{supervisorManagerOpen=!supervisorManagerOpen;renderSupervisors();};
   $("closeSupervisorManagerBtn").onclick=()=>{supervisorManagerOpen=false;renderSupervisors();};

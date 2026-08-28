@@ -40,7 +40,7 @@ onAuthStateChanged(auth, (user) => {
 
   if (isIndex) {
     if (new URLSearchParams(location.search).get('naLogin') === 'huiswerkklas') {
-      location.href = 'huiswerkklas.html';
+      location.href = 'huiswerkklas.html?v=20260828-a5-2';
       return;
     }
     const kaart = document.getElementById('ingelogd-kaart');
