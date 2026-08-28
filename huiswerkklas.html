@@ -290,8 +290,9 @@ function collect(){
 async function save(){
   collect();
   await setDoc(monthRef(),{...hw,schooljaar,month,bewaarTot:bewaarTotVoorSchooljaar(),bewaartermijnJaren:BEWAAR_JAREN_HUISWERKKLAS,updatedAt:serverTimestamp(),updatedBy:user.email||user.uid},{merge:true});
-  $("status").textContent=demoMode?"Testgegevens bewaard":"Bewaard";
   render();
+  $("status").textContent=demoMode?"TESTMODUS · ✓ Testgegevens bewaard":"✓ Bewaard";
+  const knop=$("mobileSaveBtn"),normaal="✓ Aanwezigheden en begeleiders bewaren";knop.textContent=demoMode?"✓ Testgegevens bewaard":"✓ Bewaard";setTimeout(()=>{knop.textContent=normaal},1800);
 }
 async function saveNoRender(){
   collect();
