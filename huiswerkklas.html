@@ -50,6 +50,11 @@
     .lock-note{display:block;font-size:11px;color:#756855;margin-top:3px;text-transform:none;letter-spacing:0}
     .list-panel{padding:14px 16px}
     .list-header{display:flex;align-items:end;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:8px}
+    .begeleiders-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(245px,1fr));gap:10px;margin-top:12px}
+    .begeleider-dag{border:1px solid var(--line);border-radius:12px;padding:11px;background:#fff}
+    .begeleider-dag h3{margin:0 0 8px;font-size:15px}.begeleider-keuzes{display:grid;gap:6px}
+    .begeleider-keuzes label{display:flex;align-items:center;gap:7px;margin:0;font-size:13px;font-weight:700}.begeleider-keuzes input{flex:0 0 auto}
+    .begeleider-totalen{display:flex;flex-wrap:wrap;gap:7px;margin-top:12px}.begeleider-totaal{background:#eef3f9;border-radius:999px;padding:6px 10px;font-size:12px;font-weight:800}
     @media(max-width:900px){main{padding:10px}.toolbar,.two{grid-template-columns:1fr}.right{margin-left:0}.attendance-row{grid-template-columns:10px 60px 1fr 32px}}
   </style>
 </head>
@@ -79,6 +84,10 @@
     <strong>Werking:</strong>
     <span class="muted" id="workHelp">Klasleerkrachten duiden in Klaslijsten bij hun eigen klas aan welke kinderen naar de huiswerkklas gaan. Ontbreekt een leerling? Voeg die eerst toe via <a href="schoolbeheer.html" target="_blank" rel="noopener">Klaslijsten → Nieuwe leerling</a>. Hier verschijnen alleen kinderen die daar voor de huiswerkklas zijn aangeduid.</span>
   </section>
+  <section class="panel" id="supervisorPanel" style="display:none">
+    <div class="bar"><div><h2 style="margin:0 0 4px">Begeleiders per datum</h2><p class="muted" style="margin:0">Vink per huiswerkklasdag aan welke leerkrachten begeleid hebben. Het maandtotaal wordt automatisch berekend.</p></div><button class="white right" id="supervisorPdfBtn">📄 PDF begeleiders</button></div>
+    <div id="supervisorDays"></div>
+  </section>
   <section class="panel list-panel">
     <div class="bar">
       <div>
@@ -99,8 +108,9 @@ import { probeerVeiligheidskopie } from "./firebase-veiligheid.js";
 const firebaseConfig={apiKey:"AIzaSyA7KxXMvZ4dzBQDut3CMyWUblLte2tFzoQ",authDomain:"huiswerkapp-a311e.firebaseapp.com",projectId:"huiswerkapp-a311e",storageBucket:"huiswerkapp-a311e.appspot.com",messagingSenderId:"797169941164",appId:"1:797169941164:web:511d9618079f1378d0fd09"};
 const app=getApps().length?getApp():initializeApp(firebaseConfig), auth=getAuth(app), db=getFirestore(app);
 const DEFAULT_CLASSES=["K1","K2","K3","1A","2A","3A","4A","5A","6A"], COLORS=["#93c47d","#6fa8dc","#ffd966","#e6a5c8","#b4a7d6","#76a5af","#f6b26b","#8fce00","#c27ba0"];
+const SUPERVISORS=["Stevens Lara","Verheyden Leen","Boeykens Steffi","De Bruyn Lotte","Vanhorenbeeck Kelly","Bierbooms Laura"];
 const $=id=>document.getElementById(id), esc=v=>String(v??"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;");
-let user=null, role="", schooljaar=currentSchooljaar(), month=currentMonth(), date=todayIso(), ownClasses=[], allClasses=[], classStudents={}, hw={enrolled:{},attendance:{}};
+let user=null, role="", schooljaar=currentSchooljaar(), month=currentMonth(), date=todayIso(), ownClasses=[], allClasses=[], classStudents={}, hw={enrolled:{},attendance:{},supervisors:{}};
 async function setDoc(ref,payload,options){
   await probeerVeiligheidskopie(ref,{reden:"Huiswerkklas vóór opslag",schooljaar,klas:"schoolbreed",gebruiker:user?.email||user?.uid||""},(melding,err)=>{console.warn(melding,err);const status=document.getElementById("status");if(status)status.textContent="Let op: reservekopie mislukt";});
   return firestoreSetDoc(ref,payload,options);
@@ -145,8 +155,8 @@ async function loadData(){
     classStudents[klas]=snap.exists()?activeStudents(snap.data().leerlingen||[]):[];
   }));
   const hwSnap=await getDoc(monthRef());
-  hw=hwSnap.exists()?hwSnap.data():{enrolled:{},attendance:{},dates:[],processedDates:{}};
-  hw.enrolled||={}; hw.attendance||={}; hw.dates||=[]; hw.processedDates||={};
+  hw=hwSnap.exists()?hwSnap.data():{enrolled:{},attendance:{},dates:[],processedDates:{},supervisors:{}};
+  hw.enrolled||={}; hw.attendance||={}; hw.dates||=[]; hw.processedDates||={}; hw.supervisors||={};
   render();
 }
 function localRows(){
@@ -185,8 +195,23 @@ function renderRoleTools(){
   const toegelatenKlassen=(isSchoolBreed()||secretary)?allClasses:ownClasses;
   $("pdfScope").innerHTML=`${(isSchoolBreed()||secretary)?'<option value="all">Alle klassen</option>':''}${toegelatenKlassen.map(k=>`<option value="${esc(k)}">Klas ${esc(k)}</option>`).join("")}`;
 }
-function render(){ $("status").textContent=`${schooljaar} - ${month}`; renderRoleTools(); renderTable(); }
+function formatSupervisorDate(d){const datum=new Date(`${d}T12:00:00`);return `${datum.toLocaleDateString("nl-BE",{weekday:"long"})} ${d.slice(8,10)}/${d.slice(5,7)}`;}
+function renderSupervisors(){
+  const panel=$("supervisorPanel"),doel=$("supervisorDays");
+  if(!isSecretariaat()){panel.style.display="none";return}
+  panel.style.display="block";const dates=[...(hw.dates||[])].sort();
+  if(!dates.length){doel.innerHTML='<div class="empty">Voeg eerst een huiswerkklasdatum toe. Daarna kun je hier de begeleiders aanduiden.</div>';return}
+  const totalen=Object.fromEntries(SUPERVISORS.map(n=>[n,0]));
+  dates.forEach(d=>(hw.supervisors?.[d]||[]).forEach(n=>{if(n in totalen)totalen[n]++}));
+  doel.innerHTML=`<div class="begeleiders-grid">${dates.map(d=>{const gekozen=new Set(hw.supervisors?.[d]||[]);return `<div class="begeleider-dag"><h3>${esc(formatSupervisorDate(d))}</h3><div class="begeleider-keuzes">${SUPERVISORS.map(n=>`<label><input type="checkbox" data-supervisor-date="${esc(d)}" data-supervisor-name="${esc(n)}" ${gekozen.has(n)?"checked":""}> ${esc(n)}</label>`).join("")}</div></div>`}).join("")}</div><div class="begeleider-totalen">${SUPERVISORS.map(n=>`<span class="begeleider-totaal">${esc(n)}: ${totalen[n]} keer</span>`).join("")}</div>`;
+  document.querySelectorAll("[data-supervisor-date]").forEach(ch=>ch.onchange=()=>{collectSupervisors();renderSupervisors();autoSave()});
+}
+function render(){ $("status").textContent=`${schooljaar} - ${month}`; renderRoleTools(); renderSupervisors(); renderTable(); }
+function collectSupervisors(){
+  document.querySelectorAll("[data-supervisor-date]").forEach(ch=>{const d=ch.dataset.supervisorDate,n=ch.dataset.supervisorName;hw.supervisors[d]||=[];const set=new Set(hw.supervisors[d]);ch.checked?set.add(n):set.delete(n);hw.supervisors[d]=[...set]});
+}
 function collect(){
+  collectSupervisors();
   localRows().forEach(r=>{hw.enrolled[r.key]={active:true,klas:r.klas,name:r.name,free:r.free,days:r.days||{}};});
   document.querySelectorAll("[data-present]").forEach(ch=>{const d=ch.dataset.date;hw.attendance[d]||={};hw.attendance[d][ch.dataset.present]=ch.checked;});
   document.querySelectorAll("[data-lock-date]").forEach(ch=>{hw.processedDates[ch.dataset.lockDate]=ch.checked;});
@@ -230,6 +255,15 @@ async function processWholeMonth(){
   await save();
 }
 function pdfLeerlingNaam(naam){return String(naam||"").replace(",","").trim();}
+function downloadSupervisorsPdf(){
+  if(!window.jspdf?.jsPDF)return alert("De PDF-module is nog niet geladen. Probeer over enkele seconden opnieuw.");
+  collectSupervisors();const dates=[...(hw.dates||[])].sort(),{jsPDF}=window.jspdf,pdf=new jsPDF({orientation:"portrait",unit:"mm",format:"a4"}),m=15;
+  pdf.setFillColor(107,93,82);pdf.rect(0,0,210,25,"F");pdf.setTextColor(255,255,255);pdf.setFont("helvetica","bold");pdf.setFontSize(17);pdf.text("Begeleiders huiswerkklas",m,11);pdf.setFont("helvetica","normal");pdf.setFontSize(10);pdf.text(`Schooljaar ${schooljaar} - maand ${month.slice(5,7)}/${month.slice(0,4)}`,m,18);
+  let y=35;pdf.setTextColor(44,31,14);pdf.setFont("helvetica","bold");pdf.setFontSize(13);pdf.text("Registratie per datum",m,y);y+=7;
+  dates.forEach(d=>{const namen=hw.supervisors?.[d]||[];pdf.setFillColor(238,243,249);pdf.roundedRect(m,y,180,8,2,2,"F");pdf.setFont("helvetica","bold");pdf.setFontSize(10);pdf.text(formatSupervisorDate(d),m+3,y+5.5);y+=11;pdf.setFont("helvetica","normal");pdf.text(namen.length?namen.join(", "):"Geen begeleider aangeduid",m+3,y,{maxWidth:174});y+=Math.max(8,Math.ceil((namen.join(", ").length||24)/90)*5);});
+  y+=3;pdf.setFont("helvetica","bold");pdf.setFontSize(13);pdf.text("Maandtotaal per leerkracht",m,y);y+=7;SUPERVISORS.forEach(n=>{const totaal=dates.filter(d=>(hw.supervisors?.[d]||[]).includes(n)).length;pdf.setFont("helvetica","normal");pdf.setFontSize(10);pdf.text(n,m+3,y);pdf.setFont("helvetica","bold");pdf.text(`${totaal} keer`,190,y,{align:"right"});pdf.setDrawColor(225,220,212);pdf.line(m+2,y+2,195,y+2);y+=7;});
+  pdf.setTextColor(117,104,85);pdf.setFont("helvetica","normal");pdf.setFontSize(8);pdf.text("GO! Basisschool De Linde",105,290,{align:"center"});pdf.save(`begeleiders_huiswerkklas_${month}.pdf`);
+}
 function downloadParticipantsPdf(){
   if(!window.jspdf?.jsPDF)return alert("De PDF-module is nog niet geladen. Probeer over enkele seconden opnieuw.");
   const scope=$("pdfScope")?.value||"all",rows=localRows().filter(r=>scope==="all"||r.klas===scope),{jsPDF}=window.jspdf,pdf=new jsPDF({orientation:"portrait",unit:"mm",format:"a4"});
@@ -291,6 +325,7 @@ onAuthStateChanged(auth,async u=>{
   $("processUntilBtn").onclick=processUntil;
   $("processMonthBtn").onclick=processWholeMonth;
   $("pdfBtn").onclick=downloadParticipantsPdf;
+  $("supervisorPdfBtn").onclick=downloadSupervisorsPdf;
   $("schooljaarInput").onchange=loadData; $("monthInput").onchange=loadData; $("dateInput").onchange=()=>{date=$("dateInput").value;};
   $("logoutBtn").onclick=()=>signOut(auth).then(()=>location.href="index.html");
   await loadData();
