@@ -136,6 +136,7 @@
       <span class="tag right" id="countTag">0 leerlingen</span>
       <button class="white" id="closeAttendanceBtn" style="display:none">← Terug naar overzicht</button>
     </div>
+    <div id="attendanceSupervisorPicker"></div>
     <div id="homeworkTable"></div>
   </section>
 </main>
@@ -356,7 +357,7 @@ async function saveSupervisorConfig(){
     updatedAt:serverTimestamp(),
     updatedBy:user.email||user.uid
   },{merge:true});
-  supervisorConfig=gekozen;supervisorConfigIsExplicit=true;supervisorManagerOpen=false;render();$("status").textContent="✓ Begeleiders bewaard";
+  supervisorConfig=gekozen;supervisorConfigIsExplicit=true;supervisorManagerOpen=false;render();$("status").textContent=`✓ ${gekozen.length} begeleider${gekozen.length===1?"":"s"} bewaard`;
 }
 function mobileDagSleutel(d){const weekdag=new Date(`${d}T12:00:00`).getDay();return weekdag===2?"dinsdag":weekdag===4?"donderdag":"";}
 function renderMobileToday(){
@@ -377,8 +378,16 @@ function renderMobileToday(){
   body.innerHTML=`<h3>Begeleiders vandaag</h3><div class="mobile-supervisors">${supervisorNames().map(n=>`<label><input type="checkbox" data-mobile-supervisor="${esc(n)}" ${gekozen.has(n)?"checked":""} ${locked?"disabled":""}> ${esc(n)}</label>`).join("")}</div><h3>Aanwezige kinderen (${rows.length})</h3>${locked?'<div class="notice"><strong>Deze datum is verwerkt en vergrendeld.</strong></div>':""}<div>${kinderenHtml||'<div class="empty">Geen verwachte kinderen voor deze dag.</div>'}</div>`;
   $("mobileSaveBtn").disabled=locked;
 }
+function renderAttendanceSupervisorPicker(){
+  const doel=$("attendanceSupervisorPicker");if(!doel)return;
+  if(isSecretariaat()||!desktopEntryOpen||!magAanwezighedenInvullen()){doel.innerHTML="";return;}
+  const d=gekozenWerkdatum();if(!d){doel.innerHTML='<div class="notice"><strong>Voeg eerst een huiswerkklasdatum toe.</strong></div>';return;}
+  const gekozen=new Set(hw.supervisors?.[d]||[]),locked=!!hw.processedDates?.[d];
+  doel.innerHTML=`<div class="notice" style="margin:12px 0"><strong>Begeleiders op ${esc(formatSupervisorDate(d))}</strong><p class="muted" style="margin:4px 0 10px">Vink aan wie vandaag de huiswerkklas begeleidt.</p><div class="mobile-supervisors" style="grid-template-columns:repeat(auto-fit,minmax(210px,1fr));margin-bottom:0">${supervisorNames().map(n=>`<label><input type="checkbox" data-supervisor-date="${esc(d)}" data-supervisor-name="${esc(n)}" ${gekozen.has(n)?"checked":""} ${locked?"disabled":""}> ${esc(n)}</label>`).join("")}</div></div>`;
+  doel.querySelectorAll("[data-supervisor-date]").forEach(ch=>ch.onchange=()=>{collectSupervisors();autoSave();});
+}
 function bindProcessedCheckboxes(){document.querySelectorAll("[data-lock-date]").forEach(ch=>ch.onchange=()=>{document.querySelectorAll(`[data-lock-date="${ch.dataset.lockDate}"]`).forEach(andere=>andere.checked=ch.checked);autoSave();});}
-function render(){ $("status").textContent=demoMode?`TESTMODUS · ${schooljaar} - ${month}`:`${schooljaar} - ${month}`; renderRoleTools(); renderPlanningOverview(); renderSupervisors(); renderTable(); renderMobileToday(); bindProcessedCheckboxes(); }
+function render(){ $("status").textContent=demoMode?`TESTMODUS · ${schooljaar} - ${month}`:`${schooljaar} - ${month}`; renderRoleTools(); renderPlanningOverview(); renderSupervisors(); renderAttendanceSupervisorPicker(); renderTable(); renderMobileToday(); bindProcessedCheckboxes(); }
 function collectSupervisors(){
   document.querySelectorAll("[data-supervisor-date]").forEach(ch=>{const d=ch.dataset.supervisorDate,n=ch.dataset.supervisorName;hw.supervisors[d]||=[];const set=new Set(hw.supervisors[d]);ch.checked?set.add(n):set.delete(n);hw.supervisors[d]=[...set]});
   if(mobileSelectedDate){hw.supervisors[mobileSelectedDate]=[...document.querySelectorAll("[data-mobile-supervisor]:checked")].map(ch=>ch.dataset.mobileSupervisor)}
