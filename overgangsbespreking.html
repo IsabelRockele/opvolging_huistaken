@@ -1161,8 +1161,10 @@ const schooljaar = (() => {
   const gevraagd = overgangParams.get('schooljaar');
   if (geldigSchooljaar(gevraagd)) return gevraagd;
   const now = new Date();
-  // Vanaf augustus werken leerkrachten al in de klas van het nieuwe schooljaar.
-  const y = now.getMonth() >= 7 ? now.getFullYear() : now.getFullYear() - 1;
+  // Augustus blijft bij het aflopende schooljaar: de rijke overgangsfiches en
+  // doorgestuurde dossiers worden tijdens de vakantie nog gecontroleerd.
+  // Schakel pas op 1 september automatisch naar het nieuwe schooljaar.
+  const y = now.getMonth() >= 8 ? now.getFullYear() : now.getFullYear() - 1;
   return `${y}-${y + 1}`;
 })();
 const BEWAAR_JAREN_OVERGANG = 12; // Maximum: K1 tot einde lager onderwijs plus marge.
@@ -1657,8 +1659,9 @@ const sfSchooljaar = (() => {
   const gevraagd = new URLSearchParams(window.location.search).get('schooljaar');
   if (sfGeldigSchooljaar(gevraagd)) return gevraagd;
   const now = new Date();
-  // Vanaf augustus werken leerkrachten al in de klas van het nieuwe schooljaar.
-  const y = now.getMonth() >= 7 ? now.getFullYear() : now.getFullYear() - 1;
+  // Houd augustus bij het aflopende schooljaar, zodat overdrachten niet met
+  // een nieuwe klaslijst uit het volgende schooljaar vermengd worden.
+  const y = now.getMonth() >= 8 ? now.getFullYear() : now.getFullYear() - 1;
   return `${y}-${y + 1}`;
 })();
 
@@ -4956,7 +4959,7 @@ function emailsUitKlasKoppeling(koppeling) {
     .filter(v => v.includes('@'));
 }
 
-const OVERDRACHT_ACTIES_GEBLOKKEERD = false;
+const OVERDRACHT_ACTIES_GEBLOKKEERD = true;
 
 async function sfShareTransfer() {
   if (OVERDRACHT_ACTIES_GEBLOKKEERD) {
