@@ -115,6 +115,7 @@
   </section>
   <section class="panel desktop-overview" id="planningPanel">
     <div class="bar"><div><h2 style="margin:0 0 4px">Algemeen overzicht inschrijvingen</h2><p class="muted" id="planningIntro" style="margin:0">Wie op dinsdag of donderdag komt en wie gratis of betalend deelneemt.</p></div><button class="white right" id="togglePlanningBtn" style="display:none">Overzicht openen</button><button class="secondary" id="openAttendanceBtn" style="display:none">Lijst invullen</button></div>
+    <label id="paidOnlyLabel" style="display:flex;align-items:center;gap:8px;margin:12px 0 0;font-size:14px"><input id="paidOnlyCheckbox" type="checkbox" style="width:20px;flex:0 0 auto"> Alleen betalende leerlingen tonen</label>
     <div id="planningOverview"></div>
   </section>
   <section class="panel" id="supervisorPanel" style="display:none">
@@ -140,7 +141,7 @@ const app=getApps().length?getApp():initializeApp(firebaseConfig), auth=getAuth(
 const DEFAULT_CLASSES=["K1","K2","K3","1A","2A","3A","4A","5A","6A"], COLORS=["#93c47d","#6fa8dc","#ffd966","#e6a5c8","#b4a7d6","#76a5af","#f6b26b","#8fce00","#c27ba0"];
 const SUPERVISORS=["Stevens Lara","Verheyden Leen","Boeykens Steffi","De Bruyn Lotte","Vanhorenbeeck Kelly","Bierbooms Laura"];
 const $=id=>document.getElementById(id), esc=v=>String(v??"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;");
-let user=null, role="", realRole="", demoMode=false, desktopEntryOpen=false, secretaryPlanningOpen=false, secretaryMoreOpen=false, schooljaar=currentSchooljaar(), month=currentMonth(), date=todayIso(), mobileSelectedDate="", ownClasses=[], allClasses=[], classStudents={}, hw={enrolled:{},attendance:{},supervisors:{}};
+let user=null, role="", realRole="", demoMode=false, desktopEntryOpen=false, secretaryPlanningOpen=false, secretaryMoreOpen=false, planningPaidOnly=false, schooljaar=currentSchooljaar(), month=currentMonth(), date=todayIso(), mobileSelectedDate="", ownClasses=[], allClasses=[], classStudents={}, hw={enrolled:{},attendance:{},supervisors:{}};
 async function setDoc(ref,payload,options){
   await probeerVeiligheidskopie(ref,{reden:"Huiswerkklas vóór opslag",schooljaar,klas:"schoolbreed",gebruiker:user?.email||user?.uid||""},(melding,err)=>{console.warn(melding,err);const status=document.getElementById("status");if(status)status.textContent="Let op: reservekopie mislukt";});
   return firestoreSetDoc(ref,payload,options);
@@ -210,6 +211,8 @@ function gekozenWerkdatum(){const dates=[...(hw.dates||[])].sort();if(!dates.len
 function renderPlanningOverview(){
   let rows=localRows();
   if(role==="klasleerkracht"&&!demoMode)rows=rows.filter(r=>ownClasses.includes(r.klas));
+  if(planningPaidOnly)rows=rows.filter(r=>!r.free);
+  $("paidOnlyCheckbox").checked=planningPaidOnly;
   const doel=$("planningOverview");
   if(!rows.length){doel.innerHTML='<div class="empty">Er zijn nog geen leerlingen voor de huiswerkklas aangeduid.</div>';return}
   doel.innerHTML=`<div class="table-wrap" style="max-height:none"><table class="planning-table"><thead><tr><th>Klas</th><th>Leerling</th><th>Dinsdag</th><th>Donderdag</th><th>Betaling</th></tr></thead><tbody>${rows.map(r=>`<tr class="${r.free?"free-row":""}"><td><span class="class-chip"><span class="stripe-dot" style="background:${colorForClass(r.klas)}"></span>${esc(r.klas)}</span></td><td><strong>${esc(r.name)}</strong></td><td class="${r.days?.dinsdag?"day-check":"day-empty"}">${r.days?.dinsdag?"✓":"—"}</td><td class="${r.days?.donderdag?"day-check":"day-empty"}">${r.days?.donderdag?"✓":"—"}</td><td><span class="pay-badge ${r.free?"free":"paid"}">${r.free?"Gratis":"Betalend"}</span></td></tr>`).join("")}</tbody></table></div>`;
@@ -418,6 +421,7 @@ onAuthStateChanged(auth,async u=>{
   $("openAttendanceBtn").onclick=()=>{desktopEntryOpen=!desktopEntryOpen;render();if(desktopEntryOpen)$("attendancePanel").scrollIntoView({behavior:"smooth",block:"start"});};
   $("togglePlanningBtn").onclick=()=>{secretaryPlanningOpen=!secretaryPlanningOpen;render();};
   $("planningTopBtn").onclick=()=>{secretaryPlanningOpen=!secretaryPlanningOpen;render();if(secretaryPlanningOpen)$("planningPanel").scrollIntoView({behavior:"smooth",block:"start"});};
+  $("paidOnlyCheckbox").onchange=()=>{planningPaidOnly=$("paidOnlyCheckbox").checked;renderPlanningOverview();};
   $("secretaryOptionsBtn").onclick=()=>{secretaryMoreOpen=!secretaryMoreOpen;render();};
   $("mobileSaveBtn").onclick=save;
   $("schooljaarInput").onchange=loadData; $("monthInput").onchange=loadData; $("dateInput").onchange=()=>{date=$("dateInput").value;render();};
