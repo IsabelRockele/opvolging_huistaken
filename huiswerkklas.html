@@ -97,6 +97,7 @@
         <label><span id="dateLabel">Per dag bekijken</span><input id="dateInput" type="date"></label>
         <button class="white" id="openDayBtn" style="display:none">Dag openen</button>
         <button class="white teacher-extra" id="addDateBtn">Datum toevoegen</button>
+        <button class="white" id="cancelDateBtn" style="display:none">Deze dag gaat niet door</button>
         <label class="teacher-extra">PDF voor<select id="pdfScope"></select></label>
         <button class="white teacher-extra" id="pdfBtn">📄 Klasoverzicht downloaden (A5)</button>
         <a class="button white" id="qrSheetBtn" href="output/pdf/qr-huiswerkklas.pdf" target="_blank" rel="noopener" style="display:none">📱 QR-blad openen / afdrukken</a>
@@ -169,6 +170,7 @@ function supervisorConfigRef(){return doc(db,"huiswerkklas",schooljaar,"maanden"
 function supervisorKey(x){return String(x.uid||x.email||x.name||"").trim().toLowerCase();}
 function isConfiguredSupervisor(){const email=(user?.email||"").toLowerCase();return supervisorConfig.some(x=>(x.uid&&x.uid===user?.uid)||(x.email&&x.email.toLowerCase()===email));}
 function magAanwezighedenInvullen(){return isSecretariaat()||realRole==="beheerder"||isConfiguredSupervisor();}
+function isCancelledDate(d){return !!hw.cancelledDates?.[d];}
 function colorForClass(klas){const i=Math.max(0,DEFAULT_CLASSES.indexOf(klas));return COLORS[i%COLORS.length];}
 function monthRef(){return doc(db,"huiswerkklas",schooljaar,"maanden",demoMode?`test-${user.uid}-${month}`:month);}
 function testModeKey(){return `lindeHuiswerkklasTest_${user?.uid||""}`;}
@@ -223,7 +225,7 @@ async function loadData(){
   }));
   const hwSnap=await getDoc(monthRef());
   hw=hwSnap.exists()?hwSnap.data():(demoMode?maakTestgegevens():{enrolled:{},attendance:{},dates:[],processedDates:{},supervisors:{}});
-  hw.enrolled||={}; hw.attendance||={}; hw.dates||=[]; hw.processedDates||={}; hw.supervisors||={};
+  hw.enrolled||={}; hw.attendance||={}; hw.dates||=[]; hw.processedDates||={}; hw.supervisors||={}; hw.cancelledDates||={};
   render();
 }
 function localRows(){
@@ -244,7 +246,7 @@ function planningVoorDatum(r,d){
   const laatste=historie.at(-1);if(laatste)return laatste.action==="stop"?{active:false,days:{},free:!!laatste.free}:{active:true,days:laatste.days||{},free:!!laatste.free};
   return {active:(!r.start||d>=r.start)&&(!r.end||d<=r.end),days:r.days||{},free:!!r.free};
 }
-function geplandOpDatum(r,d){const p=planningVoorDatum(r,d);return p.active&&!!p.days?.[mobileDagSleutel(d)];}
+function geplandOpDatum(r,d){if(isCancelledDate(d))return false;const p=planningVoorDatum(r,d);return p.active&&!!p.days?.[mobileDagSleutel(d)];}
 function enrolledList(){
   return Object.entries(hw.enrolled||{}).filter(([,v])=>v&&v.active!==false).map(([key,v])=>({key,...v})).sort((a,b)=>(a.klas||"").localeCompare(b.klas||"","nl",{numeric:true})||(a.name||"").localeCompare(b.name||"","nl"));
 }
@@ -261,11 +263,12 @@ function renderPlanningOverview(){
 }
 function renderTable(){
   const dates=zichtbareWerkdatums(),dag=dates.length===1?mobileDagSleutel(dates[0]):"",alleRijen=localRows(),dagRijen=dag?alleRijen.filter(r=>geplandOpDatum(r,dates[0])):alleRijen,rows=attendancePaidOnly?dagRijen.filter(r=>dates.length?!planningVoorDatum(r,dates[0]).free:!r.free):dagRijen;
+  if(dates.length===1&&isCancelledDate(dates[0])){$("countTag").textContent="gaat niet door";$("homeworkTable").innerHTML=`<div class="notice"><strong>Huiswerkklas gaat niet door op ${esc(formatSupervisorDate(dates[0]))}.</strong><p class="muted">Er worden voor deze dag geen aanwezigheden, begeleiders of betalingen geregistreerd.</p></div>`;return;}
   $("attendancePaidOnlyCheckbox").checked=attendancePaidOnly;
   const enrolledCount=rows.filter(r=>r.active).length;
   $("countTag").textContent=`${enrolledCount} leerling${enrolledCount===1?"":"en"}`;
   if(!rows.length){$("homeworkTable").innerHTML=`<div class="empty">Geen leerlingen gevonden.</div>`;return;}
-  $("homeworkTable").innerHTML=`<div class="table-wrap"><table><thead><tr><th class="class-col">Klas</th><th class="name-col">Leerling</th>${dates.map(d=>`<th class="date-col">${esc(d.slice(8,10)+"/"+d.slice(5,7))}${isSecretariaat()?`<label class="lock-note"><input type="checkbox" data-lock-date="${esc(d)}" ${hw.processedDates?.[d]?"checked":""}> verwerkt</label>`:hw.processedDates?.[d]?`<span class="lock-note">verwerkt</span>`:""}</th>`).join("")}<th class="total-col">Totaal</th></tr></thead><tbody>${rows.map(r=>{const total=dates.reduce((sum,d)=>sum+(hw.attendance?.[d]?.[r.key]&&planningVoorDatum(r,d).active?1:0),0),dagen=[r.days?.dinsdag?'di':'',r.days?.donderdag?'do':''].filter(Boolean).join(' + ');return `<tr class="${r.free?"free-row":""}"><td class="class-col"><span class="class-chip"><span class="stripe-dot" style="background:${colorForClass(r.klas)}"></span>${esc(r.klas)}</span></td><td class="name-col"><strong>${esc(r.name)}</strong>${dagen?`<span class="pay-badge">${dagen}</span>`:''}<span class="pay-badge ${r.free?"free":"paid"}">${r.free?"gratis":"betalend"}</span></td>${dates.map(d=>{const gepland=geplandOpDatum(r,d),locked=!!hw.processedDates?.[d]&&!isSecretariaat();return gepland?`<td class="date-col"><input type="checkbox" data-present="${esc(r.key)}" data-date="${esc(d)}" ${hw.attendance?.[d]?.[r.key]?"checked":""} ${locked?"disabled":""}></td>`:`<td class="date-col day-empty">—</td>`;}).join("")}<td class="total-col">${total}</td></tr>`;}).join("")}</tbody></table></div>`;
+  $("homeworkTable").innerHTML=`<div class="table-wrap"><table><thead><tr><th class="class-col">Klas</th><th class="name-col">Leerling</th>${dates.map(d=>`<th class="date-col">${esc(d.slice(8,10)+"/"+d.slice(5,7))}${isCancelledDate(d)?'<span class="lock-note">gaat niet door</span>':isSecretariaat()?`<label class="lock-note"><input type="checkbox" data-lock-date="${esc(d)}" ${hw.processedDates?.[d]?"checked":""}> verwerkt</label>`:hw.processedDates?.[d]?`<span class="lock-note">verwerkt</span>`:""}</th>`).join("")}<th class="total-col">Totaal</th></tr></thead><tbody>${rows.map(r=>{const total=dates.reduce((sum,d)=>sum+(!isCancelledDate(d)&&hw.attendance?.[d]?.[r.key]&&planningVoorDatum(r,d).active?1:0),0),dagen=[r.days?.dinsdag?'di':'',r.days?.donderdag?'do':''].filter(Boolean).join(' + ');return `<tr class="${r.free?"free-row":""}"><td class="class-col"><span class="class-chip"><span class="stripe-dot" style="background:${colorForClass(r.klas)}"></span>${esc(r.klas)}</span></td><td class="name-col"><strong>${esc(r.name)}</strong>${dagen?`<span class="pay-badge">${dagen}</span>`:''}<span class="pay-badge ${r.free?"free":"paid"}">${r.free?"gratis":"betalend"}</span></td>${dates.map(d=>{const gepland=geplandOpDatum(r,d),locked=!!hw.processedDates?.[d]&&!isSecretariaat();return gepland?`<td class="date-col"><input type="checkbox" data-present="${esc(r.key)}" data-date="${esc(d)}" ${hw.attendance?.[d]?.[r.key]?"checked":""} ${locked?"disabled":""}></td>`:`<td class="date-col day-empty">—</td>`;}).join("")}<td class="total-col">${total}</td></tr>`;}).join("")}</tbody></table></div>`;
   document.querySelectorAll("[data-present]").forEach(ch=>ch.onchange=()=>autoSave());
   document.querySelectorAll("[data-lock-date]").forEach(ch=>ch.onchange=()=>autoSave());
 }
@@ -295,7 +298,10 @@ function renderRoleTools(){
   $("workingNotice").style.display=secretary?"none":"block";
   $("dateInput").closest("label").style.display="block";
   $("dateLabel").textContent=secretary?"Datum":"Datum kiezen / toevoegen";
-  $("addDateBtn").style.display=secretary?"none":"inline-block";
+  $("addDateBtn").style.display=magAanwezighedenInvullen()?"inline-block":"none";
+  const gekozenDatum=$("dateInput").value||date,bestaandeDatum=(hw.dates||[]).includes(gekozenDatum);
+  $("cancelDateBtn").style.display=magAanwezighedenInvullen()&&bestaandeDatum?"inline-block":"none";
+  $("cancelDateBtn").textContent=isCancelledDate(gekozenDatum)?"Dag opnieuw activeren":"Deze dag gaat niet door";
   $("workHelp").innerHTML=secretary
     ? "Secretariaat ziet hier de aanwezigheden voor de facturatie. Verwerk tot een datum of verwerk de hele maand; die dagen worden dan geblokkeerd voor klasleerkrachten. Secretariaat kan fouten wel nog aanpassen."
     : 'Klasleerkrachten duiden in Klaslijsten bij hun eigen klas aan welke kinderen naar de huiswerkklas gaan. Ontbreekt een leerling? Voeg die eerst toe via <a href="schoolbeheer.html" target="_blank" rel="noopener">Klaslijsten → Nieuwe leerling</a>. Hier verschijnen alleen kinderen die daar voor de huiswerkklas zijn aangeduid.';
@@ -313,7 +319,7 @@ function updatePdfButton(){
   const scope=$("pdfScope")?.value||"all";
   if($("pdfBtn"))$("pdfBtn").textContent=scope==="all"?"📄 Schooloverzicht downloaden (A4)":"📄 Klasoverzicht downloaden (A5)";
 }
-function demoDatums(){const [jaar,maand]=month.split("-").map(Number),uit=[];for(let dag=1;dag<=14&&uit.length<2;dag++){const d=new Date(jaar,maand-1,dag),w=d.getDay();if(w===2||w===4)uit.push(`${month}-${String(dag).padStart(2,"0")}`)}return uit}
+function demoDatums(){return []}
 function maakTestgegevens(){
   const dates=demoDatums(),namen=[["2A","Testleerling, Noor","dinsdag"],["2A","Voorbeeld, Adam","donderdag"],["3A","Oefenkind, Lina","dinsdag"],["3A","Demoleerling, Sam","donderdag"]],enrolled={};
   namen.forEach((x,i)=>{enrolled[`demo_${i}`]={active:true,klas:x[0],name:x[1],free:i===2,days:{dinsdag:x[2]==="dinsdag",donderdag:x[2]==="donderdag"}}});
@@ -334,8 +340,8 @@ function renderSupervisors(){
   panel.style.display="block";const alleDatums=[...(hw.dates||[])].sort(),dates=zichtbareWerkdatums();
   if(!alleDatums.length){doel.innerHTML='<div class="empty">Voeg eerst een huiswerkklasdatum toe. Daarna kun je hier de begeleiders aanduiden.</div>';return}
   const namen=supervisorNames(),totalen=Object.fromEntries(namen.map(n=>[n,0]));
-  alleDatums.forEach(d=>(hw.supervisors?.[d]||[]).forEach(n=>{if(n in totalen)totalen[n]++}));
-  doel.innerHTML=`<div class="supervisor-table-wrap"><table><thead><tr><th class="class-col"></th><th class="name-col">Leerkracht</th>${dates.map(d=>`<th class="date-col">${esc(d.slice(8,10)+"/"+d.slice(5,7))}<label class="lock-note"><input type="checkbox" data-lock-date="${esc(d)}" ${hw.processedDates?.[d]?"checked":""}> verwerkt</label></th>`).join("")}<th class="total-col">Deze maand</th></tr></thead><tbody>${namen.map(n=>`<tr><td class="class-col teacher-icon">👩‍🏫</td><td class="name-col"><strong>${esc(n)}</strong></td>${dates.map(d=>`<td class="date-col"><input type="checkbox" data-supervisor-date="${esc(d)}" data-supervisor-name="${esc(n)}" ${(hw.supervisors?.[d]||[]).includes(n)?"checked":""}></td>`).join("")}<td class="total-col">${totalen[n]}</td></tr>`).join("")}</tbody></table></div>`;
+  alleDatums.filter(d=>!isCancelledDate(d)).forEach(d=>(hw.supervisors?.[d]||[]).forEach(n=>{if(n in totalen)totalen[n]++}));
+  doel.innerHTML=`<div class="supervisor-table-wrap"><table><thead><tr><th class="class-col"></th><th class="name-col">Leerkracht</th>${dates.map(d=>`<th class="date-col">${esc(d.slice(8,10)+"/"+d.slice(5,7))}${isCancelledDate(d)?'<span class="lock-note">gaat niet door</span>':`<label class="lock-note"><input type="checkbox" data-lock-date="${esc(d)}" ${hw.processedDates?.[d]?"checked":""}> verwerkt</label>`}</th>`).join("")}<th class="total-col">Deze maand</th></tr></thead><tbody>${namen.map(n=>`<tr><td class="class-col teacher-icon">👩‍🏫</td><td class="name-col"><strong>${esc(n)}</strong></td>${dates.map(d=>`<td class="date-col">${isCancelledDate(d)?'—':`<input type="checkbox" data-supervisor-date="${esc(d)}" data-supervisor-name="${esc(n)}" ${(hw.supervisors?.[d]||[]).includes(n)?"checked":""}>`}</td>`).join("")}<td class="total-col">${totalen[n]}</td></tr>`).join("")}</tbody></table></div>`;
   document.querySelectorAll("[data-supervisor-date]").forEach(ch=>ch.onchange=()=>{collectSupervisors();renderSupervisors();bindProcessedCheckboxes();autoSave()});
 }
 function renderSupervisorManager(){
@@ -370,8 +376,9 @@ function renderMobileToday(){
   if(!dates.length){keuze.innerHTML='<option>Geen datum</option>';keuze.disabled=true;body.innerHTML='<div class="empty">Er is nog geen huiswerkklasdatum toegevoegd.</div>';$("mobileSaveBtn").disabled=true;return}
   keuze.disabled=false;$("mobileSaveBtn").disabled=false;
   if(!dates.includes(mobileSelectedDate))mobileSelectedDate=dates.includes(todayIso())?todayIso():(dates.filter(d=>d<=todayIso()).at(-1)||dates[0]);
-  keuze.innerHTML=dates.map(d=>`<option value="${esc(d)}" ${d===mobileSelectedDate?"selected":""}>${esc(formatSupervisorDate(d))}</option>`).join("");
+  keuze.innerHTML=dates.map(d=>`<option value="${esc(d)}" ${d===mobileSelectedDate?"selected":""}>${esc(formatSupervisorDate(d))}${isCancelledDate(d)?" - gaat niet door":""}</option>`).join("");
   keuze.onchange=()=>{mobileSelectedDate=keuze.value;renderMobileToday()};
+  if(isCancelledDate(mobileSelectedDate)){body.innerHTML=`<div class="notice"><strong>Huiswerkklas gaat niet door op ${esc(formatSupervisorDate(mobileSelectedDate))}.</strong></div>`;$("mobileSaveBtn").disabled=true;return;}
   const dag=mobileDagSleutel(mobileSelectedDate),alle=localRows(),gepland=alle.filter(r=>dag?geplandOpDatum(r,mobileSelectedDate):planningVoorDatum(r,mobileSelectedDate).active),rows=[...new Map(gepland.map(r=>[r.key,r])).values()],locked=(!!hw.processedDates?.[mobileSelectedDate]&&!isSecretariaat())||!magAanwezighedenInvullen(),gekozen=new Set(hw.supervisors?.[mobileSelectedDate]||[]);
   const klasGroepen=[...new Map(rows.map(r=>[r.klas,rows.filter(x=>x.klas===r.klas)])).entries()];
   const kinderenHtml=klasGroepen.map(([klas,leerlingen])=>`<section class="mobile-class-group"><h4 class="mobile-class-heading"><span class="stripe-dot" style="background:${colorForClass(klas)}"></span>Klas ${esc(klas)} <small class="muted">(${leerlingen.length})</small></h4>${leerlingen.map(r=>`<label class="mobile-person"><input type="checkbox" data-mobile-present="${esc(r.key)}" ${hw.attendance?.[mobileSelectedDate]?.[r.key]?"checked":""} ${locked?"disabled":""}><span>${esc(r.name)}${r.free?'<small>gratis</small>':''}</span></label>`).join("")}</section>`).join("");
@@ -382,6 +389,7 @@ function renderAttendanceSupervisorPicker(){
   const doel=$("attendanceSupervisorPicker");if(!doel)return;
   if(isSecretariaat()||!desktopEntryOpen||!magAanwezighedenInvullen()){doel.innerHTML="";return;}
   const d=gekozenWerkdatum();if(!d){doel.innerHTML='<div class="notice"><strong>Voeg eerst een huiswerkklasdatum toe.</strong></div>';return;}
+  if(isCancelledDate(d)){doel.innerHTML="";return;}
   const gekozen=new Set(hw.supervisors?.[d]||[]),locked=!!hw.processedDates?.[d];
   doel.innerHTML=`<div class="notice" style="margin:12px 0"><strong>Begeleiders op ${esc(formatSupervisorDate(d))}</strong><p class="muted" style="margin:4px 0 10px">Vink aan wie vandaag de huiswerkklas begeleidt.</p><div class="mobile-supervisors" style="grid-template-columns:repeat(auto-fit,minmax(210px,1fr));margin-bottom:0">${supervisorNames().map(n=>`<label><input type="checkbox" data-supervisor-date="${esc(d)}" data-supervisor-name="${esc(n)}" ${gekozen.has(n)?"checked":""} ${locked?"disabled":""}> ${esc(n)}</label>`).join("")}</div></div>`;
   doel.querySelectorAll("[data-supervisor-date]").forEach(ch=>ch.onchange=()=>{collectSupervisors();autoSave();});
@@ -423,18 +431,37 @@ async function openMonth(value){
 }
 async function shiftMonth(amount){const [y,m]=($("monthInput").value||month).split("-").map(Number),d=new Date(y,m-1+amount,1);await openMonth(`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}`);}
 async function addDate(){
-  if(isSecretariaat())return;
+  if(!magAanwezighedenInvullen())return;
   collect();
   const d=$("dateInput").value;
   if(!d)return alert("Kies eerst een datum.");
   if(d.slice(0,7)!==month)return alert("Kies een datum binnen de geselecteerde maand.");
+  if(!mobileDagSleutel(d))return alert("De huiswerkklas kan alleen op een dinsdag of donderdag worden toegevoegd.");
   hw.dates=[...new Set([...(hw.dates||[]),d])].sort();
-  await save();
+  date=d;mobileSelectedDate=d;
+  render();await save();
+}
+async function toggleCancelledDate(){
+  if(!magAanwezighedenInvullen())return;
+  const d=$("dateInput").value||date;if(!(hw.dates||[]).includes(d))return alert("Voeg deze datum eerst toe.");
+  hw.cancelledDates||={};
+  if(isCancelledDate(d)){
+    const oud=hw.cancelledDates[d]||{};
+    if(!confirm(`De huiswerkklas op ${formatSupervisorDate(d)} opnieuw laten doorgaan?`))return;
+    hw.attendance[d]=oud.attendance||{};hw.supervisors[d]=oud.supervisors||[];
+    if(oud.processed)hw.processedDates[d]=true;else delete hw.processedDates[d];
+    delete hw.cancelledDates[d];
+  }else{
+    if(!confirm(`Huiswerkklas op ${formatSupervisorDate(d)} aanduiden als 'gaat niet door'?\n\nVoor deze dag worden geen aanwezigheden, begeleiders of betalingen geregistreerd.`))return;
+    hw.cancelledDates[d]={cancelledAt:new Date().toISOString(),cancelledBy:user.email||user.uid||"",attendance:hw.attendance?.[d]||{},supervisors:hw.supervisors?.[d]||[],processed:!!hw.processedDates?.[d]};
+    delete hw.attendance[d];delete hw.supervisors[d];delete hw.processedDates[d];
+  }
+  render();await save();
 }
 function pdfLeerlingNaam(naam){return String(naam||"").replace(",","").trim();}
 function downloadSupervisorsPdf(){
   if(!window.jspdf?.jsPDF)return alert("De PDF-module is nog niet geladen. Probeer over enkele seconden opnieuw.");
-  collectSupervisors();const dates=[...(hw.dates||[])].sort(),{jsPDF}=window.jspdf,pdf=new jsPDF({orientation:"portrait",unit:"mm",format:"a4"}),m=15;
+  collectSupervisors();const dates=[...(hw.dates||[])].filter(d=>!isCancelledDate(d)).sort(),{jsPDF}=window.jspdf,pdf=new jsPDF({orientation:"portrait",unit:"mm",format:"a4"}),m=15;
   pdf.setFillColor(107,93,82);pdf.rect(0,0,210,25,"F");pdf.setTextColor(255,255,255);pdf.setFont("helvetica","bold");pdf.setFontSize(17);pdf.text("Begeleiders huiswerkklas",m,11);pdf.setFont("helvetica","normal");pdf.setFontSize(10);pdf.text(`Schooljaar ${schooljaar} - maand ${month.slice(5,7)}/${month.slice(0,4)}`,m,18);
   let y=35;pdf.setTextColor(44,31,14);pdf.setFont("helvetica","bold");pdf.setFontSize(13);pdf.text("Registratie per datum",m,y);y+=7;
   dates.forEach(d=>{const namen=hw.supervisors?.[d]||[];pdf.setFillColor(238,243,249);pdf.roundedRect(m,y,180,8,2,2,"F");pdf.setFont("helvetica","bold");pdf.setFontSize(10);pdf.text(formatSupervisorDate(d),m+3,y+5.5);y+=11;pdf.setFont("helvetica","normal");pdf.text(namen.length?namen.join(", "):"Geen begeleider aangeduid",m+3,y,{maxWidth:174});y+=Math.max(8,Math.ceil((namen.join(", ").length||24)/90)*5);});
@@ -507,6 +534,7 @@ onAuthStateChanged(auth,async u=>{
   demoMode=realRole==="beheerder"&&localStorage.getItem(testModeKey())==="1";
   $("saveBtn").onclick=save;
   $("addDateBtn").onclick=addDate;
+  $("cancelDateBtn").onclick=toggleCancelledDate;
   $("pdfBtn").onclick=downloadParticipantsPdf;
   $("pdfScope").onchange=updatePdfButton;
   $("supervisorPdfBtn").onclick=downloadSupervisorsPdf;
@@ -528,7 +556,7 @@ onAuthStateChanged(auth,async u=>{
   $("nextMonthBtn").onclick=()=>shiftMonth(1);
   $("currentMonthBtn").onclick=()=>openMonth(currentMonth());
   $("mobileSaveBtn").onclick=save;
-  $("schooljaarInput").onchange=loadData; $("monthInput").onchange=()=>openMonth($("monthInput").value); $("dateInput").onchange=()=>{date=$("dateInput").value;render();};
+  $("schooljaarInput").onchange=loadData; $("monthInput").onchange=()=>openMonth($("monthInput").value); $("dateInput").onchange=()=>{date=$("dateInput").value;renderRoleTools();};
   $("logoutBtn").onclick=()=>signOut(auth).then(()=>location.href="index.html");
   await loadData();
 });
