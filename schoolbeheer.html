@@ -2734,8 +2734,10 @@
     };
     window.toggleHomeworkClassDay=(id,dag,checked,el)=>{
       const s=data.leerlingen.find(x=>x.id===id);if(!s)return;
+      const wasActief=!!s.homeworkClass;
       s.homeworkClassDays||={dinsdag:false,donderdag:false};s.homeworkClassDays[dag]=checked;
       s.homeworkClass=!!(s.homeworkClassDays.dinsdag||s.homeworkClassDays.donderdag);
+      if(s.homeworkClass&&!wasActief&&!s.homeworkClassStart)s.homeworkClassStart=isoDatum(new Date());
       const hoofd=el?.closest(".homework-cell")?.querySelector("[data-homework-main]");if(hoofd)hoofd.checked=s.homeworkClass;
       if(!s.homeworkClass){s.homeworkClassFree=false;const gratis=el?.closest(".homework-cell")?.querySelector("[data-homework-free]");if(gratis)gratis.checked=false;}
       markDirty();
@@ -2746,12 +2748,14 @@
         s.homeworkClassFree=checked;
         if(checked){
           s.homeworkClass=true;
+          if(!s.homeworkClassStart)s.homeworkClassStart=isoDatum(new Date());
           const main=el?.closest(".homework-cell")?.querySelector("[data-homework-main]");
           if(main) main.checked=true;
         }
         markDirty();
       }
     };
+    window.updateHomeworkClassStart=(id,value)=>{const s=data.leerlingen.find(x=>x.id===id);if(!s)return;s.homeworkClassStart=value||"";markDirty();};
     window.leaveStudent = id => { const d=prompt("Uitschrijfdatum?",`${schooljaar.slice(0,4)}-09-30`); if(!d)return; const s=data.leerlingen.find(x=>x.id===id); if(s)s.end=d; markDirty(); render(); };
     function formatDate(value){
       const match = String(value || "").match(/^(\d{4})-(\d{2})-(\d{2})$/);
@@ -2776,7 +2780,7 @@
         ${activeClass==="K1"?optioneleKolom('groep',`<td><strong data-kleutergroep-id="${esc(s.id)}">${esc(kleutergroepVoor(s)||"—")}</strong></td>`):""}
         ${optioneleKolom('oudste',`<td class="check-col"><input type="checkbox" ${s.oudsteGezin?"checked":""} onchange="toggleOudsteGezin('${s.id}',this.checked)" title="Oudste kind van het gezin op school"></td>`)}
         ${optioneleKolom('collega',`<td class="check-col"><input type="checkbox" ${s.colleague?"checked":""} onchange="toggleColleague('${s.id}',this.checked)"></td>`)}
-        ${optioneleKolom('huiswerk',`<td class="homework-cell"><div class="homework-options"><label class="homework-day-choice"><input data-homework-day="dinsdag" type="checkbox" ${s.homeworkClassDays?.dinsdag?"checked":""} onchange="toggleHomeworkClassDay('${s.id}','dinsdag',this.checked,this)"> Dinsdag</label><label class="homework-day-choice"><input data-homework-day="donderdag" type="checkbox" ${s.homeworkClassDays?.donderdag?"checked":""} onchange="toggleHomeworkClassDay('${s.id}','donderdag',this.checked,this)"> Donderdag</label><label class="homework-free-choice"><input data-homework-free type="checkbox" ${s.homeworkClassFree?"checked":""} onchange="toggleHomeworkClassFree('${s.id}',this.checked,this)"> Gratis via schooladvies</label></div></td>`)}
+        ${optioneleKolom('huiswerk',`<td class="homework-cell"><div class="homework-options"><label class="homework-day-choice"><input data-homework-day="dinsdag" type="checkbox" ${s.homeworkClassDays?.dinsdag?"checked":""} onchange="toggleHomeworkClassDay('${s.id}','dinsdag',this.checked,this)"> Dinsdag</label><label class="homework-day-choice"><input data-homework-day="donderdag" type="checkbox" ${s.homeworkClassDays?.donderdag?"checked":""} onchange="toggleHomeworkClassDay('${s.id}','donderdag',this.checked,this)"> Donderdag</label><label class="homework-free-choice"><input data-homework-free type="checkbox" ${s.homeworkClassFree?"checked":""} onchange="toggleHomeworkClassFree('${s.id}',this.checked,this)"> Gratis via schooladvies</label><label class="homework-free-choice">Vanaf <input type="date" value="${esc(s.homeworkClassStart||"")}" onchange="updateHomeworkClassStart('${s.id}',this.value)" style="width:auto;padding:4px 6px"></label></div></td>`)}
         ${optioneleKolom('start',`<td><input type="date" value="${esc(s.start||startDate())}" onchange="updateStudent('${s.id}','start',this.value)" title="Startdatum: ${formatDate(s.start||startDate())}"></td>`)}
         ${optioneleKolom('einde',`<td><input type="date" value="${esc(s.end||endDate())}" onchange="updateStudent('${s.id}','end',this.value)" title="Einddatum: ${formatDate(s.end||endDate())}"></td>`)}
         <td><button class="small pink" onclick="leaveStudent('${s.id}')">uitschrijven</button>${isSecretary()?` <button class="small danger" onclick="startNietOpSchool('${s.id}')">start niet</button>`:""}</td>
@@ -3576,6 +3580,7 @@
       roepnaam:s.roepnaam||s.callingName||"",geboortejaar:String(s.geboortejaar||""),oudsteGezin:!!s.oudsteGezin,
       colleague:!!s.colleague,homeworkClass:!!s.homeworkClass,homeworkClassFree:!!s.homeworkClassFree,
       homeworkClassDays:{dinsdag:!!s.homeworkClassDays?.dinsdag,donderdag:!!s.homeworkClassDays?.donderdag},
+      homeworkClassStart:s.homeworkClass?`${doelSchooljaar.slice(0,4)}-09-01`:"",
       start:`${doelSchooljaar.slice(0,4)}-09-01`,end:`${doelSchooljaar.slice(5,9)}-06-30`
     }; }
     async function voegLeerlingenToeAanNieuwSchooljaar(doelSchooljaar,klas,leerlingen){
