@@ -1,0 +1,14 @@
+{
+  "short_name": "Huiswerkklas",
+  "name": "Huiswerkklas - De Linde",
+  "id": "huiswerkklas.html",
+  "start_url": "huiswerkklas.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f5f0e8",
+  "theme_color": "#356d4c",
+  "icons": [
+    {"src": "icon-192x192.png", "type": "image/png", "sizes": "192x192", "purpose": "any maskable"},
+    {"src": "icon-512x512.png", "type": "image/png", "sizes": "512x512", "purpose": "any maskable"}
+  ]
+}

@@ -4,6 +4,9 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Huiswerkklas – De Linde</title>
+  <link rel="manifest" href="huiswerkklas-manifest.json">
+  <link rel="apple-touch-icon" href="icon-192x192.png">
+  <meta name="theme-color" content="#356d4c">
   <style>
     :root{--bg:#f5f0e8;--card:#fff;--line:#d9cfc0;--text:#2c1f0e;--muted:#756855;--yellow:#f6d76b;--mint:#bfe8dc;--soft:#eef7ff;--brown:#6b5d52;--green:#dff3d8;--shadow:0 8px 24px rgba(34,48,68,.10);--class-col:70px;--name-col:210px}
     *{box-sizing:border-box}
@@ -58,7 +61,8 @@
     .mobile-today{display:none}.mobile-save{position:sticky;bottom:10px;width:100%;font-size:17px;padding:13px;margin-top:14px;box-shadow:0 5px 18px #0003}
     .mobile-person{display:flex;align-items:center;gap:10px;border-top:1px solid #eee5d8;padding:11px 3px}.mobile-person input{width:25px;height:25px;flex:0 0 auto}.mobile-person span{font-weight:800}.mobile-person small{display:block;color:var(--muted);font-weight:400;margin-top:2px}
     .mobile-supervisors{display:grid;gap:7px;margin:10px 0 15px}.mobile-supervisors label{display:flex;align-items:center;gap:9px;border:1px solid var(--line);border-radius:10px;padding:10px;font-size:14px;margin:0}.mobile-supervisors input{width:23px;height:23px;flex:0 0 auto}
-    @media(max-width:900px){main{padding:10px}.toolbar,.two{grid-template-columns:1fr}.right{margin-left:0}.attendance-row{grid-template-columns:10px 60px 1fr 32px}.mobile-today{display:block}.list-panel{display:none}#supervisorPanel{display:none!important}}
+    .mobile-help{margin-top:12px;border:1px solid var(--line);border-radius:10px;padding:0 11px;background:#fff}.mobile-help summary{padding:10px 0;font-weight:800;cursor:pointer}.mobile-help p{margin:0 0 11px}
+    @media(max-width:900px){main{padding:10px}.toolbar,.two{grid-template-columns:1fr}.right{margin-left:0}.attendance-row{grid-template-columns:10px 60px 1fr 32px}.mobile-today{display:block}.list-panel,.desktop-controls,.werking-notice{display:none!important}#supervisorPanel{display:none!important}header{padding:10px 12px}.brand img{width:44px;height:44px}}
   </style>
 </head>
 <body>
@@ -67,7 +71,7 @@
   <div class="bar"><a class="button ghost" href="index.html">Keuzescherm</a><button id="logoutBtn" class="ghost">Uitloggen</button></div>
 </header>
 <main>
-  <section class="panel">
+  <section class="panel desktop-controls">
     <div class="toolbar">
       <label>Schooljaar<input id="schooljaarInput"></label>
       <label>Maand<input id="monthInput" type="month"></label>
@@ -84,7 +88,7 @@
     </div>
     <div class="bar" style="margin-top:12px"><button class="white" id="testPreviewBtn" style="display:none">🧪 Testvoorbeeld tonen</button><a class="button white" id="qrSheetBtn" href="output/pdf/qr-huiswerkklas.pdf" target="_blank" rel="noopener" style="display:none">📱 QR-blad openen / afdrukken</a></div>
   </section>
-  <section class="notice">
+  <section class="notice werking-notice">
     <strong>Werking:</strong>
     <span class="muted" id="workHelp">Klasleerkrachten duiden in Klaslijsten bij hun eigen klas aan welke kinderen naar de huiswerkklas gaan. Ontbreekt een leerling? Voeg die eerst toe via <a href="schoolbeheer.html" target="_blank" rel="noopener">Klaslijsten → Nieuwe leerling</a>. Hier verschijnen alleen kinderen die daar voor de huiswerkklas zijn aangeduid.</span>
   </section>
@@ -92,6 +96,7 @@
     <h2 style="margin-top:0">Huiswerkklas vandaag</h2>
     <label>Datum<select id="mobileDate"></select></label>
     <div id="mobileTodayBody"></div>
+    <details class="mobile-help"><summary>Hoe werkt dit?</summary><p class="muted">Controleer de datum, vink de begeleiders en aanwezige kinderen aan en tik daarna op bewaren. Een verwerkte dag kan alleen door het secretariaat worden aangepast.</p></details>
     <button class="secondary mobile-save" id="mobileSaveBtn">✓ Aanwezigheden en begeleiders bewaren</button>
   </section>
   <section class="panel" id="supervisorPanel" style="display:none">
@@ -128,7 +133,7 @@ async function setDoc(ref,payload,options){
 const BEWAAR_JAREN_HUISWERKKLAS=2;
 function currentSchooljaar(){const n=new Date(), y=n.getMonth()>=7?n.getFullYear():n.getFullYear()-1;return `${y}-${y+1}`;}
 function currentMonth(){return new Date().toISOString().slice(0,7);}
-function todayIso(){return new Date().toISOString().slice(0,10);}
+function todayIso(){const d=new Date(),p=n=>String(n).padStart(2,"0");return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}`;}
 function name(s){const first=s.first||s.firstName||"", last=s.last||s.lastName||"";return `${last}, ${first}`.replace(/^, /,"").replace(/, $/,"")||s.naam||"";}
 function studentKey(klas,s){return `${klas}_${String(s.id||name(s)).replace(/[^a-z0-9_-]+/gi,"_")}`;}
 function isSchoolBreed(){return ["directie","zorgcoordinator","zorgleerkracht","beheerder"].includes(role);}

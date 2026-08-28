@@ -50,12 +50,13 @@ def build():
     c.drawString(75, 282, "Zet de huiswerkklas als icoontje op je gsm")
     c.setFont("Helvetica", 11)
     lines = [
-        "Android: open in Chrome, tik op het menu en kies 'Toevoegen aan startscherm'.",
+        "Android: open in Chrome en kies 'Installeren als snelkoppeling'",
+        "of 'Toevoegen aan startscherm'. De benaming verschilt per toestel.",
         "iPhone: open in Safari, tik op de deelknop en kies 'Zet op beginscherm'.",
         "Daarna gebruik je altijd hetzelfde icoontje. Een nieuwe QR is niet nodig."
     ]
     for index, line in enumerate(lines):
-        c.drawString(75, 255 - index * 24, line)
+        c.drawString(75, 258 - index * 21, line)
 
     centered(c, URL, 135, "Helvetica", 8, muted)
     centered(c, "Deze QR-code blijft ook in volgende schooljaren geldig.", 108, "Helvetica-Bold", 10, green)
