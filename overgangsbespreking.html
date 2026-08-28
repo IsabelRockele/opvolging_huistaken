@@ -1475,6 +1475,13 @@ window.firebaseOvergang = {
     const snap = await getDoc(projectRef(jaar));
     return snap.exists() ? snap.data() : null;
   },
+  async loadSchoolbeheerKlasVoorJaar(jaar, klas) {
+    await ready;
+    if (!geldigSchooljaar(jaar) || !String(klas || '').trim()) return { klas: '', leerlingen: [] };
+    const klasLabel = String(klas).trim();
+    const snap = await getDoc(doc(db, "schoolbeheer", jaar, "klassen", klasLabel));
+    return { klas: klasLabel, leerlingen: snap.exists() ? (snap.data().leerlingen || []) : [] };
+  },
   async ensureNextSchoolYearCopy(data) {
     await ready;
     const now = new Date();
@@ -5060,6 +5067,9 @@ function sfRenderDossierCard(dossier, mode) {
   const overneem = mode === 'incoming' && !isOvergenomen
     ? `<button type="button" class="secondary" onclick="sfTakeOverDossier('${dossier.id}')">Activeren als werkklas ${esc(doelJaar)}</button>`
     : '';
+  const herstel = mode === 'incoming' && isOvergenomen
+    ? `<button type="button" class="secondary" onclick="sfControleerHerstel('${dossier.id}')">Volledige fiches herstellen</button>`
+    : '';
   return `<div class="schoolflow-card">
     <div>
       <h3>${title}</h3>
@@ -5068,6 +5078,7 @@ function sfRenderDossierCard(dossier, mode) {
     </div>
     <div class="actions">
       <button type="button" class="ghost" onclick="sfPreviewDossier('${dossier.id}', '${mode}')">Bekijken</button>
+      ${herstel}
       ${overneem}
     </div>
   </div>`;
@@ -5076,6 +5087,7 @@ function sfRenderDossierCard(dossier, mode) {
 let sfIncomingCache = [];
 let sfOutgoingCache = [];
 let sfLastCleanup = null;
+let sfHerstelPlan = null;
 
 function sfLatestDossiersPerTarget(list) {
   const latest = new Map();
@@ -5242,6 +5254,131 @@ async function sfUndoClearTransferMessages() {
   } catch (err) {
     console.error('Ongedaan maken mislukt:', err);
     sfBox(`<h2>Ongedaan maken</h2><div class="errorbox">Ongedaan maken lukte niet: ${esc(err.message)}</div>`);
+  }
+}
+
+function sfHerstelNaamKey(s) {
+  const first = s?.firstName || s?.first || s?.callName || s?.officialFirstName || '';
+  const last = s?.lastName || s?.last || '';
+  return `${naamZoekKey(last)}|${naamZoekKey(first)}`;
+}
+
+function sfHerstelHeeftInhoud(value) {
+  if (Array.isArray(value)) return value.length > 0;
+  if (value && typeof value === 'object') return Object.values(value).some(sfHerstelHeeftInhoud);
+  if (typeof value === 'boolean') return value;
+  if (typeof value === 'number') return value !== 0;
+  const text = String(value ?? '').trim().toLowerCase();
+  return text !== '' && !['nee','basis','ok','laag'].includes(text);
+}
+
+function sfHerstelVoegFichesSamen(bron, bestaand, dossierId, schoolbeheerRij) {
+  // Een reeds correct uit dit dossier opgebouwde fiche kan ondertussen door de
+  // nieuwe leerkracht zijn aangevuld en heeft daarom voorrang. Bij een kale
+  // namenlijst blijft het rijke overdrachtsdossier de basis.
+  const reedsCorrect = String(bestaand?.sourceDossierId || '') === String(dossierId || '');
+  const resultaat = { ...(bron || {}) };
+  if (reedsCorrect) Object.assign(resultaat, bestaand || {});
+  else Object.entries(bestaand || {}).forEach(([key, value]) => {
+    if (!sfHerstelHeeftInhoud(resultaat[key]) && sfHerstelHeeftInhoud(value)) resultaat[key] = value;
+  });
+  resultaat.id = bestaand?.id || bron?.id || uid();
+  resultaat.sourceDossierId = dossierId;
+  resultaat.schoolbeheerId = schoolbeheerRij?.schoolbeheerId || bestaand?.schoolbeheerId || bron?.schoolbeheerId || '';
+  resultaat.firstName = schoolbeheerRij?.firstName || resultaat.firstName || '';
+  resultaat.lastName = schoolbeheerRij?.lastName || resultaat.lastName || '';
+  resultaat.updatedAt = bestaand?.updatedAt || bron?.updatedAt || todayISO();
+  return resultaat;
+}
+
+async function sfControleerHerstel(id) {
+  const dossier = sfFindDossier(id, 'incoming');
+  if (!dossier) return;
+  const klas = String(dossier.volgende_klas || dossier.naar_leerjaar || window.beheerKlasLabel || '').trim();
+  const huidigeKlas = String(window.beheerKlasLabel || '').trim();
+  const doelJaar = dossier.doel_schooljaar || window.overgangSchool.volgendSchooljaar(dossier.bron_schooljaar || dossier.schooljaar || dossier.__dossierSchooljaar);
+  if (!klas || !huidigeKlas || klas !== huidigeKlas) {
+    alert(`Open eerst de overgangsbespreking van ${klas || 'de doelklas'}. Er wordt niets aangepast.`);
+    return;
+  }
+  sfBox(`<h2>Herstel controleren</h2><p>Ik vergelijk de officiële klaslijst van ${esc(klas)} met het volledige bewaarde overdrachtsdossier. Er wordt nog niets gewijzigd...</p>`);
+  try {
+    const [officieel, doelProject] = await Promise.all([
+      window.firebaseOvergang.loadSchoolbeheerKlasVoorJaar(doelJaar, klas),
+      window.firebaseOvergang.loadProject(doelJaar)
+    ]);
+    const schoolStart = `${doelJaar.slice(0,4)}-09-01`;
+    const schoolEnd = `${doelJaar.slice(5,9)}-06-30`;
+    const officiëleRijen = (officieel.leerlingen || [])
+      .filter(s => (!s.start || s.start <= schoolEnd) && (!s.end || s.end >= schoolStart))
+      .map(schoolbeheerNaamNaarRij)
+      .filter(Boolean);
+    if (!officiëleRijen.length) throw new Error(`De officiële klaslijst van ${klas} voor ${doelJaar} is leeg. Daarom herstel ik niets.`);
+
+    const dossierLeerlingen = Array.isArray(dossier.students) ? dossier.students : [];
+    const bestaandeLeerlingen = Array.isArray(doelProject?.students) ? doelProject.students : [];
+    const zoek = (lijst, rij) => lijst.find(s =>
+      (rij.schoolbeheerId && String(s.schoolbeheerId || '') === String(rij.schoolbeheerId)) ||
+      sfHerstelNaamKey(s) === sfHerstelNaamKey(rij)
+    );
+    let uitDossier = 0;
+    let reedsAanwezig = 0;
+    let nieuwLeeg = 0;
+    const hersteld = officiëleRijen.map(rij => {
+      const bron = zoek(dossierLeerlingen, rij);
+      const bestaand = zoek(bestaandeLeerlingen, rij);
+      if (bron) {
+        uitDossier++;
+        if (String(bestaand?.sourceDossierId || '') === String(id)) reedsAanwezig++;
+        return sfHerstelVoegFichesSamen(bron, bestaand, id, rij);
+      }
+      if (bestaand) return { ...bestaand, schoolbeheerId: rij.schoolbeheerId || bestaand.schoolbeheerId || '', firstName: rij.firstName, lastName: rij.lastName };
+      nieuwLeeg++;
+      return nieuweLegeStudent(rij, 'schoolbeheer');
+    });
+    const officiëleKeys = new Set(officiëleRijen.map(sfHerstelNaamKey));
+    const verwijderdUitActieveLijst = bestaandeLeerlingen.filter(s => !officiëleKeys.has(sfHerstelNaamKey(s))).length;
+    sfHerstelPlan = { id, dossier, klas, doelJaar, doelProject: doelProject || {}, students: sfSortedStudents(hersteld) };
+    sfBox(`<h2>Herstelcontrole ${esc(klas)}</h2>
+      <div class="okbox"><strong>Veilige bron gevonden.</strong> ${uitDossier} volledige fiche(s) kunnen opnieuw aan de officiële leerlingen worden gekoppeld.</div>
+      <ul>
+        <li>${officiëleRijen.length} leerlingen op de officiële klaslijst ${doelJaar}</li>
+        <li>${reedsAanwezig} fiche(s) waren al correct gekoppeld en blijven inclusief latere aanvullingen behouden</li>
+        <li>${nieuwLeeg} nieuwe leerling(en) zonder vroeger dossier krijgen alleen een lege fiche</li>
+        <li>${verwijderdUitActieveLijst} naam/namen die niet in deze officiële klas horen, verdwijnen uit de actieve werkklas maar blijven in de veiligheidskopie bewaard</li>
+      </ul>
+      <div class="warning"><strong>Nog niets gewijzigd.</strong> Controleer klas en aantallen. Bij herstellen wordt eerst automatisch een reservekopie gemaakt.</div>
+      <div class="actions" style="margin-top:12px">
+        <button type="button" class="secondary" onclick="sfVoerHerstelUit()">Herstel ${esc(klas)} veilig</button>
+        <button type="button" class="ghost" onclick="sfShowIncoming()">Annuleren</button>
+      </div>`);
+  } catch (err) {
+    sfHerstelPlan = null;
+    sfBox(`<h2>Herstelcontrole gestopt</h2><div class="errorbox">${esc(err.message || err)} Er is niets gewijzigd.</div><div class="actions" style="margin-top:12px"><button type="button" class="ghost" onclick="sfShowIncoming()">Terug</button></div>`);
+  }
+}
+
+async function sfVoerHerstelUit() {
+  const plan = sfHerstelPlan;
+  if (!plan) return;
+  if (!confirm(`Herstel de volledige fiches van ${plan.klas} voor ${plan.doelJaar}?\n\nEr wordt eerst automatisch een reservekopie gemaakt.`)) return;
+  sfBox(`<h2>${esc(plan.klas)} herstellen</h2><p>Reservekopie maken en volledige fiches veilig koppelen...</p>`);
+  try {
+    await window.firebaseOvergang.saveProject({
+      ...plan.doelProject,
+      students: plan.students,
+      projectName: plan.doelProject.projectName || plan.klas,
+      klas: plan.klas,
+      hersteldUitDossier: plan.id,
+      hersteldOp: new Date().toISOString()
+    }, { schooljaar: plan.doelJaar, skipSync: true });
+    sfHerstelPlan = null;
+    sfBox(`<h2>Herstel voltooid</h2><div class="okbox">De volledige fiches van ${esc(plan.klas)} zijn gekoppeld aan de officiële klaslijst. De vorige toestand staat in een reservekopie.</div><p>De juiste werkklas wordt nu geopend.</p>`);
+    const url = new URL(window.location.href);
+    url.searchParams.set('schooljaar', plan.doelJaar);
+    setTimeout(() => { window.location.href = url.toString(); }, 1400);
+  } catch (err) {
+    sfBox(`<h2>Herstel niet uitgevoerd</h2><div class="errorbox">Het bewaren lukte niet. De bestaande werkklas is niet bewust aangepast. Fout: ${esc(err.message || err)}</div>`);
   }
 }
 
