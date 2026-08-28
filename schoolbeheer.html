@@ -3124,7 +3124,7 @@
     window.toggleRefter = (month,sid,date,checked) => { const m=data.refter[month] ||= {}; m[sid] ||= {}; m[sid][date]=checked; markDirty(); };
 
     function renderActivities(){
-      activityMonth = $("actMonth")?.value || huidigeSchoolMaand();
+      activityMonth = activityMonth || huidigeSchoolMaand();
       const klasKeuze = isSecretary() ? `<div style="width:100%;margin-top:8px">
         <div class="bar" style="margin-bottom:6px"><strong>Voor welke klassen?</strong><div class="actions"><button type="button" class="white small" onclick="kiesAlleActiviteitKlassen(true)">Alle klassen</button><button type="button" class="white small" onclick="kiesAlleActiviteitKlassen(false)">Geen</button></div></div>
         <div class="class-picks" style="display:flex;gap:8px;flex-wrap:wrap">${allClasses.map(k=>`<label style="max-width:none"><input class="actClass" type="checkbox" value="${esc(k)}" ${k===activeClass?"checked":""}> ${esc(k)}</label>`).join("")}</div>
@@ -3137,7 +3137,7 @@
       const werkwijze=isSecretary()?`<div class="notice"><strong>Controle voor secretariaat</strong><p class="muted">Je ziet pas groen of rood nadat de leerkracht de afwezigheden heeft nagekeken en bevestigd. Niet-aangevinkte leerlingen gelden dan als aanwezig.</p></div>`:`<div class="notice" style="background:#fff4bf;border:2px solid #dfa900"><strong style="font-size:18px">⚠ Vergeet niet te bevestigen</strong><ol style="margin:8px 0 0;padding-left:22px"><li>Vink <strong>alleen de afwezige leerlingen</strong> aan. Lege vakjes betekenen aanwezig.</li><li>Klik daarna bij <strong>iedere activiteit</strong> op de gele knop <strong>Bevestig afwezigheden</strong>.</li><li>Ook wanneer niemand afwezig was, moet je de lege lijst bevestigen.</li></ol><p style="margin:9px 0 0"><strong>Zonder deze bevestiging kan het secretariaat de activiteit niet verwerken.</strong></p></div>`;
       const openstaande=(data.activiteiten||[]).filter(a=>!a.cancelled&&!a.processed&&String(a.date||"").slice(0,7)===activityMonth&&!a.attendanceConfirmed);
       const openstaandeMelding=!isSecretary()&&openstaande.length?`<div class="notice activity-open-confirmations no-print"><strong>⚠ Nog te bevestigen (${openstaande.length})</strong><p style="margin:5px 0 0">${openstaande.map(a=>esc(a.name)).join(" · ")}</p></div>`:"";
-      $("content").innerHTML = `<div class="panel"><div class="bar"><div><h2>Activiteiten <span class="muted" style="font-weight:400">${esc(activeClass)}</span></h2><p class="muted">${isSecretary()?"Kijk de bevestigde afwezigheden na en verwerk de activiteit.":"Duid uitsluitend de afwezige leerlingen aan."}</p></div><label class="right no-print" style="max-width:180px">Maand<input id="actMonth" type="month" value="${activityMonth}" onchange="wisselActiviteitenMaand(this.value)"></label>${screenTools("activiteiten")}</div>${maandOnderdeelNavigatie("activiteiten",activityMonth)}${helpPanel("activiteiten")}${testModeBlok(activityMonth)}${openstaandeMelding}${werkwijze}${invoer}${activitiesTable()}</div>`;
+      $("content").innerHTML = `<div class="panel"><div class="bar"><div><h2>Activiteiten <span class="muted" style="font-weight:400">${esc(activeClass)}</span></h2><p class="muted">${isSecretary()?"Kijk de bevestigde afwezigheden na en verwerk de activiteit.":"Duid uitsluitend de afwezige leerlingen aan."}</p></div><div class="right no-print"><strong style="display:block;margin-bottom:5px">Maand bekijken</strong><div class="actions" style="margin:0"><button class="white small" onclick="verschuifActiviteitenMaand(-1)">← Vorige maand</button><label style="width:185px"><input id="actMonth" aria-label="Maand bekijken" type="month" value="${activityMonth}" onchange="wisselActiviteitenMaand(this.value)"></label><button class="white small" onclick="verschuifActiviteitenMaand(1)">Volgende maand →</button></div></div>${screenTools("activiteiten")}</div>${maandOnderdeelNavigatie("activiteiten",activityMonth)}${helpPanel("activiteiten")}${testModeBlok(activityMonth)}${openstaandeMelding}${werkwijze}${invoer}${activitiesTable()}</div>`;
     }
     function activiteitTellingen(a){
       const leerlingen=activeStudents(a.date||`${activityMonth}-15`),afwezigen=leerlingen.filter(s=>!!a.absent?.[s.id]);
@@ -3170,6 +3170,10 @@
       return actiefHtml + geannuleerdHtml;
     }
     window.wisselActiviteitenMaand = value => { activityMonth = value; renderActivities(); };
+    window.verschuifActiviteitenMaand = stap => {
+      const [jaar,maand]=String(activityMonth||huidigeSchoolMaand()).split("-").map(Number),datum=new Date(jaar,maand-1+Number(stap||0),1);
+      activityMonth=`${datum.getFullYear()}-${String(datum.getMonth()+1).padStart(2,"0")}`;renderActivities();
+    };
     window.pasActiviteitPrijs=(naam,inputId)=>{const prijs=$(inputId);if(prijs&&String(naam||"").toLocaleLowerCase("nl").includes("zwemmen")&&Number(prijs.value||0)===0)prijs.value="1";};
     window.kiesAlleActiviteitKlassen = checked => document.querySelectorAll(".actClass").forEach(el => { el.checked = checked; });
     function openActiviteitNaRender(id,scrollY=window.scrollY){
@@ -3266,7 +3270,7 @@
     };
 
     function renderPurchases(){
-      purchaseMonth = $("buyMonth")?.value || purchaseMonth || schoolMonths()[0];
+      purchaseMonth = purchaseMonth || schoolMonths()[0];
       const students=activeStudents(`${purchaseMonth}-15`);
       const actieveTest=testMaandGegevens(purchaseMonth);
       if(actieveTest&&!Object.prototype.hasOwnProperty.call(actieveTest,"purchasesBefore")){actieveTest.purchasesBefore=structuredClone((data.aankopen||[]).filter(p=>String(p.date||"").slice(0,7)===purchaseMonth));markDirty();}
