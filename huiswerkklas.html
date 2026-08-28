@@ -334,7 +334,14 @@ async function saveSupervisorConfig(){
   const kandidaten=$("supervisorCandidateList")._kandidaten||[];
   const gekozen=[...document.querySelectorAll("[data-supervisor-candidate]:checked")].map(ch=>kandidaten[Number(ch.dataset.supervisorCandidate)]).filter(Boolean);
   if(!gekozen.length)return alert("Vink minstens één begeleider aan.");
-  await setDoc(supervisorConfigRef(),{schooljaar,begeleiders:gekozen,updatedAt:serverTimestamp(),updatedBy:user.email||user.uid},{merge:true});
+  await setDoc(supervisorConfigRef(),{
+    schooljaar,
+    begeleiders:gekozen,
+    begeleider_uids:gekozen.map(x=>String(x.uid||"").trim()).filter(Boolean),
+    begeleider_emails:gekozen.map(x=>String(x.email||"").trim().toLowerCase()).filter(Boolean),
+    updatedAt:serverTimestamp(),
+    updatedBy:user.email||user.uid
+  },{merge:true});
   supervisorConfig=gekozen;supervisorConfigIsExplicit=true;supervisorManagerOpen=false;render();$("status").textContent="✓ Begeleiders bewaard";
 }
 function mobileDagSleutel(d){const weekdag=new Date(`${d}T12:00:00`).getDay();return weekdag===2?"dinsdag":weekdag===4?"donderdag":"";}
