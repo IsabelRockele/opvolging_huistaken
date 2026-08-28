@@ -504,6 +504,11 @@
   .overdracht-paneel{padding:20px 24px;background:#fff;overflow-y:auto}
   .overdracht-paneel-leeg{color:var(--muted);font-size:13px;padding-top:20px}
   .overdracht-paneel-titel{font-size:16px;font-weight:900;margin-bottom:14px;padding-bottom:10px;border-bottom:2px solid var(--border)}
+  .zorg-klasnavigatie{display:none;align-items:center;justify-content:space-between;gap:14px;margin:0 0 16px;padding:12px 16px;background:#eef8f1;border:1px solid #a8ceb3;border-left:5px solid #397a50;border-radius:13px}
+  .zorg-klasnavigatie strong{font-size:16px;color:#173b25}
+  .zorg-klasnavigatie span{color:#52675a;font-size:13px}
+  .zorg-klasnavigatie button{white-space:nowrap;background:#397a50;color:#fff;border:0;border-radius:10px;padding:10px 16px;font-weight:800;cursor:pointer}
+  @media(max-width:700px){.zorg-klasnavigatie{align-items:stretch;flex-direction:column}.zorg-klasnavigatie button{width:100%}}
   /* Huidige klas weergave */
   .sf-huidig-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:8px;margin-top:8px}
   .sf-lln-kaart{background:var(--soft);border:1px solid var(--border);border-radius:10px;padding:10px 12px}
@@ -577,6 +582,11 @@
 
 
 <main>
+
+  <div id="zorgKlasNavigatie" class="zorg-klasnavigatie">
+    <div><strong id="zorgKlasNavigatieTitel">Je bekijkt een klas</strong><br><span id="zorgKlasNavigatieSub">Wissel hier rechtstreeks naar een andere klas.</span></div>
+    <button type="button" onclick="openOvergangKlasKiezer()">🏫 Andere klas openen</button>
+  </div>
 
   <section class="panel" style="background:#eef7f1;border-color:#c9ded0;padding:12px 15px">
     <strong>Zo werk je hier:</strong> open <strong>Leerlingenfiches</strong>, kies een leerling en vul de fiche aan. Namen komen uit Klaslijsten; alleen ontbrekende leerlingen worden toegevoegd. Bestaande fiches en roepnamen worden niet overschreven. Controleer bovenaan of <strong>Opgeslagen</strong> verschijnt.
@@ -1302,8 +1312,8 @@ window.openOvergangKlasKiezer = async function() {
       const uids = Array.isArray(k.leerkracht_uids) ? k.leerkracht_uids : [];
       const uid = k.eigenaar_uid || uids[0] || "";
       const url = uid
-        ? `overgangsbespreking.html?beheerUid=${encodeURIComponent(uid)}&klas=${encodeURIComponent(klasId)}&naam=${encodeURIComponent(leerkrachten || klasNaam)}`
-        : `overgangsbespreking.html?klasProject=1&klas=${encodeURIComponent(klasId)}&naam=${encodeURIComponent(klasNaam)}`;
+        ? `overgangsbespreking.html?beheerUid=${encodeURIComponent(uid)}&klas=${encodeURIComponent(klasId)}&naam=${encodeURIComponent(leerkrachten || klasNaam)}&schooljaar=${encodeURIComponent(schooljaar)}`
+        : `overgangsbespreking.html?klasProject=1&klas=${encodeURIComponent(klasId)}&naam=${encodeURIComponent(klasNaam)}&schooljaar=${encodeURIComponent(schooljaar)}`;
       return `<button type="button" style="text-align:left;background:#fff;border:1px solid #d9cfc0;border-radius:14px;padding:14px;display:block;color:#2c1f0e" onclick="window.location.href='${url}'">
         <strong style="display:block;font-size:17px">${ovEsc(klasNaam)}</strong>
         <span style="display:block;color:#7a6a55;font-size:12px;margin-top:4px">${k.leerlingAantal ? `${k.leerlingAantal} leerling(en)` : "Klaslijst"}${leerkrachten ? ` · ${ovEsc(leerkrachten)}` : " · geen leerkracht gekoppeld"}</span>
@@ -1320,6 +1330,16 @@ ready.then(async () => {
   if (btn && schoolbredeRollenOvergang.includes(rol)) {
     btn.style.display = "";
     btn.onclick = () => window.openOvergangKlasKiezer();
+  }
+  const klasNav = document.getElementById("zorgKlasNavigatie");
+  if (klasNav && schoolbredeRollenOvergang.includes(rol)) {
+    klasNav.style.display = "flex";
+    const titel = document.getElementById("zorgKlasNavigatieTitel");
+    const sub = document.getElementById("zorgKlasNavigatieSub");
+    if (titel) titel.textContent = beheerKlasLabel ? `Je bekijkt klas ${beheerKlasLabel}` : "Kies een klas";
+    if (sub) sub.textContent = beheerNaamLabel
+      ? `${beheerNaamLabel} · schooljaar ${schooljaar}`
+      : `Schooljaar ${schooljaar} · wissel hier rechtstreeks naar een andere klas.`;
   }
   const koppelBtn = document.getElementById("klasKoppelingenBtn");
   if (koppelBtn && schoolbredeRollenOvergang.includes(rol)) {
