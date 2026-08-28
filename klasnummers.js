@@ -8,7 +8,7 @@ let user=null,role="",leerlingen=[];
 function huidigSchooljaar(){const n=new Date(),s=n.getMonth()>=7?n.getFullYear():n.getFullYear()-1;return `${s}-${s+1}`}
 function esc(v){return String(v??"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;")}
 function xml(v){return String(v??"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&apos;")}
-function roepnaam(s){return String(s.roepnaam||s.callingName||s.first||s.firstName||s.voornaam||"").trim()||String(s.naam||s.name||"").trim().split(/[, ]+/).filter(Boolean).at(-1)||""}
+function roepnaam(s){const officieel=String(s.first||s.firstName||s.voornaam||"").trim();return String(s.roepnaam||s.roepNaam||s.callingName||officieel.split(/\s+/)[0]||"").trim()||String(s.naam||s.name||"").trim().split(/[, ]+/).filter(Boolean).at(-1)||""}
 function achternaam(s){const direct=String(s.last||s.lastName||s.achternaam||"").trim();if(direct)return direct;const volledig=String(s.naam||s.name||"").trim();if(!volledig)return "";return volledig.includes(",")?volledig.split(",")[0].trim():volledig.split(/\s+/).slice(1).join(" ").trim()}
 function vergelijk(a,b){return achternaam(a).localeCompare(achternaam(b),"nl",{sensitivity:"base"})||roepnaam(a).localeCompare(roepnaam(b),"nl",{sensitivity:"base"})}
 function actief(s){const jaar=$("schooljaar").value.trim(),datum=`${jaar.slice(0,4)}-09-15`;return(!s.start||s.start<=datum)&&(!s.end||s.end>=datum)}
