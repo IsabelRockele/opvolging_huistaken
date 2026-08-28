@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Klasnummers & roepnamen · De Linde</title>
+  <title>Klasnummers & afdrukbare klaslijst · De Linde</title>
   <style>
     :root{--ink:#263238;--muted:#68757d;--green:#386b4a;--soft:#e7f2e9;--paper:#fff;--bg:#f4f0e7;--line:#d8d3c8}
     *{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;color:var(--ink);background:var(--bg)}
@@ -14,7 +14,7 @@
   </style>
 </head>
 <body>
-  <header><img src="afbeeldingen/schoollogo.png" alt="Logo"><div><h1>Klasnummers & roepnamen</h1><p>Liggend A4 in Word · alfabetisch op achternaam</p></div><a href="index.html">Keuzescherm</a></header>
+  <header><img src="afbeeldingen/schoollogo.png" alt="Logo"><div><h1>Klasnummers & afdrukbare klaslijst</h1><p>Kies het Wordblad dat je nodig hebt</p></div><a href="index.html">Keuzescherm</a></header>
   <main>
     <section class="panel">
       <h2>Overzicht maken</h2>
@@ -22,8 +22,9 @@
       <label>Schooljaar<input id="schooljaar" autocomplete="off"></label>
       <label>Klas<select id="klas"><option>Even laden…</option></select></label>
       <div id="status" class="status">Je login en klaslijst worden gecontroleerd.</div>
-      <button id="download" class="primary" disabled>Liggend Wordbestand downloaden</button>
-      <p class="uitleg">Open het bestand in Word en druk liggend af op A4. Komt er later een leerling bij, maak dan een nieuw overzicht: door de alfabetische volgorde kunnen klasnummers veranderen.</p>
+      <button id="download" class="primary" disabled>1 2 3 · Liggend blad met klasnummers</button>
+      <button id="downloadInvul" class="primary" disabled>📄 Invulbare klaslijst met kolommen</button>
+      <p class="uitleg">Het eerste bestand is het liggende overzicht met klasnummers en roepnamen. Het tweede is de staande afdruklijst waarop je tijdelijk punten of notities kunt invullen. Komt er later een leerling bij, download dan een nieuw blad.</p>
     </section>
     <section class="panel">
       <h2>Voorbeeld van het blad</h2>
@@ -31,7 +32,8 @@
       <div class="preview-wrap"><div id="preview" class="preview"></div></div>
     </section>
   </main>
-  <script type="module" src="klasnummers.js?v=20260820-2"></script>
+  <script src="klaslijst-word.js"></script>
+  <script type="module" src="klasnummers.js?v=20260828-1"></script>
 <script type="module" src="secretariaat-meldingenbalk.js?v=20260824-1"></script>
 </body>
 </html>
