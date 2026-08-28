@@ -53,6 +53,7 @@
     .pay-badge.paid{background:#e8f0f8;color:#36536f}.pay-badge.free{background:#dff3d8;color:#315b2b}
     .planning-table{width:100%;min-width:620px}.planning-table th,.planning-table td{position:static!important}.planning-table th{text-align:center}.planning-table th:nth-child(1),.planning-table th:nth-child(2){text-align:left}.planning-table .day-check{text-align:center;font-size:20px;color:#2f7a50;font-weight:900}.planning-table .day-empty{text-align:center;color:#b7afa4}
     .desktop-overview{display:block}
+    .options-drawer{margin-top:12px;padding:13px;border:1px solid #cfded7;border-radius:12px;background:#f6faf8}.options-drawer h3{margin:0 0 10px;color:#315b47}
     .lock-note{display:block;font-size:11px;color:#756855;margin-top:3px;text-transform:none;letter-spacing:0}
     .list-panel{padding:14px 16px}
     .list-header{display:flex;align-items:end;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:8px}
@@ -79,22 +80,27 @@
 <main>
   <section class="panel desktop-controls">
     <div class="toolbar">
-      <label class="secretary-advanced">Schooljaar<input id="schooljaarInput"></label>
       <label>Maand<input id="monthInput" type="month"></label>
       <label><span id="dateLabel">Datum toevoegen</span><input id="dateInput" type="date"></label>
       <button class="secondary" id="saveBtn">Bewaren</button>
       <button class="white" id="addDateBtn">Datum toevoegen</button>
-      <label class="secretary-advanced">PDF voor<select id="pdfScope"></select></label>
-      <button class="white secretary-advanced" id="pdfBtn">📄 PDF deelnemers per dag</button>
       <button class="white" id="planningTopBtn" style="display:none">Algemeen inschrijvingsoverzicht</button>
       <button class="white" id="secretaryOptionsBtn" style="display:none">Meer opties</button>
     </div>
-    <div class="toolbar secretary-advanced" id="secretaryTools" style="display:none;margin-top:12px">
-      <label>Verwerk tot datum<input id="processedUntilInput" type="date"></label>
-      <button class="secondary" id="processUntilBtn">Verwerk tot datum</button>
-      <button class="white" id="processMonthBtn">Hele maand verwerkt</button>
+    <div class="options-drawer" id="secretaryAdvancedPanel">
+      <h3>Extra opties</h3>
+      <div class="toolbar">
+        <label>Schooljaar<input id="schooljaarInput"></label>
+        <label>PDF voor<select id="pdfScope"></select></label>
+        <button class="white" id="pdfBtn">📄 PDF deelnemers per dag</button>
+      </div>
+      <div class="toolbar" id="secretaryTools" style="display:none;margin-top:12px">
+        <label>Verwerk tot datum<input id="processedUntilInput" type="date"></label>
+        <button class="secondary" id="processUntilBtn">Verwerk tot datum</button>
+        <button class="white" id="processMonthBtn">Hele maand verwerkt</button>
+      </div>
+      <div class="bar" id="extraDesktopTools" style="margin-top:12px"><button class="white" id="testPreviewBtn" style="display:none">🧪 Testvoorbeeld tonen</button><a class="button white" id="qrSheetBtn" href="output/pdf/qr-huiswerkklas.pdf" target="_blank" rel="noopener" style="display:none">📱 QR-blad openen / afdrukken</a></div>
     </div>
-    <div class="bar secretary-advanced" id="extraDesktopTools" style="margin-top:12px"><button class="white" id="testPreviewBtn" style="display:none">🧪 Testvoorbeeld tonen</button><a class="button white" id="qrSheetBtn" href="output/pdf/qr-huiswerkklas.pdf" target="_blank" rel="noopener" style="display:none">📱 QR-blad openen / afdrukken</a></div>
   </section>
   <section class="notice werking-notice" id="workingNotice">
     <strong>Werking:</strong>
@@ -117,10 +123,7 @@
   </section>
   <section class="panel list-panel" id="attendancePanel">
     <div class="bar">
-      <div>
-        <h2>Huiswerkklas per maand</h2>
-        <p class="muted">Alleen kinderen die in Klaslijsten aangeduid zijn voor de huiswerkklas verschijnen hier. Kinderen met schooladvies staan als gratis gemarkeerd. Kies bovenaan bij <strong>PDF voor</strong> één klas voor een compact klasblad of <strong>Alle klassen</strong> voor het schoolbrede overzicht per dag.</p>
-      </div>
+      <h2>Leerlingen</h2>
       <span class="tag right" id="countTag">0 leerlingen</span>
     </div>
     <div id="homeworkTable"></div>
@@ -227,7 +230,7 @@ function renderRoleTools(){
   $("planningPanel").style.display=(!secretary||secretaryPlanningOpen)?"block":"none";
   $("secretaryOptionsBtn").style.display=secretary?"inline-block":"none";
   $("secretaryOptionsBtn").textContent=secretaryMoreOpen?"Minder opties":"Meer opties";
-  document.querySelectorAll(".secretary-advanced").forEach(el=>el.style.display=(!secretary||secretaryMoreOpen)?"":"none");
+  $("secretaryAdvancedPanel").style.display=(!secretary||secretaryMoreOpen)?"block":"none";
   const magLaptopInvullen=["klasleerkracht","zorgleerkracht","zorgcoordinator"].includes(role);
   $("togglePlanningBtn").style.display=secretary?"inline-block":"none";
   $("togglePlanningBtn").textContent=secretaryPlanningOpen?"Overzicht sluiten":"Overzicht openen";
