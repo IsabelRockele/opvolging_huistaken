@@ -235,6 +235,8 @@ function pasKnoppenToe(huistakenKnop, overgangKnop, schoolbeheerKnop, bestelling
   if (woSpelenKnop) woSpelenKnop.style.display = magWoSpelen ? '' : 'none';
   const zisaSpelgeneratorKnop = document.getElementById('zisaSpelgeneratorKeuzeKnop');
   if (zisaSpelgeneratorKnop) zisaSpelgeneratorKnop.style.display = !isSecretariaat ? '' : 'none';
+  const taalgroeiKnop = document.getElementById('taalgroeiKeuzeKnop');
+  if (taalgroeiKnop) taalgroeiKnop.style.display = !isSecretariaat ? '' : 'none';
   const tafelExpeditieKnop = document.getElementById('tafelExpeditieKeuzeKnop');
   const magTafelExpeditie = heeftKlasbeheer || ['beheerder', 'directie', 'zorgleerkracht', 'zorgcoordinator'].includes(rolNaam);
   if (tafelExpeditieKnop) tafelExpeditieKnop.style.display = magTafelExpeditie && rolNaam !== 'secretariaat' ? '' : 'none';
@@ -463,6 +465,8 @@ async function toonSchooloverzichtKnopAlsNodig(user) {
   if (klasafsprakenKnop) klasafsprakenKnop.style.display = magKlasafsprakenTesten(user) ? '' : 'none';
   if (naametikettenKnop) naametikettenKnop.style.display = 'none';
   if (woSpelenKnop) woSpelenKnop.style.display = 'none';
+  const taalgroeiKnop = document.getElementById('taalgroeiKeuzeKnop');
+  if (taalgroeiKnop) taalgroeiKnop.style.display = 'none';
   const klasnummersKnop = document.getElementById('klasnummersKeuzeKnop');
   if (klasnummersKnop) klasnummersKnop.style.display = 'none';
   if (afwezigheidsattestenKnop) afwezigheidsattestenKnop.style.display = 'none';
