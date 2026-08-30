@@ -148,7 +148,6 @@
         <p class="muted">Geef dezelfde opdracht aan de hele klas of kies één leerling. De ingestelde tafels van elk kind blijven gerespecteerd.</p>
         <div class="form-grid assignment-form">
           <label>Voor wie<select id="assignmentTarget"><option value="all">Hele klasgroep</option><option value="selection">Een of meer leerlingen kiezen</option></select></label>
-          <label>Werkvorm<select id="assignmentMode"><optgroup label="Oefenen"><option value="learn">Aanleren & gericht oefenen</option><option value="mix">Gemengd oefenen</option><option value="smart">Slim oefenen</option><option value="remediate">Remediëren met hulp</option></optgroup><optgroup label="Toetsen"><option value="knowledge">Kennistoets · zonder tijd</option><option value="flash">Flitstoets · tijd per oefening</option><option value="sprint">Tempomissie · vaste totaaltijd</option></optgroup></select></label>
           <label>Bewerkingen<select id="assignmentOperation"><option value="multiply">Maaltafels</option><option value="divide">Deeltafels</option><option value="both" selected>Maal en deel</option></select></label>
           <label>Aantal<select id="assignmentCount"><option>10</option><option selected>20</option><option>30</option><option>40</option></select></label>
           <label>Totale tijd bij tempomissie<select id="assignmentTempo"><option value="60">1 minuut</option><option value="120" selected>2 minuten</option><option value="180">3 minuten</option></select></label>
@@ -156,9 +155,18 @@
           <label>Deadline<input id="assignmentDue" type="date"></label>
           <label class="wide-label">Titel voor de kinderen<input id="assignmentTitle" maxlength="55" placeholder="bv. Missie tafel van 6"></label>
         </div>
+        <fieldset class="table-field assignment-modes-field"><legend>Welke oefenvormen wil je klaarzetten?</legend><p class="field-help">Vink één of meerdere vormen aan. Ze verschijnen voor het kind in deze volgorde.</p><div id="assignmentModeChecks" class="assignment-mode-checks">
+          <label><input class="assignment-mode-check" type="checkbox" value="learn" checked><span><b>🧩 Gericht oefenen</b><small>Opbouwen met visuele steun</small></span></label>
+          <label><input class="assignment-mode-check" type="checkbox" value="mix"><span><b>🎲 Gemengd oefenen</b><small>Vraagvormen en tafels afwisselen</small></span></label>
+          <label><input class="assignment-mode-check" type="checkbox" value="smart"><span><b>🎯 Slim oefenen</b><small>Moeilijke en trage oefeningen vaker</small></span></label>
+          <label><input class="assignment-mode-check" type="checkbox" value="remediate"><span><b>🛠️ Remediëren</b><small>Kleine stappen met gerichte hulp</small></span></label>
+          <label><input class="assignment-mode-check" type="checkbox" value="knowledge"><span><b>✓ Kennistoets</b><small>Juistheid zonder tijdsdruk</small></span></label>
+          <label><input class="assignment-mode-check" type="checkbox" value="flash"><span><b>⚡ Flitstoets</b><small>Tijd per oefening</small></span></label>
+          <label><input class="assignment-mode-check" type="checkbox" value="sprint"><span><b>⏱️ Tempomissie</b><small>Zoveel mogelijk binnen de totale tijd</small></span></label>
+        </div></fieldset>
         <fieldset id="assignmentStudentsField" class="table-field hidden"><legend>Leerlingen voor deze taak</legend><p class="field-help">Vink één leerling aan of kies meerdere kinderen die je begeleidt.</p><div class="quick-row"><button type="button" id="assignmentSelectAll" class="secondary">Iedereen aanvinken</button><button type="button" id="assignmentSelectNone" class="secondary">Niemand aanvinken</button></div><div id="assignmentStudentChecks" class="assignment-student-checks"></div></fieldset>
         <fieldset class="table-field"><legend>Tafels in deze missie</legend><div id="assignmentTableChecks" class="checks"></div></fieldset>
-        <button id="createAssignmentBtn" class="large">Zet missie klaar</button><p id="assignmentSaved" class="success"></p>
+        <button id="createAssignmentBtn" class="large">Zet gekozen missies klaar</button><p id="assignmentSaved" class="success"></p>
         <h3>Openstaande missies</h3><div id="assignmentRows" class="assignment-list"></div>
       </div>
       <div class="panel task-preview-panel">
@@ -418,7 +426,7 @@
   </form>
 </dialog>
 
-<script src="app.js?v=20260830-11"></script>
-<script type="module" src="portal-integration.js?v=20260830-11"></script>
+<script src="app.js?v=20260830-12"></script>
+<script type="module" src="portal-integration.js?v=20260830-12"></script>
 </body>
 </html>
