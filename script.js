@@ -231,6 +231,9 @@ function pasKnoppenToe(huistakenKnop, overgangKnop, schoolbeheerKnop, bestelling
   const woSpelenKnop = document.getElementById('woSpelenKeuzeKnop');
   const magWoSpelen = heeftKlasbeheer || ['zorgleerkracht', 'zorgcoordinator'].includes(rolNaam);
   if (woSpelenKnop) woSpelenKnop.style.display = magWoSpelen ? '' : 'none';
+  const tafelExpeditieKnop = document.getElementById('tafelExpeditieKeuzeKnop');
+  const magTafelExpeditie = heeftKlasbeheer || ['beheerder', 'directie', 'zorgleerkracht', 'zorgcoordinator'].includes(rolNaam);
+  if (tafelExpeditieKnop) tafelExpeditieKnop.style.display = magTafelExpeditie && !isSecretariaat ? '' : 'none';
   const klasnummersKnop = document.getElementById('klasnummersKeuzeKnop');
   if (klasnummersKnop) klasnummersKnop.style.display = (isSchoolBreed || heeftKlasbeheer) && !isSecretariaat ? '' : 'none';
   const afwezigheidsattestenKnop = document.getElementById('afwezigheidsattestenKeuzeKnop');
