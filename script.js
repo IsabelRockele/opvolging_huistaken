@@ -187,7 +187,9 @@ function pasRustigePortaalrubriekenToe(rolNaam, isSecretariaat, heeftKlasbeheer,
     kop.setAttribute('role', 'button');
     kop.setAttribute('tabindex', '0');
     kop.setAttribute('aria-expanded', String(sleutel === gekozen));
-    const open = () => {
+    const open = event => {
+      event?.preventDefault();
+      event?.stopPropagation();
       const stondOpen = !sectie.classList.contains('is-collapsed');
       if (stondOpen) {
         sectie.classList.add('is-collapsed');
@@ -235,7 +237,7 @@ function pasKnoppenToe(huistakenKnop, overgangKnop, schoolbeheerKnop, bestelling
   if (zisaSpelgeneratorKnop) zisaSpelgeneratorKnop.style.display = !isSecretariaat ? '' : 'none';
   const tafelExpeditieKnop = document.getElementById('tafelExpeditieKeuzeKnop');
   const magTafelExpeditie = heeftKlasbeheer || ['beheerder', 'directie', 'zorgleerkracht', 'zorgcoordinator'].includes(rolNaam);
-  if (tafelExpeditieKnop) tafelExpeditieKnop.style.display = magTafelExpeditie && !isSecretariaat ? '' : 'none';
+  if (tafelExpeditieKnop) tafelExpeditieKnop.style.display = magTafelExpeditie && rolNaam !== 'secretariaat' ? '' : 'none';
   const klasnummersKnop = document.getElementById('klasnummersKeuzeKnop');
   if (klasnummersKnop) klasnummersKnop.style.display = (isSchoolBreed || heeftKlasbeheer) && !isSecretariaat ? '' : 'none';
   const afwezigheidsattestenKnop = document.getElementById('afwezigheidsattestenKeuzeKnop');
