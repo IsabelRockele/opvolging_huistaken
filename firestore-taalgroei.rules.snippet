@@ -1,0 +1,72 @@
+    // ================================================================
+    // TAALGROEI — geïsoleerde pilotcollecties
+    // Alle paden beginnen met taalgroei_. Bestaande schooltools worden
+    // door dit blok niet geraakt.
+    // ================================================================
+
+    function isTaalgroeiMedewerkerVoor(data) {
+      return request.auth != null
+        && (
+          isSchoolBreed()
+          || (
+            data.get('centraleSchooljaar', '') != ''
+            && data.get('klas', '') != ''
+            && isGekoppeldAanKlas(
+              data.get('centraleSchooljaar', ''),
+              data.get('klas', '')
+            )
+          )
+        );
+    }
+
+    match /taalgroei_config/{docId} {
+      // Nodig zodat ook de kindpagina weet dat de veilige pilot actief is.
+      allow get: if true;
+      allow list: if false;
+      allow create, update: if isSchoolBreed();
+      allow delete: if isBeheerder();
+    }
+
+    match /taalgroei_kinderen/{kindCode} {
+      // Een kind kan uitsluitend het document met zijn lange, geheime code
+      // openen. De volledige leerlinglijst kan nooit publiek opgevraagd worden.
+      allow get: if true;
+      allow list: if request.auth != null
+        && isTaalgroeiMedewerkerVoor(resource.data);
+
+      allow create: if isTaalgroeiMedewerkerVoor(request.resource.data);
+      allow delete: if isTaalgroeiMedewerkerVoor(resource.data);
+
+      allow update: if isTaalgroeiMedewerkerVoor(resource.data)
+        || request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'voortgang',
+          'laatstActief',
+          'taak',
+          'taakwachtrij',
+          'taakgeschiedenis',
+          'thema_actief'
+        ]);
+    }
+
+    match /taalgroei_instellingen/{docId} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+
+    match /taalgroei_klastaken/{taakId} {
+      allow get: if true;
+      allow list: if request.auth != null;
+      allow write: if request.auth != null;
+    }
+
+    match /taalgroei_rapportperiodes/{docId} {
+      allow read, write: if request.auth != null;
+    }
+
+    match /taalgroei_schooljaren/{docId} {
+      allow read, write: if request.auth != null;
+    }
+
+    match /taalgroei_rapporten/{docId} {
+      allow read, write: if request.auth != null;
+    }
