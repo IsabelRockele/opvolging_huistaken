@@ -19,6 +19,10 @@
 </header>
 
 <main class="container">
+  <aside class="build-warning no-print" role="status">
+    <strong>🚧 Deze tool is nog in opbouw</strong>
+    <span>Alleen bedoeld om te testen en te verbeteren. Nog niet gebruiken met kinderen.</span>
+  </aside>
   <section id="landingView" class="view active">
     <div class="welcome-strip">
       <div><span class="eyebrow">MAAL · DEEL · GROEI</span><h2>Elke tafel wordt een haalbare missie.</h2><p>Oefenen met inzicht, plezier en een tempo dat écht toont of de leerstof geautomatiseerd is.</p></div>
@@ -153,8 +157,8 @@
       <div class="panel">
         <h2>Klas beheren</h2>
         <div id="portalSyncStatus" class="callout portal-sync">
-          <strong>Centrale klaslijst</strong>
-          <p>Wanneer je deze tool vanuit de huiswerkapp opent, worden de actieve leerlingen van schooljaar 2026-2027 automatisch ingeladen.</p>
+          <div id="portalSyncSummary"><strong>Centrale klaslijst</strong><p>Wanneer je deze tool vanuit de huiswerkapp opent, worden de actieve leerlingen van schooljaar 2026-2027 automatisch ingeladen.</p></div>
+          <label id="portalClassChoice" class="hidden">Klas<select id="portalClassPicker"></select></label>
         </div>
         <div class="class-actions">
           <button id="addStudentTeacherBtn">Leerling toevoegen</button>

@@ -13,6 +13,7 @@ button.danger{background:var(--bad)}.danger-outline{color:var(--bad)!important}
 .topbar{display:flex;justify-content:space-between;align-items:center;gap:16px;padding:16px max(22px,calc((100vw - 1040px)/2));background:var(--navy);color:white;border-bottom:4px solid var(--sun)}
 .topbar h1{margin:0 0 4px;font-size:1.6rem}.topbar p{margin:0;color:var(--muted)}
 .container{max-width:1040px;margin:auto;padding:26px 22px}.view{display:none}.view.active{display:block}
+.build-warning{display:flex;align-items:center;gap:12px;margin:0 0 18px;padding:13px 16px;background:#fff3cd;border:2px solid #d7a82d;border-radius:14px;color:#684b00}.build-warning strong{white-space:nowrap}.build-warning span{line-height:1.4}
 .panel,.exercise-card{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:24px;box-shadow:0 8px 30px #18324a0a}
 .brand-mark{display:inline-grid;place-items:center;width:34px;height:34px;border-radius:11px;background:var(--sun);color:var(--navy)}
 .eyebrow{font-size:.73rem;letter-spacing:.14em;font-weight:900;color:var(--accent)}

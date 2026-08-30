@@ -21,6 +21,7 @@ function esc(s){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",
 function rand(a){return a[Math.floor(Math.random()*a.length)]}
 function shuffle(a){return [...a].sort(()=>Math.random()-.5)}
 function studentById(id){return db.students.find(s=>s.id===id)}
+function visibleStudents(){return db.activePortalClass?db.students.filter(s=>!s.portalClass||s.portalClass===db.activePortalClass):db.students}
 function makePin(){let p;do{p=String(Math.floor(1000+Math.random()*9000))}while(db.students.some(s=>s.pin===p));return p}
 function studentSettings(id){const s=studentById(id);return s?.useCustom?{...db.settings,...s.custom,modes:{...db.settings.modes,...(s.custom?.modes||{})}}:db.settings}
 
@@ -31,16 +32,17 @@ function buildChecks(){
 function selected(container){return [...container.querySelectorAll("input:checked")].map(x=>+x.value)}
 function setChecks(container,nums){container.querySelectorAll("input").forEach(x=>x.checked=nums.includes(+x.value))}
 function refreshStudentSelects(){
- const opts=db.students.map(s=>`<option value="${s.id}">${esc(s.name)}</option>`).join("")||'<option value="">Nog geen leerlingen</option>';
+ const students=visibleStudents(),opts=students.map(s=>`<option value="${s.id}">${esc(s.name)}</option>`).join("")||'<option value="">Nog geen leerlingen</option>';
  ["#loginStudentSelect","#teacherStudentSelect","#previewStudentSelect","#homeworkStudentSelect"].forEach(id=>$(id).innerHTML=opts);
- $("#assignmentTarget").innerHTML='<option value="all">Hele klas</option>'+db.students.map(s=>`<option value="${s.id}">${esc(s.name)}</option>`).join("");
+ $("#assignmentTarget").innerHTML='<option value="all">Hele klas</option>'+students.map(s=>`<option value="${s.id}">${esc(s.name)}</option>`).join("");
 }
 function createStudent(name,pin){
  name=name.trim();if(!name)return;
- db.students.push({id:uid(),name,pin:(pin||"").trim()||makePin(),createdAt:new Date().toISOString(),useCustom:false,custom:{}});
+ db.students.push({id:uid(),name,pin:(pin||"").trim()||makePin(),createdAt:new Date().toISOString(),useCustom:false,custom:{},portalClass:db.activePortalClass||""});
  saveDb();refreshAllTeacher()
 }
 window.syncPortalStudents=function(portalStudents,meta={}){
+ db.activePortalClass=meta.classLabel||db.activePortalClass||"";
  const byPortalId=new Map(db.students.filter(s=>s.portalId).map(s=>[String(s.portalId),s]));
  const byName=new Map(db.students.map(s=>[String(s.name||"").trim().toLocaleLowerCase("nl-BE"),s]));
  let added=0,updated=0;
@@ -51,14 +53,14 @@ window.syncPortalStudents=function(portalStudents,meta={}){
   else{s={id:portalId?`portal_${portalId}`:uid(),portalId,name,pin:makePin(),createdAt:new Date().toISOString(),useCustom:false,custom:{},portalClass:p.className||"",portalSchoolyear:meta.schoolyear||""};db.students.push(s);added++}
  });
  saveDb();refreshAllTeacher();
- const box=$("#portalSyncStatus");if(box){box.classList.add("success-state");box.innerHTML=`<strong>Centrale klaslijst gekoppeld</strong><p>${esc(meta.classLabel||"Je klas")} · ${esc(meta.schoolyear||"")} · ${portalStudents.length} actieve leerlingen. ${added?`${added} toegevoegd. `:""}${updated?`${updated} naam/namen bijgewerkt.`:""}</p>`}
+ const box=$("#portalSyncStatus"),summary=$("#portalSyncSummary");if(box&&summary){box.classList.add("success-state");summary.innerHTML=`<strong>Centrale klaslijst gekoppeld</strong><p>${esc(meta.classLabel||"Je klas")} · ${esc(meta.schoolyear||"")} · ${portalStudents.length} actieve leerlingen. ${added?`${added} toegevoegd. `:""}${updated?`${updated} naam/namen bijgewerkt.`:""}</p>`}
  return db.students.filter(s=>s.portalSchoolyear===meta.schoolyear)
 };
 function classRowHtml(s){
  return `<tr><td>${esc(s.name)}</td><td><b>${esc(s.pin)}</b></td><td>${s.useCustom?"Persoonlijk":"Klasinstellingen"}</td><td><div class="row compact"><button class="secondary edit-student" data-id="${s.id}">Instellen</button><button class="danger delete-student" data-id="${s.id}">Verwijder</button></div></td></tr>`
 }
 function renderClass(){
- $("#classRows").innerHTML=db.students.map(classRowHtml).join("")||'<tr><td colspan="4">Nog geen leerlingen.</td></tr>';
+ $("#classRows").innerHTML=visibleStudents().map(classRowHtml).join("")||'<tr><td colspan="4">Nog geen leerlingen.</td></tr>';
  $$(".edit-student").forEach(b=>b.addEventListener("click",()=>openStudentSettings(b.dataset.id)));
  $$(".delete-student").forEach(b=>b.addEventListener("click",()=>deleteStudent(b.dataset.id)))
 }
@@ -96,7 +98,7 @@ function saveSettingsFromForm(){
 
 function teacherTab(name){
  $$(".teacher-tab").forEach(b=>b.classList.toggle("active",b.dataset.teacherTab===name));Object.entries(teacherTabs).forEach(([k,v])=>v.classList.toggle("active",k===name));
- if(name==="results")renderTeacherResults($("#teacherStudentSelect").value||db.students[0]?.id);
+ if(name==="results")renderTeacherResults($("#teacherStudentSelect").value||visibleStudents()[0]?.id);
  if(name==="class")renderClass()
  if(name==="assignments")renderAssignments()
  if(name==="preview")renderPreviewCenter()
@@ -105,8 +107,8 @@ function enterTeacher(){refreshAllTeacher();loadSettingsForm();showView("teacher
 function refreshAllTeacher(){refreshStudentSelects();renderClass();loadSettingsForm()}
 
 function printPinCards(){
- if(!db.students.length){alert("Voeg eerst leerlingen toe.");return}
- const w=window.open("","_blank"),cards=db.students.map(s=>`<article><b>TafelExpeditie</b><h2>${esc(s.name)}</h2><p>Jouw inlogcode van de leerkracht</p><strong>${esc(s.pin)}</strong><small>Bewaar dit kaartje goed.</small></article>`).join("");
+ const students=visibleStudents();if(!students.length){alert("Voeg eerst leerlingen toe.");return}
+ const w=window.open("","_blank"),cards=students.map(s=>`<article><b>TafelExpeditie</b><h2>${esc(s.name)}</h2><p>Jouw inlogcode van de leerkracht</p><strong>${esc(s.pin)}</strong><small>Bewaar dit kaartje goed.</small></article>`).join("");
  w.document.write(`<!doctype html><html><head><title>Inlogkaartjes</title><style>@page{size:A4;margin:12mm}body{font-family:Arial;display:grid;grid-template-columns:1fr 1fr;gap:8mm}article{border:2px dashed #18324a;border-radius:12px;padding:9mm;text-align:center;break-inside:avoid}article>b{color:#087f78}h2{margin:6mm 0 2mm}p{margin:0;color:#647383}strong{display:block;font-size:30pt;letter-spacing:7px;margin:5mm}small{display:block}</style></head><body>${cards}</body></html>`);w.document.close();w.focus();setTimeout(()=>w.print(),250)
 }
 
@@ -175,7 +177,7 @@ function startDirectPreview(mode){const id=$("#previewStudentSelect").value;if(!
 
 function modeLabel(mode){return({learn:"Aanleren & oefenen",mix:"Gemengde training",smart:"Slimme training",remediate:"Remediëring",knowledge:"Kennistoets",flash:"Flitstoets",sprint:"Tempomissie",tempo:"Tempotoets"})[mode]||mode}
 function isAssessmentMode(mode){return ["knowledge","flash","sprint","test","tempo"].includes(mode)}
-function assignmentStudents(a){return a.target==="all"?db.students:db.students.filter(s=>s.id===a.target)}
+function assignmentStudents(a){return a.target==="all"?visibleStudents():db.students.filter(s=>s.id===a.target)}
 function assignmentDone(a,id){return (a.completedBy||[]).includes(id)}
 function renderAssignments(){
  setChecks($("#assignmentTableChecks"),db.settings.tables);const rows=[...(db.assignments||[])].reverse();
