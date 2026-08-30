@@ -83,14 +83,14 @@ Plaats het VOOR de afsluitende match /{document=**}.
 
         allow update: if request.auth != null
           && (
-            isSchoolBreed()
+            request.resource.data.diff(resource.data).affectedKeys()
+              .hasOnly(['sessions', 'factStats', 'completedAssignmentIds'])
+            || isSchoolBreed()
             || isSecretariaat()
             || isGekoppeldAanKlas(
               resource.data.schoolyear,
               resource.data.className
             )
-            || request.resource.data.diff(resource.data).affectedKeys()
-                 .hasOnly(['sessions', 'factStats', 'completedAssignmentIds'])
           );
       }
     }
