@@ -160,7 +160,7 @@ async function toonOpvallendeStartmeldingen(user, rol, koppelingSnaps = [], plan
 
 function pasRustigePortaalrubriekenToe(rolNaam, isSecretariaat, heeftKlasbeheer, isSchoolBreed) {
   const secties = [...document.querySelectorAll('#ingelogd-kaart .portaal-sectie')];
-  const sleutelVan = sectie => sectie.classList.contains('zorgblok') ? 'zorg' : sectie.classList.contains('organisatieblok') ? 'organisatie' : 'administratie';
+  const sleutelVan = sectie => sectie.classList.contains('zorgblok') ? 'zorg' : sectie.classList.contains('organisatieblok') ? 'organisatie' : sectie.classList.contains('leerlabo-blok') ? 'leerlabo' : 'administratie';
   const zichtbareTegels = sectie => [...sectie.querySelectorAll('.portaal-tegel')].some(tegel => tegel.style.display !== 'none');
   const rolSleutel = rolNaam || (isSecretariaat ? 'secretariaat' : heeftKlasbeheer ? 'klasleerkracht' : isSchoolBreed ? 'schoolbreed' : 'gebruiker');
   const opslagSleutel = 'lindeOpenRubriek_' + rolSleutel;
@@ -231,6 +231,8 @@ function pasKnoppenToe(huistakenKnop, overgangKnop, schoolbeheerKnop, bestelling
   const woSpelenKnop = document.getElementById('woSpelenKeuzeKnop');
   const magWoSpelen = heeftKlasbeheer || ['zorgleerkracht', 'zorgcoordinator'].includes(rolNaam);
   if (woSpelenKnop) woSpelenKnop.style.display = magWoSpelen ? '' : 'none';
+  const zisaSpelgeneratorKnop = document.getElementById('zisaSpelgeneratorKeuzeKnop');
+  if (zisaSpelgeneratorKnop) zisaSpelgeneratorKnop.style.display = !isSecretariaat ? '' : 'none';
   const tafelExpeditieKnop = document.getElementById('tafelExpeditieKeuzeKnop');
   const magTafelExpeditie = heeftKlasbeheer || ['beheerder', 'directie', 'zorgleerkracht', 'zorgcoordinator'].includes(rolNaam);
   if (tafelExpeditieKnop) tafelExpeditieKnop.style.display = magTafelExpeditie && !isSecretariaat ? '' : 'none';
