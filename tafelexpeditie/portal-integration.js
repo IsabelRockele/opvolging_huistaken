@@ -1,6 +1,6 @@
 import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-import { getFirestore, collection, doc, getDoc, getDocs, query, where } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getFirestore, collection, doc, getDoc, getDocs, query, setDoc, where } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 const firebaseConfig={apiKey:"AIzaSyA7KxXMvZ4dzBQDut3CMyWUblLte2tFzoQ",authDomain:"huiswerkapp-a311e.firebaseapp.com",projectId:"huiswerkapp-a311e",storageBucket:"huiswerkapp-a311e.appspot.com",messagingSenderId:"797169941164",appId:"1:797169941164:web:511d9618079f1378d0fd09"};
 const firebaseApp=getApps()[0]||initializeApp(firebaseConfig),auth=getAuth(firebaseApp),firestore=getFirestore(firebaseApp);
@@ -8,9 +8,12 @@ const schoolyear=(()=>{const d=new Date(),start=d.getMonth()>=7?d.getFullYear():
 const status=(title,text,error=false)=>{const box=document.getElementById("portalSyncStatus"),summary=document.getElementById("portalSyncSummary");if(!box||!summary)return;box.classList.toggle("error-state",error);summary.innerHTML=`<strong>${title}</strong><p>${text}</p>`};
 const fullName=s=>{const first=String(s.voornaam||s.firstName||"").trim(),last=String(s.achternaam||s.lastName||"").trim(),direct=String(s.naam||s.name||s.fullName||s.volledigeNaam||"").trim();return first&&last?`${first} ${last}`:first||last||direct};
 const active=s=>{const today=new Date().toISOString().slice(0,10);return s.actief!==false&&(!s.start||s.start<=today)&&(!s.end||s.end>=today)};
+const newCode=used=>{let code;do{code=String(Math.floor(1000+Math.random()*9000))}while(used.has(code));used.add(code);return code};
 async function loadClass(className){
  status("Centrale klaslijst laden",`${className} · ${schoolyear} wordt opgehaald…`);
- const snap=await getDoc(doc(firestore,"schoolbeheer",schoolyear,"klassen",className)),students=snap.exists()?(snap.data().leerlingen||[]).filter(active).map(s=>({id:s.id||`${className}_${fullName(s)}`,name:fullName(s),className})).filter(s=>s.name):[];
+ const classRef=doc(firestore,"schoolbeheer",schoolyear,"klassen",className),snap=await getDoc(classRef),data=snap.exists()?snap.data():{},codes={...(data.tafelExpeditieCodes||{})},used=new Set(Object.values(codes).map(String)),students=(data.leerlingen||[]).filter(active).map(s=>({id:String(s.id||`${className}_${fullName(s)}`),name:fullName(s),className})).filter(s=>s.name);let changed=false;
+ students.forEach(s=>{if(!codes[s.id]){codes[s.id]=newCode(used);changed=true}s.pin=String(codes[s.id])});
+ let codesCentral=!changed;if(changed){try{await setDoc(classRef,{tafelExpeditieCodes:codes},{merge:true});codesCentral=true}catch(err){console.warn("Centrale inlogcodes konden niet worden bewaard",err)}}students.forEach(s=>s.codeIsCentral=codesCentral);
  localStorage.setItem("tafelExpeditieBeheerKlas",className);window.syncPortalStudents?.(students,{schoolyear,classLabel:className})
 }
 function showClassPicker(classNames,selected){

@@ -49,8 +49,8 @@ window.syncPortalStudents=function(portalStudents,meta={}){
  (portalStudents||[]).forEach(p=>{
   const portalId=String(p.id||"").trim(),name=String(p.name||"").trim();if(!name)return;
   let s=(portalId&&byPortalId.get(portalId))||byName.get(name.toLocaleLowerCase("nl-BE"));
-  if(s){if(s.name!==name){s.name=name;updated++}s.portalId=portalId||s.portalId;s.portalClass=p.className||s.portalClass;s.portalSchoolyear=meta.schoolyear||s.portalSchoolyear}
-  else{s={id:portalId?`portal_${portalId}`:uid(),portalId,name,pin:makePin(),createdAt:new Date().toISOString(),useCustom:false,custom:{},portalClass:p.className||"",portalSchoolyear:meta.schoolyear||""};db.students.push(s);added++}
+  if(s){if(s.name!==name){s.name=name;updated++}s.pin=String(p.codeIsCentral?p.pin:(s.pin||p.pin||makePin()));s.portalId=portalId||s.portalId;s.portalClass=p.className||s.portalClass;s.portalSchoolyear=meta.schoolyear||s.portalSchoolyear}
+  else{s={id:portalId?`portal_${portalId}`:uid(),portalId,name,pin:String(p.pin||makePin()),createdAt:new Date().toISOString(),useCustom:false,custom:{},portalClass:p.className||"",portalSchoolyear:meta.schoolyear||""};db.students.push(s);added++}
  });
  saveDb();refreshAllTeacher();
  const box=$("#portalSyncStatus"),summary=$("#portalSyncSummary");if(box&&summary){box.classList.add("success-state");summary.innerHTML=`<strong>Centrale klaslijst gekoppeld</strong><p>${esc(meta.classLabel||"Je klas")} · ${esc(meta.schoolyear||"")} · ${portalStudents.length} actieve leerlingen. ${added?`${added} toegevoegd. `:""}${updated?`${updated} naam/namen bijgewerkt.`:""}</p>`}
@@ -110,6 +110,11 @@ function printPinCards(){
  const students=visibleStudents();if(!students.length){alert("Voeg eerst leerlingen toe.");return}
  const w=window.open("","_blank"),cards=students.map(s=>`<article><b>TafelExpeditie</b><h2>${esc(s.name)}</h2><p>Jouw inlogcode van de leerkracht</p><strong>${esc(s.pin)}</strong><small>Bewaar dit kaartje goed.</small></article>`).join("");
  w.document.write(`<!doctype html><html><head><title>Inlogkaartjes</title><style>@page{size:A4;margin:12mm}body{font-family:Arial;display:grid;grid-template-columns:1fr 1fr;gap:8mm}article{border:2px dashed #18324a;border-radius:12px;padding:9mm;text-align:center;break-inside:avoid}article>b{color:#087f78}h2{margin:6mm 0 2mm}p{margin:0;color:#647383}strong{display:block;font-size:30pt;letter-spacing:7px;margin:5mm}small{display:block}</style></head><body>${cards}</body></html>`);w.document.close();w.focus();setTimeout(()=>w.print(),250)
+}
+function printCodeList(){
+ const students=[...visibleStudents()].sort((a,b)=>a.name.localeCompare(b.name,"nl-BE"));if(!students.length){alert("Er zijn nog geen leerlingen in deze klas.");return}
+ const className=db.activePortalClass||"Klas",schoolyear=students[0]?.portalSchoolyear||"2026-2027",rows=students.map((s,i)=>`<tr><td>${i+1}</td><td>${esc(s.name)}</td><td><strong>${esc(s.pin)}</strong></td><td></td></tr>`).join(""),w=window.open("","_blank");
+ w.document.write(`<!doctype html><html><head><title>Inlogcodes ${esc(className)}</title><style>@page{size:A4;margin:14mm}body{font-family:Arial;color:#18324a}h1{margin:0 0 4px}p{margin:0 0 18px;color:#647383}table{width:100%;border-collapse:collapse}th,td{border:1px solid #9ca9a5;padding:9px;text-align:left}th{background:#edf6f3}td:first-child{width:36px;text-align:center}td:nth-child(3){width:110px;font-size:14pt;letter-spacing:2px}td:last-child{width:150px}</style></head><body><h1>TafelExpeditie · inlogcodes</h1><p>${esc(className)} · schooljaar ${esc(schoolyear)} · alleen voor de leerkracht</p><table><thead><tr><th>Nr.</th><th>Naam</th><th>Code</th><th>Notitie</th></tr></thead><tbody>${rows}</tbody></table></body></html>`);w.document.close();w.focus();setTimeout(()=>w.print(),250)
 }
 
 function importClassFile(file){
@@ -440,6 +445,7 @@ $("#assignmentTarget").addEventListener("change",updateAssignmentTarget);updateA
 $("#assignmentSelectAll").addEventListener("click",()=>$("#assignmentStudentChecks").querySelectorAll("input").forEach(x=>x.checked=true));
 $("#assignmentSelectNone").addEventListener("click",()=>$("#assignmentStudentChecks").querySelectorAll("input").forEach(x=>x.checked=false));
 $("#printPinsBtn").addEventListener("click",printPinCards);
+$("#printCodeListBtn").addEventListener("click",printCodeList);
 $("#addStudentTeacherBtn").addEventListener("click",()=>{$("#studentNameInput").value="";$("#studentPinInput").value="";$("#studentDialog").showModal()});
 $("#studentForm").addEventListener("submit",e=>{e.preventDefault();createStudent($("#studentNameInput").value,$("#studentPinInput").value);$("#studentDialog").close()});
 $("#studentSettingsForm").addEventListener("submit",e=>{e.preventDefault();const s=studentById(editStudentId);if(!s)return;s.useCustom=$("#studentUseCustom").checked;const nums=$("#studentTablesInput").value.split(/[,; ]+/).map(Number).filter(n=>n>=1&&n<=10);let multiply=$("#studentMultiply").checked,divide=$("#studentDivide").checked;if(!multiply&&!divide)multiply=true;s.custom={factorPosition:$("#studentFactorPosition").value,tables:nums.length?nums:db.settings.tables,multiply,divide};saveDb();renderClass();$("#studentSettingsDialog").close()});
