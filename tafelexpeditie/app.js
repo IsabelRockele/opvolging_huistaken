@@ -36,7 +36,7 @@ function setChecks(container,nums){container.querySelectorAll("input").forEach(x
 function refreshStudentSelects(){
  const students=visibleStudents(),opts=students.map(s=>`<option value="${s.id}">${esc(s.name)}</option>`).join("")||'<option value="">Nog geen leerlingen</option>';
  ["#teacherStudentSelect","#previewStudentSelect","#homeworkStudentSelect"].forEach(id=>$(id).innerHTML=opts);
- const tiles=$("#loginStudentTiles");if(tiles)tiles.innerHTML=students.map((s,i)=>`<button class="student-name-tile" data-student-id="${esc(s.id)}"><span>${s.classNumber||i+1}</span><strong>${esc(s.firstName||s.name)}</strong><small>${esc(s.lastName||"")}</small></button>`).join("")||'<div class="empty-state">Er zijn nog geen leerlingen geladen.</div>';
+ const pupilStudents=students.filter(s=>!s.isTeacherTest),tiles=$("#loginStudentTiles");if(tiles)tiles.innerHTML=pupilStudents.map((s,i)=>`<button class="student-name-tile" data-student-id="${esc(s.id)}"><span>${s.classNumber||i+1}</span><strong>${esc(s.firstName||s.name)}</strong><small>${esc(s.lastName||"")}</small></button>`).join("")||'<div class="empty-state">Er zijn nog geen leerlingen geladen.</div>';
  tiles?.querySelectorAll("[data-student-id]").forEach(b=>b.addEventListener("click",()=>chooseLoginStudent(b.dataset.studentId)));
  const checks=$("#assignmentStudentChecks");if(checks)checks.innerHTML=students.map(s=>`<label class="checkline"><input type="checkbox" value="${s.id}"> ${esc(s.name)}</label>`).join("")||'<span class="muted">Nog geen leerlingen in deze klas.</span>';
 }
@@ -44,6 +44,12 @@ function createStudent(name,pin){
  name=name.trim();if(!name)return;
  db.students.push({id:uid(),name,pin:(pin||"").trim()||makePin(),createdAt:new Date().toISOString(),useCustom:false,custom:{},portalClass:db.activePortalClass||""});
  saveDb();refreshAllTeacher()
+}
+function addTeacherTestProfile(){
+ const info=window.portalTeacherInfo;if(!info){alert("Je leerkrachtgegevens worden nog geladen. Probeer over enkele seconden opnieuw.");return}
+ const id=`teacher_test_${info.id}_${db.activePortalClass||"klas"}`,existing=studentById(id);if(existing){alert(`${existing.name} staat al als testspeler in deze klas.`);return}
+ const display=/^(juf|meester)\b/i.test(info.name)?info.name:`Leerkracht ${info.name}`;
+ db.students.push({id,name:`${display} (test)`,firstName:display,lastName:"",pin:"",isTeacherTest:true,teacherUid:info.id,createdAt:new Date().toISOString(),useCustom:false,custom:{},portalClass:db.activePortalClass||"",portalSchoolyear:"2026-2027"});saveDb();refreshAllTeacher();alert(`${display} is toegevoegd als testspeler. Je kunt nu taken voor dit profiel klaarzetten of het kiezen bij Probeer eerst zelf.`)
 }
 window.syncPortalStudents=function(portalStudents,meta={}){
  db.activePortalClass=meta.classLabel||db.activePortalClass||"";
@@ -61,7 +67,7 @@ window.syncPortalStudents=function(portalStudents,meta={}){
  return db.students.filter(s=>s.portalSchoolyear===meta.schoolyear)
 };
 function classRowHtml(s){
- return `<tr><td>${esc(teacherStudentName(s))}</td><td><b>${esc(s.pin)}</b></td><td>${s.useCustom?"Persoonlijk":"Klasinstellingen"}</td><td><div class="row compact"><button class="secondary edit-student" data-id="${s.id}">Instellen</button><button class="secondary rotate-code" data-id="${s.id}">Nieuwe code</button><button class="danger delete-student" data-id="${s.id}">Verwijder</button></div></td></tr>`
+ return `<tr><td>${esc(teacherStudentName(s))}${s.isTeacherTest?' <span class="tag">TESTSPELER</span>':""}</td><td><b>${s.isTeacherTest?"—":esc(s.pin)}</b></td><td>${s.isTeacherTest?"Testprofiel leerkracht":s.useCustom?"Persoonlijk":"Klasinstellingen"}</td><td><div class="row compact"><button class="secondary edit-student" data-id="${s.id}">Instellen</button>${s.isTeacherTest?"":`<button class="secondary rotate-code" data-id="${s.id}">Nieuwe code</button>`}<button class="danger delete-student" data-id="${s.id}">Verwijder</button></div></td></tr>`
 }
 function renderClass(){
  $("#classRows").innerHTML=visibleStudents().map(classRowHtml).join("")||'<tr><td colspan="4">Nog geen leerlingen.</td></tr>';
@@ -116,12 +122,12 @@ function enterTeacher(){refreshAllTeacher();loadSettingsForm();showView("teacher
 function refreshAllTeacher(){refreshStudentSelects();renderClass();loadSettingsForm()}
 
 function printPinCards(){
- const students=visibleStudents();if(!students.length){alert("Voeg eerst leerlingen toe.");return}
+ const students=visibleStudents().filter(s=>!s.isTeacherTest);if(!students.length){alert("Voeg eerst leerlingen toe.");return}
  const w=window.open("","_blank"),cards=students.map(s=>`<article><b>TafelExpeditie</b><h2>${esc(s.name)}</h2><p>Jouw inlogcode van de leerkracht</p><strong>${esc(s.pin)}</strong><small>Bewaar dit kaartje goed.</small></article>`).join("");
  w.document.write(`<!doctype html><html><head><title>Inlogkaartjes</title><style>@page{size:A4;margin:12mm}body{font-family:Arial;display:grid;grid-template-columns:1fr 1fr;gap:8mm}article{border:2px dashed #18324a;border-radius:12px;padding:9mm;text-align:center;break-inside:avoid}article>b{color:#087f78}h2{margin:6mm 0 2mm}p{margin:0;color:#647383}strong{display:block;font-size:30pt;letter-spacing:7px;margin:5mm}small{display:block}</style></head><body>${cards}</body></html>`);w.document.close();w.focus();setTimeout(()=>w.print(),250)
 }
 function printCodeList(){
- const students=[...visibleStudents()].sort(studentSort);if(!students.length){alert("Er zijn nog geen leerlingen in deze klas.");return}
+ const students=visibleStudents().filter(s=>!s.isTeacherTest).sort(studentSort);if(!students.length){alert("Er zijn nog geen leerlingen in deze klas.");return}
  const className=db.activePortalClass||"Klas",schoolyear=students[0]?.portalSchoolyear||"2026-2027",rows=students.map((s,i)=>`<tr><td>${s.classNumber||i+1}</td><td>${esc(teacherStudentName(s))}</td><td><strong>${esc(s.pin)}</strong></td><td></td></tr>`).join(""),frame=document.createElement("iframe");
  frame.setAttribute("aria-hidden","true");frame.style.cssText="position:fixed;width:1px;height:1px;right:0;bottom:0;border:0;opacity:0;pointer-events:none";document.body.appendChild(frame);const d=frame.contentDocument;d.open();d.write(`<!doctype html><html><head><title>Inlogcodes ${esc(className)}</title><style>@page{size:A4;margin:14mm}body{font-family:Arial;color:#18324a}h1{margin:0 0 4px}p{margin:0 0 18px;color:#647383}table{width:100%;border-collapse:collapse}th,td{border:1px solid #9ca9a5;padding:9px;text-align:left}th{background:#edf6f3}td:first-child{width:36px;text-align:center}td:nth-child(3){width:110px;font-size:14pt;letter-spacing:2px}td:last-child{width:150px}</style></head><body><h1>TafelExpeditie · inlogcodes</h1><p>${esc(className)} · schooljaar ${esc(schoolyear)} · alleen voor de leerkracht</p><table><thead><tr><th>Nr.</th><th>Naam</th><th>Code</th><th>Notitie</th></tr></thead><tbody>${rows}</tbody></table></body></html>`);d.close();const cleanup=()=>setTimeout(()=>frame.remove(),300);frame.contentWindow.addEventListener("afterprint",cleanup,{once:true});setTimeout(()=>{frame.contentWindow.focus();frame.contentWindow.print();setTimeout(cleanup,30000)},250)
 }
@@ -459,6 +465,7 @@ $("#assignmentSelectNone").addEventListener("click",()=>$("#assignmentStudentChe
 $("#printPinsBtn").addEventListener("click",printPinCards);
 $("#printCodeListBtn").addEventListener("click",printCodeList);
 $("#printClassQrBtn").addEventListener("click",printClassQr);
+$("#addTeacherTestBtn").addEventListener("click",addTeacherTestProfile);
 $("#addStudentTeacherBtn").addEventListener("click",()=>{$("#studentNameInput").value="";$("#studentPinInput").value="";$("#studentDialog").showModal()});
 $("#studentForm").addEventListener("submit",e=>{e.preventDefault();createStudent($("#studentNameInput").value,$("#studentPinInput").value);$("#studentDialog").close()});
 $("#studentSettingsForm").addEventListener("submit",e=>{e.preventDefault();const s=studentById(editStudentId);if(!s)return;s.useCustom=$("#studentUseCustom").checked;const nums=$("#studentTablesInput").value.split(/[,; ]+/).map(Number).filter(n=>n>=1&&n<=10);let multiply=$("#studentMultiply").checked,divide=$("#studentDivide").checked;if(!multiply&&!divide)multiply=true;s.custom={factorPosition:$("#studentFactorPosition").value,tables:nums.length?nums:db.settings.tables,multiply,divide};saveDb();renderClass();$("#studentSettingsDialog").close()});

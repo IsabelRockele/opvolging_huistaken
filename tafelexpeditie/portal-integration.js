@@ -30,7 +30,7 @@ onAuthStateChanged(auth,async user=>{
  if(!user){status("Centrale klaslijst niet gekoppeld","Open TafelExpeditie vanuit de huiswerkapp terwijl je als leerkracht aangemeld bent.");return}
  try{
   status("Centrale klaslijst laden","Je klas van schooljaar 2026-2027 wordt opgehaald…");
-  const email=String(user.email||"").toLowerCase(),roleSnap=await getDoc(doc(firestore,"schoolrollen",user.uid)),role=String(roleSnap.data()?.rol||"").toLowerCase(),schoolWide=["beheerder","directie","zorgcoordinator","zorgleerkracht"].includes(role),snaps=await Promise.all([
+  const email=String(user.email||"").toLowerCase(),roleSnap=await getDoc(doc(firestore,"schoolrollen",user.uid)),roleData=roleSnap.data()||{},role=String(roleData.rol||"").toLowerCase(),teacherName=String(roleData.naam||roleData.displayName||user.displayName||email.split("@")[0]||"Leerkracht").trim(),schoolWide=["beheerder","directie","zorgcoordinator","zorgleerkracht"].includes(role),snaps=await Promise.all([
    getDocs(query(collection(firestore,"klasleerkrachten"),where("leerkracht_uids","array-contains",user.uid))),
    email?getDocs(query(collection(firestore,"klasleerkrachten"),where("leerkracht_emails","array-contains",email))):Promise.resolve({docs:[]})
   ]),classes=new Set();
@@ -39,6 +39,7 @@ onAuthStateChanged(auth,async user=>{
   const requested=new URLSearchParams(location.search).get("klas"),classNames=requested?[requested]:[...classes].sort((a,b)=>a.localeCompare(b,"nl",{numeric:true}));
   if(!classNames.length){status("Geen klas gevonden",`Er is voor ${schoolyear} nog geen klas aan dit leerkrachtaccount gekoppeld.`,true);return}
   const preferred=requested||localStorage.getItem("tafelExpeditieBeheerKlas"),selected=classNames.includes(preferred)?preferred:classNames[0];
+  window.portalTeacherInfo={id:user.uid,name:teacherName,email};window.dispatchEvent(new CustomEvent("portal-teacher-ready"));
   if(classNames.length>1)showClassPicker(classNames,selected);
   await loadClass(selected);
  }catch(err){console.error(err);status("Koppelen niet gelukt","Vernieuw de pagina. Blijft dit terugkomen, controleer dan de klaskoppeling in de huiswerkapp.",true)}
