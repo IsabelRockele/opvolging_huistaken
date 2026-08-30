@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TafelExpeditie · maal- en deeltafels</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="topbar no-print">
+  <div>
+    <h1><span class="brand-mark">×</span> TafelExpeditie</h1>
+    <p>Van begrijpen naar vlot kennen</p>
+  </div>
+  <div class="row compact">
+    <button id="goLandingBtn" class="secondary hidden">Startscherm</button>
+    <button id="teacherTopBtn" class="secondary">Leerkracht</button>
+  </div>
+</header>
+
+<main class="container">
+  <section id="landingView" class="view active">
+    <div class="welcome-strip">
+      <div><span class="eyebrow">MAAL · DEEL · GROEI</span><h2>Elke tafel wordt een haalbare missie.</h2><p>Oefenen met inzicht, plezier en een tempo dat écht toont of de leerstof geautomatiseerd is.</p></div>
+      <img src="assets/rekenroef-mascotte.png" alt="Ravi, de rode panda van TafelExpeditie">
+    </div>
+    <div class="landing-grid">
+      <div class="panel landing-card">
+        <div class="landing-icon">👩‍🏫</div>
+        <h2>Ik ben leerkracht</h2>
+        <p>Stel de klas in, bepaal wat kinderen oefenen, test alles zelf en volg resultaten op.</p>
+        <button id="enterTeacherBtn" class="large">Naar leerkrachtomgeving</button>
+      </div>
+      <div class="panel landing-card">
+        <div class="landing-icon">🧒</div>
+        <h2>Ik ben leerling</h2>
+        <p>Meld je aan met je naam en de code die je van je leerkracht kreeg. Je ziet alleen de oefeningen die voor jou klaarstaan.</p>
+        <button id="enterStudentLoginBtn" class="large">Aanmelden als leerling</button>
+      </div>
+    </div>
+  </section>
+
+  <section id="studentLoginView" class="view">
+    <div class="panel narrow">
+      <button class="secondary" id="studentLoginBackBtn">← Terug</button>
+      <h2>Leerling aanmelden</h2>
+      <label>Naam<select id="loginStudentSelect"></select></label>
+      <label>Jouw code van de leerkracht<input id="loginPin" inputmode="numeric" maxlength="6" autocomplete="off" placeholder="bijv. 2417"></label>
+      <p class="field-help">Je hoeft zelf geen code te maken. Gebruik de code die je leerkracht voor jou heeft klaargezet.</p>
+      <button id="studentLoginBtn" class="large">Aanmelden</button>
+      <p id="loginError" class="error"></p>
+    </div>
+  </section>
+
+  <section id="studentHomeView" class="view">
+    <div class="student-welcome">
+      <div><h2 id="studentWelcomeName">Hallo!</h2><p id="studentAssignmentText" class="muted"></p></div>
+      <button id="studentLogoutBtn" class="secondary">Afmelden</button>
+    </div>
+    <div class="student-hero"><div><span class="eyebrow">MIJN MISSIES</span><h3>Klaar voor je volgende stap?</h3></div><img src="assets/rekenroef-mascotte.png" alt="Ravi moedigt je aan"></div>
+    <div id="studentAssignments" class="assignment-list"></div>
+    <h3 class="section-title">Vrij oefenen</h3>
+    <div id="studentModes" class="mode-grid"></div>
+    <div class="panel student-progress-panel">
+      <h3>Mijn vooruitgang</h3>
+      <div id="studentProgressSummary" class="stats-grid"></div>
+    </div>
+  </section>
+
+  <section id="teacherDashboardView" class="view">
+    <div class="teacher-nav">
+      <button data-teacher-tab="settings" class="teacher-tab active">⚙️ Instellingen</button>
+      <button data-teacher-tab="class" class="teacher-tab">👥 Klas</button>
+      <button data-teacher-tab="assignments" class="teacher-tab">📌 Taken</button>
+      <button data-teacher-tab="preview" class="teacher-tab">▶ Testen</button>
+      <button data-teacher-tab="results" class="teacher-tab">📊 Opvolging</button>
+      <button data-teacher-tab="homework" class="teacher-tab">📝 Huistaken</button>
+      <button data-teacher-tab="flashcards" class="teacher-tab">🃏 Flitskaartjes</button>
+    </div>
+
+    <section id="teacherSettingsTab" class="teacher-tab-view active">
+      <div class="panel">
+        <h2>Leerkrachtinstellingen</h2>
+        <p class="muted">Deze instellingen gelden standaard voor de hele klas. Je kunt ze per leerling aanpassen.</p>
+
+        <h3>1. Hoe schrijf je de maaltafel?</h3>
+        <div class="setting-card">
+          <label class="radio-line"><input type="radio" name="factorPosition" value="front"> Tafelgetal vooraan — tafel van 4: <b>4 × 7</b></label>
+          <label class="radio-line"><input type="radio" name="factorPosition" value="back"> Tafelgetal achteraan — tafel van 4: <b>7 × 4</b></label>
+          <label class="radio-line"><input type="radio" name="factorPosition" value="both"> Beide richtingen — <b>4 × 7</b> én <b>7 × 4</b></label>
+        </div>
+
+        <h3>2. Wat moeten leerlingen oefenen?</h3>
+        <div class="setting-card">
+          <label class="checkline"><input id="setMultiply" type="checkbox"> Maaltafels</label>
+          <label class="checkline"><input id="setDivide" type="checkbox"> Deeltafels</label>
+          <label class="checkline"><input id="setFamilies" type="checkbox"> Bewerkingsfamilies: maal en deel als omgekeerde bewerkingen</label>
+          <label class="checkline"><input id="setMissing" type="checkbox"> Ontbrekende factor / deler</label>
+          <label class="checkline"><input id="setVisual" type="checkbox"> Visuele ondersteuning bij remediëring</label>
+        </div>
+
+        <h3>3. Welke tafels zijn actief?</h3>
+        <div id="settingsTableChecks" class="checks"></div>
+
+        <h3>4. Welke oefenvormen zijn beschikbaar?</h3>
+        <div class="setting-card grid2">
+          <label class="checkline"><input id="modeLearn" type="checkbox"> Gericht oefenen</label>
+          <label class="checkline"><input id="modeMix" type="checkbox"> Gemengd oefenen</label>
+          <label class="checkline"><input id="modeSmart" type="checkbox"> Slim oefenen</label>
+          <label class="checkline"><input id="modeRemediate" type="checkbox"> Remediëren</label>
+          <label class="checkline"><input id="modeTempo" type="checkbox"> Tempotoets</label>
+        </div>
+
+        <div class="form-grid">
+          <label>Standaard aantal oefeningen
+            <select id="defaultCount"><option>10</option><option selected>20</option><option>30</option><option>40</option></select>
+          </label>
+          <label>Tempotoets
+            <select id="defaultTempo"><option value="60">1 minuut</option><option value="120" selected>2 minuten</option><option value="180">3 minuten</option></select>
+          </label>
+          <label>Vlot = antwoord binnen
+            <select id="fluentSeconds"><option value="2">2 seconden</option><option value="3" selected>3 seconden</option><option value="4">4 seconden</option><option value="5">5 seconden</option></select>
+          </label>
+        </div>
+
+        <button id="saveSettingsBtn" class="large">Instellingen opslaan</button>
+        <p id="settingsSaved" class="success"></p>
+      </div>
+    </section>
+
+    <section id="teacherAssignmentsTab" class="teacher-tab-view">
+      <div class="panel">
+        <span class="eyebrow">PLANNEN & DIFFERENTIËREN</span>
+        <h2>Nieuwe missie klaarzetten</h2>
+        <p class="muted">Geef dezelfde opdracht aan de hele klas of kies één leerling. De ingestelde tafels van elk kind blijven gerespecteerd.</p>
+        <div class="form-grid assignment-form">
+          <label>Voor wie<select id="assignmentTarget"><option value="all">Hele klas</option></select></label>
+          <label>Werkvorm<select id="assignmentMode"><optgroup label="Oefenen"><option value="learn">Aanleren & gericht oefenen</option><option value="mix">Gemengd oefenen</option><option value="smart">Slim oefenen</option><option value="remediate">Remediëren met hulp</option></optgroup><optgroup label="Toetsen"><option value="knowledge">Kennistoets · zonder tijd</option><option value="flash">Flitstoets · tijd per oefening</option><option value="sprint">Tempomissie · vaste totaaltijd</option></optgroup></select></label>
+          <label>Bewerkingen<select id="assignmentOperation"><option value="multiply">Maaltafels</option><option value="divide">Deeltafels</option><option value="both" selected>Maal en deel</option></select></label>
+          <label>Aantal<select id="assignmentCount"><option>10</option><option selected>20</option><option>30</option><option>40</option></select></label>
+          <label>Totale tijd bij tempomissie<select id="assignmentTempo"><option value="60">1 minuut</option><option value="120" selected>2 minuten</option><option value="180">3 minuten</option></select></label>
+          <label>Max. tijd per oefening<select id="assignmentPerQuestion"><option value="2">2 seconden</option><option value="3" selected>3 seconden</option><option value="4">4 seconden</option><option value="5">5 seconden</option><option value="6">6 seconden</option></select></label>
+          <label>Deadline<input id="assignmentDue" type="date"></label>
+          <label class="wide-label">Titel voor de kinderen<input id="assignmentTitle" maxlength="55" placeholder="bv. Missie tafel van 6"></label>
+        </div>
+        <fieldset class="table-field"><legend>Tafels in deze missie</legend><div id="assignmentTableChecks" class="checks"></div></fieldset>
+        <button id="createAssignmentBtn" class="large">Zet missie klaar</button><p id="assignmentSaved" class="success"></p>
+        <h3>Openstaande missies</h3><div id="assignmentRows" class="assignment-list"></div>
+      </div>
+    </section>
+
+    <section id="teacherClassTab" class="teacher-tab-view">
+      <div class="panel">
+        <h2>Klas beheren</h2>
+        <div id="portalSyncStatus" class="callout portal-sync">
+          <strong>Centrale klaslijst</strong>
+          <p>Wanneer je deze tool vanuit de huiswerkapp opent, worden de actieve leerlingen van schooljaar 2026-2027 automatisch ingeladen.</p>
+        </div>
+        <div class="class-actions">
+          <button id="addStudentTeacherBtn">Leerling toevoegen</button>
+          <label class="fileBtn secondary">Klaslijst importeren
+            <input id="classImportInput" type="file" accept=".csv,.txt" hidden>
+          </label>
+          <button id="downloadClassTemplateBtn" class="secondary">Voorbeeld CSV</button>
+          <button id="printPinsBtn" class="secondary">Print inlogkaartjes</button>
+        </div>
+        <div class="callout">
+          <strong>Klaslijst uploaden</strong>
+          <p>Gebruik een CSV- of tekstbestand. Eén naam per regel is genoeg. Je mag ook kolommen <b>naam,inlogcode</b> gebruiken. De leerkracht bepaalt de code. Laat je die leeg, dan maakt de tool automatisch een unieke code van vier cijfers.</p>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Naam</th><th>Toegewezen inlogcode</th><th>Persoonlijke instelling</th><th></th></tr></thead>
+            <tbody id="classRows"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section id="teacherPreviewTab" class="teacher-tab-view">
+      <div class="panel">
+        <span class="eyebrow">LEERKRACHT · TESTCENTRUM</span>
+        <h2>Bekijk en test elke oefenvorm</h2>
+        <p class="muted">Kies een leerling om diens tafels en persoonlijke instellingen te gebruiken. Testresultaten worden nooit opgeslagen.</p>
+        <div class="preview-toolbar">
+          <label>Test met de instellingen van<select id="previewStudentSelect"></select></label>
+          <button id="startPreviewBtn" class="secondary">Bekijk volledig leerlingstartscherm</button>
+        </div>
+        <h3>Oefenen</h3>
+        <div id="previewPracticeModes" class="preview-mode-grid"></div>
+        <h3>Toetsen</h3>
+        <div id="previewTestModes" class="preview-mode-grid"></div>
+      </div>
+    </section>
+
+    <section id="teacherResultsTab" class="teacher-tab-view">
+      <div class="panel">
+        <div class="teacher-head">
+          <div><h2>Opvolging</h2></div>
+          <div class="row compact">
+            <button id="exportBtn" class="secondary">Backup exporteren</button>
+            <label class="fileBtn secondary">Backup importeren<input id="importInput" type="file" accept=".json" hidden></label>
+          </div>
+        </div>
+        <div class="teacher-controls">
+          <label>Leerling<select id="teacherStudentSelect"></select></label>
+        </div>
+        <div id="overviewCards" class="stats-grid teacher-stats"></div>
+        <div id="learningAdvice" class="advice-card"></div>
+        <h3>Automatisatie per tafel</h3>
+        <p class="legend"><span class="dot green"></span> vlot <span class="dot orange"></span> nog oefenen <span class="dot red"></span> moeilijk <span class="dot gray"></span> nog geen gegevens</p>
+        <div id="masteryGrid" class="mastery-grid"></div>
+        <h3>Recente oefensessies</h3>
+        <div class="table-wrap"><table><thead><tr><th>Datum</th><th>Type</th><th>Score</th><th>Gem. tijd</th><th>Oefeningen</th></tr></thead><tbody id="sessionRows"></tbody></table></div>
+      </div>
+    </section>
+
+    <section id="teacherHomeworkTab" class="teacher-tab-view">
+      <div class="panel">
+        <h2>Persoonlijke huistaak</h2>
+        <div class="form-grid">
+          <label>Leerling<select id="homeworkStudentSelect"></select></label>
+          <label>Niveau<select id="homeworkLevel"><option value="auto" selected>Automatisch</option><option value="basis">Basis</option><option value="kern">Kern</option><option value="uitdaging">Uitdaging</option><option value="expert">Expert</option></select></label>
+          <label>Keuze van de tafels<select id="homeworkSource"><option value="manual" selected>Alleen wat ik hieronder aanduid</option><option value="auto">Automatisch op resultaten</option></select></label>
+          <label>Bewerkingen<select id="homeworkOperation"><option value="both">Maal en deel</option><option value="multiply">Alleen maal</option><option value="divide">Alleen deel</option></select></label>
+          <label>Omvang en variatie<select id="homeworkPlay"><option value="4">Gevarieerd</option><option value="6" selected>Heel gevarieerd · mag 3 pagina's zijn</option></select></label>
+        </div>
+        <fieldset id="homeworkTablesField" class="table-field"><legend>Tafels voor de huistaak</legend><p class="field-help">Alleen de aangevinkte tafels mogen op het blad voorkomen.</p><div id="homeworkTableChecks" class="checks"></div></fieldset>
+        <button id="generateHomeworkBtn" class="large">Genereer huistaak op maat</button>
+      </div>
+    </section>
+
+    <section id="teacherFlashcardsTab" class="teacher-tab-view">
+      <div class="panel">
+        <h2>Flitskaartjes per tafel</h2>
+        <p class="muted">Genereer dubbelzijdige kaartjes. Voorzijde = oefening, achterzijde = uitkomst.</p>
+
+        <div class="form-grid">
+          <label>Tafel
+            <select id="flashTableSelect">
+              <option value="1">Tafel 1</option><option value="2">Tafel 2</option><option value="3">Tafel 3</option>
+              <option value="4">Tafel 4</option><option value="5">Tafel 5</option><option value="6">Tafel 6</option>
+              <option value="7">Tafel 7</option><option value="8">Tafel 8</option><option value="9">Tafel 9</option><option value="10">Tafel 10</option>
+            </select>
+          </label>
+          <label>Soort kaartjes
+            <select id="flashTypeSelect">
+              <option value="multiply">Maaltafel</option>
+              <option value="divide">Deeltafel</option>
+              <option value="family">Maal + deel gemengd</option>
+            </select>
+          </label>
+          <label>Notatie maaltafel
+            <select id="flashPositionSelect">
+              <option value="class">Gebruik klasinstelling</option>
+              <option value="front">Tafelgetal vooraan</option>
+              <option value="back">Tafelgetal achteraan</option>
+              <option value="both">Beide richtingen</option>
+            </select>
+          </label>
+        </div>
+
+        <div class="form-grid">
+          <label>Recto-verso afdrukken
+            <select id="flashDuplexSelect">
+              <option value="long" selected>Omslaan langs lange zijde</option>
+              <option value="short">Omslaan langs korte zijde</option>
+            </select>
+          </label>
+          <label>Kaarten per blad
+            <select id="flashCountSelect">
+              <option value="10">10 kaartjes</option>
+              <option value="12" selected>12 kaartjes</option>
+            </select>
+          </label>
+          <label>Snijlijnen
+            <select id="flashCutSelect">
+              <option value="yes" selected>Ja</option>
+              <option value="no">Nee</option>
+            </select>
+          </label>
+        </div>
+
+        <div class="callout">
+          <strong>Afdrukveilig ontwerp</strong>
+          <p>De kaarten staan binnen een veilige marge van 10 mm. De achterzijde wordt automatisch gespiegeld volgens de gekozen duplexrichting. Print op 100% / werkelijke grootte en schakel “passen aan pagina” uit.</p>
+        </div>
+
+        <button id="generateFlashcardsBtn" class="large">Genereer flitskaartjes</button>
+      </div>
+    </section>
+
+  </section>
+
+  <section id="setupView" class="view">
+    <div class="panel">
+      <div class="setup-nav"><button id="setupBackBtn" class="secondary">← Terug naar oefenvormen</button><span id="previewBadge" class="preview-badge hidden">TESTMODUS · wordt niet opgeslagen</span></div>
+      <h2 id="setupTitle">Oefening instellen</h2>
+      <div class="form-grid">
+        <label>Soort oefeningen<select id="operationSelect"><option value="multiply">Maaltafels</option><option value="divide">Deeltafels</option><option value="both">Maal en deel gemengd</option></select></label>
+        <label>Aantal oefeningen<select id="questionCount"><option>10</option><option selected>20</option><option>30</option><option>40</option><option>50</option></select></label>
+        <label id="tempoTimeWrap" class="hidden">Totale tijd<select id="tempoSeconds"><option value="60">1 minuut</option><option value="120" selected>2 minuten</option><option value="180">3 minuten</option></select></label>
+        <label id="perQuestionTimeWrap" class="hidden">Tijd per oefening<select id="perQuestionSeconds"><option value="2">2 seconden</option><option value="3" selected>3 seconden</option><option value="4">4 seconden</option><option value="5">5 seconden</option><option value="6">6 seconden</option></select></label>
+      </div>
+      <div id="modeInfo" class="mode-info"></div>
+      <h3>Kies de tafels</h3><div id="tableChecks" class="checks"></div>
+      <div id="remediateInfo" class="callout hidden"><strong>Gerichte remediëring</strong><p>De tool gebruikt eerdere fouten, trage antwoorden en visuele/inhoudelijke ondersteuning.</p></div>
+      <button id="startBtn" class="large">Start</button><p id="setupError" class="error"></p>
+    </div>
+  </section>
+
+  <section id="exerciseView" class="view">
+    <div class="exercise-head"><div><strong id="exerciseStudent"></strong><span id="progressText"></span></div><div class="play-stats"><span id="streakBox">🔥 0</span><span id="starBox">★ 0</span><div id="timerBox" class="timer hidden">⏱ <span id="timerText">02:00</span></div></div></div>
+    <div class="progressbar"><div id="progressFill"></div></div>
+    <div class="exercise-card">
+      <div id="supportBox" class="support-box hidden"></div>
+      <div id="exercisePrompt" class="exercise-prompt hidden"></div>
+      <div id="questionText" class="question"></div>
+      <form id="answerForm"><input id="answerInput" inputmode="numeric" autocomplete="off" aria-label="Antwoord"><button type="submit">OK</button></form>
+      <div id="choiceBox" class="choice-box hidden"></div>
+      <div id="feedback" class="feedback" aria-live="polite"></div>
+    </div>
+    <button id="stopBtn" class="secondary danger-outline">Stop oefening</button>
+  </section>
+
+  <section id="resultView" class="view">
+    <div class="panel">
+      <h2>Resultaat</h2>
+      <div class="stats-grid result-stats"><div><strong id="scorePct">0%</strong><span>juist</span></div><div><strong id="scoreCorrect">0/0</strong><span>oefeningen</span></div><div><strong id="scoreWrong">0</strong><span>fout</span></div><div><strong id="scoreUnanswered">0</strong><span>niet op tijd</span></div><div><strong id="scoreFluent">0</strong><span>juist én vlot</span></div><div><strong id="scoreSlow">0</strong><span>juist maar traag</span></div><div><strong id="avgTime">0 s</strong><span>gemiddeld</span></div><div><strong id="scoreRate">0</strong><span>correct per minuut</span></div></div>
+      <div id="resultMessage" class="result-message"></div><div id="mistakeList"></div>
+      <button id="resultBackBtn" class="large">Terug</button>
+    </div>
+  </section>
+
+
+  <section id="flashcardsView" class="view flash-print-area">
+    <div class="homework-toolbar no-print">
+      <button id="flashBackBtn" class="secondary">← Terug</button>
+      <button id="flashPrintBtn">Afdrukken / opslaan als PDF</button>
+    </div>
+
+    <div class="flash-instructions no-print panel">
+      <h3>Afdrukinstellingen</h3>
+      <p><b>Papier:</b> A4 liggend · <b>Schaal:</b> 100% / werkelijke grootte · <b>Marges:</b> standaard of geen extra browsermarges · <b>Dubbelzijdig:</b> gebruik dezelfde omslagrichting als gekozen in de generator.</p>
+    </div>
+
+    <article id="flashFrontPage" class="flash-page">
+      <div class="flash-page-label no-print">VOORZIJDE</div>
+      <div id="flashFrontGrid" class="flash-grid"></div>
+    </article>
+
+    <article id="flashBackPage" class="flash-page">
+      <div class="flash-page-label no-print">ACHTERZIJDE</div>
+      <div id="flashBackGrid" class="flash-grid"></div>
+    </article>
+  </section>
+
+
+  <section id="homeworkView" class="view print-area">
+    <div class="homework-toolbar no-print">
+      <button id="homeworkBackBtn" class="secondary">← Terug</button>
+      <button id="regenerateHomeworkBtn" class="secondary">Nieuwe variant</button>
+      <button id="printHomeworkBtn">Afdrukken / opslaan als PDF</button>
+      <button id="toggleAnswersBtn" class="secondary">Toon oplossingen</button>
+    </div>
+    <article class="homework-sheet" id="homeworkSheet">
+      <header class="homework-header"><div><h1>Mijn tafelmissie</h1><p>Oefenen · ontdekken · puzzelen</p></div><img class="hw-deco" src="assets/rekenroef-mascotte.png" alt=""></header>
+      <div class="homework-meta"><span>Naam: <strong id="hwName"></strong></span><span>Datum: __________________</span></div>
+      <p class="homework-instruction">Werk rustig en netjes. Neem voldoende plaats om je antwoorden duidelijk te schrijven.</p>
+      <div id="homeworkContent"></div><div class="homework-footer">Klaar? Kijk nog even na of je overal een antwoord hebt ingevuld.</div>
+    </article>
+    <article class="homework-sheet answers-sheet hidden" id="answersSheet">
+      <header class="homework-header"><div><h1>Oplossingen</h1><p id="answersFor"></p></div><div class="answer-badge">OPLOSSINGEN</div></header>
+      <div id="answersContent"></div>
+    </article>
+  </section>
+</main>
+
+<dialog id="studentDialog">
+  <form method="dialog" id="studentForm">
+    <h2>Nieuwe leerling</h2>
+    <label>Naam<input id="studentNameInput" required maxlength="40" autocomplete="off"></label>
+    <label>Inlogcode voor de leerling (optioneel)<input id="studentPinInput" inputmode="numeric" maxlength="6" placeholder="de tool maakt een code indien leeg"></label>
+    <p class="field-help">Deze code wordt door de leerkracht toegekend. De leerling kan ze niet zelf kiezen of wijzigen.</p>
+    <div class="row"><button value="cancel" class="secondary">Annuleren</button><button value="default">Opslaan</button></div>
+  </form>
+</dialog>
+
+<dialog id="studentSettingsDialog">
+  <form method="dialog" id="studentSettingsForm">
+    <h2>Persoonlijke instellingen</h2>
+    <p id="studentSettingsName"></p>
+    <label class="checkline"><input id="studentUseCustom" type="checkbox"> Afwijken van de klasinstellingen</label>
+    <label>Notatie
+      <select id="studentFactorPosition"><option value="front">tafelgetal vooraan</option><option value="back">tafelgetal achteraan</option><option value="both">beide richtingen</option></select>
+    </label>
+    <label>Actieve tafels<input id="studentTablesInput" placeholder="bijv. 2, 5, 10"></label>
+    <fieldset class="dialog-field"><legend>Wat mag deze leerling vrij oefenen?</legend>
+      <label class="checkline"><input id="studentMultiply" type="checkbox"> Maaltafels</label>
+      <label class="checkline"><input id="studentDivide" type="checkbox"> Deeltafels</label>
+    </fieldset>
+    <div class="row"><button value="cancel" class="secondary">Annuleren</button><button value="default">Opslaan</button></div>
+  </form>
+</dialog>
+
+<script src="app.js"></script>
+<script type="module" src="portal-integration.js"></script>
+</body>
+</html>

@@ -1036,6 +1036,27 @@
   color:#fff;
 }
 
+#ingelogd-kaart.startportaal .portaal-sectie.leerlabo-blok {
+  border-left:5px solid #2f8f83;
+  background:linear-gradient(145deg,#f2fbf8 0%,#fffaf0 100%);
+}
+#ingelogd-kaart.startportaal .portaal-tegel.tafel-tool {
+  background:linear-gradient(145deg,#e7f7f2 0%,#fff4cf 100%);
+  border-color:#78b7aa;
+}
+#ingelogd-kaart.startportaal .portaal-tegel.tafel-tool:hover {
+  border-color:#087f78;
+  box-shadow:0 10px 24px rgba(8,127,120,.18);
+}
+#ingelogd-kaart.startportaal .portaal-tegel.tafel-tool .portaal-tegel-icoon {
+  background:#d5efe8;
+  font-size:31px;
+}
+#ingelogd-kaart.startportaal .portaal-tegel.tafel-tool .portaal-open {
+  background:#087f78;
+  color:#fff;
+}
+
 #ingelogd-kaart.startportaal .portaal-sectie.adminblok {
   border-left: 5px solid #e1b85f;
 }
@@ -1158,18 +1179,6 @@
             <span class="portaal-desc">Open de opvolging van je klas voor het afgeven van huistaken per leerling.</span>
             <span class="portaal-open">Openen</span>
           </a>
-          <a href="https://tools.jufzisa.be/" class="portaal-tegel zisa-tool" target="_blank" rel="noopener">
-            <span class="portaal-tegel-icoon"><img src="https://tools.jufzisa.be/start_afbeeldingen/zisa.png" alt="Juf Zisa's Spelgenerator"></span>
-            <span class="portaal-title">Juf Zisa's Spelgenerator</span>
-            <span class="portaal-desc">Maak gratis werkbladen, puzzels en leerspellen voor je klas.</span>
-            <span class="portaal-open">Werkblad maken ↗</span>
-          </a>
-          <a id="woSpelenKeuzeKnop" href="https://isabelrockele.github.io/zisa-wo-spelen/" class="portaal-tegel wo-spelen-tool" target="_blank" rel="noopener" style="display:none">
-            <span class="portaal-tegel-icoon" aria-hidden="true">🌍</span>
-            <span class="portaal-title">Zisa WO Spelen</span>
-            <span class="portaal-desc">Open speelse WO-oefeningen en leeractiviteiten voor gebruik in de klas.</span>
-            <span class="portaal-open">Spelen openen ↗</span>
-          </a>
           <a id="naametikettenKeuzeKnop" href="naametiketten.html" class="portaal-tegel administratie" target="_blank" rel="noopener" style="display:none">
             <span class="portaal-tegel-icoon">&#127991;</span>
             <span class="portaal-title">Lyreco-etiketten – namen en tekst</span>
@@ -1217,6 +1226,30 @@
             <span class="portaal-title">Klasagenda nieuw</span>
             <span class="portaal-desc">Nieuwe versie - probeer & test.</span>
             <span class="portaal-open">Openen</span>
+          </a>
+        </div>
+      </section>
+
+      <section class="portaal-sectie leerlabo-blok">
+        <div class="portaal-sectie-kop"><h2>Speel- en leeratelier</h2><span>oefenen, ontdekken en leerspellen maken</span></div>
+        <div class="portaal-sectie-grid">
+          <a href="https://tools.jufzisa.be/" class="portaal-tegel zisa-tool" target="_blank" rel="noopener">
+            <span class="portaal-tegel-icoon"><img src="https://tools.jufzisa.be/start_afbeeldingen/zisa.png" alt="Juf Zisa's Spelgenerator"></span>
+            <span class="portaal-title">Juf Zisa's Spelgenerator</span>
+            <span class="portaal-desc">Maak werkbladen, puzzels en leerspellen voor je klas.</span>
+            <span class="portaal-open">Spel maken ↗</span>
+          </a>
+          <a id="woSpelenKeuzeKnop" href="https://isabelrockele.github.io/zisa-wo-spelen/" class="portaal-tegel wo-spelen-tool" target="_blank" rel="noopener" style="display:none">
+            <span class="portaal-tegel-icoon" aria-hidden="true">🌍</span>
+            <span class="portaal-title">Zisa WO Spelen</span>
+            <span class="portaal-desc">Speelse WO-oefeningen en leeractiviteiten voor gebruik in de klas.</span>
+            <span class="portaal-open">Spelen openen ↗</span>
+          </a>
+          <a id="tafelExpeditieKeuzeKnop" href="tafelexpeditie/index.html" class="portaal-tegel tafel-tool" target="_blank" rel="noopener">
+            <span class="portaal-tegel-icoon" aria-hidden="true">✖️</span>
+            <span class="portaal-title">TafelExpeditie</span>
+            <span class="portaal-desc">Leer, oefen en automatiseer de maal- en deeltafels met taken, toetsen en huistaken.</span>
+            <span class="portaal-open">Tafels oefenen</span>
           </a>
         </div>
       </section>

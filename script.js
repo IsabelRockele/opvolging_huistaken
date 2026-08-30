@@ -165,9 +165,10 @@ function pasRustigePortaalrubriekenToe(rolNaam, isSecretariaat, heeftKlasbeheer,
   const rolSleutel = rolNaam || (isSecretariaat ? 'secretariaat' : heeftKlasbeheer ? 'klasleerkracht' : isSchoolBreed ? 'schoolbreed' : 'gebruiker');
   const opslagSleutel = 'lindeOpenRubriek_' + rolSleutel;
   const standaard = isSecretariaat ? 'administratie' : heeftKlasbeheer ? 'organisatie' : isSchoolBreed ? 'zorg' : 'organisatie';
-  let gekozen = localStorage.getItem(opslagSleutel) || standaard;
+  const bewaard = localStorage.getItem(opslagSleutel);
+  let gekozen = bewaard === '__alles_dicht__' ? null : (bewaard || standaard);
   const zichtbareSecties = secties.filter(zichtbareTegels);
-  if (!zichtbareSecties.some(s => sleutelVan(s) === gekozen)) gekozen = sleutelVan(zichtbareSecties[0] || secties[0]);
+  if (gekozen && !zichtbareSecties.some(s => sleutelVan(s) === gekozen)) gekozen = sleutelVan(zichtbareSecties[0] || secties[0]);
 
   secties.forEach(sectie => {
     const kop = sectie.querySelector('.portaal-sectie-kop');
@@ -187,6 +188,13 @@ function pasRustigePortaalrubriekenToe(rolNaam, isSecretariaat, heeftKlasbeheer,
     kop.setAttribute('tabindex', '0');
     kop.setAttribute('aria-expanded', String(sleutel === gekozen));
     const open = () => {
+      const stondOpen = !sectie.classList.contains('is-collapsed');
+      if (stondOpen) {
+        sectie.classList.add('is-collapsed');
+        kop.setAttribute('aria-expanded', 'false');
+        localStorage.setItem(opslagSleutel, '__alles_dicht__');
+        return;
+      }
       secties.forEach(andere => {
         const actief = andere === sectie;
         andere.classList.toggle('is-collapsed', !actief);

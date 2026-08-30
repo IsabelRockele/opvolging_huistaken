@@ -1,0 +1,112 @@
+TAFELEXPEDITIE V9
+
+Nieuwe kernstroom in V9:
+- De leerkracht zet een "missie" klaar voor de hele klas of voor één leerling.
+- Een missie bevat een oefenvorm, tafels, aantal vragen, titel en optionele deadline.
+- Leerlingen zien na aanmelden eerst hun openstaande missies en daarnaast vrije oefenkansen.
+- Na afronden verschijnt de missie als voltooid in het overzicht van de leerkracht.
+- Tempotoetsen beoordelen niet alleen juistheid: de bestaande beheersingsanalyse combineert score en antwoordtijd.
+- Nieuwe rustige, kindvriendelijke expeditiehuisstijl met een eigen rode-pandamascotte.
+- De mascotte wordt ook gebruikt op de printbare huistaak.
+
+Didactische leerlijn:
+1. Begrijpen: visuele groepjes en herhaald optellen.
+2. Opbouwen: één tafel gericht oefenen en patronen herkennen.
+3. Verbinden: maal en delen als omgekeerde bewerkingen.
+4. Automatiseren: gemengd oefenen met steeds minder steun.
+5. Vlot beheersen: tempotoets waarbij juistheid én snelheid tellen.
+6. Remediëren: foutgevoelige en trage tafel-feiten komen vaker terug.
+
+Belangrijk voor de latere koppeling met de huiswerkapp:
+Deze versie bewaart klaslijst, door de leerkracht toegewezen inlogcodes, taken en resultaten lokaal op het gebruikte toestel.
+De datastructuur heeft aparte leerlingen, opdrachten, sessies en feitstatistieken, zodat die later
+naar de centrale klaslijst en databank van de huiswerkapp gemigreerd kunnen worden.
+
+Nieuwe structuur:
+- Startscherm met LEERKRACHT en LEERLING
+- Leerkrachtinstellingen:
+  * tafelgetal vooraan, achteraan of beide richtingen
+  * maaltafels / deeltafels
+  * maal en deel als omgekeerde bewerkingen
+  * ontbrekende factor/deler
+  * visuele remediëring
+  * actieve tafels
+  * toegelaten oefenvormen
+  * standaard aantal oefeningen
+  * tempotoetstijd
+  * grens voor 'vlot'
+- Klasbeheer
+  * leerling handmatig toevoegen
+  * klaslijst importeren als CSV of TXT
+  * formaat: één naam per regel, of naam,inlogcode
+  * de leerkracht voert een code in of laat automatisch een unieke 4-cijferige code maken
+  * persoonlijke instellingen per leerling
+- Testmodus voor leerkracht
+  * leerkracht kan exact zien wat een leerling ziet
+  * testresultaten worden NIET opgeslagen
+- Leerlinglogin
+  * naam + door de leerkracht toegewezen inlogcode
+  * leerling ziet alleen oefenvormen die zijn vrijgegeven
+- Opvolging
+- Adaptieve remediëring
+- Tempotoets
+- Persoonlijke printbare huistaken met speelse opdrachten en oplossingen
+
+Belangrijk:
+Deze versie werkt volledig lokaal in de browser en bewaart gegevens in localStorage.
+Een echte centrale leerlinglogin op meerdere toestellen vereist als volgende stap Firebase of een andere database/authenticatie.
+
+
+NIEUW IN V5 - FLITSKAARTJES
+- Leerkracht kan per tafel dubbelzijdige flitskaartjes genereren.
+- Voorzijde: oefening.
+- Achterzijde: uitkomst + kleine controle-oefening.
+- Keuze maaltafel, deeltafel of maal/deel gemengd.
+- Keuze tafelgetal vooraan, achteraan, beide richtingen of klasinstelling.
+- A4 liggend.
+- Rechthoekige liggende kaartjes.
+- Veilige afdrukzone: 10 mm marge rondom.
+- Raster: 3 kolommen × 4 rijen, kaartformaat 92 × 47 mm.
+- Achterzijde wordt gespiegeld voor:
+  * dubbelzijdig omslaan langs lange zijde
+  * dubbelzijdig omslaan langs korte zijde
+- Snijlijnen aan/uit.
+- Afdrukadvies: 100% / werkelijke grootte, niet 'passen aan pagina'.
+
+Opmerking:
+Thuisprinters kunnen een mechanische verschuiving van 1-3 mm hebben bij recto-verso.
+De brede veilige binnenmarges van elk kaartje beperken het risico dat tekst wordt afgesneden.
+
+
+HUISTAKEN V6
+- Veel grotere schrijflijnen en invulruimte.
+- Meer verticale afstand tussen oefeningen.
+- Foutendetective: aparte vakjes voor juist/fout én een ruime verbeterlijn na elke uitspraak.
+- Elke huistaak bevat nu een vraagstuk.
+- Nieuwe speelse opdrachten:
+  * sprongen tellen in een slang
+  * tafelrooster aanvullen
+  * vraagstuk met eigen PNG-illustratie
+  * adaptieve ontbrekende getallen
+  * foutendetective
+  * koppelen
+  * bewerkingsfamilies
+  * uitdaging voor sterke leerlingen
+- Eigen lokale PNG-bestanden in map assets; geen emoji in de huistaakdecoratie.
+
+
+HUISTAKEN V7 — RUIMTE
+- Huistaken worden bewust over 2 pagina's verdeeld.
+- Maximaal 3 grotere opdrachtblokken op pagina 1.
+- Grotere letters.
+- Langere antwoordlijnen.
+- Invullijnen hebben extra hoogte zodat kinderen er echt op kunnen schrijven.
+- Meer verticale witruimte tussen oefeningen.
+- Grotere juist/fout-vakjes.
+- Na elke foutendetective-uitspraak staat een aparte ruime verbeterlijn.
+- Grotere roostervakken en slangcirkels.
+- Vraagstukken krijgen meer schrijfruimte.
+- Opdrachten worden bij printen niet midden in een blok afgebroken.
+
+
+V8: huistaken herbouwd rond Basis, Kern, Uitdaging en Expert; echte variatie met visuele groepjes, slang, rooster, domino, code, indringer, vraagstukken, bewerkingsfamilies en expert-denkopdrachten. Twee ruime pagina's blijven behouden.
