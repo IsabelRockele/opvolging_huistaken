@@ -22,7 +22,7 @@ function rand(a){return a[Math.floor(Math.random()*a.length)]}
 function shuffle(a){return [...a].sort(()=>Math.random()-.5)}
 function studentById(id){return db.students.find(s=>s.id===id)}
 function studentSort(a,b){return String(a.lastName||a.name).localeCompare(String(b.lastName||b.name),"nl-BE")||String(a.firstName||a.name).localeCompare(String(b.firstName||b.name),"nl-BE")}
-function teacherStudentName(s){return s.lastName&&s.firstName?`${s.lastName}, ${s.firstName}`:s.name}
+function teacherStudentName(s){return s.lastName&&s.firstName?`${s.lastName} ${s.firstName}`:s.name}
 function visibleStudents(){return (db.activePortalClass?db.students.filter(s=>s.portalClass===db.activePortalClass):db.students).slice().sort(studentSort)}
 function makePin(){let p;do{p=String(Math.floor(1000+Math.random()*9000))}while(db.students.some(s=>s.pin===p));return p}
 function studentSettings(id){const s=studentById(id);return s?.useCustom?{...db.settings,...s.custom,modes:{...db.settings.modes,...(s.custom?.modes||{})}}:db.settings}
