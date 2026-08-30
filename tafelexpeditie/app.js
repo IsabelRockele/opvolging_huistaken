@@ -125,6 +125,7 @@ function teacherTab(name){
 }
 function enterTeacher(){refreshAllTeacher();loadSettingsForm();showView("teacher");teacherTab("settings")}
 function refreshAllTeacher(){refreshStudentSelects();renderClass();loadSettingsForm()}
+window.refreshTafelExpeditieTeacher=refreshAllTeacher;
 
 function printPinCards(){
  const students=visibleStudents();if(!students.length){alert("Voeg eerst leerlingen toe.");return}
