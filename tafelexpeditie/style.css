@@ -409,4 +409,5 @@ dialog{border:0;border-radius:14px;padding:0;box-shadow:0 8px 30px #0003}dialog:
 .pin-display{display:block;width:min(280px,100%);height:68px;margin:20px auto;font-size:2rem;font-weight:900;letter-spacing:18px;text-align:center;border:3px solid #78bbb0;border-radius:18px;background:#fff;color:#18324a}
 .login-keypad{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;max-width:330px;margin:0 auto 18px}.login-keypad button{min-height:62px;border-radius:18px;font-size:1.35rem;font-weight:900;background:#fff;color:#18324a;border:2px solid #c3ddd7}.login-keypad button:nth-child(10),.login-keypad button:nth-child(12){font-size:1rem;background:#edf6f3}
 .qr-callout small{display:block;color:#8a5d00;font-weight:700}
+.task-preview-panel{margin-top:22px;border:2px solid #b9d9d0}.preview-explanation{margin-bottom:22px}.preview-explanation p{line-height:1.55}
 @media(max-width:600px){.student-name-grid{grid-template-columns:1fr 1fr}.student-name-tile{grid-template-columns:38px 1fr;padding:10px;min-height:74px}.student-name-tile>span{width:36px;height:36px}.student-name-tile strong{font-size:.96rem}}

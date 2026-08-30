@@ -86,7 +86,6 @@
       <button data-teacher-tab="settings" class="teacher-tab active">⚙️ Instellingen</button>
       <button data-teacher-tab="class" class="teacher-tab">👥 Klas</button>
       <button data-teacher-tab="assignments" class="teacher-tab">📌 Taken</button>
-      <button data-teacher-tab="preview" class="teacher-tab">▶ Testen</button>
       <button data-teacher-tab="results" class="teacher-tab">📊 Opvolging</button>
       <button data-teacher-tab="homework" class="teacher-tab">📝 Huistaken</button>
       <button data-teacher-tab="flashcards" class="teacher-tab">🃏 Flitskaartjes</button>
@@ -162,6 +161,20 @@
         <button id="createAssignmentBtn" class="large">Zet missie klaar</button><p id="assignmentSaved" class="success"></p>
         <h3>Openstaande missies</h3><div id="assignmentRows" class="assignment-list"></div>
       </div>
+      <div class="panel task-preview-panel">
+        <span class="eyebrow">PROBEER EERST ZELF</span>
+        <h2>Ontdek wat het kind precies krijgt</h2>
+        <p class="muted">Test hier iedere oefen- en toetsvorm voordat je ze klaarzet. Je gebruikt de instellingen van een gekozen leerling, maar de testresultaten worden nooit opgeslagen.</p>
+        <div class="preview-toolbar">
+          <label>Test met de instellingen van<select id="previewStudentSelect"></select></label>
+          <button id="startPreviewBtn" class="secondary">Bekijk het volledige leerlingstartscherm</button>
+        </div>
+        <div class="callout preview-explanation"><strong>Wat is het verschil?</strong><p><b>Oefenen</b> geeft uitleg, afwisseling of gerichte hulp. Een <b>kennistoets</b> controleert juistheid zonder tijdsdruk. Een <b>flitstoets</b> geeft een ingestelde tijd per oefening. Een <b>tempomissie</b> laat zoveel mogelijk oefeningen maken binnen één totale tijd.</p></div>
+        <h3>Oefenvormen</h3>
+        <div id="previewPracticeModes" class="preview-mode-grid"></div>
+        <h3>Toetsvormen</h3>
+        <div id="previewTestModes" class="preview-mode-grid"></div>
+      </div>
     </section>
 
     <section id="teacherClassTab" class="teacher-tab-view">
@@ -192,22 +205,6 @@
             <tbody id="classRows"></tbody>
           </table>
         </div>
-      </div>
-    </section>
-
-    <section id="teacherPreviewTab" class="teacher-tab-view">
-      <div class="panel">
-        <span class="eyebrow">LEERKRACHT · TESTCENTRUM</span>
-        <h2>Bekijk en test elke oefenvorm</h2>
-        <p class="muted">Kies een leerling om diens tafels en persoonlijke instellingen te gebruiken. Testresultaten worden nooit opgeslagen.</p>
-        <div class="preview-toolbar">
-          <label>Test met de instellingen van<select id="previewStudentSelect"></select></label>
-          <button id="startPreviewBtn" class="secondary">Bekijk volledig leerlingstartscherm</button>
-        </div>
-        <h3>Oefenen</h3>
-        <div id="previewPracticeModes" class="preview-mode-grid"></div>
-        <h3>Toetsen</h3>
-        <div id="previewTestModes" class="preview-mode-grid"></div>
       </div>
     </section>
 

@@ -2,7 +2,7 @@
 const STORAGE_KEY="tafeltrainer_v4";
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 const views={landing:$("#landingView"),studentLogin:$("#studentLoginView"),studentHome:$("#studentHomeView"),teacher:$("#teacherDashboardView"),setup:$("#setupView"),exercise:$("#exerciseView"),result:$("#resultView"),homework:$("#homeworkView"),flashcards:$("#flashcardsView")};
-const teacherTabs={settings:$("#teacherSettingsTab"),class:$("#teacherClassTab"),assignments:$("#teacherAssignmentsTab"),preview:$("#teacherPreviewTab"),results:$("#teacherResultsTab"),homework:$("#teacherHomeworkTab"),flashcards:$("#teacherFlashcardsTab")};
+const teacherTabs={settings:$("#teacherSettingsTab"),class:$("#teacherClassTab"),assignments:$("#teacherAssignmentsTab"),results:$("#teacherResultsTab"),homework:$("#teacherHomeworkTab"),flashcards:$("#teacherFlashcardsTab")};
 let db=loadDb(),currentStudentId=null,currentMode=null,currentSession=null,timerId=null,questionTimerId=null,questionTickId=null,isPreview=false,returnContext="student",lastHomework=null,lastHomeworkConfig=null,editStudentId=null,currentAssignmentId=null;
 
 function defaults(){return{version:5,students:[],sessions:[],factStats:{},assignments:[],settings:{factorPosition:"front",multiply:true,divide:true,families:true,missing:true,visual:true,tables:[2,5,10],modes:{learn:true,mix:true,smart:true,remediate:true,tempo:true},defaultCount:20,defaultTempo:120,fluentSeconds:3}}}
@@ -109,8 +109,7 @@ function teacherTab(name){
  $$(".teacher-tab").forEach(b=>b.classList.toggle("active",b.dataset.teacherTab===name));Object.entries(teacherTabs).forEach(([k,v])=>v.classList.toggle("active",k===name));
  if(name==="results")renderTeacherResults($("#teacherStudentSelect").value||visibleStudents()[0]?.id);
  if(name==="class")renderClass()
- if(name==="assignments")renderAssignments()
- if(name==="preview")renderPreviewCenter()
+ if(name==="assignments"){renderAssignments();renderPreviewCenter()}
 }
 function enterTeacher(){refreshAllTeacher();loadSettingsForm();showView("teacher");teacherTab("settings")}
 function refreshAllTeacher(){refreshStudentSelects();renderClass();loadSettingsForm()}
@@ -447,7 +446,7 @@ buildChecks();setChecks($("#homeworkTableChecks"),db.settings.tables);refreshStu
 $("#enterTeacherBtn").addEventListener("click",enterTeacher);$("#teacherTopBtn").addEventListener("click",enterTeacher);
 $("#enterStudentLoginBtn").addEventListener("click",()=>{refreshStudentSelects();resetStudentLogin();showView("studentLogin")});$("#studentLoginBackBtn").addEventListener("click",()=>showView("landing"));$("#goLandingBtn").addEventListener("click",()=>showView("landing"));
 $("#chooseOtherStudentBtn").addEventListener("click",resetStudentLogin);$("#loginKeypad").innerHTML=[1,2,3,4,5,6,7,8,9,"wis",0,"⌫"].map(x=>`<button type="button" data-key="${x}">${x}</button>`).join("");$("#loginKeypad").addEventListener("click",e=>{const key=e.target.closest("[data-key]")?.dataset.key;if(key===undefined)return;const input=$("#loginPin");if(key==="wis")input.value="";else if(key==="⌫")input.value=input.value.slice(0,-1);else if(input.value.length<4)input.value+=key;$("#loginError").textContent=""});
-$("#studentLoginBtn").addEventListener("click",loginStudent);$("#studentLogoutBtn").addEventListener("click",()=>{if(isPreview){isPreview=false;returnContext="teacher";showView("teacher");teacherTab("preview")}else{currentStudentId=null;showView("landing")}});
+$("#studentLoginBtn").addEventListener("click",loginStudent);$("#studentLogoutBtn").addEventListener("click",()=>{if(isPreview){isPreview=false;returnContext="teacher";showView("teacher");teacherTab("assignments")}else{currentStudentId=null;showView("landing")}});
 $$(".teacher-tab").forEach(b=>b.addEventListener("click",()=>teacherTab(b.dataset.teacherTab)));
 $("#saveSettingsBtn").addEventListener("click",saveSettingsFromForm);
 $("#createAssignmentBtn").addEventListener("click",createAssignment);
@@ -466,10 +465,10 @@ $("#studentSettingsForm").addEventListener("submit",e=>{e.preventDefault();const
 $("#classImportInput").addEventListener("change",e=>{if(e.target.files[0])importClassFile(e.target.files[0]);e.target.value=""});$("#downloadClassTemplateBtn").addEventListener("click",downloadClassTemplate);
 $("#previewStudentSelect").addEventListener("change",renderPreviewCenter);
 $("#startPreviewBtn").addEventListener("click",()=>{const id=$("#previewStudentSelect").value;if(!id)return;currentStudentId=id;isPreview=true;returnContext="previewHome";renderStudentHome();$("#studentWelcomeName").textContent+= " · TESTMODUS";showView("studentHome")});
-$("#setupBackBtn").addEventListener("click",()=>{currentAssignmentId=null;if(returnContext==="teacher"){showView("teacher");teacherTab("preview")}else showView("studentHome")});
+$("#setupBackBtn").addEventListener("click",()=>{currentAssignmentId=null;if(returnContext==="teacher"){showView("teacher");teacherTab("assignments")}else showView("studentHome")});
 $("#startBtn").addEventListener("click",startExercise);$("#answerForm").addEventListener("submit",e=>{e.preventDefault();const v=$("#answerInput").value.trim();if(v!==""&&Number.isFinite(+v))handleAnswer(+v)});
 $("#stopBtn").addEventListener("click",()=>{if(confirm("Oefening stoppen?"))finishSession(false)});
-$("#resultBackBtn").addEventListener("click",()=>{if(isPreview&&returnContext==="teacher"){showView("teacher");teacherTab("preview");isPreview=false}else if(isPreview){renderStudentHome();$("#studentWelcomeName").textContent+= " · TESTMODUS";showView("studentHome")}else{renderStudentHome();showView("studentHome")}});
+$("#resultBackBtn").addEventListener("click",()=>{if(isPreview&&returnContext==="teacher"){showView("teacher");teacherTab("assignments");isPreview=false}else if(isPreview){renderStudentHome();$("#studentWelcomeName").textContent+= " · TESTMODUS";showView("studentHome")}else{renderStudentHome();showView("studentHome")}});
 $("#teacherStudentSelect").addEventListener("change",e=>renderTeacherResults(e.target.value));
 $("#exportBtn").addEventListener("click",exportBackup);$("#importInput").addEventListener("change",e=>{if(e.target.files[0])importBackup(e.target.files[0]);e.target.value=""});
 $("#generateHomeworkBtn").addEventListener("click",()=>{const id=$("#homeworkStudentSelect").value;if(!id)return;currentStudentId=id;const manual=$("#homeworkSource").value==="manual",tables=manual?selected($("#homeworkTableChecks")):null;if(manual&&!tables.length){alert("Kies minstens één tafel voor de huistaak.");return}lastHomeworkConfig={level:$("#homeworkLevel").value,play:+$("#homeworkPlay").value,options:{tables,operation:manual?$("#homeworkOperation").value:null}};renderHomework(makeHomework(id,lastHomeworkConfig.level,lastHomeworkConfig.play,lastHomeworkConfig.options))});
