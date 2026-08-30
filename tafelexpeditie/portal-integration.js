@@ -1,21 +1,25 @@
 import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-import { getFirestore, collection, doc, getDoc, getDocs, query, setDoc, where } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getFirestore, collection, doc, getDoc, getDocs, query, setDoc, updateDoc, where } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 const firebaseConfig={apiKey:"AIzaSyA7KxXMvZ4dzBQDut3CMyWUblLte2tFzoQ",authDomain:"huiswerkapp-a311e.firebaseapp.com",projectId:"huiswerkapp-a311e",storageBucket:"huiswerkapp-a311e.appspot.com",messagingSenderId:"797169941164",appId:"1:797169941164:web:511d9618079f1378d0fd09"};
 const firebaseApp=getApps()[0]||initializeApp(firebaseConfig),auth=getAuth(firebaseApp),firestore=getFirestore(firebaseApp);
 const schoolyear=(()=>{const d=new Date(),start=d.getMonth()>=7?d.getFullYear():d.getFullYear()-1;return`${start}-${start+1}`})();
 const status=(title,text,error=false)=>{const box=document.getElementById("portalSyncStatus"),summary=document.getElementById("portalSyncSummary");if(!box||!summary)return;box.classList.toggle("error-state",error);summary.innerHTML=`<strong>${title}</strong><p>${text}</p>`};
-const fullName=s=>{const first=String(s.voornaam||s.firstName||"").trim(),last=String(s.achternaam||s.lastName||"").trim(),direct=String(s.naam||s.name||s.fullName||s.volledigeNaam||"").trim();return first&&last?`${first} ${last}`:first||last||direct};
-const active=s=>{const today=new Date().toISOString().slice(0,10);return s.actief!==false&&(!s.start||s.start<=today)&&(!s.end||s.end>=today)};
+const nameParts=s=>{const first=String(s.roepnaam||s.callingName||s.voornaam||s.firstName||"").trim(),last=String(s.achternaam||s.lastName||s.last||"").trim(),direct=String(s.naam||s.name||s.fullName||s.volledigeNaam||"").trim();return{first,last,full:first&&last?`${first} ${last}`:first||last||direct}};
+const fullName=s=>nameParts(s).full;
+const active=s=>{const reference=`${schoolyear.slice(0,4)}-09-15`,start=s.startDatum||s.start||"",end=s.eindDatum||s.end||"";return s.actief!==false&&(!start||start<=reference)&&(!end||end>=reference)};
 const newCode=used=>{let code;do{code=String(Math.floor(1000+Math.random()*9000))}while(used.has(code));used.add(code);return code};
+const groupForClass=className=>({"1A":"graad1","2A":"graad1","3A":"graad2","4A":"graad2","5A":"graad3","6A":"graad3"})[String(className).toUpperCase()]||"";
+let loadedClassRef=null,loadedCodes={},loadedCodePath="";
 async function loadClass(className){
  status("Centrale klaslijst laden",`${className} · ${schoolyear} wordt opgehaald…`);
- const classRef=doc(firestore,"schoolbeheer",schoolyear,"klassen",className),snap=await getDoc(classRef),data=snap.exists()?snap.data():{},codes={...(data.tafelExpeditieCodes||{})},used=new Set(Object.values(codes).map(String)),students=(data.leerlingen||[]).filter(active).map(s=>({id:String(s.id||`${className}_${fullName(s)}`),name:fullName(s),className})).filter(s=>s.name);let changed=false;
+ const groupId=groupForClass(className),groupRef=groupId?doc(firestore,"schoolbeheer_groepen",`${schoolyear}_${groupId}`):null,groupSnap=groupRef?await getDoc(groupRef):null,legacyRef=doc(firestore,"schoolbeheer",schoolyear,"klassen",className),legacySnap=groupSnap?.exists()?null:await getDoc(legacyRef),classRef=groupSnap?.exists()?groupRef:legacyRef,root=groupSnap?.exists()?groupSnap.data():legacySnap?.exists()?legacySnap.data():{},data=groupSnap?.exists()?(root.klassen?.[className]||{}):root,codes={...(data.tafelExpeditieCodes||{})},used=new Set(Object.values(codes).map(String)),students=(data.leerlingen||[]).filter(active).map((s,index)=>{const n=nameParts(s);return{id:String(s.id||`${className}_${n.full}`),name:n.full,firstName:n.first||n.full,lastName:n.last,classNumber:Number(s.klasnummer||s.classNumber||0)||index+1,className}}).filter(s=>s.name);let changed=false;
  students.forEach(s=>{if(!codes[s.id]){codes[s.id]=newCode(used);changed=true}s.pin=String(codes[s.id])});
- let codesCentral=!changed;if(changed){try{await setDoc(classRef,{tafelExpeditieCodes:codes},{merge:true});codesCentral=true}catch(err){console.warn("Centrale inlogcodes konden niet worden bewaard",err)}}students.forEach(s=>s.codeIsCentral=codesCentral);
- localStorage.setItem("tafelExpeditieBeheerKlas",className);window.syncPortalStudents?.(students,{schoolyear,classLabel:className})
+ const codePath=groupSnap?.exists()?`klassen.${className}.tafelExpeditieCodes`:"tafelExpeditieCodes";let codesCentral=!changed;if(changed){try{if(groupSnap?.exists())await updateDoc(classRef,{[codePath]:codes});else await setDoc(classRef,{tafelExpeditieCodes:codes},{merge:true});codesCentral=true}catch(err){console.warn("Centrale inlogcodes konden niet worden bewaard",err)}}students.forEach(s=>s.codeIsCentral=codesCentral);
+ loadedClassRef=classRef;loadedCodePath=codePath;loadedCodes={...codes};localStorage.setItem("tafelExpeditieBeheerKlas",className);window.syncPortalStudents?.(students,{schoolyear,classLabel:className})
 }
+window.rotatePortalStudentCode=async studentId=>{if(!loadedClassRef||!loadedCodePath||!studentId)return null;const used=new Set(Object.values(loadedCodes).map(String)),code=newCode(used);loadedCodes[String(studentId)]=code;if(loadedCodePath.includes("."))await updateDoc(loadedClassRef,{[loadedCodePath]:loadedCodes});else await setDoc(loadedClassRef,{tafelExpeditieCodes:loadedCodes},{merge:true});return code};
 function showClassPicker(classNames,selected){
  const choice=document.getElementById("portalClassChoice"),picker=document.getElementById("portalClassPicker");if(!choice||!picker)return;
  choice.classList.remove("hidden");picker.innerHTML=classNames.map(c=>`<option value="${c}" ${c===selected?"selected":""}>${c}</option>`).join("");

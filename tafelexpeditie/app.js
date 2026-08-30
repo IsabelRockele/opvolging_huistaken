@@ -21,7 +21,8 @@ function esc(s){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",
 function rand(a){return a[Math.floor(Math.random()*a.length)]}
 function shuffle(a){return [...a].sort(()=>Math.random()-.5)}
 function studentById(id){return db.students.find(s=>s.id===id)}
-function visibleStudents(){return db.activePortalClass?db.students.filter(s=>s.portalClass===db.activePortalClass):db.students}
+function studentSort(a,b){return String(a.lastName||a.name).localeCompare(String(b.lastName||b.name),"nl-BE")||String(a.firstName||a.name).localeCompare(String(b.firstName||b.name),"nl-BE")}
+function visibleStudents(){return (db.activePortalClass?db.students.filter(s=>s.portalClass===db.activePortalClass):db.students).slice().sort(studentSort)}
 function makePin(){let p;do{p=String(Math.floor(1000+Math.random()*9000))}while(db.students.some(s=>s.pin===p));return p}
 function studentSettings(id){const s=studentById(id);return s?.useCustom?{...db.settings,...s.custom,modes:{...db.settings.modes,...(s.custom?.modes||{})}}:db.settings}
 
@@ -33,7 +34,9 @@ function selected(container){return [...container.querySelectorAll("input:checke
 function setChecks(container,nums){container.querySelectorAll("input").forEach(x=>x.checked=nums.includes(+x.value))}
 function refreshStudentSelects(){
  const students=visibleStudents(),opts=students.map(s=>`<option value="${s.id}">${esc(s.name)}</option>`).join("")||'<option value="">Nog geen leerlingen</option>';
- ["#loginStudentSelect","#teacherStudentSelect","#previewStudentSelect","#homeworkStudentSelect"].forEach(id=>$(id).innerHTML=opts);
+ ["#teacherStudentSelect","#previewStudentSelect","#homeworkStudentSelect"].forEach(id=>$(id).innerHTML=opts);
+ const tiles=$("#loginStudentTiles");if(tiles)tiles.innerHTML=students.map((s,i)=>`<button class="student-name-tile" data-student-id="${esc(s.id)}"><span>${s.classNumber||i+1}</span><strong>${esc(s.lastName||s.name)}</strong><small>${esc(s.firstName&&s.lastName?s.firstName:"")}</small></button>`).join("")||'<div class="empty-state">Er zijn nog geen leerlingen geladen.</div>';
+ tiles?.querySelectorAll("[data-student-id]").forEach(b=>b.addEventListener("click",()=>chooseLoginStudent(b.dataset.studentId)));
  const checks=$("#assignmentStudentChecks");if(checks)checks.innerHTML=students.map(s=>`<label class="checkline"><input type="checkbox" value="${s.id}"> ${esc(s.name)}</label>`).join("")||'<span class="muted">Nog geen leerlingen in deze klas.</span>';
 }
 function createStudent(name,pin){
@@ -49,20 +52,26 @@ window.syncPortalStudents=function(portalStudents,meta={}){
  (portalStudents||[]).forEach(p=>{
   const portalId=String(p.id||"").trim(),name=String(p.name||"").trim();if(!name)return;
   let s=(portalId&&byPortalId.get(portalId))||byName.get(name.toLocaleLowerCase("nl-BE"));
-  if(s){if(s.name!==name){s.name=name;updated++}s.pin=String(p.codeIsCentral?p.pin:(s.pin||p.pin||makePin()));s.portalId=portalId||s.portalId;s.portalClass=p.className||s.portalClass;s.portalSchoolyear=meta.schoolyear||s.portalSchoolyear}
-  else{s={id:portalId?`portal_${portalId}`:uid(),portalId,name,pin:String(p.pin||makePin()),createdAt:new Date().toISOString(),useCustom:false,custom:{},portalClass:p.className||"",portalSchoolyear:meta.schoolyear||""};db.students.push(s);added++}
+  if(s){if(s.name!==name){s.name=name;updated++}s.firstName=p.firstName||s.firstName||name;s.lastName=p.lastName||s.lastName||"";s.classNumber=p.classNumber||s.classNumber;s.pin=String(p.codeIsCentral?p.pin:(s.pin||p.pin||makePin()));s.portalId=portalId||s.portalId;s.portalClass=p.className||s.portalClass;s.portalSchoolyear=meta.schoolyear||s.portalSchoolyear}
+  else{s={id:portalId?`portal_${portalId}`:uid(),portalId,name,firstName:p.firstName||name,lastName:p.lastName||"",classNumber:p.classNumber,pin:String(p.pin||makePin()),createdAt:new Date().toISOString(),useCustom:false,custom:{},portalClass:p.className||"",portalSchoolyear:meta.schoolyear||""};db.students.push(s);added++}
  });
  saveDb();refreshAllTeacher();
  const box=$("#portalSyncStatus"),summary=$("#portalSyncSummary");if(box&&summary){box.classList.add("success-state");summary.innerHTML=`<strong>Centrale klaslijst gekoppeld</strong><p>${esc(meta.classLabel||"Je klas")} · ${esc(meta.schoolyear||"")} · ${portalStudents.length} actieve leerlingen. ${added?`${added} toegevoegd. `:""}${updated?`${updated} naam/namen bijgewerkt.`:""}</p>`}
  return db.students.filter(s=>s.portalSchoolyear===meta.schoolyear)
 };
 function classRowHtml(s){
- return `<tr><td>${esc(s.name)}</td><td><b>${esc(s.pin)}</b></td><td>${s.useCustom?"Persoonlijk":"Klasinstellingen"}</td><td><div class="row compact"><button class="secondary edit-student" data-id="${s.id}">Instellen</button><button class="danger delete-student" data-id="${s.id}">Verwijder</button></div></td></tr>`
+ return `<tr><td>${esc(s.name)}</td><td><b>${esc(s.pin)}</b></td><td>${s.useCustom?"Persoonlijk":"Klasinstellingen"}</td><td><div class="row compact"><button class="secondary edit-student" data-id="${s.id}">Instellen</button><button class="secondary rotate-code" data-id="${s.id}">Nieuwe code</button><button class="danger delete-student" data-id="${s.id}">Verwijder</button></div></td></tr>`
 }
 function renderClass(){
  $("#classRows").innerHTML=visibleStudents().map(classRowHtml).join("")||'<tr><td colspan="4">Nog geen leerlingen.</td></tr>';
  $$(".edit-student").forEach(b=>b.addEventListener("click",()=>openStudentSettings(b.dataset.id)));
+ $$(".rotate-code").forEach(b=>b.addEventListener("click",()=>rotateStudentCode(b.dataset.id,b)));
  $$(".delete-student").forEach(b=>b.addEventListener("click",()=>deleteStudent(b.dataset.id)))
+}
+async function rotateStudentCode(id,button){
+ const s=studentById(id);if(!s||!confirm(`Een nieuwe code maken voor ${s.name}? De oude code werkt daarna niet meer.`))return;
+ const oldText=button?.textContent;if(button){button.disabled=true;button.textContent="Even wachten…"}
+ try{const central=s.portalId&&window.rotatePortalStudentCode?await window.rotatePortalStudentCode(s.portalId):null;s.pin=String(central||makePin());saveDb();renderClass();alert(`De nieuwe code voor ${s.name} is ${s.pin}. Druk indien nodig een nieuw inlogkaartje af.`)}catch(err){console.error(err);alert("De nieuwe code kon niet centraal worden bewaard. Er is niets gewijzigd.");if(button){button.disabled=false;button.textContent=oldText}}
 }
 function deleteStudent(id){
  const s=studentById(id);if(!s)return;
@@ -140,11 +149,14 @@ function downloadClassTemplate(){
  a.href=url;a.download="klaslijst_voorbeeld.csv";a.click();URL.revokeObjectURL(url)
 }
 
+function chooseLoginStudent(id){const s=studentById(id);if(!s)return;currentStudentId=id;$("#chosenStudentName").textContent=`Hallo, ${s.firstName||s.name}!`;$("#loginPin").value="";$("#loginError").textContent="";$("#studentNameStep").classList.add("hidden");$("#studentCodeStep").classList.remove("hidden")}
+function resetStudentLogin(){currentStudentId=null;$("#loginPin").value="";$("#loginError").textContent="";$("#studentCodeStep").classList.add("hidden");$("#studentNameStep").classList.remove("hidden")}
 function loginStudent(){
- const id=$("#loginStudentSelect").value,pin=$("#loginPin").value.trim(),s=studentById(id);
+ const id=currentStudentId,pin=$("#loginPin").value.trim(),s=studentById(id);
  if(!s||pin!==s.pin){$("#loginError").textContent="Naam of toegewezen code klopt niet. Vraag je leerkracht om hulp.";return}
  currentStudentId=id;isPreview=false;returnContext="student";$("#loginPin").value="";$("#loginError").textContent="";renderStudentHome();showView("studentHome")
 }
+function printClassQr(){alert("De plaats voor de klas-QR staat klaar. We activeren het afdrukken zodra de beveiligde leerlinglogin met Firebase is toegevoegd; zo worden namen en codes niet openbaar gemaakt.")}
 function renderStudentHome(){
  const s=studentById(currentStudentId),cfg=studentSettings(currentStudentId);if(!s)return;
  $("#studentLogoutBtn").textContent=isPreview?"Terug naar testcentrum":"Afmelden";
@@ -433,7 +445,8 @@ function importBackup(file){const r=new FileReader();r.onload=()=>{try{const x=J
 buildChecks();setChecks($("#homeworkTableChecks"),db.settings.tables);refreshStudentSelects();
 
 $("#enterTeacherBtn").addEventListener("click",enterTeacher);$("#teacherTopBtn").addEventListener("click",enterTeacher);
-$("#enterStudentLoginBtn").addEventListener("click",()=>{refreshStudentSelects();showView("studentLogin")});$("#studentLoginBackBtn").addEventListener("click",()=>showView("landing"));$("#goLandingBtn").addEventListener("click",()=>showView("landing"));
+$("#enterStudentLoginBtn").addEventListener("click",()=>{refreshStudentSelects();resetStudentLogin();showView("studentLogin")});$("#studentLoginBackBtn").addEventListener("click",()=>showView("landing"));$("#goLandingBtn").addEventListener("click",()=>showView("landing"));
+$("#chooseOtherStudentBtn").addEventListener("click",resetStudentLogin);$("#loginKeypad").innerHTML=[1,2,3,4,5,6,7,8,9,"wis",0,"⌫"].map(x=>`<button type="button" data-key="${x}">${x}</button>`).join("");$("#loginKeypad").addEventListener("click",e=>{const key=e.target.closest("[data-key]")?.dataset.key;if(key===undefined)return;const input=$("#loginPin");if(key==="wis")input.value="";else if(key==="⌫")input.value=input.value.slice(0,-1);else if(input.value.length<4)input.value+=key;$("#loginError").textContent=""});
 $("#studentLoginBtn").addEventListener("click",loginStudent);$("#studentLogoutBtn").addEventListener("click",()=>{if(isPreview){isPreview=false;returnContext="teacher";showView("teacher");teacherTab("preview")}else{currentStudentId=null;showView("landing")}});
 $$(".teacher-tab").forEach(b=>b.addEventListener("click",()=>teacherTab(b.dataset.teacherTab)));
 $("#saveSettingsBtn").addEventListener("click",saveSettingsFromForm);
@@ -446,6 +459,7 @@ $("#assignmentSelectAll").addEventListener("click",()=>$("#assignmentStudentChec
 $("#assignmentSelectNone").addEventListener("click",()=>$("#assignmentStudentChecks").querySelectorAll("input").forEach(x=>x.checked=false));
 $("#printPinsBtn").addEventListener("click",printPinCards);
 $("#printCodeListBtn").addEventListener("click",printCodeList);
+$("#printClassQrBtn").addEventListener("click",printClassQr);
 $("#addStudentTeacherBtn").addEventListener("click",()=>{$("#studentNameInput").value="";$("#studentPinInput").value="";$("#studentDialog").showModal()});
 $("#studentForm").addEventListener("submit",e=>{e.preventDefault();createStudent($("#studentNameInput").value,$("#studentPinInput").value);$("#studentDialog").close()});
 $("#studentSettingsForm").addEventListener("submit",e=>{e.preventDefault();const s=studentById(editStudentId);if(!s)return;s.useCustom=$("#studentUseCustom").checked;const nums=$("#studentTablesInput").value.split(/[,; ]+/).map(Number).filter(n=>n>=1&&n<=10);let multiply=$("#studentMultiply").checked,divide=$("#studentDivide").checked;if(!multiply&&!divide)multiply=true;s.custom={factorPosition:$("#studentFactorPosition").value,tables:nums.length?nums:db.settings.tables,multiply,divide};saveDb();renderClass();$("#studentSettingsDialog").close()});

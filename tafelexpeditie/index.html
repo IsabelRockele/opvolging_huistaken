@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>TafelExpeditie · maal- en deeltafels</title>
-  <link rel="stylesheet" href="style.css?v=20260830-4">
+  <link rel="stylesheet" href="style.css?v=20260830-5">
 </head>
 <body>
 <header class="topbar no-print">
@@ -45,14 +45,24 @@
   </section>
 
   <section id="studentLoginView" class="view">
-    <div class="panel narrow">
+    <div class="panel student-login-panel">
       <button class="secondary" id="studentLoginBackBtn">← Terug</button>
-      <h2>Leerling aanmelden</h2>
-      <label>Naam<select id="loginStudentSelect"></select></label>
-      <label>Jouw code van de leerkracht<input id="loginPin" inputmode="numeric" maxlength="6" autocomplete="off" placeholder="bijv. 2417"></label>
-      <p class="field-help">Je hoeft zelf geen code te maken. Gebruik de code die je leerkracht voor jou heeft klaargezet.</p>
-      <button id="studentLoginBtn" class="large">Aanmelden</button>
-      <p id="loginError" class="error"></p>
+      <div id="studentNameStep">
+        <span class="eyebrow">STAP 1</span>
+        <h2>Wie ben jij?</h2>
+        <p class="muted">Zoek je klasnummer en tik je naam aan.</p>
+        <div id="loginStudentTiles" class="student-name-grid"></div>
+      </div>
+      <div id="studentCodeStep" class="hidden student-code-step">
+        <button id="chooseOtherStudentBtn" class="secondary">← Andere naam</button>
+        <span class="eyebrow">STAP 2</span>
+        <h2 id="chosenStudentName">Hallo!</h2>
+        <p>Geef de vier cijfers in die je van je leerkracht kreeg.</p>
+        <input id="loginPin" class="pin-display" inputmode="none" maxlength="4" readonly aria-label="Jouw code">
+        <div id="loginKeypad" class="login-keypad" aria-label="Cijfertoetsenbord"></div>
+        <button id="studentLoginBtn" class="large">Start mijn expeditie</button>
+        <p id="loginError" class="error"></p>
+      </div>
     </div>
   </section>
 
@@ -169,7 +179,9 @@
           <button id="downloadClassTemplateBtn" class="secondary">Voorbeeld CSV</button>
           <button id="printPinsBtn" class="secondary">Print individuele inlogkaartjes</button>
           <button id="printCodeListBtn" class="secondary">Print klaslijst met codes</button>
+          <button id="printClassQrBtn" class="secondary">Print klas-QR</button>
         </div>
+        <div class="callout qr-callout"><strong>Inloggen voor kinderen</strong><p>Hang één klas-QR bij de iPads. Na het scannen kiest een kind zijn naam op klasnummer en vult het de vier cijfers van de leerkracht in.</p><small id="classQrStatus">De klas-QR wordt beschikbaar zodra de beveiligde leerlingtoegang is geactiveerd.</small></div>
         <div class="callout">
           <strong>Klaslijst uploaden</strong>
           <p>Gebruik een CSV- of tekstbestand. Eén naam per regel is genoeg. Je mag ook kolommen <b>naam,inlogcode</b> gebruiken. De leerkracht bepaalt de code. Laat je die leeg, dan maakt de tool automatisch een unieke code van vier cijfers.</p>
@@ -409,7 +421,7 @@
   </form>
 </dialog>
 
-<script src="app.js?v=20260830-4"></script>
-<script type="module" src="portal-integration.js?v=20260830-4"></script>
+<script src="app.js?v=20260830-5"></script>
+<script type="module" src="portal-integration.js?v=20260830-5"></script>
 </body>
 </html>

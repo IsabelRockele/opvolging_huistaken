@@ -1,0 +1,31 @@
+Voeg dit blok toe binnen:
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+Plaats het VOOR de afsluitende match /{document=**}.
+
+    function isGekoppeldAanKlas(schooljaar, klasId) {
+      return request.auth != null
+        && exists(/databases/$(database)/documents/klasleerkrachten/$(schooljaar + "_" + klasId))
+        && (
+          request.auth.uid in get(/databases/$(database)/documents/klasleerkrachten/$(schooljaar + "_" + klasId)).data.leerkracht_uids
+          || request.auth.token.email in get(/databases/$(database)/documents/klasleerkrachten/$(schooljaar + "_" + klasId)).data.leerkracht_emails
+        );
+    }
+
+    function isGekoppeldAanGroep(groep) {
+      return groep.groepId == "graad1"
+          && (isGekoppeldAanKlas(groep.schooljaar, "1A") || isGekoppeldAanKlas(groep.schooljaar, "2A"))
+        || groep.groepId == "graad2"
+          && (isGekoppeldAanKlas(groep.schooljaar, "3A") || isGekoppeldAanKlas(groep.schooljaar, "4A"))
+        || groep.groepId == "graad3"
+          && (isGekoppeldAanKlas(groep.schooljaar, "5A") || isGekoppeldAanKlas(groep.schooljaar, "6A"));
+    }
+
+    match /schoolbeheer_groepen/{groepDocId} {
+      allow read, update: if request.auth != null
+        && (isSchoolBreed() || isSecretariaat() || isGekoppeldAanGroep(resource.data));
+
+      allow create: if isSecretariaat();
+      allow delete: if isBeheerder();
+    }
