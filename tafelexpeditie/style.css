@@ -403,6 +403,7 @@ dialog{border:0;border-radius:14px;padding:0;box-shadow:0 8px 30px #0003}dialog:
 .student-name-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(175px,1fr));gap:14px;margin-top:22px}
 .student-name-tile{display:grid;grid-template-columns:46px 1fr;grid-template-rows:auto auto;column-gap:12px;align-items:center;min-height:86px;padding:14px;text-align:left;border:2px solid #b9d9d0;border-radius:20px;background:#fff;color:#18324a;box-shadow:0 5px 0 #dcece7}
 .student-name-tile:hover,.student-name-tile:focus{border-color:#078d82;transform:translateY(-2px)}
+.student-name-tile.teacher-login-tile{border-color:#e5b94e;background:#fff9e8}.student-name-tile.teacher-login-tile>span{background:#18324a;color:#fff}
 .student-name-tile>span{grid-row:1/3;display:grid;place-items:center;width:44px;height:44px;border-radius:50%;background:#ffdc75;font-size:1.15rem;font-weight:900}
 .student-name-tile strong{font-size:1.08rem}.student-name-tile small{font-size:.92rem;color:#647383}
 .student-code-step{max-width:460px;margin:auto;text-align:center}.student-code-step>.secondary{display:block;margin-bottom:22px}.student-code-step .eyebrow{display:block}

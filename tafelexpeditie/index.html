@@ -58,7 +58,7 @@
         <span class="eyebrow">STAP 2</span>
         <h2 id="chosenStudentName">Hallo!</h2>
         <p>Geef de vier cijfers in die je van je leerkracht kreeg.</p>
-        <input id="loginPin" class="pin-display" inputmode="none" maxlength="4" readonly aria-label="Jouw code">
+        <input id="loginPin" class="pin-display" type="password" inputmode="none" maxlength="4" readonly aria-label="Jouw code">
         <div id="loginKeypad" class="login-keypad" aria-label="Cijfertoetsenbord"></div>
         <button id="studentLoginBtn" class="large">Start mijn expeditie</button>
         <p id="loginError" class="error"></p>
@@ -201,6 +201,7 @@
           <button id="downloadClassTemplateBtn" class="secondary">Voorbeeld CSV</button>
           <button id="printPinsBtn" class="secondary">Print individuele inlogkaartjes</button>
           <button id="printCodeListBtn" class="secondary">Print klaslijst met codes</button>
+          <button id="printLoginLabelsBtn" class="secondary">Maak Lyreco-agendastickers</button>
           <button id="printClassQrBtn" class="secondary">Print klas-QR</button>
         </div>
         <div class="callout qr-callout"><strong>Inloggen voor kinderen</strong><p>Hang één klas-QR bij de iPads. Na het scannen kiest een kind zijn naam op klasnummer en vult het de vier cijfers van de leerkracht in.</p><small id="classQrStatus">De klas-QR wordt beschikbaar zodra de beveiligde leerlingtoegang is geactiveerd.</small></div>
@@ -427,7 +428,7 @@
   </form>
 </dialog>
 
-<script src="app.js?v=20260830-13"></script>
-<script type="module" src="portal-integration.js?v=20260830-13"></script>
+<script src="app.js?v=20260830-14"></script>
+<script type="module" src="portal-integration.js?v=20260830-14"></script>
 </body>
 </html>
