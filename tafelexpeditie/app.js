@@ -22,6 +22,7 @@ function rand(a){return a[Math.floor(Math.random()*a.length)]}
 function shuffle(a){return [...a].sort(()=>Math.random()-.5)}
 function studentById(id){return db.students.find(s=>s.id===id)}
 function studentSort(a,b){return String(a.lastName||a.name).localeCompare(String(b.lastName||b.name),"nl-BE")||String(a.firstName||a.name).localeCompare(String(b.firstName||b.name),"nl-BE")}
+function teacherStudentName(s){return s.lastName&&s.firstName?`${s.lastName}, ${s.firstName}`:s.name}
 function visibleStudents(){return (db.activePortalClass?db.students.filter(s=>s.portalClass===db.activePortalClass):db.students).slice().sort(studentSort)}
 function makePin(){let p;do{p=String(Math.floor(1000+Math.random()*9000))}while(db.students.some(s=>s.pin===p));return p}
 function studentSettings(id){const s=studentById(id);return s?.useCustom?{...db.settings,...s.custom,modes:{...db.settings.modes,...(s.custom?.modes||{})}}:db.settings}
@@ -60,7 +61,7 @@ window.syncPortalStudents=function(portalStudents,meta={}){
  return db.students.filter(s=>s.portalSchoolyear===meta.schoolyear)
 };
 function classRowHtml(s){
- return `<tr><td>${esc(s.name)}</td><td><b>${esc(s.pin)}</b></td><td>${s.useCustom?"Persoonlijk":"Klasinstellingen"}</td><td><div class="row compact"><button class="secondary edit-student" data-id="${s.id}">Instellen</button><button class="secondary rotate-code" data-id="${s.id}">Nieuwe code</button><button class="danger delete-student" data-id="${s.id}">Verwijder</button></div></td></tr>`
+ return `<tr><td>${esc(teacherStudentName(s))}</td><td><b>${esc(s.pin)}</b></td><td>${s.useCustom?"Persoonlijk":"Klasinstellingen"}</td><td><div class="row compact"><button class="secondary edit-student" data-id="${s.id}">Instellen</button><button class="secondary rotate-code" data-id="${s.id}">Nieuwe code</button><button class="danger delete-student" data-id="${s.id}">Verwijder</button></div></td></tr>`
 }
 function renderClass(){
  $("#classRows").innerHTML=visibleStudents().map(classRowHtml).join("")||'<tr><td colspan="4">Nog geen leerlingen.</td></tr>';
@@ -121,7 +122,7 @@ function printPinCards(){
 }
 function printCodeList(){
  const students=[...visibleStudents()].sort((a,b)=>a.name.localeCompare(b.name,"nl-BE"));if(!students.length){alert("Er zijn nog geen leerlingen in deze klas.");return}
- const className=db.activePortalClass||"Klas",schoolyear=students[0]?.portalSchoolyear||"2026-2027",rows=students.map((s,i)=>`<tr><td>${i+1}</td><td>${esc(s.name)}</td><td><strong>${esc(s.pin)}</strong></td><td></td></tr>`).join(""),w=window.open("","_blank");
+ const className=db.activePortalClass||"Klas",schoolyear=students[0]?.portalSchoolyear||"2026-2027",rows=students.map((s,i)=>`<tr><td>${s.classNumber||i+1}</td><td>${esc(teacherStudentName(s))}</td><td><strong>${esc(s.pin)}</strong></td><td></td></tr>`).join(""),w=window.open("","_blank");
  w.document.write(`<!doctype html><html><head><title>Inlogcodes ${esc(className)}</title><style>@page{size:A4;margin:14mm}body{font-family:Arial;color:#18324a}h1{margin:0 0 4px}p{margin:0 0 18px;color:#647383}table{width:100%;border-collapse:collapse}th,td{border:1px solid #9ca9a5;padding:9px;text-align:left}th{background:#edf6f3}td:first-child{width:36px;text-align:center}td:nth-child(3){width:110px;font-size:14pt;letter-spacing:2px}td:last-child{width:150px}</style></head><body><h1>TafelExpeditie · inlogcodes</h1><p>${esc(className)} · schooljaar ${esc(schoolyear)} · alleen voor de leerkracht</p><table><thead><tr><th>Nr.</th><th>Naam</th><th>Code</th><th>Notitie</th></tr></thead><tbody>${rows}</tbody></table></body></html>`);w.document.close();w.focus();setTimeout(()=>w.print(),250)
 }
 
