@@ -29,3 +29,68 @@ Plaats het VOOR de afsluitende match /{document=**}.
       allow create: if isSecretariaat();
       allow delete: if isBeheerder();
     }
+
+    // Lichte leerlingtoegang voor TafelExpeditie.
+    // Een QR bevat een lange, willekeurige documentsleutel. Lijsten opvragen is
+    // verboden; alleen een exact gekende QR of leerlingcode kan gelezen worden.
+    match /tafelexpeditie_klassen/{toegangscode} {
+      allow get: if request.auth != null;
+      allow list: if false;
+
+      allow create: if request.auth != null
+        && (
+          isSchoolBreed()
+          || isSecretariaat()
+          || isGekoppeldAanKlas(
+            request.resource.data.schoolyear,
+            request.resource.data.className
+          )
+        );
+
+      allow update, delete: if request.auth != null
+        && (
+          isSchoolBreed()
+          || isSecretariaat()
+          || isGekoppeldAanKlas(
+            resource.data.schoolyear,
+            resource.data.className
+          )
+        );
+
+      match /leerlingen/{geheimeLeerlingSleutel} {
+        allow get: if request.auth != null;
+        allow list: if false;
+
+        allow create: if request.auth != null
+          && (
+            isSchoolBreed()
+            || isSecretariaat()
+            || isGekoppeldAanKlas(
+              request.resource.data.schoolyear,
+              request.resource.data.className
+            )
+          );
+
+        allow delete: if request.auth != null
+          && (
+            isSchoolBreed()
+            || isSecretariaat()
+            || isGekoppeldAanKlas(
+              resource.data.schoolyear,
+              resource.data.className
+            )
+          );
+
+        allow update: if request.auth != null
+          && (
+            isSchoolBreed()
+            || isSecretariaat()
+            || isGekoppeldAanKlas(
+              resource.data.schoolyear,
+              resource.data.className
+            )
+            || request.resource.data.diff(resource.data).affectedKeys()
+                 .hasOnly(['sessions', 'factStats', 'completedAssignmentIds'])
+          );
+      }
+    }
