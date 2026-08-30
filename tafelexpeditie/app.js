@@ -35,7 +35,7 @@ function setChecks(container,nums){container.querySelectorAll("input").forEach(x
 function refreshStudentSelects(){
  const students=visibleStudents(),opts=students.map(s=>`<option value="${s.id}">${esc(s.name)}</option>`).join("")||'<option value="">Nog geen leerlingen</option>';
  ["#teacherStudentSelect","#previewStudentSelect","#homeworkStudentSelect"].forEach(id=>$(id).innerHTML=opts);
- const tiles=$("#loginStudentTiles");if(tiles)tiles.innerHTML=students.map((s,i)=>`<button class="student-name-tile" data-student-id="${esc(s.id)}"><span>${s.classNumber||i+1}</span><strong>${esc(s.lastName||s.name)}</strong><small>${esc(s.firstName&&s.lastName?s.firstName:"")}</small></button>`).join("")||'<div class="empty-state">Er zijn nog geen leerlingen geladen.</div>';
+ const tiles=$("#loginStudentTiles");if(tiles)tiles.innerHTML=students.map((s,i)=>`<button class="student-name-tile" data-student-id="${esc(s.id)}"><span>${s.classNumber||i+1}</span><strong>${esc(s.firstName||s.name)}</strong><small>${esc(s.lastName||"")}</small></button>`).join("")||'<div class="empty-state">Er zijn nog geen leerlingen geladen.</div>';
  tiles?.querySelectorAll("[data-student-id]").forEach(b=>b.addEventListener("click",()=>chooseLoginStudent(b.dataset.studentId)));
  const checks=$("#assignmentStudentChecks");if(checks)checks.innerHTML=students.map(s=>`<label class="checkline"><input type="checkbox" value="${s.id}"> ${esc(s.name)}</label>`).join("")||'<span class="muted">Nog geen leerlingen in deze klas.</span>';
 }
