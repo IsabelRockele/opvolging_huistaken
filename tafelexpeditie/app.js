@@ -21,7 +21,7 @@ function esc(s){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",
 function rand(a){return a[Math.floor(Math.random()*a.length)]}
 function shuffle(a){return [...a].sort(()=>Math.random()-.5)}
 function studentById(id){return db.students.find(s=>s.id===id)}
-function studentSort(a,b){return String(a.lastName||a.name).localeCompare(String(b.lastName||b.name),"nl-BE")||String(a.firstName||a.name).localeCompare(String(b.firstName||b.name),"nl-BE")}
+function studentSort(a,b){if(!!a.isTeacherTest!==!!b.isTeacherTest)return a.isTeacherTest?1:-1;return String(a.lastName||a.name).localeCompare(String(b.lastName||b.name),"nl-BE")||String(a.firstName||a.name).localeCompare(String(b.firstName||b.name),"nl-BE")}
 function teacherStudentName(s){return s.lastName&&s.firstName?`${s.lastName} ${s.firstName}`:s.name}
 function visibleStudents(){return (db.activePortalClass?db.students.filter(s=>s.portalClass===db.activePortalClass):db.students).slice().sort(studentSort)}
 function makePin(){let p;do{p=String(Math.floor(1000+Math.random()*9000))}while(db.students.some(s=>s.pin===p));return p}
@@ -128,7 +128,7 @@ function printPinCards(){
 }
 function printCodeList(){
  const students=visibleStudents().sort(studentSort);if(!students.length){alert("Er zijn nog geen leerlingen in deze klas.");return}
- const className=db.activePortalClass||"Klas",schoolyear=students[0]?.portalSchoolyear||"2026-2027",rows=students.map((s,i)=>`<tr><td>${s.classNumber||i+1}</td><td>${esc(teacherStudentName(s))}</td><td><strong>${esc(s.pin)}</strong></td><td></td></tr>`).join(""),frame=document.createElement("iframe");
+ const className=db.activePortalClass||"Klas",schoolyear=students[0]?.portalSchoolyear||"2026-2027",rows=students.map((s,i)=>`<tr><td>${s.isTeacherTest?"★":s.classNumber||i+1}</td><td>${esc(teacherStudentName(s))}</td><td><strong>${esc(s.pin)}</strong></td><td></td></tr>`).join(""),frame=document.createElement("iframe");
  frame.setAttribute("aria-hidden","true");frame.style.cssText="position:fixed;width:1px;height:1px;right:0;bottom:0;border:0;opacity:0;pointer-events:none";document.body.appendChild(frame);const d=frame.contentDocument;d.open();d.write(`<!doctype html><html><head><title>Inlogcodes ${esc(className)}</title><style>@page{size:A4;margin:14mm}body{font-family:Arial;color:#18324a}h1{margin:0 0 4px}p{margin:0 0 18px;color:#647383}table{width:100%;border-collapse:collapse}th,td{border:1px solid #9ca9a5;padding:9px;text-align:left}th{background:#edf6f3}td:first-child{width:36px;text-align:center}td:nth-child(3){width:110px;font-size:14pt;letter-spacing:2px}td:last-child{width:150px}</style></head><body><h1>TafelExpeditie · inlogcodes</h1><p>${esc(className)} · schooljaar ${esc(schoolyear)} · alleen voor de leerkracht</p><table><thead><tr><th>Nr.</th><th>Naam</th><th>Code</th><th>Notitie</th></tr></thead><tbody>${rows}</tbody></table></body></html>`);d.close();const cleanup=()=>setTimeout(()=>frame.remove(),300);frame.contentWindow.addEventListener("afterprint",cleanup,{once:true});setTimeout(()=>{frame.contentWindow.focus();frame.contentWindow.print();setTimeout(cleanup,30000)},250)
 }
 
