@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>TafelExpeditie · maal- en deeltafels</title>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css?v=20260830-3">
 </head>
 <body>
 <header class="topbar no-print">
@@ -138,7 +138,7 @@
         <h2>Nieuwe missie klaarzetten</h2>
         <p class="muted">Geef dezelfde opdracht aan de hele klas of kies één leerling. De ingestelde tafels van elk kind blijven gerespecteerd.</p>
         <div class="form-grid assignment-form">
-          <label>Voor wie<select id="assignmentTarget"><option value="all">Hele klas</option></select></label>
+          <label>Voor wie<select id="assignmentTarget"><option value="all">Hele klasgroep</option><option value="selection">Een of meer leerlingen kiezen</option></select></label>
           <label>Werkvorm<select id="assignmentMode"><optgroup label="Oefenen"><option value="learn">Aanleren & gericht oefenen</option><option value="mix">Gemengd oefenen</option><option value="smart">Slim oefenen</option><option value="remediate">Remediëren met hulp</option></optgroup><optgroup label="Toetsen"><option value="knowledge">Kennistoets · zonder tijd</option><option value="flash">Flitstoets · tijd per oefening</option><option value="sprint">Tempomissie · vaste totaaltijd</option></optgroup></select></label>
           <label>Bewerkingen<select id="assignmentOperation"><option value="multiply">Maaltafels</option><option value="divide">Deeltafels</option><option value="both" selected>Maal en deel</option></select></label>
           <label>Aantal<select id="assignmentCount"><option>10</option><option selected>20</option><option>30</option><option>40</option></select></label>
@@ -147,6 +147,7 @@
           <label>Deadline<input id="assignmentDue" type="date"></label>
           <label class="wide-label">Titel voor de kinderen<input id="assignmentTitle" maxlength="55" placeholder="bv. Missie tafel van 6"></label>
         </div>
+        <fieldset id="assignmentStudentsField" class="table-field hidden"><legend>Leerlingen voor deze taak</legend><p class="field-help">Vink één leerling aan of kies meerdere kinderen die je begeleidt.</p><div class="quick-row"><button type="button" id="assignmentSelectAll" class="secondary">Iedereen aanvinken</button><button type="button" id="assignmentSelectNone" class="secondary">Niemand aanvinken</button></div><div id="assignmentStudentChecks" class="assignment-student-checks"></div></fieldset>
         <fieldset class="table-field"><legend>Tafels in deze missie</legend><div id="assignmentTableChecks" class="checks"></div></fieldset>
         <button id="createAssignmentBtn" class="large">Zet missie klaar</button><p id="assignmentSaved" class="success"></p>
         <h3>Openstaande missies</h3><div id="assignmentRows" class="assignment-list"></div>
@@ -407,7 +408,7 @@
   </form>
 </dialog>
 
-<script src="app.js"></script>
-<script type="module" src="portal-integration.js"></script>
+<script src="app.js?v=20260830-3"></script>
+<script type="module" src="portal-integration.js?v=20260830-3"></script>
 </body>
 </html>

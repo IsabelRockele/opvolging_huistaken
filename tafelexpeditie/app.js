@@ -21,7 +21,7 @@ function esc(s){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",
 function rand(a){return a[Math.floor(Math.random()*a.length)]}
 function shuffle(a){return [...a].sort(()=>Math.random()-.5)}
 function studentById(id){return db.students.find(s=>s.id===id)}
-function visibleStudents(){return db.activePortalClass?db.students.filter(s=>!s.portalClass||s.portalClass===db.activePortalClass):db.students}
+function visibleStudents(){return db.activePortalClass?db.students.filter(s=>s.portalClass===db.activePortalClass):db.students}
 function makePin(){let p;do{p=String(Math.floor(1000+Math.random()*9000))}while(db.students.some(s=>s.pin===p));return p}
 function studentSettings(id){const s=studentById(id);return s?.useCustom?{...db.settings,...s.custom,modes:{...db.settings.modes,...(s.custom?.modes||{})}}:db.settings}
 
@@ -34,7 +34,7 @@ function setChecks(container,nums){container.querySelectorAll("input").forEach(x
 function refreshStudentSelects(){
  const students=visibleStudents(),opts=students.map(s=>`<option value="${s.id}">${esc(s.name)}</option>`).join("")||'<option value="">Nog geen leerlingen</option>';
  ["#loginStudentSelect","#teacherStudentSelect","#previewStudentSelect","#homeworkStudentSelect"].forEach(id=>$(id).innerHTML=opts);
- $("#assignmentTarget").innerHTML='<option value="all">Hele klas</option>'+students.map(s=>`<option value="${s.id}">${esc(s.name)}</option>`).join("");
+ const checks=$("#assignmentStudentChecks");if(checks)checks.innerHTML=students.map(s=>`<label class="checkline"><input type="checkbox" value="${s.id}"> ${esc(s.name)}</label>`).join("")||'<span class="muted">Nog geen leerlingen in deze klas.</span>';
 }
 function createStudent(name,pin){
  name=name.trim();if(!name)return;
@@ -177,20 +177,20 @@ function startDirectPreview(mode){const id=$("#previewStudentSelect").value;if(!
 
 function modeLabel(mode){return({learn:"Aanleren & oefenen",mix:"Gemengde training",smart:"Slimme training",remediate:"Remediëring",knowledge:"Kennistoets",flash:"Flitstoets",sprint:"Tempomissie",tempo:"Tempotoets"})[mode]||mode}
 function isAssessmentMode(mode){return ["knowledge","flash","sprint","test","tempo"].includes(mode)}
-function assignmentStudents(a){return a.target==="all"?visibleStudents():db.students.filter(s=>s.id===a.target)}
+function assignmentStudents(a){if(a.target==="all")return visibleStudents();const ids=Array.isArray(a.targets)?a.targets:[a.target];return db.students.filter(s=>ids.includes(s.id))}
 function assignmentDone(a,id){return (a.completedBy||[]).includes(id)}
 function renderAssignments(){
- setChecks($("#assignmentTableChecks"),db.settings.tables);const rows=[...(db.assignments||[])].reverse();
- $("#assignmentRows").innerHTML=rows.length?rows.map(a=>{const learners=assignmentStudents(a),done=learners.filter(s=>assignmentDone(a,s.id)).length,measure=a.mode==="sprint"?`${Math.round((a.tempo||120)/60)} min.`:a.mode==="flash"?`${a.count} oefeningen · ${a.perQuestion||3} sec./oefening`:`${a.count} oefeningen`;return `<article class="assignment-card teacher-assignment"><div><span class="mission-type">${a.kind==="test"?"TOETS · ":""}${esc(modeLabel(a.mode))}</span><h4>${esc(a.title)}</h4><p>${(a.operation==="multiply"?"maal":a.operation==="divide"?"deel":"maal + delen")} · ${a.tables.map(t=>`×${t}`).join(" · ")} · ${measure}${a.due?` · tegen ${new Date(a.due+"T12:00:00").toLocaleDateString("nl-BE")}`:""}</p></div><div class="assignment-status"><b>${done}/${learners.length}</b><span>klaar</span><button class="secondary delete-assignment" data-id="${a.id}">Verwijder</button></div></article>`}).join(""):'<div class="empty-state">Nog geen missies. Zet hierboven de eerste klaar.</div>';
+ setChecks($("#assignmentTableChecks"),db.settings.tables);const rows=[...(db.assignments||[])].filter(a=>!a.className||!db.activePortalClass||a.className===db.activePortalClass).reverse();
+ $("#assignmentRows").innerHTML=rows.length?rows.map(a=>{const learners=assignmentStudents(a),done=learners.filter(s=>assignmentDone(a,s.id)).length,forWho=a.target==="all"?"hele klasgroep":`${learners.length} leerling${learners.length===1?"":"en"}`,measure=a.mode==="sprint"?`${Math.round((a.tempo||120)/60)} min.`:a.mode==="flash"?`${a.count} oefeningen · ${a.perQuestion||3} sec./oefening`:`${a.count} oefeningen`;return `<article class="assignment-card teacher-assignment"><div><span class="mission-type">${a.kind==="test"?"TOETS · ":""}${esc(modeLabel(a.mode))}</span><h4>${esc(a.title)}</h4><p>${forWho} · ${(a.operation==="multiply"?"maal":a.operation==="divide"?"deel":"maal + delen")} · ${a.tables.map(t=>`×${t}`).join(" · ")} · ${measure}${a.due?` · tegen ${new Date(a.due+"T12:00:00").toLocaleDateString("nl-BE")}`:""}</p></div><div class="assignment-status"><b>${done}/${learners.length}</b><span>klaar</span><button class="secondary delete-assignment" data-id="${a.id}">Verwijder</button></div></article>`}).join(""):'<div class="empty-state">Nog geen missies. Zet hierboven de eerste klaar.</div>';
  $$(".delete-assignment").forEach(b=>b.addEventListener("click",()=>{db.assignments=db.assignments.filter(a=>a.id!==b.dataset.id);saveDb();renderAssignments()}))
 }
 function createAssignment(){
- const tables=selected($("#assignmentTableChecks")),title=$("#assignmentTitle").value.trim();if(!tables.length){$("#assignmentSaved").textContent="Kies minstens één tafel.";return}
+ const tables=selected($("#assignmentTableChecks")),title=$("#assignmentTitle").value.trim(),targetMode=$("#assignmentTarget").value,targets=targetMode==="selection"?[...$("#assignmentStudentChecks").querySelectorAll("input:checked")].map(x=>x.value):[];if(!tables.length){$("#assignmentSaved").textContent="Kies minstens één tafel.";return}if(targetMode==="selection"&&!targets.length){$("#assignmentSaved").textContent="Kies minstens één leerling.";return}
  const mode=$("#assignmentMode").value,kind=isAssessmentMode(mode)?"test":"practice";
- db.assignments.push({id:uid(),target:$("#assignmentTarget").value,kind,mode,operation:$("#assignmentOperation").value,tempo:+$("#assignmentTempo").value,perQuestion:+$("#assignmentPerQuestion").value,count:+$("#assignmentCount").value,tables,due:$("#assignmentDue").value,title:title||(kind==="test"?modeLabel(mode):modeLabel(mode)),createdAt:new Date().toISOString(),completedBy:[]});saveDb();$("#assignmentTitle").value="";$("#assignmentSaved").textContent=(kind==="test"?"Toets":"Missie")+" staat klaar voor de leerling(en).";renderAssignments()
+ db.assignments.push({id:uid(),target:targetMode==="all"?"all":"selection",targets,className:db.activePortalClass||"",kind,mode,operation:$("#assignmentOperation").value,tempo:+$("#assignmentTempo").value,perQuestion:+$("#assignmentPerQuestion").value,count:+$("#assignmentCount").value,tables,due:$("#assignmentDue").value,title:title||(kind==="test"?modeLabel(mode):modeLabel(mode)),createdAt:new Date().toISOString(),completedBy:[]});saveDb();$("#assignmentTitle").value="";$("#assignmentSaved").textContent=(kind==="test"?"Toets":"Missie")+(targetMode==="all"?" staat klaar voor de hele klasgroep.":` staat klaar voor ${targets.length} leerling${targets.length===1?"":"en"}.`);renderAssignments()
 }
 function renderStudentAssignments(){
- const list=(db.assignments||[]).filter(a=>(a.target==="all"||a.target===currentStudentId)&&!assignmentDone(a,currentStudentId));
+ const student=studentById(currentStudentId),list=(db.assignments||[]).filter(a=>(!a.className||!student?.portalClass||a.className===student.portalClass)&&(a.target==="all"||a.target===currentStudentId||(Array.isArray(a.targets)&&a.targets.includes(currentStudentId)))&&!assignmentDone(a,currentStudentId));
  $("#studentAssignments").innerHTML=list.length?list.map(a=>{const measure=a.mode==="sprint"?`${Math.round((a.tempo||120)/60)} min. zoveel mogelijk`:`${a.count} vragen`;return `<button class="assignment-card student-assignment ${a.kind==="test"?"test-card":""}" data-id="${a.id}"><span class="mission-check">${a.kind==="test"?"✓":a.mode==="tempo"?"⏱":"★"}</span><span><small>${a.kind==="test"?"TOETS · ":""}${esc(modeLabel(a.mode))}</small><strong>${esc(a.title)}</strong><em>${a.tables.map(t=>`tafel ${t}`).join(" · ")} · ${measure}${a.due?` · tegen ${new Date(a.due+"T12:00:00").toLocaleDateString("nl-BE")}`:""}</em></span><b>Start →</b></button>`}).join(""):'<div class="empty-state success-state">Alles klaar! Je hebt geen openstaande missies.</div>';
  $$(".student-assignment").forEach(b=>b.addEventListener("click",()=>openAssignment(b.dataset.id)))
 }
@@ -435,6 +435,10 @@ $("#saveSettingsBtn").addEventListener("click",saveSettingsFromForm);
 $("#createAssignmentBtn").addEventListener("click",createAssignment);
 function updateAssignmentForm(){const m=$("#assignmentMode").value;$("#assignmentTempo").closest("label").classList.toggle("hidden",m!=="sprint");$("#assignmentPerQuestion").closest("label").classList.toggle("hidden",m!=="flash");$("#assignmentCount").closest("label").classList.toggle("hidden",m==="sprint")}
 $("#assignmentMode").addEventListener("change",updateAssignmentForm);updateAssignmentForm();
+function updateAssignmentTarget(){$("#assignmentStudentsField").classList.toggle("hidden",$("#assignmentTarget").value!=="selection")}
+$("#assignmentTarget").addEventListener("change",updateAssignmentTarget);updateAssignmentTarget();
+$("#assignmentSelectAll").addEventListener("click",()=>$("#assignmentStudentChecks").querySelectorAll("input").forEach(x=>x.checked=true));
+$("#assignmentSelectNone").addEventListener("click",()=>$("#assignmentStudentChecks").querySelectorAll("input").forEach(x=>x.checked=false));
 $("#printPinsBtn").addEventListener("click",printPinCards);
 $("#addStudentTeacherBtn").addEventListener("click",()=>{$("#studentNameInput").value="";$("#studentPinInput").value="";$("#studentDialog").showModal()});
 $("#studentForm").addEventListener("submit",e=>{e.preventDefault();createStudent($("#studentNameInput").value,$("#studentPinInput").value);$("#studentDialog").close()});
