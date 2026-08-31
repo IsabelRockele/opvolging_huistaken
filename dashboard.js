@@ -168,16 +168,69 @@ function dedupeLeerlingenOpNaam(leerlingen) {
 // --- HELPERS VOOR DOCREF & BASISDOC ---
 const getDocRef = () => doc(db, "leerkrachten", targetUserId || currentUser.uid);
 
-// Alleen bij eerste keer een basisdocument zetten (NIET meer 'leerlingen' invullen!)
+function schooljaarVanDatum(datum) {
+  const match = String(datum || '').match(/^(\d{4})-(\d{2})-\d{2}$/);
+  if (!match) return '';
+  const jaar = Number(match[1]);
+  const maand = Number(match[2]);
+  const start = maand >= 8 ? jaar : jaar - 1;
+  return `${start}-${start + 1}`;
+}
+
+function detecteerInhoudSchooljaar(data) {
+  const datums = [];
+  Object.values(data.weekDatums || {}).forEach(periode => {
+    if (periode && typeof periode === 'object') datums.push(...Object.values(periode));
+  });
+  Object.values(data.dagKolommen || {}).forEach(periode => {
+    if (Array.isArray(periode)) datums.push(...periode);
+    else if (periode && typeof periode === 'object') datums.push(...Object.keys(periode));
+  });
+  return datums.map(schooljaarVanDatum).find(Boolean) || String(data.schooljaar || '');
+}
+
+function maakHuistakenArchief(data) {
+  return {
+    leerlingen: data.leerlingen || [],
+    weekKolommen: data.weekKolommen || {},
+    dagKolommen: data.dagKolommen || {},
+    weekDatums: data.weekDatums || {},
+    huistakenWeek: data.huistakenWeek || {},
+    huistakenDag: data.huistakenDag || {},
+    bewaardOp: new Date().toISOString()
+  };
+}
+
+// Zet bij een nieuw schooljaar automatisch ook de oude weken, dagen en
+// registraties in het archief. Vroeger werd alleen het jaartal aangepast,
+// waardoor de inhoud van twee schooljaren door elkaar bleef staan.
 async function ensureLeerkrachtDocExists() {
   const ref = getDocRef();
   const snap = await getDoc(ref);
+  const bestaandeData = snap.exists() ? snap.data() : {};
+  const inhoudSchooljaar = detecteerInhoudSchooljaar(bestaandeData);
+  const heeftOudeInhoud = snap.exists() && inhoudSchooljaar && inhoudSchooljaar !== schooljaar;
+
   await setDoc(ref, {
     eigenaar_uid: currentUser.uid,
     eigenaar_email: currentUser.email || "",
     klas: beheerKlasId || beheerKlasLabel || "",
     klasNaam: beheerKlasLabel || beheerKlasId || "",
     schooljaar,
+    ...(heeftOudeInhoud ? {
+      archiefHuistaken: {
+        ...(bestaandeData.archiefHuistaken || {}),
+        [inhoudSchooljaar.replace(/[^a-z0-9]+/gi, "_")]: maakHuistakenArchief(bestaandeData)
+      },
+      leerlingen: [],
+      weekKolommen: { 1: [], 2: [], 3: [] },
+      dagKolommen: { 1: [], 2: [], 3: [] },
+      weekDatums: {},
+      huistakenWeek: {},
+      huistakenDag: {},
+      huistakenSignalen: {},
+      huistakenSignalenSchooljaar: schooljaar
+    } : {}),
     ...(snap.exists() ? {} : {
       weekKolommen: { 1: [], 2: [], 3: [] },
       dagKolommen:  { 1: [], 2: [], 3: [] },
@@ -887,18 +940,13 @@ window.verwijderLeerling = async (leerlingId) => {
 async function startNieuwSchooljaar() {
   const bevestiging = prompt(`Nieuw schooljaar starten voor ${schooljaar}?\n\nDe huidige dashboardgegevens worden bewaard in archiefHuistaken.${schooljaarKey}. Daarna haalt dashboard de klaslijst uit schoolbeheer.\n\nTyp NIEUW SCHOOLJAAR om te bevestigen.`);
   if (bevestiging !== 'NIEUW SCHOOLJAAR') return;
-  const archief = {
-    leerlingen: leerkrachtData.leerlingen || [],
-    weekKolommen: leerkrachtData.weekKolommen || {},
-    dagKolommen: leerkrachtData.dagKolommen || {},
-    weekDatums: leerkrachtData.weekDatums || {},
-    huistakenWeek: leerkrachtData.huistakenWeek || {},
-    huistakenDag: leerkrachtData.huistakenDag || {},
-    bewaardOp: new Date().toISOString()
-  };
+  const archief = maakHuistakenArchief(leerkrachtData);
   await setDoc(getDocRef(), {
     archiefHuistaken: { [schooljaarKey]: archief },
     leerlingen: [],
+    weekKolommen: { 1: [], 2: [], 3: [] },
+    dagKolommen: { 1: [], 2: [], 3: [] },
+    weekDatums: {},
     huistakenWeek: {},
     huistakenDag: {},
     schooljaar
