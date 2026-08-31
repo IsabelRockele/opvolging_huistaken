@@ -105,7 +105,7 @@ dialog{border:0;border-radius:14px;padding:0;box-shadow:0 8px 30px #0003}dialog:
 .celebration-panel{margin:22px 0 28px;padding:20px;border:1px solid #b9d9d2;border-radius:20px;background:linear-gradient(135deg,#f3fbf8,#fff8df)}
 .celebration-head{display:flex;justify-content:space-between;align-items:flex-start;gap:16px}.celebration-head h3{font-size:1.45rem;margin:5px 0}.celebration-head p{margin:0;color:var(--muted);max-width:650px;line-height:1.45}
 .celebration-readiness{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:16px 0}.celebration-card{background:white;border:1px solid var(--border);border-radius:14px;padding:14px}.celebration-card strong{display:block;font-size:1.05rem}.celebration-card p{margin:5px 0 0;color:var(--muted)}
-.class-expedition{position:relative;aspect-ratio:16/9;margin:18px 0;border-radius:18px;overflow:hidden;background:#d9efe8 url('assets/zebraklas-expeditie.png') center/cover no-repeat;box-shadow:inset 0 0 0 2px #18324a25}
+.class-expedition{position:relative;aspect-ratio:16/9;margin:18px 0;border-radius:18px;overflow:hidden;background:#d9efe8 url('assets/zebraklas-expeditie-v3.png') center/cover no-repeat;box-shadow:inset 0 0 0 2px #18324a25}
 .expedition-title{position:absolute;left:7%;right:7%;top:4%;text-align:center;color:var(--navy);text-shadow:0 2px #fff;font-weight:900;font-size:clamp(1rem,2.4vw,1.75rem)}
 .expedition-progress{position:absolute;left:7%;right:7%;top:16%;height:12px;border:2px solid white;border-radius:99px;background:#ffffffb8;overflow:hidden;box-shadow:0 1px 5px #18324a45}.expedition-progress i{display:block;height:100%;background:linear-gradient(90deg,#f3b72f,#ef6f61,#087f78);border-radius:99px}
 .expedition-caption{position:absolute;left:7%;right:7%;top:19%;text-align:center;font-size:clamp(.65rem,1.5vw,.9rem);font-weight:900;color:var(--navy)}
@@ -421,6 +421,7 @@ dialog{border:0;border-radius:14px;padding:0;box-shadow:0 8px 30px #0003}dialog:
 .learning-lines{grid-template-columns:1.35fr .65fr;gap:8mm}.learning-lines span:first-child{white-space:nowrap}
 @media(max-width:700px){.learning-lines{grid-template-columns:1fr;gap:2mm}.learning-lines span:first-child{white-space:normal}}
 .celebration-preview-panel{margin-top:28px;padding-top:24px;border-top:2px dashed #b7d6d0}.celebration-preview-controls{align-items:end}.celebration-preview-card{margin:16px 0}.celebration-preview-card .medal-row{margin-top:12px}
+.class-medal-board{display:grid;gap:8px;margin:12px 0 18px}.class-medal-row{display:grid;grid-template-columns:minmax(140px,1fr) repeat(10,34px) 60px;gap:5px;align-items:center;padding:8px 10px;border:1px solid #d4dfdc;border-radius:12px;background:#fff}.class-medal-row.header{font-size:12px;font-weight:800;background:#edf6f3}.class-medal-name{font-weight:800}.class-medal-dot{display:grid;place-items:center;width:30px;height:30px;border-radius:50%;background:#edf1f0;color:#83908d;font-size:13px}.class-medal-dot.earned{background:#fff1bb;color:#9a6500;border:2px solid #e2ad32}.class-medal-total{text-align:center;font-weight:900;color:#087f78}@media(max-width:900px){.class-medal-board{overflow-x:auto}.class-medal-row{min-width:650px}}
 
 /* Rustige leerlinglogin voor iPad */
 .student-login-panel{max-width:920px;margin:auto;padding:clamp(20px,4vw,42px);border-radius:28px;background:linear-gradient(145deg,#fff 0%,#f2fbf7 100%)}

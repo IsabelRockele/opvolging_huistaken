@@ -198,7 +198,7 @@
           <h3>Vieringen en klasexpeditie ontdekken</h3>
           <p class="muted">Kies een groeistap en bekijk precies wat een kind en de leerkracht later zullen zien. Deze voorbeelden slaan niets op.</p>
           <div class="preview-toolbar celebration-preview-controls">
-            <label>Groeistap<select id="celebrationPreviewLevel"><option value="start">Start</option><option value="almost">Bijna een medaille</option><option value="3">Eerste tafelsterren</option><option value="5">Sterke tafelkenner</option><option value="8">Tafelexpert</option><option value="10">Volledige expeditie</option></select></label>
+            <label>Groeistap<select id="celebrationPreviewLevel"><option value="start">Start (nog geen certificaat)</option><option value="almost">Bijna een medaille</option><option value="3" selected>Eerste tafelsterren</option><option value="5">Sterke tafelkenner</option><option value="8">Tafelexpert</option><option value="10">Volledige expeditie</option></select></label>
             <label>Klasexpeditie<select id="classExpeditionPreviewLevel"><option value="0">Vertrek · 0%</option><option value="25">Over de brug · 25%</option><option value="50">Halverwege · 50%</option><option value="75">Feestheuvel · 75%</option><option value="100">Aangekomen · 100%</option></select></label>
           </div>
           <div id="celebrationPreviewCard" class="student-medal-map celebration-preview-card"></div>
@@ -262,8 +262,12 @@
           </div>
           <div id="celebrationReadiness" class="celebration-readiness"></div>
           <div id="classExpedition" class="class-expedition"></div>
+          <h3>Klasmedaillebord</h3>
+          <p class="muted">Tien plaatsen per kind: één medaille zodra die maal- én deeltafel op twee toetsmomenten juist en vlot gekend is.</p>
+          <div id="classMedalBoard" class="class-medal-board"></div>
           <div class="row">
             <button id="printClassExpeditionBtn" class="secondary">Print klasexpeditie</button>
+            <button id="printClassMedalBoardBtn" class="secondary">Print klasmedaillebord</button>
             <button id="printReadyCertificatesBtn" class="secondary">Print behaalde mijlpalen</button>
           </div>
         </section>
@@ -465,7 +469,7 @@
 </dialog>
 
 <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
-  <script src="app.js?v=20260831-32"></script>
+  <script src="app.js?v=20260831-33"></script>
 <script type="module" src="portal-integration.js?v=20260831-31"></script>
 </body>
 </html>
