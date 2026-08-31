@@ -33,6 +33,13 @@ const schooljaar = (() => {
 const schooljaarKey = schooljaar.replace(/[^a-z0-9]+/gi, "_");
 const SCHOOLBREDE_ROLLEN = ['directie', 'zorgcoordinator', 'zorgleerkracht', 'beheerder'];
 function vergelijkKlassen(a,b){const sleutel=v=>{const s=String(v||'').toUpperCase(),k=s.match(/^K(\d+)(.*)$/),l=s.match(/^(\d+)(.*)$/);return k?[0,+k[1],k[2]]:l?[1,+l[1],l[2]]:[2,999,s]};const x=sleutel(a),y=sleutel(b);return x[0]-y[0]||x[1]-y[1]||x[2].localeCompare(y[2],'nl')}
+function schoolbeheerGroepVoorKlas(klas) {
+  const nummer = Number(String(klas || '').match(/\d+/)?.[0]);
+  if (nummer >= 1 && nummer <= 2) return 'graad1';
+  if (nummer >= 3 && nummer <= 4) return 'graad2';
+  if (nummer >= 5 && nummer <= 6) return 'graad3';
+  return '';
+}
 
 async function dashboardVeiligheidskopie(ref, reden) {
   return probeerVeiligheidskopie(ref, {
@@ -366,13 +373,26 @@ async function laadLeerlingenUitSchoolbeheerVoorDashboard() {
   const klas = await bepaalDashboardKlas();
   if (!klas) return 0;
   try {
-    const snap = await getDoc(doc(db, "schoolbeheer", schooljaar, "klassen", klas));
-    if (!snap.exists()) return 0;
+    const groep = schoolbeheerGroepVoorKlas(klas);
+    const groepSnap = groep
+      ? await getDoc(doc(db, "schoolbeheer_groepen", `${schooljaar}_${groep}`))
+      : null;
+    let bronLeerlingen;
+    if (groepSnap?.exists()) {
+      // De huidige Schoolbeheer-app bewaart de klaslijsten per graadgroep.
+      // Ook een lege klaslijst is hier een geldige, leidende lijst.
+      bronLeerlingen = groepSnap.data().klassen?.[klas]?.leerlingen || [];
+    } else {
+      // Compatibiliteit met klaslijsten die nog op de vroegere locatie staan.
+      const oudSnap = await getDoc(doc(db, "schoolbeheer", schooljaar, "klassen", klas));
+      if (!oudSnap.exists()) return 0;
+      bronLeerlingen = oudSnap.data().leerlingen || [];
+    }
     const bestaandeLeerlingen = dedupeLeerlingenOpNaam(leerkrachtData.leerlingen || []);
     const bestaande = new Map(bestaandeLeerlingen.map(l => [naamKey(l.naam), l]));
     const leerlingen = [];
     let aantalNieuwe = 0;
-    (snap.data().leerlingen || []).forEach(s => {
+    bronLeerlingen.forEach(s => {
       const naam = leerlingNaamSchoolbeheer(s);
       const key = naamKey(naam);
       if (!naam) return;
