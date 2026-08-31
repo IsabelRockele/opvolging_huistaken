@@ -193,6 +193,18 @@
         <div id="previewPracticeModes" class="preview-mode-grid"></div>
         <h3>Tafelcheck en toetsvormen</h3>
         <div id="previewTestModes" class="preview-mode-grid"></div>
+        <section class="celebration-preview-panel">
+          <span class="eyebrow">BEKIJKEN ZONDER LEERLINGRESULTATEN</span>
+          <h3>Vieringen en klasexpeditie ontdekken</h3>
+          <p class="muted">Kies een groeistap en bekijk precies wat een kind en de leerkracht later zullen zien. Deze voorbeelden slaan niets op.</p>
+          <div class="preview-toolbar celebration-preview-controls">
+            <label>Groeistap<select id="celebrationPreviewLevel"><option value="start">Start</option><option value="almost">Bijna een medaille</option><option value="3">Eerste tafelsterren</option><option value="5">Sterke tafelkenner</option><option value="8">Tafelexpert</option><option value="10">Volledige expeditie</option></select></label>
+            <label>Klasexpeditie<select id="classExpeditionPreviewLevel"><option value="0">Vertrek · 0%</option><option value="25">Over de brug · 25%</option><option value="50">Halverwege · 50%</option><option value="75">Feestheuvel · 75%</option><option value="100">Aangekomen · 100%</option></select></label>
+          </div>
+          <div id="celebrationPreviewCard" class="student-medal-map celebration-preview-card"></div>
+          <div id="classExpeditionPreview" class="class-expedition"></div>
+          <div class="row"><button id="printPreviewCertificateBtn" class="secondary">Bekijk voorbeeld groeicertificaat</button><button id="printPreviewExpeditionBtn" class="secondary">Bekijk voorbeeld klasexpeditie</button></div>
+        </section>
       </div>
     </section>
 
@@ -453,7 +465,7 @@
 </dialog>
 
 <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
-<script src="app.js?v=20260831-31"></script>
+  <script src="app.js?v=20260831-32"></script>
 <script type="module" src="portal-integration.js?v=20260831-31"></script>
 </body>
 </html>

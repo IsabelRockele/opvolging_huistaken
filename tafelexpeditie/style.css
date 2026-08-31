@@ -420,6 +420,7 @@ dialog{border:0;border-radius:14px;padding:0;box-shadow:0 8px 30px #0003}dialog:
 @media print{.difficulty-marker,.learning-chain-grid>article,.inverse-pair-grid>article{print-color-adjust:exact;-webkit-print-color-adjust:exact}}
 .learning-lines{grid-template-columns:1.35fr .65fr;gap:8mm}.learning-lines span:first-child{white-space:nowrap}
 @media(max-width:700px){.learning-lines{grid-template-columns:1fr;gap:2mm}.learning-lines span:first-child{white-space:normal}}
+.celebration-preview-panel{margin-top:28px;padding-top:24px;border-top:2px dashed #b7d6d0}.celebration-preview-controls{align-items:end}.celebration-preview-card{margin:16px 0}.celebration-preview-card .medal-row{margin-top:12px}
 
 /* Rustige leerlinglogin voor iPad */
 .student-login-panel{max-width:920px;margin:auto;padding:clamp(20px,4vw,42px);border-radius:28px;background:linear-gradient(145deg,#fff 0%,#f2fbf7 100%)}
