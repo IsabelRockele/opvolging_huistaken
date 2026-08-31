@@ -87,6 +87,7 @@
       <button data-teacher-tab="settings" class="teacher-tab active">⚙️ Instellingen</button>
       <button data-teacher-tab="class" class="teacher-tab">👥 Klas</button>
       <button data-teacher-tab="assignments" class="teacher-tab">📌 Taken</button>
+      <button data-teacher-tab="discover" class="teacher-tab">🧭 Oefeningen ontdekken</button>
       <button data-teacher-tab="results" class="teacher-tab">📊 Opvolging</button>
       <button data-teacher-tab="homework" class="teacher-tab">📝 Huistaken</button>
       <button data-teacher-tab="flashcards" class="teacher-tab">🃏 Flitskaartjes</button>
@@ -170,9 +171,12 @@
         <button id="createAssignmentBtn" class="large">Zet gekozen missies klaar</button><p id="assignmentSaved" class="success"></p>
         <h3>Openstaande missies</h3><div id="assignmentRows" class="assignment-list"></div>
       </div>
+    </section>
+
+    <section id="teacherDiscoverTab" class="teacher-tab-view">
       <div class="panel task-preview-panel">
         <span class="eyebrow">PROBEER EERST ZELF</span>
-        <h2>Ontdek wat het kind precies krijgt</h2>
+        <h2>Oefeningen ontdekken</h2>
         <p class="muted">Doorloop hier exact dezelfde nieuwe fases als een kind. Je gebruikt de tafels en instellingen van de gekozen leerling, maar de testresultaten worden nooit opgeslagen.</p>
         <div class="preview-toolbar">
           <label>Test met de instellingen van<select id="previewStudentSelect"></select></label>
@@ -442,7 +446,7 @@
 </dialog>
 
 <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
-<script src="app.js?v=20260831-26"></script>
-<script type="module" src="portal-integration.js?v=20260831-26"></script>
+<script src="app.js?v=20260831-27"></script>
+<script type="module" src="portal-integration.js?v=20260831-27"></script>
 </body>
 </html>

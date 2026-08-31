@@ -2,7 +2,7 @@
 const STORAGE_KEY="tafeltrainer_v4";
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 const views={landing:$("#landingView"),studentLogin:$("#studentLoginView"),studentHome:$("#studentHomeView"),teacher:$("#teacherDashboardView"),setup:$("#setupView"),exercise:$("#exerciseView"),result:$("#resultView"),homework:$("#homeworkView"),flashcards:$("#flashcardsView")};
-const teacherTabs={settings:$("#teacherSettingsTab"),class:$("#teacherClassTab"),assignments:$("#teacherAssignmentsTab"),results:$("#teacherResultsTab"),homework:$("#teacherHomeworkTab"),flashcards:$("#teacherFlashcardsTab")};
+const teacherTabs={settings:$("#teacherSettingsTab"),class:$("#teacherClassTab"),assignments:$("#teacherAssignmentsTab"),discover:$("#teacherDiscoverTab"),results:$("#teacherResultsTab"),homework:$("#teacherHomeworkTab"),flashcards:$("#teacherFlashcardsTab")};
 let db=loadDb(),currentStudentId=null,currentMode=null,currentSession=null,timerId=null,questionTimerId=null,questionTickId=null,isPreview=false,returnContext="student",lastHomework=null,lastHomeworkConfig=null,editStudentId=null,currentAssignmentId=null;
 let publicStudentMode=false,publicCompletedAssignmentIds=new Set();
 
@@ -122,6 +122,7 @@ function teacherTab(name){
  if(name==="results")renderTeacherResults($("#teacherStudentSelect").value||visibleStudents()[0]?.id);
  if(name==="class")renderClass()
  if(name==="assignments"){renderAssignments();renderPreviewCenter()}
+ if(name==="discover")renderPreviewCenter()
 }
 function enterTeacher(){refreshAllTeacher();loadSettingsForm();showView("teacher");teacherTab("settings")}
 function refreshAllTeacher(){refreshStudentSelects();renderClass();loadSettingsForm()}
@@ -209,7 +210,7 @@ function renderPreviewCenter(){
  $("#previewTestModes").innerHTML=hasStudent?previewModes.filter(x=>x.group==="test").map(previewModeHtml).join(""):empty;
  $$('[data-preview-mode]').forEach(b=>b.addEventListener("click",()=>startDirectPreview(b.dataset.previewMode)))
 }
-function startDirectPreview(mode){const id=$("#previewStudentSelect").value;if(!id)return;currentStudentId=id;currentAssignmentId=null;isPreview=true;returnContext="teacher";if(mode==="checkup"){startCheckup();return}openSetup(mode)}
+function startDirectPreview(mode){const id=$("#previewStudentSelect").value;if(!id)return;currentStudentId=id;currentAssignmentId=null;isPreview=true;returnContext="discover";if(mode==="checkup"){startCheckup();return}openSetup(mode)}
 
 function modeLabel(mode){return({learn:"Fase 1 · Leren",mix:"Fase 2 · Inoefenen",smart:"Fase 3 · Automatiseren",remediate:"Gerichte remediëring",checkup:"Korte tafelcheck",knowledge:"Kennistoets",flash:"Flitstoets",sprint:"Tempomissie",tempo:"Tempotoets"})[mode]||mode}
 function isAssessmentMode(mode){return ["knowledge","flash","sprint","test","tempo","checkup"].includes(mode)}
@@ -525,7 +526,7 @@ buildChecks();setChecks($("#homeworkTableChecks"),db.settings.tables);refreshStu
 $("#enterTeacherBtn").addEventListener("click",enterTeacher);$("#teacherTopBtn").addEventListener("click",enterTeacher);
 $("#enterStudentLoginBtn").addEventListener("click",()=>{refreshStudentSelects();resetStudentLogin();showView("studentLogin")});$("#studentLoginBackBtn").addEventListener("click",()=>{if(publicStudentMode){resetStudentLogin();showView("studentLogin")}else showView("landing")});$("#goLandingBtn").addEventListener("click",()=>showView("landing"));
 $("#chooseOtherStudentBtn").addEventListener("click",resetStudentLogin);$("#loginKeypad").innerHTML=[1,2,3,4,5,6,7,8,9,"wis",0,"⌫"].map(x=>`<button type="button" data-key="${x}">${x}</button>`).join("");$("#loginKeypad").addEventListener("click",e=>{const key=e.target.closest("[data-key]")?.dataset.key;if(key===undefined)return;const input=$("#loginPin");if(key==="wis")input.value="";else if(key==="⌫")input.value=input.value.slice(0,-1);else if(input.value.length<4)input.value+=key;$("#loginError").textContent=""});
-$("#studentLoginBtn").addEventListener("click",loginStudent);$("#studentLogoutBtn").addEventListener("click",()=>{if(isPreview){isPreview=false;returnContext="teacher";showView("teacher");teacherTab("assignments")}else{currentStudentId=null;resetStudentLogin();showView(publicStudentMode?"studentLogin":"landing")}});
+$("#studentLoginBtn").addEventListener("click",loginStudent);$("#studentLogoutBtn").addEventListener("click",()=>{if(isPreview){const tab=returnContext==="discoverHome"?"discover":"assignments";isPreview=false;returnContext="teacher";showView("teacher");teacherTab(tab)}else{currentStudentId=null;resetStudentLogin();showView(publicStudentMode?"studentLogin":"landing")}});
 $$(".teacher-tab").forEach(b=>b.addEventListener("click",()=>teacherTab(b.dataset.teacherTab)));
 $("#saveSettingsBtn").addEventListener("click",saveSettingsFromForm);
 $("#createAssignmentBtn").addEventListener("click",createAssignment);
@@ -546,11 +547,11 @@ $("#studentForm").addEventListener("submit",e=>{e.preventDefault();createStudent
 $("#studentSettingsForm").addEventListener("submit",e=>{e.preventDefault();const s=studentById(editStudentId);if(!s)return;s.useCustom=$("#studentUseCustom").checked;const nums=$("#studentTablesInput").value.split(/[,; ]+/).map(Number).filter(n=>n>=1&&n<=10);let multiply=$("#studentMultiply").checked,divide=$("#studentDivide").checked;if(!multiply&&!divide)multiply=true;s.custom={factorPosition:$("#studentFactorPosition").value,tables:nums.length?nums:db.settings.tables,multiply,divide};saveDb();renderClass();window.requestPortalPublish?.();$("#studentSettingsDialog").close()});
 $("#classImportInput").addEventListener("change",e=>{if(e.target.files[0])importClassFile(e.target.files[0]);e.target.value=""});$("#downloadClassTemplateBtn").addEventListener("click",downloadClassTemplate);
 $("#previewStudentSelect").addEventListener("change",renderPreviewCenter);
-$("#startPreviewBtn").addEventListener("click",()=>{const id=$("#previewStudentSelect").value;if(!id)return;currentStudentId=id;isPreview=true;returnContext="previewHome";renderStudentHome();$("#studentWelcomeName").textContent+= " · TESTMODUS";showView("studentHome")});
-$("#setupBackBtn").addEventListener("click",()=>{currentAssignmentId=null;if(returnContext==="teacher"){showView("teacher");teacherTab("assignments")}else showView("studentHome")});
+$("#startPreviewBtn").addEventListener("click",()=>{const id=$("#previewStudentSelect").value;if(!id)return;currentStudentId=id;isPreview=true;returnContext="discoverHome";renderStudentHome();$("#studentWelcomeName").textContent+= " · TESTMODUS";showView("studentHome")});
+$("#setupBackBtn").addEventListener("click",()=>{currentAssignmentId=null;if(returnContext==="teacher"||returnContext==="discover"){showView("teacher");teacherTab(returnContext==="discover"?"discover":"assignments")}else showView("studentHome")});
 $("#startBtn").addEventListener("click",startExercise);$("#answerForm").addEventListener("submit",e=>{e.preventDefault();const v=$("#answerInput").value.trim();if(v!==""&&Number.isFinite(+v))handleAnswer(+v)});
 $("#stopBtn").addEventListener("click",()=>{if(confirm("Oefening stoppen?"))finishSession(false)});
-$("#resultBackBtn").addEventListener("click",()=>{if(isPreview&&returnContext==="teacher"){showView("teacher");teacherTab("assignments");isPreview=false}else if(isPreview){renderStudentHome();$("#studentWelcomeName").textContent+= " · TESTMODUS";showView("studentHome")}else{renderStudentHome();showView("studentHome")}});
+$("#resultBackBtn").addEventListener("click",()=>{if(isPreview&&(returnContext==="teacher"||returnContext==="discover")){showView("teacher");teacherTab(returnContext==="discover"?"discover":"assignments");isPreview=false}else if(isPreview){renderStudentHome();$("#studentWelcomeName").textContent+= " · TESTMODUS";showView("studentHome")}else{renderStudentHome();showView("studentHome")}});
 $("#teacherStudentSelect").addEventListener("change",e=>renderTeacherResults(e.target.value));
 $("#printGrowthCertificateBtn").addEventListener("click",printGrowthCertificate);$("#printReadyCertificatesBtn").addEventListener("click",printReadyCertificates);$("#printClassExpeditionBtn").addEventListener("click",printClassExpedition);
 $("#exportBtn").addEventListener("click",exportBackup);$("#importInput").addEventListener("change",e=>{if(e.target.files[0])importBackup(e.target.files[0]);e.target.value=""});
