@@ -180,12 +180,13 @@ function renderStudentHome(){
  $("#studentAssignmentText").textContent=`Jouw tafels: ${cfg.tables.join(", ")} · ${cfg.factorPosition==="front"?"tafelgetal vooraan":cfg.factorPosition==="back"?"tafelgetal achteraan":"beide richtingen"}`;
  renderStudentAssignments();
  const defs=[
-  ["learn","🧩","Aanleren & oefenen","Kijken, begrijpen en inoefenen"],["mix","🎲","Gemengd oefenen","Afwisselende spelvragen door elkaar"],
-  ["smart","🎯","Slim oefenen","Extra wat nog moeilijk of traag is"],["remediate","🛠️","Remediëren","Kleine stappen met gerichte hulp"],
+  ["learn","🧩","Fase 1 · Leren","Eerst zien, dan kiezen, daarna zelf oplossen"],["mix","🎲","Fase 2 · Inoefenen","Gekende tafel-feiten en vraagvormen door elkaar"],
+  ["smart","🎯","Fase 3 · Automatiseren","Moeilijke en trage oefeningen vaker"],["remediate","🛠️","Gericht remediëren","Probleemfeiten opnieuw opbouwen en herhalen"],
   ["knowledge","✓","Kennistoets","Juist rekenen zonder tijdsdruk"],["flash","⚡","Flitstoets","Automatisatie: tijd per oefening"],["sprint","⏱️","Tempomissie","Zoveel mogelijk juist binnen de tijd"]
  ];
- $("#studentModes").innerHTML=defs.filter(x=>["knowledge","flash","sprint"].includes(x[0])?cfg.modes.tempo:cfg.modes[x[0]]).map(([m,ic,t,sub])=>`<button class="mode-card student-mode" data-mode="${m}"><span class="mode-icon">${ic}</span><strong>${t}</strong><span>${sub}</span></button>`).join("")||'<div class="panel">Er staan nog geen oefeningen voor jou klaar.</div>';
- $$(".student-mode").forEach(b=>b.addEventListener("click",()=>{currentAssignmentId=null;openSetup(b.dataset.mode)}));
+ const checkup=checkupDue(currentStudentId)?`<button class="mode-card student-mode checkup-card" data-mode="checkup"><span class="mode-icon">🔎</span><strong>Korte tafelcheck</strong><span>10 vragen bepalen wat jij extra moet oefenen</span></button>`:"";
+ $("#studentModes").innerHTML=checkup+defs.filter(x=>["knowledge","flash","sprint"].includes(x[0])?cfg.modes.tempo:cfg.modes[x[0]]).map(([m,ic,t,sub])=>`<button class="mode-card student-mode" data-mode="${m}"><span class="mode-icon">${ic}</span><strong>${t}</strong><span>${sub}</span></button>`).join("")||'<div class="panel">Er staan nog geen oefeningen voor jou klaar.</div>';
+ $$(".student-mode").forEach(b=>b.addEventListener("click",()=>{currentAssignmentId=null;b.dataset.mode==="checkup"?startCheckup():openSetup(b.dataset.mode)}));
  const sessions=db.sessions.filter(x=>x.studentId===currentStudentId),ans=sessions.flatMap(s=>s.answers),correct=ans.filter(a=>a.correct).length,p=ans.length?Math.round(correct/ans.length*100):0;
  $("#studentProgressSummary").innerHTML=`<div><strong>${sessions.length}</strong><span>oefenbeurten</span></div><div><strong>${ans.length}</strong><span>oefeningen</span></div><div><strong>${p}%</strong><span>juist</span></div>`
 }
@@ -208,8 +209,10 @@ function renderPreviewCenter(){
 }
 function startDirectPreview(mode){const id=$("#previewStudentSelect").value;if(!id)return;currentStudentId=id;currentAssignmentId=null;isPreview=true;returnContext="teacher";openSetup(mode)}
 
-function modeLabel(mode){return({learn:"Aanleren & oefenen",mix:"Gemengde training",smart:"Slimme training",remediate:"Remediëring",knowledge:"Kennistoets",flash:"Flitstoets",sprint:"Tempomissie",tempo:"Tempotoets"})[mode]||mode}
-function isAssessmentMode(mode){return ["knowledge","flash","sprint","test","tempo"].includes(mode)}
+function modeLabel(mode){return({learn:"Fase 1 · Leren",mix:"Fase 2 · Inoefenen",smart:"Fase 3 · Automatiseren",remediate:"Gerichte remediëring",checkup:"Korte tafelcheck",knowledge:"Kennistoets",flash:"Flitstoets",sprint:"Tempomissie",tempo:"Tempotoets"})[mode]||mode}
+function isAssessmentMode(mode){return ["knowledge","flash","sprint","test","tempo","checkup"].includes(mode)}
+function checkupDue(id){const sessions=db.sessions.filter(s=>s.studentId===id),last=[...sessions].reverse().find(s=>s.mode==="checkup");if(!last)return true;const later=sessions.filter(s=>s.mode!=="checkup"&&new Date(s.startedAt)>new Date(last.startedAt)).length,days=(Date.now()-new Date(last.startedAt).getTime())/86400000;return later>=5||days>=14}
+function startCheckup(){const cfg=studentSettings(currentStudentId);currentMode="checkup";openSetup("checkup");setChecks($("#tableChecks"),cfg.tables);$("#questionCount").value="10";$("#operationSelect").value=cfg.multiply&&cfg.divide?"both":cfg.divide?"divide":"multiply";startExercise()}
 function assignmentStudents(a){if(a.target==="all")return visibleStudents();const ids=Array.isArray(a.targets)?a.targets:[a.target];return db.students.filter(s=>ids.includes(s.id))}
 function assignmentDone(a,id){return (a.completedBy||[]).includes(id)}
 function renderAssignments(){
@@ -254,11 +257,11 @@ function weakness(f,id){
  return(1-acc)*10+Math.min(avg/(db.settings.fluentSeconds*1000),4)+(st.attempts<2?2:0)
 }
 function weightedPool(facts,id){const out=[];facts.forEach(f=>{const w=Math.max(1,Math.round(weakness(f,id)));for(let i=0;i<w;i++)out.push(f)});return out}
-function addVariant(q,mode,index,cfg){
+function addVariant(q,mode,index,cfg,forced=null){
  if(isAssessmentMode(mode)){q.variant="direct";q.userAnswer=q.answer;return q}
  const cycles={learn:["visual","choice","missing","family","direct"],mix:["choice","truefalse","missing","family","direct"],smart:["direct","choice","missing","direct","truefalse"],remediate:["visual","visual","missing","family","choice"]};
  const cycle=cycles[mode]||cycles.mix;
- q.variant=cycle[index%cycle.length];
+ q.variant=forced||cycle[index%cycle.length];
  if(q.variant==="visual"&&!cfg.visual)q.variant="direct";
  if(q.variant==="missing"&&!cfg.missing)q.variant="direct";
  if(q.variant==="family"&&!cfg.families)q.variant="direct";
@@ -281,17 +284,25 @@ function addVariant(q,mode,index,cfg){
 }
 function makeQuestions(mode,tables,operation,count,cfg){
  let facts=allFacts(tables,operation,cfg),base=[];
- if(mode==="remediate"){facts=facts.sort((a,b)=>weakness(b,currentStudentId)-weakness(a,currentStudentId)).slice(0,14)}
- else if(mode==="smart")facts=weightedPool(facts,currentStudentId);
- for(let i=0;i<count;i++)base.push({...rand(facts)});
+ if(mode==="checkup")return shuffle(facts).slice(0,count).map((q,i)=>addVariant({...q},mode,i,cfg));
+ if(mode==="learn"){
+  const order=[1,2,5,10,3,4,6,7,8,9],targets=[...facts].sort((a,b)=>tables.indexOf(a.table)-tables.indexOf(b.table)||order.indexOf(a.n)-order.indexOf(b.n)||Number(a.op==="divide")-Number(b.op==="divide")).slice(0,Math.ceil(count/3));
+  targets.forEach(q=>{base.push(addVariant({...q},mode,0,cfg,"visual"));base.push(addVariant({...q},mode,1,cfg,"choice"))});targets.forEach(q=>base.push(addVariant({...q},mode,4,cfg,"direct")));return base.slice(0,count)
+ }
+ if(mode==="remediate"){
+  const targets=[...facts].sort((a,b)=>weakness(b,currentStudentId)-weakness(a,currentStudentId)).slice(0,Math.max(3,Math.ceil(count/3)));
+  targets.forEach(q=>{base.push(addVariant({...q},mode,0,cfg,"visual"));base.push(addVariant({...q},mode,2,cfg,"missing"))});targets.forEach(q=>base.push(addVariant({...q},mode,4,cfg,"direct")));return base.slice(0,count)
+ }
+ if(mode==="smart")facts=weightedPool(facts,currentStudentId);else facts=shuffle(facts);
+ for(let i=0;i<count;i++)base.push({...facts[i%facts.length]});
  return base.map((q,i)=>addVariant(q,mode,i,cfg))
 }
 function openSetup(mode){
- currentMode=mode;const cfg=studentSettings(currentStudentId);$("#setupTitle").textContent=({learn:"Aanleren & gericht oefenen",mix:"Gemengd oefenen",smart:"Slim oefenen",remediate:"Remediëren",knowledge:"Kennistoets zonder tijd",flash:"Flitstoets per oefening",sprint:"Tempomissie",tempo:"Tempomissie",test:"Kennistoets"})[mode];
+ currentMode=mode;const cfg=studentSettings(currentStudentId);$("#setupTitle").textContent=({learn:"Fase 1 · Leren",mix:"Fase 2 · Inoefenen",smart:"Fase 3 · Automatiseren",remediate:"Gericht remediëren",checkup:"Korte tafelcheck",knowledge:"Kennistoets zonder tijd",flash:"Flitstoets per oefening",sprint:"Tempomissie",tempo:"Tempomissie",test:"Kennistoets"})[mode];
  $("#tempoTimeWrap").classList.toggle("hidden",!["sprint","tempo"].includes(mode));$("#perQuestionTimeWrap").classList.toggle("hidden",mode!=="flash");$("#remediateInfo").classList.toggle("hidden",mode!=="remediate");
  $("#questionCount").value=String(cfg.defaultCount);$("#tempoSeconds").value=String(cfg.defaultTempo);
  $("#questionCount").closest("label").classList.toggle("hidden",["sprint","tempo"].includes(mode));
- const info={learn:"Je start met kijken en begrijpen. Daarna volgen kiezen, aanvullen, omkeren en zelf antwoorden.",mix:"Meerkeuze, juist/fout, ontbrekende getallen en bewerkingsfamilies wisselen elkaar af.",smart:"Moeilijke, trage en weinig geoefende tafel-feiten komen vaker terug.",remediate:"Visuele groepjes en tussenstappen bouwen de tafel opnieuw op. Fouten keren later terug.",knowledge:"Meet of je het juiste antwoord kunt vinden. Er is geen tijdsdruk en je krijgt feedback na afloop.",flash:"Elke oefening heeft een eigen tijdslimiet. Juist maar te traag is nog niet geautomatiseerd.",sprint:"Los binnen de totale tijd zoveel mogelijk oefeningen op. We meten aantal, nauwkeurigheid en correcte antwoorden per minuut.",tempo:"Los binnen de totale tijd zoveel mogelijk oefeningen op."};$("#modeInfo").textContent=info[mode]||"";
+ const info={learn:"Elk nieuw tafel-feit wordt eerst zichtbaar opgebouwd, daarna gekozen en pas dan zonder hulp opgelost.",mix:"Gekende tafel-feiten komen in verschillende vraagvormen door elkaar terug.",smart:"Moeilijke, trage en weinig geoefende tafel-feiten komen vaker en vooral zonder hulp terug.",remediate:"Een kleine groep probleemfeiten wordt opnieuw opgebouwd. Een fout antwoord keert later in dezelfde oefenbeurt terug.",checkup:"Tien korte vragen zonder hulp brengen in kaart wat al gekend is en wat extra oefening nodig heeft.",knowledge:"Meet of je het juiste antwoord kunt vinden. Er is geen tijdsdruk en je krijgt feedback na afloop.",flash:"Elke oefening heeft een eigen tijdslimiet. Juist maar te traag is nog niet geautomatiseerd.",sprint:"Los binnen de totale tijd zoveel mogelijk oefeningen op. We meten aantal, nauwkeurigheid en correcte antwoorden per minuut.",tempo:"Los binnen de totale tijd zoveel mogelijk oefeningen op."};$("#modeInfo").textContent=info[mode]||"";
  setChecks($("#tableChecks"),mode==="learn"?[cfg.tables[0]]:cfg.tables);
  let op="both";if(cfg.multiply&&!cfg.divide)op="multiply";if(!cfg.multiply&&cfg.divide)op="divide";$("#operationSelect").value=op;
  $("#tableChecks").classList.remove("locked");$("#tableChecks").querySelectorAll("input").forEach(x=>x.disabled=false);$("#questionCount").disabled=false;$("#operationSelect").disabled=!(cfg.multiply&&cfg.divide);$("#previewBadge").classList.toggle("hidden",!isPreview);showView("setup")
@@ -333,11 +344,12 @@ function renderQuestion(){
  currentSession.questionStartedAt=performance.now();startQuestionTimer()
 }
 function choiceButtons(items){$("#answerForm").classList.add("hidden");$("#choiceBox").classList.remove("hidden");items.forEach(([lab,val])=>{const b=document.createElement("button");b.type="button";b.className="choice-btn";b.textContent=lab;b.addEventListener("click",()=>handleAnswer(val));$("#choiceBox").appendChild(b)})}
+function makeRetryQuestion(q,mode){const base={op:q.op,table:q.table,n:q.n,a:q.a,b:q.b,answer:q.answer,key:q.key,text:q.text,direction:q.direction,retryCount:(q.retryCount||0)+1},cfg=studentSettings(currentStudentId),forced=base.retryCount===1&&["learn","remediate"].includes(mode)?"visual":base.retryCount===1?"choice":"direct",retry=addVariant(base,mode,0,cfg,forced);retry.prompt=base.retryCount===1?"We proberen deze nog eens met hulp.":"Nog één keer zonder hulp.";return retry}
 function handleAnswer(value,timedOut=false){
  if(!currentSession||!currentSession.acceptingAnswer||currentSession.index>=currentSession.questions.length)return;currentSession.acceptingAnswer=false;clearQuestionTimer();const q=currentSession.questions[currentSession.index],ms=timedOut?currentSession.perQuestionSeconds*1000:Math.max(100,Math.round(performance.now()-currentSession.questionStartedAt)),correct=!timedOut&&Number(value)===Number(q.userAnswer),fluent=correct&&ms<=db.settings.fluentSeconds*1000;
  const a={key:q.key,op:q.op,table:q.table,n:q.n,question:q.displayText||q.text,expected:q.userAnswer,given:timedOut?null:+value,correct,fluent,timedOut,ms,variant:q.variant};
  currentSession.answers.push(a);if(!isPreview)updateStat(currentStudentId,a);currentSession.streak=correct?currentSession.streak+1:0;if(correct)currentSession.stars+=fluent?2:1;
- $("#streakBox").textContent=`🔥 ${currentSession.streak}`;$("#starBox").textContent=`★ ${currentSession.stars}`;$$(".choice-btn").forEach(b=>b.disabled=true);currentSession.index++;
+ $("#streakBox").textContent=`🔥 ${currentSession.streak}`;$("#starBox").textContent=`★ ${currentSession.stars}`;$$(".choice-btn").forEach(b=>b.disabled=true);currentSession.index++;if(!correct&&!isAssessmentMode(currentSession.mode)&&(q.retryCount||0)<2){const at=Math.min(currentSession.questions.length,currentSession.index+2);currentSession.questions.splice(at,0,makeRetryQuestion(q,currentSession.mode))}
  if(isAssessmentMode(currentSession.mode)){$("#feedback").textContent=timedOut?"Tijd voorbij — volgende oefening":"Antwoord bewaard";$("#feedback").className="feedback";setTimeout(renderQuestion,timedOut?450:180);return}
  $("#feedback").textContent=correct?(fluent?"Juist én vlot! +2 sterren":"Juist! Probeer het straks nog wat vlotter. +1 ster"):`Nog niet. ${q.text} ${q.answer}`;$("#feedback").className="feedback "+(correct?"ok":"bad");setTimeout(renderQuestion,correct?600:1200)
 }
