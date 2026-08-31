@@ -142,6 +142,14 @@ function leerlingNaamSchoolbeheer(s) {
   if (first || last) return first || last;
   return direct;
 }
+function isActieveSchoolbeheerLeerling(s) {
+  if (s?.startNiet === true) return false;
+  const eersteSchooldag = `${schooljaar.slice(0,4)}-09-01`;
+  const laatsteSchooldag = `${schooljaar.slice(5,9)}-06-30`;
+  const start = s?.start || s?.startDatum || '';
+  const einde = s?.end || s?.eindDatum || '';
+  return (!start || start <= laatsteSchooldag) && (!einde || einde >= eersteSchooldag);
+}
 function isSchoolbeheerLeerling(leerling) {
   return Boolean(leerling?.schoolbeheerId || String(leerling?.id || '').startsWith('schoolbeheer_'));
 }
@@ -400,7 +408,7 @@ async function laadLeerlingenUitSchoolbeheerVoorDashboard() {
     const bestaande = new Map(bestaandeLeerlingen.map(l => [naamKey(l.naam), l]));
     const leerlingen = [];
     let aantalNieuwe = 0;
-    bronLeerlingen.forEach(s => {
+    bronLeerlingen.filter(isActieveSchoolbeheerLeerling).forEach(s => {
       const naam = leerlingNaamSchoolbeheer(s);
       const key = naamKey(naam);
       if (!naam) return;
