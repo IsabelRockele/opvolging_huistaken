@@ -446,6 +446,9 @@ dialog{border:0;border-radius:14px;padding:0;box-shadow:0 8px 30px #0003}dialog:
    één eigen zebra die met het klasnummer van links naar rechts beweegt. */
 .race-board-scene.individual{background-image:url('assets/zebrarace-savanne-v3.png')}
 .race-board-participants{inset:16% 13.5% 7% 13.5%;grid-template-rows:repeat(var(--racer-count,1),minmax(0,1fr));align-content:stretch;gap:0;padding:3px 0;background:transparent;box-shadow:none}
+.race-board-participants::before,.race-board-participants::after{content:'';position:absolute;z-index:1;top:0;bottom:0;pointer-events:none}
+.race-board-participants::before{left:-2px;width:4px;border-radius:4px;background:#078d82;box-shadow:0 0 0 2px #ffffffaa}
+.race-board-participants::after{right:-3px;width:8px;background:repeating-linear-gradient(180deg,#18324a 0 8px,#fff 8px 16px);box-shadow:0 0 0 2px #ffffffcc,0 0 8px #18324a55}
 .race-lane{min-height:0;height:auto;border-bottom:1px dashed #9b723c66}
 .race-lane:nth-child(even){background:#fff8dc18}
 .race-lane i{display:none}
