@@ -374,9 +374,17 @@ async function laadLeerlingenUitSchoolbeheerVoorDashboard() {
   if (!klas) return 0;
   try {
     const groep = schoolbeheerGroepVoorKlas(klas);
-    const groepSnap = groep
-      ? await getDoc(doc(db, "schoolbeheer_groepen", `${schooljaar}_${groep}`))
-      : null;
+    let groepSnap = null;
+    if (groep) {
+      try {
+        groepSnap = await getDoc(doc(db, "schoolbeheer_groepen", `${schooljaar}_${groep}`));
+      } catch (err) {
+        // Een gewone klasleerkracht mag een nog niet aangemaakt groepsdocument
+        // niet altijd opvragen. Dat mag de geldige klaslijst op de bestaande
+        // locatie niet blokkeren.
+        console.info("Groepsklaslijst niet beschikbaar; bestaande klaslijst wordt gebruikt.", err);
+      }
+    }
     let bronLeerlingen;
     if (groepSnap?.exists()) {
       // De huidige Schoolbeheer-app bewaart de klaslijsten per graadgroep.
