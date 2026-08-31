@@ -317,40 +317,46 @@ async function laadLeerlingenUitSchoolbeheerVoorDashboard() {
     if (!snap.exists()) return 0;
     const bestaandeLeerlingen = dedupeLeerlingenOpNaam(leerkrachtData.leerlingen || []);
     const bestaande = new Map(bestaandeLeerlingen.map(l => [naamKey(l.naam), l]));
-    const nieuwe = [];
-    let bestaandeNaamBijgewerkt = false;
+    const leerlingen = [];
+    let aantalNieuwe = 0;
     (snap.data().leerlingen || []).forEach(s => {
       const naam = leerlingNaamSchoolbeheer(s);
       const key = naamKey(naam);
       if (!naam) return;
       if (bestaande.has(key)) {
         const bestaand = bestaande.get(key);
-        if (
-          isSchoolbeheerLeerling(bestaand)
-          && !naamHeeftAchternaamVoorop(bestaand.naam)
-          && naamHeeftAchternaamVoorop(naam)
-        ) {
-          bestaand.naam = naam;
-          bestaand.schoolbeheerId = bestaand.schoolbeheerId || s.id || '';
-          bestaandeNaamBijgewerkt = true;
-        }
+        leerlingen.push({
+          ...bestaand,
+          naam,
+          schoolbeheerId: s.id || bestaand.schoolbeheerId || '',
+          schooljaar,
+          klas,
+          startDatum: s.start || bestaand.startDatum || `${schooljaar.slice(0,4)}-09-01`,
+          eindDatum: s.end || `${schooljaar.slice(5,9)}-06-30`
+        });
         return;
       }
-      bestaande.set(key, true);
-      nieuwe.push({
+      aantalNieuwe += 1;
+      leerlingen.push({
         id: `schoolbeheer_${klas}_${s.id || key.replace(/[^a-z0-9]+/g, "_")}`,
         naam,
         schoolbeheerId: s.id || '',
+        schooljaar,
+        klas,
         startDatum: s.start || `${schooljaar.slice(0,4)}-09-01`,
         eindDatum: s.end || `${schooljaar.slice(5,9)}-06-30`
       });
     });
-    const hadDubbeleNamen = bestaandeLeerlingen.length !== (leerkrachtData.leerlingen || []).length;
-    if (!nieuwe.length && !hadDubbeleNamen && !bestaandeNaamBijgewerkt) return 0;
-    const leerlingen = [...bestaandeLeerlingen, ...nieuwe].sort((a,b)=>a.naam.localeCompare(b.naam,'nl'));
+    leerlingen.sort((a,b)=>a.naam.localeCompare(b.naam,'nl'));
+
+    // Schoolbeheer is de bron van waarheid voor de gekozen klas en het huidige
+    // schooljaar. Zo blijven leerlingen uit een vroegere klas of een oud
+    // schooljaar niet in het huistakenoverzicht van deze leerkracht staan.
+    const lijstGewijzigd = JSON.stringify(leerlingen) !== JSON.stringify(bestaandeLeerlingen);
+    if (!lijstGewijzigd) return 0;
     leerkrachtData.leerlingen = leerlingen;
     await setDoc(getDocRef(), { leerlingen, schooljaar, klas: klas || '' }, { merge: true });
-    return nieuwe.length;
+    return aantalNieuwe;
   } catch (err) {
     console.warn("Leerlingen uit schoolbeheer laden voor dashboard mislukt", err);
     return 0;
