@@ -202,6 +202,7 @@ dialog{border:0;border-radius:14px;padding:0;box-shadow:0 8px 30px #0003}dialog:
 .story-problem img{width:26mm;height:auto}
 .story-problem p{margin:0 0 3mm;line-height:1.45;font-size:12.5pt}
 .story-answer{display:block;width:70mm;height:9mm;border-bottom:.45mm solid #222;margin-top:3mm}
+.reasoning-stories>p{margin:-2mm 0 5mm;color:#4f626f}.reasoning-story{display:grid;grid-template-columns:8mm 1fr;gap:3mm;border:1px solid #9fb1ad;border-radius:4mm;padding:5mm;margin-bottom:5mm;break-inside:avoid}.reasoning-story>b{display:grid;place-items:center;width:8mm;height:8mm;border-radius:50%;background:#e7f3ef}.reasoning-story>p{margin:1mm 0 4mm;font-size:12.5pt;line-height:1.45}.reasoning-work{grid-column:2;display:grid;grid-template-columns:27mm 1fr;gap:3mm;align-items:end}.reasoning-work span{font-size:10pt;color:#536572}.reasoning-work i{display:block;height:8mm;border-bottom:.4mm solid #333}.reasoning-work i.wide{height:11mm}
 .mini-title{font-weight:700;margin-bottom:2mm}
 .homework-instruction{font-size:11.5pt;line-height:1.4}
 @media print{
