@@ -193,10 +193,11 @@ function renderStudentHome(){
 }
 
 const previewModes=[
- {group:"practice",mode:"learn",icon:"🧩",title:"Aanleren & gericht oefenen",text:"Visueel opbouwen en steun afbouwen"},
- {group:"practice",mode:"mix",icon:"🎲",title:"Gemengd oefenen",text:"Afwisselende vraagvormen en tafels"},
- {group:"practice",mode:"smart",icon:"🎯",title:"Slim oefenen",text:"Moeilijke en trage oefeningen vaker"},
- {group:"practice",mode:"remediate",icon:"🛠️",title:"Remediëren",text:"Kleine stappen met visuele hulp"},
+ {group:"practice",mode:"learn",icon:"🧩",title:"Fase 1 · Leren",text:"Eerst zien, dan kiezen en daarna zelf oplossen; fouten keren terug met hulp"},
+ {group:"practice",mode:"mix",icon:"🎲",title:"Fase 2 · Inoefenen",text:"Gekende tafelfeiten en verschillende vraagvormen door elkaar"},
+ {group:"practice",mode:"smart",icon:"🎯",title:"Fase 3 · Automatiseren",text:"Moeilijke, trage en weinig geoefende feiten komen vaker terug"},
+ {group:"practice",mode:"remediate",icon:"🛠️",title:"Gerichte remediëring",text:"Probleemfeiten opnieuw opbouwen, steun afbouwen en fouten herhalen"},
+ {group:"test",mode:"checkup",icon:"🔎",title:"Korte tafelcheck",text:"10 vragen brengen in kaart wat al gekend is en wat extra oefening vraagt"},
  {group:"test",mode:"knowledge",icon:"✓",title:"Kennistoets",text:"Juistheid zonder tijdsdruk"},
  {group:"test",mode:"flash",icon:"⚡",title:"Flitstoets",text:"Instelbare tijd per oefening"},
  {group:"test",mode:"sprint",icon:"⏱️",title:"Tempomissie",text:"Zoveel mogelijk binnen de totale tijd"}
@@ -208,7 +209,7 @@ function renderPreviewCenter(){
  $("#previewTestModes").innerHTML=hasStudent?previewModes.filter(x=>x.group==="test").map(previewModeHtml).join(""):empty;
  $$('[data-preview-mode]').forEach(b=>b.addEventListener("click",()=>startDirectPreview(b.dataset.previewMode)))
 }
-function startDirectPreview(mode){const id=$("#previewStudentSelect").value;if(!id)return;currentStudentId=id;currentAssignmentId=null;isPreview=true;returnContext="teacher";openSetup(mode)}
+function startDirectPreview(mode){const id=$("#previewStudentSelect").value;if(!id)return;currentStudentId=id;currentAssignmentId=null;isPreview=true;returnContext="teacher";if(mode==="checkup"){startCheckup();return}openSetup(mode)}
 
 function modeLabel(mode){return({learn:"Fase 1 · Leren",mix:"Fase 2 · Inoefenen",smart:"Fase 3 · Automatiseren",remediate:"Gerichte remediëring",checkup:"Korte tafelcheck",knowledge:"Kennistoets",flash:"Flitstoets",sprint:"Tempomissie",tempo:"Tempotoets"})[mode]||mode}
 function isAssessmentMode(mode){return ["knowledge","flash","sprint","test","tempo","checkup"].includes(mode)}
