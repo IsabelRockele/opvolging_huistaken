@@ -241,9 +241,7 @@ function makeMultiplyFact(table,n,cfg,direction=null){
 }
 function makeDivideFact(table,n,cfg){
  const product=table*n;
- const variant=Math.random()<.5?0:1;
- if(variant===0)return{op:"divide",table,n,a:product,b:table,answer:n,key:factKey("divide",product,table),text:`${product} : ${table} =`};
- return{op:"divide",table,n,a:product,b:n,answer:table,key:factKey("divide",product,n),text:`${product} : ${n} =`}
+ return{op:"divide",table,n,a:product,b:table,answer:n,key:factKey("divide",product,table),text:`${product} : ${table} =`}
 }
 function allFacts(tables,operation,cfg){
  const facts=[];
@@ -325,10 +323,10 @@ function supportHtml(q){
  if(q.variant!=="visual")return"";
  if(q.op==="multiply"){
   const groups=Array.from({length:q.a},()=>`<span class="group">${Array.from({length:q.b},()=>'<i class="counter"></i>').join("")}</span>`).join("");
-  return `<strong>${q.a} groepen van ${q.b}</strong><div class="groups">${groups}</div><p>${Array.from({length:q.a},()=>q.b).join(" + ")} = ?</p>`
+  return `<strong>${q.a} groepen van ${q.b}</strong><div class="groups">${groups}</div><p>Herhaalde optelling: ${Array.from({length:q.a},()=>q.b).join(" + ")} = ?</p><p>${q.a} keer ${q.b} → ${q.a} × ${q.b} = ?</p>`
  }
  const groups=Array.from({length:q.answer},()=>`<span class="group">${Array.from({length:q.b},()=>'<i class="counter"></i>').join("")}</span>`).join("");
- return `<strong>Verdeel ${q.a} in groepjes van ${q.b}. Hoeveel groepjes zie je?</strong><div class="groups">${groups}</div><p>Vermenigvuldigen en delen zijn omgekeerde bewerkingen.</p>`
+ const subtraction=[q.a,...Array.from({length:q.answer},()=>`− ${q.b}`)].join(" ");return `<strong>Verdeel ${q.a} in groepjes van ${q.b}. Hoeveel groepjes zie je?</strong><div class="groups">${groups}</div><p>Herhaalde aftrekking: ${subtraction} = 0</p><p>${q.a} : ${q.b} = ? en ? × ${q.b} = ${q.a}</p>`
 }
 function renderQuestion(){
  if(!currentSession)return;if(currentSession.index>=currentSession.questions.length){finishSession(false);return}
@@ -391,6 +389,7 @@ function makeHomework(id,levelChoice,play,options={}){
  const cfg=studentSettings(id),tables=(options.tables&&options.tables.length?options.tables:cfg.tables).map(Number),operation=options.operation||(cfg.multiply&&cfg.divide?"both":cfg.multiply?"multiply":"divide"),level=levelChoice&&levelChoice!=="auto"?levelChoice:studentLevel(id),facts=focusFacts(id,30,tables,operation),tasks=[],answers=[];
  const getF=()=>rand(facts);let nr=1;
  if(level==="basis"){
+  const learningFacts=shuffle(facts).slice(0,3);tasks.push({type:"learning-chain",title:`${nr++}. Van beeld naar bewerking`,items:learningFacts});answers.push({title:tasks.at(-1).title,items:learningFacts.map(f=>f.op==="multiply"?`${Array.from({length:f.a},()=>f.b).join(" + ")} = ${f.answer}; ${f.a} × ${f.b} = ${f.answer}`:`${[f.a,...Array.from({length:f.answer},()=>`− ${f.b}`)].join(" ")} = 0; ${f.a} : ${f.b} = ${f.answer}`)});
   const visualPool=shuffle(facts.filter(f=>(f.op==="multiply"?f.answer:f.a)<=40)),visualFacts=[];for(const f of (visualPool.length?visualPool:facts)){if(!visualFacts.some(x=>x.n==f.n&&x.op==f.op))visualFacts.push(f);if(visualFacts.length===3)break}while(visualFacts.length<3)visualFacts.push(getF());tasks.push({type:"visual-set",title:`${nr++}. Kijk, groepeer en reken`,items:visualFacts});answers.push({title:tasks.at(-1).title,items:visualFacts.map(f=>displayFact(f,false))});
   const core=facts.slice(0,5); tasks.push({type:"core",title:`${nr++}. Probeer het nu zelf`,items:core}); answers.push({title:tasks.at(-1).title,items:core.map(f=>displayFact(f,false))});
  }
@@ -400,11 +399,16 @@ function makeHomework(id,levelChoice,play,options={}){
  }
  if(level==="uitdaging"){
   const fs=shuffle(facts).slice(0,5),missing=fs.map(missingFact);tasks.push({type:"missing",title:`${nr++}. Zoek de verborgen getallen`,items:missing.map(x=>x.text)});answers.push({title:tasks.at(-1).title,items:missing.map(x=>`${x.text.replace("□",x.answer)}`)});
-  const indFacts=shuffle(facts).slice(0,4),wrongIndex=Math.floor(Math.random()*indFacts.length),items=indFacts.map((x,i)=>({statement:`${x.text} ${i===wrongIndex?x.answer+rand([-2,-1,1,2]):x.answer}`,good:i!==wrongIndex,correct:x.answer}));tasks.push({type:"detective",title:`${nr++}. Zoek de fout`,items});answers.push({title:tasks.at(-1).title,items:items.map(x=>x.good?`${x.statement} is juist`:`${x.statement} moet ${x.correct} zijn`)})
+  const indFacts=shuffle(facts).slice(0,4),wrongIndex=Math.floor(Math.random()*indFacts.length),items=indFacts.map((x,i)=>({statement:`${x.text} ${i===wrongIndex?x.answer+rand([-2,-1,1,2]):x.answer}`,good:i!==wrongIndex,correct:x.answer}));tasks.push({type:"detective",title:`${nr++}. Zoek de fout`,items});answers.push({title:tasks.at(-1).title,items:items.map(x=>x.good?`${x.statement} is juist`:`${x.statement} moet ${x.correct} zijn`)});
+  const representationItems=shuffle(facts).slice(0,4);tasks.push({type:"representation-match",title:`${nr++}. Verbind wat bij elkaar hoort`,items:representationItems});answers.push({title:tasks.at(-1).title,items:representationItems.map(f=>f.op==="multiply"?`${f.a} × ${f.b} = ${f.answer} ↔ ${Array.from({length:f.a},()=>f.b).join(" + ")}`:`${f.a} : ${f.b} = ${f.answer} ↔ ${[f.a,...Array.from({length:f.answer},()=>`− ${f.b}`)].join(" ")} = 0`)})
  }
  if(level==="expert"){
   const f=getF(),fam=factFamily(f);tasks.push({type:"expert",title:`${nr++}. Tafelbreker`,family:fam});answers.push({title:tasks.at(-1).title,items:[`${fam.table} × ${fam.n} = ${fam.product}; ${fam.product} : ${fam.table} = ${fam.n}; ${fam.n} × ${fam.table} = ${fam.product}; ${fam.product} : ${fam.n} = ${fam.table}`]});
   tasks.push({type:"family",title:`${nr++}. Bouw de bewerkingsfamilie`,items:[f]});answers.push({title:tasks.at(-1).title,items:[`${fam.x} × ${fam.y} = ${fam.product}; ${fam.y} × ${fam.x} = ${fam.product}; ${fam.product} : ${fam.x} = ${fam.y}; ${fam.product} : ${fam.y} = ${fam.x}`]});
+  const tripleItems=uniqueFamilyFacts(facts,4).map(factFamily);tasks.push({type:"family-triples",title:`${nr++}. Drie getallen, vier bewerkingen`,items:tripleItems});answers.push({title:tasks.at(-1).title,items:tripleItems.map(x=>`${x.x} × ${x.y} = ${x.product}; ${x.y} × ${x.x} = ${x.product}; ${x.product} : ${x.x} = ${x.y}; ${x.product} : ${x.y} = ${x.x}`)})
+ }
+ if(operation!=="multiply"){
+  const inverseItems=uniqueFamilyFacts(facts.filter(f=>f.op==="divide"),3);if(inverseItems.length){tasks.push({type:"inverse-pairs",title:`${nr++}. Delen en vermenigvuldigen horen bij elkaar`,items:inverseItems});answers.push({title:tasks.at(-1).title,items:inverseItems.map(f=>`${f.a} : ${f.b} = ${f.answer} en ${f.answer} × ${f.b} = ${f.a}`)})}
  }
  const usedTypes=new Set(tasks.map(t=>t.type)),anchor=rand(["calcgrid","grid","match"]),allTypes=[anchor,...shuffle(["calcgrid","grid","match","story","detective","domino","family","snake","answerbank"].filter(x=>x!==anchor))],bank=allTypes.filter(type=>!usedTypes.has(type)),wanted=Math.min(bank.length,Math.max(3,Math.min(6,+play||4)));
  for(const type of bank.slice(0,wanted)){
@@ -419,9 +423,13 @@ function makeHomework(id,levelChoice,play,options={}){
   if(type==="match"){const items=fs,answerValues=shuffle(items.map(x=>x.answer));tasks.push({type,title:`${k}. Wat hoort bij elkaar?`,items,answerValues});answers.push({title:tasks.at(-1).title,items:items.map(x=>`${x.text} ${x.answer}`)})}
   if(type==="answerbank"){const items=fs,answerValues=shuffle(items.map(x=>x.answer));tasks.push({type,title:`${k}. Kies uit de antwoordbank`,items,answerValues});answers.push({title:tasks.at(-1).title,items:items.map(x=>`${x.text} ${x.answer}`)})}
  }
- return{id,level,tables,operation,tasks,answers}
+ const difficulty={"learning-chain":"basis","visual-set":"basis",visual:"basis",snake:"basis",core:"kern",calcgrid:"kern",grid:"kern",match:"kern",domino:"kern",answerbank:"kern",story:"kern","inverse-pairs":"kern",missing:"uitdaging",detective:"uitdaging","representation-match":"uitdaging",family:"uitdaging",expert:"uitdaging","family-triples":"expert"};tasks.forEach(t=>t.difficulty=difficulty[t.type]||level);return{id,level,tables,operation,tasks,answers}
 }
 function taskHtml(t){
+ if(t.type==="learning-chain")return `<section class="hw-section learning-chain"><h2>${t.title}</h2><p>Bekijk elk beeld. Schrijf wat je ziet eerst als herhaalde optelling of aftrekking en daarna als maal- of deeloefening.</p><div class="learning-chain-grid">${t.items.map((f,i)=>{if(f.op==="divide"){const dots=Array.from({length:f.a},()=>'<i class="visual-dot"></i>').join(""),subtract=[f.a,...Array.from({length:f.answer},()=>`− ${f.b}`)].join(" ");return `<article><b>${String.fromCharCode(97+i)}.</b><p>Verdeel <strong>${f.a}</strong> in groepen van <strong>${f.b}</strong>.</p><div class="loose-dots compact-dots">${dots}</div><div class="learning-lines"><span>${subtract} = <i></i></span><span>${f.a} : ${f.b} = <i></i></span></div></article>`}const groups=Array.from({length:f.a},()=>`<span class="visual-group">${Array.from({length:f.b},()=>'<i class="visual-dot"></i>').join("")}</span>`).join(""),addition=Array.from({length:f.a},()=>f.b).join(" + ");return `<article><b>${String.fromCharCode(97+i)}.</b><p><strong>${f.a}</strong> groepen van <strong>${f.b}</strong>.</p><div class="visual-groups compact-groups">${groups}</div><div class="learning-lines"><span>${addition} = <i></i></span><span>${f.a} × ${f.b} = <i></i></span></div></article>`}).join("")}</div></section>`;
+ if(t.type==="inverse-pairs")return `<section class="hw-section inverse-pairs"><h2>${t.title}</h2><p>Bekijk de groepjes. Schrijf telkens de deling en de omgekeerde vermenigvuldiging.</p><div class="inverse-pair-grid">${t.items.map(f=>{const groups=Array.from({length:f.answer},()=>`<span class="visual-group">${Array.from({length:f.b},()=>'<i class="visual-dot"></i>').join("")}</span>`).join("");return `<article><div class="visual-groups compact-groups">${groups}</div><div class="relation-arrows"><span>delen door ${f.b} →</span><span>← maal ${f.b}</span></div><div class="pair-lines"><span>${f.a} : ${f.b} = <i></i></span><span><i></i> × ${f.b} = ${f.a}</span></div></article>`}).join("")}</div></section>`;
+ if(t.type==="representation-match"){const left=t.items.map(f=>f.op==="multiply"?`${f.a} keer ${f.b}`:`${f.a} gedeeld door ${f.b}`),middle=t.items.map(f=>f.op==="multiply"?Array.from({length:f.a},()=>f.b).join(" + "):[f.a,...Array.from({length:f.answer},()=>`− ${f.b}`)].join(" ")+" = 0"),right=t.items.map(f=>f.text.replace("=","").trim());return `<section class="hw-section representation-match"><h2>${t.title}</h2><p>Trek lijnen tussen de drie vakken die bij dezelfde bewerking horen.</p><div class="representation-board"><div>${shuffle(left).map(x=>`<span>${x}</span>`).join("")}</div><div>${shuffle(middle).map(x=>`<span>${x}</span>`).join("")}</div><div>${shuffle(right).map(x=>`<span>${x}</span>`).join("")}</div></div></section>`}
+ if(t.type==="family-triples")return `<section class="hw-section family-triples"><h2>${t.title}</h2><p>Gebruik in elk blok alleen de drie getallen. Schrijf twee vermenigvuldigingen en twee delingen.</p><div class="family-triple-grid">${t.items.map((x,i)=>`<article><div class="triple-numbers"><b>${x.x}</b><b>${x.y}</b><b>${x.product}</b></div><div class="triple-lines"><span><i></i> × <i></i> = <i></i></span><span><i></i> × <i></i> = <i></i></span><span><i></i> : <i></i> = <i></i></span><span><i></i> : <i></i> = <i></i></span></div></article>`).join("")}</div></section>`;
  if(t.type==="core")return `<section class="hw-section"><h2>${t.title}</h2><div class="hw-grid">${t.items.map(f=>`<div class="hw-item">${displayFact(f)}</div>`).join("")}</div></section>`;
  if(t.type==="missing")return `<section class="hw-section"><h2>${t.title}</h2><p>Schrijf het ontbrekende getal in het hokje.</p><div class="puzzle-box missing-grid">${t.items.map(x=>`<div class="hw-item">${esc(x).replace("□",'<span class="inline-answer-box"></span>')}</div>`).join("")}</div></section>`;
  if(t.type==="visual-set")return `<section class="hw-section visual-set"><h2>${t.title}</h2>${t.items.map((f,i)=>{if(f.op==="divide"){const dots=Array.from({length:f.a},()=>'<i class="visual-dot"></i>').join("");return `<div class="visual-exercise"><h3>${String.fromCharCode(97+i)}. Maak zelf groepjes</h3><p>Zet telkens een kring rond <b>${f.b}</b> stippen. Hoeveel groepjes kun je maken?</p><div class="loose-dots">${dots}</div><div class="visual-answer">${f.a} : ${f.b} = <span class="answer-line"></span></div></div>`}const groups=Array.from({length:f.a},()=>`<span class="visual-group">${Array.from({length:f.b},()=>'<i class="visual-dot"></i>').join("")}</span>`).join("");return `<div class="visual-exercise"><h3>${String.fromCharCode(97+i)}. Kijk naar de groepjes</h3><p>Hoeveel stippen zijn er samen?</p><div class="visual-groups">${groups}</div><div class="visual-answer">${f.a} × ${f.b} = <span class="answer-line"></span></div></div>`}).join("")}</section>`;
@@ -440,8 +448,9 @@ function taskHtml(t){
 }
 function renderHomework(hw){
  lastHomework=hw;const s=studentById(hw.id);$("#hwName").textContent=s.name;$("#answersFor").textContent=`Voor ${s.name}`;
- const parts=hw.tasks.map(taskHtml);
- $("#homeworkContent").innerHTML=`<div class="hw-level-chip">${hw.level.charAt(0).toUpperCase()+hw.level.slice(1)} · tafel${hw.tables.length>1?"s":""} ${hw.tables.join(", ")} · ${hw.operation==="multiply"?"maal":hw.operation==="divide"?"delen":"maal en delen"}</div>`+parts.join("");
+ const parts=hw.tasks.map(t=>taskHtml(t).replace('<section class="',`<section data-difficulty="${t.difficulty}" class="`));
+ $("#homeworkContent").innerHTML=`<div class="hw-level-chip">${hw.level.charAt(0).toUpperCase()+hw.level.slice(1)} · tafel${hw.tables.length>1?"s":""} ${hw.tables.join(", ")} · ${hw.operation==="multiply"?"maal":hw.operation==="divide"?"delen":"maal en delen"}</div><div class="difficulty-legend"><span><i class="basis"></i> basis</span><span><i class="kern"></i> kern</span><span><i class="uitdaging"></i> uitdaging</span></div>`+parts.join("");
+ $("#homeworkContent").querySelectorAll(".hw-section>h2").forEach(h=>{const m=h.textContent.match(/^(\d+)\.\s*(.*)$/),level=h.parentElement.dataset.difficulty;if(!m||!level)return;h.innerHTML=`<span class="difficulty-marker ${level}" aria-label="${level}">${m[1]}</span><span>${esc(m[2])}</span>`});
  $("#answersContent").innerHTML=hw.answers.map(a=>`<section class="hw-section"><h2>${a.title}</h2>${a.items.map(x=>`<div>${x}</div>`).join("")}</section>`).join("");$("#answersSheet").classList.add("hidden");showView("homework")
 }
 
