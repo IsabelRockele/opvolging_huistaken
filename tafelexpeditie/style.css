@@ -445,8 +445,10 @@ dialog{border:0;border-radius:14px;padding:0;box-shadow:0 8px 30px #0003}dialog:
 /* De renbaan zelf bevat geen vaste deelnemers. Iedere leerling krijgt hieronder
    één eigen zebra die met het klasnummer van links naar rechts beweegt. */
 .race-board-scene.individual{background-image:url('assets/zebrarace-smartboard-v2.png')}
-.race-board-participants{inset:17% 7% 6% 7%;grid-template-rows:repeat(var(--racer-count,1),minmax(0,1fr));align-content:stretch;gap:0}
-.race-lane{min-height:0;height:auto}
-.racing-zebra{left:calc((100% - 60px)*var(--race-progress));top:50%;width:auto;height:min(90%,68px);aspect-ratio:1.28;transform:translateY(-54%);font-size:0}
+.race-board-participants{inset:17% 6.5% 5% 6.5%;grid-template-rows:repeat(var(--racer-count,1),minmax(0,1fr));align-content:stretch;gap:0;padding:3px 10px;border-radius:18px;background:#fffffff0;box-shadow:0 3px 18px #18324a18}
+.race-lane{min-height:0;height:auto;border-bottom:1px solid #d9b97899}
+.race-lane:nth-child(even){background:#edf8f555}
+.race-lane i{display:none}
+.racing-zebra{left:calc((100% - var(--racer-size,38px))*var(--race-progress));top:50%;width:auto;height:var(--racer-size,38px);aspect-ratio:1.28;transform:translateY(-52%);font-size:0;filter:drop-shadow(0 2px 2px #18324a33)}
 .racing-zebra img{display:block;width:100%;height:100%;object-fit:contain}
-.racing-zebra b{position:absolute;left:43%;top:51%;display:grid;place-items:center;min-width:min(28px,48%);height:min(28px,48%);padding:0 2px;transform:translate(-50%,-50%);border:1px solid #fff;border-radius:99px;background:#18324a;color:#fff;box-shadow:0 2px 5px #18324a55;font-size:clamp(8px,.9vw,14px);line-height:1}
+.racing-zebra b{position:absolute;left:43%;top:51%;display:grid;place-items:center;min-width:20px;height:19px;padding:0 2px;transform:translate(-50%,-50%);border:2px solid #fff;border-radius:99px;background:#18324a;color:#fff;box-shadow:0 2px 5px #18324a55;font-size:12px;font-weight:900;line-height:1}
