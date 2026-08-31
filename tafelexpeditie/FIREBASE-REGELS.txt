@@ -93,4 +93,58 @@ Plaats het VOOR de afsluitende match /{document=**}.
             )
           );
       }
+
+      // Tijdelijke live klasgames. De lange QR-sleutel en geheime
+      // leerlingdocumentsleutel werken als toegangssleutels. Leerlingen mogen
+      // nooit de deelnemerslijst opvragen; alleen de leerkracht ziet het bord.
+      match /races/{raceId} {
+        allow get: if request.auth != null;
+        allow list: if false;
+
+        allow create, update, delete: if request.auth != null
+          && (
+            isSchoolBreed()
+            || isSecretariaat()
+            || isGekoppeldAanKlas(
+              get(/databases/$(database)/documents/tafelexpeditie_klassen/$(toegangscode)).data.schoolyear,
+              get(/databases/$(database)/documents/tafelexpeditie_klassen/$(toegangscode)).data.className
+            )
+          );
+
+        match /racers/{geheimeLeerlingSleutel} {
+          allow get: if request.auth != null;
+
+          allow list: if request.auth != null
+            && (
+              isSchoolBreed()
+              || isSecretariaat()
+              || isGekoppeldAanKlas(
+                get(/databases/$(database)/documents/tafelexpeditie_klassen/$(toegangscode)).data.schoolyear,
+                get(/databases/$(database)/documents/tafelexpeditie_klassen/$(toegangscode)).data.className
+              )
+            );
+
+          allow create: if request.auth != null
+            && request.resource.data.keys().hasOnly([
+              'classNumber', 'firstName', 'progress', 'total', 'wrong',
+              'finished', 'joinedAt', 'updatedAt', 'finishedAt', 'elapsedMs'
+            ]);
+
+          allow update: if request.auth != null
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+              'progress', 'total', 'wrong', 'finished', 'updatedAt',
+              'finishedAt', 'elapsedMs'
+            ]);
+
+          allow delete: if request.auth != null
+            && (
+              isSchoolBreed()
+              || isSecretariaat()
+              || isGekoppeldAanKlas(
+                get(/databases/$(database)/documents/tafelexpeditie_klassen/$(toegangscode)).data.schoolyear,
+                get(/databases/$(database)/documents/tafelexpeditie_klassen/$(toegangscode)).data.className
+              )
+            );
+        }
+      }
     }

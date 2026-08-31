@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>TafelExpeditie · maal- en deeltafels</title>
-  <link rel="stylesheet" href="style.css?v=20260831-10">
+  <link rel="stylesheet" href="style.css?v=20260831-11">
 </head>
 <body>
 <header class="topbar no-print">
@@ -72,6 +72,7 @@
       <button id="studentLogoutBtn" class="secondary">Afmelden</button>
     </div>
     <div class="student-hero"><div><span class="eyebrow">MIJN MISSIES</span><h3>Klaar voor je volgende stap?</h3></div><img src="assets/rekenroef-mascotte.png" alt="Ravi moedigt je aan"></div>
+    <div id="studentLiveRace" class="student-live-race hidden"></div>
     <div id="studentAssignments" class="assignment-list"></div>
     <h3 class="section-title">Vrij oefenen</h3>
     <div id="studentModes" class="mode-grid"></div>
@@ -88,7 +89,9 @@
       <button data-teacher-tab="class" class="teacher-tab">👥 Klas</button>
       <button data-teacher-tab="assignments" class="teacher-tab">📌 Taken</button>
       <button data-teacher-tab="discover" class="teacher-tab">🧭 Oefeningen ontdekken</button>
+      <button data-teacher-tab="race" class="teacher-tab">🏁 Live spel</button>
       <button data-teacher-tab="results" class="teacher-tab">📊 Opvolging</button>
+      <button data-teacher-tab="medals" class="teacher-tab">🏅 Medailles</button>
       <button data-teacher-tab="homework" class="teacher-tab">📝 Huistaken</button>
       <button data-teacher-tab="flashcards" class="teacher-tab">🃏 Flitskaartjes</button>
     </div>
@@ -241,6 +244,26 @@
       </div>
     </section>
 
+    <section id="teacherRaceTab" class="teacher-tab-view">
+      <div class="panel">
+        <span class="eyebrow">SMARTBOARD · HELE KLAS</span>
+        <h2>Live zebraspellen</h2>
+        <p class="muted">De kinderen melden zich aan op hun eigen toestel. Jij opent het racebord op het smartboard en geeft samen het startsein.</p>
+        <div class="race-kind-cards">
+          <label class="race-kind-card"><input type="radio" name="raceKind" value="race" checked><span><b>🏁 Zebrarace</b><small>Iedere zebra gaat vooruit bij een juist antwoord. Na afloop verschijnt een top 5.</small></span></label>
+          <label class="race-kind-card"><input type="radio" name="raceKind" value="team"><span><b>⭐ Samen naar de finish</b><small>Alle juiste antwoorden duwen samen de klasster naar het feest.</small></span></label>
+        </div>
+        <div class="form-grid">
+          <label>Oefeningen<select id="raceOperation"><option value="multiply">Maaltafels</option><option value="divide">Deeltafels</option><option value="both" selected>Maal en deel gemengd</option></select></label>
+          <label>Aantal per kind<select id="raceQuestionCount"><option value="10" selected>10</option><option value="15">15</option><option value="20">20</option></select></label>
+        </div>
+        <fieldset class="table-field"><legend>Tafels in het spel</legend><div id="raceTableChecks" class="checks"></div></fieldset>
+        <div class="row"><button id="createRaceBtn" class="large">Maak een nieuw spel</button><button id="openRaceBoardBtn" class="secondary" disabled>Open smartboard</button><button id="previewZebraRaceBtn" class="secondary">Bekijk voorbeeld Zebrarace</button><button id="previewTeamRaceBtn" class="secondary">Bekijk voorbeeld samenspel</button></div>
+        <div id="raceTeacherStatus" class="callout race-teacher-status"><strong>Nog geen live spel</strong><p>Maak eerst een spel. Daarna kunnen de kinderen deelnemen.</p></div>
+        <div class="row"><button id="startRaceBtn" disabled>Start voor iedereen</button><button id="stopRaceBtn" class="secondary danger-outline" disabled>Stop spel</button></div>
+      </div>
+    </section>
+
     <section id="teacherResultsTab" class="teacher-tab-view">
       <div class="panel">
         <div class="teacher-head">
@@ -261,13 +284,7 @@
             <button id="printGrowthCertificateBtn">Print groeicertificaat</button>
           </div>
           <div id="celebrationReadiness" class="celebration-readiness"></div>
-          <div id="classExpedition" class="class-expedition"></div>
-          <h3>Klasmedaillebord</h3>
-          <p class="muted">Tien plaatsen per kind: één medaille zodra die maal- én deeltafel op twee toetsmomenten juist en vlot gekend is.</p>
-          <div id="classMedalBoard" class="class-medal-board"></div>
           <div class="row">
-            <button id="printClassExpeditionBtn" class="secondary">Print klasexpeditie</button>
-            <button id="printClassMedalBoardBtn" class="secondary">Print klasmedaillebord</button>
             <button id="printReadyCertificatesBtn" class="secondary">Print behaalde mijlpalen</button>
           </div>
         </section>
@@ -276,6 +293,19 @@
         <div id="masteryGrid" class="mastery-grid"></div>
         <h3>Recente oefensessies</h3>
         <div class="table-wrap"><table><thead><tr><th>Datum</th><th>Type</th><th>Score</th><th>Gem. tijd</th><th>Oefeningen</th></tr></thead><tbody id="sessionRows"></tbody></table></div>
+      </div>
+    </section>
+
+    <section id="teacherMedalsTab" class="teacher-tab-view">
+      <div class="panel medals-class-panel">
+        <span class="eyebrow">ALLEEN VOOR HET LEERKRACHTENBORD</span>
+        <h2>Onze medailleklas</h2>
+        <p class="muted">Open dit bord af en toe samen in de klas. Elk kind ziet hier zijn klasnummer, voornaam en eigen groei. Thuis ziet een leerling uitsluitend de eigen medailles.</p>
+        <div id="classMedalBoard" class="class-medal-board"></div>
+        <div class="row"><button id="printClassMedalBoardBtn">Print het klasmedaillebord</button></div>
+        <h3>Onze gezamenlijke TafelExpeditie</h3>
+        <div id="classExpedition" class="class-expedition"></div>
+        <div class="row"><button id="printClassExpeditionBtn" class="secondary">Print klasexpeditie</button></div>
       </div>
     </section>
 
@@ -355,6 +385,16 @@
       </div>
     </section>
 
+  </section>
+
+  <section id="raceBoardView" class="view race-board-view">
+    <div class="race-board-head"><button id="raceBoardBackBtn" class="secondary">← Terug naar bediening</button><div><span id="raceBoardKind">LIVE ZEBRARACE</span><h2 id="raceBoardTitle">Iedereen klaar?</h2></div><div id="raceBoardTimer">00:00</div></div>
+    <div id="raceBoardScene" class="race-board-scene"><div id="raceBoardParticipants" class="race-board-participants"></div><div id="teamRaceProgress" class="team-race-progress hidden"><div class="team-star">★</div></div></div>
+    <div id="raceLeaderboard" class="race-leaderboard hidden"></div>
+  </section>
+
+  <section id="studentRaceLobbyView" class="view student-race-lobby-view">
+    <div class="panel student-race-lobby-card"><span class="eyebrow">LIVE MET DE KLAS</span><h2 id="studentRaceLobbyTitle">Je zebra staat klaar!</h2><div class="waiting-zebra">🦓</div><p id="studentRaceLobbyText">Kijk naar het smartboard. De juf of meester geeft het startsein.</p><button id="leaveRaceBtn" class="secondary">Terug naar mijn missies</button></div>
   </section>
 
   <section id="setupView" class="view">
@@ -469,7 +509,7 @@
 </dialog>
 
 <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
-  <script src="app.js?v=20260831-33"></script>
-<script type="module" src="portal-integration.js?v=20260831-31"></script>
+  <script src="app.js?v=20260831-36"></script>
+<script type="module" src="portal-integration.js?v=20260831-32"></script>
 </body>
 </html>
