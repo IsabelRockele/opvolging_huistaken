@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>TafelExpeditie · maal- en deeltafels</title>
-  <link rel="stylesheet" href="style.css?v=20260830-5">
+  <link rel="stylesheet" href="style.css?v=20260831-6">
 </head>
 <body>
 <header class="topbar no-print">
@@ -78,6 +78,7 @@
     <div class="panel student-progress-panel">
       <h3>Mijn vooruitgang</h3>
       <div id="studentProgressSummary" class="stats-grid"></div>
+      <div id="studentMedalMap" class="student-medal-map"></div>
     </div>
   </section>
 
@@ -232,6 +233,18 @@
         </div>
         <div id="overviewCards" class="stats-grid teacher-stats"></div>
         <div id="learningAdvice" class="advice-card"></div>
+        <section class="celebration-panel">
+          <div class="celebration-head">
+            <div><span class="eyebrow">ZEBRAKLAS · SAMEN GROEIEN</span><h3>Klaar om te vieren</h3><p>Een digitale medaille verschijnt pas als de maal- én deeltafel op twee verschillende toetsmomenten juist en vlot waren.</p></div>
+            <button id="printGrowthCertificateBtn">Print groeicertificaat</button>
+          </div>
+          <div id="celebrationReadiness" class="celebration-readiness"></div>
+          <div id="classExpedition" class="class-expedition"></div>
+          <div class="row">
+            <button id="printClassExpeditionBtn" class="secondary">Print klasexpeditie</button>
+            <button id="printReadyCertificatesBtn" class="secondary">Print behaalde mijlpalen</button>
+          </div>
+        </section>
         <h3>Automatisatie per tafel</h3>
         <p class="legend"><span class="dot green"></span> vlot <span class="dot orange"></span> nog oefenen <span class="dot red"></span> moeilijk <span class="dot gray"></span> nog geen gegevens</p>
         <div id="masteryGrid" class="mastery-grid"></div>
@@ -429,7 +442,7 @@
 </dialog>
 
 <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
-<script src="app.js?v=20260831-24"></script>
-<script type="module" src="portal-integration.js?v=20260831-24"></script>
+<script src="app.js?v=20260831-25"></script>
+<script type="module" src="portal-integration.js?v=20260831-25"></script>
 </body>
 </html>
