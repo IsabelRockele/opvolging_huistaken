@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>TafelExpeditie · maal- en deeltafels</title>
-  <link rel="stylesheet" href="style.css?v=20260831-8">
+  <link rel="stylesheet" href="style.css?v=20260831-9">
 </head>
 <body>
 <header class="topbar no-print">
@@ -271,6 +271,7 @@
           <label>Niveau<select id="homeworkLevel"><option value="auto" selected>Automatisch</option><option value="basis">Basis</option><option value="kern">Kern</option><option value="uitdaging">Uitdaging</option><option value="expert">Expert</option></select></label>
           <label>Keuze van de tafels<select id="homeworkSource"><option value="manual" selected>Alleen wat ik hieronder aanduid</option><option value="auto">Automatisch op resultaten</option></select></label>
           <label>Bewerkingen<select id="homeworkOperation"><option value="both">Maal en deel</option><option value="multiply">Alleen maal</option><option value="divide">Alleen deel</option></select></label>
+          <label>Schrijfwijze maaltafel<select id="homeworkFactorPosition"><option value="class" selected>Gebruik de klasinstelling</option><option value="student">Gebruik de persoonlijke leerlinginstelling</option></select><small id="homeworkPositionHint" class="muted"></small></label>
           <label>Omvang en variatie<select id="homeworkPlay"><option value="4">Gevarieerd</option><option value="6" selected>Heel gevarieerd · mag 3 pagina's zijn</option></select></label>
         </div>
         <fieldset id="homeworkTablesField" class="table-field"><legend>Tafels voor de huistaak</legend><p class="field-help">Alleen de aangevinkte tafels mogen op het blad voorkomen.</p><div id="homeworkTableChecks" class="checks"></div></fieldset>
@@ -452,7 +453,7 @@
 </dialog>
 
 <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
-<script src="app.js?v=20260831-30"></script>
-<script type="module" src="portal-integration.js?v=20260831-30"></script>
+<script src="app.js?v=20260831-31"></script>
+<script type="module" src="portal-integration.js?v=20260831-31"></script>
 </body>
 </html>
