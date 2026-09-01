@@ -3934,7 +3934,10 @@
       el.addEventListener("click", () => {
         const vorigeTab = tab;
         tab = el.dataset.tab;
-        if(isSecretary()&&tab==="leerlingen")tab="leerlingenstart";
+        if(isSecretary()&&tab==="leerlingen"){
+          tab=activeClass&&data?"leerlingen":"leerlingenstart";
+          adminPanel="klaslijsten";classListMode="";
+        }
         if(tab === "refter" && vorigeTab !== "refter") gekozenRefterWeek = "";
         if(tab === "administratie" && isSecretary()){adminPanel = "wegwijzer";adminNavigatieOpen=false;secretariaatModulesOpen=false;}
         renderKlasPills();
