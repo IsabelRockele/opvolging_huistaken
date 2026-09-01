@@ -37,7 +37,14 @@
       <label>Wat wil je op de etiketten?</label>
       <div class="keuzes">
         <label class="keuze"><input type="radio" name="inhoud" value="namen" checked><span><strong>Namen uit mijn klaslijst</strong><span>Kies hieronder de leerlingen en de verdeling.</span></span></label>
+        <label class="keuze"><input type="radio" name="inhoud" value="naamTitel"><span><strong>Naam met schrifttitel eronder</strong><span>Elke leerling één etiket; de kleinere titel staat onder de naam.</span></span></label>
         <label class="keuze"><input type="radio" name="inhoud" value="tekst"><span><strong>Dezelfde eigen tekst op alle etiketten</strong><span>Eén A4 met 24 identieke tekstetiketten.</span></span></label>
+      </div>
+      <div id="naamTitelOpties" class="verborgen">
+        <label>Titel onder de naam<input id="schriftTitel" maxlength="50" value="Creatief schrijven" placeholder="bv. Creatief schrijven"></label>
+        <label>Lettergrootte naam<input id="titelNaamGrootte" type="number" min="22" max="38" step="1" value="32"></label>
+        <label>Lettergrootte titel<input id="schriftTitelGrootte" type="number" min="10" max="20" step="1" value="14"></label>
+        <p class="uitleg">Aanbevolen: naam 32 pt en titel 14 pt. Lange namen worden automatisch iets verkleind.</p>
       </div>
       <div id="naamOpties">
         <label>Schrijfwijze<select id="schrijfwijze"><option value="hoofdletter">Met hoofdletter (standaard)</option><option value="klein">Zonder hoofdletters</option></select></label>
@@ -74,7 +81,7 @@
       <div class="preview-waarschuwing"><strong>Voorbeeld op schaal:</strong> het volledige A4-blad is verkleind, maar de verhouding tussen lettergrootte en etiket komt overeen met Word. Druk af op <strong>100%/werkelijke grootte</strong>.</div>
     </section>
   </main>
-  <script type="module" src="naametiketten.js?v=20260820-1"></script>
+  <script type="module" src="naametiketten.js?v=20260901-1"></script>
   <script type="module" src="secretariaat-meldingenbalk.js?v=20260824-1"></script>
 </body>
 </html>

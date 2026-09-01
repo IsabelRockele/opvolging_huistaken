@@ -43,6 +43,8 @@ function etikettenNamen(){
 function gekozenNamen(){return etikettenNamen().filter(x=>geselecteerd.has(x.id)).map(x=>x.naam)}
 function inhoud(){return document.querySelector('input[name="inhoud"]:checked')?.value||'namen'}
 function isTekst(){return inhoud()==='tekst'}
+function isNaamTitel(){return inhoud()==='naamTitel'}
+function schriftTitel(){return String($('schriftTitel')?.value||'').trim()}
 function tekstUitlijning(){return isTekst()&&$('tekstUitlijning')?.value==='left'?'left':'center'}
 function eigenTekst(){return String($('eigenTekst').innerText||'').replace(/\u00a0/g,' ').replace(/\r/g,'').trim()}
 function tekstSegmenten(){
@@ -66,11 +68,13 @@ function tekstPreviewHtml(){return tekstSegmenten().map(s=>s.nieuweregel?'<br>':
 window.maakTekstOp=function(opdracht){$('eigenTekst').focus();document.execCommand(opdracht,false,null);render()}
 function actief(s){const jaar=$('schooljaar').value.trim(),datum=`${jaar.slice(0,4)}-09-15`;return(!s.start||s.start<=datum)&&(!s.end||s.end>=datum)}
 function modus(){return document.querySelector('input[name="modus"]:checked').value}
-function basisGrootte(){return isTekst()?Math.max(8,Math.min(36,Number($('tekstLettergrootte').value)||14)):Math.max(26,Math.min(48,Number($('lettergrootte').value)||48))}
+function basisGrootte(){return isTekst()?Math.max(8,Math.min(36,Number($('tekstLettergrootte').value)||14)):isNaamTitel()?Math.max(22,Math.min(38,Number($('titelNaamGrootte').value)||32)):Math.max(26,Math.min(48,Number($('lettergrootte').value)||48))}
+function titelGrootte(){return Math.max(10,Math.min(20,Number($('schriftTitelGrootte').value)||14))}
 function isVet(){return $('vetgedrukt').checked}
 function bladen(){
   if(isTekst()){const tekst=eigenTekst();return tekst?[Array(24).fill(tekst)]:[]}
   const namen=gekozenNamen().filter(Boolean);
+  if(isNaamTitel()){const uit=[];for(let i=0;i<namen.length;i+=24)uit.push([...namen.slice(i,i+24),...Array(Math.max(0,24-namen.slice(i,i+24).length)).fill("")]);return uit}
   if(modus()==="volblad")return namen.map(n=>Array(24).fill(n));
   if(modus()==="halfblad"){const uit=[];for(let i=0;i<namen.length;i+=2)uit.push([...Array(12).fill(namen[i]),...Array(12).fill(namen[i+1]||"")]);return uit}
   const uit=[];for(let i=0;i<namen.length;i+=24)uit.push([...namen.slice(i,i+24),...Array(Math.max(0,24-namen.slice(i,i+24).length)).fill("")]);return uit;
@@ -91,7 +95,7 @@ function puntgrootte(naam){
   const basis=basisGrootte();if(!naam)return basis; const canvas=puntgrootte.canvas||(puntgrootte.canvas=document.createElement('canvas')),ctx=canvas.getContext('2d');
   if(isTekst())return berekenTekstPasvorm(naam).grootte;
   ctx.font=`${isVet()?'bold ':''}${basis}pt Arial`;const breedte=ctx.measureText(naam).width,maximum=225;
-  return Math.max(26,Math.min(basis,Math.floor(basis*maximum/Math.max(breedte,1))));
+  return Math.max(isNaamTitel()?22:26,Math.min(basis,Math.floor(basis*maximum/Math.max(breedte,1))));
 }
 function previewLettergrootte(punten){
   // Het voorbeeldblad heeft de A4-verhouding. A4 is 595,28 punten breed,
@@ -101,16 +105,16 @@ function previewLettergrootte(punten){
 }
 function render(){
   const opties=etikettenNamen(),namen=gekozenNamen().filter(Boolean),pagina=bladen()[0]||Array(24).fill("");
-  $('naamOpties').classList.toggle('verborgen',isTekst());$('naamVerdeling').classList.toggle('verborgen',isTekst());$('tekstOpties').classList.toggle('verborgen',!isTekst());
+  $('naamOpties').classList.toggle('verborgen',isTekst()||isNaamTitel());$('naamTitelOpties').classList.toggle('verborgen',!isNaamTitel());$('naamVerdeling').classList.toggle('verborgen',isTekst()||isNaamTitel());$('tekstOpties').classList.toggle('verborgen',!isTekst());
   $('namen').innerHTML=opties.map(x=>`<label class="naam"><input type="checkbox" data-leerling-id="${esc(x.id)}" ${geselecteerd.has(x.id)?'checked':''}><span>${esc(x.naam)}</span></label>`).join('');
   $('namen').querySelectorAll('input[data-leerling-id]').forEach(v=>v.addEventListener('change',()=>{v.checked?geselecteerd.add(v.dataset.leerlingId):geselecteerd.delete(v.dataset.leerlingId);render()}));
   const previewInhoud=isTekst()?tekstPreviewHtml():null;
   const uitlijning=tekstUitlijning();
-  $('preview').innerHTML=pagina.map(n=>`<div class="etiket" style="font-size:${previewLettergrootte(puntgrootte(n)).toFixed(2)}px;font-weight:${isVet()?700:400};text-align:${uitlijning};justify-content:${uitlijning==='left'?'flex-start':'center'}">${isTekst()?previewInhoud:esc(n)}</div>`).join('');
-  $('letterInfo').textContent=`Voorbeeld op schaal · Word: Arial ${basisGrootte()} pt${isVet()?' vet':''}${isTekst()?'; indien nodig automatisch kleiner.':'; lange namen worden automatisch verkleind.'}`;
+  $('preview').innerHTML=pagina.map(n=>`<div class="etiket" style="font-size:${previewLettergrootte(puntgrootte(n)).toFixed(2)}px;font-weight:${isVet()?700:400};text-align:${uitlijning};justify-content:${uitlijning==='left'?'flex-start':'center'}">${isTekst()?previewInhoud:isNaamTitel()?(n?`<div><div>${esc(n)}</div><div style="font-size:${previewLettergrootte(titelGrootte()).toFixed(2)}px;font-weight:400;margin-top:3px">${esc(schriftTitel())}</div></div>`:''):esc(n)}</div>`).join('');
+  $('letterInfo').textContent=isNaamTitel()?`Voorbeeld op schaal · Word: naam ${basisGrootte()} pt, titel ${titelGrootte()} pt.`:`Voorbeeld op schaal · Word: Arial ${basisGrootte()} pt${isVet()?' vet':''}${isTekst()?'; indien nodig automatisch kleiner.':'; lange namen worden automatisch verkleind.'}`;
   $('bladBadge').textContent=`${bladen().length} ${bladen().length===1?'blad':'bladen'}`;
   const teLang=isTekst()&&eigenTekst().length>240,pasvorm=isTekst()&&eigenTekst()?berekenTekstPasvorm(eigenTekst()):null;
-  $('download').disabled=isTekst()?(!eigenTekst()||teLang||!pasvorm?.past):!namen.length;
+  $('download').disabled=isTekst()?(!eigenTekst()||teLang||!pasvorm?.past):isNaamTitel()?(!namen.length||!schriftTitel()):!namen.length;
   if(isTekst()){
     $('pasMelding').className='pas-melding';
     if(teLang){$('pasMelding').classList.add('fout');$('pasMelding').textContent='Te veel tekst (maximaal 240 tekens). Maak de tekst korter.'}
@@ -119,7 +123,7 @@ function render(){
     else if(pasvorm.grootte<pasvorm.aangevraagd){$('pasMelding').classList.add('kleiner');$('pasMelding').textContent=`De tekst past en wordt automatisch verkleind van ${pasvorm.aangevraagd} pt naar ${pasvorm.grootte} pt.`}
     else $('pasMelding').textContent=`De tekst past veilig op ${pasvorm.grootte} pt.`;
   }
-  $('status').textContent=isTekst()?(eigenTekst()?(teLang||!pasvorm?.past?'Pas de tekst aan voordat je downloadt.':'Eén A4 met 24 identieke tekstetiketten staat klaar.'):'Typ eerst de tekst die op ieder etiket moet komen.'):leerlingen.length?`${namen.length} van ${leerlingen.length} actieve leerling${leerlingen.length===1?'':'en'} geselecteerd in ${$('klas').value}.`:'Geen actieve leerlingen gevonden in deze klaslijst.';
+  $('status').textContent=isTekst()?(eigenTekst()?(teLang||!pasvorm?.past?'Pas de tekst aan voordat je downloadt.':'Eén A4 met 24 identieke tekstetiketten staat klaar.'):'Typ eerst de tekst die op ieder etiket moet komen.'):isNaamTitel()?(!schriftTitel()?'Vul eerst de titel in.':`${namen.length} naametiket${namen.length===1?'':'ten'} met “${schriftTitel()}” staan klaar.`):leerlingen.length?`${namen.length} van ${leerlingen.length} actieve leerling${leerlingen.length===1?'':'en'} geselecteerd in ${$('klas').value}.`:'Geen actieve leerlingen gevonden in deze klaslijst.';
 }
 async function laadRol(){const s=await getDoc(doc(db,'schoolrollen',user.uid));role=s.exists()?String(s.data().rol||'').toLowerCase():'';if(role==='beheerder'){const sim=localStorage.getItem('lindeSimuleerRol_'+user.uid);if(sim)role=sim}}
 async function laadKlassen(){
@@ -132,7 +136,7 @@ async function laadLeerlingen(){const klas=$('klas').value,jaar=$('schooljaar').
 
 function xml(v){return String(v??'').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&apos;')}
 function tekstRunsXml(tekst,half){if(!isTekst())return `<w:r><w:rPr><w:rFonts w:ascii="Arial" w:hAnsi="Arial"/>${isVet()?'<w:b/>':''}<w:sz w:val="${half}"/><w:szCs w:val="${half}"/></w:rPr><w:t xml:space="preserve">${xml(tekst)}</w:t></w:r>`;return tekstSegmenten().map(s=>s.nieuweregel?'<w:r><w:br/></w:r>':`<w:r><w:rPr><w:rFonts w:ascii="Arial" w:hAnsi="Arial"/>${isVet()||s.vet?'<w:b/>':''}${s.onderstreept?'<w:u w:val="single"/>':''}<w:sz w:val="${half}"/><w:szCs w:val="${half}"/></w:rPr><w:t xml:space="preserve">${xml(s.tekst)}</w:t></w:r>`).join('')}
-function celXml(naam){const half=puntgrootte(naam)*2;if(isTekst())return `<w:tc><w:tcPr><w:tcW w:w="3968" w:type="dxa"/><w:tcMar><w:top w:w="180" w:type="dxa"/><w:left w:w="283" w:type="dxa"/><w:bottom w:w="180" w:type="dxa"/><w:right w:w="283" w:type="dxa"/></w:tcMar><w:vAlign w:val="center"/></w:tcPr><w:p><w:pPr><w:spacing w:before="0" w:after="0"/><w:ind w:left="283" w:right="283"/><w:jc w:val="${tekstUitlijning()}"/></w:pPr>${naam?tekstRunsXml(naam,half):''}</w:p></w:tc>`;return `<w:tc><w:tcPr><w:tcW w:w="3968" w:type="dxa"/></w:tcPr><w:p><w:pPr><w:ind w:right="258"/><w:jc w:val="center"/></w:pPr></w:p><w:p><w:pPr><w:ind w:left="258" w:right="258"/><w:jc w:val="center"/></w:pPr></w:p><w:p><w:pPr><w:ind w:left="258" w:right="258"/><w:jc w:val="center"/></w:pPr>${naam?tekstRunsXml(naam,half):''}</w:p></w:tc>`}
+function celXml(naam){const half=puntgrootte(naam)*2;if(isTekst())return `<w:tc><w:tcPr><w:tcW w:w="3968" w:type="dxa"/><w:tcMar><w:top w:w="180" w:type="dxa"/><w:left w:w="283" w:type="dxa"/><w:bottom w:w="180" w:type="dxa"/><w:right w:w="283" w:type="dxa"/></w:tcMar><w:vAlign w:val="center"/></w:tcPr><w:p><w:pPr><w:spacing w:before="0" w:after="0"/><w:ind w:left="283" w:right="283"/><w:jc w:val="${tekstUitlijning()}"/></w:pPr>${naam?tekstRunsXml(naam,half):''}</w:p></w:tc>`;if(isNaamTitel())return `<w:tc><w:tcPr><w:tcW w:w="3968" w:type="dxa"/><w:tcMar><w:top w:w="120" w:type="dxa"/><w:left w:w="258" w:type="dxa"/><w:bottom w:w="120" w:type="dxa"/><w:right w:w="258" w:type="dxa"/></w:tcMar><w:vAlign w:val="center"/></w:tcPr><w:p><w:pPr><w:spacing w:before="0" w:after="45"/><w:jc w:val="center"/></w:pPr>${naam?tekstRunsXml(naam,half):''}</w:p><w:p><w:pPr><w:spacing w:before="0" w:after="0"/><w:jc w:val="center"/></w:pPr>${naam?`<w:r><w:rPr><w:rFonts w:ascii="Arial" w:hAnsi="Arial"/><w:sz w:val="${titelGrootte()*2}"/><w:szCs w:val="${titelGrootte()*2}"/></w:rPr><w:t xml:space="preserve">${xml(schriftTitel())}</w:t></w:r>`:''}</w:p></w:tc>`;return `<w:tc><w:tcPr><w:tcW w:w="3968" w:type="dxa"/></w:tcPr><w:p><w:pPr><w:ind w:right="258"/><w:jc w:val="center"/></w:pPr></w:p><w:p><w:pPr><w:ind w:left="258" w:right="258"/><w:jc w:val="center"/></w:pPr></w:p><w:p><w:pPr><w:ind w:left="258" w:right="258"/><w:jc w:val="center"/></w:pPr>${naam?tekstRunsXml(naam,half):''}</w:p></w:tc>`}
 function tabelXml(namen){let r='',rijHoogte=isTekst()?1900:2098;for(let y=0;y<8;y++)r+=`<w:tr><w:trPr><w:cantSplit/><w:trHeight w:hRule="exact" w:val="${rijHoogte}"/></w:trPr>${namen.slice(y*3,y*3+3).map(celXml).join('')}</w:tr>`;return `<w:tbl><w:tblPr><w:tblW w:w="0" w:type="auto"/><w:tblInd w:w="-15" w:type="dxa"/><w:tblBorders><w:top w:val="none"/><w:left w:val="none"/><w:bottom w:val="none"/><w:right w:val="none"/><w:insideH w:val="none"/><w:insideV w:val="none"/></w:tblBorders><w:tblLayout w:type="fixed"/><w:tblCellMar><w:left w:w="15" w:type="dxa"/><w:right w:w="15" w:type="dxa"/></w:tblCellMar></w:tblPr><w:tblGrid><w:gridCol w:w="3968"/><w:gridCol w:w="3968"/><w:gridCol w:w="3968"/></w:tblGrid>${r}</w:tbl>`}
 function kleinAlinea(extra=''){return `<w:p><w:pPr><w:spacing w:before="0" w:after="0" w:line="1" w:lineRule="exact"/></w:pPr><w:r><w:rPr><w:sz w:val="2"/><w:szCs w:val="2"/></w:rPr>${extra}</w:r></w:p>`}
 function documentXml(paginas){const inhoud=paginas.map((p,i)=>tabelXml(p)+(i<paginas.length-1?kleinAlinea('<w:br w:type="page"/>'):'')).join('');return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body>${inhoud}${kleinAlinea()}<w:sectPr><w:type w:val="continuous"/><w:pgSz w:w="11906" w:h="16838"/><w:pgMar w:top="0" w:right="0" w:bottom="0" w:left="0" w:header="708" w:footer="708" w:gutter="0"/><w:cols w:space="708"/></w:sectPr></w:body></w:document>`}
@@ -147,9 +151,9 @@ function maakDocx(){const paginas=bladen();if(!paginas.length)return;const besta
   'word/_rels/document.xml.rels':'<?xml version="1.0" encoding="UTF-8"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>',
   'word/styles.xml':'<?xml version="1.0" encoding="UTF-8"?><w:styles xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:docDefaults><w:rPrDefault><w:rPr><w:rFonts w:ascii="Arial" w:hAnsi="Arial"/><w:sz w:val="22"/><w:szCs w:val="22"/></w:rPr></w:rPrDefault><w:pPrDefault/></w:docDefaults><w:style w:type="paragraph" w:default="1" w:styleId="Normal"><w:name w:val="Normal"/><w:pPr><w:spacing w:after="0" w:line="240" w:lineRule="auto"/></w:pPr></w:style></w:styles>',
   'word/document.xml':documentXml(paginas)};
-  const url=URL.createObjectURL(zipBestanden(bestanden)),a=document.createElement('a');a.href=url;a.download=isTekst()?`tekstetiketten_${$('schooljaar').value}.docx`:`naametiketten_${$('klas').value}_${$('schooljaar').value}_${modus()}.docx`;a.click();setTimeout(()=>URL.revokeObjectURL(url),2000);
+  const url=URL.createObjectURL(zipBestanden(bestanden)),a=document.createElement('a');a.href=url;a.download=isTekst()?`tekstetiketten_${$('schooljaar').value}.docx`:isNaamTitel()?`naametiketten_met_titel_${$('klas').value}_${$('schooljaar').value}.docx`:`naametiketten_${$('klas').value}_${$('schooljaar').value}_${modus()}.docx`;a.click();setTimeout(()=>URL.revokeObjectURL(url),2000);
 }
 
-$('schooljaar').value=huidigSchooljaar();$('klas').addEventListener('change',laadLeerlingen);$('schooljaar').addEventListener('change',laadKlassen);$('schrijfwijze').addEventListener('change',render);$('lettergrootte').addEventListener('input',render);$('tekstLettergrootte').addEventListener('input',render);$('tekstUitlijning').addEventListener('change',render);$('eigenTekst').addEventListener('input',render);$('vetgedrukt').addEventListener('change',render);document.querySelectorAll('input[name="inhoud"],input[name="modus"]').forEach(x=>x.addEventListener('change',render));$('selecteerAlles').addEventListener('click',()=>{geselecteerd=new Set(etikettenNamen().map(x=>x.id));render()});$('selecteerGeen').addEventListener('click',()=>{geselecteerd.clear();render()});$('download').addEventListener('click',maakDocx);
+$('schooljaar').value=huidigSchooljaar();$('klas').addEventListener('change',laadLeerlingen);$('schooljaar').addEventListener('change',laadKlassen);$('schrijfwijze').addEventListener('change',render);$('lettergrootte').addEventListener('input',render);$('tekstLettergrootte').addEventListener('input',render);$('tekstUitlijning').addEventListener('change',render);$('eigenTekst').addEventListener('input',render);$('schriftTitel').addEventListener('input',render);$('titelNaamGrootte').addEventListener('input',render);$('schriftTitelGrootte').addEventListener('input',render);$('vetgedrukt').addEventListener('change',render);document.querySelectorAll('input[name="inhoud"],input[name="modus"]').forEach(x=>x.addEventListener('change',render));$('selecteerAlles').addEventListener('click',()=>{geselecteerd=new Set(etikettenNamen().map(x=>x.id));render()});$('selecteerGeen').addEventListener('click',()=>{geselecteerd.clear();render()});$('download').addEventListener('click',maakDocx);
 let previewResizeTimer;window.addEventListener('resize',()=>{clearTimeout(previewResizeTimer);previewResizeTimer=setTimeout(render,120)});
 onAuthStateChanged(auth,async u=>{if(!u){location.href='index.html';return}user=u;try{await laadRol();await laadKlassen()}catch(e){console.error(e);$('status').textContent='De klaslijst kon niet worden geladen: '+e.message}});
