@@ -66,7 +66,7 @@ function tekstSegmenten(){
 }
 function tekstPreviewHtml(){return tekstSegmenten().map(s=>s.nieuweregel?'<br>':`${s.vet?'<strong>':''}${s.onderstreept?'<u>':''}${esc(s.tekst)}${s.onderstreept?'</u>':''}${s.vet?'</strong>':''}`).join('')}
 window.maakTekstOp=function(opdracht){$('eigenTekst').focus();document.execCommand(opdracht,false,null);render()}
-function actief(s){const jaar=$('schooljaar').value.trim(),datum=`${jaar.slice(0,4)}-09-15`;return(!s.start||s.start<=datum)&&(!s.end||s.end>=datum)}
+function actief(s){const jaar=$('schooljaar').value.trim(),begin=`${jaar.slice(0,4)}-09-01`,einde=`${jaar.slice(5,9)}-06-30`,n=new Date(),vandaag=`${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}-${String(n.getDate()).padStart(2,'0')}`,datum=vandaag<begin?begin:vandaag>einde?einde:vandaag;return(!s.start||s.start<=datum)&&(!s.end||s.end>=datum)}
 function modus(){return document.querySelector('input[name="modus"]:checked').value}
 function basisGrootte(){return isTekst()?Math.max(8,Math.min(36,Number($('tekstLettergrootte').value)||14)):isNaamTitel()?Math.max(22,Math.min(38,Number($('titelNaamGrootte').value)||32)):Math.max(26,Math.min(48,Number($('lettergrootte').value)||48))}
 function titelGrootte(){return Math.max(10,Math.min(20,Number($('schriftTitelGrootte').value)||14))}
