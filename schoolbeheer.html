@@ -2830,7 +2830,7 @@
         ${optioneleKolom('huiswerk',`<td class="homework-cell"><div><strong>${esc(huiswerkSamenvatting(s))}</strong><br><button class="small ${s.homeworkClass?"white":"green"}" style="margin-top:7px" onclick="openHomeworkEnrollment('${s.id}')">${s.homeworkClass?"Wijzigen":"Inschrijven"}</button></div></td>`)}
         ${optioneleKolom('start',`<td><input type="date" value="${esc(s.start||startDate())}" onchange="updateStudent('${s.id}','start',this.value)" title="Startdatum: ${formatDate(s.start||startDate())}"></td>`)}
         ${optioneleKolom('einde',`<td><input type="date" value="${esc(s.end||endDate())}" onchange="updateStudent('${s.id}','end',this.value)" title="Einddatum: ${formatDate(s.end||endDate())}"></td>`)}
-        <td><button class="small pink" onclick="leaveStudent('${s.id}')">vertrekt tijdens schooljaar</button>${isSecretary()?` <button class="small danger" onclick="startNietOpSchool('${s.id}')">niet gestart (31/08)</button>`:""}</td>
+        <td><div style="display:grid;gap:7px;min-width:190px"><button class="small pink" onclick="leaveStudent('${s.id}')" title="Kies de laatste actieve schooldag met een kalender">📅 Vertrekt tijdens schooljaar</button>${isSecretary()?`<button class="small danger" onclick="startNietOpSchool('${s.id}')" title="Alleen gebruiken als het kind geen enkele schooldag gestart is">🚫 Nooit gestart op school</button>`:""}</div></td>
       </tr>`).join("")}</tbody></table></div>`;
     }
     function inactieveLeerlingenTabel(){
