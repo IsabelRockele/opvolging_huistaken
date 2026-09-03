@@ -2705,8 +2705,17 @@
       const lijst=activeStudents().filter(s=>s.oudsteGezin);
       const kleuters=activeClass==="K1"?activeStudents().reduce((t,s)=>{const g=kleutergroepVoor(s);if(g==="K0")t.k0++;if(g==="K1")t.k1++;return t},{k0:0,k1:0}):null;
       const toonNamen=!isSecretary()&&!isSchoolBreedRole();
-      return `<section id="oudstenKlasSamenvatting" class="notice no-print" style="margin:0 0 12px"><strong>Oudsten voor brieven: ${lijst.length}</strong>${toonNamen?(lijst.length?`<p class="muted">${lijst.map(name).map(esc).join(" · ")}</p>`:`<p class="muted">Nog niemand aangeduid als oudste van het gezin op school.</p>`):""}${kleuters?`<p><strong>K0:</strong> ${kleuters.k0} (geboortejaar ${Number(schooljaar.slice(0,4))-2}) &nbsp; <strong>K1:</strong> ${kleuters.k1} (geboortejaar ${Number(schooljaar.slice(0,4))-3})</p>`:""}</section>`;
+      return `<section id="oudstenKlasSamenvatting" class="notice no-print" style="margin:0 0 12px"><div class="bar"><strong>Oudsten voor brieven: ${lijst.length}</strong>${toonNamen&&lijst.length?`<button type="button" class="white small" onclick="printKlasoudsten()">🖨️ Klasoudsten afdrukken</button>`:""}</div>${toonNamen?(lijst.length?`<p class="muted">${lijst.map(name).map(esc).join(" · ")}</p>`:`<p class="muted">Nog niemand aangeduid als oudste van het gezin op school.</p>`):""}${kleuters?`<p><strong>K0:</strong> ${kleuters.k0} (geboortejaar ${Number(schooljaar.slice(0,4))-2}) &nbsp; <strong>K1:</strong> ${kleuters.k1} (geboortejaar ${Number(schooljaar.slice(0,4))-3})</p>`:""}</section>`;
     }
+    window.printKlasoudsten=()=>{
+      const lijst=activeStudents().filter(s=>s.oudsteGezin);
+      if(!lijst.length)return alert("Er zijn nog geen klasoudsten aangeduid.");
+      const venster=window.open("","_blank","width=720,height=720");
+      if(!venster)return alert("Het afdrukvenster werd geblokkeerd. Sta pop-ups voor deze pagina toe en probeer opnieuw.");
+      const namen=lijst.map((s,i)=>`<li><span>${i+1}.</span><strong>${esc(name(s))}</strong></li>`).join("");
+      venster.document.write(`<!doctype html><html lang="nl"><head><meta charset="utf-8"><title>Klasoudsten ${esc(activeClass)}</title><style>@page{size:A5 portrait;margin:12mm}*{box-sizing:border-box}body{font-family:Arial,sans-serif;color:#17212b;margin:0;padding:0}main{border:2px solid #8fbaa0;border-radius:14px;padding:18px 20px;background:#fbfefc}h1{font-size:25px;margin:0 0 4px;color:#285c3e}.meta{font-size:13px;color:#52606d;border-bottom:2px solid #d8eadf;padding-bottom:11px;margin-bottom:13px}ol{list-style:none;padding:0;margin:0;columns:2;column-gap:28px}li{break-inside:avoid;display:grid;grid-template-columns:24px 1fr;gap:6px;padding:5px 0;border-bottom:1px solid #e4ece7;font-size:14px}li span{color:#6b7785}footer{font-size:10px;color:#7c8792;margin-top:12px;text-align:right}@media print{main{break-inside:avoid}}</style></head><body><main><h1>Klasoudsten</h1><div class="meta"><strong>Klas ${esc(activeClass)}</strong> · Schooljaar ${esc(schooljaar)} · Totaal: <strong>${lijst.length}</strong></div><ol>${namen}</ol><footer>Afgedrukt op ${esc(new Date().toLocaleDateString("nl-BE"))}</footer></main><script>window.addEventListener('load',()=>setTimeout(()=>window.print(),150));window.addEventListener('afterprint',()=>window.close());<\/script></body></html>`);
+      venster.document.close();
+    };
     window.toggleOudsteGezin=(id,checked)=>{const s=data.leerlingen.find(x=>x.id===id);if(!s)return;s.oudsteGezin=checked;markDirty();const vak=$("oudstenKlasSamenvatting");if(vak)vak.outerHTML=oudstenKlasSamenvatting();};
     window.toonSchoolOudstenOverzicht=async function(){
       if(!isSecretary())return;
