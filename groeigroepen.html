@@ -637,6 +637,10 @@ function gekozenLeerplandoelen(){
   const plan=active.groeiplan=normalizeGroeiplan(active.groeiplan);
   return plan.geselecteerdeDoelen;
 }
+function stelGekozenLeerplandoelenIn(doelen){
+  if(doelenKiezerConcept)doelenKiezerConcept=doelen;
+  else active.groeiplan.geselecteerdeDoelen=doelen;
+}
 function gekozenDoelenHtml(gekozen,verwijderFunctie){
   return gekozen.length?gekozen.map(d=>{const bron=LEERPLANDOELEN_NEDERLANDS.find(x=>x.nummer===d.nummer)||d,geselecteerd=new Set(d.geselecteerdeItems||[]),items=(bron.aanklikbareItems||[]).filter(item=>geselecteerd.has(`${item.groep}::${item.tekst}`));return`<div class="gekozen-doel"><div><strong>${esc(d.nummer||"")}</strong> — ${esc(d.tekst||"")}<div class="doel-meta">${esc(doelPad(d))}${d.leeftijden?.length?` · ${esc(d.leeftijden.join(", "))} jaar`:""}</div>${items.length?`<ul class="gekozen-doel-items">${items.map(item=>`<li><strong>${esc(item.groep)}:</strong> ${esc(item.tekst)}</li>`).join("")}</ul>`:""}</div><button class="ghost small" onclick="${verwijderFunctie}('${esc(d.nummer||d)}')">Verwijderen</button></div>`;}).join(""):`<div class="empty">Nog geen leerplandoelen gekozen.</div>`;
 }
@@ -649,12 +653,20 @@ function renderGekozenDoelenOverzicht(){
   const teller=$("gekozenDoelenAantal");
   if(teller)teller.textContent=`${gekozen.length} doel${gekozen.length===1?"":"en"} gekozen`;
 }
+function renderVoorlopigGekozenDoelen(){
+  const el=$("gekozenLeerplandoelen");
+  if(!el)return;
+  const gekozen=gekozenLeerplandoelen();
+  el.innerHTML=gekozenDoelenHtml(gekozen,"ggSchakelLeerplandoelUit");
+  const teller=$("voorlopigGekozenAantal");
+  if(teller)teller.textContent=`${gekozen.length} doel${gekozen.length===1?"":"en"} voorlopig gekozen`;
+}
 function doelSubkeuzesHtml(doel,geselecteerdeItems){
   const groepen=new Map();
   (doel.aanklikbareItems||[]).forEach((item,index)=>{if(!groepen.has(item.groep))groepen.set(item.groep,[]);groepen.get(item.groep).push({item,index});});
   return [...groepen].map(([groep,regels])=>{
     const begrippen=groep==="Te hanteren begrippen";
-    return `<div class="doel-subblok ${begrippen?'begrippen':'mia'}"><div class="doel-subgroep">${begrippen?'Te hanteren begrippen':`MIA · ${esc(groep)}`}</div>${regels.map(({item,index})=>{const sleutel=`${item.groep}::${item.tekst}`;return`<label class="doel-subkeuze"><input type="checkbox" ${geselecteerdeItems.has(sleutel)?'checked':''} onchange="ggSchakelLeerplandoelItem('${esc(doel.nummer)}',${index},this.checked)"><span>${esc(item.tekst)}</span></label>`;}).join("")}</div>`;
+    return `<div class="doel-subblok ${begrippen?'begrippen':'mia'}"><div class="doel-subgroep">${begrippen?'Te hanteren begrippen':`MIA · ${esc(groep)}`}</div>${regels.map(({item,index})=>{const sleutel=`${item.groep}::${item.tekst}`;return`<label class="doel-subkeuze"><input type="checkbox" data-leerplandoel-item="${esc(doel.nummer)}" ${geselecteerdeItems.has(sleutel)?'checked':''} onchange="ggSchakelLeerplandoelItem('${esc(doel.nummer)}',${index},this.checked)"><span>${esc(item.tekst)}</span></label>`;}).join("")}</div>`;
   }).join("");
 }
 function renderGroeiplanDoelenZoeker(){
@@ -669,10 +681,10 @@ function renderGroeiplanDoelenZoeker(){
   }
   const magZoeken=!!onderdeel||!!zoek;
   const passend=magZoeken?LEERPLANDOELEN_NEDERLANDS.filter(d=>(!onderdeel||d.onderwerp===onderdeel)&&(!leeftijd||d.leeftijden.includes(leeftijd))&&(!onderverdeling||d.subthema===onderverdeling)&&(!zoek||`${d.nummer} ${d.tekst} ${doelPad(d)}`.toLowerCase().includes(zoek))):[];
-  gekozenBox.innerHTML=gekozenDoelenHtml(gekozen,"ggSchakelLeerplandoelUit");
+  renderVoorlopigGekozenDoelen();
   const zichtbaar=passend.slice(0,80);
   let laatsteGroep="";
-  resultaten.innerHTML=!magZoeken?`<div class="empty">Kies eerst een onderdeel van Nederlands, of geef meteen een doelnummer in.</div>`:zichtbaar.length?zichtbaar.map(d=>{const groep=[d.rubriek,d.subrubriek].filter(Boolean).join(" › ")||d.subthema||d.onderwerp,groepKop=groep!==laatsteGroep?`<div class="doel-groepkop">${esc(groep)}</div>`:"";laatsteGroep=groep;const gekozenDoel=gekozen.find(x=>String(x.nummer||x)===d.nummer),geselecteerdeItems=new Set(gekozenDoel?.geselecteerdeItems||[]),subkeuzes=doelSubkeuzesHtml(d,geselecteerdeItems);return`${groepKop}<div class="doel-resultaat-wrap"><label class="doel-resultaat"><input type="checkbox" ${gekozenNummers.has(d.nummer)?'checked':''} onchange="ggSchakelLeerplandoel('${esc(d.nummer)}',this.checked)"><span><strong>${esc(d.nummer)}</strong> — ${esc(d.tekst)}<span class="doel-meta">${esc(d.kennisverwerking||"")}</span><span class="doel-leeftijden">${d.leeftijden.map(x=>`<span>${esc(x)}</span>`).join("")}</span></span></label>${subkeuzes?`<div class="doel-subkeuzes">${subkeuzes}</div>`:""}</div>`;}).join(""):`<div class="empty">Geen doelen gevonden met deze filters.</div>`;
+  resultaten.innerHTML=!magZoeken?`<div class="empty">Kies eerst een onderdeel van Nederlands, of geef meteen een doelnummer in.</div>`:zichtbaar.length?zichtbaar.map(d=>{const groep=[d.rubriek,d.subrubriek].filter(Boolean).join(" › ")||d.subthema||d.onderwerp,groepKop=groep!==laatsteGroep?`<div class="doel-groepkop">${esc(groep)}</div>`:"";laatsteGroep=groep;const gekozenDoel=gekozen.find(x=>String(x.nummer||x)===d.nummer),geselecteerdeItems=new Set(gekozenDoel?.geselecteerdeItems||[]),subkeuzes=doelSubkeuzesHtml(d,geselecteerdeItems);return`${groepKop}<div class="doel-resultaat-wrap"><label class="doel-resultaat"><input type="checkbox" data-leerplandoel="${esc(d.nummer)}" ${gekozenNummers.has(d.nummer)?'checked':''} onchange="ggSchakelLeerplandoel('${esc(d.nummer)}',this.checked)"><span><strong>${esc(d.nummer)}</strong> — ${esc(d.tekst)}<span class="doel-meta">${esc(d.kennisverwerking||"")}</span><span class="doel-leeftijden">${d.leeftijden.map(x=>`<span>${esc(x)}</span>`).join("")}</span></span></label>${subkeuzes?`<div class="doel-subkeuzes">${subkeuzes}</div>`:""}</div>`;}).join(""):`<div class="empty">Geen doelen gevonden met deze filters.</div>`;
   $("leerplandoelenTeller").textContent=magZoeken?`${passend.length} doel${passend.length===1?'':'en'} gevonden${passend.length>80?' · verfijn de filters om meer gericht te zoeken':''}`:"";
   pasRaadpleegstandToe();
 }
@@ -683,8 +695,13 @@ window.ggSchakelLeerplandoel=(nummer,checked)=>{
   collectGroeiplan();
   const doel=LEERPLANDOELEN_NEDERLANDS.find(d=>d.nummer===nummer);
   if(checked&&doel&&!gekozenLeerplandoelen().some(d=>String(d.nummer||d)===nummer))gekozenLeerplandoelen().push(doelVoorOpslag(doel));
-  if(!checked)active.groeiplan.geselecteerdeDoelen=gekozenLeerplandoelen().filter(d=>String(d.nummer||d)!==nummer);
-  renderGroeiplanDoelenZoeker();
+  if(!checked){
+    stelGekozenLeerplandoelenIn(gekozenLeerplandoelen().filter(d=>String(d.nummer||d)!==nummer));
+    document.querySelectorAll(`[data-leerplandoel-item="${CSS.escape(nummer)}"]`).forEach(cb=>{cb.checked=false;});
+  }
+  const hoofdkeuze=document.querySelector(`[data-leerplandoel="${CSS.escape(nummer)}"]`);
+  if(hoofdkeuze)hoofdkeuze.checked=checked;
+  renderVoorlopigGekozenDoelen();
 };
 window.ggSchakelLeerplandoelItem=(nummer,index,checked)=>{
   collectGroeiplan();
@@ -696,11 +713,13 @@ window.ggSchakelLeerplandoelItem=(nummer,index,checked)=>{
   const sleutel=`${item.groep}::${item.tekst}`;
   if(checked&&!gekozen.geselecteerdeItems.includes(sleutel))gekozen.geselecteerdeItems.push(sleutel);
   if(!checked)gekozen.geselecteerdeItems=gekozen.geselecteerdeItems.filter(x=>x!==sleutel);
-  renderGroeiplanDoelenZoeker();
+  const hoofdkeuze=document.querySelector(`[data-leerplandoel="${CSS.escape(nummer)}"]`);
+  if(hoofdkeuze)hoofdkeuze.checked=true;
+  renderVoorlopigGekozenDoelen();
 };
 window.ggVerwijderLeerplandoel=nummer=>{
   collectGroeiplan();
-  active.groeiplan.geselecteerdeDoelen=gekozenLeerplandoelen().filter(d=>String(d.nummer||d)!==nummer);
+  stelGekozenLeerplandoelenIn(gekozenLeerplandoelen().filter(d=>String(d.nummer||d)!==nummer));
   renderGekozenDoelenOverzicht();
 };
 window.ggOpenDoelenKiezer=()=>{
@@ -758,10 +777,10 @@ function renderGroeiplan(){
             </div>
             <div id="leerplandoelenTeller" class="doelen-teller"></div>
             <div id="leerplandoelenResultaten" class="doelen-resultaten"></div>
-            <div class="gekozen-doelen-kop">Voorlopig gekozen</div>
+            <div id="voorlopigGekozenAantal" class="gekozen-doelen-kop">Voorlopig gekozen</div>
             <div id="gekozenLeerplandoelen" class="gekozen-doelen"></div>
           </div>
-          <div class="doelen-modal-voet"><span class="muted">Klik op toevoegen om deze selectie in het groeiplan over te nemen.</span><div class="row"><button type="button" class="ghost" onclick="window.ggSluitDoelenKiezer()">Annuleren</button><button type="button" class="secondary" onclick="window.ggBevestigDoelenKiezer()">Gekozen doelen toevoegen</button></div></div>
+          <div class="doelen-modal-voet"><span class="muted">Klik op toevoegen om deze selectie in het groeiplan over te nemen.</span><div class="row"><button type="button" class="ghost" onclick="window.ggSluitDoelenKiezer()">Annuleren</button><button type="button" class="secondary" onclick="window.ggBevestigDoelenKiezer()">Voeg toe aan groeiplan</button></div></div>
         </div>
       </div>
       <label class="plan-veld">Probleem / diagnose<textarea id="planProbleem" placeholder="Wat lukt nog niet? Wat merken we op?">${esc(plan.probleem)}</textarea></label>
