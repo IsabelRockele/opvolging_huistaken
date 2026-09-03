@@ -100,6 +100,37 @@ function meldingIsAfgehandeldVoor(m, user, zorgRol) {
   return m.responseType === 'read' ? ['read', 'done'].includes(status) : status === 'done';
 }
 
+function toonRefterHerinneringOpStart(rol, klasDocs) {
+  document.getElementById('portaalRefterHerinnering')?.remove();
+  if (rol !== 'klasleerkracht') return;
+  const nu = new Date(), dag = nu.getDay();
+  if (dag < 1 || dag > 3) return;
+  const iso = datum => `${datum.getFullYear()}-${String(datum.getMonth()+1).padStart(2,'0')}-${String(datum.getDate()).padStart(2,'0')}`;
+  const verschuif = (datum, aantal) => { const kopie = new Date(datum); kopie.setDate(kopie.getDate()+aantal); return kopie; };
+  const deadline = verschuif(nu, 3-dag);
+  const eersteBron = klasDocs.find(x => x.snap?.exists())?.snap.data() || {};
+  const isVrij = datum => (eersteBron.vrijeDagen || []).some(v => datum >= v.start && datum <= v.end);
+  if (isVrij(iso(deadline))) return;
+  let weekStart = verschuif(deadline, -9);
+  const heeftSchooldag = start => [0,1,2,3,4].some(i => !isVrij(iso(verschuif(start,i))));
+  while (!heeftSchooldag(weekStart)) weekStart = verschuif(weekStart,-7);
+  const weekSleutel = iso(weekStart);
+  const bevestigingen = klasDocs.filter(x => x.snap?.exists()).map(x => !!x.snap.data()?.refterBevestigingen?.[weekSleutel]);
+  if (!bevestigingen.length) return;
+  const bevestigd = bevestigingen.every(Boolean);
+  const format = datum => datum.toLocaleDateString('nl-BE',{day:'numeric',month:'long'});
+  const blok = document.createElement('a');
+  blok.id = 'portaalRefterHerinnering';
+  blok.className = `portaal-refter-herinnering${bevestigd?' is-bevestigd':''}`;
+  blok.href = 'schoolbeheer.html?open=refter';
+  blok.target = '_blank';
+  blok.rel = 'noopener';
+  blok.innerHTML = bevestigd
+    ? `<span><strong>✓ Refterlijst van de voorbije week is bevestigd</strong>Het secretariaat ziet dat je controle klaar is voor woensdag ${format(deadline)}.</span><span class="refter-herinnering-knop">Refterlijst bekijken</span>`
+    : `<span><strong>⚠ Refterlijst nakijken tegen woensdag ${format(deadline)}</strong>Controleer de voorbije schoolweek en bevestig ze daarna, ook wanneer niemand afwezig was.</span><span class="refter-herinnering-knop">Nu nakijken</span>`;
+  document.getElementById('administratiePortaalGrid')?.insertAdjacentElement('beforebegin', blok);
+}
+
 async function toonOpvallendeStartmeldingen(user, rol, koppelingSnaps = [], planHerhaling = true) {
   if (planHerhaling) {
     clearInterval(meldingenControleTimer);
@@ -110,6 +141,7 @@ async function toonOpvallendeStartmeldingen(user, rol, koppelingSnaps = [], plan
   }
   const bestaand = document.getElementById('portaalActieveMeldingen');
   if (bestaand) bestaand.remove();
+  document.getElementById('portaalRefterHerinnering')?.remove();
   if (!user || rol === 'secretariaat') {
     zetAppMeldingenBadge(0);
     return;
@@ -129,6 +161,7 @@ async function toonOpvallendeStartmeldingen(user, rol, koppelingSnaps = [], plan
   }
   const vandaag = new Date().toISOString().slice(0,10);
   const docs = await Promise.all(klassen.map(async klas => ({klas,snap:await getDoc(doc(db,'schoolbeheer',schooljaar,'klassen',klas))})));
+  toonRefterHerinneringOpStart(rol, docs);
   const kandidaten = [];
   docs.forEach(({klas,snap}) => {
     if (!snap.exists()) return;
@@ -535,7 +568,8 @@ async function toonSchooloverzichtKnopAlsNodig(user) {
       isSchoolBreed, isSecretariaat, heeftKlasbeheer, rol);
     if (klasafsprakenKnop) klasafsprakenKnop.style.display = magKlasafsprakenTesten(user) ? '' : 'none';
     toonPortaalLaden(false);
-    toonOpvallendeStartmeldingen(user, rol, [uidResult.value, emailResult.value].filter(Boolean)).catch(console.warn);
+    const rolVoorMeldingen = heeftKlasbeheer && !isSchoolBreed ? 'klasleerkracht' : rol;
+    toonOpvallendeStartmeldingen(user, rolVoorMeldingen, [uidResult.value, emailResult.value].filter(Boolean)).catch(console.warn);
 
   } catch (err) {
     console.error('Rol controleren mislukt:', err);
