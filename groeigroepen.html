@@ -199,8 +199,13 @@ label{display:block;font-weight:800;font-size:12px;color:#44515f;margin:8px 0 4p
 .doelen-modal-venster{width:min(1240px,96vw);height:min(860px,92vh);background:#fff;border-radius:18px;box-shadow:0 24px 70px rgba(0,0,0,.3);display:grid;grid-template-rows:auto 1fr auto;overflow:hidden}
 .doelen-modal-kop,.doelen-modal-voet{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:15px 18px;border-bottom:1px solid var(--line)}
 .doelen-modal-kop h2{margin:0}.doelen-modal-voet{border-bottom:0;border-top:1px solid var(--line)}
-.doelen-modal-inhoud{padding:14px 18px;overflow:auto;background:#f8fcf7}
+.doelen-modal-inhoud{display:grid;grid-template-columns:minmax(0,2fr) minmax(310px,.85fr);min-height:0;background:#f8fcf7}
+.doelen-modal-links,.doelen-modal-rechts{padding:14px 18px;overflow:auto;min-height:0}
+.doelen-modal-rechts{background:#fff;border-left:1px solid var(--line)}
+.doelen-modal-rechts h3{margin:0 0 4px}.doelen-modal-rechts .gekozen-doelen{margin-top:12px}
+.doelen-modal .doelen-filters{grid-template-columns:140px minmax(170px,1fr) minmax(190px,1fr)}
 .doelen-modal .doelen-resultaten{max-height:none}
+.gekozen-doel-verwijder{font-size:20px;line-height:1;width:34px;height:34px;padding:0;border-radius:50%;color:#9c3044}
 body.doelen-modal-open{overflow:hidden}
 .doelen-filters{display:grid;grid-template-columns:150px minmax(170px,1fr) minmax(200px,1fr) 130px minmax(210px,1.2fr);gap:9px;align-items:end}
 .doelen-resultaten{max-height:330px;overflow:auto;display:grid;gap:7px;margin-top:10px;padding-right:3px}
@@ -227,7 +232,7 @@ body.doelen-modal-open{overflow:hidden}
 .gekozen-doelen{display:grid;gap:7px;margin:9px 0 12px}
 .gekozen-doelen-kop{margin-top:12px;font-weight:800;color:#315b2b}
 .doelen-teller{font-size:12px;color:var(--muted);margin-top:7px}
-@media(max-width:800px){.doelen-filters{grid-template-columns:1fr}.doel-resultaat,.gekozen-doel{grid-template-columns:1fr}.doelen-modal{padding:8px}.doelen-modal-venster{width:100%;height:96vh}}
+@media(max-width:800px){.doelen-filters,.doelen-modal .doelen-filters{grid-template-columns:1fr}.doel-resultaat,.gekozen-doel{grid-template-columns:1fr}.doelen-modal{padding:8px}.doelen-modal-venster{width:100%;height:96vh}.doelen-modal-inhoud{grid-template-columns:1fr;overflow:auto}.doelen-modal-links,.doelen-modal-rechts{overflow:visible}.doelen-modal-rechts{border-left:0;border-top:1px solid var(--line)}}
 .plan-week{border:1px solid var(--line);border-radius:12px;background:#fbfcfb;margin:10px 0;overflow:hidden}
 .plan-week-kop{display:grid;grid-template-columns:120px 1fr 150px auto;gap:8px;align-items:end;background:#e4f4dc;padding:10px}
 .plan-week-body{display:grid;grid-template-columns:1fr 1.35fr;gap:10px;padding:10px}
@@ -641,8 +646,8 @@ function stelGekozenLeerplandoelenIn(doelen){
   if(doelenKiezerConcept)doelenKiezerConcept=doelen;
   else active.groeiplan.geselecteerdeDoelen=doelen;
 }
-function gekozenDoelenHtml(gekozen,verwijderFunctie){
-  return gekozen.length?gekozen.map(d=>{const bron=LEERPLANDOELEN_NEDERLANDS.find(x=>x.nummer===d.nummer)||d,geselecteerd=new Set(d.geselecteerdeItems||[]),items=(bron.aanklikbareItems||[]).filter(item=>geselecteerd.has(`${item.groep}::${item.tekst}`));return`<div class="gekozen-doel"><div><strong>${esc(d.nummer||"")}</strong> — ${esc(d.tekst||"")}<div class="doel-meta">${esc(doelPad(d))}${d.leeftijden?.length?` · ${esc(d.leeftijden.join(", "))} jaar`:""}</div>${items.length?`<ul class="gekozen-doel-items">${items.map(item=>`<li><strong>${esc(item.groep)}:</strong> ${esc(item.tekst)}</li>`).join("")}</ul>`:""}</div><button class="ghost small" onclick="${verwijderFunctie}('${esc(d.nummer||d)}')">Verwijderen</button></div>`;}).join(""):`<div class="empty">Nog geen leerplandoelen gekozen.</div>`;
+function gekozenDoelenHtml(gekozen,verwijderFunctie,metKruisje=false){
+  return gekozen.length?gekozen.map(d=>{const bron=LEERPLANDOELEN_NEDERLANDS.find(x=>x.nummer===d.nummer)||d,geselecteerd=new Set(d.geselecteerdeItems||[]),items=(bron.aanklikbareItems||[]).filter(item=>geselecteerd.has(`${item.groep}::${item.tekst}`));return`<div class="gekozen-doel"><div><strong>${esc(d.nummer||"")}</strong> — ${esc(d.tekst||"")}<div class="doel-meta">${esc(doelPad(d))}${d.leeftijden?.length?` · ${esc(d.leeftijden.join(", "))} jaar`:""}</div>${items.length?`<ul class="gekozen-doel-items">${items.map(item=>`<li><strong>${esc(item.groep)}:</strong> ${esc(item.tekst)}</li>`).join("")}</ul>`:""}</div><button class="ghost small ${metKruisje?"gekozen-doel-verwijder":""}" aria-label="${metKruisje?"Verwijder "+esc(d.nummer||d):""}" title="Verwijderen" onclick="${verwijderFunctie}('${esc(d.nummer||d)}')">${metKruisje?"×":"Verwijderen"}</button></div>`;}).join(""):`<div class="empty">Nog geen doelen gekozen. Vink links een doel aan.</div>`;
 }
 function renderGekozenDoelenOverzicht(){
   const el=$("gekozenLeerplandoelenOverzicht");
@@ -657,7 +662,7 @@ function renderVoorlopigGekozenDoelen(){
   const el=$("gekozenLeerplandoelen");
   if(!el)return;
   const gekozen=gekozenLeerplandoelen();
-  el.innerHTML=gekozenDoelenHtml(gekozen,"ggSchakelLeerplandoelUit");
+  el.innerHTML=gekozenDoelenHtml(gekozen,"ggSchakelLeerplandoelUit",true);
   const teller=$("voorlopigGekozenAantal");
   if(teller)teller.textContent=`${gekozen.length} doel${gekozen.length===1?"":"en"} voorlopig gekozen`;
 }
@@ -768,17 +773,22 @@ function renderGroeiplan(){
         <div class="doelen-modal-venster">
           <div class="doelen-modal-kop"><div><h2 id="doelenKiezerTitel">Doelen kiezen</h2><div class="muted">Zoek en vink de doelen, MIA en begrippen aan die bij deze groeigroep horen.</div></div><button type="button" class="ghost" onclick="window.ggSluitDoelenKiezer()">Sluiten</button></div>
           <div class="doelen-modal-inhoud">
-            <div class="doelen-filters">
-              <label>Leergebied<select disabled><option>Nederlands</option></select></label>
-              <label>Onderdeel<select id="leerplandoelOnderdeel" onchange="ggKiesLeerplanOnderdeel()"><option value="">Kies een onderdeel…</option>${[...new Set(LEERPLANDOELEN_NEDERLANDS.map(d=>d.onderwerp).filter(Boolean))].map(x=>`<option value="${esc(x)}">${esc(x)}</option>`).join("")}</select></label>
-              <label>Onderverdeling<select id="leerplandoelOnderverdeling" onchange="ggFilterLeerplandoelen()"><option value="">Alle onderverdelingen</option></select></label>
-              <label>Leeftijd<select id="leerplandoelLeeftijd" onchange="ggFilterLeerplandoelen()"><option value="">Alle leeftijden</option>${["2,5-4","4-5","5-6","6-7","7-8","8-9","9-10","10-11","11-12"].map(x=>`<option value="${x}">${x} jaar</option>`).join("")}</select></label>
-              <label>Zoeken op nummer of tekst<input id="leerplandoelZoek" placeholder="bv. NL.003, rijm of vloeiend lezen" oninput="ggFilterLeerplandoelen()"></label>
+            <div class="doelen-modal-links">
+              <div class="doelen-filters">
+                <label>Leergebied<select disabled><option>Nederlands</option></select></label>
+                <label>Onderdeel<select id="leerplandoelOnderdeel" onchange="ggKiesLeerplanOnderdeel()"><option value="">Kies een onderdeel…</option>${[...new Set(LEERPLANDOELEN_NEDERLANDS.map(d=>d.onderwerp).filter(Boolean))].map(x=>`<option value="${esc(x)}">${esc(x)}</option>`).join("")}</select></label>
+                <label>Onderverdeling<select id="leerplandoelOnderverdeling" onchange="ggFilterLeerplandoelen()"><option value="">Alle onderverdelingen</option></select></label>
+                <label>Leeftijd<select id="leerplandoelLeeftijd" onchange="ggFilterLeerplandoelen()"><option value="">Alle leeftijden</option>${["2,5-4","4-5","5-6","6-7","7-8","8-9","9-10","10-11","11-12"].map(x=>`<option value="${x}">${x} jaar</option>`).join("")}</select></label>
+                <label>Zoeken op nummer of tekst<input id="leerplandoelZoek" placeholder="bv. NL.003, rijm of vloeiend lezen" oninput="ggFilterLeerplandoelen()"></label>
+              </div>
+              <div id="leerplandoelenTeller" class="doelen-teller"></div>
+              <div id="leerplandoelenResultaten" class="doelen-resultaten"></div>
             </div>
-            <div id="leerplandoelenTeller" class="doelen-teller"></div>
-            <div id="leerplandoelenResultaten" class="doelen-resultaten"></div>
-            <div id="voorlopigGekozenAantal" class="gekozen-doelen-kop">Voorlopig gekozen</div>
-            <div id="gekozenLeerplandoelen" class="gekozen-doelen"></div>
+            <aside class="doelen-modal-rechts">
+              <h3>Gekozen doelen</h3>
+              <div id="voorlopigGekozenAantal" class="muted">Nog geen doelen gekozen</div>
+              <div id="gekozenLeerplandoelen" class="gekozen-doelen"></div>
+            </aside>
           </div>
           <div class="doelen-modal-voet"><span class="muted">Klik op toevoegen om deze selectie in het groeiplan over te nemen.</span><div class="row"><button type="button" class="ghost" onclick="window.ggSluitDoelenKiezer()">Annuleren</button><button type="button" class="secondary" onclick="window.ggBevestigDoelenKiezer()">Voeg toe aan groeiplan</button></div></div>
         </div>
