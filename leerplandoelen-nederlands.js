@@ -13,7 +13,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "begrijpen",
     "minimumdoelen": [
       "1.1.1"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.002",
@@ -29,6 +30,16 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "begrijpen",
     "minimumdoelen": [
       "1.1.1"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "het rijm"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "rijmen"
+      }
     ]
   },
   {
@@ -45,6 +56,24 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.1.1"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Toepassen",
+        "tekst": "Rijmt het of rijmt het niet?"
+      },
+      {
+        "groep": "Toepassen",
+        "tekst": "Zoek bij elkaar wat rijmt. Zoek de rijmende woorden."
+      },
+      {
+        "groep": "Toepassen",
+        "tekst": "ontbrekende zinnen en woorden invullen"
+      },
+      {
+        "groep": "Toepassen",
+        "tekst": "zelf rijm bedenken"
+      }
     ]
   },
   {
@@ -60,7 +89,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "begrijpen",
     "minimumdoelen": [
       "1.1.1"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.005",
@@ -75,6 +105,16 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "begrijpen",
     "minimumdoelen": [
       "1.1.1"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "het woord"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "de klankgroep"
+      }
     ]
   },
   {
@@ -91,7 +131,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.1.1"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.007",
@@ -107,7 +148,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.1.1"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.008",
@@ -123,6 +165,24 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "begrijpen",
     "minimumdoelen": [
       "1.1.2"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Klanken",
+        "tekst": "met aandacht voor de uitspraak"
+      },
+      {
+        "groep": "Een reeks woorden",
+        "tekst": "2 tot 4 woorden"
+      },
+      {
+        "groep": "Een zin",
+        "tekst": "een eenvoudige, korte zin nazeggen"
+      },
+      {
+        "groep": "Een zin",
+        "tekst": "een korte zin aanvullen"
+      }
     ]
   },
   {
@@ -138,7 +198,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.1.2"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.010",
@@ -154,6 +215,12 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "minimumdoelen": [
       "1.1.2",
       "1.1.3"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "de klank"
+      }
     ]
   },
   {
@@ -171,6 +238,20 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "minimumdoelen": [
       "1.1.2",
       "1.1.3"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Woorden",
+        "tekst": "MK-woorden"
+      },
+      {
+        "groep": "Woorden",
+        "tekst": "KM-woorden"
+      },
+      {
+        "groep": "Woorden",
+        "tekst": "MKM-woorden"
+      }
     ]
   },
   {
@@ -187,6 +268,20 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "minimumdoelen": [
       "1.1.2",
       "1.1.3"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Woorden",
+        "tekst": "MK-woorden"
+      },
+      {
+        "groep": "Woorden",
+        "tekst": "KM-woorden"
+      },
+      {
+        "groep": "Woorden",
+        "tekst": "MKM-woorden"
+      }
     ]
   },
   {
@@ -203,6 +298,20 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "minimumdoelen": [
       "1.1.2",
       "1.1.3"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Woorden",
+        "tekst": "MK-woorden"
+      },
+      {
+        "groep": "Woorden",
+        "tekst": "KM-woorden"
+      },
+      {
+        "groep": "Woorden",
+        "tekst": "MKM-woorden"
+      }
     ]
   },
   {
@@ -220,6 +329,44 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "minimumdoelen": [
       "1.1.2",
       "1.1.3"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Woorden",
+        "tekst": "MK-woorden"
+      },
+      {
+        "groep": "Woorden",
+        "tekst": "KM-woorden"
+      },
+      {
+        "groep": "Woorden",
+        "tekst": "MKM-woorden"
+      },
+      {
+        "groep": "Klanken in woorden",
+        "tekst": "beginklank"
+      },
+      {
+        "groep": "Klanken in woorden",
+        "tekst": "middenklank"
+      },
+      {
+        "groep": "Klanken in woorden",
+        "tekst": "eindklank"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "vooraan"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "achteraan"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "in het midden"
+      }
     ]
   },
   {
@@ -236,7 +383,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.1.3"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.016",
@@ -252,7 +400,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.1.3"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.017",
@@ -268,6 +417,20 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.1.2"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Klankbewerkingen",
+        "tekst": "toevoeging van een klank"
+      },
+      {
+        "groep": "Klankbewerkingen",
+        "tekst": "weglating van een klank"
+      },
+      {
+        "groep": "Klankbewerkingen",
+        "tekst": "vervanging van een klank"
+      }
     ]
   },
   {
@@ -287,7 +450,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
       "1.1.1",
       "1.1.2",
       "1.1.3"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.019",
@@ -302,6 +466,16 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "begrijpen",
     "minimumdoelen": [
       "1.1.4"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "het woord"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "de letter"
+      }
     ]
   },
   {
@@ -317,7 +491,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.1.4"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.021",
@@ -332,6 +507,40 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "begrijpen",
     "minimumdoelen": [
       "1.1.4"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Herkennen",
+        "tekst": "leesletters: kleine letter, hoofdletter"
+      },
+      {
+        "groep": "Herkennen",
+        "tekst": "in verschillende verschijningsvormen"
+      },
+      {
+        "groep": "Letters",
+        "tekst": "korte klinkers"
+      },
+      {
+        "groep": "Letters",
+        "tekst": "lange klinkers"
+      },
+      {
+        "groep": "Letters",
+        "tekst": "tweetekenklinkers"
+      },
+      {
+        "groep": "Letters",
+        "tekst": "medeklinkers"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "de klinker"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "de medeklinker"
+      }
     ]
   },
   {
@@ -347,6 +556,16 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.1.4"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Verklanken",
+        "tekst": "met correcte uitspraak"
+      },
+      {
+        "groep": "Verklanken",
+        "tekst": "leesletters: kleine letter, hoofdletter"
+      }
     ]
   },
   {
@@ -363,6 +582,36 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "begrijpen",
     "minimumdoelen": [
       "1.1.2"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Letters",
+        "tekst": "leesletters: kleine letter, hoofdletter"
+      },
+      {
+        "groep": "Letters",
+        "tekst": "schrijfletters: kleine letter, hoofdletter"
+      },
+      {
+        "groep": "Letters",
+        "tekst": "in verschillende verschijningsvormen"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "de korte klinker"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "de lange klinker"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "de tweetekenklinker"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "de medeklinker"
+      }
     ]
   },
   {
@@ -379,6 +628,32 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.1.2"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Letters",
+        "tekst": "korte klinkers"
+      },
+      {
+        "groep": "Letters",
+        "tekst": "lange klinkers"
+      },
+      {
+        "groep": "Letters",
+        "tekst": "tweetekenklinkers"
+      },
+      {
+        "groep": "Letters",
+        "tekst": "medeklinkers"
+      },
+      {
+        "groep": "Verklanken",
+        "tekst": "leesletters: kleine letter, hoofdletter"
+      },
+      {
+        "groep": "Verklanken",
+        "tekst": "schrijfletters: kleine letter, hoofdletter"
+      }
     ]
   },
   {
@@ -393,7 +668,25 @@ export const LEERPLANDOELEN_NEDERLANDS = [
       "8-9"
     ],
     "kennisverwerking": "begrijpen",
-    "minimumdoelen": []
+    "minimumdoelen": [],
+    "aanklikbareItems": [
+      {
+        "groep": "Doel",
+        "tekst": "alfabetisch rangschikken"
+      },
+      {
+        "groep": "Doel",
+        "tekst": "alfabetisch opzoeken"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "de letter"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "het alfabet"
+      }
+    ]
   },
   {
     "nummer": "NL.026",
@@ -407,7 +700,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
       "8-9"
     ],
     "kennisverwerking": "begrijpen",
-    "minimumdoelen": []
+    "minimumdoelen": [],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.027",
@@ -421,7 +715,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
       "8-9"
     ],
     "kennisverwerking": "gebruiken",
-    "minimumdoelen": []
+    "minimumdoelen": [],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.028",
@@ -444,7 +739,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "minimumdoelen": [
       "1.1.4",
       "1.1.2"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.029",
@@ -459,7 +755,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.1.2"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.030",
@@ -474,7 +771,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.1.2"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.031",
@@ -489,6 +787,20 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.1.2"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Eenlettergrepige woorden",
+        "tekst": "eindigend op -d of -t"
+      },
+      {
+        "groep": "Eenlettergrepige woorden",
+        "tekst": "eindigend op -ng, -nk"
+      },
+      {
+        "groep": "Eenlettergrepige woorden",
+        "tekst": "met klankgroep aai, ooi, oei"
+      }
     ]
   },
   {
@@ -504,6 +816,16 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.1.2"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Eenvoudige tweelettergrepige woorden",
+        "tekst": "niet samengestelde woorden"
+      },
+      {
+        "groep": "Eenvoudige tweelettergrepige woorden",
+        "tekst": "samengestelde woorden"
+      }
     ]
   },
   {
@@ -519,6 +841,32 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.1.2"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Woorden met medeklinkerclusters",
+        "tekst": "MKMM"
+      },
+      {
+        "groep": "Woorden met medeklinkerclusters",
+        "tekst": "MMKM"
+      },
+      {
+        "groep": "Woorden met medeklinkerclusters",
+        "tekst": "MMKMM"
+      },
+      {
+        "groep": "Woorden met medeklinkerclusters",
+        "tekst": "MMMKM"
+      },
+      {
+        "groep": "Woorden met medeklinkerclusters",
+        "tekst": "MKMMM"
+      },
+      {
+        "groep": "Medeklinkerclusters",
+        "tekst": "inclusief sch-, -ch, -cht"
+      }
     ]
   },
   {
@@ -534,7 +882,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.1.2"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.035",
@@ -550,7 +899,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.1.2"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.036",
@@ -567,6 +917,20 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "minimumdoelen": [
       "1.1.1",
       "1.1.2"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Woorden met een doffe e",
+        "tekst": "in een onbeklemtoonde lettergreep achteraan"
+      },
+      {
+        "groep": "Woorden met een doffe e",
+        "tekst": "met voorvoegsel ge-, be-, ver-"
+      },
+      {
+        "groep": "Woorden met een doffe e",
+        "tekst": "met achtervoegsel -ig, -lijk"
+      }
     ]
   },
   {
@@ -583,6 +947,16 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.1.2"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Specifieke lettercombinaties",
+        "tekst": "eeuw, ieuw en uw"
+      },
+      {
+        "groep": "Specifieke lettercombinaties",
+        "tekst": "eindigend op -b, -p"
+      }
     ]
   },
   {
@@ -599,7 +973,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.1.2"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.039",
@@ -615,6 +990,12 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.1.2"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "de lettergreep"
+      }
     ]
   },
   {
@@ -632,7 +1013,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.1.2"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.041",
@@ -650,6 +1032,12 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.1.1"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "het leenwoord"
+      }
     ]
   },
   {
@@ -667,7 +1055,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.1.1"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.043",
@@ -682,7 +1071,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.1.2"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.044",
@@ -697,6 +1087,32 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.1.2"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Zinnen",
+        "tekst": "zinslengte: van 1 tot ongeveer 8 woorden"
+      },
+      {
+        "groep": "Zinnen",
+        "tekst": "één zin per regel"
+      },
+      {
+        "groep": "Zinnen",
+        "tekst": "zowel kleine letters als hoofdletters"
+      },
+      {
+        "groep": "Zinnen",
+        "tekst": "enkelvoudige zinnen"
+      },
+      {
+        "groep": "Zinnen",
+        "tekst": "korte samengestelde zinnen met 'en', 'maar'"
+      },
+      {
+        "groep": "Zinnen",
+        "tekst": "leestekens: punt, uitroepteken en vraagteken"
+      }
     ]
   },
   {
@@ -712,6 +1128,32 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.1.2"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Zinnen",
+        "tekst": "zinslengte: van 1 tot ongeveer 12 woorden"
+      },
+      {
+        "groep": "Zinnen",
+        "tekst": "korte zinnen die betekenisvol zijn afgebroken en doorlopen op de volgende regel"
+      },
+      {
+        "groep": "Zinnen",
+        "tekst": "samengestelde zinnen"
+      },
+      {
+        "groep": "Zinnen",
+        "tekst": "met klankzuivere en niet klankzuivere één- en meerlettergrepige woorden"
+      },
+      {
+        "groep": "Zinnen",
+        "tekst": "leestekens: komma, aanhalingstekens en dubbel punt"
+      },
+      {
+        "groep": "Zinnen",
+        "tekst": "leesgedrag afstemmen op leestekens punt, uitroepteken en vraagteken"
+      }
     ]
   },
   {
@@ -727,6 +1169,20 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.1.2"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Zinnen",
+        "tekst": "zinslengte: van 1 tot ongeveer 16 woorden"
+      },
+      {
+        "groep": "Zinnen",
+        "tekst": "lange zinnen met woordgroepen die kunnen doorlopen over de regels heen"
+      },
+      {
+        "groep": "Zinnen",
+        "tekst": "leesgedrag afstemmen op leestekens komma, aanhalingstekens en dubbel punt"
+      }
     ]
   },
   {
@@ -742,6 +1198,20 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.1.2"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Zinnen",
+        "tekst": "zinslengte: van 1 tot ongeveer 20 woorden"
+      },
+      {
+        "groep": "Zinnen",
+        "tekst": "zinnen beginnen niet meer noodzakelijk op een nieuwe regel"
+      },
+      {
+        "groep": "Zinnen",
+        "tekst": "alle soorten woorden komen aan bod"
+      }
     ]
   },
   {
@@ -758,7 +1228,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "begrijpen",
     "minimumdoelen": [
       "1.1.2"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.049",
@@ -774,7 +1245,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.1.3"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.050",
@@ -795,6 +1267,16 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "minimumdoelen": [
       "1.1.2",
       "1.1.3"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Accuraat",
+        "tekst": "correcte uitspraak versus spellingsuitspraak"
+      },
+      {
+        "groep": "Verstaanbaar",
+        "tekst": "articulatie"
+      }
     ]
   },
   {
@@ -812,7 +1294,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "minimumdoelen": [
       "1.1.2",
       "1.1.3"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.052",
@@ -829,6 +1312,20 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "minimumdoelen": [
       "1.1.3",
       "1.1.12"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Intonatie",
+        "tekst": "met gepaste klemtoon"
+      },
+      {
+        "groep": "Intonatie",
+        "tekst": "met behulp van lees- en woordtekens"
+      },
+      {
+        "groep": "Intonatie",
+        "tekst": "in functie van de inhoud van de tekst"
+      }
     ]
   },
   {
@@ -846,6 +1343,20 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "minimumdoelen": [
       "1.1.3",
       "1.1.12"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Intonatie",
+        "tekst": "met gepaste klemtoon"
+      },
+      {
+        "groep": "Intonatie",
+        "tekst": "met behulp van lees- en woordtekens"
+      },
+      {
+        "groep": "Intonatie",
+        "tekst": "in functie van de inhoud van de tekst"
+      }
     ]
   },
   {
@@ -862,6 +1373,24 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "begrijpen",
     "minimumdoelen": [
       "1.1.2"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Expressie",
+        "tekst": "gepast volume"
+      },
+      {
+        "groep": "Expressie",
+        "tekst": "gepast tempo"
+      },
+      {
+        "groep": "Expressie",
+        "tekst": "natuurlijkheid"
+      },
+      {
+        "groep": "Expressie",
+        "tekst": "emotionaliteit"
+      }
     ]
   },
   {
@@ -878,7 +1407,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.1.2"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.056",
@@ -895,7 +1425,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.1.2"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.057",
@@ -912,6 +1443,20 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.1.2"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Natuurlijkheid en emotionaliteit",
+        "tekst": "spreken bij het luidop lezen van teksten op dezelfde manier als bij een gewoon gesprek. (natuurlijkheid)"
+      },
+      {
+        "groep": "Natuurlijkheid en emotionaliteit",
+        "tekst": "laten het verschil horen tussen een dialoog en een beschrijving. (natuurlijkheid)"
+      },
+      {
+        "groep": "Natuurlijkheid en emotionaliteit",
+        "tekst": "geven uitdrukking aan beelden, gevoelens en gedachten. (emotionaliteit)"
+      }
     ]
   },
   {
@@ -929,7 +1474,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "minimumdoelen": [
       "1.1.1",
       "1.1.2"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.059",
@@ -946,6 +1492,20 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "minimumdoelen": [
       "1.1.2",
       "1.1.1"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Leestechnieken",
+        "tekst": "elementaire leeshandeling"
+      },
+      {
+        "groep": "Leestechnieken",
+        "tekst": "lezen met behulp van klankclusters en spellingspatronen"
+      },
+      {
+        "groep": "Leestechnieken",
+        "tekst": "lezen met behulp van morfologische analyse"
+      }
     ]
   },
   {
@@ -961,6 +1521,24 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.1.2"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Elementaire leeshandeling",
+        "tekst": "de letters in een woord verklanken in de juiste volgorde."
+      },
+      {
+        "groep": "Elementaire leeshandeling",
+        "tekst": "de juiste volgorde van de klanken onthouden."
+      },
+      {
+        "groep": "Elementaire leeshandeling",
+        "tekst": "de klanken samenvoegen tot een woord."
+      },
+      {
+        "groep": "Elementaire leeshandeling",
+        "tekst": "het nieuwe woord betekenis geven."
+      }
     ]
   },
   {
@@ -977,6 +1555,20 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.1.2"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "klankclusters en spellingspatronen",
+        "tekst": "combinaties van medeklinkers"
+      },
+      {
+        "groep": "klankclusters en spellingspatronen",
+        "tekst": "combinaties van zowel klinkers als medeklinkers"
+      },
+      {
+        "groep": "klankclusters en spellingspatronen",
+        "tekst": "vaste lettercombinaties"
+      }
     ]
   },
   {
@@ -992,7 +1584,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.1.2"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.063",
@@ -1011,7 +1604,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
       "1.1.2",
       "1.1.1",
       "1.1.1"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.064",
@@ -1027,6 +1621,16 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.1.1"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Lezen",
+        "tekst": "met behulp van inzicht in de morfologische opbouw"
+      },
+      {
+        "groep": "Lezen",
+        "tekst": "met behulp van kennis van leenwoorden"
+      }
     ]
   },
   {
@@ -1045,6 +1649,20 @@ export const LEERPLANDOELEN_NEDERLANDS = [
       "1.1.2",
       "1.1.3",
       "1.1.4"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Verbeteren met behulp van",
+        "tekst": "leestechnieken"
+      },
+      {
+        "groep": "Verbeteren met behulp van",
+        "tekst": "afbeeldingen"
+      },
+      {
+        "groep": "Verbeteren met behulp van",
+        "tekst": "aanwijzingen van anderen"
+      }
     ]
   },
   {
@@ -1063,6 +1681,16 @@ export const LEERPLANDOELEN_NEDERLANDS = [
       "1.1.2",
       "1.1.3",
       "1.1.4"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Verbeteren met behulp van",
+        "tekst": "de inhoud van de tekst"
+      },
+      {
+        "groep": "Verbeteren met behulp van",
+        "tekst": "kennis van woord- en leestekens"
+      }
     ]
   },
   {
@@ -1083,7 +1711,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
       "1.1.2",
       "1.1.3",
       "1.1.4"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.068",
@@ -1101,7 +1730,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "engageren",
     "minimumdoelen": [
       "1.1.4"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.069",
@@ -1121,7 +1751,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
       "1.1.2",
       "1.1.3",
       "1.1.4"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.070",
@@ -1144,6 +1775,24 @@ export const LEERPLANDOELEN_NEDERLANDS = [
       "1.1.8",
       "1.1.9",
       "1.3.4"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Begrijpen",
+        "tekst": "eenvoudige visuele boodschappen"
+      },
+      {
+        "groep": "Begrijpen",
+        "tekst": "expliciete informatie"
+      },
+      {
+        "groep": "Begrijpen",
+        "tekst": "belangrijkste gebeurtenissen uit een verhaallijn"
+      },
+      {
+        "groep": "Begrijpen",
+        "tekst": "reageren door vragen te stellen"
+      }
     ]
   },
   {
@@ -1160,6 +1809,40 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.1.6"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Informatie",
+        "tekst": "de belangrijkste gebeurtenissen"
+      },
+      {
+        "groep": "Informatie",
+        "tekst": "de situatie"
+      },
+      {
+        "groep": "Informatie",
+        "tekst": "de gevoelens"
+      },
+      {
+        "groep": "Informatie",
+        "tekst": "de personages"
+      },
+      {
+        "groep": "Informatie",
+        "tekst": "de perspectiefname"
+      },
+      {
+        "groep": "Weergeven",
+        "tekst": "in eigen woorden"
+      },
+      {
+        "groep": "Weergeven",
+        "tekst": "door het uit te beelden"
+      },
+      {
+        "groep": "Weergeven",
+        "tekst": "met behulp van concreet materiaal en/of afbeeldingen"
+      }
     ]
   },
   {
@@ -1176,6 +1859,36 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.1.6"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Informatie",
+        "tekst": "de belangrijkste gebeurtenissen"
+      },
+      {
+        "groep": "Informatie",
+        "tekst": "de situatie"
+      },
+      {
+        "groep": "Informatie",
+        "tekst": "de gevoelens"
+      },
+      {
+        "groep": "Informatie",
+        "tekst": "de personages"
+      },
+      {
+        "groep": "Informatie",
+        "tekst": "de perspectiefname"
+      },
+      {
+        "groep": "Weergeven",
+        "tekst": "in eigen woorden"
+      },
+      {
+        "groep": "Weergeven",
+        "tekst": "met gebruik van taal uit de tekst"
+      }
     ]
   },
   {
@@ -1194,7 +1907,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "begrijpen",
     "minimumdoelen": [
       "1.1.9"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.074",
@@ -1211,6 +1925,28 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.1.9"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Weergeven",
+        "tekst": "in eigen woorden"
+      },
+      {
+        "groep": "Weergeven",
+        "tekst": "in chronologische volgorde"
+      },
+      {
+        "groep": "Weergeven",
+        "tekst": "met gebruik van taal uit de tekst"
+      },
+      {
+        "groep": "Belangrijkste elementen",
+        "tekst": "hoofdpersonage(s)"
+      },
+      {
+        "groep": "Belangrijkste elementen",
+        "tekst": "hoofdgedachte"
+      }
     ]
   },
   {
@@ -1231,6 +1967,28 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "minimumdoelen": [
       "1.1.5",
       "1.1.7"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Begrijpen",
+        "tekst": "expliciete informatie"
+      },
+      {
+        "groep": "Begrijpen",
+        "tekst": "hoofd- en bijzaken"
+      },
+      {
+        "groep": "Begrijpen",
+        "tekst": "hoofdgedachte"
+      },
+      {
+        "groep": "Begrijpen",
+        "tekst": "verbanden tussen voorgelezen tekst en vakspecifieke kennis en voorkennis"
+      },
+      {
+        "groep": "Begrijpen",
+        "tekst": "belangrijkste gebeurtenissen uit een verhaallijn"
+      }
     ]
   },
   {
@@ -1248,7 +2006,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.1.5"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.077",
@@ -1264,7 +2023,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.1.5"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.078",
@@ -1280,7 +2040,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.1.5"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.079",
@@ -1298,6 +2059,16 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.1.7"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Relaties en verbanden",
+        "tekst": "oorzaak en gevolg"
+      },
+      {
+        "groep": "Relaties en verbanden",
+        "tekst": "probleem en oplossing"
+      }
     ]
   },
   {
@@ -1317,6 +2088,28 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.1.6"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Relaties en verbanden",
+        "tekst": "oorzaak en gevolg"
+      },
+      {
+        "groep": "Relaties en verbanden",
+        "tekst": "probleem en oplossing"
+      },
+      {
+        "groep": "Relaties en verbanden",
+        "tekst": "middel-doel"
+      },
+      {
+        "groep": "Relaties en verbanden",
+        "tekst": "deel-geheel"
+      },
+      {
+        "groep": "Relaties en verbanden",
+        "tekst": "tussen hoofdpersonen en nevenpersonages"
+      }
     ]
   },
   {
@@ -1334,7 +2127,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.1.6"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.082",
@@ -1352,7 +2146,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.1.3"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.083",
@@ -1368,7 +2163,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.1.3"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.084",
@@ -1386,6 +2182,16 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.1.8"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Verbindingen",
+        "tekst": "tussen de tekst en eigen ervaringen"
+      },
+      {
+        "groep": "Verbindingen",
+        "tekst": "tussen de tekst en vakspecifieke (voor)kennis"
+      }
     ]
   },
   {
@@ -1406,6 +2212,20 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "minimumdoelen": [
       "1.1.7",
       "1.1.4"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Verbindingen",
+        "tekst": "tussen de tekst en eigen ervaringen"
+      },
+      {
+        "groep": "Verbindingen",
+        "tekst": "tussen de tekst en vakspecifieke (voor)kennis"
+      },
+      {
+        "groep": "Verbindingen",
+        "tekst": "tussen passages uit de tekst"
+      }
     ]
   },
   {
@@ -1424,7 +2244,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.1.8"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.087",
@@ -1440,7 +2261,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "begrijpen",
     "minimumdoelen": [
       "1.1.6"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.088",
@@ -1456,7 +2278,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "engageren",
     "minimumdoelen": [
       "1.1.6"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.089",
@@ -1474,6 +2297,16 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.1.6"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "fictie"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "non-fictie"
+      }
     ]
   },
   {
@@ -1493,6 +2326,16 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "minimumdoelen": [
       "1.1.6",
       "1.1.3"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "de mening"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "het feit"
+      }
     ]
   },
   {
@@ -1511,7 +2354,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.1.3"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.092",
@@ -1527,7 +2371,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "begrijpen",
     "minimumdoelen": [
       "1.1.9"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.093",
@@ -1541,7 +2386,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
       "11-12"
     ],
     "kennisverwerking": "gebruiken",
-    "minimumdoelen": []
+    "minimumdoelen": [],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.094",
@@ -1559,7 +2405,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "begrijpen",
     "minimumdoelen": [
       "1.1.10"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.095",
@@ -1577,7 +2424,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "begrijpen",
     "minimumdoelen": [
       "1.1.10"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.096",
@@ -1593,6 +2441,16 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.1.5"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Verschillende teksten",
+        "tekst": "teksten van verschillende auteurs"
+      },
+      {
+        "groep": "Verschillende teksten",
+        "tekst": "verschillende teksten van dezelfde auteur"
+      }
     ]
   },
   {
@@ -1607,7 +2465,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
       "11-12"
     ],
     "kennisverwerking": "gebruiken",
-    "minimumdoelen": []
+    "minimumdoelen": [],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.098",
@@ -1625,6 +2484,20 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.1.6"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Gedachten en meningen",
+        "tekst": "over de vorm"
+      },
+      {
+        "groep": "Gedachten en meningen",
+        "tekst": "over de inhoud"
+      },
+      {
+        "groep": "Weergeven",
+        "tekst": "onderbouwd met informatie uit de tekst"
+      }
     ]
   },
   {
@@ -1638,7 +2511,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
       "11-12"
     ],
     "kennisverwerking": "gebruiken",
-    "minimumdoelen": []
+    "minimumdoelen": [],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.100",
@@ -1654,6 +2528,16 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "engageren",
     "minimumdoelen": [
       "1.1.6"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Reflecteren over de invloed van de gelezen tekst op de eigen mening",
+        "tekst": "relatie tussen zender en ontvanger"
+      },
+      {
+        "groep": "Reflecteren over de invloed van de gelezen tekst op de eigen mening",
+        "tekst": "houding van de zender ten opzichte van de ontvanger en omgekeerd"
+      }
     ]
   },
   {
@@ -1674,7 +2558,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "minimumdoelen": [
       "1.1.7",
       "1.1.4"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.102",
@@ -1688,7 +2573,21 @@ export const LEERPLANDOELEN_NEDERLANDS = [
       "11-12"
     ],
     "kennisverwerking": "begrijpen",
-    "minimumdoelen": []
+    "minimumdoelen": [],
+    "aanklikbareItems": [
+      {
+        "groep": "Betrouwbaarheid van bronnen herkennen",
+        "tekst": "wie is de auteur?"
+      },
+      {
+        "groep": "Betrouwbaarheid van bronnen herkennen",
+        "tekst": "wat is de datum?"
+      },
+      {
+        "groep": "Betrouwbaarheid van bronnen herkennen",
+        "tekst": "waarom schrijft de auteur dit?"
+      }
+    ]
   },
   {
     "nummer": "NL.103",
@@ -1705,6 +2604,16 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "begrijpen",
     "minimumdoelen": [
       "1.1.11"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Sturingsstrategieën",
+        "tekst": "actualiseren van kennis en woordenschat"
+      },
+      {
+        "groep": "Sturingsstrategieën",
+        "tekst": "actief luisteren aan de hand van luisterstrategieën"
+      }
     ]
   },
   {
@@ -1722,7 +2631,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.1.11"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.105",
@@ -1739,6 +2649,48 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "begrijpen",
     "minimumdoelen": [
       "1.1.11"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Sturingsstrategieën",
+        "tekst": "leesdoel bepalen"
+      },
+      {
+        "groep": "Sturingsstrategieën",
+        "tekst": "oriëntatie op de tekst"
+      },
+      {
+        "groep": "Sturingsstrategieën",
+        "tekst": "actualiseren van kennis en woordenschat"
+      },
+      {
+        "groep": "Sturingsstrategieën",
+        "tekst": "actief lezen door toepassen van leesstrategieën"
+      },
+      {
+        "groep": "Sturingsstrategieën",
+        "tekst": "controleren van begrip"
+      },
+      {
+        "groep": "Sturingsstrategieën",
+        "tekst": "toepassen van herstelstrategieën"
+      },
+      {
+        "groep": "Sturingsstrategieën",
+        "tekst": "controle bereiken leesdoel"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "de controle"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "het leesdoel"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "het begrip"
+      }
     ]
   },
   {
@@ -1758,7 +2710,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.1.11"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.107",
@@ -1778,6 +2731,20 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "minimumdoelen": [
       "1.1.11",
       "1.1.7"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Manieren van lezen",
+        "tekst": "globaal lezen"
+      },
+      {
+        "groep": "Manieren van lezen",
+        "tekst": "intensief lezen"
+      },
+      {
+        "groep": "Manieren van lezen",
+        "tekst": "kritisch lezen"
+      }
     ]
   },
   {
@@ -1797,7 +2764,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "minimumdoelen": [
       "1.1.11",
       "1.1.7"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.109",
@@ -1812,7 +2780,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
       "11-12"
     ],
     "kennisverwerking": "begrijpen",
-    "minimumdoelen": []
+    "minimumdoelen": [],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.110",
@@ -1831,6 +2800,56 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "minimumdoelen": [
       "1.1.11",
       "1.1.7"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Herstelstrategieën",
+        "tekst": "Een stukje opnieuw lezen, langzamer."
+      },
+      {
+        "groep": "Herstelstrategieën",
+        "tekst": "Een stukje hardop lezen."
+      },
+      {
+        "groep": "Herstelstrategieën",
+        "tekst": "Een stukje verder lezen, wordt het dan duidelijk?"
+      },
+      {
+        "groep": "Herstelstrategieën",
+        "tekst": "Naar de illustraties kijken, wordt het dan duidelijk?"
+      },
+      {
+        "groep": "Herstelstrategieën",
+        "tekst": "Helpt het om een leesstrategie toe te passen?"
+      },
+      {
+        "groep": "Herstelstrategieën",
+        "tekst": "Hulp vragen als je er echt niet uitkomt."
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "hardop"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "de illustratie"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "opnieuw"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "langzamer"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "verder"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "de hulp"
+      }
     ]
   },
   {
@@ -1852,7 +2871,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "minimumdoelen": [
       "1.1.11",
       "1.1.7"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.112",
@@ -1870,6 +2890,24 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "minimumdoelen": [
       "1.3.4",
       "1.1.11"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Leesstrategieën",
+        "tekst": "voorspellen"
+      },
+      {
+        "groep": "Leesstrategieën",
+        "tekst": "vragen stellen"
+      },
+      {
+        "groep": "Leesstrategieën",
+        "tekst": "visualiseren"
+      },
+      {
+        "groep": "Leesstrategieën",
+        "tekst": "verbinden"
+      }
     ]
   },
   {
@@ -1888,7 +2926,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "minimumdoelen": [
       "1.3.4",
       "1.1.11"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.114",
@@ -1905,6 +2944,56 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "begrijpen",
     "minimumdoelen": [
       "1.1.11"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Leesstrategieën",
+        "tekst": "voorspellen"
+      },
+      {
+        "groep": "Leesstrategieën",
+        "tekst": "vragen stellen"
+      },
+      {
+        "groep": "Leesstrategieën",
+        "tekst": "visualiseren: mentale beelden en zintuigelijke gewaarwordingen"
+      },
+      {
+        "groep": "Leesstrategieën",
+        "tekst": "verbinden"
+      },
+      {
+        "groep": "Leesstrategieën",
+        "tekst": "samenvatten"
+      },
+      {
+        "groep": "Leesstrategieën",
+        "tekst": "afleiden"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "voorspellen"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "vragen stellen"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "visualiseren"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "verbinden"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "samenvatten"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "afleiden"
+      }
     ]
   },
   {
@@ -1921,6 +3010,20 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "begrijpen",
     "minimumdoelen": [
       "1.1.7"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Selecteren",
+        "tekst": "Wanneer de leesstrategie inzetten?"
+      },
+      {
+        "groep": "Selecteren",
+        "tekst": "Waarom de leesstrategie inzetten?"
+      },
+      {
+        "groep": "Selecteren",
+        "tekst": "Welke leesstrategie inzetten?"
+      }
     ]
   },
   {
@@ -1938,7 +3041,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.1.11"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.117",
@@ -1954,7 +3058,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.1.7"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.118",
@@ -1973,7 +3078,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "minimumdoelen": [
       "1.1.11",
       "1.1.7"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.119",
@@ -1996,7 +3102,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "begrijpen",
     "minimumdoelen": [
       "1.1.13"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.120",
@@ -2015,6 +3122,40 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "minimumdoelen": [
       "1.1.13",
       "1.1.9"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "informeren"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "mening vertellen"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "gevoelens tot uitdrukking brengen"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "overtuigen"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "aansporen"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "amuseren"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "adviseren"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "waarschuwen"
+      }
     ]
   },
   {
@@ -2031,7 +3172,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "begrijpen",
     "minimumdoelen": [
       "1.1.10"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.122",
@@ -2048,7 +3190,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.1.10"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.123",
@@ -2064,7 +3207,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "begrijpen",
     "minimumdoelen": [
       "1.1.10"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.124",
@@ -2080,6 +3224,24 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "begrijpen",
     "minimumdoelen": [
       "1.1.10"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Verschil tussen",
+        "tekst": "symbolen"
+      },
+      {
+        "groep": "Verschil tussen",
+        "tekst": "pictogrammen"
+      },
+      {
+        "groep": "Verschil tussen",
+        "tekst": "afbeeldingen"
+      },
+      {
+        "groep": "Verschil tussen",
+        "tekst": "letters en andere tekens"
+      }
     ]
   },
   {
@@ -2097,7 +3259,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "begrijpen",
     "minimumdoelen": [
       "1.1.10"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.126",
@@ -2113,7 +3276,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.1.10"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.127",
@@ -2130,6 +3294,40 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "begrijpen",
     "minimumdoelen": [
       "1.1.11"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Communicatief doel",
+        "tekst": "Taal kan bewaard blijven."
+      },
+      {
+        "groep": "Communicatief doel",
+        "tekst": "Taal kan tijd en afstand overbruggen"
+      },
+      {
+        "groep": "Communicatief doel",
+        "tekst": "Taal kan gelezen worden"
+      },
+      {
+        "groep": "Communicatief doel",
+        "tekst": "Taal kan gebruikt worden om iets te onthouden"
+      },
+      {
+        "groep": "Communicatief doel",
+        "tekst": "Taal kan gebruikt worden om een boodschap over te brengen"
+      },
+      {
+        "groep": "Communicatief doel",
+        "tekst": "Taal kan gebruikt worden om iets te benoemen"
+      },
+      {
+        "groep": "Communicatief doel",
+        "tekst": "Taal kan gebruikt worden om een verhaal weer te geven"
+      },
+      {
+        "groep": "Esthetisch doel",
+        "tekst": "Taal kan gebruikt worden om van te genieten."
+      }
     ]
   },
   {
@@ -2146,7 +3344,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "begrijpen",
     "minimumdoelen": [
       "1.1.12"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.129",
@@ -2162,6 +3361,28 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "begrijpen",
     "minimumdoelen": [
       "1.1.12"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Functies van hoofdletters en interpunctie bij het lezen",
+        "tekst": "De hoofdletter duidt het begin van een nieuwe zin aan."
+      },
+      {
+        "groep": "Functies van hoofdletters en interpunctie bij het lezen",
+        "tekst": "De hoofdletter geeft een naam aan."
+      },
+      {
+        "groep": "Functies van hoofdletters en interpunctie bij het lezen",
+        "tekst": "Het punt, uitroepteken en vraagteken duiden het einde van een zin aan."
+      },
+      {
+        "groep": "Functies van hoofdletters en interpunctie bij het lezen",
+        "tekst": "Een uitroepteken geeft weer dat de tekst luid wordt gelezen."
+      },
+      {
+        "groep": "Functies van hoofdletters en interpunctie bij het lezen",
+        "tekst": "Een vraagteken geeft weer dat een zin vragend wordt gelezen."
+      }
     ]
   },
   {
@@ -2177,6 +3398,32 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "begrijpen",
     "minimumdoelen": [
       "1.1.12"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Vormelijke elementen van tekststructuur/verhaalstructuur",
+        "tekst": "de alinea"
+      },
+      {
+        "groep": "Vormelijke elementen van tekststructuur/verhaalstructuur",
+        "tekst": "de titel"
+      },
+      {
+        "groep": "Vormelijke elementen van tekststructuur/verhaalstructuur",
+        "tekst": "de tussentitel"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "de alinea"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "de tussentitel"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "de titel"
+      }
     ]
   },
   {
@@ -2192,6 +3439,40 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "begrijpen",
     "minimumdoelen": [
       "1.1.12"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Elementen van tekststructuur/verhaalstructuur",
+        "tekst": "de regel"
+      },
+      {
+        "groep": "Elementen van tekststructuur/verhaalstructuur",
+        "tekst": "het begin"
+      },
+      {
+        "groep": "Elementen van tekststructuur/verhaalstructuur",
+        "tekst": "het midden"
+      },
+      {
+        "groep": "Elementen van tekststructuur/verhaalstructuur",
+        "tekst": "het slot"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "de regel"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "het begin"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "het midden"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "het slot"
+      }
     ]
   },
   {
@@ -2209,6 +3490,40 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "begrijpen",
     "minimumdoelen": [
       "1.1.8"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Vormelijke elementen van tekststructuur/verhaalstructuur",
+        "tekst": "de tekstopmaak"
+      },
+      {
+        "groep": "Vormelijke elementen van tekststructuur/verhaalstructuur",
+        "tekst": "cursief"
+      },
+      {
+        "groep": "Vormelijke elementen van tekststructuur/verhaalstructuur",
+        "tekst": "vet"
+      },
+      {
+        "groep": "Vormelijke elementen van tekststructuur/verhaalstructuur",
+        "tekst": "hoofdstuk"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "de tekstopmaak"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "cursief"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "vet"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "het hoofdstuk"
+      }
     ]
   },
   {
@@ -2225,6 +3540,32 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "begrijpen",
     "minimumdoelen": [
       "1.1.8"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Begrijpen",
+        "tekst": "doel en gebruik"
+      },
+      {
+        "groep": "Vormelijke elementen van tekststructuur",
+        "tekst": "de index"
+      },
+      {
+        "groep": "Vormelijke elementen van tekststructuur",
+        "tekst": "de inhoudsopgave"
+      },
+      {
+        "groep": "Vormelijke elementen van tekststructuur",
+        "tekst": "de legende"
+      },
+      {
+        "groep": "Vormelijke elementen van tekststructuur",
+        "tekst": "de tabellen"
+      },
+      {
+        "groep": "Vormelijke elementen van tekststructuur",
+        "tekst": "de figuren"
+      }
     ]
   },
   {
@@ -2242,6 +3583,16 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "begrijpen",
     "minimumdoelen": [
       "1.1.13"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "de tekst"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "het teksttype"
+      }
     ]
   },
   {
@@ -2261,6 +3612,36 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "minimumdoelen": [
       "1.1.13",
       "1.1.9"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Inhoudelijke elementen van tekststructuur",
+        "tekst": "oorzaak-gevolgstructuur"
+      },
+      {
+        "groep": "Inhoudelijke elementen van tekststructuur",
+        "tekst": "chronologische opbouw"
+      },
+      {
+        "groep": "Inhoudelijke elementen van tekststructuur",
+        "tekst": "probleem-oplossingsstructuur"
+      },
+      {
+        "groep": "Inhoudelijke elementen van tekststructuur",
+        "tekst": "vergelijkende opbouw"
+      },
+      {
+        "groep": "Inhoudelijke elementen van tekststructuur",
+        "tekst": "beschrijvende opbouw"
+      },
+      {
+        "groep": "Inhoudelijke elementen van verhaalstructuur",
+        "tekst": "begin (kennismaking: personage, situatie, plaats), midden (probleem en obstakels), slot (oplossing en afloop)"
+      },
+      {
+        "groep": "Inhoudelijke elementen van verhaalstructuur",
+        "tekst": "chronologische opbouw"
+      }
     ]
   },
   {
@@ -2277,6 +3658,16 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.1.9"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Tekststructuur/verhaalstructuur",
+        "tekst": "vormelijke elementen"
+      },
+      {
+        "groep": "Tekststructuur/verhaalstructuur",
+        "tekst": "inhoudelijke elementen"
+      }
     ]
   },
   {
@@ -2292,7 +3683,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "begrijpen",
     "minimumdoelen": [
       "1.1.12"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.138",
@@ -2307,6 +3699,16 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "begrijpen",
     "minimumdoelen": [
       "1.1.12"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Structuuraanduiders",
+        "tekst": "verwijswoorden: verwijzen terug naar andere woorden of woordgroepen in de tekst"
+      },
+      {
+        "groep": "Structuuraanduiders",
+        "tekst": "signaal- en verbindingswoorden: verbinden zinnen of tekstdelen en geven aan wat voor verband er tussen die zinnen of tekstdelen bestaat"
+      }
     ]
   },
   {
@@ -2323,6 +3725,20 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "minimumdoelen": [
       "1.1.12",
       "1.1.9"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Structuuraanduiders",
+        "tekst": "verwijswoorden"
+      },
+      {
+        "groep": "Structuuraanduiders",
+        "tekst": "signaal- en verbindingswoorden"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "de structuuraanduider"
+      }
     ]
   },
   {
@@ -2339,6 +3755,24 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "begrijpen",
     "minimumdoelen": [
       "1.1.12"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "De invloed van zinsconstructies en tekststructuur/verhaalstructuur",
+        "tekst": "Korte concrete zinnen geven duidelijk de boodschap weer."
+      },
+      {
+        "groep": "De invloed van zinsconstructies en tekststructuur/verhaalstructuur",
+        "tekst": "Zinnen met structuuraanduiders geven een oorzaak-gevolg, chronologie, probleem-oplossing, vergelijking of beschrijving weer."
+      },
+      {
+        "groep": "De invloed van zinsconstructies en tekststructuur/verhaalstructuur",
+        "tekst": "In een informatieve tekst geven tussentitels bij alinea’s kort weer welke informatie in die alinea over het onderwerp zal gegeven worden."
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "de redenering"
+      }
     ]
   },
   {
@@ -2356,7 +3790,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "engageren",
     "minimumdoelen": [
       "1.1.8"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.142",
@@ -2372,6 +3807,40 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "begrijpen",
     "minimumdoelen": [
       "1.2.1"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Dynamische pengreep",
+        "tekst": "doseren van de spierspanning van de vingers"
+      },
+      {
+        "groep": "Dynamische pengreep",
+        "tekst": "met soepele vingers en pols"
+      },
+      {
+        "groep": "Dynamische pengreep",
+        "tekst": "schrijfgerief tussen duim en wijsvinger"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "de duim"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "de vinger"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "de wijsvinger"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "de hand"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "de pols"
+      }
     ]
   },
   {
@@ -2388,7 +3857,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.2.1"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.144",
@@ -2404,7 +3874,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.2.3"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.145",
@@ -2420,7 +3891,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.2.4"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.146",
@@ -2435,7 +3907,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.2.5"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.147",
@@ -2450,7 +3923,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.2.5"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.148",
@@ -2465,7 +3939,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.2.6"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.149",
@@ -2480,6 +3955,44 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "begrijpen",
     "minimumdoelen": [
       "1.2.7"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Schrijfrichting",
+        "tekst": "van links naar rechts"
+      },
+      {
+        "groep": "Schrijfrichting",
+        "tekst": "van boven naar beneden"
+      },
+      {
+        "groep": "Schrijfrichting",
+        "tekst": "pagina na pagina"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "van links"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "naar rechts"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "van boven"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "naar beneden"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "van voor"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "naar achter"
+      }
     ]
   },
   {
@@ -2496,7 +4009,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.2.7"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.151",
@@ -2513,6 +4027,16 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "begrijpen",
     "minimumdoelen": [
       "1.2.2"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Correcte schrijfhouding",
+        "tekst": "een goede zithouding"
+      },
+      {
+        "groep": "Correcte schrijfhouding",
+        "tekst": "afstand tussen ogen en schrijfhand"
+      }
     ]
   },
   {
@@ -2530,7 +4054,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.2.2"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.153",
@@ -2544,7 +4069,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
       "7-8"
     ],
     "kennisverwerking": "begrijpen",
-    "minimumdoelen": []
+    "minimumdoelen": [],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.154",
@@ -2558,7 +4084,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
       "7-8"
     ],
     "kennisverwerking": "gebruiken",
-    "minimumdoelen": []
+    "minimumdoelen": [],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.155",
@@ -2572,7 +4099,17 @@ export const LEERPLANDOELEN_NEDERLANDS = [
       "7-8"
     ],
     "kennisverwerking": "begrijpen",
-    "minimumdoelen": []
+    "minimumdoelen": [],
+    "aanklikbareItems": [
+      {
+        "groep": "Functie van de niet-schrijfhand",
+        "tekst": "om het schrijfoppervlak te fixeren zodat het niet verschuift"
+      },
+      {
+        "groep": "Functie van de niet-schrijfhand",
+        "tekst": "om het schrijfoppervlak na iedere regel een stukje omhoog te schuiven"
+      }
+    ]
   },
   {
     "nummer": "NL.156",
@@ -2586,7 +4123,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
       "7-8"
     ],
     "kennisverwerking": "gebruiken",
-    "minimumdoelen": []
+    "minimumdoelen": [],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.157",
@@ -2599,7 +4137,17 @@ export const LEERPLANDOELEN_NEDERLANDS = [
       "2,5-4"
     ],
     "kennisverwerking": "begrijpen",
-    "minimumdoelen": []
+    "minimumdoelen": [],
+    "aanklikbareItems": [
+      {
+        "groep": "Schrijfmaterialen",
+        "tekst": "schrijfgerief"
+      },
+      {
+        "groep": "Schrijfmaterialen",
+        "tekst": "schrijfoppervlakken"
+      }
+    ]
   },
   {
     "nummer": "NL.158",
@@ -2613,7 +4161,17 @@ export const LEERPLANDOELEN_NEDERLANDS = [
       "5-6"
     ],
     "kennisverwerking": "begrijpen",
-    "minimumdoelen": []
+    "minimumdoelen": [],
+    "aanklikbareItems": [
+      {
+        "groep": "Schrijfmaterialen",
+        "tekst": "schrijfgerief"
+      },
+      {
+        "groep": "Schrijfmaterialen",
+        "tekst": "schrijfoppervlakken"
+      }
+    ]
   },
   {
     "nummer": "NL.159",
@@ -2628,7 +4186,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
       "5-6"
     ],
     "kennisverwerking": "gebruiken",
-    "minimumdoelen": []
+    "minimumdoelen": [],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.160",
@@ -2643,7 +4202,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
       "7-8"
     ],
     "kennisverwerking": "engageren",
-    "minimumdoelen": []
+    "minimumdoelen": [],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.161",
@@ -2659,6 +4219,56 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "begrijpen",
     "minimumdoelen": [
       "1.2.2"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Correcte route",
+        "tekst": "kleine letters, cijfers"
+      },
+      {
+        "groep": "Correcte route",
+        "tekst": "leestekens: het punt, het vraagteken, het uitroepteken"
+      },
+      {
+        "groep": "Correcte route",
+        "tekst": "rekentekens"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "omhoog"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "omlaag"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "(naar) boven"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "(naar) onder"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "rond"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "gebogen"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "de lijn"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "de lus"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "schuin"
+      }
     ]
   },
   {
@@ -2675,6 +4285,16 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "begrijpen",
     "minimumdoelen": [
       "1.2.2"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Correcte route",
+        "tekst": "hoofdletters"
+      },
+      {
+        "groep": "Correcte route",
+        "tekst": "leestekens: de komma"
+      }
     ]
   },
   {
@@ -2690,6 +4310,12 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "begrijpen",
     "minimumdoelen": [
       "1.2.2"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Correcte route",
+        "tekst": "leestekens: het dubbele punt"
+      }
     ]
   },
   {
@@ -2705,6 +4331,16 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "begrijpen",
     "minimumdoelen": [
       "1.2.1"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "de grondlijn"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "de hulplijn"
+      }
     ]
   },
   {
@@ -2720,6 +4356,24 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.2.2"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Schrijven",
+        "tekst": "kleine letters, cijfers"
+      },
+      {
+        "groep": "Schrijven",
+        "tekst": "leestekens: het punt, het vraagteken, het uitroepteken"
+      },
+      {
+        "groep": "Schrijven",
+        "tekst": "letters, woorden en zinnen"
+      },
+      {
+        "groep": "Schrijven",
+        "tekst": "rekentekens"
+      }
     ]
   },
   {
@@ -2735,6 +4389,24 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.2.2"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Schrijven",
+        "tekst": "kleine letters, hoofdletters, cijfers"
+      },
+      {
+        "groep": "Schrijven",
+        "tekst": "leestekens: het punt, het vraagteken, het uitroepteken"
+      },
+      {
+        "groep": "Schrijven",
+        "tekst": "letters, woorden en zinnen"
+      },
+      {
+        "groep": "Schrijven",
+        "tekst": "rekentekens"
+      }
     ]
   },
   {
@@ -2751,6 +4423,20 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.2.2"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Schrijven",
+        "tekst": "kleine letters, hoofdletters en cijfers"
+      },
+      {
+        "groep": "Schrijven",
+        "tekst": "leestekens: het dubbele punt, de komma"
+      },
+      {
+        "groep": "Schrijven",
+        "tekst": "woorden, zinnen en rekentekens"
+      }
     ]
   },
   {
@@ -2767,6 +4453,20 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.2.1"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Schrijven",
+        "tekst": "zonder hulplijnen"
+      },
+      {
+        "groep": "Schrijven",
+        "tekst": "op een enkele grondlijn"
+      },
+      {
+        "groep": "Schrijven",
+        "tekst": "woordtekens: trema, koppelteken, apostrof, accent"
+      }
     ]
   },
   {
@@ -2783,7 +4483,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.2.3"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.170",
@@ -2802,6 +4503,20 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "minimumdoelen": [
       "1.2.3",
       "1.2.4"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Juiste spatiëring",
+        "tekst": "met afstand tussen letters binnen woorden"
+      },
+      {
+        "groep": "Juiste spatiëring",
+        "tekst": "met witruimte tussen woorden."
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "de spatie"
+      }
     ]
   },
   {
@@ -2817,7 +4532,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.2.4"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.172",
@@ -2833,7 +4549,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.2.1"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.173",
@@ -2849,7 +4566,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.2.2"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.174",
@@ -2863,7 +4581,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
       "11-12"
     ],
     "kennisverwerking": "gebruiken",
-    "minimumdoelen": []
+    "minimumdoelen": [],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.175",
@@ -2877,7 +4596,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
       "11-12"
     ],
     "kennisverwerking": "engageren",
-    "minimumdoelen": []
+    "minimumdoelen": [],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.176",
@@ -2893,7 +4613,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.2.3"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.177",
@@ -2907,7 +4628,17 @@ export const LEERPLANDOELEN_NEDERLANDS = [
       "5-6"
     ],
     "kennisverwerking": "gebruiken",
-    "minimumdoelen": []
+    "minimumdoelen": [],
+    "aanklikbareItems": [
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "het woord"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "de letter"
+      }
+    ]
   },
   {
     "nummer": "NL.178",
@@ -2922,6 +4653,36 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.2.5"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Klankzuivere woorden met één lettergreep",
+        "tekst": "MK-woorden"
+      },
+      {
+        "groep": "Klankzuivere woorden met één lettergreep",
+        "tekst": "KM-woorden"
+      },
+      {
+        "groep": "Klankzuivere woorden met één lettergreep",
+        "tekst": "MKM-woorden"
+      },
+      {
+        "groep": "Klankzuivere woorden met één lettergreep",
+        "tekst": "inclusief woorden met ui, oe, eu"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "de klank"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "de medeklinker"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "de klinker"
+      }
     ]
   },
   {
@@ -2937,7 +4698,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.2.5"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.180",
@@ -2952,7 +4714,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.2.5"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.181",
@@ -2968,6 +4731,16 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "begrijpen",
     "minimumdoelen": [
       "1.2.5"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "de medeklinker"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "de klinker"
+      }
     ]
   },
   {
@@ -2984,7 +4757,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.2.5"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.183",
@@ -3001,6 +4775,28 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "begrijpen",
     "minimumdoelen": [
       "1.2.5"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "de korte klinker"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "de lange klinker"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "de open lettergreep"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "de gesloten lettergreep"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "de dubbele medeklinker"
+      }
     ]
   },
   {
@@ -3018,7 +4814,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.2.5"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.185",
@@ -3035,6 +4832,16 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "begrijpen",
     "minimumdoelen": [
       "1.2.5"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Vrije klinker",
+        "tekst": "vrije klinker in een woord"
+      },
+      {
+        "groep": "Vrije klinker",
+        "tekst": "vrije klinker op het einde van een woord"
+      }
     ]
   },
   {
@@ -3052,7 +4859,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.2.5"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.187",
@@ -3068,6 +4876,28 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "begrijpen",
     "minimumdoelen": [
       "1.2.5"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Regelmatige verkleinwoorden",
+        "tekst": "op -je,"
+      },
+      {
+        "groep": "Regelmatige verkleinwoorden",
+        "tekst": "op -tje"
+      },
+      {
+        "groep": "Regelmatige verkleinwoorden",
+        "tekst": "op -pje"
+      },
+      {
+        "groep": "Regelmatige verkleinwoorden",
+        "tekst": "op -etje"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "het verkleinwoord"
+      }
     ]
   },
   {
@@ -3084,7 +4914,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "begrijpen",
     "minimumdoelen": [
       "1.2.5"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.189",
@@ -3100,6 +4931,28 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "begrijpen",
     "minimumdoelen": [
       "1.2.4"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Vorming van onregelmatige verkleinwoorden",
+        "tekst": "klankverandering in grondwoord"
+      },
+      {
+        "groep": "Vorming van onregelmatige verkleinwoorden",
+        "tekst": "verlenging van vrije klinker"
+      },
+      {
+        "groep": "Vorming van onregelmatige verkleinwoorden",
+        "tekst": "verdubbeling van medeklinker"
+      },
+      {
+        "groep": "Vorming van onregelmatige verkleinwoorden",
+        "tekst": "uitzonderlijk verkleinwoord"
+      },
+      {
+        "groep": "Vorming van onregelmatige verkleinwoorden",
+        "tekst": "verkleinwoorden van leenwoorden"
+      }
     ]
   },
   {
@@ -3120,7 +4973,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "minimumdoelen": [
       "1.2.5",
       "1.2.4"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.191",
@@ -3137,7 +4991,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "begrijpen",
     "minimumdoelen": [
       "1.2.5"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.192",
@@ -3153,6 +5008,20 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "begrijpen",
     "minimumdoelen": [
       "1.2.5"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "het zelfstandig naamwoord"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "het enkelvoud"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "het meervoud"
+      }
     ]
   },
   {
@@ -3169,6 +5038,32 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "begrijpen",
     "minimumdoelen": [
       "1.2.4"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Vorming van meervouden",
+        "tekst": "meervouden met behoud van betekenis en verandering van betekenis"
+      },
+      {
+        "groep": "Vorming van meervouden",
+        "tekst": "zelfstandige naamwoorden die geen meervoud hebben"
+      },
+      {
+        "groep": "Vorming van meervouden",
+        "tekst": "zelfstandige naamwoorden die geen enkelvoud hebben"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "het zelfstandig naamwoord"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "het enkelvoud"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "het meervoud"
+      }
     ]
   },
   {
@@ -3185,7 +5080,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "begrijpen",
     "minimumdoelen": [
       "1.2.4"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.195",
@@ -3201,7 +5097,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "begrijpen",
     "minimumdoelen": [
       "1.2.4"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.196",
@@ -3220,7 +5117,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.2.4"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.197",
@@ -3237,6 +5135,32 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "minimumdoelen": [
       "1.2.6",
       "1.2.5"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "het werkwoord"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "de persoonsvorm"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "de stam"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "de uitgang"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "de tegenwoordige tijd"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "de infinitief"
+      }
     ]
   },
   {
@@ -3254,7 +5178,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "minimumdoelen": [
       "1.2.6",
       "1.2.5"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.199",
@@ -3271,6 +5196,16 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "minimumdoelen": [
       "1.2.6",
       "1.2.5"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "de voltooid tegenwoordige tijd"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "het voltooid deelwoord"
+      }
     ]
   },
   {
@@ -3288,7 +5223,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "minimumdoelen": [
       "1.2.6",
       "1.2.5"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.201",
@@ -3305,6 +5241,20 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "minimumdoelen": [
       "1.2.7",
       "1.2.5"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Vorming van zwakke werkwoorden in de onvoltooid verleden tijd",
+        "tekst": "stam + uitgang"
+      },
+      {
+        "groep": "Vorming van zwakke werkwoorden in de onvoltooid verleden tijd",
+        "tekst": "zonder klankverandering"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "de verleden tijd"
+      }
     ]
   },
   {
@@ -3322,6 +5272,16 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "minimumdoelen": [
       "1.2.7",
       "1.2.5"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Vorming van sterke werkwoorden in de onvoltooid verleden tijd",
+        "tekst": "stam + uitgang"
+      },
+      {
+        "groep": "Vorming van sterke werkwoorden in de onvoltooid verleden tijd",
+        "tekst": "met klankverandering"
+      }
     ]
   },
   {
@@ -3339,7 +5299,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "minimumdoelen": [
       "1.2.7",
       "1.2.5"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.204",
@@ -3356,6 +5317,12 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "minimumdoelen": [
       "1.2.7",
       "1.2.5"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "de voltooid verleden tijd"
+      }
     ]
   },
   {
@@ -3373,7 +5340,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "minimumdoelen": [
       "1.2.7",
       "1.2.5"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.206",
@@ -3389,6 +5357,16 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "begrijpen",
     "minimumdoelen": [
       "1.2.5"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "de infinitief"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "de toekomende tijd"
+      }
     ]
   },
   {
@@ -3405,7 +5383,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.2.5"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.208",
@@ -3421,7 +5400,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "engageren",
     "minimumdoelen": [
       "1.2.5"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.209",
@@ -3437,7 +5417,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.2.5"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.210",
@@ -3454,7 +5435,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.2.5"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.211",
@@ -3471,7 +5453,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.2.5"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.212",
@@ -3487,7 +5470,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.2.5"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.213",
@@ -3503,7 +5487,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.2.5"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.214",
@@ -3519,6 +5504,44 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.2.5"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Meertekenklanken",
+        "tekst": "aai"
+      },
+      {
+        "groep": "Meertekenklanken",
+        "tekst": "ooi"
+      },
+      {
+        "groep": "Meertekenklanken",
+        "tekst": "oei"
+      },
+      {
+        "groep": "Meertekenklanken",
+        "tekst": "eeuw"
+      },
+      {
+        "groep": "Meertekenklanken",
+        "tekst": "ieuw"
+      },
+      {
+        "groep": "Meertekenklanken",
+        "tekst": "uw"
+      },
+      {
+        "groep": "Meertekenklanken",
+        "tekst": "eu"
+      },
+      {
+        "groep": "Meertekenklanken",
+        "tekst": "ui"
+      },
+      {
+        "groep": "Meertekenklanken",
+        "tekst": "oe"
+      }
     ]
   },
   {
@@ -3535,7 +5558,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.2.5"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.216",
@@ -3549,7 +5573,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
       "10-11"
     ],
     "kennisverwerking": "gebruiken",
-    "minimumdoelen": []
+    "minimumdoelen": [],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.217",
@@ -3562,7 +5587,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
       "10-11"
     ],
     "kennisverwerking": "gebruiken",
-    "minimumdoelen": []
+    "minimumdoelen": [],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.218",
@@ -3578,6 +5604,16 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.2.4"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "het grondwoord"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "het achtervoegsel"
+      }
     ]
   },
   {
@@ -3593,7 +5629,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.2.5"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.220",
@@ -3608,7 +5645,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.2.5"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.221",
@@ -3624,7 +5662,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.2.5"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.222",
@@ -3640,6 +5679,20 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.2.5"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Voor- en/of achtervoegsel",
+        "tekst": "ge-, ver-, be-"
+      },
+      {
+        "groep": "Voor- en/of achtervoegsel",
+        "tekst": "elen, -eren, -enen"
+      },
+      {
+        "groep": "Voor- en/of achtervoegsel",
+        "tekst": "-ig, -lijk"
+      }
     ]
   },
   {
@@ -3655,7 +5708,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "begrijpen",
     "minimumdoelen": [
       "1.2.4"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.224",
@@ -3672,7 +5726,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "begrijpen",
     "minimumdoelen": [
       "1.2.4"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.225",
@@ -3689,7 +5744,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.2.4"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.226",
@@ -3705,7 +5761,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "begrijpen",
     "minimumdoelen": [
       "1.2.4"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.227",
@@ -3721,6 +5778,72 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "begrijpen",
     "minimumdoelen": [
       "1.2.4"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Fonemen die als bepaalde grafemen geschreven worden",
+        "tekst": "k als c"
+      },
+      {
+        "groep": "Fonemen die als bepaalde grafemen geschreven worden",
+        "tekst": "s als c"
+      },
+      {
+        "groep": "Fonemen die als bepaalde grafemen geschreven worden",
+        "tekst": "t als th"
+      },
+      {
+        "groep": "Fonemen die als bepaalde grafemen geschreven worden",
+        "tekst": "i als y"
+      },
+      {
+        "groep": "Fonemen die als bepaalde grafemen geschreven worden",
+        "tekst": "z als s"
+      },
+      {
+        "groep": "Fonemen die als bepaalde grafemen geschreven worden",
+        "tekst": "s als t"
+      },
+      {
+        "groep": "Fonemen die als bepaalde grafemen geschreven worden",
+        "tekst": "ks als cc"
+      },
+      {
+        "groep": "Fonemen die als bepaalde grafemen geschreven worden",
+        "tekst": "k als cc"
+      },
+      {
+        "groep": "Fonemen die als bepaalde grafemen geschreven worden",
+        "tekst": "k als q"
+      },
+      {
+        "groep": "Fonemen die als bepaalde grafemen geschreven worden",
+        "tekst": "kw als qu"
+      },
+      {
+        "groep": "Fonemen die als bepaalde grafemen geschreven worden",
+        "tekst": "ks als x"
+      },
+      {
+        "groep": "Fonemen die als bepaalde grafemen geschreven worden",
+        "tekst": "wr als vr"
+      },
+      {
+        "groep": "Fonemen die als bepaalde grafemen geschreven worden",
+        "tekst": "oo als eau"
+      },
+      {
+        "groep": "Fonemen die als bepaalde grafemen geschreven worden",
+        "tekst": "oo als au"
+      },
+      {
+        "groep": "Fonemen die als bepaalde grafemen geschreven worden",
+        "tekst": "oe als ou"
+      },
+      {
+        "groep": "Fonemen die als bepaalde grafemen geschreven worden",
+        "tekst": "ie als i"
+      }
     ]
   },
   {
@@ -3737,7 +5860,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "begrijpen",
     "minimumdoelen": [
       "1.2.4"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.229",
@@ -3753,7 +5877,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.2.4"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.230",
@@ -3769,7 +5894,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "begrijpen",
     "minimumdoelen": [
       "1.2.4"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.231",
@@ -3785,7 +5911,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.2.4"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.232",
@@ -3802,7 +5929,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "minimumdoelen": [
       "1.2.4",
       "1.4.5"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.233",
@@ -3819,7 +5947,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "minimumdoelen": [
       "1.2.4",
       "1.4.5"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.234",
@@ -3835,6 +5964,28 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "begrijpen",
     "minimumdoelen": [
       "1.2.5"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Regels voor het gebruik van hoofdletters",
+        "tekst": "aan het begin van een zin"
+      },
+      {
+        "groep": "Regels voor het gebruik van hoofdletters",
+        "tekst": "bij het schrijven van eigennamen van personen"
+      },
+      {
+        "groep": "Regels voor het gebruik van hoofdletters",
+        "tekst": "bij titels van boeken en films"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "de hoofdletter"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "de kleine letter"
+      }
     ]
   },
   {
@@ -3851,6 +6002,44 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "begrijpen",
     "minimumdoelen": [
       "1.2.5"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Regels voor het gebruik met hoofdletters",
+        "tekst": "het eerste woord van een aanhaling"
+      },
+      {
+        "groep": "Regels voor het gebruik met hoofdletters",
+        "tekst": "aan het begin van een zin"
+      },
+      {
+        "groep": "Regels voor het gebruik met hoofdletters",
+        "tekst": "aardrijkskundige namen"
+      },
+      {
+        "groep": "Regels voor het gebruik met hoofdletters",
+        "tekst": "namen van windstreken die verwijzen naar een geografisch gebied"
+      },
+      {
+        "groep": "Regels voor het gebruik met hoofdletters",
+        "tekst": "feestdagen"
+      },
+      {
+        "groep": "Regels voor het gebruik met hoofdletters",
+        "tekst": "namen van talen en taalvariëteiten"
+      },
+      {
+        "groep": "Regels voor het gebruik zonder hoofdletter",
+        "tekst": "een zin die met een getal begint"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "de hoofdletter"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "de kleine letter"
+      }
     ]
   },
   {
@@ -3867,6 +6056,36 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "begrijpen",
     "minimumdoelen": [
       "1.2.4"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Regels voor het gebruik met hoofdletter",
+        "tekst": "na een afgekort woord aan het begin van een zin: 's en 't"
+      },
+      {
+        "groep": "Regels voor het gebruik met hoofdletter",
+        "tekst": "vaste benaming van een bekende historische gebeurtenis"
+      },
+      {
+        "groep": "Regels voor het gebruik met hoofdletter",
+        "tekst": "afleidingen van aardrijkskundige namen"
+      },
+      {
+        "groep": "Regels voor het gebruik met hoofdletter",
+        "tekst": "namen van windstreken die deel uitmaken van aardrijkskundige namen"
+      },
+      {
+        "groep": "Regels voor het gebruik met hoofdletter",
+        "tekst": "namen van gebouwen, bedrijven en merken"
+      },
+      {
+        "groep": "Regels voor het gebruik zonder hoofdletter",
+        "tekst": "historische periodes"
+      },
+      {
+        "groep": "Regels voor het gebruik zonder hoofdletter",
+        "tekst": "namen van windstreken in afleidingen"
+      }
     ]
   },
   {
@@ -3887,7 +6106,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "minimumdoelen": [
       "1.2.5",
       "1.2.4"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.238",
@@ -3903,6 +6123,20 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.2.8"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Interpunctietekens",
+        "tekst": "het punt"
+      },
+      {
+        "groep": "Interpunctietekens",
+        "tekst": "het uitroepteken"
+      },
+      {
+        "groep": "Interpunctietekens",
+        "tekst": "het vraagteken"
+      }
     ]
   },
   {
@@ -3919,6 +6153,16 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.2.8"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Interpunctietekens",
+        "tekst": "het dubbele punt"
+      },
+      {
+        "groep": "Interpunctietekens",
+        "tekst": "de komma"
+      }
     ]
   },
   {
@@ -3935,7 +6179,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.2.6"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.241",
@@ -3951,6 +6196,24 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.2.4"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "het trema"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "het koppelteken"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "de apostrof"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "het accent"
+      }
     ]
   },
   {
@@ -3972,7 +6235,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "minimumdoelen": [
       "1.2.8",
       "1.2.6"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.243",
@@ -3988,6 +6252,16 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.2.8"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Gebruik van hoofdletters en interpunctie",
+        "tekst": "hoofdletter aan het begin van een zin"
+      },
+      {
+        "groep": "Gebruik van hoofdletters en interpunctie",
+        "tekst": "leesteken aan het einde van de zin: punt, uitroepteken, vraagteken"
+      }
     ]
   },
   {
@@ -4004,6 +6278,16 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.2.8"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Gebruik van hoofdletters en interpunctie",
+        "tekst": "hoofdletter aan het begin van een zin, inclusief uitzondering bij een zin die met een getal begint"
+      },
+      {
+        "groep": "Gebruik van hoofdletters en interpunctie",
+        "tekst": "leesteken in de zin: komma, dubbele punt"
+      }
     ]
   },
   {
@@ -4020,6 +6304,20 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.2.6"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Gebruik van hoofdletters en interpunctie",
+        "tekst": "hoofdletter aan het begin van een zin, inclusief uitzonderingen zoals ’s Morgens… en 14 dagen later…"
+      },
+      {
+        "groep": "Gebruik van hoofdletters en interpunctie",
+        "tekst": "hoofletter aan het begin van een aanhaling"
+      },
+      {
+        "groep": "Gebruik van hoofdletters en interpunctie",
+        "tekst": "leesteken in de zin: dubbele aanhalingstekens"
+      }
     ]
   },
   {
@@ -4036,6 +6334,20 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.2.8"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Zinnen",
+        "tekst": "enkelvoudige zinnen"
+      },
+      {
+        "groep": "Zinnen",
+        "tekst": "mededelende zin"
+      },
+      {
+        "groep": "Zinsstructuren",
+        "tekst": "juiste woordvolgorde: met woorden op de juiste plaats in de zin, afgestemd op de soort zin"
+      }
     ]
   },
   {
@@ -4052,6 +6364,20 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.2.8"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Zinnen",
+        "tekst": "enkelvoudige zinnen"
+      },
+      {
+        "groep": "Zinnen",
+        "tekst": "uitroepende zin, vragende zin, ontkennende zin, gebiedende wijs"
+      },
+      {
+        "groep": "Zinsstructuren",
+        "tekst": "juiste woordvolgorde: met woorden op de juiste plaats in de zin, afgestemd op de soort zin"
+      }
     ]
   },
   {
@@ -4068,6 +6394,20 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "minimumdoelen": [
       "1.2.8",
       "1.2.6"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Zinnen",
+        "tekst": "enkelvoudige en samengestelde zinnen"
+      },
+      {
+        "groep": "Zinnen",
+        "tekst": "mededelende zin"
+      },
+      {
+        "groep": "Zinsstructuren",
+        "tekst": "juiste woordvolgorde: met woorden op de juiste plaats in de zin, afgestemd op de soort zin"
+      }
     ]
   },
   {
@@ -4086,6 +6426,20 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "minimumdoelen": [
       "1.2.8",
       "1.2.6"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Zinnen",
+        "tekst": "enkelvoudige en samengestelde zinnen"
+      },
+      {
+        "groep": "Zinnen",
+        "tekst": "mededelende zin, uitroepende zin, vragende zin, ontkennende zin, gebiedende wijs"
+      },
+      {
+        "groep": "Zinsstructuren",
+        "tekst": "juiste woordvolgorde: met woorden op de juiste plaats in de zin, afgestemd op de soort zin"
+      }
     ]
   },
   {
@@ -4102,7 +6456,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.2.8"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.251",
@@ -4118,7 +6473,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.2.8"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.252",
@@ -4134,7 +6490,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.2.8"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.253",
@@ -4150,6 +6507,16 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.2.8"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Schrijven",
+        "tekst": "tekeningen"
+      },
+      {
+        "groep": "Schrijven",
+        "tekst": "al dan niet uitgevonden grafemen"
+      }
     ]
   },
   {
@@ -4166,7 +6533,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.2.8"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.255",
@@ -4182,6 +6550,16 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.2.9"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Schematische voorstelling",
+        "tekst": "schema"
+      },
+      {
+        "groep": "Schematische voorstelling",
+        "tekst": "lijst"
+      }
     ]
   },
   {
@@ -4198,7 +6576,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "begrijpen",
     "minimumdoelen": [
       "1.2.9"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.257",
@@ -4214,6 +6593,16 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.2.9"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Teksten",
+        "tekst": "mondeling of schriftelijk aangeboden"
+      },
+      {
+        "groep": "Teksten",
+        "tekst": "van verschillende vakdisciplines"
+      }
     ]
   },
   {
@@ -4230,6 +6619,16 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.2.9"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Gebruiken",
+        "tekst": "met gebruik van kernwoorden"
+      },
+      {
+        "groep": "Gebruiken",
+        "tekst": "met weergave van verbanden"
+      }
     ]
   },
   {
@@ -4246,6 +6645,16 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "begrijpen",
     "minimumdoelen": [
       "1.2.10"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Tekst",
+        "tekst": "een alinea of de volledige tekst"
+      },
+      {
+        "groep": "Verwoorden",
+        "tekst": "met behulp van genoteerde kernwoorden"
+      }
     ]
   },
   {
@@ -4262,6 +6671,16 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.2.10"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Tekst",
+        "tekst": "een alinea of de volledige tekst"
+      },
+      {
+        "groep": "Schrijven",
+        "tekst": "met behulp van kernwoorden"
+      }
     ]
   },
   {
@@ -4278,7 +6697,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.2.9"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.262",
@@ -4294,7 +6714,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.2.7"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.263",
@@ -4308,7 +6729,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
       "11-12"
     ],
     "kennisverwerking": "begrijpen",
-    "minimumdoelen": []
+    "minimumdoelen": [],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.264",
@@ -4324,6 +6746,20 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.2.8"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Samenvatten",
+        "tekst": "kernidee/hoofdgedachte"
+      },
+      {
+        "groep": "Samenvatten",
+        "tekst": "argumenten"
+      },
+      {
+        "groep": "Samenvatten",
+        "tekst": "relevante details"
+      }
     ]
   },
   {
@@ -4340,6 +6776,56 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.2.8"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Tekststructuren/verhaalstructuur",
+        "tekst": "vormelijke elementen van tekststructuur/verhaalstructuur: titel, tussentitel, alinea, hoofdstuk, bladzijde, regel, cursief, vet, tekstopmaak"
+      },
+      {
+        "groep": "Tekststructuren/verhaalstructuur",
+        "tekst": "inhoudelijke elementen van tekststructuur: oorzaak-gevolgstructuur, chronologische opbouw, probleem-oplossingsstructuur, vergelijkende opbouw, beschrijvende opbouw"
+      },
+      {
+        "groep": "Tekststructuren/verhaalstructuur",
+        "tekst": "inhoudelijke elementen van verhaalstructuur: begin (kennismaking: personages, situatie, plaats), midden (probleem en obstakels), slot (oplossing en afloop); chronologische opbouw"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "het hoofdstuk"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "de bladzijde"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "de alinea"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "de regel"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "de titel"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "de tussentitel"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "de tekstopmaak"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "cursief"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "vet"
+      }
     ]
   },
   {
@@ -4354,7 +6840,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
       "11-12"
     ],
     "kennisverwerking": "gebruiken",
-    "minimumdoelen": []
+    "minimumdoelen": [],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.267",
@@ -4370,6 +6857,16 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "begrijpen",
     "minimumdoelen": [
       "1.2.9"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Functies van geschreven taal",
+        "tekst": "om te informeren"
+      },
+      {
+        "groep": "Functies van geschreven taal",
+        "tekst": "om te communiceren"
+      }
     ]
   },
   {
@@ -4386,6 +6883,16 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "begrijpen",
     "minimumdoelen": [
       "1.2.16"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Invloed auteur",
+        "tekst": "taalgebruik"
+      },
+      {
+        "groep": "Invloed auteur",
+        "tekst": "woordkeuze"
+      }
     ]
   },
   {
@@ -4402,7 +6909,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "engageren",
     "minimumdoelen": [
       "1.2.16"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.270",
@@ -4418,7 +6926,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.2.15"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.271",
@@ -4451,6 +6960,28 @@ export const LEERPLANDOELEN_NEDERLANDS = [
       "1.2.15",
       "1.2.16",
       "1.2.17"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Schrijfproces",
+        "tekst": "schrijven voorbereiden"
+      },
+      {
+        "groep": "Schrijfproces",
+        "tekst": "boodschap formuleren"
+      },
+      {
+        "groep": "Schrijfproces",
+        "tekst": "reviseren"
+      },
+      {
+        "groep": "Schrijfproces",
+        "tekst": "verzenden/ publiceren"
+      },
+      {
+        "groep": "Schrijfproces",
+        "tekst": "reflecteren op het schrijfproces"
+      }
     ]
   },
   {
@@ -4470,6 +7001,16 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "minimumdoelen": [
       "1.2.19",
       "1.2.18"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Uitvoeren",
+        "tekst": "met aandacht"
+      },
+      {
+        "groep": "Uitvoeren",
+        "tekst": "met doorzettingsvermogen"
+      }
     ]
   },
   {
@@ -4487,7 +7028,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "begrijpen",
     "minimumdoelen": [
       "1.2.9"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.274",
@@ -4504,7 +7046,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "begrijpen",
     "minimumdoelen": [
       "1.2.16"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.275",
@@ -4520,7 +7063,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "begrijpen",
     "minimumdoelen": [
       "1.2.15"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.276",
@@ -4543,7 +7087,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "minimumdoelen": [
       "1.2.16",
       "1.2.15"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.277",
@@ -4563,7 +7108,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "minimumdoelen": [
       "1.2.11",
       "1.2.10"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.278",
@@ -4583,7 +7129,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "minimumdoelen": [
       "1.2.11",
       "1.2.10"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.279",
@@ -4602,6 +7149,40 @@ export const LEERPLANDOELEN_NEDERLANDS = [
       "1.2.12",
       "1.2.13",
       "1.2.15"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Manieren om een schrijfonderwerp voor te bereiden",
+        "tekst": "inhoud bedenken, gebruikmakend van vakspecifieke kennis en voorkennis"
+      },
+      {
+        "groep": "Manieren om een schrijfonderwerp voor te bereiden",
+        "tekst": "verzamelen van ideeën en informatie via een woordspin of schema"
+      },
+      {
+        "groep": "Manieren om een schrijfonderwerp voor te bereiden",
+        "tekst": "selecteren van ideeën en geschikte informatie"
+      },
+      {
+        "groep": "Manieren om een schrijfonderwerp voor te bereiden",
+        "tekst": "ordenen van ideeën en verzamelde informatie via een woordspin of schema"
+      },
+      {
+        "groep": "Manieren om een schrijfonderwerp voor te bereiden",
+        "tekst": "structureren van ideeën en verzamelde informatie: begin, midden, slot"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "het begin"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "het midden"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "het slot"
+      }
     ]
   },
   {
@@ -4620,6 +7201,52 @@ export const LEERPLANDOELEN_NEDERLANDS = [
       "1.2.11",
       "1.2.12",
       "1.2.14"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Manieren om een schrijfonderwerp voor te bereiden",
+        "tekst": "inhoud bedenken, gebruikmakend van vakspecifieke kennis en voorkennis"
+      },
+      {
+        "groep": "Manieren om een schrijfonderwerp voor te bereiden",
+        "tekst": "inhoud bedenken met behulp van strategieën: brainstorm, vragen stellen, associëren"
+      },
+      {
+        "groep": "Manieren om een schrijfonderwerp voor te bereiden",
+        "tekst": "verzamelen van ideeën en informatie"
+      },
+      {
+        "groep": "Manieren om een schrijfonderwerp voor te bereiden",
+        "tekst": "selecteren van ideeën en geschikte informatie"
+      },
+      {
+        "groep": "Manieren om een schrijfonderwerp voor te bereiden",
+        "tekst": "ordenen van ideeën en verzamelde informatie"
+      },
+      {
+        "groep": "Manieren om een schrijfonderwerp voor te bereiden",
+        "tekst": "structureren van ideeën en verzamelde informatie: titel, tussentitels, alinea’s, structuuraanduiders"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "de titel"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "de tussentitel"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "de alinea"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "het verwijswoord"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "het verbindingswoord"
+      }
     ]
   },
   {
@@ -4639,7 +7266,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "minimumdoelen": [
       "1.2.13",
       "1.2.12"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.282",
@@ -4657,7 +7285,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.2.13"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.283",
@@ -4673,7 +7302,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.2.12"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.284",
@@ -4689,7 +7319,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "engageren",
     "minimumdoelen": [
       "1.2.10"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.285",
@@ -4706,6 +7337,16 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.2.10"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Schrijven",
+        "tekst": "samen met de leraar"
+      },
+      {
+        "groep": "Schrijven",
+        "tekst": "met letters, cijfers en al dan niet uitgevonden tekens"
+      }
     ]
   },
   {
@@ -4723,6 +7364,16 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "begrijpen",
     "minimumdoelen": [
       "1.2.10"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Principe van hardop schrijven",
+        "tekst": "gedachten weergeven in de vorm van woorden, zinnen en teksten"
+      },
+      {
+        "groep": "Principe van hardop schrijven",
+        "tekst": "zinnen en formuleringen uitproberen ‘in mijn hoofd’"
+      }
     ]
   },
   {
@@ -4740,6 +7391,20 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "minimumdoelen": [
       "1.2.14",
       "1.2.16"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Korte teksten",
+        "tekst": "met meestal één inhoudselement"
+      },
+      {
+        "groep": "Korte teksten",
+        "tekst": "vaak met chronologische opbouw"
+      },
+      {
+        "groep": "Korte teksten",
+        "tekst": "korte zinnen, meestal enkelvoudig, grammaticaal eenvoudig"
+      }
     ]
   },
   {
@@ -4758,6 +7423,20 @@ export const LEERPLANDOELEN_NEDERLANDS = [
       "1.2.11",
       "1.2.14",
       "1.2.16"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Langere teksten",
+        "tekst": "met enkele inhoudselementen"
+      },
+      {
+        "groep": "Langere teksten",
+        "tekst": "met chronologische opbouw"
+      },
+      {
+        "groep": "Langere teksten",
+        "tekst": "langere zinnen, naast enkelvoudige ook samengestelde zinnen"
+      }
     ]
   },
   {
@@ -4776,6 +7455,28 @@ export const LEERPLANDOELEN_NEDERLANDS = [
       "1.2.10",
       "1.2.13",
       "1.2.15"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Langere teksten",
+        "tekst": "met meerdere, samenhangende inhoudselementen: de tekst bevat steeds meer details, karakters worden steeds meer uitgediept, ideeën worden steeds dieper uitgewerkt"
+      },
+      {
+        "groep": "Langere teksten",
+        "tekst": "variatie in zinsbouw"
+      },
+      {
+        "groep": "Langere teksten",
+        "tekst": "gepaste woordkeuze"
+      },
+      {
+        "groep": "Langere teksten",
+        "tekst": "figuurlijk taalgebruik"
+      },
+      {
+        "groep": "Langere teksten",
+        "tekst": "register afgestemd op het publiek"
+      }
     ]
   },
   {
@@ -4794,7 +7495,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.2.18"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.291",
@@ -4810,7 +7512,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.2.18"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.292",
@@ -4829,6 +7532,28 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "minimumdoelen": [
       "1.2.18",
       "1.2.16"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Reviseren",
+        "tekst": "tekststructuur"
+      },
+      {
+        "groep": "Reviseren",
+        "tekst": "zinsbouw"
+      },
+      {
+        "groep": "Reviseren",
+        "tekst": "woordgebruik"
+      },
+      {
+        "groep": "Reviseren",
+        "tekst": "tekstconventies"
+      },
+      {
+        "groep": "Reviseren",
+        "tekst": "spelling"
+      }
     ]
   },
   {
@@ -4843,7 +7568,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
       "9-10"
     ],
     "kennisverwerking": "begrijpen",
-    "minimumdoelen": []
+    "minimumdoelen": [],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.294",
@@ -4857,7 +7583,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
       "11-12"
     ],
     "kennisverwerking": "begrijpen",
-    "minimumdoelen": []
+    "minimumdoelen": [],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.295",
@@ -4871,7 +7598,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
       "11-12"
     ],
     "kennisverwerking": "gebruiken",
-    "minimumdoelen": []
+    "minimumdoelen": [],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.296",
@@ -4885,7 +7613,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
       "5-6"
     ],
     "kennisverwerking": "engageren",
-    "minimumdoelen": []
+    "minimumdoelen": [],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.297",
@@ -4903,7 +7632,17 @@ export const LEERPLANDOELEN_NEDERLANDS = [
       "11-12"
     ],
     "kennisverwerking": "gebruiken",
-    "minimumdoelen": []
+    "minimumdoelen": [],
+    "aanklikbareItems": [
+      {
+        "groep": "Eigen geschreven teksten",
+        "tekst": "persoonlijke teksten"
+      },
+      {
+        "groep": "Eigen geschreven teksten",
+        "tekst": "teksten van de groep"
+      }
+    ]
   },
   {
     "nummer": "NL.298",
@@ -4924,6 +7663,36 @@ export const LEERPLANDOELEN_NEDERLANDS = [
       "1.2.17",
       "1.2.15",
       "1.2.17"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Criteria",
+        "tekst": "afgestemd op het publiek"
+      },
+      {
+        "groep": "Criteria",
+        "tekst": "gepast taalregister"
+      },
+      {
+        "groep": "Criteria",
+        "tekst": "gepaste woordkeuze"
+      },
+      {
+        "groep": "Criteria",
+        "tekst": "figuurlijk taalgebruik"
+      },
+      {
+        "groep": "Criteria",
+        "tekst": "variatie aan zinsbouw"
+      },
+      {
+        "groep": "Criteria",
+        "tekst": "gepaste tekstopmaak"
+      },
+      {
+        "groep": "Criteria",
+        "tekst": "gepaste kanaal en medium: geschreven tekst"
+      }
     ]
   },
   {
@@ -4940,7 +7709,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
       "11-12"
     ],
     "kennisverwerking": "begrijpen",
-    "minimumdoelen": []
+    "minimumdoelen": [],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.300",
@@ -4956,7 +7726,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
       "11-12"
     ],
     "kennisverwerking": "gebruiken",
-    "minimumdoelen": []
+    "minimumdoelen": [],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.301",
@@ -4972,7 +7743,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.2.17"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.302",
@@ -4988,6 +7760,16 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.2.17"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Verzorgde opmaak",
+        "tekst": "handgeschreven"
+      },
+      {
+        "groep": "Verzorgde opmaak",
+        "tekst": "digitaal"
+      }
     ]
   },
   {
@@ -5004,6 +7786,16 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.2.17"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Geschreven teksten",
+        "tekst": "voor verschillende doeleinden en -groepen"
+      },
+      {
+        "groep": "Vormgeven",
+        "tekst": "volgens gangbare schrijfconventies"
+      }
     ]
   },
   {
@@ -5023,6 +7815,16 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "minimumdoelen": [
       "1.2.18",
       "1.2.16"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Duiden gemaakte keuzes",
+        "tekst": "over het eigen schrijfproces en schrijfproduct"
+      },
+      {
+        "groep": "Duiden gemaakte keuzes",
+        "tekst": "over het schrijfproces en schrijfproduct van anderen"
+      }
     ]
   },
   {
@@ -5042,7 +7844,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "minimumdoelen": [
       "1.2.18",
       "1.2.16"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.306",
@@ -5059,7 +7862,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "minimumdoelen": [
       "1.2.18",
       "1.2.16"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.307",
@@ -5077,6 +7881,32 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "minimumdoelen": [
       "1.2.17",
       "1.2.17"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Schrijfconventies",
+        "tekst": "leesbaar handschrift"
+      },
+      {
+        "groep": "Schrijfconventies",
+        "tekst": "tekstopmaak afgestemd op teksttype en schrijfdoel"
+      },
+      {
+        "groep": "Schrijfconventies",
+        "tekst": "met aandacht voor een passende bladschikking: schrijven naast de kantlijn, schrijven op de schrijflijn, spaties tussen woorden, zinnen en alinea’s, afspraken rond het gebruik van leestekens"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "de tekstopmaak"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "cursief"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "vet"
+      }
     ]
   },
   {
@@ -5094,6 +7924,32 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "minimumdoelen": [
       "1.2.12",
       "1.2.15"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Tekststructuur",
+        "tekst": "vormelijke structuur"
+      },
+      {
+        "groep": "Tekststructuur",
+        "tekst": "inhoudelijke structuur: oorzaak-gevolgstructuur, chronologische opbouw, probleem-oplossingstructuur, vergelijkende opbouw, beschrijvende opbouw"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "de tekst"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "het begin"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "het midden"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "het slot"
+      }
     ]
   },
   {
@@ -5111,6 +7967,32 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "minimumdoelen": [
       "1.2.11",
       "1.2.14"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Tekststructuur",
+        "tekst": "vormelijke structuur"
+      },
+      {
+        "groep": "Tekststructuur",
+        "tekst": "inhoudelijke structuur: oorzaak-gevolgstructuur, chronologische opbouw, probleem-oplossingstructuur, vergelijkende opbouw, beschrijvende opbouw"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "de titel"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "de tussentitel"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "de alinea"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "de structuuraanduider"
+      }
     ]
   },
   {
@@ -5127,7 +8009,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.2.15"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.311",
@@ -5143,7 +8026,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.2.14"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.312",
@@ -5159,7 +8043,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.2.15"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.313",
@@ -5177,7 +8062,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "minimumdoelen": [
       "1.2.15",
       "1.2.14"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.314",
@@ -5193,7 +8079,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.2.14"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.315",
@@ -5211,6 +8098,20 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "begrijpen",
     "minimumdoelen": [
       "1.2.14"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Structuuraanduiders",
+        "tekst": "verwijswoorden: verwijzen naar iemand of iets wat eerder in de tekst genoemd was"
+      },
+      {
+        "groep": "Structuuraanduiders",
+        "tekst": "verbindingswoorden: leggen verbanden tussen zinnen en tussen alinea’s"
+      },
+      {
+        "groep": "Structuuraanduiders",
+        "tekst": "signaalwoorden: geven het soort verband tussen zinnen en tussen alinea’s weer (tijd: eerst, toen, daarna; oorzaak: omdat, doordat; gevolg: zodat, waardoor; tegenstelling: maar; opsomming: en, bovendien; conclusie: dus, daarom)"
+      }
     ]
   },
   {
@@ -5229,6 +8130,20 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.2.14"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Structuuraanduiders",
+        "tekst": "verwijswoorden: verwijzen naar iemand of iets wat eerder in de tekst genoemd was"
+      },
+      {
+        "groep": "Structuuraanduiders",
+        "tekst": "verbindingswoorden: leggen verbanden tussen zinnen en tussen alinea’s"
+      },
+      {
+        "groep": "Structuuraanduiders",
+        "tekst": "signaalwoorden: geven het soort verband tussen zinnen en tussen alinea’s weer"
+      }
     ]
   },
   {
@@ -5245,7 +8160,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.2.14"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.318",
@@ -5262,7 +8178,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.3.1"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.319",
@@ -5279,6 +8196,24 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.3.1"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Non-verbale communicatie",
+        "tekst": "blik gericht houden"
+      },
+      {
+        "groep": "Non-verbale communicatie",
+        "tekst": "blik van de leraar volgen"
+      },
+      {
+        "groep": "Non-verbale communicatie",
+        "tekst": "oogcontact maken"
+      },
+      {
+        "groep": "Non-verbale communicatie",
+        "tekst": "aandacht voor lichaamstaal, mimiek en stemgebruik van de spreker"
+      }
     ]
   },
   {
@@ -5296,6 +8231,16 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.3.4"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Context",
+        "tekst": "visuele ondersteuning: boeken, prenten, concreet materiaal, presentatie, gebaren, mimiek"
+      },
+      {
+        "groep": "Context",
+        "tekst": "auditieve ondersteuning: stemgebruik, intonatie"
+      }
     ]
   },
   {
@@ -5311,7 +8256,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.3.2"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.322",
@@ -5327,7 +8273,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.3.2"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.323",
@@ -5344,6 +8291,28 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.3.2"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Reageren",
+        "tekst": "verbaal"
+      },
+      {
+        "groep": "Reageren",
+        "tekst": "non-verbaal"
+      },
+      {
+        "groep": "Vragen",
+        "tekst": "open vragen"
+      },
+      {
+        "groep": "Vragen",
+        "tekst": "gesloten vragen"
+      },
+      {
+        "groep": "Vragen",
+        "tekst": "denkstimulerende vragen"
+      }
     ]
   },
   {
@@ -5360,6 +8329,16 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.3.3"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Luisteropdracht",
+        "tekst": "om meer informatie te krijgen"
+      },
+      {
+        "groep": "Luisteropdracht",
+        "tekst": "om na te gaan of ze de boodschap goed begrepen hebben"
+      }
     ]
   },
   {
@@ -5379,7 +8358,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "begrijpen",
     "minimumdoelen": [
       "1.3.1"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.326",
@@ -5398,7 +8378,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.3.1"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.327",
@@ -5414,7 +8395,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "begrijpen",
     "minimumdoelen": [
       "1.3.1"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.328",
@@ -5430,7 +8412,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.3.1"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.329",
@@ -5448,6 +8431,16 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.3.4"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Relaties en verbanden",
+        "tekst": "oorzaak en gevolg"
+      },
+      {
+        "groep": "Relaties en verbanden",
+        "tekst": "probleem en oplossing"
+      }
     ]
   },
   {
@@ -5464,6 +8457,24 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.3.2"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Relaties en verbanden",
+        "tekst": "oorzaak en gevolg"
+      },
+      {
+        "groep": "Relaties en verbanden",
+        "tekst": "probleem en oplossing"
+      },
+      {
+        "groep": "Relaties en verbanden",
+        "tekst": "middel-doelrelatie"
+      },
+      {
+        "groep": "Relaties en verbanden",
+        "tekst": "conclusie trekken: informatie uit de tekst combineren om tot een conclusie te komen"
+      }
     ]
   },
   {
@@ -5480,7 +8491,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.3.1"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.332",
@@ -5499,6 +8511,16 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "minimumdoelen": [
       "1.3.10",
       "1.3.14"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "de mening"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "het feit"
+      }
     ]
   },
   {
@@ -5518,7 +8540,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "minimumdoelen": [
       "1.3.10",
       "1.3.14"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.334",
@@ -5536,6 +8559,16 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.3.4"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Verbindingen",
+        "tekst": "tussen de tekst en eigen ervaringen"
+      },
+      {
+        "groep": "Verbindingen",
+        "tekst": "tussen de tekst en vakspecifieke (voor)kennis"
+      }
     ]
   },
   {
@@ -5556,6 +8589,20 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "minimumdoelen": [
       "1.3.3",
       "1.3.2"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Verbindingen",
+        "tekst": "tussen de tekst en eigen ervaringen voorkennis"
+      },
+      {
+        "groep": "Verbindingen",
+        "tekst": "tussen de tekst en vakspecifieke (voor)kennis"
+      },
+      {
+        "groep": "Verbindingen",
+        "tekst": "tussen passages uit de tekst"
+      }
     ]
   },
   {
@@ -5580,7 +8627,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "minimumdoelen": [
       "1.3.3",
       "1.3.2"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.337",
@@ -5596,6 +8644,28 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.3.2"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Analyseren",
+        "tekst": "relatie tussen zender en ontvanger"
+      },
+      {
+        "groep": "Analyseren",
+        "tekst": "houding van de zender ten opzichte van de ontvanger en omgekeerd"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "communicatie"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "de zender"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "de ontvanger"
+      }
     ]
   },
   {
@@ -5612,6 +8682,24 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.3.2"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Analyseren",
+        "tekst": "relatie tussen boodschap en kanaal"
+      },
+      {
+        "groep": "Analyseren",
+        "tekst": "mening, feit"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "de boodschap"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "het kanaal"
+      }
     ]
   },
   {
@@ -5628,7 +8716,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.3.4"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.340",
@@ -5644,6 +8733,28 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.3.1"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Analyseren",
+        "tekst": "het medium herkennen als drager van de boodschap"
+      },
+      {
+        "groep": "Analyseren",
+        "tekst": "het kanaal herkennen als de weg waarlangs de boodschap wordt verspreid"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "communicatie"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "het medium"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "het kanaal"
+      }
     ]
   },
   {
@@ -5660,7 +8771,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.3.3"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.342",
@@ -5676,7 +8788,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "engageren",
     "minimumdoelen": [
       "1.3.4"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.343",
@@ -5693,6 +8806,16 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "begrijpen",
     "minimumdoelen": [
       "1.3.3"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Sturingsstrategieën",
+        "tekst": "actualiseren van kennis en woordenschat"
+      },
+      {
+        "groep": "Sturingsstrategieën",
+        "tekst": "actief luisteren met behulp van luisterstrategieën"
+      }
     ]
   },
   {
@@ -5710,7 +8833,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.3.3"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.345",
@@ -5730,6 +8854,20 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "begrijpen",
     "minimumdoelen": [
       "1.3.3"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Herstelstrategieën - controle van begrip door",
+        "tekst": "vragen om herhaling"
+      },
+      {
+        "groep": "Herstelstrategieën - controle van begrip door",
+        "tekst": "vragen om verduidelijking"
+      },
+      {
+        "groep": "Herstelstrategieën - controle van begrip door",
+        "tekst": "vragen om tempo of volume aan te passen"
+      }
     ]
   },
   {
@@ -5752,7 +8890,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.3.3"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.347",
@@ -5774,7 +8913,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "engageren",
     "minimumdoelen": [
       "1.3.3"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.348",
@@ -5791,6 +8931,28 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "begrijpen",
     "minimumdoelen": [
       "1.3.5"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Sturingsstrategieën",
+        "tekst": "luisterdoel bepalen"
+      },
+      {
+        "groep": "Sturingsstrategieën",
+        "tekst": "toepassen van herstelstrategieën"
+      },
+      {
+        "groep": "Sturingsstrategieën",
+        "tekst": "controle bereiken luisterdoel"
+      },
+      {
+        "groep": "Sturingsstrategieën",
+        "tekst": "actief luisteren door toepassen van luisterstrategieën"
+      },
+      {
+        "groep": "Sturingsstrategieën",
+        "tekst": "actualiseren van kennis en woordenschat"
+      }
     ]
   },
   {
@@ -5811,7 +8973,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "minimumdoelen": [
       "1.3.5",
       "1.3.2"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.350",
@@ -5832,6 +8995,24 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "minimumdoelen": [
       "1.3.5",
       "1.3.2"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Een variatie aan manieren van luisteren",
+        "tekst": "globaal luisteren"
+      },
+      {
+        "groep": "Een variatie aan manieren van luisteren",
+        "tekst": "intensief luisteren"
+      },
+      {
+        "groep": "Een variatie aan manieren van luisteren",
+        "tekst": "kritisch luisteren"
+      },
+      {
+        "groep": "Een variatie aan manieren van luisteren",
+        "tekst": "empatisch luisteren"
+      }
     ]
   },
   {
@@ -5856,7 +9037,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
       "1.3.3",
       "1.3.5",
       "1.3.2"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.352",
@@ -5873,6 +9055,24 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "begrijpen",
     "minimumdoelen": [
       "1.3.4"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Luisterstrategieën",
+        "tekst": "voorspellen"
+      },
+      {
+        "groep": "Luisterstrategieën",
+        "tekst": "vragen stellen"
+      },
+      {
+        "groep": "Luisterstrategieën",
+        "tekst": "visualiseren"
+      },
+      {
+        "groep": "Luisterstrategieën",
+        "tekst": "verbinden"
+      }
     ]
   },
   {
@@ -5890,7 +9090,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.3.4"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.354",
@@ -5907,6 +9108,56 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "begrijpen",
     "minimumdoelen": [
       "1.3.3"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Luisterstrategieën",
+        "tekst": "voorspellen"
+      },
+      {
+        "groep": "Luisterstrategieën",
+        "tekst": "vragen stellen"
+      },
+      {
+        "groep": "Luisterstrategieën",
+        "tekst": "visualiseren"
+      },
+      {
+        "groep": "Luisterstrategieën",
+        "tekst": "verbinden"
+      },
+      {
+        "groep": "Luisterstrategieën",
+        "tekst": "samenvatten"
+      },
+      {
+        "groep": "Luisterstrategieën",
+        "tekst": "afleiden"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "voorspellen"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "vragen stellen"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "visualiseren"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "verbinden"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "samenvatten"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "afleiden"
+      }
     ]
   },
   {
@@ -5928,7 +9179,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
       "1.3.3",
       "1.3.5",
       "1.3.2"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.356",
@@ -5944,6 +9196,20 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.3.2"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Selecteren",
+        "tekst": "Wanneer de luisterstrategie inzetten?"
+      },
+      {
+        "groep": "Selecteren",
+        "tekst": "Waarom de luisterstrategie inzetten?"
+      },
+      {
+        "groep": "Selecteren",
+        "tekst": "Welke luisterstrategie inzetten?"
+      }
     ]
   },
   {
@@ -5968,7 +9234,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
       "1.3.3",
       "1.3.5",
       "1.3.2"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.358",
@@ -5984,6 +9251,12 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "begrijpen",
     "minimumdoelen": [
       "1.3.5"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Factoren voor verstaanbaar spreken",
+        "tekst": "passend volume"
+      }
     ]
   },
   {
@@ -6000,6 +9273,16 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "begrijpen",
     "minimumdoelen": [
       "1.3.7"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Factoren voor verstaanbaar spreken",
+        "tekst": "correcte uitspraak van klanken en klankcombinaties"
+      },
+      {
+        "groep": "Factoren voor verstaanbaar spreken",
+        "tekst": "duidelijke articulatie"
+      }
     ]
   },
   {
@@ -6016,6 +9299,20 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "begrijpen",
     "minimumdoelen": [
       "1.3.7"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Factoren voor verstaanbaar spreken",
+        "tekst": "gepaste klemtoon: zinsaccent en woordaccent"
+      },
+      {
+        "groep": "Factoren voor verstaanbaar spreken",
+        "tekst": "met een ondersteunende houding, passende gebaren en passende mimiek"
+      },
+      {
+        "groep": "Factoren voor verstaanbaar spreken",
+        "tekst": "met natuurlijkheid en emotionaliteit"
+      }
     ]
   },
   {
@@ -6039,7 +9336,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "minimumdoelen": [
       "1.3.5",
       "1.3.7"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.362",
@@ -6055,6 +9353,16 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.3.11"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Afstemmen",
+        "tekst": "expressie"
+      },
+      {
+        "groep": "Afstemmen",
+        "tekst": "taalregister: formeel en informeel"
+      }
     ]
   },
   {
@@ -6071,7 +9379,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.3.9"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.364",
@@ -6087,6 +9396,16 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.3.9"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Gepast register",
+        "tekst": "formele taal"
+      },
+      {
+        "groep": "Gepast register",
+        "tekst": "informele taal"
+      }
     ]
   },
   {
@@ -6103,7 +9422,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.3.12"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.366",
@@ -6119,6 +9439,20 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.3.12"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Non-verbale communicatie",
+        "tekst": "mimiek"
+      },
+      {
+        "groep": "Non-verbale communicatie",
+        "tekst": "intonatie"
+      },
+      {
+        "groep": "Non-verbale communicatie",
+        "tekst": "lichaamstaal: oogcontact, lichaamshouding, gebaren"
+      }
     ]
   },
   {
@@ -6135,7 +9469,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "begrijpen",
     "minimumdoelen": [
       "1.3.9"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.368",
@@ -6153,6 +9488,20 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "minimumdoelen": [
       "1.3.8",
       "1.3.9"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Factoren van begrijpelijk en gepast spreken",
+        "tekst": "woordkeuze"
+      },
+      {
+        "groep": "Factoren van begrijpelijk en gepast spreken",
+        "tekst": "correcte zinsconstructies"
+      },
+      {
+        "groep": "Factoren van begrijpelijk en gepast spreken",
+        "tekst": "samenhang"
+      }
     ]
   },
   {
@@ -6171,6 +9520,20 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "minimumdoelen": [
       "1.3.5",
       "1.3.6"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Factoren van begrijpelijk en gepast spreken",
+        "tekst": "gepaste woordkeuze"
+      },
+      {
+        "groep": "Factoren van begrijpelijk en gepast spreken",
+        "tekst": "complexere zinsconstructies"
+      },
+      {
+        "groep": "Factoren van begrijpelijk en gepast spreken",
+        "tekst": "ideeën, gedachten en verworven inzichten  gestructureerd formuleren"
+      }
     ]
   },
   {
@@ -6197,7 +9560,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
       "1.3.9",
       "1.3.5",
       "1.3.6"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.371",
@@ -6215,6 +9579,16 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.3.7"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Samenhangend",
+        "tekst": "met een aanzet tot volgorde"
+      },
+      {
+        "groep": "Samenhangend",
+        "tekst": "met een aanzet tot gebruik van structuuraanduiders (verwijs- en verbindingswoorden)"
+      }
     ]
   },
   {
@@ -6231,6 +9605,16 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "begrijpen",
     "minimumdoelen": [
       "1.3.9"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Gestructureerd en samenhangend",
+        "tekst": "logische en gemakkelijk te volgen samenhang"
+      },
+      {
+        "groep": "Gestructureerd en samenhangend",
+        "tekst": "verbanden duidelijk aangevend met gebruik van gepaste structuuraanduiders (verwijs-, signaal- en verbindingswoorden)"
+      }
     ]
   },
   {
@@ -6249,6 +9633,28 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "minimumdoelen": [
       "1.3.9",
       "1.3.6"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Gestructureerd en samenhangend spreken",
+        "tekst": "logische en gemakkelijk te volgen samenhang"
+      },
+      {
+        "groep": "Gestructureerd en samenhangend spreken",
+        "tekst": "verbanden duidelijk aangevend met gebruik van gepaste structuuraanduiders (verwijs-, signaal- en verbindingswoorden)"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "het begin"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "het midden"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "het slot"
+      }
     ]
   },
   {
@@ -6269,6 +9675,16 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "minimumdoelen": [
       "1.3.9",
       "1.3.6"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Gestructureerd en samenhangend",
+        "tekst": "logische en gemakkelijk te volgen samenhang"
+      },
+      {
+        "groep": "Gestructureerd en samenhangend",
+        "tekst": "verbanden duidelijk aangevend met gebruik van gepaste structuuraanduiders (verwijs-, signaal- en verbindingswoorden)"
+      }
     ]
   },
   {
@@ -6293,7 +9709,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
       "1.3.7",
       "1.3.9",
       "1.3.6"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.376",
@@ -6309,7 +9726,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.3.6"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.377",
@@ -6325,7 +9743,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.3.6"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.378",
@@ -6341,6 +9760,16 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.3.6"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Basiszinnen",
+        "tekst": "met aandacht voor eenvoudige zinsconstructies"
+      },
+      {
+        "groep": "Basiszinnen",
+        "tekst": "mededelende, vragende enkelvoudige en eenvoudige samengestelde zinnen"
+      }
     ]
   },
   {
@@ -6356,6 +9785,12 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.3.8"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Soorten zinnen",
+        "tekst": "enkelvoudige zinnen"
+      }
     ]
   },
   {
@@ -6373,6 +9808,20 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.3.8"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Soorten zinnen",
+        "tekst": "enkelvoudige zinnen"
+      },
+      {
+        "groep": "Soorten zinnen",
+        "tekst": "samengestelde zinnen: verbanden leggen met behulp van structuuraanduiders"
+      },
+      {
+        "groep": "Soorten zinnen",
+        "tekst": "de mededelende zin, de vragende zin, de uitroepende zin, de ontkennende zin, de gebiedende wijs"
+      }
     ]
   },
   {
@@ -6388,6 +9837,20 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.3.5"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Soorten zinnen",
+        "tekst": "enkelvoudige complexere zinnen"
+      },
+      {
+        "groep": "Soorten zinnen",
+        "tekst": "samengestelde zinnen: verbanden leggen met behulp structuuraanduiders"
+      },
+      {
+        "groep": "Soorten zinnen",
+        "tekst": "de mededelende zin, de vragende zin, de uitroepende zin, de ontkennende zin, de gebiedende wijs"
+      }
     ]
   },
   {
@@ -6403,6 +9866,20 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.3.5"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Soorten zinnen",
+        "tekst": "enkelvoudige complexere zinnen"
+      },
+      {
+        "groep": "Soorten zinnen",
+        "tekst": "samengestelde complexere zinnen: verbanden leggen met behulp structuuraanduiders"
+      },
+      {
+        "groep": "Soorten zinnen",
+        "tekst": "de mededelende zin, de vragende zin, de uitroepende zin, de ontkennende zin, de gebiedende wijs"
+      }
     ]
   },
   {
@@ -6423,6 +9900,28 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "minimumdoelen": [
       "1.3.6",
       "1.3.8"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Stappen in het spreekproces",
+        "tekst": "spreken voorbereiden"
+      },
+      {
+        "groep": "Stappen in het spreekproces",
+        "tekst": "boodschap formuleren"
+      },
+      {
+        "groep": "Stappen in het spreekproces",
+        "tekst": "reviseren"
+      },
+      {
+        "groep": "Stappen in het spreekproces",
+        "tekst": "presenteren"
+      },
+      {
+        "groep": "Stappen in het spreekproces",
+        "tekst": "reflecteren op het spreekproces"
+      }
     ]
   },
   {
@@ -6444,7 +9943,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "minimumdoelen": [
       "1.3.6",
       "1.3.8"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.385",
@@ -6463,7 +9963,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "minimumdoelen": [
       "1.3.6",
       "1.3.8"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.386",
@@ -6482,7 +9983,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "minimumdoelen": [
       "1.3.6",
       "1.3.8"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.387",
@@ -6501,7 +10003,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "minimumdoelen": [
       "1.3.10",
       "1.3.8"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.388",
@@ -6517,7 +10020,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.3.7"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.389",
@@ -6534,7 +10038,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.3.8"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.390",
@@ -6551,6 +10056,16 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "minimumdoelen": [
       "1.3.7",
       "1.3.8"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Vertellen",
+        "tekst": "met aandacht voor eenvoudige zinsconstructies"
+      },
+      {
+        "groep": "Vertellen",
+        "tekst": "met een logische en gemakkelijk te volgen samenhang"
+      }
     ]
   },
   {
@@ -6570,6 +10085,32 @@ export const LEERPLANDOELEN_NEDERLANDS = [
       "1.3.7",
       "1.3.8",
       "1.3.9"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Spreken",
+        "tekst": "in een variatie aan teksten"
+      },
+      {
+        "groep": "Spreken",
+        "tekst": "voor een publiek"
+      },
+      {
+        "groep": "Begrijpelijk, gepast en samenhangend",
+        "tekst": "met aandacht voor goedgekozen woorden"
+      },
+      {
+        "groep": "Begrijpelijk, gepast en samenhangend",
+        "tekst": "met aandacht voor zinsconstructies die niet complexer zijn dan nodig"
+      },
+      {
+        "groep": "Begrijpelijk, gepast en samenhangend",
+        "tekst": "met aandacht voor Standaardnederlands en zinsaccent"
+      },
+      {
+        "groep": "Begrijpelijk, gepast en samenhangend",
+        "tekst": "met een logische en gemakkelijk te volgen samenhang"
+      }
     ]
   },
   {
@@ -6588,6 +10129,52 @@ export const LEERPLANDOELEN_NEDERLANDS = [
       "1.3.7",
       "1.3.8",
       "1.3.9"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Spreken",
+        "tekst": "in een variatie aan teksten"
+      },
+      {
+        "groep": "Spreken",
+        "tekst": "voor een publiek"
+      },
+      {
+        "groep": "Begrijpelijk, gepast en samenhangend",
+        "tekst": "met aandacht voor goedgekozen woorden"
+      },
+      {
+        "groep": "Begrijpelijk, gepast en samenhangend",
+        "tekst": "met aandacht voor een gepaste woordkeuze"
+      },
+      {
+        "groep": "Begrijpelijk, gepast en samenhangend",
+        "tekst": "met aandacht voor zinsconstructies die niet complexer zijn dan nodig"
+      },
+      {
+        "groep": "Begrijpelijk, gepast en samenhangend",
+        "tekst": "met aandacht voor Standaardnederlands en zinsaccent"
+      },
+      {
+        "groep": "Begrijpelijk, gepast en samenhangend",
+        "tekst": "met aandacht voor correcte inhoud in het geval van informatieve en prescriptieve teksten"
+      },
+      {
+        "groep": "Begrijpelijk, gepast en samenhangend",
+        "tekst": "met aandacht voor onderbouwing bij meningen en standpunten"
+      },
+      {
+        "groep": "Begrijpelijk, gepast en samenhangend",
+        "tekst": "in een gepast register"
+      },
+      {
+        "groep": "Begrijpelijk, gepast en samenhangend",
+        "tekst": "met een logische en gemakkelijk te volgen samenhang"
+      },
+      {
+        "groep": "Begrijpelijk, gepast en samenhangend",
+        "tekst": "verbanden duidelijk aangevend met gebruik van verwijs- en verbindingswoorden"
+      }
     ]
   },
   {
@@ -6607,6 +10194,48 @@ export const LEERPLANDOELEN_NEDERLANDS = [
       "1.3.6",
       "1.3.7",
       "1.3.9"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Spreken",
+        "tekst": "in een variatie aan teksten"
+      },
+      {
+        "groep": "Spreken",
+        "tekst": "voor een publiek"
+      },
+      {
+        "groep": "Begrijpelijk, gepast en samenhangend",
+        "tekst": "met aandacht voor goedgekozen woorden."
+      },
+      {
+        "groep": "Begrijpelijk, gepast en samenhangend",
+        "tekst": "met aandacht voor een gepaste woordkeuze."
+      },
+      {
+        "groep": "Begrijpelijk, gepast en samenhangend",
+        "tekst": "met aandacht voor complexere zinsconstructies die duidelijk zijn voor de luisteraar"
+      },
+      {
+        "groep": "Begrijpelijk, gepast en samenhangend",
+        "tekst": "met aandacht voor correcte inhoud in het geval van informatieve en prescriptieve teksten"
+      },
+      {
+        "groep": "Begrijpelijk, gepast en samenhangend",
+        "tekst": "met aandacht voor onderbouwing bij meningen en standpunten"
+      },
+      {
+        "groep": "Begrijpelijk, gepast en samenhangend",
+        "tekst": "in een gepast register"
+      },
+      {
+        "groep": "Begrijpelijk, gepast en samenhangend",
+        "tekst": "met een logische en gemakkelijk te volgen samenhang"
+      },
+      {
+        "groep": "Begrijpelijk, gepast en samenhangend",
+        "tekst": "verbanden duidelijk aangevend met gebruik van verwijs- en verbindingswoorden"
+      }
     ]
   },
   {
@@ -6622,7 +10251,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "begrijpen",
     "minimumdoelen": [
       "1.3.13"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.395",
@@ -6637,7 +10267,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.3.13"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.396",
@@ -6654,6 +10285,16 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "begrijpen",
     "minimumdoelen": [
       "1.3.13"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Fouten",
+        "tekst": "fout uitgesproken klanken, woorden en zinnen"
+      },
+      {
+        "groep": "Fouten",
+        "tekst": "onduidelijke articulatie"
+      }
     ]
   },
   {
@@ -6671,6 +10312,16 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.3.13"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Verbeteren",
+        "tekst": "fout uitgesproken klanken, woorden en zinnen juist herhalen"
+      },
+      {
+        "groep": "Verbeteren",
+        "tekst": "de intonatie en klemtoon passend bij de gesproken tekst herhalen"
+      }
     ]
   },
   {
@@ -6688,6 +10339,20 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "begrijpen",
     "minimumdoelen": [
       "1.3.13"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Fouten",
+        "tekst": "fout uitgesproken klanken, woorden en zinnen juist herhalen"
+      },
+      {
+        "groep": "Fouten",
+        "tekst": "de intonatie en klemtoon passend bij de gesproken tekst herhalen"
+      },
+      {
+        "groep": "Fouten",
+        "tekst": "een opbouw, gedachtegang of redenering herformuleren in functie van het begrip en de samenhang"
+      }
     ]
   },
   {
@@ -6705,6 +10370,20 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.3.13"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Verbeteren",
+        "tekst": "fout uitgesproken klanken, woorden en zinnen juist herhalen"
+      },
+      {
+        "groep": "Verbeteren",
+        "tekst": "de intonatie en klemtoon passend bij de gesproken tekst herhalen"
+      },
+      {
+        "groep": "Verbeteren",
+        "tekst": "een opbouw, gedachtegang of redenering herformuleren in functie van het begrip en de samenhang"
+      }
     ]
   },
   {
@@ -6721,6 +10400,16 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.3.8"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Vertellen",
+        "tekst": "over ervaringen vanuit de eigen leefwereld en de klas- en schoolomgeving"
+      },
+      {
+        "groep": "Vertellen",
+        "tekst": "over een plan van aanpak"
+      }
     ]
   },
   {
@@ -6737,6 +10426,24 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.3.9"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Presenteren",
+        "tekst": "beschrijven van een voorwerp, persoon, dier of plaats"
+      },
+      {
+        "groep": "Presenteren",
+        "tekst": "verslag uitbrengen over een ervaring of beleving"
+      },
+      {
+        "groep": "Presenteren",
+        "tekst": "instructie geven over een plan van aanpak (uitleggen hoe je iets moet doen)"
+      },
+      {
+        "groep": "Presenteren",
+        "tekst": "een mededeling doen"
+      }
     ]
   },
   {
@@ -6754,6 +10461,32 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "minimumdoelen": [
       "1.3.9",
       "1.3.10"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Presenteren",
+        "tekst": "verslag uitbrengen over een leeractiviteit"
+      },
+      {
+        "groep": "Presenteren",
+        "tekst": "verzamelde informatie over een persoonlijk interesseveld uiteenzetten"
+      },
+      {
+        "groep": "Presenteren",
+        "tekst": "een beschrijving geven"
+      },
+      {
+        "groep": "Presenteren",
+        "tekst": "een mededeling of aankondiging doen"
+      },
+      {
+        "groep": "Presenteren",
+        "tekst": "een anekdote vertellen"
+      },
+      {
+        "groep": "Presenteren",
+        "tekst": "een mening formuleren"
+      }
     ]
   },
   {
@@ -6771,6 +10504,24 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "minimumdoelen": [
       "1.3.6",
       "1.3.7"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Presenteren",
+        "tekst": "inzichten en besluit van een eerder gevoerd onderzoek delen"
+      },
+      {
+        "groep": "Presenteren",
+        "tekst": "een mening uiteenzetten en beargumenteren"
+      },
+      {
+        "groep": "Presenteren",
+        "tekst": "een oproep tot actie voeren"
+      },
+      {
+        "groep": "Presenteren",
+        "tekst": "informatie, verzameld uit verschillende bronnen delen"
+      }
     ]
   },
   {
@@ -6787,6 +10538,16 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.3.12"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Hulpmiddelen",
+        "tekst": "concreet materiaal"
+      },
+      {
+        "groep": "Hulpmiddelen",
+        "tekst": "afbeeldingen"
+      }
     ]
   },
   {
@@ -6805,6 +10566,20 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.3.12"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Hulpmiddelen",
+        "tekst": "concreet materiaal"
+      },
+      {
+        "groep": "Hulpmiddelen",
+        "tekst": "afbeeldingen"
+      },
+      {
+        "groep": "Hulpmiddelen",
+        "tekst": "digitale hulpmiddelen zoals presentatiesoftware"
+      }
     ]
   },
   {
@@ -6819,7 +10594,17 @@ export const LEERPLANDOELEN_NEDERLANDS = [
       "7-8"
     ],
     "kennisverwerking": "engageren",
-    "minimumdoelen": []
+    "minimumdoelen": [],
+    "aanklikbareItems": [
+      {
+        "groep": "Eigen spreekproces",
+        "tekst": "de formulering van de boodschap tijdens het spreken"
+      },
+      {
+        "groep": "Eigen spreekproces",
+        "tekst": "de presentatie bij het spreken"
+      }
+    ]
   },
   {
     "nummer": "NL.407",
@@ -6835,7 +10620,29 @@ export const LEERPLANDOELEN_NEDERLANDS = [
       "11-12"
     ],
     "kennisverwerking": "engageren",
-    "minimumdoelen": []
+    "minimumdoelen": [],
+    "aanklikbareItems": [
+      {
+        "groep": "Eigen spreekproces",
+        "tekst": "de voorbereiding voor het spreken"
+      },
+      {
+        "groep": "Eigen spreekproces",
+        "tekst": "de keuze van het teksttype in functie van de boodschap en het publiek/ de ontvanger"
+      },
+      {
+        "groep": "Eigen spreekproces",
+        "tekst": "de formulering van de boodschap tijdens het spreken"
+      },
+      {
+        "groep": "Eigen spreekproces",
+        "tekst": "het eventuele reviseren of verbeteren tijdens het spreken"
+      },
+      {
+        "groep": "Eigen spreekproces",
+        "tekst": "de presentatie bij het spreken"
+      }
+    ]
   },
   {
     "nummer": "NL.408",
@@ -6849,7 +10656,25 @@ export const LEERPLANDOELEN_NEDERLANDS = [
       "9-10"
     ],
     "kennisverwerking": "begrijpen",
-    "minimumdoelen": []
+    "minimumdoelen": [],
+    "aanklikbareItems": [
+      {
+        "groep": "Kenmerken van een spreekstijl",
+        "tekst": "verstaanbaarheid"
+      },
+      {
+        "groep": "Kenmerken van een spreekstijl",
+        "tekst": "het gebruik van lichaamstaal"
+      },
+      {
+        "groep": "Kenmerken van een spreekstijl",
+        "tekst": "expressie"
+      },
+      {
+        "groep": "Kenmerken van een spreekstijl",
+        "tekst": "taalregister"
+      }
+    ]
   },
   {
     "nummer": "NL.409",
@@ -6863,7 +10688,25 @@ export const LEERPLANDOELEN_NEDERLANDS = [
       "9-10"
     ],
     "kennisverwerking": "engageren",
-    "minimumdoelen": []
+    "minimumdoelen": [],
+    "aanklikbareItems": [
+      {
+        "groep": "Spreekstijl",
+        "tekst": "verstaanbaarheid"
+      },
+      {
+        "groep": "Spreekstijl",
+        "tekst": "het gebruik van lichaamstaal"
+      },
+      {
+        "groep": "Spreekstijl",
+        "tekst": "expressie"
+      },
+      {
+        "groep": "Spreekstijl",
+        "tekst": "taalregister"
+      }
+    ]
   },
   {
     "nummer": "NL.410",
@@ -6877,7 +10720,29 @@ export const LEERPLANDOELEN_NEDERLANDS = [
       "11-12"
     ],
     "kennisverwerking": "engageren",
-    "minimumdoelen": []
+    "minimumdoelen": [],
+    "aanklikbareItems": [
+      {
+        "groep": "Spreekstijl",
+        "tekst": "verstaanbaarheid"
+      },
+      {
+        "groep": "Spreekstijl",
+        "tekst": "het gebruik van lichaamstaal"
+      },
+      {
+        "groep": "Spreekstijl",
+        "tekst": "expressie"
+      },
+      {
+        "groep": "Spreekstijl",
+        "tekst": "taalregister"
+      },
+      {
+        "groep": "Spreekstijl",
+        "tekst": "taalgebruik: complexiteit van zinnen, rijkdom van de woordenschat, breedvoerig of beknopt"
+      }
+    ]
   },
   {
     "nummer": "NL.411",
@@ -6891,7 +10756,17 @@ export const LEERPLANDOELEN_NEDERLANDS = [
       "11-12"
     ],
     "kennisverwerking": "engageren",
-    "minimumdoelen": []
+    "minimumdoelen": [],
+    "aanklikbareItems": [
+      {
+        "groep": "Reflecteren",
+        "tekst": "zich relevante zaken afvragen en vragen stellen"
+      },
+      {
+        "groep": "Reflecteren",
+        "tekst": "verbindingen zoeken tussen wat deelnemers zeggen"
+      }
+    ]
   },
   {
     "nummer": "NL.412",
@@ -6908,6 +10783,20 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.3.9"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Gesprekken",
+        "tekst": "rechtstreeks aansluitend bij de plaats, tijd en situatie waarin ze plaatsvinden"
+      },
+      {
+        "groep": "Gesprekken",
+        "tekst": "los van de zichtbare werkelijkheid"
+      },
+      {
+        "groep": "Gesprekken",
+        "tekst": "kringgesprek"
+      }
     ]
   },
   {
@@ -6924,6 +10813,32 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.3.14"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Participeren",
+        "tekst": "doelgericht luisteren, spreken en non-verbaal reageren in het gesprek"
+      },
+      {
+        "groep": "Gesprekken",
+        "tekst": "kringgesprek"
+      },
+      {
+        "groep": "Gesprekken",
+        "tekst": "onderwijsleergesprek"
+      },
+      {
+        "groep": "Gesprekken",
+        "tekst": "gesprek om informatie te geven of te vragen"
+      },
+      {
+        "groep": "Gesprekken",
+        "tekst": "dialoog"
+      },
+      {
+        "groep": "Gesprekken",
+        "tekst": "gesprekken in kleine groepen"
+      }
     ]
   },
   {
@@ -6940,6 +10855,32 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.3.14"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Participeren",
+        "tekst": "doelgericht luisteren, spreken en non-verbaal reageren in het gesprek"
+      },
+      {
+        "groep": "Gesprekken",
+        "tekst": "onderwijsleergesprek"
+      },
+      {
+        "groep": "Gesprekken",
+        "tekst": "gesprek om informatie te geven of te vragen"
+      },
+      {
+        "groep": "Gesprekken",
+        "tekst": "dialoog"
+      },
+      {
+        "groep": "Gesprekken",
+        "tekst": "groepsgesprek"
+      },
+      {
+        "groep": "Gesprekken",
+        "tekst": "discussie"
+      }
     ]
   },
   {
@@ -6956,6 +10897,32 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.3.10"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Participeren",
+        "tekst": "Doelgericht en genuanceerd luisteren, spreken en non-verbaal reageren in het gesprek."
+      },
+      {
+        "groep": "Gesprekken",
+        "tekst": "onderwijsleergesprek"
+      },
+      {
+        "groep": "Gesprekken",
+        "tekst": "gesprek om informatie te geven of te vragen"
+      },
+      {
+        "groep": "Gesprekken",
+        "tekst": "dialoog"
+      },
+      {
+        "groep": "Gesprekken",
+        "tekst": "groepsgesprek"
+      },
+      {
+        "groep": "Gesprekken",
+        "tekst": "discussie"
+      }
     ]
   },
   {
@@ -6974,6 +10941,16 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "minimumdoelen": [
       "1.3.9",
       "1.3.14"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Onderhandelen",
+        "tekst": "over het plan van aanpak bij een groepsactiviteit"
+      },
+      {
+        "groep": "Onderhandelen",
+        "tekst": "over de oplossingsstrategie bij problemen"
+      }
     ]
   },
   {
@@ -6990,6 +10967,20 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.3.14"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Onderhandelen",
+        "tekst": "over het plan van aanpak bij een groepsactiviteit"
+      },
+      {
+        "groep": "Onderhandelen",
+        "tekst": "over de taakverdeling bij een groepsactiviteit"
+      },
+      {
+        "groep": "Onderhandelen",
+        "tekst": "over de oplossingsstrategie bij problemen"
+      }
     ]
   },
   {
@@ -7006,7 +10997,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.3.14"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.419",
@@ -7022,7 +11014,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.3.10"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.420",
@@ -7038,7 +11031,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.3.10"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.421",
@@ -7054,7 +11048,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.3.10"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.422",
@@ -7070,7 +11065,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.3.10"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.423",
@@ -7086,7 +11082,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.3.10"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.424",
@@ -7102,7 +11099,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.3.10"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.425",
@@ -7118,7 +11116,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.3.10"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.426",
@@ -7135,7 +11134,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.3.9"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.427",
@@ -7152,7 +11152,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.3.9"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.428",
@@ -7168,6 +11169,20 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.3.9"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Informatie",
+        "tekst": "een behandeld onderwerp binnen de verschillende leergebieden"
+      },
+      {
+        "groep": "Vraagsoorten",
+        "tekst": "gesloten vragen"
+      },
+      {
+        "groep": "Vraagsoorten",
+        "tekst": "open vragen"
+      }
     ]
   },
   {
@@ -7184,6 +11199,24 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.3.14"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Informatie",
+        "tekst": "een behandeld onderwerp binnen de verschillende leergebieden"
+      },
+      {
+        "groep": "Vraagsoorten",
+        "tekst": "gesloten vragen"
+      },
+      {
+        "groep": "Vraagsoorten",
+        "tekst": "open vragen"
+      },
+      {
+        "groep": "Vraagsoorten",
+        "tekst": "meerkeuzevragen"
+      }
     ]
   },
   {
@@ -7200,6 +11233,20 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.3.14"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Vraagsoorten",
+        "tekst": "gesloten vragen"
+      },
+      {
+        "groep": "Vraagsoorten",
+        "tekst": "open vragen"
+      },
+      {
+        "groep": "Vraagsoorten",
+        "tekst": "reflectieve vragen"
+      }
     ]
   },
   {
@@ -7216,6 +11263,20 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.3.10"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Vraagsoorten",
+        "tekst": "kritische vragen"
+      },
+      {
+        "groep": "Vraagsoorten",
+        "tekst": "hypothetische vragen"
+      },
+      {
+        "groep": "Vraagsoorten",
+        "tekst": "controlevragen"
+      }
     ]
   },
   {
@@ -7235,7 +11296,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "minimumdoelen": [
       "1.3.14",
       "1.3.10"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.433",
@@ -7249,7 +11311,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
       "11-12"
     ],
     "kennisverwerking": "gebruiken",
-    "minimumdoelen": []
+    "minimumdoelen": [],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.434",
@@ -7263,7 +11326,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
       "11-12"
     ],
     "kennisverwerking": "gebruiken",
-    "minimumdoelen": []
+    "minimumdoelen": [],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.435",
@@ -7279,7 +11343,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.3.14"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.436",
@@ -7298,7 +11363,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "minimumdoelen": [
       "1.3.14",
       "1.3.10"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.437",
@@ -7317,6 +11383,16 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "minimumdoelen": [
       "1.3.14",
       "1.3.10"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "de mening"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "het feit"
+      }
     ]
   },
   {
@@ -7336,7 +11412,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "minimumdoelen": [
       "1.3.14",
       "1.3.10"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.439",
@@ -7353,6 +11430,20 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.3.9"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Actief",
+        "tekst": "de blik gericht houden op de gesprekspartners"
+      },
+      {
+        "groep": "Actief",
+        "tekst": "non-verbaal reageren"
+      },
+      {
+        "groep": "Actief",
+        "tekst": "verbaal reageren"
+      }
     ]
   },
   {
@@ -7370,7 +11461,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "engageren",
     "minimumdoelen": [
       "1.3.9"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.441",
@@ -7386,6 +11478,24 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.3.9"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Standaardzinnen, basiszinnen en vraagzinnen",
+        "tekst": "bij het groeten"
+      },
+      {
+        "groep": "Standaardzinnen, basiszinnen en vraagzinnen",
+        "tekst": "bij het aanspreken"
+      },
+      {
+        "groep": "Standaardzinnen, basiszinnen en vraagzinnen",
+        "tekst": "bij het bedanken"
+      },
+      {
+        "groep": "Standaardzinnen, basiszinnen en vraagzinnen",
+        "tekst": "bij vragen"
+      }
     ]
   },
   {
@@ -7403,6 +11513,16 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "begrijpen",
     "minimumdoelen": [
       "1.3.9"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Gespreksconventies",
+        "tekst": "op een gepaste manier het woord nemen of vragen"
+      },
+      {
+        "groep": "Gespreksconventies",
+        "tekst": "elkaar laten uitspreken"
+      }
     ]
   },
   {
@@ -7420,6 +11540,16 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.3.9"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Gespreksconventies",
+        "tekst": "op een gepaste manier het woord nemen of vragen"
+      },
+      {
+        "groep": "Gespreksconventies",
+        "tekst": "elkaar laten uitspreken"
+      }
     ]
   },
   {
@@ -7436,7 +11566,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "begrijpen",
     "minimumdoelen": [
       "1.3.9"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.445",
@@ -7452,7 +11583,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.3.9"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.446",
@@ -7468,6 +11600,24 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "begrijpen",
     "minimumdoelen": [
       "1.3.14"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Gespreksconventies",
+        "tekst": "elkaar laten uitspreken"
+      },
+      {
+        "groep": "Gespreksconventies",
+        "tekst": "op een gepaste manier het woord vragen of nemen"
+      },
+      {
+        "groep": "Gespreksconventies",
+        "tekst": "inspelen op de inbreng van de gesprekspartner"
+      },
+      {
+        "groep": "Gespreksconventies",
+        "tekst": "elkaars inbreng waarderen"
+      }
     ]
   },
   {
@@ -7488,6 +11638,24 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.3.14"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Gespreksconventies",
+        "tekst": "elkaar laten uitspreken"
+      },
+      {
+        "groep": "Gespreksconventies",
+        "tekst": "op een gepaste manier het woord vragen of nemen"
+      },
+      {
+        "groep": "Gespreksconventies",
+        "tekst": "inspelen op de inbreng van de gesprekspartner"
+      },
+      {
+        "groep": "Gespreksconventies",
+        "tekst": "elkaars inbreng waarderen"
+      }
     ]
   },
   {
@@ -7504,6 +11672,16 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.3.14"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Inspelen op de inbreng van de ander",
+        "tekst": "antwoorden in volzinnen op vragen"
+      },
+      {
+        "groep": "Inspelen op de inbreng van de ander",
+        "tekst": "brengen argumenten, meningen en  nieuwe informatie in die aansluiten bij het gespreksonderwerp"
+      }
     ]
   },
   {
@@ -7523,7 +11701,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "minimumdoelen": [
       "1.3.14",
       "1.3.10"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.450",
@@ -7540,7 +11719,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "minimumdoelen": [
       "1.3.14",
       "1.3.10"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.451",
@@ -7556,6 +11736,28 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.3.10"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Inspelen op de inbreng van de ander",
+        "tekst": "bouwen verder op andermans ideeën"
+      },
+      {
+        "groep": "Inspelen op de inbreng van de ander",
+        "tekst": "bevragen argumenten die aansluiten bij het gespreksonderwerp"
+      },
+      {
+        "groep": "Inspelen op de inbreng van de ander",
+        "tekst": "nuanceren argumenten die aansluiten bij het gespreksonderwerp"
+      },
+      {
+        "groep": "Inspelen op de inbreng van de ander",
+        "tekst": "legen verbanden tussen verschillende standpunten"
+      },
+      {
+        "groep": "Inspelen op de inbreng van de ander",
+        "tekst": "komen tot een conclusie*"
+      }
     ]
   },
   {
@@ -7571,7 +11773,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
       "11-12"
     ],
     "kennisverwerking": "begrijpen",
-    "minimumdoelen": []
+    "minimumdoelen": [],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.453",
@@ -7586,7 +11789,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
       "11-12"
     ],
     "kennisverwerking": "gebruiken",
-    "minimumdoelen": []
+    "minimumdoelen": [],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.454",
@@ -7604,7 +11808,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.3.14"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.455",
@@ -7622,6 +11827,12 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.3.14"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Spreekstijlen",
+        "tekst": "formeel en informeel taalgebruik"
+      }
     ]
   },
   {
@@ -7640,7 +11851,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "engageren",
     "minimumdoelen": [
       "1.3.14"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.457",
@@ -7656,6 +11868,16 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.3.10"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Gepast",
+        "tekst": "aanvaarden dat de ander anders reageert dan verwacht"
+      },
+      {
+        "groep": "Gepast",
+        "tekst": "de ander de vrijheid gunnen om de vragen, onderwerpen… aan te nemen, te weigeren of te twijfelen"
+      }
     ]
   },
   {
@@ -7679,7 +11901,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
       "1.3.9",
       "1.3.14",
       "1.3.10"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.459",
@@ -7698,7 +11921,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
       "11-12"
     ],
     "kennisverwerking": "engageren",
-    "minimumdoelen": []
+    "minimumdoelen": [],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.460",
@@ -7713,6 +11937,20 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "begrijpen",
     "minimumdoelen": [
       "1.4.1"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Basiswoordenschat",
+        "tekst": "woordenschat met betrekking tot de leefomgeving en de school"
+      },
+      {
+        "groep": "Basiswoordenschat",
+        "tekst": "inhoudswoorden"
+      },
+      {
+        "groep": "Basiswoordenschat",
+        "tekst": "functiewoorden"
+      }
     ]
   },
   {
@@ -7728,6 +11966,20 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.4.1"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Basiswoordenschat",
+        "tekst": "woordenschat met betrekking tot de leefomgeving en de school"
+      },
+      {
+        "groep": "Basiswoordenschat",
+        "tekst": "inhoudswoorden"
+      },
+      {
+        "groep": "Basiswoordenschat",
+        "tekst": "functiewoorden"
+      }
     ]
   },
   {
@@ -7744,6 +11996,20 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "begrijpen",
     "minimumdoelen": [
       "1.4.1"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Basiswoordenschat",
+        "tekst": "inhoudswoorden"
+      },
+      {
+        "groep": "Basiswoordenschat",
+        "tekst": "functiewoorden"
+      },
+      {
+        "groep": "Basiswoordenschat",
+        "tekst": "woorden met meerdere betekenissen"
+      }
     ]
   },
   {
@@ -7760,6 +12026,24 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.4.1"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Basiswoordenschat",
+        "tekst": "woordenschat met betrekking tot de leefomgeving en de school"
+      },
+      {
+        "groep": "Basiswoordenschat",
+        "tekst": "inhoudswoorden"
+      },
+      {
+        "groep": "Basiswoordenschat",
+        "tekst": "functiewoorden"
+      },
+      {
+        "groep": "Basiswoordenschat",
+        "tekst": "woorden met meerdere betekenissen"
+      }
     ]
   },
   {
@@ -7775,6 +12059,20 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "begrijpen",
     "minimumdoelen": [
       "1.4.2"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Eenvoudige school-en instructietaal",
+        "tekst": "binnen de context van de activiteiten, vakspecifieke kennis, voorkennis en ervaring"
+      },
+      {
+        "groep": "Eenvoudige school-en instructietaal",
+        "tekst": "inhoudswoorden"
+      },
+      {
+        "groep": "Eenvoudige school-en instructietaal",
+        "tekst": "functiewoorden"
+      }
     ]
   },
   {
@@ -7790,6 +12088,20 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.4.2"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Eenvoudige school-en instructietaal",
+        "tekst": "binnen de context van de activiteiten, vakspecifieke kennis, voorkennis en ervaring"
+      },
+      {
+        "groep": "Eenvoudige school-en instructietaal",
+        "tekst": "inhoudswoorden"
+      },
+      {
+        "groep": "Eenvoudige school-en instructietaal",
+        "tekst": "functiewoorden"
+      }
     ]
   },
   {
@@ -7806,6 +12118,28 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "begrijpen",
     "minimumdoelen": [
       "1.4.2"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Eenvoudige school- en instructietaal",
+        "tekst": "binnen de context van de activiteiten, vakspecifieke kennis, voorkennis en ervaring"
+      },
+      {
+        "groep": "Eenvoudige school- en instructietaal",
+        "tekst": "inhoudswoorden"
+      },
+      {
+        "groep": "Eenvoudige school- en instructietaal",
+        "tekst": "uitdrukkingen"
+      },
+      {
+        "groep": "Eenvoudige school- en instructietaal",
+        "tekst": "functiewoorden"
+      },
+      {
+        "groep": "Eenvoudige school- en instructietaal",
+        "tekst": "woorden met meerdere betekenissen"
+      }
     ]
   },
   {
@@ -7822,6 +12156,24 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.4.2"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Eenvoudige school- en instructietaal",
+        "tekst": "binnen de context van de activiteiten, vakspecifieke kennis, voorkennis en ervaring"
+      },
+      {
+        "groep": "Eenvoudige school- en instructietaal",
+        "tekst": "inhoudswoorden"
+      },
+      {
+        "groep": "Eenvoudige school- en instructietaal",
+        "tekst": "functiewoorden"
+      },
+      {
+        "groep": "Eenvoudige school- en instructietaal",
+        "tekst": "woorden met meerdere betekenissen"
+      }
     ]
   },
   {
@@ -7838,7 +12190,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.4.3"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.469",
@@ -7856,6 +12209,24 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "begrijpen",
     "minimumdoelen": [
       "1.4.5"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "School- en instructietaal",
+        "tekst": "inhoudswoorden"
+      },
+      {
+        "groep": "School- en instructietaal",
+        "tekst": "uitdrukkingen"
+      },
+      {
+        "groep": "School- en instructietaal",
+        "tekst": "functiewoorden"
+      },
+      {
+        "groep": "School- en instructietaal",
+        "tekst": "woorden met meerdere betekenissen"
+      }
     ]
   },
   {
@@ -7874,7 +12245,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.4.5"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.471",
@@ -7890,6 +12262,20 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "begrijpen",
     "minimumdoelen": [
       "1.4.2"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Vaktaal",
+        "tekst": "binnen de context van de activiteiten, vakspecifieke kennis, voorkennis en ervaring"
+      },
+      {
+        "groep": "Vaktaal",
+        "tekst": "relevante themawoordenschat"
+      },
+      {
+        "groep": "Vaktaal",
+        "tekst": "vakspecifieke taal"
+      }
     ]
   },
   {
@@ -7906,6 +12292,20 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.4.2"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Vaktaal",
+        "tekst": "binnen de context van de activiteiten, vakspecifieke kennis, voorkennis en ervaring"
+      },
+      {
+        "groep": "Vaktaal",
+        "tekst": "relevante themawoordenschat"
+      },
+      {
+        "groep": "Vaktaal",
+        "tekst": "vakspecifieke taal"
+      }
     ]
   },
   {
@@ -7922,7 +12322,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "begrijpen",
     "minimumdoelen": [
       "1.4.5"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.474",
@@ -7939,6 +12340,12 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "minimumdoelen": [
       "1.4.5",
       "1.4.14"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "de vaktaal"
+      }
     ]
   },
   {
@@ -7957,7 +12364,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.4.5"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.476",
@@ -7980,7 +12388,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "minimumdoelen": [
       "1.4.2",
       "1.4.5"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.477",
@@ -7997,6 +12406,24 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "begrijpen",
     "minimumdoelen": [
       "1.4.3"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Woordleerstrategieën",
+        "tekst": "linken leggen met bekende woorden"
+      },
+      {
+        "groep": "Woordleerstrategieën",
+        "tekst": "de woordopbouw analyseren"
+      },
+      {
+        "groep": "Woordleerstrategieën",
+        "tekst": "de eigen bredere talenkennis inzetten om betekenissen af te leiden"
+      },
+      {
+        "groep": "Woordleerstrategieën",
+        "tekst": "de betekenis van woorden afleiden uit de context"
+      }
     ]
   },
   {
@@ -8013,6 +12440,28 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "begrijpen",
     "minimumdoelen": [
       "1.4.6"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Woordleerstrategieën",
+        "tekst": "om verduidelijking vragen"
+      },
+      {
+        "groep": "Woordleerstrategieën",
+        "tekst": "vergelijken met een bekend woord"
+      },
+      {
+        "groep": "Woordleerstrategieën",
+        "tekst": "de context inzetten"
+      },
+      {
+        "groep": "Woordleerstrategieën",
+        "tekst": "de eigen bredere talenkennis inzetten om betekenissen af te leiden"
+      },
+      {
+        "groep": "Woordleerstrategieën",
+        "tekst": "de woordopbouw analyseren"
+      }
     ]
   },
   {
@@ -8029,6 +12478,36 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "begrijpen",
     "minimumdoelen": [
       "1.4.6"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Woordleerstrategieën",
+        "tekst": "om verduidelijking vragen"
+      },
+      {
+        "groep": "Woordleerstrategieën",
+        "tekst": "vergelijken met een bekend woord"
+      },
+      {
+        "groep": "Woordleerstrategieën",
+        "tekst": "de context inzetten"
+      },
+      {
+        "groep": "Woordleerstrategieën",
+        "tekst": "de eigen bredere talenkennis inzetten om betekenissen af te leiden"
+      },
+      {
+        "groep": "Woordleerstrategieën",
+        "tekst": "de woordopbouw analyseren"
+      },
+      {
+        "groep": "Woordleerstrategieën",
+        "tekst": "belang van het woord in de tekst na gaan"
+      },
+      {
+        "groep": "Woordleerstrategieën",
+        "tekst": "hulpbron inzetten"
+      }
     ]
   },
   {
@@ -8045,6 +12524,40 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "begrijpen",
     "minimumdoelen": [
       "1.4.4"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Woordleerstrategieën",
+        "tekst": "om verduidelijking vragen"
+      },
+      {
+        "groep": "Woordleerstrategieën",
+        "tekst": "vergelijken met een bekend woord"
+      },
+      {
+        "groep": "Woordleerstrategieën",
+        "tekst": "de context inzetten"
+      },
+      {
+        "groep": "Woordleerstrategieën",
+        "tekst": "de eigen bredere talenkennis inzetten om betekenissen af te leiden"
+      },
+      {
+        "groep": "Woordleerstrategieën",
+        "tekst": "de woordopbouw analyseren"
+      },
+      {
+        "groep": "Woordleerstrategieën",
+        "tekst": "belang van het woord in de tekst na gaan"
+      },
+      {
+        "groep": "Woordleerstrategieën",
+        "tekst": "vreemdetalenkennis inzetten"
+      },
+      {
+        "groep": "Woordleerstrategieën",
+        "tekst": "hulpbron inzetten"
+      }
     ]
   },
   {
@@ -8064,7 +12577,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "minimumdoelen": [
       "1.4.6",
       "1.4.4"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.482",
@@ -8081,7 +12595,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "minimumdoelen": [
       "1.4.6",
       "1.4.4"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.483",
@@ -8098,7 +12613,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.4.3"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.484",
@@ -8119,6 +12635,16 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "minimumdoelen": [
       "1.4.6",
       "1.4.4"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Toepassen",
+        "tekst": "Om nieuwe woordbetekenissen en relaties te achterhalen uit gesproken context."
+      },
+      {
+        "groep": "Toepassen",
+        "tekst": "Om nieuwe woordbetekenissen en relaties te achterhalen uit geschreven context."
+      }
     ]
   },
   {
@@ -8135,6 +12661,24 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "begrijpen",
     "minimumdoelen": [
       "1.4.1"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Betekenisrelaties",
+        "tekst": "categorie en exemplaar (hyperoniem - hyponiem)"
+      },
+      {
+        "groep": "Betekenisrelaties",
+        "tekst": "eenvoudige synoniemen"
+      },
+      {
+        "groep": "Betekenisrelaties",
+        "tekst": "eenvoudige tegenstellingen (antoniemen)"
+      },
+      {
+        "groep": "Betekenisrelaties",
+        "tekst": "veel gebruikte trappen van vergelijking"
+      }
     ]
   },
   {
@@ -8151,7 +12695,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "begrijpen",
     "minimumdoelen": [
       "1.4.1"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.487",
@@ -8169,7 +12714,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "begrijpen",
     "minimumdoelen": [
       "1.4.2"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.488",
@@ -8185,6 +12731,12 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "begrijpen",
     "minimumdoelen": [
       "1.4.2"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "het homoniem"
+      }
     ]
   },
   {
@@ -8201,6 +12753,12 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "begrijpen",
     "minimumdoelen": [
       "1.4.2"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "het antoniem"
+      }
     ]
   },
   {
@@ -8217,6 +12775,12 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "begrijpen",
     "minimumdoelen": [
       "1.4.2"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "het synoniem"
+      }
     ]
   },
   {
@@ -8233,6 +12797,12 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "begrijpen",
     "minimumdoelen": [
       "1.4.2"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "de trappen van vergelijking"
+      }
     ]
   },
   {
@@ -8248,7 +12818,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "begrijpen",
     "minimumdoelen": [
       "1.4.2"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.493",
@@ -8264,6 +12835,20 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "begrijpen",
     "minimumdoelen": [
       "1.4.1"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Betekenisrelaties tussen woorden",
+        "tekst": "hyponiemen"
+      },
+      {
+        "groep": "Betekenisrelaties tussen woorden",
+        "tekst": "hyperoniem"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "het hyponiem"
+      }
     ]
   },
   {
@@ -8286,7 +12871,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.4.2"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.495",
@@ -8304,7 +12890,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "minimumdoelen": [
       "1.4.2",
       "1.4.1"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.496",
@@ -8329,7 +12916,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
       "1.4.3",
       "1.4.2",
       "1.4.1"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.497",
@@ -8345,7 +12933,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.4.3"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.498",
@@ -8362,7 +12951,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "begrijpen",
     "minimumdoelen": [
       "1.4.3"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.499",
@@ -8381,6 +12971,20 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "minimumdoelen": [
       "1.4.3",
       "1.4.3"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "letterlijk"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "figuurlijk"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "de uitdrukking"
+      }
     ]
   },
   {
@@ -8403,6 +13007,16 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "minimumdoelen": [
       "1.4.3",
       "1.4.3"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Reflecteren",
+        "tekst": "met elkaar"
+      },
+      {
+        "groep": "Reflecteren",
+        "tekst": "in verschillende lees- en luistercontexten"
+      }
     ]
   },
   {
@@ -8419,7 +13033,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "begrijpen",
     "minimumdoelen": [
       "1.4.1"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.502",
@@ -8436,6 +13051,12 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "minimumdoelen": [
       "1.4.1",
       "1.4.9"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "de samenstelling"
+      }
     ]
   },
   {
@@ -8453,6 +13074,16 @@ export const LEERPLANDOELEN_NEDERLANDS = [
       "1.4.1",
       "1.4.9",
       "1.4.7"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "de afleiding"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "het grondwoord"
+      }
     ]
   },
   {
@@ -8469,6 +13100,16 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "begrijpen",
     "minimumdoelen": [
       "1.4.7"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "het voorvoegsel"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "het achtervoegsel"
+      }
     ]
   },
   {
@@ -8485,6 +13126,24 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "begrijpen",
     "minimumdoelen": [
       "1.4.9"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Vormelijke kenmerken van verbuigingen",
+        "tekst": "bij bijvoeglijke naamwoorden"
+      },
+      {
+        "groep": "Vormelijke kenmerken van verbuigingen",
+        "tekst": "bij trappen van vergelijking"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "de verbuiging"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "het bijvoeglijk naamwoord"
+      }
     ]
   },
   {
@@ -8501,7 +13160,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "engageren",
     "minimumdoelen": [
       "1.4.4"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.507",
@@ -8517,7 +13177,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "engageren",
     "minimumdoelen": [
       "1.4.3"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.508",
@@ -8534,6 +13195,24 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "begrijpen",
     "minimumdoelen": [
       "1.4.9"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Getal",
+        "tekst": "enkelvoud"
+      },
+      {
+        "groep": "Getal",
+        "tekst": "meervoud"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "het enkelvoud"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "het meervoud"
+      }
     ]
   },
   {
@@ -8550,6 +13229,24 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "begrijpen",
     "minimumdoelen": [
       "1.4.9"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Vervoeging werkwoord",
+        "tekst": "eerste persoon enkelvoud en meervoud (ik en wij)"
+      },
+      {
+        "groep": "Vervoeging werkwoord",
+        "tekst": "tweede persoon enkelvoud en meervoud (jij, u en jullie)"
+      },
+      {
+        "groep": "Vervoeging werkwoord",
+        "tekst": "derde persoon enkelvoud en meervoud (hij, zij, het en zij)"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "de vervoeging"
+      }
     ]
   },
   {
@@ -8566,6 +13263,16 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "begrijpen",
     "minimumdoelen": [
       "1.4.17"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "het formeel taalgebruik"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "het informeel taalgebruik"
+      }
     ]
   },
   {
@@ -8582,6 +13289,16 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "begrijpen",
     "minimumdoelen": [
       "1.4.2"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "het formeel taalgebruik"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "het informeel taalgebruik"
+      }
     ]
   },
   {
@@ -8601,7 +13318,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "minimumdoelen": [
       "1.4.17",
       "1.4.2"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.513",
@@ -8617,6 +13335,20 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "begrijpen",
     "minimumdoelen": [
       "1.4.4"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "In verschillende contexten",
+        "tekst": "rijmpje, raadsel, liederen"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "het rijm"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "rijmen"
+      }
     ]
   },
   {
@@ -8633,6 +13365,28 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "begrijpen",
     "minimumdoelen": [
       "1.4.4"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "de klank"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "de letter"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "de klankgroep"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "het woord"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "het woorddeel"
+      }
     ]
   },
   {
@@ -8650,6 +13404,32 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "begrijpen",
     "minimumdoelen": [
       "1.4.7"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "de korte klank"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "de lange klank"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "de tweetekenklinker"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "de klinker"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "de medeklinker"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "de uitspraak"
+      }
     ]
   },
   {
@@ -8666,7 +13446,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.4.5"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.517",
@@ -8687,7 +13468,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "minimumdoelen": [
       "1.4.11",
       "1.4.9"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.518",
@@ -8702,6 +13484,20 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "begrijpen",
     "minimumdoelen": [
       "1.4.8"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Interpunctietekens en hoofdletters",
+        "tekst": "de kleine letter"
+      },
+      {
+        "groep": "Interpunctietekens en hoofdletters",
+        "tekst": "de hoofdletter"
+      },
+      {
+        "groep": "Interpunctietekens en hoofdletters",
+        "tekst": "het punt"
+      }
     ]
   },
   {
@@ -8717,6 +13513,16 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "begrijpen",
     "minimumdoelen": [
       "1.4.8"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "de kleine letter"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "de hoofdletter"
+      }
     ]
   },
   {
@@ -8732,6 +13538,16 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "begrijpen",
     "minimumdoelen": [
       "1.4.8"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "het leesteken"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "het punt"
+      }
     ]
   },
   {
@@ -8748,6 +13564,16 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "begrijpen",
     "minimumdoelen": [
       "1.4.8"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "het uitroepteken"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "het vraagteken"
+      }
     ]
   },
   {
@@ -8765,6 +13591,16 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "begrijpen",
     "minimumdoelen": [
       "1.4.8"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "het dubbele punt"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "de komma"
+      }
     ]
   },
   {
@@ -8781,6 +13617,16 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "begrijpen",
     "minimumdoelen": [
       "1.4.5"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "de dubbele aanhalingstekens"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "de haakjes"
+      }
     ]
   },
   {
@@ -8798,6 +13644,12 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "begrijpen",
     "minimumdoelen": [
       "1.4.8"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "de spatie"
+      }
     ]
   },
   {
@@ -8813,6 +13665,12 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "begrijpen",
     "minimumdoelen": [
       "1.4.8"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "de kantlijn"
+      }
     ]
   },
   {
@@ -8829,6 +13687,28 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "begrijpen",
     "minimumdoelen": [
       "1.4.5"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "het trema"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "het koppelteken"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "de apostrof"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "het accent"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "de afkorting"
+      }
     ]
   },
   {
@@ -8844,6 +13724,32 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "begrijpen",
     "minimumdoelen": [
       "1.4.9"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Woordsoorten",
+        "tekst": "eigennamen"
+      },
+      {
+        "groep": "Woordsoorten",
+        "tekst": "lidwoorden"
+      },
+      {
+        "groep": "Woordsoorten",
+        "tekst": "telwoorden"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "de eigennaam"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "het lidwoord"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "het telwoord"
+      }
     ]
   },
   {
@@ -8860,7 +13766,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "begrijpen",
     "minimumdoelen": [
       "1.4.9"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.529",
@@ -8876,6 +13783,40 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "begrijpen",
     "minimumdoelen": [
       "1.4.9"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Woordsoorten",
+        "tekst": "zelfstandige naamwoorden"
+      },
+      {
+        "groep": "Woordsoorten",
+        "tekst": "bijvoeglijke naamwoorden"
+      },
+      {
+        "groep": "Woordsoorten",
+        "tekst": "voorzetsels"
+      },
+      {
+        "groep": "Woordvormen",
+        "tekst": "verkleinwoorden"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "het bijvoeglijk naamwoord"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "het zelfstandig naamwoord"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "het voorzetsel"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "het verkleinwoord"
+      }
     ]
   },
   {
@@ -8895,6 +13836,28 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "minimumdoelen": [
       "1.4.9",
       "1.4.7"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Woordsoorten",
+        "tekst": "voegwoorden"
+      },
+      {
+        "groep": "Woordsoorten",
+        "tekst": "werkwoorden"
+      },
+      {
+        "groep": "Woordvormen",
+        "tekst": "verkleinwoorden"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "het voegwoord"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "het werkwoord"
+      }
     ]
   },
   {
@@ -8911,6 +13874,12 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "begrijpen",
     "minimumdoelen": [
       "1.4.6"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "het voornaamwoord"
+      }
     ]
   },
   {
@@ -8924,7 +13893,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
       "10-11"
     ],
     "kennisverwerking": "begrijpen",
-    "minimumdoelen": []
+    "minimumdoelen": [],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.533",
@@ -8940,6 +13910,16 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "begrijpen",
     "minimumdoelen": [
       "1.4.9"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "het werkwoord"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "de tegenwoordige tijd"
+      }
     ]
   },
   {
@@ -8956,6 +13936,12 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "begrijpen",
     "minimumdoelen": [
       "1.4.9"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "de verleden tijd"
+      }
     ]
   },
   {
@@ -8974,7 +13960,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "begrijpen",
     "minimumdoelen": [
       "1.4.9"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.536",
@@ -8992,7 +13979,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "begrijpen",
     "minimumdoelen": [
       "1.4.9"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.537",
@@ -9008,6 +13996,12 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "begrijpen",
     "minimumdoelen": [
       "1.4.6"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "de toekomende tijd"
+      }
     ]
   },
   {
@@ -9026,6 +14020,12 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "begrijpen",
     "minimumdoelen": [
       "1.4.6"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "het voltooid deelwoord"
+      }
     ]
   },
   {
@@ -9043,6 +14043,32 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "minimumdoelen": [
       "1.4.9",
       "1.4.7"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Vorming van werkwoorden",
+        "tekst": "de tegenwoordige tijd"
+      },
+      {
+        "groep": "Vorming van werkwoorden",
+        "tekst": "de verleden tijd"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "de stam"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "de uitgang"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "de infinitief"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "de vervoeging"
+      }
     ]
   },
   {
@@ -9060,7 +14086,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "minimumdoelen": [
       "1.4.6",
       "1.4.8"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.541",
@@ -9083,6 +14110,20 @@ export const LEERPLANDOELEN_NEDERLANDS = [
       "1.4.11",
       "1.4.6",
       "1.4.9"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Woorden",
+        "tekst": "woordvorming"
+      },
+      {
+        "groep": "Woorden",
+        "tekst": "woordsoorten"
+      },
+      {
+        "groep": "Woorden",
+        "tekst": "werkwoorden"
+      }
     ]
   },
   {
@@ -9098,6 +14139,24 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "begrijpen",
     "minimumdoelen": [
       "1.4.10"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Zinnen",
+        "tekst": "de mededelende zin, de vragende zin"
+      },
+      {
+        "groep": "Structuur",
+        "tekst": "juiste woordvolgorde: met woorden op de juiste plaats in de zin, afgestemd op de soort zin"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "de zin"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "de mededelende zin"
+      }
     ]
   },
   {
@@ -9115,6 +14174,28 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "begrijpen",
     "minimumdoelen": [
       "1.4.10"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Zinnen",
+        "tekst": "de mededelende zin, de vragende zin, de uitroepende zin"
+      },
+      {
+        "groep": "Structuur",
+        "tekst": "juiste woordvolgorde: met woorden op de juiste plaats in de zin, afgestemd op de soort zin"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "de mededelende zin"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "de vragende zin"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "de uitroepende zin"
+      }
     ]
   },
   {
@@ -9130,6 +14211,32 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "begrijpen",
     "minimumdoelen": [
       "1.4.8"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Soorten zinnen",
+        "tekst": "ontkennende zin"
+      },
+      {
+        "groep": "Soorten zinnen",
+        "tekst": "enkelvoudige en samengestelde zinnen"
+      },
+      {
+        "groep": "Structuur",
+        "tekst": "juiste woordvolgorde: met woorden op de juiste plaats in de zin, afgestemd op de soort zin"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "de ontkennende zin"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "de enkelvoudige zin"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "de samengestelde zin"
+      }
     ]
   },
   {
@@ -9145,6 +14252,20 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "begrijpen",
     "minimumdoelen": [
       "1.4.8"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Zinnen",
+        "tekst": "soorten zinnen: gebiedende wijs"
+      },
+      {
+        "groep": "Structuur",
+        "tekst": "juiste woordvolgorde: met woorden op de juiste plaats in de zin, afgestemd op de soort zin"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "de gebiedende wijs"
+      }
     ]
   },
   {
@@ -9161,7 +14282,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "begrijpen",
     "minimumdoelen": [
       "1.4.10"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.547",
@@ -9177,6 +14299,20 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "begrijpen",
     "minimumdoelen": [
       "1.4.10"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "de zin"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "het onderwerp"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "de persoonsvorm"
+      }
     ]
   },
   {
@@ -9192,6 +14328,24 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "begrijpen",
     "minimumdoelen": [
       "1.4.10"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Gezegde",
+        "tekst": "wat er gebeurt"
+      },
+      {
+        "groep": "Gezegde",
+        "tekst": "wat iemand doet"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "het gezegde"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "het zinsdeel"
+      }
     ]
   },
   {
@@ -9208,6 +14362,12 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "begrijpen",
     "minimumdoelen": [
       "1.4.8"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "het lijdend voorwerp"
+      }
     ]
   },
   {
@@ -9224,6 +14384,12 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "begrijpen",
     "minimumdoelen": [
       "1.4.8"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "het meewerkend voorwerp"
+      }
     ]
   },
   {
@@ -9239,6 +14405,12 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "begrijpen",
     "minimumdoelen": [
       "1.4.8"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "het naamwoordelijk gezegde"
+      }
     ]
   },
   {
@@ -9254,6 +14426,12 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "begrijpen",
     "minimumdoelen": [
       "1.4.8"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "het werkwoordelijk gezegde"
+      }
     ]
   },
   {
@@ -9277,7 +14455,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
       "1.4.11",
       "1.4.8",
       "1.4.9"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.554",
@@ -9296,7 +14475,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "begrijpen",
     "minimumdoelen": [
       "1.4.6"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.555",
@@ -9312,6 +14492,20 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "begrijpen",
     "minimumdoelen": [
       "1.4.13"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Non-verbale communicatie",
+        "tekst": "mimiek"
+      },
+      {
+        "groep": "Non-verbale communicatie",
+        "tekst": "lichaamstaal"
+      },
+      {
+        "groep": "Non-verbale communicatie",
+        "tekst": "intonatie"
+      }
     ]
   },
   {
@@ -9334,7 +14528,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "minimumdoelen": [
       "1.4.6",
       "1.4.13"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.557",
@@ -9351,7 +14546,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "begrijpen",
     "minimumdoelen": [
       "1.4.7"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.558",
@@ -9368,7 +14564,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.4.7"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.559",
@@ -9387,6 +14584,52 @@ export const LEERPLANDOELEN_NEDERLANDS = [
       "1.4.12",
       "1.4.13",
       "1.4.14"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Taalvariëteiten",
+        "tekst": "dialect"
+      },
+      {
+        "groep": "Taalvariëteiten",
+        "tekst": "Standaardnederlands"
+      },
+      {
+        "groep": "Taalvariëteiten",
+        "tekst": "jongerentaal"
+      },
+      {
+        "groep": "Taalvariëteiten",
+        "tekst": "vaktaal"
+      },
+      {
+        "groep": "Taalvariëteiten",
+        "tekst": "formele en informele"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "het dialect"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "het Standaardnederlands"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "de jongerentaal"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "de vaktaal"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "de formele taal"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "de informele taal"
+      }
     ]
   },
   {
@@ -9403,6 +14646,24 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "begrijpen",
     "minimumdoelen": [
       "1.4.11"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Taalvariëteiten",
+        "tekst": "tussentaal"
+      },
+      {
+        "groep": "Taalvariëteiten",
+        "tekst": "vreemde taal"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "de tussentaal"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "de vreemde taal"
+      }
     ]
   },
   {
@@ -9424,7 +14685,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
       "1.4.12",
       "1.4.14",
       "1.4.11"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.562",
@@ -9448,7 +14710,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
       "1.4.13",
       "1.4.14",
       "1.4.11"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.563",
@@ -9474,7 +14737,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
       "1.4.13",
       "1.4.14",
       "1.4.11"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.564",
@@ -9489,6 +14753,20 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "begrijpen",
     "minimumdoelen": [
       "1.4.16"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Taal evolueert",
+        "tekst": "woordenschat verandert: nieuwe woorden, verandering van woordbetekenis"
+      },
+      {
+        "groep": "Taal evolueert",
+        "tekst": "spelling en uitspraak veranderen"
+      },
+      {
+        "groep": "Taal evolueert",
+        "tekst": "taalsysteem (grammatica) verandert"
+      }
     ]
   },
   {
@@ -9505,6 +14783,24 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "begrijpen",
     "minimumdoelen": [
       "1.4.13"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Taal evolueert",
+        "tekst": "in betekenis"
+      },
+      {
+        "groep": "Taal evolueert",
+        "tekst": "in vorm en grammatica"
+      },
+      {
+        "groep": "Taal evolueert",
+        "tekst": "in klank en uitspraak"
+      },
+      {
+        "groep": "Taal evolueert",
+        "tekst": "onder invloed van cultuur, technologie en maatschappij"
+      }
     ]
   },
   {
@@ -9523,7 +14819,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "minimumdoelen": [
       "1.4.16",
       "1.4.13"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.567",
@@ -9540,6 +14837,20 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "minimumdoelen": [
       "1.4.15",
       "1.4.17"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Beïnvloeden",
+        "tekst": "taalgebruik"
+      },
+      {
+        "groep": "Beïnvloeden",
+        "tekst": "woordkeuze"
+      },
+      {
+        "groep": "Beïnvloeden",
+        "tekst": "afbeeldingen"
+      }
     ]
   },
   {
@@ -9557,7 +14868,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
       "1.4.14",
       "1.4.15",
       "1.4.17"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.569",
@@ -9573,6 +14885,28 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "begrijpen",
     "minimumdoelen": [
       "1.4.12"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Plaats en cultuur",
+        "tekst": "plaats"
+      },
+      {
+        "groep": "Plaats en cultuur",
+        "tekst": "leefmilieu"
+      },
+      {
+        "groep": "Plaats en cultuur",
+        "tekst": "tijdsgeest"
+      },
+      {
+        "groep": "Plaats en cultuur",
+        "tekst": "normen en waarden"
+      },
+      {
+        "groep": "Plaats en cultuur",
+        "tekst": "stereotypen en vooroordelen"
+      }
     ]
   },
   {
@@ -9594,7 +14928,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
       "1.4.15",
       "1.4.17",
       "1.4.12"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.571",
@@ -9610,7 +14945,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "begrijpen",
     "minimumdoelen": [
       "1.4.14"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.572",
@@ -9633,6 +14969,20 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "minimumdoelen": [
       "1.4.14",
       "1.4.15"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Verschillen en overeenkomsten",
+        "tekst": "woordenschat"
+      },
+      {
+        "groep": "Verschillen en overeenkomsten",
+        "tekst": "uitspraak"
+      },
+      {
+        "groep": "Verschillen en overeenkomsten",
+        "tekst": "schrifttekens"
+      }
     ]
   },
   {
@@ -9649,6 +14999,24 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "begrijpen",
     "minimumdoelen": [
       "1.4.13"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Factoren van het communicatiemodel",
+        "tekst": "de zender"
+      },
+      {
+        "groep": "Factoren van het communicatiemodel",
+        "tekst": "de ontvanger"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "de zender"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "de ontvanger"
+      }
     ]
   },
   {
@@ -9665,6 +15033,32 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "begrijpen",
     "minimumdoelen": [
       "1.4.13"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Factoren van het communicatiemodel",
+        "tekst": "de boodschap"
+      },
+      {
+        "groep": "Factoren van het communicatiemodel",
+        "tekst": "het kanaal"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "de boodschap"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "het kanaal"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "de communicatie"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "het communicatiemodel"
+      }
     ]
   },
   {
@@ -9681,6 +15075,32 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "begrijpen",
     "minimumdoelen": [
       "1.4.10"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Factoren van het communicatiemodel",
+        "tekst": "het doel"
+      },
+      {
+        "groep": "Factoren van het communicatiemodel",
+        "tekst": "het medium"
+      },
+      {
+        "groep": "Factoren van het communicatiemodel",
+        "tekst": "het effect"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "het doel"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "het medium"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "het effect"
+      }
     ]
   },
   {
@@ -9696,7 +15116,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "begrijpen",
     "minimumdoelen": [
       "1.4.13"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.577",
@@ -9714,7 +15135,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "begrijpen",
     "minimumdoelen": [
       "1.5.3"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.578",
@@ -9733,7 +15155,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "minimumdoelen": [
       "1.5.4",
       "1.5.3"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.579",
@@ -9750,6 +15173,28 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.5.3"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Lezen",
+        "tekst": "een grote variatie aan boeken en teksten"
+      },
+      {
+        "groep": "Lezen",
+        "tekst": "aangereikte literaire teksten en boeken"
+      },
+      {
+        "groep": "Lezen",
+        "tekst": "zelfgekozen literaire teksten en boeken op basis van interesse, voorkeur en leesmotivatie"
+      },
+      {
+        "groep": "Lezen",
+        "tekst": "fictie- en non fictie"
+      },
+      {
+        "groep": "Lezen",
+        "tekst": "bekroonde jeugdliteratuur"
+      }
     ]
   },
   {
@@ -9767,6 +15212,16 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.5.3"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Teksten en boeken",
+        "tekst": "een variatie aan genres"
+      },
+      {
+        "groep": "Teksten en boeken",
+        "tekst": "passend bij de eigen leesvoorkeur"
+      }
     ]
   },
   {
@@ -9784,6 +15239,20 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.5.4"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Teksten en boeken",
+        "tekst": "uit een variatie aan genres"
+      },
+      {
+        "groep": "Teksten en boeken",
+        "tekst": "passend bij de eigen leesvoorkeur"
+      },
+      {
+        "groep": "Teksten en boeken",
+        "tekst": "passend bij het leesdoel"
+      }
     ]
   },
   {
@@ -9801,7 +15270,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "begrijpen",
     "minimumdoelen": [
       "1.5.3"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.583",
@@ -9818,6 +15288,40 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "begrijpen",
     "minimumdoelen": [
       "1.5.4"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Boekkeuze",
+        "tekst": "aangereikte of zelfgekozen boeken"
+      },
+      {
+        "groep": "Boekkeuze",
+        "tekst": "fictie- en non fictie"
+      },
+      {
+        "groep": "Boekkeuze",
+        "tekst": "leesdoel: ter ontspanning, om te leren, om iets te weten te komen"
+      },
+      {
+        "groep": "Boekkeuze",
+        "tekst": "eigen interesse, voorkeur, leesmotivatie"
+      },
+      {
+        "groep": "Boekkeuze",
+        "tekst": "eigen leesvaardigheid"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "fictie"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "non-fictie"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "de tekst"
+      }
     ]
   },
   {
@@ -9834,6 +15338,16 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "begrijpen",
     "minimumdoelen": [
       "1.5.2"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Literaire voorkeur",
+        "tekst": "bekroonde kinder- en jeugdliteratuur"
+      },
+      {
+        "groep": "Literaire voorkeur",
+        "tekst": "fictie en non-fictie"
+      }
     ]
   },
   {
@@ -9855,7 +15369,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "minimumdoelen": [
       "1.5.4",
       "1.5.2"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.586",
@@ -9873,6 +15388,28 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.5.4"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Variatie aan boeken en teksten",
+        "tekst": "uit een variatie aan genres"
+      },
+      {
+        "groep": "Variatie aan boeken en teksten",
+        "tekst": "aangereikte teksten en boeken"
+      },
+      {
+        "groep": "Variatie aan boeken en teksten",
+        "tekst": "zelfgekozen teksten en boeken op basis van interesse, voorkeur en leesmotivatie"
+      },
+      {
+        "groep": "Variatie aan boeken en teksten",
+        "tekst": "fictie- en non fictie"
+      },
+      {
+        "groep": "Variatie aan boeken en teksten",
+        "tekst": "bekroonde kinder- en jeugdliteratuur"
+      }
     ]
   },
   {
@@ -9891,6 +15428,28 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "minimumdoelen": [
       "1.1.4",
       "1.5.5"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Variatie aan literaire boeken en teksten",
+        "tekst": "uit een variatie aan genres"
+      },
+      {
+        "groep": "Variatie aan literaire boeken en teksten",
+        "tekst": "aangereikte literaire teksten en boeken"
+      },
+      {
+        "groep": "Variatie aan literaire boeken en teksten",
+        "tekst": "zelfgekozen literaire teksten en boeken op basis van interesse, voorkeur en leesmotivatie"
+      },
+      {
+        "groep": "Variatie aan literaire boeken en teksten",
+        "tekst": "fictie- en non fictie"
+      },
+      {
+        "groep": "Variatie aan literaire boeken en teksten",
+        "tekst": "bekroonde kinder- en jeugdliteratuur"
+      }
     ]
   },
   {
@@ -9907,6 +15466,32 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.5.3"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Variatie aan literaire boeken en teksten",
+        "tekst": "uit een variatie aan genres"
+      },
+      {
+        "groep": "Variatie aan literaire boeken en teksten",
+        "tekst": "aangereikte literaire teksten en boeken"
+      },
+      {
+        "groep": "Variatie aan literaire boeken en teksten",
+        "tekst": "zelfgekozen literaire teksten en boeken op basis van interesse, voorkeur en leesmotivatie"
+      },
+      {
+        "groep": "Variatie aan literaire boeken en teksten",
+        "tekst": "fictie- en non fictie"
+      },
+      {
+        "groep": "Variatie aan literaire boeken en teksten",
+        "tekst": "bekroonde kinder- en jeugdliteratuur"
+      },
+      {
+        "groep": "Variatie aan literaire boeken en teksten",
+        "tekst": "teksten over alle vakken heen"
+      }
     ]
   },
   {
@@ -9925,6 +15510,24 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.5.4"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Navertellen",
+        "tekst": "de verhaallijn"
+      },
+      {
+        "groep": "Navertellen",
+        "tekst": "de kern van het verhaal"
+      },
+      {
+        "groep": "Navertellen",
+        "tekst": "mét ondersteuning van beelden of symbolen"
+      },
+      {
+        "groep": "Navertellen",
+        "tekst": "zonder ondersteuning van beelden of symbolen"
+      }
     ]
   },
   {
@@ -9942,7 +15545,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.5.8"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.591",
@@ -9959,6 +15563,24 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "begrijpen",
     "minimumdoelen": [
       "1.5.1"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "de auteur"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "de illustrator"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "de titel"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "de kaft"
+      }
     ]
   },
   {
@@ -9976,6 +15598,24 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "begrijpen",
     "minimumdoelen": [
       "1.5.2"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Literaire tekst",
+        "tekst": "verhalende tekst, rijk taalgebruik"
+      },
+      {
+        "groep": "Plot",
+        "tekst": "de belangrijkste gebeurtenissen"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "de plot"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "de belangrijkste gebeurtenis"
+      }
     ]
   },
   {
@@ -9994,6 +15634,44 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "minimumdoelen": [
       "1.5.1",
       "1.5.3"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Literaire tekst",
+        "tekst": "verhalende tekst, rijk taalgebruik"
+      },
+      {
+        "groep": "Elementen uit een literaire tekst",
+        "tekst": "personage, hoofdpersonage"
+      },
+      {
+        "groep": "Elementen uit een literaire tekst",
+        "tekst": "thema"
+      },
+      {
+        "groep": "Elementen uit een literaire tekst",
+        "tekst": "context: tijd en plaats"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "het personage"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "het hoofdpersonage"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "het thema"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "de plaats"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "de tijd"
+      }
     ]
   },
   {
@@ -10010,6 +15688,24 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "begrijpen",
     "minimumdoelen": [
       "1.5.1"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Literaire tekst",
+        "tekst": "verhalende tekst, rijk taalgebruik"
+      },
+      {
+        "groep": "Elementen uit een literaire tekst",
+        "tekst": "vertelperspectief: de ‘ik-verteller’"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "het vertelperspectief"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "de ik-verteller"
+      }
     ]
   },
   {
@@ -10026,7 +15722,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.5.4"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.596",
@@ -10039,7 +15736,21 @@ export const LEERPLANDOELEN_NEDERLANDS = [
       "2,5-4"
     ],
     "kennisverwerking": "begrijpen",
-    "minimumdoelen": []
+    "minimumdoelen": [],
+    "aanklikbareItems": [
+      {
+        "groep": "Zorg dragen voor boeken",
+        "tekst": "de kaft en de bladen netjes en gaaf houden"
+      },
+      {
+        "groep": "Zorg dragen voor boeken",
+        "tekst": "bladeren in het boek door het hoekje van de bladzijde vast te nemen en voorzichtig om te slaan"
+      },
+      {
+        "groep": "Zorg dragen voor boeken",
+        "tekst": "na het lezen boeken terugplaatsen op hun plek"
+      }
+    ]
   },
   {
     "nummer": "NL.597",
@@ -10055,7 +15766,21 @@ export const LEERPLANDOELEN_NEDERLANDS = [
       "7-8"
     ],
     "kennisverwerking": "begrijpen",
-    "minimumdoelen": []
+    "minimumdoelen": [],
+    "aanklikbareItems": [
+      {
+        "groep": "Zorg dragen voor boeken",
+        "tekst": "de kaft en de bladen netjes en gaaf houden"
+      },
+      {
+        "groep": "Zorg dragen voor boeken",
+        "tekst": "bladeren in het boek door het hoekje van de bladzijde vast te nemen en voorzichtig om te slaan"
+      },
+      {
+        "groep": "Zorg dragen voor boeken",
+        "tekst": "na het lezen boeken terugplaatsen op hun plek"
+      }
+    ]
   },
   {
     "nummer": "NL.598",
@@ -10076,7 +15801,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
       "11-12"
     ],
     "kennisverwerking": "engageren",
-    "minimumdoelen": []
+    "minimumdoelen": [],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.599",
@@ -10095,7 +15821,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "minimumdoelen": [
       "1.1.4",
       "1.5.5"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.600",
@@ -10114,7 +15841,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "minimumdoelen": [
       "1.5.5",
       "1.5.3"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.601",
@@ -10132,6 +15860,28 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "begrijpen",
     "minimumdoelen": [
       "1.5.2"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Teksten",
+        "tekst": "fictie en non-fictie"
+      },
+      {
+        "groep": "Teksten",
+        "tekst": "bekroonde kinder- en jeugdliteratuur"
+      },
+      {
+        "groep": "Eigen beleving",
+        "tekst": "de inhoud van het boek: persoonlijke interesse, herkenbare situatie, herkenbaar personage, emoties en gedachten die het teweeg brengt"
+      },
+      {
+        "groep": "Eigen beleving",
+        "tekst": "illustraties in het boek: kleurgebruik, details, herkenbaarheid"
+      },
+      {
+        "groep": "Eigen beleving",
+        "tekst": "de vorm van de tekst in het boek: rijmvorm, tekstopmaak, lettertypes"
+      }
     ]
   },
   {
@@ -10152,6 +15902,32 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "minimumdoelen": [
       "1.5.5",
       "1.5.7"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Teksten",
+        "tekst": "fictie en non-fictie"
+      },
+      {
+        "groep": "Teksten",
+        "tekst": "bekroonde kinder- en jeugdliteratuur"
+      },
+      {
+        "groep": "Eigen beleving",
+        "tekst": "de inhoud van het boek: persoonlijke interesse, herkenbare situatie, herkenbaar personage, emoties die het teweeg brengt"
+      },
+      {
+        "groep": "Eigen beleving",
+        "tekst": "illustraties in het boek: tekenstijl, kleurgebruik, details, herkenbaarheid"
+      },
+      {
+        "groep": "Eigen beleving",
+        "tekst": "de vorm van de tekst in het boek: doorlopende tekst, rijmvorm, tekstopmaak, lettertypes"
+      },
+      {
+        "groep": "Eigen beleving",
+        "tekst": "de structuur van de tekst in het boek: indeling in hoofdstukken, indeling in alinea’s al dan niet met tussentitels"
+      }
     ]
   },
   {
@@ -10170,6 +15946,16 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.5.2"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "In gesprek",
+        "tekst": "leesvoorkeuren geven"
+      },
+      {
+        "groep": "In gesprek",
+        "tekst": "vragen stellen en antwoorden geven"
+      }
     ]
   },
   {
@@ -10187,6 +15973,32 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.5.6"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Spreken",
+        "tekst": "leesvoorkeuren geven"
+      },
+      {
+        "groep": "Spreken",
+        "tekst": "leesmotivatie beschrijven"
+      },
+      {
+        "groep": "Spreken",
+        "tekst": "leesdoel formuleren"
+      },
+      {
+        "groep": "Spreken",
+        "tekst": "vragen stellen en vragen beantwoorden"
+      },
+      {
+        "groep": "Spreken",
+        "tekst": "eigen meningen formuleren"
+      },
+      {
+        "groep": "Te hanteren begrippen",
+        "tekst": "de motivatie"
+      }
     ]
   },
   {
@@ -10203,6 +16015,32 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "gebruiken",
     "minimumdoelen": [
       "1.5.2"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Spreken",
+        "tekst": "leesvoorkeuren geven"
+      },
+      {
+        "groep": "Spreken",
+        "tekst": "leesmotivatie beschrijven"
+      },
+      {
+        "groep": "Spreken",
+        "tekst": "leesdoel formuleren"
+      },
+      {
+        "groep": "Spreken",
+        "tekst": "vragen stellen en vragen beantwoorden"
+      },
+      {
+        "groep": "Spreken",
+        "tekst": "eigen meningen formuleren"
+      },
+      {
+        "groep": "Spreken",
+        "tekst": "de eigen mening beargumenteren"
+      }
     ]
   },
   {
@@ -10220,6 +16058,16 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "begrijpen",
     "minimumdoelen": [
       "1.5.3"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Leesvoorkeuren",
+        "tekst": "bepaalde verhalen"
+      },
+      {
+        "groep": "Leesvoorkeuren",
+        "tekst": "bepaalde personages"
+      }
     ]
   },
   {
@@ -10237,6 +16085,28 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "begrijpen",
     "minimumdoelen": [
       "1.5.4"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Literaire tekst",
+        "tekst": "verhalende tekst, rijk taalgebruik"
+      },
+      {
+        "groep": "Leesvoorkeuren",
+        "tekst": "bepaalde verhalen"
+      },
+      {
+        "groep": "Leesvoorkeuren",
+        "tekst": "bepaalde personages"
+      },
+      {
+        "groep": "Leesvoorkeuren",
+        "tekst": "bepaalde reeksen"
+      },
+      {
+        "groep": "Leesvoorkeuren",
+        "tekst": "bepaalde genres"
+      }
     ]
   },
   {
@@ -10253,6 +16123,32 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "begrijpen",
     "minimumdoelen": [
       "1.5.2"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Literaire tekst",
+        "tekst": "verhalende tekst, rijk taalgebruik"
+      },
+      {
+        "groep": "Leesvoorkeuren",
+        "tekst": "bepaalde verhalen"
+      },
+      {
+        "groep": "Leesvoorkeuren",
+        "tekst": "bepaalde personages"
+      },
+      {
+        "groep": "Leesvoorkeuren",
+        "tekst": "bepaalde reeksen"
+      },
+      {
+        "groep": "Leesvoorkeuren",
+        "tekst": "bepaalde genres"
+      },
+      {
+        "groep": "Leesvoorkeuren",
+        "tekst": "bepaalde auteur(s)"
+      }
     ]
   },
   {
@@ -10272,6 +16168,12 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "minimumdoelen": [
       "1.5.6",
       "1.5.2"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Literaire tekst",
+        "tekst": "verhalende tekst, rijk taalgebruik"
+      }
     ]
   },
   {
@@ -10289,6 +16191,28 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "engageren",
     "minimumdoelen": [
       "1.5.5"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Speels en creatief",
+        "tekst": "de eigen verbeelding oproepen"
+      },
+      {
+        "groep": "Speels en creatief",
+        "tekst": "experimenteren met taal"
+      },
+      {
+        "groep": "Speels en creatief",
+        "tekst": "talig creëren"
+      },
+      {
+        "groep": "Inzetten",
+        "tekst": "in spelsituaties"
+      },
+      {
+        "groep": "Inzetten",
+        "tekst": "bij vertelrondes"
+      }
     ]
   },
   {
@@ -10305,6 +16229,24 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "begrijpen",
     "minimumdoelen": [
       "1.5.5"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Creatief",
+        "tekst": "vanuit de eigen verbeelding"
+      },
+      {
+        "groep": "Creatief",
+        "tekst": "experimenteren met taal"
+      },
+      {
+        "groep": "Creatief",
+        "tekst": "talig creëren"
+      },
+      {
+        "groep": "Uitdrukken",
+        "tekst": "in gesproken taal"
+      }
     ]
   },
   {
@@ -10321,6 +16263,16 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "begrijpen",
     "minimumdoelen": [
       "1.5.9"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Uitdrukken",
+        "tekst": "in gesproken taal"
+      },
+      {
+        "groep": "Uitdrukken",
+        "tekst": "met een groeiende hoeveelheid woordenschat"
+      }
     ]
   },
   {
@@ -10340,7 +16292,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "minimumdoelen": [
       "1.5.9",
       "1.5.5"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.614",
@@ -10354,7 +16307,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
       "11-12"
     ],
     "kennisverwerking": "gebruiken",
-    "minimumdoelen": []
+    "minimumdoelen": [],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.615",
@@ -10371,7 +16325,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "minimumdoelen": [
       "1.5.9",
       "1.5.5"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.616",
@@ -10388,7 +16343,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "minimumdoelen": [
       "1.5.9",
       "1.5.5"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.617",
@@ -10405,7 +16361,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "minimumdoelen": [
       "1.5.9",
       "1.5.5"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.618",
@@ -10421,6 +16378,32 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "kennisverwerking": "engageren",
     "minimumdoelen": [
       "1.5.5"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Speels en creatief",
+        "tekst": "de eigen verbeelding oproepen"
+      },
+      {
+        "groep": "Speels en creatief",
+        "tekst": "experimenteren met taal"
+      },
+      {
+        "groep": "Speels en creatief",
+        "tekst": "talig creëren"
+      },
+      {
+        "groep": "Inzetten",
+        "tekst": "in spelsituaties"
+      },
+      {
+        "groep": "Inzetten",
+        "tekst": "bij vertelrondes"
+      },
+      {
+        "groep": "Inzetten",
+        "tekst": "gebruik makend van tekeningen, letters, cijfers en al dan niet uitgevonden tekens"
+      }
     ]
   },
   {
@@ -10444,7 +16427,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "minimumdoelen": [
       "1.5.9",
       "1.5.5"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.620",
@@ -10464,7 +16448,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "minimumdoelen": [
       "1.5.9",
       "1.5.5"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.621",
@@ -10483,7 +16468,8 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "minimumdoelen": [
       "1.5.9",
       "1.5.5"
-    ]
+    ],
+    "aanklikbareItems": []
   },
   {
     "nummer": "NL.622",
@@ -10502,6 +16488,20 @@ export const LEERPLANDOELEN_NEDERLANDS = [
     "minimumdoelen": [
       "1.5.9",
       "1.5.5"
+    ],
+    "aanklikbareItems": [
+      {
+        "groep": "Rijkere teksten",
+        "tekst": "de tekst bevat steeds meer details"
+      },
+      {
+        "groep": "Rijkere teksten",
+        "tekst": "karakters worden steeds meer uitgediept"
+      },
+      {
+        "groep": "Rijkere teksten",
+        "tekst": "ideeën worden steeds dieper uitgewerkt"
+      }
     ]
   }
 ];
