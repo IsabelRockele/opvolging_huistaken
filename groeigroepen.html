@@ -438,6 +438,17 @@ function huidigSchooljaar(){
   const start=now.getMonth()>=7?now.getFullYear():now.getFullYear()-1;
   return `${start}-${start+1}`;
 }
+function klasPeildatum(jaar=year()){
+  const vandaag=today(),start=`${String(jaar).slice(0,4)}-09-01`,einde=`${String(jaar).slice(5,9)}-06-30`;
+  return vandaag<start?start:vandaag>einde?einde:vandaag;
+}
+function actieveKlasleerlingen(leerlingen,jaar=year()){
+  const datum=klasPeildatum(jaar);
+  return (Array.isArray(leerlingen)?leerlingen:[]).filter(s=>{
+    const start=s.start||s.startDatum||"",einde=s.end||s.eindDatum||"";
+    return s.startNiet!==true&&(!start||start<=datum)&&(!einde||einde>=datum);
+  });
+}
 if($("schooljaar")) $("schooljaar").value=huidigSchooljaar();
 function year(){return ($("schooljaar").value||huidigSchooljaar()).trim();}
 async function setDoc(ref,payload,options){
@@ -536,17 +547,17 @@ async function loadClasses(){
   classes={};
   if(role==="klasleerkracht"){
     const snaps=await Promise.all(eigenKlassen.map(k=>getDoc(doc(db,"schoolbeheer",year(),"klassen",k))));
-    snaps.forEach((s,i)=>{const data=s.exists()?s.data():{};classes[eigenKlassen[i]]={klas:eigenKlassen[i],leerlingen:Array.isArray(data.leerlingen)?data.leerlingen:[]};});
+    snaps.forEach((s,i)=>{const data=s.exists()?s.data():{};classes[eigenKlassen[i]]={klas:eigenKlassen[i],leerlingen:actieveKlasleerlingen(data.leerlingen)};});
   }else{
     const snap=await getDocs(collection(db,"schoolbeheer",year(),"klassen"));
-    snap.docs.forEach(d=>{const data=d.data();classes[d.id]={klas:d.id,leerlingen:Array.isArray(data.leerlingen)?data.leerlingen:[]};});
+    snap.docs.forEach(d=>{const data=d.data();classes[d.id]={klas:d.id,leerlingen:actieveKlasleerlingen(data.leerlingen)};});
     DEFAULT_CLASSES.forEach(k=>{if(!classes[k])classes[k]={klas:k,leerlingen:[]};});
   }
 }
 async function loadClassesForYear(jaar){
   const snap=await getDocs(collection(db,"schoolbeheer",jaar,"klassen"));
   const result={};
-  snap.docs.forEach(d=>{const data=d.data();result[d.id]={klas:d.id,leerlingen:Array.isArray(data.leerlingen)?data.leerlingen:[]};});
+  snap.docs.forEach(d=>{const data=d.data();result[d.id]={klas:d.id,leerlingen:actieveKlasleerlingen(data.leerlingen,jaar)};});
   DEFAULT_CLASSES.forEach(k=>{if(!result[k])result[k]={klas:k,leerlingen:[]};});
   return result;
 }
