@@ -187,6 +187,16 @@ label{display:block;font-weight:800;font-size:12px;color:#44515f;margin:8px 0 4p
 .plan-uitleg{border:1px solid #bdd9b6;background:#f5fbf3;border-radius:12px;padding:12px;margin-bottom:12px}
 .plan-uitleg strong{color:#315b2b}
 .plan-veld{margin-bottom:10px}
+.doelen-kiezer{border:1px solid #b9cfb3;border-radius:12px;background:#f8fcf7;padding:12px;margin:0 0 12px}
+.doelen-filters{display:grid;grid-template-columns:160px minmax(200px,1fr) minmax(220px,1.4fr);gap:9px;align-items:end}
+.doelen-resultaten{max-height:330px;overflow:auto;display:grid;gap:7px;margin-top:10px;padding-right:3px}
+.doel-resultaat,.gekozen-doel{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;border:1px solid #d8e4d4;border-radius:10px;background:#fff;padding:9px 10px}
+.doel-resultaat strong,.gekozen-doel strong{color:#315b2b}
+.doel-meta{font-size:11px;color:var(--muted);margin-top:3px}
+.gekozen-doelen{display:grid;gap:7px;margin:9px 0 12px}
+.gekozen-doelen-kop{margin-top:12px;font-weight:800;color:#315b2b}
+.doelen-teller{font-size:12px;color:var(--muted);margin-top:7px}
+@media(max-width:800px){.doelen-filters{grid-template-columns:1fr}.doel-resultaat,.gekozen-doel{grid-template-columns:1fr}}
 .plan-week{border:1px solid var(--line);border-radius:12px;background:#fbfcfb;margin:10px 0;overflow:hidden}
 .plan-week-kop{display:grid;grid-template-columns:120px 1fr 150px auto;gap:8px;align-items:end;background:#e4f4dc;padding:10px}
 .plan-week-body{display:grid;grid-template-columns:1fr 1.35fr;gap:10px;padding:10px}
@@ -294,6 +304,7 @@ import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebase
 import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import { getFirestore, collection, doc, getDoc, getDocs, setDoc as firestoreSetDoc, deleteDoc as firestoreDeleteDoc, query, where, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 import { maakVeiligheidskopie, probeerVeiligheidskopie } from "./firebase-veiligheid.js";
+import { LEERPLANDOELEN_NEDERLANDS } from "./leerplandoelen-nederlands.js";
 
 const firebaseConfig={apiKey:"AIzaSyA7KxXMvZ4dzBQDut3CMyWUblLte2tFzoQ",authDomain:"huiswerkapp-a311e.firebaseapp.com",projectId:"huiswerkapp-a311e",storageBucket:"huiswerkapp-a311e.appspot.com",messagingSenderId:"797169941164",appId:"1:797169941164:web:511d9618079f1378d0fd09"};
 const app=getApps().length?getApp():initializeApp(firebaseConfig);
@@ -414,7 +425,8 @@ function emptyGroeiplan(){
     klas:"",
     groep:"",
     onderwerp:"",
-    minimumdoelen:"",
+    doelen:"",
+    geselecteerdeDoelen:[],
     probleem:"",
     uitval:"",
     beoogdeEffecten:"",
@@ -426,6 +438,8 @@ function emptyGroeiplan(){
 }
 function normalizeGroeiplan(plan){
   const p={...emptyGroeiplan(),...(plan||{})};
+  p.doelen=p.doelen||p.minimumdoelen||"";
+  p.geselecteerdeDoelen=Array.isArray(p.geselecteerdeDoelen)?p.geselecteerdeDoelen:[];
   p.leerlingStatus=p.leerlingStatus||{};
   p.weken=Array.isArray(p.weken)?p.weken:[];
   p.wijzigingen=Array.isArray(p.wijzigingen)?p.wijzigingen:[];
@@ -583,6 +597,35 @@ function groeiplanStatusLabel(value){
     opvolgen:"opvolgen in klas"
   })[value||"actief"]||"in groeigroep";
 }
+function doelPad(doel){return [doel.subthema,doel.rubriek,doel.subrubriek].filter(Boolean).join(" › ");}
+function gekozenLeerplandoelen(){
+  const plan=active.groeiplan=normalizeGroeiplan(active.groeiplan);
+  return plan.geselecteerdeDoelen;
+}
+function renderGroeiplanDoelenZoeker(){
+  const resultaten=$("leerplandoelenResultaten"),gekozenBox=$("gekozenLeerplandoelen");
+  if(!resultaten||!gekozenBox)return;
+  const gekozen=gekozenLeerplandoelen(),gekozenNummers=new Set(gekozen.map(d=>String(d.nummer||d)));
+  const zoek=($("leerplandoelZoek")?.value||"").trim().toLowerCase(),leeftijd=$("leerplandoelLeeftijd")?.value||"",onderverdeling=$("leerplandoelOnderverdeling")?.value||"";
+  const passend=LEERPLANDOELEN_NEDERLANDS.filter(d=>(!leeftijd||d.leeftijden.includes(leeftijd))&&(!onderverdeling||d.subthema===onderverdeling)&&(!zoek||`${d.nummer} ${d.tekst} ${doelPad(d)}`.toLowerCase().includes(zoek)));
+  gekozenBox.innerHTML=gekozen.length?gekozen.map(d=>`<div class="gekozen-doel"><div><strong>${esc(d.nummer||"")}</strong> — ${esc(d.tekst||"")}<div class="doel-meta">${esc(doelPad(d))}${d.leeftijden?.length?` · ${esc(d.leeftijden.join(", "))} jaar`:""}</div></div><button class="ghost small" onclick="ggVerwijderLeerplandoel('${esc(d.nummer||d)}')">Verwijderen</button></div>`).join(""):`<div class="empty">Nog geen leerplandoelen gekozen.</div>`;
+  const zichtbaar=passend.slice(0,80);
+  resultaten.innerHTML=zichtbaar.length?zichtbaar.map(d=>`<div class="doel-resultaat"><div><strong>${esc(d.nummer)}</strong> — ${esc(d.tekst)}<div class="doel-meta">${esc(doelPad(d))}${d.leeftijden.length?` · ${esc(d.leeftijden.join(", "))} jaar`:""}</div></div><button class="small ${gekozenNummers.has(d.nummer)?'ghost':'secondary'}" ${gekozenNummers.has(d.nummer)?'disabled':''} onclick="ggKiesLeerplandoel('${esc(d.nummer)}')">${gekozenNummers.has(d.nummer)?'✓ Gekozen':'Toevoegen'}</button></div>`).join(""):`<div class="empty">Geen doelen gevonden met deze filters.</div>`;
+  $("leerplandoelenTeller").textContent=`${passend.length} doel${passend.length===1?'':'en'} gevonden${passend.length>80?' · verfijn de filters om meer gericht te zoeken':''}`;
+  pasRaadpleegstandToe();
+}
+window.ggFilterLeerplandoelen=renderGroeiplanDoelenZoeker;
+window.ggKiesLeerplandoel=nummer=>{
+  collectGroeiplan();
+  const doel=LEERPLANDOELEN_NEDERLANDS.find(d=>d.nummer===nummer);
+  if(doel&&!gekozenLeerplandoelen().some(d=>String(d.nummer||d)===nummer))gekozenLeerplandoelen().push({...doel});
+  renderGroeiplanDoelenZoeker();
+};
+window.ggVerwijderLeerplandoel=nummer=>{
+  collectGroeiplan();
+  active.groeiplan.geselecteerdeDoelen=gekozenLeerplandoelen().filter(d=>String(d.nummer||d)!==nummer);
+  renderGroeiplanDoelenZoeker();
+};
 function renderGroeiplan(){
   const plan=active.groeiplan=normalizeGroeiplan(active.groeiplan);
   $("tab-groeiplan").innerHTML=`
@@ -602,7 +645,19 @@ function renderGroeiplan(){
         <label>Groep<input id="planGroep" value="${esc(plan.groep||active.naam)}" placeholder="Naam groeigroep"></label>
       </div>
       <label class="plan-veld">Onderwerp<textarea id="planOnderwerp" placeholder="Waarover gaat dit groeiplan?">${esc(plan.onderwerp)}</textarea></label>
-      <label class="plan-veld">Minimumdoelen<textarea id="planMinimumdoelen" placeholder="Welke minimumdoelen moeten bereikt worden?">${esc(plan.minimumdoelen)}</textarea></label>
+      <div class="plan-veld"><strong>Doelen</strong><div class="muted">Selecteer doelen uit het nieuwe leerplan Nederlands. Zoek op doelnummer of woorden uit het doel en filter eventueel op leeftijd en onderverdeling.</div></div>
+      <section class="doelen-kiezer">
+        <div class="doelen-filters">
+          <label>Leeftijd<select id="leerplandoelLeeftijd" onchange="ggFilterLeerplandoelen()"><option value="">Alle leeftijden</option>${["2,5-4","4-5","5-6","6-7","7-8","8-9","9-10","10-11","11-12"].map(x=>`<option value="${x}">${x} jaar</option>`).join("")}</select></label>
+          <label>Onderverdeling<select id="leerplandoelOnderverdeling" onchange="ggFilterLeerplandoelen()"><option value="">Alle onderverdelingen</option>${[...new Set(LEERPLANDOELEN_NEDERLANDS.map(d=>d.subthema).filter(Boolean))].sort((a,b)=>a.localeCompare(b,"nl")).map(x=>`<option value="${esc(x)}">${esc(x)}</option>`).join("")}</select></label>
+          <label>Zoeken op nummer of tekst<input id="leerplandoelZoek" placeholder="bv. NL.003, rijm of vloeiend lezen" oninput="ggFilterLeerplandoelen()"></label>
+        </div>
+        <div id="leerplandoelenTeller" class="doelen-teller"></div>
+        <div id="leerplandoelenResultaten" class="doelen-resultaten"></div>
+        <div class="gekozen-doelen-kop">Gekozen doelen</div>
+        <div id="gekozenLeerplandoelen" class="gekozen-doelen"></div>
+        <label>Eigen doel of aanvulling<textarea id="planDoelen" placeholder="Voeg hier indien nodig een eigen doel of extra verduidelijking toe.">${esc(plan.doelen)}</textarea></label>
+      </section>
       <label class="plan-veld">Probleem / diagnose<textarea id="planProbleem" placeholder="Wat lukt nog niet? Wat merken we op?">${esc(plan.probleem)}</textarea></label>
       <label class="plan-veld">Uitval / oorzaak<textarea id="planUitval" placeholder="Didactische oorzaken, kindeigen oorzaken, observaties...">${esc(plan.uitval)}</textarea></label>
       <label class="plan-veld">Beoogde effecten<textarea id="planEffecten" placeholder="Wat willen we zien veranderen?">${esc(plan.beoogdeEffecten)}</textarea></label>
@@ -641,6 +696,7 @@ function renderGroeiplan(){
         ${(plan.wijzigingen||[]).length?plan.wijzigingen.slice().reverse().map(w=>`<div class="plan-history-item"><strong>${esc(w.datum||"")}</strong> ${esc(w.tekst||"")}</div>`).join(""):`<p class="muted" style="margin-top:8px">Nog geen wijzigingen genoteerd.</p>`}
       </div>
     </div>`;
+  renderGroeiplanDoelenZoeker();
 }
 function renderGroeiplanWeek(w){
   return `<section class="plan-week" data-plan-week="${esc(w.id)}">
@@ -664,7 +720,7 @@ function collectGroeiplan(){
   current.klas=$("planKlas")?.value.trim()||"";
   current.groep=$("planGroep")?.value.trim()||"";
   current.onderwerp=$("planOnderwerp")?.value.trim()||"";
-  current.minimumdoelen=$("planMinimumdoelen")?.value.trim()||"";
+  current.doelen=$("planDoelen")?.value.trim()||"";
   current.probleem=$("planProbleem")?.value.trim()||"";
   current.uitval=$("planUitval")?.value.trim()||"";
   current.beoogdeEffecten=$("planEffecten")?.value.trim()||"";
@@ -746,6 +802,8 @@ function bouwGroeiplanPdfHtml(logoUrl){
     : `<div class="gp-kop-met-start"><h2>Opvolging en acties</h2><div class="gp-weken"><div class="gp-empty">Nog geen weekopvolging ingevuld.</div></div></div>`;
   const wijzigingen=(plan.wijzigingen||[]).length?plan.wijzigingen.map(w=>`<div class="gp-history-item"><strong>${esc(w.datum||"")}</strong><br>${esc(w.tekst||"")}</div>`).join(""):`<div class="gp-empty">Nog geen wijzigingen genoteerd.</div>`;
   const section=(titel,inhoud)=>`<section class="gp-section gp-keep"><h2>${esc(titel)}</h2><div class="gp-section-body">${tekstblok(inhoud)||'<span class="gp-empty">Nog niet ingevuld.</span>'}</div></section>`;
+  const gekozenDoelen=(plan.geselecteerdeDoelen||[]).map(d=>`${d.nummer||""} — ${d.tekst||""}`).filter(Boolean).join("\n");
+  const doelenTekst=[gekozenDoelen,plan.doelen||plan.minimumdoelen||""].filter(Boolean).join("\n\n");
   return `<div id="groeiplanPdf">
     <div class="gp-cover">
       <div class="gp-title">
@@ -770,7 +828,7 @@ function bouwGroeiplanPdfHtml(logoUrl){
       <div class="gp-inspectie">De status toont of een leerling nog actief deelneemt, afbouwt, terug aansluit in de klas of verder in de klas opgevolgd wordt.</div>
     </section>
     ${section("Onderwerp",plan.onderwerp)}
-    ${section("Minimumdoelen",plan.minimumdoelen)}
+    ${section("Doelen",doelenTekst)}
     ${section("Probleem / diagnose",plan.probleem)}
     ${section("Uitval / oorzaak",plan.uitval)}
     ${section("Beoogde effecten",plan.beoogdeEffecten)}
@@ -1653,6 +1711,19 @@ async function saveGroup(){
     throw e;
   }
 }
+function maakFirebaseVeilig(value){
+  if(value===undefined)return undefined;
+  if(Array.isArray(value))return value.map(maakFirebaseVeilig).filter(item=>item!==undefined);
+  if(value&&typeof value==="object"){
+    const prototype=Object.getPrototypeOf(value);
+    if(prototype!==Object.prototype&&prototype!==null)return value;
+    return Object.fromEntries(Object.entries(value).flatMap(([key,item])=>{
+      const veilig=maakFirebaseVeilig(item);
+      return veilig===undefined?[]:[[key,veilig]];
+    }));
+  }
+  return value;
+}
 async function persistActiveGroup(doneText){
   if(!active)return;
   if(!magBewerken()) throw new Error("Deze groeigroep staat voor jou in raadpleegstand.");
@@ -1661,7 +1732,8 @@ async function persistActiveGroup(doneText){
   active.bewaartermijnJaren=BEWAAR_JAREN_GROEIGROEP_LOGBOEK;
   active.bewaardoor="logboek zorgtraject";
   try{
-    await setDoc(groupRef(active.id),{...active,updatedAt:serverTimestamp(),updatedBy:user.email||user.uid},{merge:true});
+    const veiligeGroep=maakFirebaseVeilig(active);
+    await setDoc(groupRef(active.id),{...veiligeGroep,updatedAt:serverTimestamp(),updatedBy:user.email||user.uid},{merge:true});
     const tekst=doneText||("Bewaard om "+new Date().toLocaleTimeString("nl-BE",{hour:"2-digit",minute:"2-digit"}));
     setStatus(tekst);
   }catch(e){
