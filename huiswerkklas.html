@@ -163,6 +163,7 @@ function currentSchooljaar(){const n=new Date(), y=n.getMonth()>=7?n.getFullYear
 function currentMonth(){const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}`;}
 function todayIso(){const d=new Date(),p=n=>String(n).padStart(2,"0");return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}`;}
 function name(s){const first=s.first||s.firstName||"", last=s.last||s.lastName||"";return `${last}, ${first}`.replace(/^, /,"").replace(/, $/,"")||s.naam||"";}
+function nameSortKey(s){const first=s.first||s.firstName||"",last=s.last||s.lastName||String(s.naam||"").split(",")[0]||"";return `${last}${first}`.normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9]/gi,"").toLocaleLowerCase("nl")}
 function studentKey(klas,s){return `${klas}_${String(s.id||name(s)).replace(/[^a-z0-9_-]+/gi,"_")}`;}
 function isSchoolBreed(){return ["directie","zorgcoordinator","zorgleerkracht","beheerder"].includes(role);}
 function isSecretariaat(){return ["secretariaat","beheerder"].includes(role);}
@@ -176,7 +177,7 @@ function colorForClass(klas){const i=Math.max(0,DEFAULT_CLASSES.indexOf(klas));r
 function monthRef(){return doc(db,"huiswerkklas",schooljaar,"maanden",demoMode?`test-${user.uid}-${month}`:month);}
 function testModeKey(){return `lindeHuiswerkklasTest_${user?.uid||""}`;}
 function bewaarTotVoorSchooljaar(jaar=schooljaar, extraJaren=BEWAAR_JAREN_HUISWERKKLAS){return `${Number(String(jaar).slice(0,4))+extraJaren}-08-31`;}
-function activeStudents(list,dateForCheck=`${month}-15`){return (list||[]).filter(s=>(!s.start||s.start<=dateForCheck)&&(!s.end||s.end>=dateForCheck)).sort((a,b)=>name(a).localeCompare(name(b),"nl"));}
+function activeStudents(list,dateForCheck=`${month}-15`){return (list||[]).filter(s=>(!s.start||s.start<=dateForCheck)&&(!s.end||s.end>=dateForCheck)).sort((a,b)=>nameSortKey(a).localeCompare(nameSortKey(b),"nl"));}
 async function loadRole(){
   const snap=await getDoc(doc(db,"schoolrollen",user.uid));
   realRole=snap.exists()?String(snap.data().rol||"").toLowerCase():"";role=realRole;

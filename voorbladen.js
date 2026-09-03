@@ -13,6 +13,7 @@ function xml(v){return String(v??"").replaceAll("&","&amp;").replaceAll("<","&lt
 function voornaam(s){const d=String(s.first||s.firstName||s.voornaam||"").trim();if(d)return d;const v=String(s.naam||s.name||"").trim();if(v.includes(","))return v.split(",").slice(1).join(",").trim();return v.split(/\s+/)[0]||""}
 function achternaam(s){const d=String(s.last||s.lastName||s.achternaam||"").trim();if(d)return d;const v=String(s.naam||s.name||"").trim();if(v.includes(","))return v.split(",")[0].trim();return v.split(/\s+/).slice(1).join(" ").trim()}
 function volledigeNaam(s){return [achternaam(s),voornaam(s)].filter(Boolean).join(" ")}
+function naamSorteersleutel(s){return `${achternaam(s)}${voornaam(s)}`.normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]/gi,'').toLocaleLowerCase('nl')}
 function leerlingId(s,i){return String(s.id||`${achternaam(s)}_${voornaam(s)}_${i}`)}
 function actief(s){const jaar=$('schooljaar').value.trim(),datum=`${jaar.slice(0,4)}-09-15`;return(!s.start||s.start<=datum)&&(!s.end||s.end>=datum)}
 function gekozen(){return leerlingen.map((s,i)=>({id:leerlingId(s,i),naam:volledigeNaam(s)})).filter(x=>geselecteerd.has(x.id)&&x.naam)}
@@ -35,7 +36,7 @@ async function laadKlassen(){
   else{const email=(user.email||'').toLowerCase(),qs=await Promise.all([getDocs(query(collection(db,'klasleerkrachten'),where('leerkracht_uids','array-contains',user.uid))),getDocs(query(collection(db,'klasleerkrachten'),where('leerkracht_emails','array-contains',email)))]);const set=new Set();qs.forEach(q=>q.docs.forEach(d=>{const x=d.data();if(String(x.schooljaar||jaar)===jaar&&x.klas)set.add(String(x.klas).trim())}));klassen=[...set]}
   klassen.sort(vergelijkKlassen);$('klas').innerHTML=klassen.map(k=>`<option>${esc(k)}</option>`).join('')||'<option value="">Geen klas gekoppeld</option>';await laadLeerlingen();
 }
-async function laadLeerlingen(){const klas=$('klas').value,jaar=$('schooljaar').value.trim();leerlingen=[];if(klas){const s=await getDoc(doc(db,'schoolbeheer',jaar,'klassen',klas));if(s.exists())leerlingen=(s.data().leerlingen||[]).filter(actief).sort((a,b)=>volledigeNaam(a).localeCompare(volledigeNaam(b),'nl'))}geselecteerd=new Set(leerlingen.map(leerlingId));render()}
+async function laadLeerlingen(){const klas=$('klas').value,jaar=$('schooljaar').value.trim();leerlingen=[];if(klas){const s=await getDoc(doc(db,'schoolbeheer',jaar,'klassen',klas));if(s.exists())leerlingen=(s.data().leerlingen||[]).filter(actief).sort((a,b)=>naamSorteersleutel(a).localeCompare(naamSorteersleutel(b),'nl'))}geselecteerd=new Set(leerlingen.map(leerlingId));render()}
 
 const encoder=new TextEncoder();let crcTable=null;
 function crc32(bytes){if(!crcTable){crcTable=new Uint32Array(256);for(let n=0;n<256;n++){let c=n;for(let k=0;k<8;k++)c=(c&1)?0xedb88320^(c>>>1):c>>>1;crcTable[n]=c>>>0}}let c=0xffffffff;for(const b of bytes)c=crcTable[(c^b)&255]^(c>>>8);return(c^0xffffffff)>>>0}

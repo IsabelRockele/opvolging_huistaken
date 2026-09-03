@@ -10,7 +10,8 @@ function esc(v){return String(v??"").replaceAll("&","&amp;").replaceAll("<","&lt
 function xml(v){return String(v??"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&apos;")}
 function roepnaam(s){const officieel=String(s.first||s.firstName||s.voornaam||"").trim();return String(s.roepnaam||s.roepNaam||s.callingName||officieel||"").trim()||String(s.naam||s.name||"").trim().split(/[, ]+/).filter(Boolean).at(-1)||""}
 function achternaam(s){const direct=String(s.last||s.lastName||s.achternaam||"").trim();if(direct)return direct;const volledig=String(s.naam||s.name||"").trim();if(!volledig)return "";return volledig.includes(",")?volledig.split(",")[0].trim():volledig.split(/\s+/).slice(1).join(" ").trim()}
-function vergelijk(a,b){return achternaam(a).localeCompare(achternaam(b),"nl",{sensitivity:"base"})||roepnaam(a).localeCompare(roepnaam(b),"nl",{sensitivity:"base"})}
+function naamSorteersleutel(s){return `${achternaam(s)}${roepnaam(s)}`.normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9]/gi,"").toLocaleLowerCase("nl")}
+function vergelijk(a,b){return naamSorteersleutel(a).localeCompare(naamSorteersleutel(b),"nl",{sensitivity:"base"})}
 function actief(s){const jaar=$("schooljaar").value.trim(),begin=`${jaar.slice(0,4)}-09-01`,einde=`${jaar.slice(5,9)}-06-30`,n=new Date(),vandaag=`${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,"0")}-${String(n.getDate()).padStart(2,"0")}`,datum=vandaag<begin?begin:vandaag>einde?einde:vandaag;return(!s.start||s.start<=datum)&&(!s.end||s.end>=datum)}
 function vergelijkKlassen(a,b){const sleutel=v=>{const s=String(v||"").toUpperCase(),k=s.match(/^K(\d+)(.*)$/),l=s.match(/^(\d+)(.*)$/);return k?[0,+k[1],k[2]]:l?[1,+l[1],l[2]]:[2,999,s]};const x=sleutel(a),y=sleutel(b);return x[0]-y[0]||x[1]-y[1]||x[2].localeCompare(y[2],"nl")}
 function isBreed(){return ["beheerder","directie","zorgcoordinator","zorgleerkracht"].includes(role)}

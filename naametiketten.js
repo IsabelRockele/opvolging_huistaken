@@ -24,8 +24,9 @@ function achternaam(s){
   if(volledig.includes(","))return volledig.split(",")[0].trim();
   return volledig.split(/\s+/).slice(1).join(" ").trim();
 }
+function naamSorteersleutel(s){return `${achternaam(s)}${voornaam(s)}`.normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]/gi,'').toLocaleLowerCase('nl')}
 function vergelijkOpAchternaam(a,b){
-  return achternaam(a).localeCompare(achternaam(b),'nl',{sensitivity:'base'}) || voornaam(a).localeCompare(voornaam(b),'nl',{sensitivity:'base'});
+  return naamSorteersleutel(a).localeCompare(naamSorteersleutel(b),'nl',{sensitivity:'base'});
 }
 function leerlingId(s,index){return String(s.id||`${voornaam(s)}_${achternaam(s)}_${index}`)}
 function basisVoornaam(s){

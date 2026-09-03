@@ -398,6 +398,11 @@ function studentNaam(s){
   if(direct && direct!==id) return direct;
   return "Naam ontbreekt";
 }
+function studentNaamSorteersleutel(s){
+  const last=String(s.lastName||s.last||s.achternaam||studentNaam(s).split(",")[0]||"");
+  const first=String(s.firstName||s.first||s.voornaam||studentNaam(s).split(",").slice(1).join(",")||"");
+  return `${last}${first}`.normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9]/gi,"").toLocaleLowerCase("nl");
+}
 function studentUitKlas(klas,s){
   const leerlingId=String(s.id||s.leerlingId||uid());
   const item={
@@ -447,7 +452,7 @@ function actieveKlasleerlingen(leerlingen,jaar=year()){
   return (Array.isArray(leerlingen)?leerlingen:[]).filter(s=>{
     const start=s.start||s.startDatum||"",einde=s.end||s.eindDatum||"";
     return s.startNiet!==true&&(!start||start<=datum)&&(!einde||einde>=datum);
-  });
+  }).sort((a,b)=>studentNaamSorteersleutel(a).localeCompare(studentNaamSorteersleutel(b),"nl"));
 }
 if($("schooljaar")) $("schooljaar").value=huidigSchooljaar();
 function year(){return ($("schooljaar").value||huidigSchooljaar()).trim();}
