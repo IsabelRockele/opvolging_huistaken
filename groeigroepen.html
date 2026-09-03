@@ -40,8 +40,12 @@ label{display:block;font-weight:800;font-size:12px;color:#44515f;margin:8px 0 4p
 .tab{background:#f0f2f4}.tab.active{background:var(--yellow)}
 .empty{text-align:center;padding:36px;color:var(--muted)}
 .student-list{display:grid;gap:7px;max-height:410px;overflow:auto;padding-right:4px}
+.klas-keuze{display:flex;gap:7px;flex-wrap:wrap;margin:10px 0 12px}
+.klas-keuze-knop{background:#f0f2f4;border:2px solid transparent;display:inline-flex;gap:7px;align-items:center}
+.klas-keuze-knop.active{background:var(--blue2);border-color:#7ca6d8;color:#183f70}
+.klas-keuze-knop .klas-teller{background:#fff;border-radius:999px;padding:2px 7px;font-size:11px}
 .class-block{border:1px solid var(--line);border-radius:12px;overflow:hidden;background:#fff}
-.class-title{width:100%;justify-content:space-between;background:#f6f8fa;border-radius:0}
+.class-title{width:100%;display:flex;align-items:center;justify-content:space-between;background:#f6f8fa;border-radius:0}
 .class-students{display:none;padding:8px}.class-block.open .class-students{display:grid;gap:5px}
 .check-row{display:flex;align-items:center;gap:8px;padding:7px 8px;border-radius:8px}
 .check-row:hover{background:#f6f8fa}.check-row input{width:auto}
@@ -408,6 +412,7 @@ function verrijkLeerling(s){
 }
 const today=()=>new Date().toISOString().slice(0,10);
 let user=null, role="", groups=[], active=null, classes={}, tab="basis", eigenKlassen=[];
+let leerlingPickerKlas="";
 let rapHoofdtab="groep"; // welke rapport-hoofdtab actief is: 'groep' of 'kind'
 let ptPeriodeFilter="";
 const BEWAAR_JAREN_GROEIGROEP_LOGBOEK = 6; // Aanpasbaar: groeigroep-logboeken bewaren tot eind augustus na dit aantal schooljaren.
@@ -953,30 +958,40 @@ function allStudents(){
   }))).sort((a,b)=>studentNaam(a).localeCompare(studentNaam(b),"nl"));
 }
 function renderLeerlingen(){
+  const klasLijst=Object.values(classes).sort((a,b)=>a.klas.localeCompare(b.klas,"nl",{numeric:true}));
+  if(!klasLijst.some(c=>c.klas===leerlingPickerKlas)){
+    leerlingPickerKlas=active.leerlingen.find(s=>classes[s.klas])?.klas||klasLijst[0]?.klas||"";
+  }
+  const gekozenPerKlas=active.leerlingen.reduce((a,s)=>{a[s.klas]=(a[s.klas]||0)+1;return a;},{});
   $("tab-leerlingen").innerHTML=`
     <div class="grid2">
       <div>
         <h3>Leerlingen uit schoolbeheer</h3>
-        <input id="studentSearch" placeholder="Zoek naam of klas..." oninput="window.ggRenderPicker()">
+        <div class="muted">Kies eerst een klas. Je kunt daarna een andere klas openen; eerdere keuzes blijven bewaard.</div>
+        <div class="klas-keuze">${klasLijst.map(c=>`<button type="button" data-picker-klas="${esc(c.klas)}" class="klas-keuze-knop ${c.klas===leerlingPickerKlas?"active":""}" onclick="window.ggKiesLeerlingenKlas(decodeURIComponent('${encodeURIComponent(c.klas)}'))">${esc(c.klas)} <span class="klas-teller">${gekozenPerKlas[c.klas]||0}/${(c.leerlingen||[]).length}</span></button>`).join("")}</div>
+        <input id="studentSearch" placeholder="Zoek leerling in ${esc(leerlingPickerKlas)}..." oninput="window.ggRenderPicker()">
         <div id="studentPicker" class="student-list" style="margin-top:10px"></div>
       </div>
       <div>
-        <h3>Mandje</h3>
-        <div class="muted" style="margin-bottom:8px">Dit is meteen de markering: bij deze kinderen hoort dit zorgtraject.</div>
+        <h3 id="chosenStudentsTitle">Gekozen leerlingen (${active.leerlingen.length})</h3>
+        <div class="muted" style="margin-bottom:8px">Hier staan alle gekozen leerlingen samen, ook als ze uit verschillende klassen komen.</div>
         <div id="chosenStudentsBasket" class="basket"></div>
       </div>
     </div>`;
+  window.ggKiesLeerlingenKlas=klas=>{
+    leerlingPickerKlas=klas;
+    renderLeerlingen();
+  };
   window.ggRenderPicker=()=>{
     const term=($("studentSearch")?.value||"").toLowerCase();
     const chosen=new Set(active.leerlingen.map(studentKey));
-    $("studentPicker").innerHTML=Object.values(classes).sort((a,b)=>a.klas.localeCompare(b.klas,"nl",{numeric:true})).map(c=>{
-      const students=(c.leerlingen||[]).map(s=>studentUitKlas(c.klas,s))
-        .filter(s=>!term||`${s.klas} ${studentNaam(s)}`.toLowerCase().includes(term));
-      if(!students.length&&!term)return`<div class="class-block"><button class="class-title">${esc(c.klas)} <span class="muted">0</span></button></div>`;
-      if(!students.length)return"";
-      return`<div class="class-block open"><button class="class-title" onclick="this.parentElement.classList.toggle('open')">${esc(c.klas)} <span class="muted">${students.length}</span></button><div class="class-students">${students.map(s=>`
-        <label class="check-row"><input type="checkbox" data-student-key="${esc(studentKey(s))}" ${chosen.has(studentKey(s))?"checked":""} onchange="window.ggToggleStudent('${esc(c.klas)}','${esc(s.leerlingId)}',this.checked)"> ${esc(studentNaam(s))}</label>`).join("")}</div></div>`;
-    }).join("");
+    const c=classes[leerlingPickerKlas];
+    if(!c){$("studentPicker").innerHTML=`<div class="empty">Kies eerst een klas.</div>`;return;}
+    const students=(c.leerlingen||[]).map(s=>studentUitKlas(c.klas,s))
+      .filter(s=>!term||studentNaam(s).toLowerCase().includes(term));
+    $("studentPicker").innerHTML=students.length?`<div class="class-block open"><div class="class-title">${esc(c.klas)} <span class="muted">${students.length} leerling${students.length===1?"":"en"}</span></div><div class="class-students">${students.map(s=>`
+        <label class="check-row"><input type="checkbox" data-student-key="${esc(studentKey(s))}" ${chosen.has(studentKey(s))?"checked":""} onchange="window.ggToggleStudent('${esc(c.klas)}','${esc(s.leerlingId)}',this.checked)"> ${esc(studentNaam(s))}</label>`).join("")}</div></div>`
+      :`<div class="empty">${term?"Geen leerling gevonden in deze klas.":"In deze klas staan nog geen leerlingen."}</div>`;
   };
   window.ggRenderPicker();
   renderChosenStudentsBasket();
@@ -984,6 +999,14 @@ function renderLeerlingen(){
 function renderChosenStudentsBasket(){
   const el=$("chosenStudentsBasket");
   if(!el)return;
+  const titel=$("chosenStudentsTitle");
+  if(titel)titel.textContent=`Gekozen leerlingen (${active.leerlingen.length})`;
+  document.querySelectorAll("[data-picker-klas]").forEach(knop=>{
+    const klas=knop.dataset.pickerKlas;
+    const gekozen=active.leerlingen.filter(s=>s.klas===klas).length;
+    const teller=knop.querySelector(".klas-teller");
+    if(teller)teller.textContent=`${gekozen}/${(classes[klas]?.leerlingen||[]).length}`;
+  });
   el.innerHTML=active.leerlingen.length?active.leerlingen.map(s=>`
     <div class="basket-item"><span><strong>${esc(studentNaam(s))}</strong><br><span class="muted">${esc(s.klas)}</span></span><button class="ghost small" onclick="window.ggRemoveStudent('${esc(studentKey(s))}')">X</button></div>`).join(""):`<div class="empty">Nog geen leerlingen gekozen.</div>`;
 }
