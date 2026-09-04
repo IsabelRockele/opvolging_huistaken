@@ -39,6 +39,9 @@ label{display:block;font-weight:800;font-size:12px;color:#44515f;margin:8px 0 4p
 .tabs{display:flex;gap:7px;flex-wrap:wrap;border-bottom:1px solid var(--line);padding-bottom:10px;margin-bottom:14px}
 .tab{background:#f0f2f4}.tab.active{background:var(--yellow)}
 .empty{text-align:center;padding:36px;color:var(--muted)}
+#bewaarGroeiplanKnop{transition:background .15s,transform .1s,box-shadow .1s}
+#bewaarGroeiplanKnop:active,#bewaarGroeiplanKnop[data-state="busy"]{background:#245c39;color:#fff;transform:translateY(2px);box-shadow:inset 0 2px 5px #0004;opacity:1}
+#bewaarGroeiplanKnop[data-state="done"]{background:#245c39;color:#fff;opacity:1}
 .student-list{display:grid;gap:7px;max-height:410px;overflow:auto;padding-right:4px}
 .klas-keuze{display:flex;gap:7px;flex-wrap:wrap;margin:10px 0 12px}
 .klas-keuze-knop{background:#f0f2f4;border:2px solid transparent;display:inline-flex;gap:7px;align-items:center}
@@ -782,7 +785,7 @@ function renderGroeiplan(){
     </div>
     <div class="editor">
       <div class="row" style="justify-content:flex-end;margin-bottom:10px">
-        <button class="secondary" onclick="window.ggBewaarGroeiplan()">Bewaar groeiplan</button>
+        <button id="bewaarGroeiplanKnop" class="secondary" onclick="window.ggBewaarGroeiplan()">Bewaar groeiplan</button>
         <button onclick="window.ggDownloadGroeiplanPdf()">PDF groeiplan</button>
       </div>
       <div class="grid2">
@@ -904,9 +907,25 @@ function collectGroeiplan(){
   });
   current.updatedAt=new Date().toISOString();
 }
+let groeiplanWordtBewaard=false,groeiplanKnopTimer;
+function zetGroeiplanKnopStatus(status){
+  const knop=$("bewaarGroeiplanKnop");if(!knop)return;
+  knop.dataset.state=status;knop.disabled=status==="busy";
+  knop.setAttribute("aria-busy",String(status==="busy"));
+  knop.textContent=status==="busy"?"Bezig met bewaren…":status==="done"?"✓ Bewaard":"Bewaar groeiplan";
+}
 window.ggBewaarGroeiplan=async()=>{
-  collectGroeiplan();
-  await saveGroup();
+  if(groeiplanWordtBewaard)return;
+  groeiplanWordtBewaard=true;clearTimeout(groeiplanKnopTimer);
+  zetGroeiplanKnopStatus("busy");
+  try{
+    collectGroeiplan();
+    await saveGroup();
+    zetGroeiplanKnopStatus("done");
+    groeiplanKnopTimer=setTimeout(()=>zetGroeiplanKnopStatus(""),3000);
+  }catch(e){
+    zetGroeiplanKnopStatus("");
+  }finally{groeiplanWordtBewaard=false;}
 };
 window.ggPlanWeekToevoegen=()=>{
   collectGroeiplan();
