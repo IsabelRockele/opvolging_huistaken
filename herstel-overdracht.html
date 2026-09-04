@@ -1,0 +1,43 @@
+<!doctype html><html lang="nl"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Herstelvoorbeeld 2A en 3A</title>
+<style>body{font:17px system-ui;color:#25383e;background:#f7f4ed;margin:25px auto;max-width:1100px;padding:20px}section,article{background:white;border:1px solid #ccd7d3;border-radius:14px;padding:20px;margin:16px 0}button,input,select{font:inherit;padding:12px;margin:6px}button{cursor:pointer;background:#e0eee8;border:1px solid #79988e;border-radius:8px}button:disabled{opacity:.5;cursor:default}p{line-height:1.5;white-space:pre-wrap}h2{color:#285e51}.warning{background:#fff0d0;padding:18px;border-radius:12px}details{margin:14px 0}summary{cursor:pointer;font-weight:bold}pre{white-space:pre-wrap;overflow-wrap:anywhere}.tag{padding:5px;background:#e2edff;border-radius:8px}nav{position:sticky;top:0;background:#f7f4ed;padding:8px}label{display:block}</style>
+<h1>Herstelvoorbeeld — 2A en 3A</h1>
+<p class="warning">Dit is een voorbeeld, niet de echte klasfiche. Bekijk eerst alles. Alleen de beheerder kan onderaan het herstel bevestigen. De oude schooljaardossiers en centrale GOK-lijst worden niet gewijzigd.</p>
+<section><label>Kies de gedownloade controleback-up <input id="file" type="file" accept=".json,application/json"></label><p>Het bestand wordt lokaal in deze browser gelezen. Het wordt niet naar een andere dienst geüpload.</p><p id="status">Kies eerst de back-up.</p></section>
+<nav><button id="two">2A bekijken</button><button id="three">3A bekijken</button><select id="view"><option value="pupils">Volledige fiches per kind</option><option value="parts">Overzicht per onderdeel</option></select></nav><main id="preview"></main>
+<section id="approval" hidden><h2>Pas herstellen na controle</h2><p>Hiermee worden uitsluitend de leerlingfiches in de twee huidige overgangsprojecten vervangen door dit voorstel. Verkeerde oude klasleden verdwijnen uit het huidige overzicht, niet uit de historiek. Bestaande groepsindelingen worden leeggemaakt omdat die naar de verkeerde klasleden kunnen verwijzen. Alle oorspronkelijke gegevens blijven in je back-up.</p><label><input type="checkbox" id="checked">Ik heb de fiches van beide klassen bekeken en keur dit voorstel goed.</label><label><input type="checkbox" id="saved">Ik heb de oorspronkelijke JSON-back-up veilig bewaard en alle oude overgangsschermen gesloten.</label><button id="restore" disabled>Beide klasgroepen herstellen</button><p id="result"></p></section>
+<script type="module">
+import {buildPreview,stable,label} from './herstel-overdracht-model.mjs';
+import {initializeApp} from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import {getAuth,onAuthStateChanged} from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+import {getFirestore,doc,getDocFromServer,runTransaction,Timestamp} from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+const app=initializeApp({apiKey:'AIzaSyA7KxXMvZ4dzBQDut3CMyWUblLte2tFzoQ',authDomain:'huiswerkapp-a311e.firebaseapp.com',projectId:'huiswerkapp-a311e'}),auth=getAuth(app),db=getFirestore(app),$=id=>document.getElementById(id);
+const esc=v=>String(v??'').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;');
+const names={reading:'Lezen',readingNote:'Lezen — toelichting',spelling:'Spelling',spellingNote:'Spelling — toelichting',math:'Wiskunde',mathNote:'Wiskunde — toelichting',writing:'Schrijven',writingNote:'Schrijven — toelichting',focus:'Concentratie',focusNote:'Concentratie — toelichting',behavior:'Gedrag',behaviorNote:'Gedrag — toelichting',care:'Zorgniveau',careNote:'Zorg — toelichting',socialNote:'Sociaal',notes:'Algemene notities',schoolNote:'Schoolnotities',allergies:'Allergieën',medicalNote:'Medische informatie',gok:'GOK',gokNote:'GOK — toelichting',gokKenmerken:'GOK-kenmerken',avi:'AVI',therapies:'Ondersteuning',friends:'Graag samen',avoid:'Liever apart',iac:'IAC',extraCare:'Extra zorg'};
+let backup,plan,klas='2A',admin=false,busy=false;
+function pack(v){if(v instanceof Timestamp)return {__firestoreType:'Timestamp',seconds:v.seconds,nanoseconds:v.nanoseconds};if(Array.isArray(v))return v.map(pack);if(v&&typeof v==='object')return Object.fromEntries(Object.entries(v).map(([k,x])=>[k,pack(x)]));return v;}
+function unpack(v){if(v&&v.__firestoreType==='Timestamp')return new Timestamp(v.seconds,v.nanoseconds);if(Array.isArray(v))return v.map(unpack);if(v&&typeof v==='object')return Object.fromEntries(Object.entries(v).map(([k,x])=>[k,unpack(x)]));return v;}
+function value(v){return esc(typeof v==='object'?JSON.stringify(v,null,2):v);}
+function fields(s){return Object.entries(s).filter(([k,v])=>!['id','schoolbeheerId','name','firstName','lastName'].includes(k)&&v!==''&&v!==null&&v!==undefined);}
+function render(){if(!plan)return;const c=plan.find(c=>c.klas===klas);$('preview').innerHTML=`<h2>${klas} — ${c.students.length} kinderen · ${c.gokCount} GOK</h2>`+($('view').value==='pupils'?c.students.map((s,i)=>`<article><h3>${esc(label(s))} ${s.gok==='ja'?'<span class="tag">GOK</span>':''}</h3>${c.changes[i].isNew?'<p>Nieuwe leerling: geen oude notities.</p>':''}${fields(s).map(([k,v])=>`<details ${names[k]?'open':''}><summary>${esc(names[k]||k)}</summary><pre>${value(v)}</pre></details>`).join('')}<details><summary>Vergelijk met de huidige fiche vóór herstel</summary>${fields(c.changes[i].current).map(([k,v])=>`<p><strong>${esc(names[k]||k)}</strong><br>${value(v)}</p>`).join('')}</details></article>`).join(''):Object.entries(names).map(([field,title])=>`<article><h3>${title}</h3>${c.students.filter(s=>s[field]!==undefined&&s[field]!==''&&s[field]!==null).map(s=>`<p><strong>${esc(label(s))}</strong><br>${value(s[field])}</p>`).join('')||'<p>Geen informatie.</p>'}</article>`).join(''));}
+function enable(){$('restore').disabled=!plan||!admin||busy||!$('checked').checked||!$('saved').checked;}
+onAuthStateChanged(auth,async user=>{admin=false;enable();if(!user)return;try{const r=await getDocFromServer(doc(db,'schoolrollen',user.uid));admin=auth.currentUser?.uid===user.uid&&r.data()?.rol==='beheerder';enable();}catch{}});
+$('file').onchange=async()=>{if(busy)return;plan=null;enable();$('preview').replaceChildren();$('approval').hidden=true;$('checked').checked=false;$('saved').checked=false;try{backup=JSON.parse(await $('file').files[0].text());plan=buildPreview(backup);$('status').textContent='Voorbeeld opgebouwd. Er is niets opgeslagen. Bekijk 2A en 3A per kind of per onderdeel.';$('approval').hidden=false;render();enable();}catch(e){$('status').textContent='Gestopt: '+e.message;}};
+$('two').onclick=()=>{klas='2A';render();};$('three').onclick=()=>{klas='3A';render();};$('view').onchange=render;$('checked').onchange=enable;$('saved').onchange=enable;
+$('restore').onclick=async()=>{
+ if(!plan||!admin||busy||!$('checked').checked||!$('saved').checked)return;
+ if(!confirm('Herstel 2A (22 kinderen) en 3A (17 kinderen) volgens dit bekeken voorstel? Storm blijft in 2A. De huidige GOK-gegevens blijven behouden.'))return;
+ busy=true;enable();$('file').disabled=true;$('result').textContent='Huidige bronnen controleren; bij een verschil wordt niets opgeslagen…';
+ try{
+  const uid=auth.currentUser.uid;
+  await runTransaction(db,async tx=>{
+   const role=await tx.get(doc(db,'schoolrollen',uid));if(role.data()?.rol!=='beheerder')throw Error('Alleen de beheerder mag herstellen.');
+   const needed=new Map();for(const c of plan)for(const d of [c.target,c.source,c.rosterDoc])needed.set(d.path,d);
+   for(const d of needed.values()){const snap=await tx.get(doc(db,d.path));if(!snap.exists()||stable(pack(snap.data()))!==stable(d.data))throw Error('Gegevens gewijzigd sinds de back-up. Maak eerst een nieuwe controleback-up; er is niets hersteld.');}
+   for(const c of plan)tx.update(doc(db,c.target.path),{students:unpack(c.students),groups:[],locks:{},updatedAt:Timestamp.now()});
+  });
+  for(const c of plan){const s=await getDocFromServer(doc(db,c.target.path));if(stable(pack(s.data().students))!==stable(c.students))throw Error('Opslag is uitgevoerd, maar de nacontrole wijkt af. Niet opnieuw herstellen; laat de beheerder dit controleren.');}
+  $('result').textContent='Beide klasgroepen zijn hersteld en de opgeslagen fiches zijn nagekeken. Laat de tijdelijke bewaarblokkade eerst gecontroleerd opheffen voordat leerkrachten verder werken.';plan=null;
+ }catch(e){$('result').textContent='Herstel niet bevestigd: '+e.message;}finally{busy=false;$('file').disabled=false;enable();}
+};
+</script></html>
