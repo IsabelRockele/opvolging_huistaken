@@ -513,7 +513,7 @@ function toonBewaarMelding(tekst){
   clearTimeout(bewaarMeldingTimer);melding.textContent="✓ "+tekst;melding.hidden=false;
   bewaarMeldingTimer=setTimeout(()=>{melding.hidden=true;},4500);
 }
-function normalizeGroup(g){g.leerlingen=Array.isArray(g.leerlingen)?g.leerlingen.map(verrijkLeerling):[];g.logboek=Array.isArray(g.logboek)?g.logboek:[];g.toetsen=Array.isArray(g.toetsen)?g.toetsen:[];g.domeinen=Array.isArray(g.domeinen)?g.domeinen:[];g.rapporten=g.rapporten||{};g.rapportPeriodes=g.rapportPeriodes||{};g.groeiplan=normalizeGroeiplan(g.groeiplan);g.bewaarTot=g.bewaarTot||bewaarTotVoorSchooljaar(g.schooljaar||year());g.bewaartermijnJaren=g.bewaartermijnJaren||BEWAAR_JAREN_GROEIGROEP_LOGBOEK;g.bewaardoor=g.bewaardoor||"logboek zorgtraject";return g;}
+function normalizeGroup(g){g.leerlingen=Array.isArray(g.leerlingen)?g.leerlingen.map(verrijkLeerling):[];g.logboek=Array.isArray(g.logboek)?g.logboek:[];g.toetsen=Array.isArray(g.toetsen)?g.toetsen:[];g.domeinen=Array.isArray(g.domeinen)?[...new Set(g.domeinen)]:[];g.rapporten=g.rapporten||{};g.rapportPeriodes=g.rapportPeriodes||{};g.groeiplan=normalizeGroeiplan(g.groeiplan);g.bewaarTot=g.bewaarTot||bewaarTotVoorSchooljaar(g.schooljaar||year());g.bewaartermijnJaren=g.bewaartermijnJaren||BEWAAR_JAREN_GROEIGROEP_LOGBOEK;g.bewaardoor=g.bewaardoor||"logboek zorgtraject";return g;}
 function huidigeRapportPeriode(){
   return ($("rapportPeriode")?.value || active?.rapportGroep?.periode || ptPeriodeFilter || "").trim();
 }
@@ -1876,7 +1876,8 @@ function collectBasis(){
   active.naam=$("gNaam")?.value.trim()||active.naam;
   active.begeleiders=$("gBegeleiders")?.value.trim()||"";
   // Het oude veld doelen blijft behouden; nieuwe invoer gebeurt in het groeiplan.
-  active.domeinen=[...document.querySelectorAll('input[value][type="checkbox"]')].filter(i=>DOMAINEN.some(d=>d.id===i.value)&&i.checked).map(i=>i.value);
+  const basis=$("tab-basis");
+  if(basis)active.domeinen=[...new Set([...basis.querySelectorAll('input[value][type="checkbox"]')].filter(i=>DOMAINEN.some(d=>d.id===i.value)&&i.checked).map(i=>i.value))];
 }
 async function saveGroup(){
   if(!active)return;
