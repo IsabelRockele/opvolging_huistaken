@@ -2971,6 +2971,8 @@
     function laatsteRefterWeek(){return maandagVan(endDate());}
     function geldigeRefterWeek(value){const week=maandagVan(value);return week>=eersteRefterWeek()&&week<=laatsteRefterWeek()?week:"";}
     function standaardRefterWeek(){
+      const teBevestigen=verplichteRefterWeek();
+      if(teBevestigen)return teBevestigen;
       const gekozen=gekozenRefterWeek||$("refterWeek")?.value;
       if(gekozen&&geldigeRefterWeek(gekozen))return geldigeRefterWeek(gekozen);
       const vandaag=isoDatum(new Date());
@@ -2996,6 +2998,11 @@
       return !!legacy&&!!laatste&&legacy>=laatste;
     }
     function refterWeekBevestiging(weekStart,bron=data){return bron?.refterBevestigingen?.[weekStart]||null;}
+    function verplichteRefterWeek(vandaag=isoDatum(new Date())){
+      if(isSecretary()||!data||vandaag<startDate()||vandaag>endDate())return "";
+      const week=laatsteInTeVullenRefterWeekVoor(vandaag);
+      return week&&!refterWeekVerwerkt(week)&&!refterWeekBevestiging(week)?week:"";
+    }
     function initialiseerRefterWeken(){
       data.processed||={};
       if(data.processed.refterWeken)return data.processed.refterWeken;
@@ -3037,6 +3044,7 @@
       return week>=eersteRefterWeek()?week:"";
     }
     function refterWoensdagBlok(weekStart){
+      if(verplichteRefterWeek()===weekStart)return `<div class="notice no-print refter-deadline-alert" role="alert"><strong>⚠️ Eerst de voorbije schoolweek nakijken</strong><p>Controleer de refterlijst van <strong>${formatDate(weekStart)} tot en met ${formatDate(datumPlusDagen(weekStart,4))}</strong> en pas eventuele fouten aan. Bevestig ook als er geen afwezigen waren. Daarna opent automatisch de huidige week en ziet het secretariaat dat de vorige week is nagekeken.</p><button onclick="bevestigRefterWeek('${weekStart}')">✓ Alles nagekeken — deze week klopt</button></div>`;
       const verwerkt=refterWeekVerwerkt(weekStart),bevestiging=refterWeekBevestiging(weekStart),eerste=eersteRefterVerwerkingsWoensdag(),weekEnd=datumPlusDagen(weekStart,4),woensdag=laatsteGeplandeRefterWoensdag(),heeftSchooldag=refterWeekHeeftSchooldag(weekStart),magVerwerken=woensdag&&weekEnd<woensdag;
       if(isSecretary()){
         if(!heeftSchooldag)return `<div class="notice no-print" style="margin:14px 0"><strong>🏖️ Geen refterverwerking nodig</strong><p class="muted">Deze week bevat geen invulbare schooldagen door de gekende vakantie- of vrije dagen.</p></div>`;
@@ -3054,8 +3062,10 @@
     window.bevestigRefterWeek = weekStart => {
       if(isSecretary()||refterWeekVerwerkt(weekStart))return;
       if(datumPlusDagen(weekStart,4)>=isoDatum(new Date()))return alert("Je kunt de week pas bevestigen nadat de volledige schoolweek voorbij is.");
+      const openHuidigeWeek=verplichteRefterWeek()===weekStart;
       data.refterBevestigingen||={};
       data.refterBevestigingen[weekStart]={bevestigdOp:new Date().toISOString(),door:user.email||user.uid||""};
+      if(openHuidigeWeek)gekozenRefterWeek=maandagVan(isoDatum(new Date()));
       markDirty();renderRefter();
     };
     window.setProcessedRefter = value => {
@@ -3200,6 +3210,9 @@
       const deadlineMelding=refterPaneel?.querySelector(".refter-deadline-alert");
       if(deadlineMelding&&weekNav)weekNav.before(deadlineMelding);
       if(geenRefterForm&&refterTabel)refterTabel.before(geenRefterForm);
+      if(verplichteRefterWeek()){
+        weekNav?.querySelectorAll('button,input').forEach(el=>{if(!el.classList.contains('refter-geen-knop'))el.disabled=true;});
+      }
       laadRefterWeekStatus(weekStart).catch(console.warn);
     }
     window.kiesRefterWeek=value=>{const week=geldigeRefterWeek(value);if(!week)return alert("Kies een datum binnen het schooljaar.");gekozenRefterWeek=week;renderRefter();};
