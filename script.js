@@ -540,6 +540,7 @@ async function toonSchooloverzichtKnopAlsNodig(user) {
 
     // ── Beheerder: toon rolwissel-paneel en pas gesimuleerde rol toe ──
     if (isBeheerder) {
+      document.body.classList.add('beheerder-account');
       initAccountbeheer(app, auth);
       initKlassenBackup(app, auth);
       toonBeheerderRolwissel(user);
@@ -666,6 +667,7 @@ if ('serviceWorker' in navigator) {
 }
 
 window.uitloggenVanIndex = function () {
+  document.body.classList.remove('beheerder-account');
   clearInterval(meldingenControleTimer);
   zetAppMeldingenBadge(0);
   signOut(auth)
