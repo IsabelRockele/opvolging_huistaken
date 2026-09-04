@@ -13,6 +13,7 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 import { initAccountbeheer } from './accountbeheer-info.js?v=20260904-1';
+import { initKlassenBackup } from './klassen-backup.js?v=20260904-1';
 const auth = getAuth(app);
 const db = getFirestore(app);
 export { db };
@@ -540,6 +541,7 @@ async function toonSchooloverzichtKnopAlsNodig(user) {
     // ── Beheerder: toon rolwissel-paneel en pas gesimuleerde rol toe ──
     if (isBeheerder) {
       initAccountbeheer(app, auth);
+      initKlassenBackup(app, auth);
       toonBeheerderRolwissel(user);
       const simuleerSleutel = 'lindeSimuleerRol_' + user.uid;
       const gesimuleerdRol = localStorage.getItem(simuleerSleutel) || 'beheerder';
