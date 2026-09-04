@@ -3166,8 +3166,21 @@
       renderRefter();
     };
 
+    let refterCorrectieSleutel="", refterGetoondeSleutel="";
+    function refterContextSleutel(week){return `${schooljaar}|${activeClass}|${week}`;}
+    function magRefterCorrigeren(week){return isSecretary()&&refterCorrectieSleutel===refterContextSleutel(week);}
+    window.startRefterCorrectie=()=>{
+      const week=standaardRefterWeek();
+      if(!isSecretary()||!refterWeekVerwerkt(week))return;
+      if(!confirm("Wil je wijzigingen aanbrengen in deze reeds verwerkte week?\n\nJe kunt de gegevens van een kind corrigeren. De week blijft verwerkt en vergrendeld voor leerkrachten."))return;
+      refterCorrectieSleutel=refterContextSleutel(week);renderRefter();
+    };
+    window.stopRefterCorrectie=()=>{refterCorrectieSleutel="";renderRefter();};
     function renderRefter(){
       const weekStart=standaardRefterWeek();gekozenRefterWeek=weekStart;
+      const contextSleutel=refterContextSleutel(weekStart);
+      if(refterGetoondeSleutel!==contextSleutel||!refterWeekVerwerkt(weekStart))refterCorrectieSleutel="";
+      refterGetoondeSleutel=contextSleutel;
       const days=refterWeekDagen(weekStart),weekEnd=datumPlusDagen(weekStart,4),month=days.find(d=>d.date>=startDate())?.date.slice(0,7)||days[0].date.slice(0,7);
       const grenzen=maandGrenzen(month),students=leerlingenInPeriode(grenzen.van,grenzen.tot),verwerkt=refterWeekVerwerkt(weekStart);
       const weekLabel=`${formatDate(days[0].date)} – ${formatDate(days[4].date)}`;
@@ -3177,6 +3190,12 @@
       const refterPaneel=$("content").querySelector(".panel"),weekNav=refterPaneel?.querySelector(".bar .actions.no-print"),weekTitel=refterPaneel?.querySelector(":scope > .notice"),geenRefterForm=refterPaneel?.querySelector(".refter-free-form"),refterTabel=refterPaneel?.querySelector(".refter-print-wrap");
       if(weekTitel&&refterTabel){weekTitel.classList.add("refter-week-titel");refterTabel.before(weekTitel);}
       if(verwerkt&&weekTitel)weekTitel.insertAdjacentHTML("beforeend",'<div style="margin-top:6px;color:#245c39;font-weight:800">🔒 Reeds verwerkt door het secretariaat</div><div class="muted">Deze schoolweek is vergrendeld voor klas- en zorgleerkrachten.</div>');
+      if(verwerkt){
+        const corrigeren=magRefterCorrigeren(weekStart);
+        if(!isSecretary()&&weekTitel)weekTitel.insertAdjacentHTML("beforeend",'<div class="muted">Een fout opgemerkt? Neem contact op met het secretariaat om dit te laten aanpassen.</div>');
+        refterTabel?.querySelectorAll('input[type="checkbox"]').forEach(input=>{input.disabled=!corrigeren;});
+        if(isSecretary()&&weekTitel)weekTitel.insertAdjacentHTML("beforeend",`<div class="no-print" style="margin-top:10px">${corrigeren?'<p>Correcties zijn ingeschakeld. Wijzigingen worden automatisch bewaard.</p><button class="white" onclick="stopRefterCorrectie()">Klaar met wijzigen</button>':'<button class="white" onclick="startRefterCorrectie()">Wijzigingen aanbrengen</button>'}</div>`);
+      }
       if(weekNav&&refterTabel){weekNav.classList.add("refter-week-nav");weekNav.insertAdjacentHTML("afterbegin",`<button class="refter-geen-knop" onclick="const f=document.getElementById('refterFreeForm');f.hidden=!f.hidden;this.textContent=f.hidden?'🚫 Geen refter voor de hele klas':'✕ Sluiten'">🚫 Geen refter voor de hele klas</button>`);refterTabel.before(weekNav);}
       const deadlineMelding=refterPaneel?.querySelector(".refter-deadline-alert");
       if(deadlineMelding&&weekNav)weekNav.before(deadlineMelding);
@@ -3186,7 +3205,7 @@
     window.kiesRefterWeek=value=>{const week=geldigeRefterWeek(value);if(!week)return alert("Kies een datum binnen het schooljaar.");gekozenRefterWeek=week;renderRefter();};
     window.wisselRefterWeek=richting=>{const nieuw=datumPlusDagen(standaardRefterWeek(),Number(richting)*7);if(nieuw<eersteRefterWeek()||nieuw>laatsteRefterWeek())return;gekozenRefterWeek=nieuw;renderRefter();};
     window.wisselRefterMaand=value=>{gekozenRefterWeek=geldigeRefterWeek(`${value}-01`)||maandagVan(`${value}-01`);renderRefter();};
-    window.toggleRefter = (month,sid,date,checked) => { const m=data.refter[month] ||= {}; m[sid] ||= {}; m[sid][date]=checked; const week=maandagVan(date);if(data.refterBevestigingen?.[week])delete data.refterBevestigingen[week];markDirty();renderRefter(); };
+    window.toggleRefter = (month,sid,date,checked) => { const week=maandagVan(date);if(refterWeekVerwerkt(week)&&!magRefterCorrigeren(week)){renderRefter();return;}const m=data.refter[month] ||= {}; m[sid] ||= {}; m[sid][date]=checked;if(data.refterBevestigingen?.[week])delete data.refterBevestigingen[week];markDirty();renderRefter(); };
 
     function renderActivities(){
       activityMonth = activityMonth || huidigeSchoolMaand();
@@ -3990,7 +4009,7 @@
           tab=activeClass&&data?"leerlingen":"leerlingenstart";
           adminPanel="klaslijsten";classListMode="";
         }
-        if(tab === "refter" && vorigeTab !== "refter") gekozenRefterWeek = "";
+        if(tab === "refter" && vorigeTab !== "refter") {gekozenRefterWeek = "";refterCorrectieSleutel="";}
         if(tab === "administratie" && isSecretary()){adminPanel = "wegwijzer";adminNavigatieOpen=false;secretariaatModulesOpen=false;}
         renderKlasPills();
         render();
