@@ -1491,10 +1491,12 @@ function schoolbeheerNameKey(s) {
   return `${String(s.first || s.firstName || '').trim().toLowerCase()} ${String(s.last || s.lastName || '').trim().toLowerCase()}`.replace(/\s+/g, ' ').trim();
 }
 
+let overgangOpslagBlokkade = 'Het dossier is nog niet volledig gecontroleerd en geladen.';
 window.firebaseOvergang = {
   ready,
   async saveProject(data, opties = {}) {
     await ready;
+    if (overgangOpslagBlokkade) throw new Error(overgangOpslagBlokkade);
     const bewaarSchooljaar = geldigSchooljaar(opties.schooljaar) ? opties.schooljaar : schooljaar;
     const dossierKlas = data.klas || data.className || data.class || beheerKlasLabel || "";
     const bewaarJaren = bewaarJarenVoorKlas(dossierKlas);
@@ -1516,9 +1518,19 @@ window.firebaseOvergang = {
   },
   async loadProject(jaar = schooljaar) {
     await ready;
+    overgangOpslagBlokkade = 'Het dossier wordt gecontroleerd. Bewaren is tijdelijk geblokkeerd.';
     const snap = await getDoc(projectRef(jaar));
-    return snap.exists() ? snap.data() : null;
+    const inhoud = snap.exists() ? snap.data() : null;
+    const klas = await bepaalSchoolbeheerKlas();
+    const getroffen = jaar === '2026-2027' && ['2A','3A'].includes(klas);
+    overgangOpslagBlokkade = getroffen
+      ? '2A en 3A worden gecontroleerd op ontbrekende overdrachtsinformatie. Bewaren is tijdelijk geblokkeerd; de GOK-lijst blijft apart behouden.'
+      : !inhoud || !Array.isArray(inhoud.students)
+        ? 'Geen geldig opgeslagen dossier gevonden. Er wordt geen lege vervanging opgeslagen. Laat de beheerder eerst de juiste overdracht koppelen.'
+        : '';
+    return inhoud;
   },
+  opslagBlokkade() { return overgangOpslagBlokkade; },
   async loadSchoolbeheerKlasVoorJaar(jaar, klas) {
     await ready;
     if (!geldigSchooljaar(jaar) || !String(klas || '').trim()) return { klas: '', leerlingen: [] };
@@ -3740,42 +3752,27 @@ async function loadFirebaseProjectOnStart() {
       buildZorggroepenIndex([]);
       console.warn('Groeigroepen konden niet geladen worden voor overgangsbespreking', zorgResult.__zorggroepenError);
     }
-    if (!data) {
-      const sync = await vulOntbrekendeLeerlingenUitSchoolbeheer();
-      if (sync.added) {
-        if (state.projectName === 'Nieuwe verdeling' && sync.klas) state.projectName = sync.klas;
-        writeSettings();
-        renderStudents();
-        updateBadges();
-        await window.firebaseOvergang.saveProject(collectProjectData());
-        markClean();
-        setFirebaseStatus(`Nieuwe overgang gestart vanuit klaslijst ${sync.klas}: ${sync.added} leerling${sync.added === 1 ? '' : 'en'} toegevoegd.${Array.isArray(zorgResult) ? ` ${zorggroepen.length} groeigroep(en) gekoppeld.` : ' Groeigroepen konden niet geladen worden.'}`);
-      } else {
-        setFirebaseStatus(sync.klas ? `Geen opgeslagen overgang gevonden. Klaslijst ${sync.klas} bevat geen nieuwe namen.${Array.isArray(zorgResult) ? ` ${zorggroepen.length} groeigroep(en) gekoppeld.` : ' Groeigroepen konden niet geladen worden.'}` : 'Geen opgeslagen overgang gevonden en geen klas gekoppeld.');
-      }
-      await startLiveGokSync();
+    if (!data || !Array.isArray(data.students)) {
+      setFirebaseStatus(window.firebaseOvergang.opslagBlokkade());
       return;
     }
-    if (!applyProjectData(data)) {
-      setFirebaseStatus('Firebase-versie gevonden, maar er stonden nog geen leerlingen in.');
-    }
-    const jaarovergangKopie = await window.firebaseOvergang.ensureNextSchoolYearCopy(data).catch(err => {
-      console.warn('Veilige kopie naar volgend schooljaar kon niet worden gemaakt:', err);
-      return { copied: false, reason: 'fout' };
-    });
-    const sync = await vulOntbrekendeLeerlingenUitSchoolbeheer();
+    // Openen is alleen lezen: geen namen toevoegen, jaar-kopie of automatische opslag.
+    applyProjectData(data);
     writeSettings();
     renderStudents();
     if (typeof renderGroups === 'function') renderGroups();
     updateBadges();
-    if (sync.added || sync.linked || sync.gokUpdated) {
-      await window.firebaseOvergang.saveProject(collectProjectData());
-    }
     await startLiveGokSync();
     markClean();
-    const aantal = state.students.length;
-    const kopieMelding = jaarovergangKopie.copied ? ` Veilige kopie gemaakt voor ${jaarovergangKopie.schooljaar}.` : '';
-    setFirebaseStatus(`Firebase geladen: ${aantal} leerling${aantal === 1 ? '' : 'en'}${sync.added ? `, ${sync.added} nieuwe naam/namen uit klaslijst toegevoegd` : ''}.${Array.isArray(zorgResult) ? ` ${zorggroepen.length} groeigroep(en) gekoppeld.` : ' Groeigroepen konden niet geladen worden.'}${kopieMelding}`);
+    const blokkade = window.firebaseOvergang.opslagBlokkade();
+    setFirebaseStatus(blokkade || `Firebase geladen: ${state.students.length} leerlingen. Bestaande fiches zijn niet automatisch aangevuld of opgeslagen.`);
+    if (blokkade) {
+      const melding = document.createElement('div');
+      melding.className = 'errorbox';
+      melding.setAttribute('role', 'alert');
+      melding.textContent = blokkade + ' Dit overzicht is nog niet hersteld.';
+      document.getElementById('firebaseStatus')?.after(melding);
+    }
   } catch (err) {
     console.error('Firebase laden mislukt:', err);
     setFirebaseStatus('Firebase laden mislukt: ' + err.message);
