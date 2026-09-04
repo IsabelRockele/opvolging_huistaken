@@ -501,6 +501,18 @@ function normalizeGroeiplan(plan){
 }
 function emptyGroup(){return{id:"zg_"+uid(),schooljaar:year(),naam:"Nieuwe groeigroep",domeinen:["lezen"],begeleiders:"",doelen:"",leerlingen:[],logboek:[],toetsen:[],rapporten:{},groeiplan:emptyGroeiplan(),bewaarTot:bewaarTotVoorSchooljaar(),bewaardoor:"logboek zorgtraject",bewaartermijnJaren:BEWAAR_JAREN_GROEIGROEP_LOGBOEK,createdAt:new Date().toISOString()};}
 function setStatus(text){$("status").textContent=text;}
+let bewaarMeldingTimer;
+function toonBewaarMelding(tekst){
+  let melding=$("bewaarMelding");
+  if(!melding){
+    melding=document.createElement("div");melding.id="bewaarMelding";
+    melding.setAttribute("role","status");melding.setAttribute("aria-live","polite");
+    melding.style.cssText="position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:2000;background:#245c39;color:white;padding:16px 24px;border-radius:14px;box-shadow:0 6px 24px #0003;font-size:17px;font-weight:700;max-width:90vw;pointer-events:none";
+    document.body.appendChild(melding);
+  }
+  clearTimeout(bewaarMeldingTimer);melding.textContent="✓ "+tekst;melding.hidden=false;
+  bewaarMeldingTimer=setTimeout(()=>{melding.hidden=true;},4500);
+}
 function normalizeGroup(g){g.leerlingen=Array.isArray(g.leerlingen)?g.leerlingen.map(verrijkLeerling):[];g.logboek=Array.isArray(g.logboek)?g.logboek:[];g.toetsen=Array.isArray(g.toetsen)?g.toetsen:[];g.domeinen=Array.isArray(g.domeinen)?g.domeinen:[];g.rapporten=g.rapporten||{};g.rapportPeriodes=g.rapportPeriodes||{};g.groeiplan=normalizeGroeiplan(g.groeiplan);g.bewaarTot=g.bewaarTot||bewaarTotVoorSchooljaar(g.schooljaar||year());g.bewaartermijnJaren=g.bewaartermijnJaren||BEWAAR_JAREN_GROEIGROEP_LOGBOEK;g.bewaardoor=g.bewaardoor||"logboek zorgtraject";return g;}
 function huidigeRapportPeriode(){
   return ($("rapportPeriode")?.value || active?.rapportGroep?.periode || ptPeriodeFilter || "").trim();
@@ -784,6 +796,7 @@ function renderGroeiplan(){
         <div class="doelen-overzicht-kop"><strong id="gekozenDoelenAantal">${plan.geselecteerdeDoelen.length} doel${plan.geselecteerdeDoelen.length===1?"":"en"} gekozen</strong><button type="button" class="secondary" onclick="window.ggOpenDoelenKiezer()">Doelen kiezen</button></div>
         <div id="gekozenLeerplandoelenOverzicht" class="gekozen-doelen"></div>
         <label>Eigen doel of aanvulling<textarea id="planDoelen" placeholder="Voeg hier indien nodig een eigen doel of extra verduidelijking toe.">${esc(plan.doelen)}</textarea></label>
+        ${active.doelen?`<details style="margin-top:12px"><summary>Eerder ingevulde doelen en aanpak (uit Basis)</summary><div style="white-space:pre-wrap;padding:10px 0">${esc(active.doelen)}</div><p class="muted">Deze eerdere tekst blijft bewaard. Nieuwe doelen en aanpak vul je in dit groeiplan in.</p></details>`:""}
       </section>
       <div id="doelenKiezerModal" class="doelen-modal hidden" role="dialog" aria-modal="true" aria-labelledby="doelenKiezerTitel">
         <div class="doelen-modal-venster">
@@ -1041,7 +1054,6 @@ function renderBasis(){
         <div><label>Naam groeigroep</label><input id="gNaam" value="${esc(active.naam)}"></div>
         <div><label>Begeleiders (juffen/meesters van dit groepje)</label><input id="gBegeleiders" value="${esc(active.begeleiders)}" placeholder="bv. juf Lotte, juf An"></div>
       </div>
-      <label>Doelen en aanpak</label><textarea id="gDoelen" placeholder="Waar werken jullie aan? Wat is de aanpak?">${esc(active.doelen)}</textarea>
       <label>Domeinen die bij deze groep horen</label>
       <div class="domain-grid">${DOMAINEN.map(d=>`
         <label class="domain-box ${active.domeinen.includes(d.id)?"active":""}">
@@ -1863,7 +1875,7 @@ async function downloadCurrentReportPdf(){
 function collectBasis(){
   active.naam=$("gNaam")?.value.trim()||active.naam;
   active.begeleiders=$("gBegeleiders")?.value.trim()||"";
-  active.doelen=$("gDoelen")?.value.trim()||"";
+  // Het oude veld doelen blijft behouden; nieuwe invoer gebeurt in het groeiplan.
   active.domeinen=[...document.querySelectorAll('input[value][type="checkbox"]')].filter(i=>DOMAINEN.some(d=>d.id===i.value)&&i.checked).map(i=>i.value);
 }
 async function saveGroup(){
@@ -1906,9 +1918,13 @@ async function persistActiveGroup(doneText){
   active.bewaardoor="logboek zorgtraject";
   try{
     const veiligeGroep=maakFirebaseVeilig(active);
+    clearTimeout(bewaarMeldingTimer);
+    if($("bewaarMelding"))$("bewaarMelding").hidden=true;
+    setStatus("Bezig met bewaren…");
     await setDoc(groupRef(active.id),{...veiligeGroep,updatedAt:serverTimestamp(),updatedBy:user.email||user.uid},{merge:true});
     const tekst=doneText||("Bewaard om "+new Date().toLocaleTimeString("nl-BE",{hour:"2-digit",minute:"2-digit"}));
     setStatus(tekst);
+    toonBewaarMelding(tekst);
   }catch(e){
     console.error("Groeigroep bewaren mislukt",e);
     const code=String(e?.code||"onbekende-fout").replace(/^firestore\//,"");
