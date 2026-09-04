@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="nl"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Veilige controle overgang 2A en 3A</title>
+<style>body{font:17px system-ui;background:#f6f3ed;color:#243340;max-width:1150px;margin:25px auto;padding:18px}section{background:white;border:1px solid #ccd4d8;border-radius:14px;padding:20px;margin:18px 0}button{font:inherit;padding:12px;border:1px solid #75918b;border-radius:9px;background:#e5f3ee;cursor:pointer}button:disabled{opacity:.5;cursor:default}p{line-height:1.5}.warn{background:#fff2d9}table{width:100%;border-collapse:collapse}td,th{text-align:left;border-bottom:1px solid #ddd;padding:9px;vertical-align:top}small{overflow-wrap:anywhere}details{margin:12px 0}pre{white-space:pre-wrap;overflow-wrap:anywhere}#status{font-weight:bold}</style>
+<h1>Controle overgangsbesprekingen — 2A en 3A</h1>
+<section class="warn"><strong>Alleen lezen — geen herstel of automatische opslag</strong><p>Deze pagina vergelijkt bronnen uit 2025–2026 en 2026–2027. Ze verandert geen leerlingen, GOK-aanduidingen of dossiers. Laat de gewone overgangsbesprekingen voorlopig gesloten.</p><p>Een back-up bevat vertrouwelijke leerlinggegevens. Bewaar die uitsluitend op een beveiligde schoollocatie en deel hem niet via een openbare link.</p></section>
+<section><p id="status">Aanmelding controleren…</p><button id="scan" disabled>1. Dossiers van 2A en 3A controleren</button> <button id="backup" disabled>2. Gelezen gegevens downloaden als back-up</button><p id="downloadStatus"></p></section>
+<div id="result"></div>
+<script type="module">
+import {initializeApp} from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import {getAuth,onAuthStateChanged} from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+import {getFirestore,doc,getDocFromServer,getDocsFromServer,collection,query,where,Timestamp} from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+const app=initializeApp({apiKey:'AIzaSyA7KxXMvZ4dzBQDut3CMyWUblLte2tFzoQ',authDomain:'huiswerkapp-a311e.firebaseapp.com',projectId:'huiswerkapp-a311e'});
+const db=getFirestore(app),auth=getAuth(app),$=id=>document.getElementById(id);
+const classes=['2A','3A'],years=['2025-2026','2026-2027'];
+let records=new Map(),errors=[],allowed=false,scanUid='',scannedAt='';
+const esc=v=>String(v??'').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;');
+const name=s=>[s.lastName||s.last,s.firstName||s.first].filter(Boolean).join(', ')||s.name||'(zonder naam)';
+const notes=['readingNote','spellingNote','mathNote','writingNote','focusNote','behaviorNote','careNote','socialNote','notes','schoolNote','allergies','medicalNote'];
+const filled=s=>notes.filter(k=>String(s[k]??'').trim());
+// Bewaar timestamps expliciet en verlies hun nanoseconden niet in de back-up.
+function pack(v){if(v instanceof Timestamp)return {__firestoreType:'Timestamp',seconds:v.seconds,nanoseconds:v.nanoseconds};if(Array.isArray(v))return v.map(pack);if(v&&typeof v==='object')return Object.fromEntries(Object.entries(v).map(([k,x])=>[k,pack(x)]));return v;}
+function remember(s,klas,kind){if(!s.exists())return;const r=records.get(s.ref.path)||{path:s.ref.path,classes:[],kind,data:s.data()};if(!r.classes.includes(klas))r.classes.push(klas);records.set(r.path,r);}
+async function one(path,klas,kind){const s=await getDocFromServer(doc(db,...path));remember(s,klas,kind);return s.exists()?s.data():null;}
+async function find(path,field,value,klas,kind){const snap=await getDocsFromServer(query(collection(db,...path),where(field,'==',value)));snap.docs.forEach(s=>remember(s,klas,kind));return snap.docs.map(s=>s.data());}
+async function attempt(label,fn){try{return await fn();}catch(e){errors.push(`${label}: ${e.code||e.message}`);return null;}}
+onAuthStateChanged(auth,async user=>{
+  allowed=false;$('scan').disabled=true;$('backup').disabled=true;records.clear();$('result').replaceChildren();
+  if(!user){$('status').textContent='Niet aangemeld. Meld je eerst op de startpagina aan als beheerder; open geen overgangsbespreking.';return;}
+  try{const role=await getDocFromServer(doc(db,'schoolrollen',user.uid));if(auth.currentUser?.uid!==user.uid)return;allowed=role.exists()&&role.data().rol==='beheerder';$('scan').disabled=!allowed;$('status').textContent=allowed?'Aangemeld als beheerder. Er wordt uitsluitend gelezen.':'Deze controle is uitsluitend voor de beheerder.';}catch(e){$('status').textContent='Beheerdersrol kon niet gecontroleerd worden: '+e.code;}
+});
+$('scan').onclick=async()=>{
+  if(!allowed)return;scanUid=auth.currentUser.uid;records=new Map();errors=[];$('scan').disabled=true;$('backup').disabled=true;$('result').replaceChildren();$('downloadStatus').textContent='';$('status').textContent='Bronnen rechtstreeks uit Firebase lezen…';
+  for(const klas of classes)for(const year of years){
+    if(auth.currentUser?.uid!==scanUid){records.clear();return;}
+    const koppelingen=[];
+    const direct=await attempt(`${year} ${klas} klaskoppeling`,()=>one(['klasleerkrachten',`${year}_${klas}`],klas,'Klaskoppeling'));if(direct)koppelingen.push(direct);
+    for(const field of ['klas','klasId']){const hits=await attempt(`${year} ${klas} koppelingen zoeken`,()=>find(['klasleerkrachten'],field,klas,klas,'Klaskoppeling'));koppelingen.push(...(hits||[]).filter(x=>!x.schooljaar||x.schooljaar===year));}
+    await attempt(`${year} ${klas} klaslijst`,()=>one(['schoolbeheer',year,'klassen',klas],klas,'Centrale klaslijst en GOK'));
+    await attempt(`${year} ${klas} klasproject`,()=>one(['overgangsbesprekingen',year,'projecten',`klas_${klas}`],klas,'Project per klas'));
+    const uids=new Set(koppelingen.flatMap(k=>[k.eigenaar_uid,...(k.leerkracht_uids||[])]).filter(Boolean));
+    for(const uid of uids)await attempt(`${year} ${klas} leerkrachtproject`,()=>one(['overgangsbesprekingen',year,'projecten',uid],klas,'Project per leerkracht (koppeling controleren)'));
+    for(const field of ['volgende_klas','naar_leerjaar','opgeruimdVoorKlas'])await attempt(`${year} ${klas} overdrachten`,()=>find(['overgangsbesprekingen',year,'dossiers'],field,klas,klas,'Overdrachtsdossier'));
+  }
+  if(auth.currentUser?.uid!==scanUid){records.clear();return;}
+  scannedAt=new Date().toISOString();$('scan').disabled=false;$('backup').disabled=!records.size;
+  $('status').textContent=errors.length?'Controle onvolledig: sommige bronnen konden niet gelezen worden. Geen herstel uitvoeren.':'Controle klaar. Niets gewijzigd. Download nu de back-up. De volledigheid moet nog worden beoordeeld.';
+  $('result').innerHTML=(errors.length?`<section class="warn"><h2>Leesfouten</h2><pre>${esc(errors.join('\n'))}</pre></section>`:'')+classes.map(klas=>`<section><h2>${klas}</h2><p>Vergelijk de aantallen en de notities in de oude overdrachten met de huidige projecten. Een leerlingnaam alleen bewijst nog geen juiste koppeling. GOK is hieronder apart geteld.</p><table><tr><th>Bron</th><th>Leerlingen</th><th>Met oude fiche-notities</th><th>GOK</th></tr>${[...records.values()].filter(r=>r.classes.includes(klas)&&r.kind!=='Klaskoppeling').map(r=>{const ss=r.data.students||r.data.leerlingen||[];return `<tr><td>${esc(r.kind)}<br><small>${esc(r.path)}</small><br>Status: ${esc(r.data.status||'—')}<details><summary>Leerlingen en ingevulde notitievelden bekijken</summary>${ss.map(s=>`<details><summary>${esc(name(s))} — ${filled(s).length} notitievelden</summary>${filled(s).map(k=>`<p><strong>${esc(k)}</strong><br>${esc(s[k])}</p>`).join('')||'<p>Geen tekst in de gecontroleerde notitievelden. Andere velden kunnen wel ingevuld zijn.</p>'}</details>`).join('')}</details></td><td>${ss.length}</td><td>${ss.filter(s=>filled(s).length).length}</td><td>${ss.filter(s=>s.gok==='ja').length}</td></tr>`;}).join('')}</table></section>`).join('')+'<section class="warn"><strong>Nog geen herstel uitgevoerd.</strong><p>Deze vergelijking kiest geen bron en voegt niets samen. Eerst de back-up veilig bewaren en het overzicht beoordelen. Herstel vereist daarna een apart, expliciet bevestigd plan dat nieuwe GOK-gegevens en bestaande inhoud behoudt.</p></section>';
+};
+$('backup').onclick=()=>{
+  if(!allowed||auth.currentUser?.uid!==scanUid||!records.size)return;
+  const payload={format:'overdracht-controle-v1',projectId:'huiswerkapp-a311e',scannedAt,classes,years,completeScan:!errors.length,errors,documents:[...records.values()].map(r=>({...r,data:pack(r.data)}))};
+  const url=URL.createObjectURL(new Blob([JSON.stringify(payload,null,2)],{type:'application/json'}));const a=document.createElement('a');a.href=url;a.download=`overdracht-2A-3A-${scannedAt.replace(/[:.]/g,'-')}.json`;a.click();setTimeout(()=>URL.revokeObjectURL(url),60000);
+  $('downloadStatus').textContent='Download aangevraagd. Controleer zelf dat het JSON-bestand veilig is opgeslagen. Dit is een kopie van de gelezen bronnen, geen garantie dat alle historische versies gevonden zijn.';
+};
+</script></html>
