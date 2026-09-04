@@ -786,10 +786,11 @@ function renderGroeiplan(){
       </div>
       <div class="grid2">
         <label>Vak<input id="planVak" value="${esc(plan.vak)}" placeholder="bv. Nederlands"></label>
-        <label>Domein<input id="planDomein" value="${esc(plan.domein||active.domeinen.map(domainName).join(', '))}" placeholder="bv. lezen, spelling"></label>
+        <label>Domeinen uit Basis<input id="planDomein" readonly value="${esc(active.domeinen.map(domainName).join(', '))}" placeholder="Kies de domeinen in Basis"><span class="muted">Automatisch gekoppeld — wijzigen in Basis.</span></label>
         <label>Klas<input id="planKlas" value="${esc(plan.klas||[...new Set(active.leerlingen.map(s=>s.klas))].join(', '))}" placeholder="bv. 2A"></label>
-        <label>Groep<input id="planGroep" value="${esc(plan.groep||active.naam)}" placeholder="Naam groeigroep"></label>
+        <label>Groepsnaam uit Basis<input id="planGroep" readonly value="${esc(active.naam||'')}" placeholder="Vul de groepsnaam in Basis in"><span class="muted">Automatisch gekoppeld — wijzigen in Basis.</span></label>
       </div>
+      ${(plan.domein&&plan.domein!==active.domeinen.map(domainName).join(', '))||(plan.groep&&plan.groep!==active.naam)?`<details style="margin:10px 0"><summary>Eerdere aparte invoer in het groeiplan (bewaard)</summary>${plan.domein?`<p><strong>Eerder domein:</strong> ${esc(plan.domein)}</p>`:''}${plan.groep?`<p><strong>Eerdere groepsnaam:</strong> ${esc(plan.groep)}</p>`:''}<p class="muted">De actuele naam en domeinen komen nu uit Basis. Deze eerdere tekst is niet verwijderd.</p></details>`:''}
       <label class="plan-veld">Onderwerp<textarea id="planOnderwerp" placeholder="Waarover gaat dit groeiplan?">${esc(plan.onderwerp)}</textarea></label>
       <div class="plan-veld"><strong>Doelen</strong><div class="muted">De gekozen leerplandoelen staan hieronder. Open de doelenkiezer om doelen op te zoeken, toe te voegen of aan te passen.</div></div>
       <section class="doelen-overzicht">
@@ -880,9 +881,8 @@ function collectGroeiplan(){
   if(!active) return;
   const current=active.groeiplan=normalizeGroeiplan(active.groeiplan);
   current.vak=$("planVak")?.value.trim()||"";
-  current.domein=$("planDomein")?.value.trim()||"";
+  // Naam en domeinen worden uit Basis getoond; oude aparte invoer blijft intact.
   current.klas=$("planKlas")?.value.trim()||"";
-  current.groep=$("planGroep")?.value.trim()||"";
   current.onderwerp=$("planOnderwerp")?.value.trim()||"";
   current.doelen=$("planDoelen")?.value.trim()||"";
   current.probleem=$("planProbleem")?.value.trim()||"";
@@ -983,9 +983,9 @@ function bouwGroeiplanPdfHtml(logoUrl){
       </div>
       <div class="gp-meta">
         <div><span class="gp-label">Vak</span>${esc(plan.vak||"-")}</div>
-        <div><span class="gp-label">Domein</span>${esc(plan.domein||active.domeinen.map(domainName).join(", ")||"-")}</div>
+        <div><span class="gp-label">Domein</span>${esc(active.domeinen.map(domainName).join(", ")||"-")}</div>
         <div><span class="gp-label">Klas(sen)</span>${esc(plan.klas||[...new Set(leerlingen.map(s=>s.klas).filter(Boolean))].join(", ")||"-")}</div>
-        <div><span class="gp-label">Groep</span>${esc(plan.groep||active.naam||"-")}</div>
+        <div><span class="gp-label">Groep</span>${esc(active.naam||"-")}</div>
         <div><span class="gp-label">Begeleider(s)</span>${esc(alleBegeleiders(active)||active.begeleiders||"-")}</div>
         <div><span class="gp-label">Laatst bijgewerkt</span>${plan.updatedAt?new Date(plan.updatedAt).toLocaleDateString("nl-BE"):"-"}</div>
       </div>
