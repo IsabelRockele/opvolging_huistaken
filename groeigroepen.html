@@ -645,6 +645,7 @@ function pasRaadpleegstandToe(){
   const alleenLezen=!magBewerken();
   document.body.classList.toggle("raadpleegstand",alleenLezen);
   ["newGroupBtn","saveGroupBtn","deleteGroupBtn","carryGroupBtn"].forEach(id=>{const el=$(id);if(el)el.style.display=alleenLezen?"none":"";});
+  if($("saveGroupBtn"))$("saveGroupBtn").style.display=alleenLezen||tab==="groeiplan"?"none":"";
   if(!alleenLezen||!$("workspace")) return;
   $("workspace").querySelectorAll("input, textarea, select").forEach(el=>el.disabled=true);
   $("workspace").querySelectorAll("button").forEach(btn=>{
@@ -781,7 +782,7 @@ function renderGroeiplan(){
     </div>
     <div class="editor">
       <div class="row" style="justify-content:flex-end;margin-bottom:10px">
-        <button class="secondary" onclick="window.ggBewaarGroeiplan()">Groeiplan bewaren</button>
+        <button class="secondary" onclick="window.ggBewaarGroeiplan()">Bewaar groeiplan</button>
         <button onclick="window.ggDownloadGroeiplanPdf()">PDF groeiplan</button>
       </div>
       <div class="grid2">
