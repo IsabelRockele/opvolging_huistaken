@@ -209,7 +209,12 @@ function pasRustigePortaalrubriekenToe(rolNaam, isSecretariaat, heeftKlasbeheer,
     const sleutel = sleutelVan(sectie);
     const inhoud = [...sectie.querySelectorAll('.portaal-tegel')]
       .filter(tegel => tegel.style.display !== 'none')
-      .map(tegel => tegel.querySelector('.portaal-title')?.textContent.trim())
+      .map(tegel => {
+        const titel = tegel.querySelector('.portaal-title')?.textContent.trim();
+        return titel === 'Mijn klasorganisatie'
+          ? `${titel} (klaslijst, refterlijst, lijst activiteiten + aankopen en maximumfactuur)`
+          : titel;
+      })
       .filter(Boolean);
     const samenvatting = kop.querySelector(':scope > span');
     if (samenvatting) {
