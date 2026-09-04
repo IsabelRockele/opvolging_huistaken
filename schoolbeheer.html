@@ -1338,6 +1338,7 @@
 
     window.openClass = async function(klas, behoudAlgemeen=false){
       toonSchermLaden(`${klas} laden…`);
+      if(isSecretary())gekozenRefterWeek="";
       activeClass = klas;
       const blijfInOnderdeel=["refter","activiteiten","aankopen","leerlingen"].includes(tab);
       if(isSecretary() && !behoudAlgemeen && !blijfInOnderdeel){
@@ -1544,7 +1545,7 @@
     }
     window.openMaandOnderdeel=(soort,month,viaOpvolging=false)=>{
       secretariaatOpvolgModus=!!viaOpvolging;
-      if(soort==="refter")gekozenRefterWeek=geldigeRefterWeek(`${month}-15`)||maandagVan(`${month}-15`);
+      if(soort==="refter")gekozenRefterWeek=isSecretary()?"":geldigeRefterWeek(`${month}-15`)||maandagVan(`${month}-15`);
       if(soort==="activiteiten")activityMonth=month;
       if(soort==="aankopen")purchaseMonth=month;
       tab=soort;setActiveNav("");render();
@@ -2973,6 +2974,9 @@
     function standaardRefterWeek(){
       const teBevestigen=verplichteRefterWeek();
       if(teBevestigen)return teBevestigen;
+      // Bij openen nooit de datum van de oude klas of maandmap overnemen.
+      // Een bewuste keuze via de weeknavigatie blijft wel behouden.
+      if(isSecretary()&&!gekozenRefterWeek)return refterWeekNaVerwerking();
       const gekozen=gekozenRefterWeek||$("refterWeek")?.value;
       if(gekozen&&geldigeRefterWeek(gekozen))return geldigeRefterWeek(gekozen);
       const vandaag=isoDatum(new Date());
