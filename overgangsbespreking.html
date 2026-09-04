@@ -1491,6 +1491,19 @@ function schoolbeheerNameKey(s) {
   return `${String(s.first || s.firstName || '').trim().toLowerCase()} ${String(s.last || s.lastName || '').trim().toLowerCase()}`.replace(/\s+/g, ' ').trim();
 }
 
+function controleHersteldeKlas(inhoud, leerlingen, klas) {
+  if (!Array.isArray(inhoud?.students) || !Array.isArray(leerlingen)) return false;
+  const actief = leerlingen.filter(s => !s.startNiet && (!s.start || s.start <= '2026-09-04') && (!s.end || s.end >= '2026-09-04'));
+  const ids = new Set(actief.map(s => String(s.id || '')));
+  const fiches = inhoud.students;
+  if (ids.has('') || ids.size !== actief.length || fiches.length !== ids.size) return false;
+  if (new Set(fiches.map(s => s.schoolbeheerId)).size !== fiches.length || new Set(fiches.map(s => s.id)).size !== fiches.length) return false;
+  const notities = ['readingNote','spellingNote','mathNote','writingNote','focusNote','behaviorNote','careNote','socialNote','notes','schoolNote','allergies','medicalNote'];
+  const naam = s => `${s.lastName || ''}|${s.firstName || ''}`.trim().toLowerCase();
+  if (fiches.some(s => !ids.has(String(s.schoolbeheerId || '')))) return false;
+  if (fiches.some(s => !['knowland|lucien','halawa|maher'].includes(naam(s)) && !notities.some(k => String(s[k] || '').trim()))) return false;
+  return fiches.some(s => naam(s) === 'de bondt|storm') === (klas === '2A');
+}
 let overgangOpslagBlokkade = 'Het dossier is nog niet volledig gecontroleerd en geladen.';
 window.firebaseOvergang = {
   ready,
@@ -1528,6 +1541,10 @@ window.firebaseOvergang = {
       : !inhoud || !Array.isArray(inhoud.students)
         ? 'Geen geldig opgeslagen dossier gevonden. Er wordt geen lege vervanging opgeslagen. Laat de beheerder eerst de juiste overdracht koppelen.'
         : '';
+    if (getroffen) {
+      const centraal = await getDoc(doc(db, 'schoolbeheer', jaar, 'klassen', klas));
+      if (centraal.exists() && controleHersteldeKlas(inhoud, centraal.data().leerlingen, klas)) overgangOpslagBlokkade = '';
+    }
     return inhoud;
   },
   opslagBlokkade() { return overgangOpslagBlokkade; },
