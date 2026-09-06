@@ -859,7 +859,9 @@ function toonMiniBar(el){
   let _savedRange = null;
   function saveSelection(){
     const sel = window.getSelection();
-    if (sel && sel.rangeCount > 0 && !sel.isCollapsed && inEditable(sel.anchorNode)){
+    // Ook een gewone (ingeklapte) cursor bewaren: die is nodig om een
+    // pictogram precies op de gekozen plek inline in te voegen.
+    if (sel && sel.rangeCount > 0 && inEditable(sel.anchorNode)){
       _savedRange = sel.getRangeAt(0).cloneRange();
     } else if (lastTextRange && Date.now() - lastTextRangeAt < 10000){
       _savedRange = lastTextRange.cloneRange();
@@ -870,12 +872,12 @@ function toonMiniBar(el){
   function restoreSelection(){
     let range = _savedRange;
     const current = window.getSelection();
-    if (current && current.rangeCount > 0 && !current.isCollapsed && inEditable(current.anchorNode)){
+    if (current && current.rangeCount > 0 && inEditable(current.anchorNode)){
       range = current.getRangeAt(0).cloneRange();
     } else if (!range && lastTextRange && Date.now() - lastTextRangeAt < 10000){
       range = lastTextRange.cloneRange();
     }
-    if (!range || range.collapsed) return false;
+    if (!range) return false;
     const sel = window.getSelection();
     sel.removeAllRanges();
     sel.addRange(range);
@@ -1185,7 +1187,13 @@ function toonMiniBar(el){
     planBox.addEventListener('focusin', () => { lastFocusedHost = art.querySelector('.body'); setActiveHost(lastFocusedHost); });
 
     wireDate(art,i);
-    art.addEventListener('pointerdown',()=> { setActiveDay(art); setActiveHost(art.querySelector('.body')); });
+    art.addEventListener('pointerdown',(e)=> {
+      setActiveDay(art);
+      const bringHost = e.target.closest('.bringBox');
+      const host = bringHost || art.querySelector('.body');
+      setActiveHost(host);
+      lastFocusedHost = host;
+    });
     return art;
   }
 
@@ -1630,8 +1638,8 @@ function toonMiniBar(el){
     if (wantInline){
       restoreSelection(); // herstel cursor die verloren ging bij dock/toolbar-klik
       const sel = window.getSelection();
-      const ae = document.activeElement;
-      if (ae && ae.isContentEditable && sel && sel.rangeCount){
+      const editable = sel && sel.rangeCount ? inEditable(sel.anchorNode) : null;
+      if (editable){
        const span = document.createElement('span');
 span.className = 'picto-inline';
 span.style.cssText = 'display:inline-flex;align-items:center;vertical-align:middle;margin:0 3px;cursor:pointer';
