@@ -867,8 +867,6 @@ function toonMiniBar(el){
       _savedRange = sel.getRangeAt(0).cloneRange();
     } else if (lastTextRange && Date.now() - lastTextRangeAt < 10000){
       _savedRange = lastTextRange.cloneRange();
-    } else {
-      _savedRange = null;
     }
   }
   function restoreSelection(){
