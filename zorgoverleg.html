@@ -73,6 +73,9 @@
     .fasevragen h3{margin:0 0 10px;font-size:16px;color:#51406e}.fasevragen-grid{display:grid;grid-template-columns:repeat(2,minmax(240px,1fr));gap:10px}
     .fasevragen .breed{grid-column:1/-1}.fasevragen textarea{min-height:78px}
     .vorige-fase-info{background:#f3eff8;border-left:4px solid #8d76ad;border-radius:9px;padding:8px 10px;margin-bottom:10px;font-size:12px;line-height:1.5;color:#51406e}
+    .zorgoverdracht{border:1px solid #e1b65d;border-left:7px solid #e1a62d;border-radius:14px;background:#fff8df;padding:12px 14px;margin-bottom:14px}
+    .zorgoverdracht h3{margin:0 0 7px;font-size:16px;color:#6b4b0c}.zorgoverdracht-grid{display:grid;grid-template-columns:repeat(2,minmax(240px,1fr));gap:7px 14px}
+    .zorgoverdracht-item{font-size:12.5px;line-height:1.45;white-space:pre-wrap}.zorgoverdracht-item strong{color:#59400e}
     .zorg-content{background:#fff;border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);padding:16px}
     .zorg-head{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:14px}
     .zorg-head h2{margin:0;font-size:24px}
@@ -119,7 +122,7 @@
     #pdfWrap .pdf-value{padding:12px 14px;font-size:12.5px;white-space:pre-wrap;min-height:42px;overflow-wrap:anywhere}
     #pdfWrap .pdf-info-block{border:1px solid #e2d3ab;background:#fdf7ea;border-radius:8px;padding:10px 12px;margin-bottom:10px;font-size:12px;line-height:1.5}
     #pdfWrap .pdf-info-block strong{color:#4b3b2d}
-    @media(max-width:900px){.toolbar,.grid,.grid2,.group-action,.timeline-grid,.fiche-grid,.zorgfase-card,.fasevragen-grid{grid-template-columns:1fr}.fasevragen .breed{grid-column:auto}.student-tab{min-width:180px}}
+    @media(max-width:900px){.toolbar,.grid,.grid2,.group-action,.timeline-grid,.fiche-grid,.zorgfase-card,.fasevragen-grid,.zorgoverdracht-grid{grid-template-columns:1fr}.fasevragen .breed{grid-column:auto}.student-tab{min-width:180px}}
   </style>
 </head>
 <body>
@@ -172,7 +175,7 @@ const BEWAAR_JAREN_ZORGOVERLEG = 12; // Maximum: K1 tot einde lager onderwijs pl
 const BEWAAR_JAREN_PER_STARTKLAS = { K1:12, K2:11, K3:10, "1A":9, "2A":8, "3A":7, "4A":6, "5A":5, "6A":4 };
 const EERSTE_APP_SCHOOLJAAR = "2025-2026";
 const esc=v=>String(v??"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;");
-let user=null, role="", schooljaar=huidigSchooljaar(), classes=[], activeKlas="", maand="", leerlingen=[], data={entries:{},groupActions:[]}, previousData={entries:{},groupActions:[]}, overlegHistoriek=[], activeStudentIndex=0, activeField="werkhouding", fullFicheMode=false;
+let user=null, role="", schooljaar=huidigSchooljaar(), classes=[], activeKlas="", maand="", leerlingen=[], data={entries:{},groupActions:[]}, previousData={entries:{},groupActions:[]}, overlegHistoriek=[], zorgOverdracht={}, activeStudentIndex=0, activeField="werkhouding", fullFicheMode=false;
 async function setDoc(ref,payload,options){
   await probeerVeiligheidskopie(ref,{reden:"Zorgoverleg vóór opslag",schooljaar,klas:activeKlas,gebruiker:user?.email||user?.uid||""},(melding,err)=>{console.warn(melding,err);const status=document.getElementById("status");if(status)status.textContent="Let op: reservekopie mislukt";});
   return firestoreSetDoc(ref,payload,options);
@@ -187,6 +190,9 @@ function schooljaarOpties(){
 }
 function isArchiefJaar(){return Number(schooljaar.slice(0,4))<Number(huidigSchooljaar().slice(0,4));}
 function schoolMonths(){const s=Number(schooljaar.slice(0,4)), e=Number(schooljaar.slice(5,9));return [`${s}-09`,`${s}-10`,`${s}-11`,`${s}-12`,`${e}-01`,`${e}-02`,`${e}-03`,`${e}-04`,`${e}-05`,`${e}-06`];}
+function maandenVoorSchooljaar(jaar){const s=Number(jaar.slice(0,4)),e=Number(jaar.slice(5,9));return [`${s}-09`,`${s}-10`,`${s}-11`,`${s}-12`,`${e}-01`,`${e}-02`,`${e}-03`,`${e}-04`,`${e}-05`,`${e}-06`];}
+function vorigSchooljaar(jaar=schooljaar){const start=Number(String(jaar).slice(0,4))-1;return `${start}-${start+1}`;}
+function mogelijkeVorigeKlassen(klas){const vorige={K2:"K1",K3:"K2","1A":"K3","2A":"1A","3A":"2A","4A":"3A","5A":"4A","6A":"5A"}[String(klas).toUpperCase()];return [...new Set([vorige,klas].filter(Boolean))];}
 function previousMonthId(){const months=schoolMonths(), i=months.indexOf(maand);return i>0?months[i-1]:"";}
 function overlegPeildatum(){
   const vandaag=new Date().toISOString().slice(0,10), huidigeMaand=vandaag.slice(0,7);
@@ -273,6 +279,7 @@ async function openOverleg(){
   const months=schoolMonths();
   const monthSnaps=await Promise.all(months.map(m=>getDoc(overlegRefFor(m))));
   overlegHistoriek=monthSnaps.map((s,i)=>({maand:months[i],data:s.exists()?s.data():null})).filter(x=>x.data&&x.maand!==maand);
+  await laadZorgOverdracht();
   $("titelInput").value=data.titel||`Zorgoverleg ${maand}`;
   zetBewaarstatus("");
   renderGroupActions();
@@ -362,7 +369,7 @@ function laatsteWaarde(studentKey, field){
 function laatsteZorgfase(studentKey){
   const items=[...overlegHistoriek,{maand,data}].sort((a,b)=>a.maand.localeCompare(b.maand));
   const fases=items.map(item=>item.data?.entries?.[studentKey]?.zorgfase).filter(value=>value!==undefined&&value!==null&&String(value)!=="");
-  return fases.length?String(fases[fases.length-1]):"";
+  return fases.length?String(fases[fases.length-1]):String(zorgOverdracht?.[studentKey]?.waarden?.zorgfase||"");
 }
 function leerlingHeeftInvulling(studentKey){
   const entry=data.entries?.[studentKey]||{};
@@ -384,7 +391,7 @@ function renderZorgfase(studentKey){
 function laatsteFaseWaarde(studentKey,field){
   const items=[...overlegHistoriek].sort((a,b)=>a.maand.localeCompare(b.maand));
   const values=items.map(item=>item.data?.entries?.[studentKey]?.[field]).filter(value=>value!==undefined&&value!==null&&String(value)!=="");
-  return values.length?String(values[values.length-1]):"";
+  return values.length?String(values[values.length-1]):String(zorgOverdracht?.[studentKey]?.waarden?.[field]||"");
 }
 function faseWaarde(studentKey,field){
   const current=data.entries?.[studentKey]||{};
@@ -410,6 +417,41 @@ function renderFaseVragen(studentKey){
   if(fase==="3")inhoud=`${faseInput(studentKey,"inkluusBegeleider","Begeleiding door Inkluus")}${faseTekst(studentKey,"inkluusAfspraken","Afspraken rond de begeleiding door Inkluus")}`;
   return `<section class="fasevragen"><h3>Extra opvolging voor ${esc(zorgfaseLabel(fase))}</h3>${vorigeFaseInfo(studentKey,fase)}<div class="fasevragen-grid">${inhoud}</div></section>`;
 }
+async function laadZorgOverdracht(){
+  zorgOverdracht={};
+  const bronJaar=vorigSchooljaar(), bronKlassen=mogelijkeVorigeKlassen(activeKlas), maanden=maandenVoorSchooljaar(bronJaar);
+  if(Number(bronJaar.slice(0,4))<Number(EERSTE_APP_SCHOOLJAAR.slice(0,4)))return;
+  for(const bronKlas of bronKlassen){
+    try{
+      const klasSnap=await getDoc(doc(db,"schoolbeheer",bronJaar,"klassen",bronKlas));
+      if(!klasSnap.exists())continue;
+      const oudeLeerlingen=klasSnap.data().leerlingen||[];
+      const snaps=await Promise.all(maanden.map(m=>getDoc(doc(db,"zorgoverleggen",bronJaar,"klassen",bronKlas,"maanden",m)).catch(()=>null)));
+      for(const student of leerlingen){
+        const oud=oudeLeerlingen.find(s=>(s.id&&student.id&&String(s.id)===String(student.id))||naamKey(naam(s))===naamKey(naam(student)));
+        if(!oud)continue;
+        const oudKey=key(oud), waarden={}, groepsacties=[];let laatsteMaand="";
+        snaps.forEach((snap,index)=>{
+          if(!snap?.exists())return;
+          const entry=snap.data()?.entries?.[oudKey]||{};
+          Object.entries(entry).forEach(([field,value])=>{if(value!==undefined&&value!==null&&String(value).trim()!=="")waarden[field]=value;});
+          const acties=(snap.data()?.groupActions||[]).filter(g=>(g.studentKeys||[]).includes(oudKey));
+          if(Object.keys(entry).some(field=>field!=="zorgfase"&&String(entry[field]||"").trim())||acties.length)laatsteMaand=maanden[index];
+          acties.forEach(actie=>groepsacties.push(actie));
+        });
+        if(Object.keys(waarden).length||groepsacties.length)zorgOverdracht[key(student)]={bronJaar,bronKlas,laatsteMaand,waarden,groepsacties};
+      }
+    }catch(err){console.warn("Zorgoverdracht kon niet uit de vorige klas geladen worden",bronJaar,bronKlas,err);}
+  }
+}
+function renderZorgOverdracht(studentKey){
+  const bron=zorgOverdracht?.[studentKey];if(!bron)return "";
+  const labels={zorgfase:"Zorgfase",doel:"Lopend doel",acties:"Lopende acties",evaluatie:"Laatste evaluatie",observatieStatus:"Observatie zorgcoördinator",observatieDatum:"Observatiedatum",observatieAdvies:"Advies na observatie",vvfStatus:"Vraagverhelderingsfiche (VVF)",schooloverlegAdvies:"Advies schooloverleg",inkluusBegeleider:"Begeleiding door Inkluus",inkluusAfspraken:"Afspraken Inkluus"};
+  const velden=["zorgfase","doel","acties","evaluatie","observatieStatus","observatieDatum","observatieAdvies","vvfStatus","schooloverlegAdvies","inkluusBegeleider","inkluusAfspraken"];
+  const items=velden.map(field=>{const value=bron.waarden?.[field];if(value===undefined||value===null||String(value).trim()==="")return "";const tekst=field==="zorgfase"?zorgfaseLabel(value):leesbareFaseWaarde(String(value));return `<div class="zorgoverdracht-item"><strong>${esc(labels[field])}:</strong><br>${esc(tekst)}</div>`;}).filter(Boolean);
+  bron.groepsacties?.forEach(g=>items.push(`<div class="zorgoverdracht-item"><strong>Gezamenlijke actie:</strong><br>${esc([g.groep,g.actie,g.evaluatie].filter(Boolean).join(" — "))}</div>`));
+  return `<section class="zorgoverdracht"><h3>Overgenomen beginsituatie uit ${esc(bron.bronJaar)}</h3><div class="muted" style="margin-bottom:8px">Afkomstig uit ${esc(bron.bronKlas)}${bron.laatsteMaand?` · laatst aangevuld ${esc(maandLabel(bron.laatsteMaand))}`:""}. Dit telt niet als nieuwe invulling.</div><div class="zorgoverdracht-grid">${items.join("")}</div></section>`;
+}
 function renderVakTabs(){
   return `<div class="vak-tabs">${FIELD_TABS.map(([id,label])=>`<button type="button" class="vak-tab ${id===activeField?"active":""}" onclick="switchField('${id}')">${esc(label)}</button>`).join("")}</div>`;
 }
@@ -431,7 +473,7 @@ function render(){
   const archiveNotice=isArchiefJaar()?`<section class="notice"><strong>Archief:</strong> <span class="muted">Je bekijkt ${esc(schooljaar)}. Dit schooljaar is beschermd tegen per ongeluk aanpassen.</span></section>`:"";
   $("students").innerHTML=`${archiveNotice}${renderStudentTabs()}<section class="zorg-content" data-student="${esc(studentKey)}">
     <div class="zorg-head"><div><h2>${esc(naam(student))}</h2><div class="muted">${esc(activeKlas)} - gekozen overleg: ${esc(maandLabel(maand))}</div></div><button class="white" onclick="pdf()">PDF deze leerling</button></div>
-    ${renderZorgfase(studentKey)}${renderFaseVragen(studentKey)}${leerlingInfoBlok(student)}${groupSummary(studentKey)}
+    ${renderZorgOverdracht(studentKey)}${renderZorgfase(studentKey)}${renderFaseVragen(studentKey)}${leerlingInfoBlok(student)}${groupSummary(studentKey)}
     <div class="history-panel" id="zorgHistoryPanel"><button type="button" class="history-toggle" onclick="toggleZorgGeschiedenis()"><strong>Vorige schooljaren van deze leerling</strong><span id="zorgHistoryPijl">Tonen</span></button><div class="history-body" id="zorgHistoryBody"><div class="muted">Klik om de vorige schooljaren te laden.</div></div></div>
     ${renderFicheModeTabs()}${fullFicheMode?renderVolledigeFiche(studentKey):`${renderVakTabs()}<div class="timeline-grid">
       <aside class="side-card">
