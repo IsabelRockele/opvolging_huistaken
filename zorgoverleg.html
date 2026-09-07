@@ -331,6 +331,7 @@ const FIELD_TABS=[
   ["nederlands","Nederlands"],
   ["wiskunde","Wiskunde"],
   ["wo","WO"],
+  ["motoriek","Motoriek"],
   ["frans","Frans"],
   ["hulpmiddelen","Hulpmiddelen"],
   ["bezorgdheden","Bezorgdheden"],
@@ -619,7 +620,7 @@ async function pdf(){
   const groups=matchingGroups(studentKey, studentName).map(g=>`<section class="pdf-student"><h2>Gezamenlijke klasactie</h2>${cell("Waarvoor?",g.groep)}${cell("Leerlingen",g.studentNames?.length?g.studentNames.join(", "):g.leerlingen)}${cell("Actie",g.actie)}${cell("Evaluatie",g.evaluatie)}</section>`).join("");
   const isGok=student.gok==="ja", tmTekst=testmomentenTekst(student);
   const infoPdf=(isGok||tmTekst)?`<div class="pdf-info-block"><strong>Vaste zorginfo:</strong><br>${isGok?`GOK: ${esc(gokKenmerkenTekst(student))}<br>`:""}${tmTekst?`Testmomenten:<br>${tmTekst}`:""}</div>`:"";
-  const html=`<div id="pdfWrap"><div class="pdf-cover"><div class="pdf-title">${logo?`<img src="${logo}">`:""}<div><h1>${esc(data.titel||"Zorgoverleg")}</h1><div class="pdf-meta">${esc(studentName)} - ${esc(activeKlas)} - ${esc(maand)} - ${esc(schooljaar)}</div></div></div></div>${infoPdf}<section class="pdf-student"><h2>${esc(studentName)} <span style="font-weight:400;color:#5c7254">(${esc(activeKlas)})</span></h2>${cell("Zorgfase",zorgfaseLabel(e.zorgfase||laatsteZorgfase(studentKey)))}${cell("Doel",e.doel)}${cell("Werkhouding",e.werkhouding)}${cell("Nederlands",e.nederlands)}${cell("Wiskunde",e.wiskunde)}${cell("WO",e.wo)}${cell("Frans",e.frans)}${cell("Hulpmiddelen",e.hulpmiddelen)}${cell("Bezorgdheden",e.bezorgdheden)}${cell("Samen nemen / groepje",e.groepje)}${cell("Acties",e.acties)}${cell("Evaluatie",e.evaluatie)}${cell("Ouders / CLB",e.oudersClb)}${cell("Extra notitie",e.notitie)}</section>${groups}</div>`;
+  const html=`<div id="pdfWrap"><div class="pdf-cover"><div class="pdf-title">${logo?`<img src="${logo}">`:""}<div><h1>${esc(data.titel||"Zorgoverleg")}</h1><div class="pdf-meta">${esc(studentName)} - ${esc(activeKlas)} - ${esc(maand)} - ${esc(schooljaar)}</div></div></div></div>${infoPdf}<section class="pdf-student"><h2>${esc(studentName)} <span style="font-weight:400;color:#5c7254">(${esc(activeKlas)})</span></h2>${cell("Zorgfase",zorgfaseLabel(e.zorgfase||laatsteZorgfase(studentKey)))}${cell("Doel",e.doel)}${cell("Werkhouding",e.werkhouding)}${cell("Nederlands",e.nederlands)}${cell("Wiskunde",e.wiskunde)}${cell("WO",e.wo)}${cell("Motoriek",e.motoriek)}${cell("Frans",e.frans)}${cell("Hulpmiddelen",e.hulpmiddelen)}${cell("Bezorgdheden",e.bezorgdheden)}${cell("Samen nemen / groepje",e.groepje)}${cell("Acties",e.acties)}${cell("Evaluatie",e.evaluatie)}${cell("Ouders / CLB",e.oudersClb)}${cell("Extra notitie",e.notitie)}</section>${groups}</div>`;
   const holder=document.createElement("div");holder.style.cssText="position:absolute;left:-10000px;top:0;width:640px;background:#fff";holder.innerHTML=html;document.body.appendChild(holder);
   await html2pdf().set({margin:[14,16,14,16],filename:`Zorgoverleg_${safeFileName(studentName)}_${activeKlas}_${maand}.pdf`,image:{type:"jpeg",quality:.96},html2canvas:{scale:2,useCORS:true,backgroundColor:"#fff",scrollX:0,scrollY:0},jsPDF:{unit:"mm",format:"a4",orientation:"portrait"},pagebreak:{mode:["css","legacy"],avoid:[".pdf-cover"]}}).from(holder.querySelector("#pdfWrap")).save();
   holder.remove();
