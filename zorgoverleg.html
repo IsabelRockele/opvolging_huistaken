@@ -47,9 +47,18 @@
     .leerling-info .gok-tag{display:inline-block;background:#e4ecf9;color:#2c4a7c;border-radius:999px;padding:1px 8px;font-size:11px;font-weight:800;margin-right:4px}
     .leerling-info .geen{color:var(--muted);font-style:italic}
     .student-tabs{display:flex;gap:8px;overflow-x:auto;padding:12px;background:#fff;border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);margin-bottom:14px}
+    .student-tabs-wrap{margin-bottom:14px}.student-tabs-wrap .student-tabs{margin-bottom:6px}
+    .student-tabs-legenda{display:flex;align-items:center;gap:6px;color:var(--muted);font-size:12px;padding-left:4px}
     .student-tab{min-width:210px;text-align:left;background:#fff;border:1px solid var(--line);border-radius:12px;padding:10px 12px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+    .student-tab.opgevolgd{background:#edf8ea;border-color:#78ad68;box-shadow:inset 4px 0 #78ad68}
     .student-tab.active{background:#fff4c4;border-color:#d4a932}
+    .student-tab.active.opgevolgd{background:linear-gradient(90deg,#e6f6e1,#fff4c4)}
     .student-tab .naam{font-weight:900}
+    .student-tab-info{display:flex;align-items:center;gap:5px;flex-wrap:wrap;justify-content:flex-end}
+    .besproken-picto{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:50%;background:#4f8f45;color:#fff;font-size:13px;font-weight:900}
+    .fase-badge{display:inline-block;border-radius:999px;background:#e9e3f5;color:#51406e;padding:3px 8px;font-size:11px;font-weight:800;white-space:nowrap}
+    .zorgfase-card{display:grid;grid-template-columns:minmax(230px,360px) 1fr;gap:12px;align-items:end;border:1px solid #cfc4df;border-radius:14px;background:#f8f5fc;padding:12px 14px;margin-bottom:14px}
+    .zorgfase-card label{margin:0}.zorgfase-uitleg{font-size:12px;color:#665a73;line-height:1.45}
     .zorg-content{background:#fff;border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);padding:16px}
     .zorg-head{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:14px}
     .zorg-head h2{margin:0;font-size:24px}
@@ -96,7 +105,7 @@
     #pdfWrap .pdf-value{padding:12px 14px;font-size:12.5px;white-space:pre-wrap;min-height:42px;overflow-wrap:anywhere}
     #pdfWrap .pdf-info-block{border:1px solid #e2d3ab;background:#fdf7ea;border-radius:8px;padding:10px 12px;margin-bottom:10px;font-size:12px;line-height:1.5}
     #pdfWrap .pdf-info-block strong{color:#4b3b2d}
-    @media(max-width:900px){.toolbar,.grid,.grid2,.group-action,.timeline-grid,.fiche-grid{grid-template-columns:1fr}.student-tab{min-width:180px}}
+    @media(max-width:900px){.toolbar,.grid,.grid2,.group-action,.timeline-grid,.fiche-grid,.zorgfase-card{grid-template-columns:1fr}.student-tab{min-width:180px}}
   </style>
 </head>
 <body>
@@ -294,7 +303,14 @@ const FIELD_TABS=[
   ["oudersClb","Ouders / CLB"],
   ["notitie","Extra notitie"]
 ];
+const ZORGFASES=[
+  ["0","0. Brede basiszorg"],
+  ["1","1. Verhoogde zorg"],
+  ["2","2. Uitbreiding van zorg"],
+  ["3","3. Individueel aangepast curriculum"]
+];
 function fieldLabel(field){return FIELD_TABS.find(([id])=>id===field)?.[1]||field;}
+function zorgfaseLabel(value){return ZORGFASES.find(([id])=>id===String(value??""))?.[1]||"Nog niet aangeduid";}
 function maandLabel(value){
   const [y,m]=String(value||"").split("-");
   const namen={ "01":"jan","02":"feb","03":"mrt","04":"apr","05":"mei","06":"jun","09":"sep","10":"okt","11":"nov","12":"dec" };
@@ -312,8 +328,24 @@ function laatsteWaarde(studentKey, field){
   const list=historiekVoor(studentKey, field).filter(x=>x.maand!==maand);
   return list.length?list[list.length-1].value:"";
 }
+function laatsteZorgfase(studentKey){
+  const items=[...overlegHistoriek,{maand,data}].sort((a,b)=>a.maand.localeCompare(b.maand));
+  const fases=items.map(item=>item.data?.entries?.[studentKey]?.zorgfase).filter(value=>value!==undefined&&value!==null&&String(value)!=="");
+  return fases.length?String(fases[fases.length-1]):"";
+}
+function leerlingHeeftInvulling(studentKey){
+  const entry=data.entries?.[studentKey]||{};
+  const eigenNotitie=FIELD_TABS.some(([field])=>String(entry[field]||"").trim());
+  const groepsactie=groupsForStudent(studentKey).some(g=>String(g.groep||"").trim()||String(g.actie||"").trim()||String(g.evaluatie||"").trim());
+  return eigenNotitie||groepsactie;
+}
 function renderStudentTabs(){
-  return `<div class="student-tabs">${leerlingen.map((s,i)=>`<button type="button" class="student-tab ${i===activeStudentIndex?"active":""}" onclick="openStudent(${i})"><span class="naam">${esc(naam(s))}</span>${s.gok==="ja"?'<span class="tag">GOK</span>':""}</button>`).join("")}</div>`;
+  return `<div class="student-tabs-wrap"><div class="student-tabs">${leerlingen.map((s,i)=>{const studentKey=key(s),ingevuld=leerlingHeeftInvulling(studentKey),fase=laatsteZorgfase(studentKey);return `<button type="button" class="student-tab ${i===activeStudentIndex?"active":""} ${ingevuld?"opgevolgd":""}" onclick="openStudent(${i})"><span class="naam">${esc(naam(s))}</span><span class="student-tab-info">${fase?`<span class="fase-badge">Fase ${esc(fase)}</span>`:""}${s.gok==="ja"?'<span class="tag">GOK</span>':""}${ingevuld?'<span class="besproken-picto" title="Ingevuld" aria-label="Ingevuld">✓</span>':""}</span></button>`;}).join("")}</div><div class="student-tabs-legenda"><span class="besproken-picto" aria-hidden="true">✓</span><span>Ingevuld in ${esc(maandLabel(maand))}</span></div></div>`;
+}
+function renderZorgfase(studentKey){
+  const current=data.entries?.[studentKey]?.zorgfase;
+  const value=current!==undefined&&current!==null&&String(current)!==""?String(current):laatsteZorgfase(studentKey);
+  return `<section class="zorgfase-card"><label>Zorgfase van deze leerling<select data-zorgfase ${isArchiefJaar()?"disabled":""}><option value="">Nog niet aangeduid</option>${ZORGFASES.map(([id,label])=>`<option value="${id}" ${value===id?"selected":""}>${esc(label)}</option>`).join("")}</select></label><div class="zorgfase-uitleg"><strong>De volledige zorglijn blijft bij de leerling.</strong><br>Als je de fase wijzigt, blijven alle eerdere notities, acties en evaluaties zichtbaar.</div></section>`;
 }
 function renderVakTabs(){
   return `<div class="vak-tabs">${FIELD_TABS.map(([id,label])=>`<button type="button" class="vak-tab ${id===activeField?"active":""}" onclick="switchField('${id}')">${esc(label)}</button>`).join("")}</div>`;
@@ -336,7 +368,7 @@ function render(){
   const archiveNotice=isArchiefJaar()?`<section class="notice"><strong>Archief:</strong> <span class="muted">Je bekijkt ${esc(schooljaar)}. Dit schooljaar is beschermd tegen per ongeluk aanpassen.</span></section>`:"";
   $("students").innerHTML=`${archiveNotice}${renderStudentTabs()}<section class="zorg-content" data-student="${esc(studentKey)}">
     <div class="zorg-head"><div><h2>${esc(naam(student))}</h2><div class="muted">${esc(activeKlas)} - gekozen overleg: ${esc(maandLabel(maand))}</div></div><button class="white" onclick="pdf()">PDF deze leerling</button></div>
-    ${leerlingInfoBlok(student)}${groupSummary(studentKey)}
+    ${renderZorgfase(studentKey)}${leerlingInfoBlok(student)}${groupSummary(studentKey)}
     <div class="history-panel" id="zorgHistoryPanel"><button type="button" class="history-toggle" onclick="toggleZorgGeschiedenis()"><strong>Vorige schooljaren van deze leerling</strong><span id="zorgHistoryPijl">Tonen</span></button><div class="history-body" id="zorgHistoryBody"><div class="muted">Klik om de vorige schooljaren te laden.</div></div></div>
     ${renderFicheModeTabs()}${fullFicheMode?renderVolledigeFiche(studentKey):`${renderVakTabs()}<div class="timeline-grid">
       <aside class="side-card">
@@ -367,6 +399,8 @@ function collectCurrent(){
   const studentKey=box.dataset.student;
   data.entries={...(data.entries||{})};
   data.entries[studentKey]={...(data.entries[studentKey]||{})};
+  const zorgfase=document.querySelector("[data-zorgfase]");
+  if(zorgfase)data.entries[studentKey].zorgfase=zorgfase.value||"";
   areas.forEach(area=>{data.entries[studentKey][area.dataset.currentField]=area.value||"";});
 }
 function openStudent(index){
@@ -428,7 +462,7 @@ async function toggleZorgGeschiedenis(){
   }
 }
 function zorgoverlegBewaarPayload(){const jaren=bewaarJarenVoorKlas(activeKlas);return {...data,schooljaar,klas:activeKlas,maand,bewaarTot:bewaarTotVoorSchooljaar(schooljaar,jaren),bewaartermijnJaren:jaren,updatedAt:serverTimestamp(),updatedBy:user.email||user.uid};}
-async function save(){if(isArchiefJaar()){alert("Dit is een vorig schooljaar. Je kan het bekijken, maar niet per ongeluk overschrijven.");return;}collect();await setDoc(overlegRef(),zorgoverlegBewaarPayload(),{merge:true});$("status").textContent="Bewaard";}
+async function save(){if(isArchiefJaar()){alert("Dit is een vorig schooljaar. Je kan het bekijken, maar niet per ongeluk overschrijven.");return;}collect();await setDoc(overlegRef(),zorgoverlegBewaarPayload(),{merge:true});render();$("status").textContent="Bewaard";}
 async function saveAndGoNext(){
   if(isArchiefJaar()){goToStudent(activeStudentIndex+1);return;}
   const next=activeStudentIndex+1;
@@ -461,7 +495,7 @@ async function pdf(){
   const groups=matchingGroups(studentKey, studentName).map(g=>`<section class="pdf-student"><h2>Gezamenlijke klasactie</h2>${cell("Waarvoor?",g.groep)}${cell("Leerlingen",g.studentNames?.length?g.studentNames.join(", "):g.leerlingen)}${cell("Actie",g.actie)}${cell("Evaluatie",g.evaluatie)}</section>`).join("");
   const isGok=student.gok==="ja", tmTekst=testmomentenTekst(student);
   const infoPdf=(isGok||tmTekst)?`<div class="pdf-info-block"><strong>Vaste zorginfo:</strong><br>${isGok?`GOK: ${esc(gokKenmerkenTekst(student))}<br>`:""}${tmTekst?`Testmomenten:<br>${tmTekst}`:""}</div>`:"";
-  const html=`<div id="pdfWrap"><div class="pdf-cover"><div class="pdf-title">${logo?`<img src="${logo}">`:""}<div><h1>${esc(data.titel||"Zorgoverleg")}</h1><div class="pdf-meta">${esc(studentName)} - ${esc(activeKlas)} - ${esc(maand)} - ${esc(schooljaar)}</div></div></div></div>${infoPdf}<section class="pdf-student"><h2>${esc(studentName)} <span style="font-weight:400;color:#5c7254">(${esc(activeKlas)})</span></h2>${cell("Werkhouding",e.werkhouding)}${cell("Nederlands",e.nederlands)}${cell("Wiskunde",e.wiskunde)}${cell("WO",e.wo)}${cell("Frans",e.frans)}${cell("Hulpmiddelen",e.hulpmiddelen)}${cell("Bezorgdheden",e.bezorgdheden)}${cell("Samen nemen / groepje",e.groepje)}${cell("Acties",e.acties)}${cell("Evaluatie",e.evaluatie)}${cell("Ouders / CLB",e.oudersClb)}${cell("Extra notitie",e.notitie)}</section>${groups}</div>`;
+  const html=`<div id="pdfWrap"><div class="pdf-cover"><div class="pdf-title">${logo?`<img src="${logo}">`:""}<div><h1>${esc(data.titel||"Zorgoverleg")}</h1><div class="pdf-meta">${esc(studentName)} - ${esc(activeKlas)} - ${esc(maand)} - ${esc(schooljaar)}</div></div></div></div>${infoPdf}<section class="pdf-student"><h2>${esc(studentName)} <span style="font-weight:400;color:#5c7254">(${esc(activeKlas)})</span></h2>${cell("Zorgfase",zorgfaseLabel(e.zorgfase||laatsteZorgfase(studentKey)))}${cell("Werkhouding",e.werkhouding)}${cell("Nederlands",e.nederlands)}${cell("Wiskunde",e.wiskunde)}${cell("WO",e.wo)}${cell("Frans",e.frans)}${cell("Hulpmiddelen",e.hulpmiddelen)}${cell("Bezorgdheden",e.bezorgdheden)}${cell("Samen nemen / groepje",e.groepje)}${cell("Acties",e.acties)}${cell("Evaluatie",e.evaluatie)}${cell("Ouders / CLB",e.oudersClb)}${cell("Extra notitie",e.notitie)}</section>${groups}</div>`;
   const holder=document.createElement("div");holder.style.cssText="position:absolute;left:-10000px;top:0;width:640px;background:#fff";holder.innerHTML=html;document.body.appendChild(holder);
   await html2pdf().set({margin:[14,16,14,16],filename:`Zorgoverleg_${safeFileName(studentName)}_${activeKlas}_${maand}.pdf`,image:{type:"jpeg",quality:.96},html2canvas:{scale:2,useCORS:true,backgroundColor:"#fff",scrollX:0,scrollY:0},jsPDF:{unit:"mm",format:"a4",orientation:"portrait"},pagebreak:{mode:["css","legacy"],avoid:[".pdf-cover"]}}).from(holder.querySelector("#pdfWrap")).save();
   holder.remove();
