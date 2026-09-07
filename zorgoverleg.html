@@ -63,6 +63,10 @@
     .fase-badge{display:inline-block;border-radius:999px;background:#e9e3f5;color:#51406e;padding:3px 8px;font-size:11px;font-weight:800;white-space:nowrap}
     .zorgfase-card{display:grid;grid-template-columns:minmax(230px,360px) 1fr;gap:12px;align-items:end;border:1px solid #cfc4df;border-radius:14px;background:#f8f5fc;padding:12px 14px;margin-bottom:14px}
     .zorgfase-card label{margin:0}.zorgfase-uitleg{font-size:12px;color:#665a73;line-height:1.45}
+    .fasevragen{border:1px solid #cfc4df;border-radius:14px;background:#fcfaff;padding:13px 14px;margin-bottom:14px}
+    .fasevragen h3{margin:0 0 10px;font-size:16px;color:#51406e}.fasevragen-grid{display:grid;grid-template-columns:repeat(2,minmax(240px,1fr));gap:10px}
+    .fasevragen .breed{grid-column:1/-1}.fasevragen textarea{min-height:78px}
+    .vorige-fase-info{background:#f3eff8;border-left:4px solid #8d76ad;border-radius:9px;padding:8px 10px;margin-bottom:10px;font-size:12px;line-height:1.5;color:#51406e}
     .zorg-content{background:#fff;border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);padding:16px}
     .zorg-head{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:14px}
     .zorg-head h2{margin:0;font-size:24px}
@@ -109,7 +113,7 @@
     #pdfWrap .pdf-value{padding:12px 14px;font-size:12.5px;white-space:pre-wrap;min-height:42px;overflow-wrap:anywhere}
     #pdfWrap .pdf-info-block{border:1px solid #e2d3ab;background:#fdf7ea;border-radius:8px;padding:10px 12px;margin-bottom:10px;font-size:12px;line-height:1.5}
     #pdfWrap .pdf-info-block strong{color:#4b3b2d}
-    @media(max-width:900px){.toolbar,.grid,.grid2,.group-action,.timeline-grid,.fiche-grid,.zorgfase-card{grid-template-columns:1fr}.student-tab{min-width:180px}}
+    @media(max-width:900px){.toolbar,.grid,.grid2,.group-action,.timeline-grid,.fiche-grid,.zorgfase-card,.fasevragen-grid{grid-template-columns:1fr}.fasevragen .breed{grid-column:auto}.student-tab{min-width:180px}}
   </style>
 </head>
 <body>
@@ -308,6 +312,7 @@ function groupSummary(studentKey){
   return `<div class="group-summary"><h3>Gezamenlijke acties waar deze leerling in zit</h3>${groups.map(g=>`<div class="group-summary-item"><strong>${esc(g.groep||"Groepsactie")}</strong><br>${esc(g.actie||"Geen actie ingevuld.")}${g.evaluatie?`<br><em>Evaluatie: ${esc(g.evaluatie)}</em>`:""}</div>`).join("")}</div>`;
 }
 const FIELD_TABS=[
+  ["doel","Doel"],
   ["werkhouding","Werkhouding"],
   ["nederlands","Nederlands"],
   ["wiskunde","Wiskunde"],
@@ -327,6 +332,7 @@ const ZORGFASES=[
   ["2","2. Uitbreiding van zorg"],
   ["3","3. Individueel aangepast curriculum"]
 ];
+const FASE_VELDEN=["lvsStatus","fase1Besluit","zorgvraag","observatieStatus","observatieDatum","observatieAdvies","fase2Besluit","vvfStatus","schooloverlegDatum","schooloverlegBespreking","schooloverlegAdvies","inkluusBegeleider","inkluusAfspraken"];
 function fieldLabel(field){return FIELD_TABS.find(([id])=>id===field)?.[1]||field;}
 function zorgfaseLabel(value){return ZORGFASES.find(([id])=>id===String(value??""))?.[1]||"Nog niet aangeduid";}
 function maandLabel(value){
@@ -353,7 +359,7 @@ function laatsteZorgfase(studentKey){
 }
 function leerlingHeeftInvulling(studentKey){
   const entry=data.entries?.[studentKey]||{};
-  const eigenNotitie=FIELD_TABS.some(([field])=>String(entry[field]||"").trim());
+  const eigenNotitie=[...FIELD_TABS.map(([field])=>field),...FASE_VELDEN].some(field=>String(entry[field]||"").trim());
   const groepsactie=groupsForStudent(studentKey).some(g=>String(g.groep||"").trim()||String(g.actie||"").trim()||String(g.evaluatie||"").trim());
   return eigenNotitie||groepsactie;
 }
@@ -366,7 +372,36 @@ function renderStudentTabs(){
 function renderZorgfase(studentKey){
   const current=data.entries?.[studentKey]?.zorgfase;
   const value=current!==undefined&&current!==null&&String(current)!==""?String(current):laatsteZorgfase(studentKey);
-  return `<section class="zorgfase-card"><label>Zorgfase van deze leerling<select data-zorgfase ${isArchiefJaar()?"disabled":""}><option value="">Nog niet aangeduid</option>${ZORGFASES.map(([id,label])=>`<option value="${id}" ${value===id?"selected":""}>${esc(label)}</option>`).join("")}</select></label><div class="zorgfase-uitleg"><strong>De volledige zorglijn blijft bij de leerling.</strong><br>Als je de fase wijzigt, blijven alle eerdere notities, acties en evaluaties zichtbaar.</div></section>`;
+  return `<section class="zorgfase-card"><label>Zorgfase van deze leerling<select data-zorgfase onchange="wisselZorgfase(this.value)" ${isArchiefJaar()?"disabled":""}><option value="">Nog niet aangeduid</option>${ZORGFASES.map(([id,label])=>`<option value="${id}" ${value===id?"selected":""}>${esc(label)}</option>`).join("")}</select></label><div class="zorgfase-uitleg"><strong>De volledige zorglijn blijft bij de leerling.</strong><br>Als je de fase wijzigt, blijven alle eerdere notities, acties en evaluaties zichtbaar.</div></section>`;
+}
+function laatsteFaseWaarde(studentKey,field){
+  const items=[...overlegHistoriek].sort((a,b)=>a.maand.localeCompare(b.maand));
+  const values=items.map(item=>item.data?.entries?.[studentKey]?.[field]).filter(value=>value!==undefined&&value!==null&&String(value)!=="");
+  return values.length?String(values[values.length-1]):"";
+}
+function faseWaarde(studentKey,field){
+  const current=data.entries?.[studentKey]||{};
+  return Object.prototype.hasOwnProperty.call(current,field)?String(current[field]??""):"";
+}
+function faseSelect(studentKey,field,label,options){const value=faseWaarde(studentKey,field);return `<label>${esc(label)}<select data-fase-field="${esc(field)}" ${isArchiefJaar()?"disabled":""}><option value="">Nog niet aangeduid</option>${options.map(([id,text])=>`<option value="${esc(id)}" ${value===id?"selected":""}>${esc(text)}</option>`).join("")}</select></label>`;}
+function faseInput(studentKey,field,label,type="text"){return `<label>${esc(label)}<input type="${esc(type)}" data-fase-field="${esc(field)}" value="${esc(faseWaarde(studentKey,field))}" ${isArchiefJaar()?"disabled":""}></label>`;}
+function faseTekst(studentKey,field,label){return `<label class="breed">${esc(label)}<textarea data-fase-field="${esc(field)}" ${isArchiefJaar()?"disabled":""}>${esc(faseWaarde(studentKey,field))}</textarea></label>`;}
+function leesbareFaseWaarde(value){const labels={ja:"Ja",nee:"Nee",te_bekijken:"Te bekijken",in_te_plannen:"Nog in te plannen",gepland:"Gepland",uitgevoerd:"Deze periode uitgevoerd",eerder_uitgevoerd:"Reeds uitgevoerd in een vorige periode",nieuwe_nodig:"Nieuwe observatie nodig",niet_gestart:"Nog niet gestart",in_opmaak:"In opmaak",opgemaakt:"Opgemaakt",niet_nodig:"Niet nodig"};return labels[value]||value;}
+function vorigeFaseInfo(studentKey,fase){
+  const velden={"0":[["lvsStatus","LVS"],["fase1Besluit","Verhoogde zorg"],["zorgvraag","Zorgvraag"]],"1":[["observatieStatus","Observatie"],["observatieDatum","Observatiedatum"],["observatieAdvies","Advies na observatie"],["lvsStatus","LVS"],["fase2Besluit","Uitbreiding van zorg"],["vvfStatus","VVF"]],"2":[["schooloverlegDatum","Schooloverleg"],["schooloverlegBespreking","Besproken"],["schooloverlegAdvies","Advies"]],"3":[["inkluusBegeleider","Begeleiding door Inkluus"],["inkluusAfspraken","Afspraken Inkluus"]]}[fase]||[];
+  const regels=velden.map(([field,label])=>{const value=laatsteFaseWaarde(studentKey,field);return value?`<strong>${esc(label)}:</strong> ${esc(leesbareFaseWaarde(value))}`:"";}).filter(Boolean);
+  return regels.length?`<div class="vorige-fase-info"><strong>Overgenomen uit een vorig zorgoverleg</strong><br>${regels.join("<br>")}</div>`:"";
+}
+function renderFaseVragen(studentKey){
+  const fase=String(data.entries?.[studentKey]?.zorgfase??laatsteZorgfase(studentKey));
+  if(!fase)return "";
+  const jaNee=[["ja","Ja"],["nee","Nee"],["te_bekijken","Te bekijken"]];
+  let inhoud="";
+  if(fase==="0")inhoud=`${faseSelect(studentKey,"lvsStatus","Opgenomen in het leerlingvolgsysteem (LVS)?",jaNee)}${faseSelect(studentKey,"fase1Besluit","Verhoogde zorg nodig?",jaNee)}${faseTekst(studentKey,"zorgvraag","Zorgvraag")}`;
+  if(fase==="1")inhoud=`${faseSelect(studentKey,"observatieStatus","Observatie door de zorgcoördinator",[["in_te_plannen","Nog in te plannen"],["gepland","Gepland"],["uitgevoerd","Deze periode uitgevoerd"],["eerder_uitgevoerd","Reeds uitgevoerd in een vorige periode"],["nieuwe_nodig","Nieuwe observatie nodig"]])}${faseInput(studentKey,"observatieDatum","Datum en uur observatie","datetime-local")}${faseTekst(studentKey,"observatieAdvies","Advies na observatie")}${faseSelect(studentKey,"lvsStatus","Opgenomen in het leerlingvolgsysteem (LVS)?",jaNee)}${faseSelect(studentKey,"fase2Besluit","Uitbreiding van zorg nodig?",jaNee)}${faseSelect(studentKey,"vvfStatus","Vraagverhelderingsfiche (VVF)",[["niet_gestart","Nog niet gestart"],["in_opmaak","In opmaak"],["opgemaakt","Opgemaakt"],["niet_nodig","Niet nodig"]])}`;
+  if(fase==="2")inhoud=`${faseInput(studentKey,"schooloverlegDatum","Besproken op schooloverleg","date")}${faseTekst(studentKey,"schooloverlegBespreking","Wat werd besproken?")}${faseTekst(studentKey,"schooloverlegAdvies","Advies na het schooloverleg")}`;
+  if(fase==="3")inhoud=`${faseInput(studentKey,"inkluusBegeleider","Begeleiding door Inkluus")}${faseTekst(studentKey,"inkluusAfspraken","Afspraken rond de begeleiding door Inkluus")}`;
+  return `<section class="fasevragen"><h3>Extra opvolging voor ${esc(zorgfaseLabel(fase))}</h3>${vorigeFaseInfo(studentKey,fase)}<div class="fasevragen-grid">${inhoud}</div></section>`;
 }
 function renderVakTabs(){
   return `<div class="vak-tabs">${FIELD_TABS.map(([id,label])=>`<button type="button" class="vak-tab ${id===activeField?"active":""}" onclick="switchField('${id}')">${esc(label)}</button>`).join("")}</div>`;
@@ -389,7 +424,7 @@ function render(){
   const archiveNotice=isArchiefJaar()?`<section class="notice"><strong>Archief:</strong> <span class="muted">Je bekijkt ${esc(schooljaar)}. Dit schooljaar is beschermd tegen per ongeluk aanpassen.</span></section>`:"";
   $("students").innerHTML=`${archiveNotice}${renderStudentTabs()}<section class="zorg-content" data-student="${esc(studentKey)}">
     <div class="zorg-head"><div><h2>${esc(naam(student))}</h2><div class="muted">${esc(activeKlas)} - gekozen overleg: ${esc(maandLabel(maand))}</div></div><button class="white" onclick="pdf()">PDF deze leerling</button></div>
-    ${renderZorgfase(studentKey)}${leerlingInfoBlok(student)}${groupSummary(studentKey)}
+    ${renderZorgfase(studentKey)}${renderFaseVragen(studentKey)}${leerlingInfoBlok(student)}${groupSummary(studentKey)}
     <div class="history-panel" id="zorgHistoryPanel"><button type="button" class="history-toggle" onclick="toggleZorgGeschiedenis()"><strong>Vorige schooljaren van deze leerling</strong><span id="zorgHistoryPijl">Tonen</span></button><div class="history-body" id="zorgHistoryBody"><div class="muted">Klik om de vorige schooljaren te laden.</div></div></div>
     ${renderFicheModeTabs()}${fullFicheMode?renderVolledigeFiche(studentKey):`${renderVakTabs()}<div class="timeline-grid">
       <aside class="side-card">
@@ -426,8 +461,10 @@ function collectCurrent(){
   data.entries[studentKey]={...(data.entries[studentKey]||{})};
   const zorgfase=document.querySelector("[data-zorgfase]");
   if(zorgfase)data.entries[studentKey].zorgfase=zorgfase.value||"";
+  document.querySelectorAll("[data-fase-field]").forEach(el=>{data.entries[studentKey][el.dataset.faseField]=el.value||"";});
   areas.forEach(area=>{data.entries[studentKey][area.dataset.currentField]=area.value||"";});
 }
+function wisselZorgfase(value){collectCurrent();const studentKey=key(leerlingen[activeStudentIndex]);data.entries[studentKey].zorgfase=String(value??"");render();}
 function openStudent(index){
   if(index<0||index>=leerlingen.length)return;
   collectCurrent();
@@ -520,12 +557,12 @@ async function pdf(){
   const groups=matchingGroups(studentKey, studentName).map(g=>`<section class="pdf-student"><h2>Gezamenlijke klasactie</h2>${cell("Waarvoor?",g.groep)}${cell("Leerlingen",g.studentNames?.length?g.studentNames.join(", "):g.leerlingen)}${cell("Actie",g.actie)}${cell("Evaluatie",g.evaluatie)}</section>`).join("");
   const isGok=student.gok==="ja", tmTekst=testmomentenTekst(student);
   const infoPdf=(isGok||tmTekst)?`<div class="pdf-info-block"><strong>Vaste zorginfo:</strong><br>${isGok?`GOK: ${esc(gokKenmerkenTekst(student))}<br>`:""}${tmTekst?`Testmomenten:<br>${tmTekst}`:""}</div>`:"";
-  const html=`<div id="pdfWrap"><div class="pdf-cover"><div class="pdf-title">${logo?`<img src="${logo}">`:""}<div><h1>${esc(data.titel||"Zorgoverleg")}</h1><div class="pdf-meta">${esc(studentName)} - ${esc(activeKlas)} - ${esc(maand)} - ${esc(schooljaar)}</div></div></div></div>${infoPdf}<section class="pdf-student"><h2>${esc(studentName)} <span style="font-weight:400;color:#5c7254">(${esc(activeKlas)})</span></h2>${cell("Zorgfase",zorgfaseLabel(e.zorgfase||laatsteZorgfase(studentKey)))}${cell("Werkhouding",e.werkhouding)}${cell("Nederlands",e.nederlands)}${cell("Wiskunde",e.wiskunde)}${cell("WO",e.wo)}${cell("Frans",e.frans)}${cell("Hulpmiddelen",e.hulpmiddelen)}${cell("Bezorgdheden",e.bezorgdheden)}${cell("Samen nemen / groepje",e.groepje)}${cell("Acties",e.acties)}${cell("Evaluatie",e.evaluatie)}${cell("Ouders / CLB",e.oudersClb)}${cell("Extra notitie",e.notitie)}</section>${groups}</div>`;
+  const html=`<div id="pdfWrap"><div class="pdf-cover"><div class="pdf-title">${logo?`<img src="${logo}">`:""}<div><h1>${esc(data.titel||"Zorgoverleg")}</h1><div class="pdf-meta">${esc(studentName)} - ${esc(activeKlas)} - ${esc(maand)} - ${esc(schooljaar)}</div></div></div></div>${infoPdf}<section class="pdf-student"><h2>${esc(studentName)} <span style="font-weight:400;color:#5c7254">(${esc(activeKlas)})</span></h2>${cell("Zorgfase",zorgfaseLabel(e.zorgfase||laatsteZorgfase(studentKey)))}${cell("Doel",e.doel)}${cell("Werkhouding",e.werkhouding)}${cell("Nederlands",e.nederlands)}${cell("Wiskunde",e.wiskunde)}${cell("WO",e.wo)}${cell("Frans",e.frans)}${cell("Hulpmiddelen",e.hulpmiddelen)}${cell("Bezorgdheden",e.bezorgdheden)}${cell("Samen nemen / groepje",e.groepje)}${cell("Acties",e.acties)}${cell("Evaluatie",e.evaluatie)}${cell("Ouders / CLB",e.oudersClb)}${cell("Extra notitie",e.notitie)}</section>${groups}</div>`;
   const holder=document.createElement("div");holder.style.cssText="position:absolute;left:-10000px;top:0;width:640px;background:#fff";holder.innerHTML=html;document.body.appendChild(holder);
   await html2pdf().set({margin:[14,16,14,16],filename:`Zorgoverleg_${safeFileName(studentName)}_${activeKlas}_${maand}.pdf`,image:{type:"jpeg",quality:.96},html2canvas:{scale:2,useCORS:true,backgroundColor:"#fff",scrollX:0,scrollY:0},jsPDF:{unit:"mm",format:"a4",orientation:"portrait"},pagebreak:{mode:["css","legacy"],avoid:[".pdf-cover"]}}).from(holder.querySelector("#pdfWrap")).save();
   holder.remove();
 }
-Object.assign(window,{openStudent,switchField,setFicheMode,save,pdf,goToStudent,saveAndGoNext,toggleZorgGeschiedenis});
+Object.assign(window,{openStudent,switchField,setFicheMode,save,pdf,goToStudent,saveAndGoNext,toggleZorgGeschiedenis,wisselZorgfase});
 onAuthStateChanged(auth,async u=>{if(!u){location.href="index.html";return;}user=u;await loadRole();$("schooljaarSelect").innerHTML=schooljaarOpties().map(j=>`<option>${esc(j)}</option>`).join("");$("schooljaarSelect").value=schooljaar;$("schooljaarSelect").onchange=refreshSchooljaar;await loadClasses();$("klasSelect").innerHTML=classes.map(k=>`<option>${esc(k)}</option>`).join("");$("maandSelect").innerHTML=schoolMonths().map(m=>`<option>${esc(m)}</option>`).join("");$("maandSelect").value=schoolMonths().find(m=>m===new Date().toISOString().slice(0,7))||schoolMonths()[0];$("klasSelect").onchange=openOverleg;$("maandSelect").onchange=openOverleg;$("saveBtn").onclick=save;$("pdfBtn").onclick=pdf;$("groupToggle").onclick=toggleGroupPanel;$("addGroupActionBtn").onclick=()=>{if(isArchiefJaar()){alert("Dit is archief. Nieuwe groepsacties maak je in het huidige schooljaar.");return;}collectGroupActions();data.groupActions.push({groep:"",studentKeys:[],studentNames:[],actie:"",evaluatie:""});$("groupPanel")?.classList.add("open");renderGroupActions();};$("logoutBtn").onclick=()=>signOut(auth).then(()=>location.href="index.html");if(classes.length)openOverleg();else $("students").innerHTML=`<div class="panel empty">Je account is nog niet gekoppeld aan een klas.</div>`;});
 </script>
 <script src="tool-wegwijzer.js"></script>
