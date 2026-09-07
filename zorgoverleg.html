@@ -69,12 +69,16 @@
     .fase-badge.fase-3{background:#e51b18;color:#fff}
     .zorgfase-card{display:grid;grid-template-columns:minmax(230px,360px) 1fr;gap:12px;align-items:end;border:1px solid #cfc4df;border-radius:14px;background:#f8f5fc;padding:12px 14px;margin-bottom:14px}
     .zorgfase-card label{margin:0}.zorgfase-uitleg{font-size:12px;color:#665a73;line-height:1.45}
-    .fasevragen{border:1px solid #cfc4df;border-radius:14px;background:#fcfaff;padding:13px 14px;margin-bottom:14px}
-    .fasevragen h3{margin:0 0 10px;font-size:16px;color:#51406e}.fasevragen-grid{display:grid;grid-template-columns:repeat(2,minmax(240px,1fr));gap:10px}
+    .fasevragen{border:1px solid #cfc4df;border-radius:14px;background:#fcfaff;margin-bottom:14px;overflow:hidden}
+    .fasevragen-summary,.zorgoverdracht-summary{display:flex;align-items:center;justify-content:space-between;gap:12px;cursor:pointer;list-style:none;padding:12px 14px;font-weight:900}
+    .fasevragen-summary::-webkit-details-marker,.zorgoverdracht-summary::-webkit-details-marker{display:none}
+    .fasevragen-summary{color:#51406e;background:#f3eff8}.fasevragen-summary::after,.zorgoverdracht-summary::after{content:"Tonen";font-size:12px;font-weight:800}
+    details[open]>.fasevragen-summary::after,details[open]>.zorgoverdracht-summary::after{content:"Verbergen"}
+    .fasevragen-inhoud{padding:12px 14px 14px}.fasevragen-grid{display:grid;grid-template-columns:repeat(2,minmax(240px,1fr));gap:10px}
     .fasevragen .breed{grid-column:1/-1}.fasevragen textarea{min-height:78px}
     .vorige-fase-info{background:#f3eff8;border-left:4px solid #8d76ad;border-radius:9px;padding:8px 10px;margin-bottom:10px;font-size:12px;line-height:1.5;color:#51406e}
-    .zorgoverdracht{border:1px solid #e1b65d;border-left:7px solid #e1a62d;border-radius:14px;background:#fff8df;padding:12px 14px;margin-bottom:14px}
-    .zorgoverdracht h3{margin:0 0 7px;font-size:16px;color:#6b4b0c}.zorgoverdracht-grid{display:grid;grid-template-columns:repeat(2,minmax(240px,1fr));gap:7px 14px}
+    .zorgoverdracht{border:1px solid #e1b65d;border-left:7px solid #e1a62d;border-radius:14px;background:#fff8df;margin-bottom:14px;overflow:hidden}
+    .zorgoverdracht-summary{color:#6b4b0c;background:#fff3c9}.zorgoverdracht-inhoud{padding:11px 14px 14px}.zorgoverdracht-grid{display:grid;grid-template-columns:repeat(2,minmax(240px,1fr));gap:7px 14px}
     .zorgoverdracht-item{font-size:12.5px;line-height:1.45;white-space:pre-wrap}.zorgoverdracht-item strong{color:#59400e}
     .zorg-content{background:#fff;border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);padding:16px}
     .zorg-head{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:14px}
@@ -175,7 +179,7 @@ const BEWAAR_JAREN_ZORGOVERLEG = 12; // Maximum: K1 tot einde lager onderwijs pl
 const BEWAAR_JAREN_PER_STARTKLAS = { K1:12, K2:11, K3:10, "1A":9, "2A":8, "3A":7, "4A":6, "5A":5, "6A":4 };
 const EERSTE_APP_SCHOOLJAAR = "2025-2026";
 const esc=v=>String(v??"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;");
-let user=null, role="", schooljaar=huidigSchooljaar(), classes=[], activeKlas="", maand="", leerlingen=[], data={entries:{},groupActions:[]}, previousData={entries:{},groupActions:[]}, overlegHistoriek=[], zorgOverdracht={}, activeStudentIndex=0, activeField="werkhouding", fullFicheMode=false;
+let user=null, role="", schooljaar=huidigSchooljaar(), classes=[], activeKlas="", maand="", leerlingen=[], data={entries:{},groupActions:[]}, previousData={entries:{},groupActions:[]}, overlegHistoriek=[], zorgOverdracht={}, activeStudentIndex=0, activeField="werkhouding", fullFicheMode=false, faseVragenOpen=false;
 async function setDoc(ref,payload,options){
   await probeerVeiligheidskopie(ref,{reden:"Zorgoverleg vóór opslag",schooljaar,klas:activeKlas,gebruiker:user?.email||user?.uid||""},(melding,err)=>{console.warn(melding,err);const status=document.getElementById("status");if(status)status.textContent="Let op: reservekopie mislukt";});
   return firestoreSetDoc(ref,payload,options);
@@ -415,7 +419,8 @@ function renderFaseVragen(studentKey){
   if(fase==="1")inhoud=`${faseSelect(studentKey,"observatieStatus","Observatie door de zorgcoördinator",[["in_te_plannen","Nog in te plannen"],["gepland","Gepland"],["uitgevoerd","Deze periode uitgevoerd"],["eerder_uitgevoerd","Reeds uitgevoerd in een vorige periode"],["nieuwe_nodig","Nieuwe observatie nodig"]])}${faseInput(studentKey,"observatieDatum","Datum en uur observatie","datetime-local")}${faseTekst(studentKey,"observatieAdvies","Advies na observatie")}${faseSelect(studentKey,"lvsStatus","Opgenomen in het leerlingvolgsysteem (LVS)?",jaNee)}${faseSelect(studentKey,"fase2Besluit","Uitbreiding van zorg nodig?",jaNee)}${faseSelect(studentKey,"vvfStatus","Vraagverhelderingsfiche (VVF)",[["niet_gestart","Nog niet gestart"],["in_opmaak","In opmaak"],["opgemaakt","Opgemaakt"],["niet_nodig","Niet nodig"]])}`;
   if(fase==="2")inhoud=`${faseInput(studentKey,"schooloverlegDatum","Besproken op schooloverleg","date")}${faseTekst(studentKey,"schooloverlegBespreking","Wat werd besproken?")}${faseTekst(studentKey,"schooloverlegAdvies","Advies na het schooloverleg")}`;
   if(fase==="3")inhoud=`${faseInput(studentKey,"inkluusBegeleider","Begeleiding door Inkluus")}${faseTekst(studentKey,"inkluusAfspraken","Afspraken rond de begeleiding door Inkluus")}`;
-  return `<section class="fasevragen"><h3>Extra opvolging voor ${esc(zorgfaseLabel(fase))}</h3>${vorigeFaseInfo(studentKey,fase)}<div class="fasevragen-grid">${inhoud}</div></section>`;
+  const aantal=FASE_VELDEN.filter(field=>String(data.entries?.[studentKey]?.[field]||"").trim()).length;
+  return `<details class="fasevragen" ${faseVragenOpen?"open":""} ontoggle="onthoudFaseVragen(this.open)"><summary class="fasevragen-summary"><span>Extra vragen · ${esc(zorgfaseLabel(fase))}</span><span class="muted">${aantal?`${aantal} ingevuld`:"nog niets ingevuld"}</span></summary><div class="fasevragen-inhoud">${vorigeFaseInfo(studentKey,fase)}<div class="fasevragen-grid">${inhoud}</div></div></details>`;
 }
 async function laadZorgOverdracht(){
   zorgOverdracht={};
@@ -450,7 +455,7 @@ function renderZorgOverdracht(studentKey){
   const velden=["zorgfase","doel","acties","evaluatie","observatieStatus","observatieDatum","observatieAdvies","vvfStatus","schooloverlegAdvies","inkluusBegeleider","inkluusAfspraken"];
   const items=velden.map(field=>{const value=bron.waarden?.[field];if(value===undefined||value===null||String(value).trim()==="")return "";const tekst=field==="zorgfase"?zorgfaseLabel(value):leesbareFaseWaarde(String(value));return `<div class="zorgoverdracht-item"><strong>${esc(labels[field])}:</strong><br>${esc(tekst)}</div>`;}).filter(Boolean);
   bron.groepsacties?.forEach(g=>items.push(`<div class="zorgoverdracht-item"><strong>Gezamenlijke actie:</strong><br>${esc([g.groep,g.actie,g.evaluatie].filter(Boolean).join(" — "))}</div>`));
-  return `<section class="zorgoverdracht"><h3>Overgenomen beginsituatie uit ${esc(bron.bronJaar)}</h3><div class="muted" style="margin-bottom:8px">Afkomstig uit ${esc(bron.bronKlas)}${bron.laatsteMaand?` · laatst aangevuld ${esc(maandLabel(bron.laatsteMaand))}`:""}. Dit telt niet als nieuwe invulling.</div><div class="zorgoverdracht-grid">${items.join("")}</div></section>`;
+  return `<details class="zorgoverdracht"><summary class="zorgoverdracht-summary">Overgenomen beginsituatie uit ${esc(bron.bronJaar)}</summary><div class="zorgoverdracht-inhoud"><div class="muted" style="margin-bottom:8px">Afkomstig uit ${esc(bron.bronKlas)}${bron.laatsteMaand?` · laatst aangevuld ${esc(maandLabel(bron.laatsteMaand))}`:""}. Dit telt niet als nieuwe invulling.</div><div class="zorgoverdracht-grid">${items.join("")}</div></div></details>`;
 }
 function renderVakTabs(){
   return `<div class="vak-tabs">${FIELD_TABS.map(([id,label])=>`<button type="button" class="vak-tab ${id===activeField?"active":""}" onclick="switchField('${id}')">${esc(label)}</button>`).join("")}</div>`;
@@ -513,13 +518,15 @@ function collectCurrent(){
   document.querySelectorAll("[data-fase-field]").forEach(el=>{data.entries[studentKey][el.dataset.faseField]=el.value||"";});
   areas.forEach(area=>{data.entries[studentKey][area.dataset.currentField]=area.value||"";});
 }
-function wisselZorgfase(value){collectCurrent();const studentKey=key(leerlingen[activeStudentIndex]);data.entries[studentKey].zorgfase=String(value??"");render();}
+function onthoudFaseVragen(open){faseVragenOpen=!!open;}
+function wisselZorgfase(value){collectCurrent();const studentKey=key(leerlingen[activeStudentIndex]);data.entries[studentKey].zorgfase=String(value??"");faseVragenOpen=!!value;render();}
 function openStudent(index){
   if(index<0||index>=leerlingen.length)return;
   collectCurrent();
   activeStudentIndex=index;
   activeField="werkhouding";
   fullFicheMode=false;
+  faseVragenOpen=false;
   render();
 }
 function goToStudent(index){
@@ -528,6 +535,7 @@ function goToStudent(index){
   activeStudentIndex=index;
   activeField="werkhouding";
   fullFicheMode=false;
+  faseVragenOpen=false;
   render();
 }
 function switchField(field){collectCurrent();activeField=field;render();}
@@ -620,7 +628,7 @@ async function pdf(){
   await html2pdf().set({margin:[14,16,14,16],filename:`Zorgoverleg_${safeFileName(studentName)}_${activeKlas}_${maand}.pdf`,image:{type:"jpeg",quality:.96},html2canvas:{scale:2,useCORS:true,backgroundColor:"#fff",scrollX:0,scrollY:0},jsPDF:{unit:"mm",format:"a4",orientation:"portrait"},pagebreak:{mode:["css","legacy"],avoid:[".pdf-cover"]}}).from(holder.querySelector("#pdfWrap")).save();
   holder.remove();
 }
-Object.assign(window,{openStudent,switchField,setFicheMode,save,pdf,goToStudent,saveAndGoNext,toggleZorgGeschiedenis,wisselZorgfase});
+Object.assign(window,{openStudent,switchField,setFicheMode,save,pdf,goToStudent,saveAndGoNext,toggleZorgGeschiedenis,wisselZorgfase,onthoudFaseVragen});
 onAuthStateChanged(auth,async u=>{if(!u){location.href="index.html";return;}user=u;await loadRole();$("schooljaarSelect").innerHTML=schooljaarOpties().map(j=>`<option>${esc(j)}</option>`).join("");$("schooljaarSelect").value=schooljaar;$("schooljaarSelect").onchange=refreshSchooljaar;await loadClasses();$("klasSelect").innerHTML=classes.map(k=>`<option>${esc(k)}</option>`).join("");$("maandSelect").innerHTML=schoolMonths().map(m=>`<option>${esc(m)}</option>`).join("");$("maandSelect").value=schoolMonths().find(m=>m===new Date().toISOString().slice(0,7))||schoolMonths()[0];$("klasSelect").onchange=openOverleg;$("maandSelect").onchange=openOverleg;$("titelInput").oninput=()=>zetBewaarstatus("Titel nog niet bewaard","dirty");$("saveBtn").onclick=save;$("pdfBtn").onclick=pdf;$("groupToggle").onclick=toggleGroupPanel;$("addGroupActionBtn").onclick=()=>{if(isArchiefJaar()){alert("Dit is archief. Nieuwe groepsacties maak je in het huidige schooljaar.");return;}collectGroupActions();data.groupActions.push({groep:"",studentKeys:[],studentNames:[],actie:"",evaluatie:""});$("groupPanel")?.classList.add("open");renderGroupActions();};$("logoutBtn").onclick=()=>signOut(auth).then(()=>location.href="index.html");if(classes.length)openOverleg();else $("students").innerHTML=`<div class="panel empty">Je account is nog niet gekoppeld aan een klas.</div>`;});
 </script>
 <script src="tool-wegwijzer.js"></script>
