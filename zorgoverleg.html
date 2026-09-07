@@ -411,6 +411,10 @@ function render(){
       </div>
     </div>`}
   </section>`;
+  const namenbalk=document.querySelector(".student-tabs"), actieveNaam=namenbalk?.querySelector(".student-tab.active");
+  if(namenbalk&&actieveNaam){
+    namenbalk.scrollLeft=Math.max(0,actieveNaam.offsetLeft-(namenbalk.clientWidth-actieveNaam.offsetWidth)/2);
+  }
 }
 function collectCurrent(){
   data.titel=$("titelInput").value||`Zorgoverleg ${maand}`;
