@@ -16,6 +16,8 @@
     main{max-width:1500px;margin:18px auto;padding:0 18px}.panel{background:#fff;border:1px solid var(--line);border-radius:16px;padding:18px;box-shadow:var(--shadow);margin-bottom:14px}
     .bar{display:flex;align-items:end;gap:10px;flex-wrap:wrap}.right{margin-left:auto}.muted{color:var(--muted);font-size:13px;line-height:1.45}
     label{display:block;font-weight:800;font-size:12px;color:#4b3b2d;margin-bottom:4px} input,select,textarea{font:inherit;width:100%;border:1px solid var(--line);border-radius:10px;padding:8px 10px;background:#fff}
+    .bewaarstatus-inline{display:block;min-height:16px;margin-top:4px;font-size:11px;font-weight:700;color:var(--muted)}
+    .bewaarstatus-inline.dirty{color:#9a5a00}.bewaarstatus-inline.saving{color:#665a73}.bewaarstatus-inline.saved{color:#2f7430}.bewaarstatus-inline.error{color:#a82424}
     textarea{min-height:62px;resize:vertical}.toolbar{display:grid;grid-template-columns:150px 150px 180px 1fr auto auto;gap:10px;align-items:end}
     .leerling-card{border:1px solid var(--line);border-radius:14px;overflow:hidden;background:#fff;margin-bottom:12px}
     .leerling-head{background:#f7faf5;border:0;padding:10px 12px;display:flex;justify-content:space-between;gap:10px;align-items:center;width:100%;text-align:left;color:var(--text)}
@@ -131,7 +133,7 @@
       <label>Schooljaar<select id="schooljaarSelect"></select></label>
       <label>Klas<select id="klasSelect"></select></label>
       <label>Maand<select id="maandSelect"></select></label>
-      <label>Titel overleg<input id="titelInput" placeholder="bv. Zorgoverleg oktober"></label>
+      <label>Titel overleg<input id="titelInput" placeholder="bv. Zorgoverleg oktober"><span id="titelSaveStatus" class="bewaarstatus-inline"></span></label>
       <button class="secondary" id="saveBtn">Bewaren</button>
       <button id="pdfBtn">PDF leerling</button>
     </div>
@@ -272,6 +274,7 @@ async function openOverleg(){
   const monthSnaps=await Promise.all(months.map(m=>getDoc(overlegRefFor(m))));
   overlegHistoriek=monthSnaps.map((s,i)=>({maand:months[i],data:s.exists()?s.data():null})).filter(x=>x.data&&x.maand!==maand);
   $("titelInput").value=data.titel||`Zorgoverleg ${maand}`;
+  zetBewaarstatus("");
   renderGroupActions();
   render();
   if(isArchiefJaar()) $("status").textContent=`Archief ${schooljaar} - alleen lezen`;
@@ -528,18 +531,27 @@ async function toggleZorgGeschiedenis(){
   }
 }
 function zorgoverlegBewaarPayload(){const jaren=bewaarJarenVoorKlas(activeKlas);return {...data,schooljaar,klas:activeKlas,maand,bewaarTot:bewaarTotVoorSchooljaar(schooljaar,jaren),bewaartermijnJaren:jaren,updatedAt:serverTimestamp(),updatedBy:user.email||user.uid};}
-async function save(){if(isArchiefJaar()){alert("Dit is een vorig schooljaar. Je kan het bekijken, maar niet per ongeluk overschrijven.");return;}collect();await setDoc(overlegRef(),zorgoverlegBewaarPayload(),{merge:true});render();$("status").textContent="Bewaard";}
+function zetBewaarstatus(text,klasse=""){const el=$("titelSaveStatus");if(!el)return;el.textContent=text;el.className=`bewaarstatus-inline ${klasse}`.trim();}
+async function save(){
+  if(isArchiefJaar()){alert("Dit is een vorig schooljaar. Je kan het bekijken, maar niet per ongeluk overschrijven.");return;}
+  collect();$("status").textContent="Bewaren...";zetBewaarstatus("Bezig met bewaren...","saving");
+  try{await setDoc(overlegRef(),zorgoverlegBewaarPayload(),{merge:true});render();$("status").textContent="Bewaard";zetBewaarstatus("Titel en gegevens bewaard ✓","saved");}
+  catch(err){$("status").textContent="Bewaren mislukt";zetBewaarstatus("Bewaren mislukt","error");alert("Bewaren lukte niet: "+err.message);}
+}
 async function saveAndGoNext(){
   if(isArchiefJaar()){goToStudent(activeStudentIndex+1);return;}
   const next=activeStudentIndex+1;
   collect();
   if(next<leerlingen.length)goToStudent(next);
   $("status").textContent="Bewaren...";
+  zetBewaarstatus("Bezig met bewaren...","saving");
   try{
     await setDoc(overlegRef(),zorgoverlegBewaarPayload(),{merge:true});
     $("status").textContent="Bewaard";
+    zetBewaarstatus("Titel en gegevens bewaard ✓","saved");
   }catch(err){
     $("status").textContent="Bewaren mislukt";
+    zetBewaarstatus("Bewaren mislukt","error");
     alert("Bewaren lukte niet: " + err.message);
   }
 }
@@ -567,7 +579,7 @@ async function pdf(){
   holder.remove();
 }
 Object.assign(window,{openStudent,switchField,setFicheMode,save,pdf,goToStudent,saveAndGoNext,toggleZorgGeschiedenis,wisselZorgfase});
-onAuthStateChanged(auth,async u=>{if(!u){location.href="index.html";return;}user=u;await loadRole();$("schooljaarSelect").innerHTML=schooljaarOpties().map(j=>`<option>${esc(j)}</option>`).join("");$("schooljaarSelect").value=schooljaar;$("schooljaarSelect").onchange=refreshSchooljaar;await loadClasses();$("klasSelect").innerHTML=classes.map(k=>`<option>${esc(k)}</option>`).join("");$("maandSelect").innerHTML=schoolMonths().map(m=>`<option>${esc(m)}</option>`).join("");$("maandSelect").value=schoolMonths().find(m=>m===new Date().toISOString().slice(0,7))||schoolMonths()[0];$("klasSelect").onchange=openOverleg;$("maandSelect").onchange=openOverleg;$("saveBtn").onclick=save;$("pdfBtn").onclick=pdf;$("groupToggle").onclick=toggleGroupPanel;$("addGroupActionBtn").onclick=()=>{if(isArchiefJaar()){alert("Dit is archief. Nieuwe groepsacties maak je in het huidige schooljaar.");return;}collectGroupActions();data.groupActions.push({groep:"",studentKeys:[],studentNames:[],actie:"",evaluatie:""});$("groupPanel")?.classList.add("open");renderGroupActions();};$("logoutBtn").onclick=()=>signOut(auth).then(()=>location.href="index.html");if(classes.length)openOverleg();else $("students").innerHTML=`<div class="panel empty">Je account is nog niet gekoppeld aan een klas.</div>`;});
+onAuthStateChanged(auth,async u=>{if(!u){location.href="index.html";return;}user=u;await loadRole();$("schooljaarSelect").innerHTML=schooljaarOpties().map(j=>`<option>${esc(j)}</option>`).join("");$("schooljaarSelect").value=schooljaar;$("schooljaarSelect").onchange=refreshSchooljaar;await loadClasses();$("klasSelect").innerHTML=classes.map(k=>`<option>${esc(k)}</option>`).join("");$("maandSelect").innerHTML=schoolMonths().map(m=>`<option>${esc(m)}</option>`).join("");$("maandSelect").value=schoolMonths().find(m=>m===new Date().toISOString().slice(0,7))||schoolMonths()[0];$("klasSelect").onchange=openOverleg;$("maandSelect").onchange=openOverleg;$("titelInput").oninput=()=>zetBewaarstatus("Titel nog niet bewaard","dirty");$("saveBtn").onclick=save;$("pdfBtn").onclick=pdf;$("groupToggle").onclick=toggleGroupPanel;$("addGroupActionBtn").onclick=()=>{if(isArchiefJaar()){alert("Dit is archief. Nieuwe groepsacties maak je in het huidige schooljaar.");return;}collectGroupActions();data.groupActions.push({groep:"",studentKeys:[],studentNames:[],actie:"",evaluatie:""});$("groupPanel")?.classList.add("open");renderGroupActions();};$("logoutBtn").onclick=()=>signOut(auth).then(()=>location.href="index.html");if(classes.length)openOverleg();else $("students").innerHTML=`<div class="panel empty">Je account is nog niet gekoppeld aan een klas.</div>`;});
 </script>
 <script src="tool-wegwijzer.js"></script>
 <script type="module" src="secretariaat-meldingenbalk.js?v=20260824-1"></script>
