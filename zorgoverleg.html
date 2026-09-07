@@ -400,8 +400,8 @@ function render(){
       <div class="timeline">
         ${entries.length?entries.map((item,i)=>`<article class="timeline-entry c${i%4}"><div class="timeline-entry-head"><span class="timeline-entry-date">${esc(maandLabel(item.maand))}</span><span class="timeline-entry-kind">vorig zorgoverleg</span></div><div class="timeline-entry-body">${esc(item.value)}</div></article>`).join(""):`<div class="notice">Nog geen vorige notities voor ${esc(fieldLabel(activeField))}.</div>`}
         <div class="new-entry">
-          <h3>Nieuwe bevinding voor ${esc(maandLabel(maand))}</h3>
-          <textarea data-current-field="${esc(activeField)}" placeholder="Typ hier alleen wat nieuw is of wat bijgestuurd werd...">${esc(current)}</textarea>
+          <h3>Nieuwe bevinding – ${esc(fieldLabel(activeField))} – ${esc(maandLabel(maand))}</h3>
+          <textarea data-current-field="${esc(activeField)}" aria-label="Nieuwe bevinding voor ${esc(fieldLabel(activeField))}" placeholder="Typ hier wat nieuw is of bijgestuurd werd voor ${esc(fieldLabel(activeField))}...">${esc(current)}</textarea>
           <div class="timeline-actions">
             <button type="button" onclick="save()">Opslaan</button>
             <button type="button" class="white" onclick="goToStudent(activeStudentIndex-1)" ${activeStudentIndex===0?"disabled":""}>Vorige leerling</button>
