@@ -2425,6 +2425,7 @@
           ${kolommenKiezer()}
         </div>
         ${oudstenKlasSamenvatting()}
+        ${isSecretary()?`<div class="notice no-print" style="margin:8px 0 12px;padding:10px 12px;background:#eef4fa;border-color:#c3d3e3"><strong>Leerling vertrekt of is nooit gestart?</strong> Klik op de voornaam of achternaam van het kind om dit in te geven.</div>`:""}
         ${studentTable()}
         ${inactieveLeerlingenTabel()}`;
     }
