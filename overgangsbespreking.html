@@ -1027,7 +1027,7 @@
             <div class="grid grid-2" style="gap:10px;margin-top:12px">
               <div class="checkbox-row">
                 <input type="checkbox" id="m_magOpFoto">
-                <label for="m_magOpFoto" style="margin:0">Mag op foto</label>
+                <label id="m_magOpFotoLabel" for="m_magOpFoto" style="margin:0">Mag op foto</label>
               </div>
               <div class="checkbox-row" style="flex-direction:column;align-items:flex-start;gap:6px">
                 <span style="font-weight:700;font-size:13px">Gaat naar huiswerkklas</span>
@@ -1620,6 +1620,18 @@ window.firebaseOvergang = {
     if (!klas) return { klas: '', leerlingen: [] };
     const snap = await getDoc(doc(db, "schoolbeheer", schooljaar, "klassen", klas));
     return { klas, leerlingen: snap.exists() ? (snap.data().leerlingen || []) : [] };
+  },
+  async loadFotoToestemming() {
+    await ready;
+    const snap = await getDoc(doc(db, "schoolbeheer", schooljaar, "instellingen", "fototoestemming"));
+    return snap.exists() ? { bevestigd: false, uitzonderingen: [], gecontroleerdeLeerlingen: [], ...snap.data() } : { bevestigd: false, uitzonderingen: [], gecontroleerdeLeerlingen: [] };
+  },
+  async watchFotoToestemming(callback) {
+    await ready;
+    if (typeof callback !== 'function') return () => {};
+    return onSnapshot(doc(db, "schoolbeheer", schooljaar, "instellingen", "fototoestemming"), snap => {
+      callback(snap.exists() ? { bevestigd: false, uitzonderingen: [], gecontroleerdeLeerlingen: [], ...snap.data() } : { bevestigd: false, uitzonderingen: [], gecontroleerdeLeerlingen: [] });
+    }, err => console.warn('Live fototoestemming kon niet worden geladen:', err));
   },
   async watchSchoolbeheerLeerlingen(callback) {
     await ready;
@@ -2389,6 +2401,13 @@ function openModal(studentId = null) {
     $('m_newcomer').checked = !!s.newcomer;
     $('m_stayingThisYear').checked = !!s.stayingThisYear;
     $('m_magOpFoto').checked = !!s.magOpFoto;
+    $('m_magOpFoto').disabled = !!fotoToestemmingInstelling.bevestigd;
+    $('m_magOpFoto').title = fotoToestemmingInstelling.bevestigd && s.fotoToestemmingCentraal
+      ? 'Wordt centraal beheerd via Niet op de foto.'
+      : 'Nog niet centraal bevestigd voor dit schooljaar.';
+    $('m_magOpFotoLabel').textContent = fotoToestemmingInstelling.bevestigd && s.fotoToestemmingCentraal
+      ? 'Mag op foto · centraal beheerd'
+      : 'Fototoestemming nog te controleren';
     document.querySelectorAll('input[name="huiswerkklasDag"]').forEach(cb => {
       cb.checked = Array.isArray(s.huiswerkklas) && s.huiswerkklas.includes(cb.value);
     });
@@ -2433,6 +2452,10 @@ function openModal(studentId = null) {
     ['m_repeated','m_newcomer','m_stayingThisYear','m_magOpFoto','m_therapy_logo','m_therapy_kine',
      'm_therapy_gon','m_therapy_clb','m_therapy_psy'
     ].forEach(id => $(id).checked = false);
+    $('m_magOpFoto').checked = false;
+    $('m_magOpFoto').disabled = !!fotoToestemmingInstelling.bevestigd;
+    $('m_magOpFoto').title = fotoToestemmingInstelling.bevestigd ? 'Wordt centraal beheerd via Niet op de foto.' : 'Nog niet centraal bevestigd voor dit schooljaar.';
+    $('m_magOpFotoLabel').textContent = 'Fototoestemming nog te controleren';
     document.querySelectorAll('input[name="repeatedYear"]').forEach(cb => { cb.checked = false; });
     document.querySelectorAll('input[name="huiswerkklasDag"]').forEach(cb => { cb.checked = false; });
     $('m_gender').value = '-'; $('m_level').value = '3';
@@ -2873,6 +2896,39 @@ function schoolbeheerNaamNaarRij(s) {
   return parsed ? {...parsed, officialFirstName: parsed.firstName, callName: '', schoolbeheerId: String(s.id || s.schoolbeheerId || '').trim(), hasGokData: false, gok: 'nee', gokKenmerken: [], gokNote: ''} : null;
 }
 
+let fotoToestemmingInstelling = { bevestigd:false, uitzonderingen:[], gecontroleerdeLeerlingen:[] };
+function fotoStatusVoorStudent(s) {
+  if (!fotoToestemmingInstelling.bevestigd || !s.fotoToestemmingCentraal) return 'onbekend';
+  return s.magOpFoto ? 'ja' : 'nee';
+}
+function fotoTekstVoorStudent(s) {
+  const status = fotoStatusVoorStudent(s);
+  return status === 'ja' ? '✅ Mag op foto' : status === 'nee' ? '🚫 Mag NIET op foto' : '⏳ Fototoestemming nog te controleren';
+}
+function pasCentraleFotoToestemmingToe(instelling) {
+  fotoToestemmingInstelling = instelling || { bevestigd:false, uitzonderingen:[], gecontroleerdeLeerlingen:[] };
+  if (!fotoToestemmingInstelling.bevestigd || !Array.isArray(state.students)) return 0;
+  const uitzonderingen = Array.isArray(fotoToestemmingInstelling.uitzonderingen) ? fotoToestemmingInstelling.uitzonderingen : [];
+  const ids = new Set(uitzonderingen.map(x => String(x.leerlingId || '')).filter(Boolean));
+  const namen = new Set(uitzonderingen.map(x => String(x.naam || '').trim().toLocaleLowerCase('nl').replace(/\s+/g,' ')).filter(Boolean));
+  const gecontroleerde = Array.isArray(fotoToestemmingInstelling.gecontroleerdeLeerlingen) ? fotoToestemmingInstelling.gecontroleerdeLeerlingen : [];
+  const gecontroleerdeIds = new Set(gecontroleerde.map(x => String(x.leerlingId || '')).filter(Boolean));
+  const gecontroleerdeNamen = new Set(gecontroleerde.map(x => String(x.naam || '').trim().toLocaleLowerCase('nl').replace(/\s+/g,' ')).filter(Boolean));
+  let gewijzigd = 0;
+  state.students.forEach(s => {
+    const volledigeNaam = `${String(s.firstName || '').trim()} ${String(s.lastName || '').trim()}`.trim().toLocaleLowerCase('nl').replace(/\s+/g,' ');
+    const leerlingId = String(s.schoolbeheerId || '');
+    const uitzondering = ids.has(leerlingId) || namen.has(volledigeNaam);
+    const isGecontroleerd = uitzondering || gecontroleerdeIds.has(leerlingId) || gecontroleerdeNamen.has(volledigeNaam);
+    const magOpFoto = !uitzondering;
+    if (s.fotoToestemmingCentraal !== isGecontroleerd || (isGecontroleerd && s.magOpFoto !== magOpFoto)) gewijzigd++;
+    if (isGecontroleerd) s.magOpFoto = magOpFoto;
+    s.fotoToestemmingSchooljaar = fotoToestemmingInstelling.schooljaar || '';
+    s.fotoToestemmingCentraal = isGecontroleerd;
+  });
+  return gewijzigd;
+}
+
 function nieuweLegeStudent(row, source = '') {
   return {
     id: uid(),
@@ -3005,6 +3061,7 @@ async function vulOntbrekendeLeerlingenUitSchoolbeheer() {
 }
 
 let liveGokUnsub = null;
+let liveFotoUnsub = null;
 async function startLiveGokSync() {
   if (!window.firebaseOvergang || typeof window.firebaseOvergang.watchSchoolbeheerLeerlingen !== 'function') return;
   if (liveGokUnsub) { liveGokUnsub(); liveGokUnsub = null; }
@@ -3031,6 +3088,20 @@ async function startLiveGokSync() {
       updateBadges();
       setFirebaseStatus(`${gewijzigd} GOK-fiche${gewijzigd === 1 ? '' : 's'} live bijgewerkt vanuit het GOK-overzicht.`);
     }
+  });
+}
+
+async function startLiveFotoSync() {
+  if (!window.firebaseOvergang || typeof window.firebaseOvergang.watchFotoToestemming !== 'function') return;
+  if (liveFotoUnsub) { liveFotoUnsub(); liveFotoUnsub = null; }
+  liveFotoUnsub = await window.firebaseOvergang.watchFotoToestemming(instelling => {
+    const gewijzigd = pasCentraleFotoToestemmingToe(instelling);
+    if (!instelling.bevestigd) return;
+    if (gewijzigd) {
+      renderStudents();
+      updateBadges();
+    }
+    setFirebaseStatus(`Fototoestemmingen ${instelling.schooljaar || ''} centraal gecontroleerd. ${Array.isArray(instelling.uitzonderingen) ? instelling.uitzonderingen.length : 0} leerling(en) mogen niet op de foto.`);
   });
 }
 
@@ -3761,10 +3832,11 @@ async function loadFirebaseProjectOnStart() {
   }
   setFirebaseStatus('Firebase wordt gecontroleerd...');
   try {
-    const [data, zorgResult, huiswerkResult] = await Promise.all([
+    const [data, zorgResult, huiswerkResult, fotoResult] = await Promise.all([
       window.firebaseOvergang.loadProject(),
       window.firebaseOvergang.loadZorggroepen().catch(err => ({ __zorggroepenError: err })),
-      window.firebaseOvergang.loadHuistakenSignalen().catch(() => ({}))
+      window.firebaseOvergang.loadHuistakenSignalen().catch(() => ({})),
+      window.firebaseOvergang.loadFotoToestemming().catch(() => ({ bevestigd:false, uitzonderingen:[], gecontroleerdeLeerlingen:[] }))
     ]);
     huistakenSignalen = huiswerkResult || {};
     if (Array.isArray(zorgResult)) {
@@ -3783,11 +3855,13 @@ async function loadFirebaseProjectOnStart() {
     }
     // Openen is alleen lezen: geen namen toevoegen, jaar-kopie of automatische opslag.
     applyProjectData(data);
+    pasCentraleFotoToestemmingToe(fotoResult);
     writeSettings();
     renderStudents();
     if (typeof renderGroups === 'function') renderGroups();
     updateBadges();
     await startLiveGokSync();
+    await startLiveFotoSync();
     const blokkade = window.firebaseOvergang.opslagBlokkade();
     if (!blokkade) markClean();
     document.getElementById('overgangControleMelding')?.remove();
@@ -3907,8 +3981,7 @@ function makeTransfer() {
     if (t.other) therapieList.push({ naam: t.other, adres:'' });
     if (x.repeated) loopbaanItems.push('Heeft een leerjaar overgedaan' + (() => { const j = Array.isArray(x.repeatedYear) ? x.repeatedYear.join(', ') : (x.repeatedYear || ''); return j ? ` (${j})` : ''; })());
     if (x.newcomer) loopbaanItems.push('Anderstalige nieuwkomer (OKAN/AN)');
-    if (x.magOpFoto) loopbaanItems.push('✅ Mag op foto');
-    else loopbaanItems.push('🚫 Mag NIET op foto');
+    loopbaanItems.push(fotoTekstVoorStudent(x));
     if (Array.isArray(x.huiswerkklas) && x.huiswerkklas.length > 0) loopbaanItems.push('📚 Huiswerkklas: ' + x.huiswerkklas.join(', '));
     // Vakgebied-regels met optionele notities en aanpassingen
     const AANP_LABELS_PDF = {verlengd:'Verlengde tijd',mondeling:'Mondeling i.p.v. schriftelijk',eigendoelen:'Eigen doelen / ander niveau',hulpkaarten:'Hulpkaarten / woordenlijst',toetsing:'Aangepaste toetsing',remediering:'Extra herhaling / remediëring'};
@@ -4133,8 +4206,7 @@ function bouwFichePdfHtml(x) {
       const loopbaanItems = [];
       if (x.repeated) loopbaanItems.push('Heeft een leerjaar overgedaan' + (() => { const j = Array.isArray(x.repeatedYear) ? x.repeatedYear.join(', ') : (x.repeatedYear || ''); return j ? ` (${j})` : ''; })());
       if (x.newcomer) loopbaanItems.push('Anderstalige nieuwkomer (OKAN/AN)');
-      if (x.magOpFoto) loopbaanItems.push('✅ Mag op foto');
-      else loopbaanItems.push('🚫 Mag NIET op foto');
+      loopbaanItems.push(fotoTekstVoorStudent(x));
       if (Array.isArray(x.huiswerkklas) && x.huiswerkklas.length > 0) loopbaanItems.push('📚 Huiswerkklas: ' + x.huiswerkklas.join(', '));
       const huiswerkSignaal = huistaakSignaalVoorStudent(x);
       const AANP_LABELS_PDF = {verlengd:'Verlengde tijd',mondeling:'Mondeling i.p.v. schriftelijk',eigendoelen:'Eigen doelen / ander niveau',hulpkaarten:'Hulpkaarten / woordenlijst',toetsing:'Aangepaste toetsing',remediering:'Extra herhaling / remediëring'};
@@ -4356,8 +4428,7 @@ function openFicheModal(studentId) {
   const loopItems = [];
   if (s.repeated) { const j = Array.isArray(s.repeatedYear) ? s.repeatedYear.join(', ') : (s.repeatedYear||''); loopItems.push('Heeft leerjaar overgedaan' + (j ? ` (${j})` : '')); }
   if (s.newcomer) loopItems.push('Anderstalige nieuwkomer (AN/OKAN)');
-  if (s.magOpFoto) loopItems.push('✅ Mag op foto');
-  else loopItems.push('🚫 Mag NIET op foto');
+  loopItems.push(fotoTekstVoorStudent(s));
   if (Array.isArray(s.huiswerkklas) && s.huiswerkklas.length > 0) loopItems.push('📚 Huiswerkklas: ' + s.huiswerkklas.join(', '));
   if (loopItems.length) loopbaanInhoud = loopItems.map(x => `<p>• ${esc(x)}</p>`).join('');
 
@@ -4559,9 +4630,10 @@ function renderTransferOnline() {
   });
 
   // Foto
-  const nietOpFoto = s.filter(x => !x.magOpFoto);
+  const nietOpFoto = fotoToestemmingInstelling.bevestigd ? s.filter(x => fotoStatusVoorStudent(x) === 'nee') : [];
   const fotoCount = nietOpFoto.length;
   const fotoInhoud = (() => {
+    if (!fotoToestemmingInstelling.bevestigd) return `<div class="transfer-subsectie"><p class="transfer-empty">Fototoestemmingen voor dit schooljaar zijn nog niet gecontroleerd door het secretariaat.</p></div>`;
     if (!fotoCount) return `<div class="transfer-subsectie"><p class="transfer-empty">Alle leerlingen mogen op foto.</p></div>`;
     return `<div class="transfer-subsectie"><h4>🚫 Mag NIET op foto</h4>` +
       [...nietOpFoto].sort((a,b) => (a.lastName||'').localeCompare(b.lastName||'','nl')).map(st =>
@@ -4739,7 +4811,8 @@ function openOverzichtKlasPdf() {
     onderdeel('Foto',
       `<div class="groep foto-alert">${
         (() => {
-          const nietOpFoto = sorteer(leerlingen.filter(x => !x.magOpFoto));
+          if (!fotoToestemmingInstelling.bevestigd) return '<p class="empty">Fototoestemmingen voor dit schooljaar zijn nog niet gecontroleerd door het secretariaat.</p>';
+          const nietOpFoto = sorteer(leerlingen.filter(x => fotoStatusVoorStudent(x) === 'nee'));
           return nietOpFoto.length
             ? nietOpFoto.map(s => `<div class="leerling-rij"><strong>${esc(s.name)}</strong><span class="extra foto-nee">🚫 MAG NIET OP FOTO</span></div>`).join('')
             : '<p class="empty">Alle leerlingen mogen op foto.</p>';
@@ -5252,7 +5325,7 @@ function sfPreviewDossier(id, mode) {
       s.medicalNote ? 'medisch' : ''
     ].filter(Boolean).join(' · ') || '-'}</td>
     <td>${esc(badmutsLabel(s.badmuts))}</td>
-    <td>${Object.prototype.hasOwnProperty.call(s,'magOpFoto') ? (s.magOpFoto ? 'Ja' : 'Nee') : 'niet ingevuld'}</td>
+    <td>${fotoStatusVoorStudent(s) === 'ja' ? 'Ja' : fotoStatusVoorStudent(s) === 'nee' ? 'Nee' : 'nog te controleren'}</td>
     <td>${ingevuldeNotities(s)}</td>
   </tr>`).join('');
   sfBox(`<h2>${esc(dossier.titel || 'Overdracht')}</h2>

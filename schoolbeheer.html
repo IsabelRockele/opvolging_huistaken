@@ -222,6 +222,7 @@
     .tag.green{background:#d8f5e9}.tag.done{background:#c9efd9}
     .th-sub{display:block;margin-top:3px;font-size:10px;font-weight:600;text-transform:none;letter-spacing:0;color:var(--muted)}
     .homework-cell{min-width:245px;text-align:left!important}
+    .photo-cell{min-width:175px;text-align:left!important}.photo-status{display:block;font-weight:850;margin-bottom:7px}.photo-status.no{color:#9b2c2c}.photo-status.yes{color:#26704a}.photo-status.unknown{color:#8a6500}
     .homework-options{display:grid;grid-template-columns:1fr 1fr;gap:7px;align-items:center}
     .homework-cell label{display:flex;align-items:center;justify-content:flex-start;gap:7px;margin:0;font-size:12px;font-weight:700;color:var(--ink);white-space:nowrap}
     .homework-cell label input[type="checkbox"]{display:inline-block!important;margin:0!important;flex:0 0 18px}
@@ -230,8 +231,9 @@
     .kolommen-kiezer{position:relative;margin-left:auto}
     .kolommen-kiezer summary{cursor:pointer;list-style:none;border:1px solid var(--line);border-radius:10px;padding:7px 11px;background:#fff;font-weight:700;font-size:13px}
     .kolommen-kiezer[open] .kolommen-menu{display:grid}
-    .kolommen-menu{position:absolute;right:0;top:40px;z-index:20;display:none;grid-template-columns:1fr 1fr;gap:8px 14px;min-width:330px;padding:14px;background:#fff;border:1px solid var(--line);border-radius:12px;box-shadow:0 10px 28px rgba(11,35,65,.16)}
+    .kolommen-menu{position:absolute;right:0;top:40px;z-index:20;display:none;grid-template-columns:1fr 1fr;gap:8px 14px;min-width:350px;padding:42px 14px 14px;background:#fff;border:1px solid var(--line);border-radius:12px;box-shadow:0 10px 28px rgba(11,35,65,.16)}
     .kolommen-menu label{display:flex;align-items:center;gap:7px;font-size:13px;font-weight:700;white-space:nowrap}
+    .kolommen-menu-sluiten{position:absolute;right:9px;top:8px;width:30px;height:30px;padding:0;border-radius:999px;background:#edf2f8;color:#26384a;font-size:18px;line-height:1}
     .mf-klas { margin-bottom: 32px; }
     .mf-klas-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:6px; }
     .mf-klas-header h3 { margin:0; font-size:1.15rem; }
@@ -1138,7 +1140,8 @@
         activeClass = "", schooljaar = huidigSchooljaar(), data = null, unsub = null,
         activityMonth = "", purchaseMonth = "", gekozenRefterMaand = "", gekozenRefterWeek = "", opvolgMaand = "", secretariaatOpvolgModus = false,
         tab = "administratie", adminPanel = "wegwijzer", classListMode = "", saveTimer = null,
-        excelImportVoorbeeld = [], excelImportBestandsnaam = "", kalenderImportVoorbeeld = [], lokaleBewaringTot = 0;
+        excelImportVoorbeeld = [], excelImportBestandsnaam = "", kalenderImportVoorbeeld = [], lokaleBewaringTot = 0,
+        fotoToestemmingData = {bevestigd:false,uitzonderingen:[],gecontroleerdeLeerlingen:[]}, fotoUnsub = null;
     let testOverzichtUnsub = null;
     const actieveTestKlassen = new Map();
     const liveKlasDocumenten = new Map();
@@ -1234,6 +1237,14 @@
     }
     function emptyClassDoc(klas){ return { schooljaar, klas, leerlingen:[], refter:{}, refterVrijeDagen:[], activiteiten:[], aankopen:[], vrijeDagen:[...standardFree], messages:[], processed:{refter:""}, bewaarTot:bewaarTotVoorSchooljaar(), bewaartermijnJaren:BEWAAR_JAREN_SCHOOLBEHEER, bijgewerktOp:new Date().toISOString() }; }
     function classRef(klas=activeClass){ return doc(db, "schoolbeheer", schooljaar, "klassen", klas); }
+    function fotoToestemmingRef(){ return doc(db,"schoolbeheer",schooljaar,"instellingen","fototoestemming"); }
+    function luisterNaarFotoToestemming(){
+      if(fotoUnsub){fotoUnsub();fotoUnsub=null;}
+      fotoUnsub=onSnapshot(fotoToestemmingRef(),snap=>{
+        fotoToestemmingData=snap.exists()?{bevestigd:false,uitzonderingen:[],gecontroleerdeLeerlingen:[],...snap.data()}:{bevestigd:false,uitzonderingen:[],gecontroleerdeLeerlingen:[]};
+        if(data&&(tab==="klaslijst"||tab==="leerlingenstart"||(tab==="administratie"&&adminPanel==="klaslijsten")))render();
+      },err=>console.warn("Fototoestemming laden mislukt",err));
+    }
     function schooljaarOffset(jaar, offset){
       const start = Number(String(jaar || schooljaar).slice(0,4)) + offset;
       return `${start}-${start + 1}`;
@@ -1347,6 +1358,7 @@
         secretariaatModulesOpen=true;
       }
       schooljaar = $("schooljaarInput").value.trim() || schooljaar;
+      luisterNaarFotoToestemming();
       renderScope();
       if(unsub) unsub();
       setStatus("Laden...");
@@ -2409,6 +2421,7 @@
         <div class="class-list-heading">
           <h3>Leerlingen</h3>
           <span class="muted small">${activeStudents().length} leerling(en)</span>
+          ${isSecretary()?`<button class="small green no-print" onclick="bevestigFotoKlas()">📷 Hele klas bevestigen</button>`:""}
           ${kolommenKiezer()}
         </div>
         ${oudstenKlasSamenvatting()}
@@ -2821,18 +2834,56 @@
       const match = String(value || "").match(/^(\d{4})-(\d{2})-(\d{2})$/);
       return match ? `${match[3]}/${match[2]}/${match[1]}` : esc(value || "");
     }
-    const klasKolommen=[['roepnaam','Roepnaam'],['geboortejaar','Geboortejaar'],['groep','K0/K1-groep'],['oudste','Oudste gezin'],['collega','Kind collega'],['huiswerk','Huiswerkklas'],['start','Startdatum'],['einde','Einddatum']];
-    function kolomVoorkeurSleutel(){return `lindeVerborgenKlasKolommen_${user?.uid||'gebruiker'}_${role||'klasleerkracht'}`;}
+    const klasKolommen=[['roepnaam','Roepnaam'],['geboortejaar','Geboortejaar'],['groep','K0/K1-groep'],['oudste','Oudste gezin'],['collega','Kind collega'],['huiswerk','Huiswerkklas'],['foto','Foto'],['start','Startdatum'],['einde','Einddatum']];
+    function kolomVoorkeurSleutel(){return `lindeVerborgenKlasKolommen_${user?.uid||'gebruiker'}_${role||'klasleerkracht'}_${schooljaar}_${activeClass||'geen-klas'}`;}
     function verborgenKlasKolommen(){try{return new Set(JSON.parse(localStorage.getItem(kolomVoorkeurSleutel())||'[]'));}catch{return new Set();}}
     function toonKlasKolom(key){return !verborgenKlasKolommen().has(key);}
     function optioneleKolom(key,html){return toonKlasKolom(key)?html:"";}
     function kolommenKiezer(){
       if(!isSecretary())return "";const verborgen=verborgenKlasKolommen();
-      return `<details class="kolommen-kiezer no-print"><summary>Kolommen kiezen</summary><div class="kolommen-menu"><span class="muted small" style="grid-column:1/-1">Je keuze wordt op dit toestel onthouden.</span>${klasKolommen.map(([key,label])=>`<label><input type="checkbox" ${!verborgen.has(key)?'checked':''} onchange="wijzigKlasKolom('${key}',this.checked)"> ${label}</label>`).join('')}</div></details>`;
+      return `<details class="kolommen-kiezer no-print"><summary>Kolommen kiezen</summary><div class="kolommen-menu"><button type="button" class="kolommen-menu-sluiten" onclick="this.closest('details').open=false" aria-label="Kolommenmenu sluiten" title="Sluiten">✕</button><span class="muted small" style="grid-column:1/-1">Deze keuze wordt voor ${esc(activeClass)} op dit toestel onthouden.</span>${klasKolommen.map(([key,label])=>`<label><input type="checkbox" ${!verborgen.has(key)?'checked':''} onchange="wijzigKlasKolom('${key}',this.checked)"> ${label}</label>`).join('')}</div></details>`;
     }
     window.wijzigKlasKolom=(key,zichbaar)=>{const verborgen=verborgenKlasKolommen();zichbaar?verborgen.delete(key):verborgen.add(key);localStorage.setItem(kolomVoorkeurSleutel(),JSON.stringify([...verborgen]));render();setTimeout(()=>{const keuze=document.querySelector('.kolommen-kiezer');if(keuze)keuze.open=true;},0);};
+    function fotoStatusKlaslijst(s){
+      if(!fotoToestemmingData.bevestigd)return "onbekend";
+      const id=String(s.id||""),naamKey=name(s).trim().toLocaleLowerCase("nl").replace(/\s+/g," ");
+      const uitzonderingen=fotoToestemmingData.uitzonderingen||[],gecontroleerd=fotoToestemmingData.gecontroleerdeLeerlingen||[];
+      if(uitzonderingen.some(x=>(id&&String(x.leerlingId||"")===id)||String(x.naam||"").trim().toLocaleLowerCase("nl").replace(/\s+/g," ")===naamKey))return "nee";
+      if(gecontroleerd.some(x=>(id&&String(x.leerlingId||"")===id)||String(x.naam||"").trim().toLocaleLowerCase("nl").replace(/\s+/g," ")===naamKey))return "ja";
+      return "onbekend";
+    }
+    function fotoCelKlaslijst(s){
+      const status=fotoStatusKlaslijst(s),tekst=status==="nee"?"🚫 Mag niet":status==="ja"?"✅ Mag wel":"⏳ Controleren";
+      if(!isSecretary())return `<span class="photo-status ${status}">${tekst}</span>`;
+      if(status==="onbekend")return `<span class="photo-status unknown">${tekst}</span><button class="small pink" onclick="zetFotoStatus('${s.id}','nee')">Aanduiden: mag niet</button>`;
+      return `<span class="photo-status ${status}">${tekst}</span><button class="small ${status==="nee"?"green":"pink"}" onclick="zetFotoStatus('${s.id}','${status==="nee"?"ja":"nee"}')">Wijzigen naar ${status==="nee"?"mag wel":"mag niet"}</button>`;
+    }
+    window.zetFotoStatus=async(id,status)=>{
+      if(!isSecretary())return;
+      const s=(data.leerlingen||[]).find(x=>x.id===id);if(!s)return;
+      try{
+        const ref=fotoToestemmingRef(),snap=await getDoc(ref),item=snap.exists()?{bevestigd:false,uitzonderingen:[],gecontroleerdeLeerlingen:[],...snap.data()}:{bevestigd:false,uitzonderingen:[],gecontroleerdeLeerlingen:[]};
+        const leerling={leerlingId:String(s.id||""),naam:name(s),klas:activeClass};
+        item.uitzonderingen=(item.uitzonderingen||[]).filter(x=>String(x.leerlingId||"")!==leerling.leerlingId);
+        item.gecontroleerdeLeerlingen=(item.gecontroleerdeLeerlingen||[]).filter(x=>String(x.leerlingId||"")!==leerling.leerlingId);
+        item.gecontroleerdeLeerlingen.push(leerling);if(status==="nee")item.uitzonderingen.push(leerling);
+        await firestoreSetDoc(ref,{schooljaar,bevestigd:true,uitzonderingen:item.uitzonderingen,gecontroleerdeLeerlingen:item.gecontroleerdeLeerlingen,gecontroleerdOp:new Date().toISOString(),gecontroleerdDoor:user.email||user.uid},{merge:true});
+      }catch(err){console.error(err);alert("De fototoestemming kon niet worden bewaard: "+err.message);}
+    };
+    window.bevestigFotoKlas=async()=>{
+      if(!isSecretary())return;
+      const leerlingen=activeStudents();if(!leerlingen.length)return;
+      if(!confirm(`Fototoestemming voor ${activeClass} bevestigen?\n\nAlle ${leerlingen.length} leerlingen gelden daarna als gecontroleerd. Alleen wie uitdrukkelijk als “mag niet” is aangeduid, blijft een uitzondering.`))return;
+      try{
+        const ref=fotoToestemmingRef(),snap=await getDoc(ref),item=snap.exists()?{bevestigd:false,uitzonderingen:[],gecontroleerdeLeerlingen:[],...snap.data()}:{bevestigd:false,uitzonderingen:[],gecontroleerdeLeerlingen:[]};
+        const ids=new Set(leerlingen.map(s=>String(s.id||"")));
+        item.gecontroleerdeLeerlingen=(item.gecontroleerdeLeerlingen||[]).filter(x=>!ids.has(String(x.leerlingId||"")));
+        leerlingen.forEach(s=>item.gecontroleerdeLeerlingen.push({leerlingId:String(s.id||""),naam:name(s),klas:activeClass}));
+        await firestoreSetDoc(ref,{schooljaar,bevestigd:true,uitzonderingen:item.uitzonderingen||[],gecontroleerdeLeerlingen:item.gecontroleerdeLeerlingen,gecontroleerdOp:new Date().toISOString(),gecontroleerdDoor:user.email||user.uid},{merge:true});
+      }catch(err){console.error(err);alert("De klasbevestiging kon niet worden bewaard: "+err.message);}
+    };
     function studentTable(){
-      return `<div class="table-wrap"><table><thead><tr><th>Achternaam</th><th>Officiële voornaam</th>${optioneleKolom('roepnaam','<th>Roepnaam<span class="th-sub">optioneel</span></th>')}${optioneleKolom('geboortejaar','<th>Geboortejaar</th>')}${activeClass==="K1"?optioneleKolom('groep','<th>Groep</th>'):""}${optioneleKolom('oudste','<th class="check-col">Oudste<br>gezin</th>')}${optioneleKolom('collega','<th class="check-col">Kind collega</th>')}${optioneleKolom('huiswerk','<th class="homework-cell">Huiswerkklas<span class="th-sub">deelname en betaling</span></th>')}${optioneleKolom('start','<th>Start</th>')}${optioneleKolom('einde','<th>Einde</th>')}<th></th></tr></thead><tbody>${activeStudents().map(s=>`<tr class="${s.colleague?"colleague":""}">
+      return `<div class="table-wrap"><table><thead><tr><th>Achternaam</th><th>Officiële voornaam</th>${optioneleKolom('roepnaam','<th>Roepnaam<span class="th-sub">optioneel</span></th>')}${optioneleKolom('geboortejaar','<th>Geboortejaar</th>')}${activeClass==="K1"?optioneleKolom('groep','<th>Groep</th>'):""}${optioneleKolom('oudste','<th class="check-col">Oudste<br>gezin</th>')}${optioneleKolom('collega','<th class="check-col">Kind collega</th>')}${optioneleKolom('huiswerk','<th class="homework-cell">Huiswerkklas<span class="th-sub">deelname en betaling</span></th>')}${optioneleKolom('foto','<th class="photo-cell">Foto<span class="th-sub">toestemming dit schooljaar</span></th>')}${optioneleKolom('start','<th>Start</th>')}${optioneleKolom('einde','<th>Einde</th>')}<th></th></tr></thead><tbody>${activeStudents().map(s=>`<tr class="${s.colleague?"colleague":""}">
         <td><input class="name-input" value="${esc(s.last||"")}" onchange="updateStudent('${s.id}','last',this.value)"></td>
         <td><input class="name-input" value="${esc(s.first||"")}" onchange="updateStudent('${s.id}','first',this.value)"></td>
         ${optioneleKolom('roepnaam',`<td><input class="name-input" value="${esc(s.roepnaam||"")}" placeholder="bv. Haroun" onchange="updateStudent('${s.id}','roepnaam',this.value)"></td>`)}
@@ -2841,6 +2892,7 @@
         ${optioneleKolom('oudste',`<td class="check-col"><input type="checkbox" ${s.oudsteGezin?"checked":""} onchange="toggleOudsteGezin('${s.id}',this.checked)" title="Oudste kind van het gezin op school"></td>`)}
         ${optioneleKolom('collega',`<td class="check-col"><input type="checkbox" ${s.colleague?"checked":""} onchange="toggleColleague('${s.id}',this.checked)"></td>`)}
         ${optioneleKolom('huiswerk',`<td class="homework-cell"><div><strong>${esc(huiswerkSamenvatting(s))}</strong><br><button class="small ${s.homeworkClass?"white":"green"}" style="margin-top:7px" onclick="openHomeworkEnrollment('${s.id}')">${s.homeworkClass?"Wijzigen":"Inschrijven"}</button></div></td>`)}
+        ${optioneleKolom('foto',`<td class="photo-cell">${fotoCelKlaslijst(s)}</td>`)}
         ${optioneleKolom('start',`<td><input type="date" value="${esc(s.start||startDate())}" onchange="updateStudent('${s.id}','start',this.value)" title="Startdatum: ${formatDate(s.start||startDate())}"></td>`)}
         ${optioneleKolom('einde',`<td><input type="date" value="${esc(s.end||endDate())}" onchange="updateStudent('${s.id}','end',this.value)" title="Einddatum: ${formatDate(s.end||endDate())}"></td>`)}
         <td><div style="display:grid;gap:7px;min-width:190px"><button class="small pink" onclick="leaveStudent('${s.id}')" title="Kies de laatste actieve schooldag met een kalender">📅 Vertrekt tijdens schooljaar</button>${isSecretary()?`<button class="small danger" onclick="startNietOpSchool('${s.id}')" title="Alleen gebruiken als het kind geen enkele schooldag gestart is">🚫 Nooit gestart op school</button>`:""}</div></td>
@@ -3221,7 +3273,18 @@ return `<div class="notice no-print" style="margin:14px 0;background:${verwerkt?
     window.kiesRefterWeek=value=>{const week=geldigeRefterWeek(value);if(!week)return alert("Kies een datum binnen het schooljaar.");gekozenRefterWeek=week;renderRefter();};
     window.wisselRefterWeek=richting=>{const nieuw=datumPlusDagen(standaardRefterWeek(),Number(richting)*7);if(nieuw<eersteRefterWeek()||nieuw>laatsteRefterWeek())return;gekozenRefterWeek=nieuw;renderRefter();};
     window.wisselRefterMaand=value=>{gekozenRefterWeek=geldigeRefterWeek(`${value}-01`)||maandagVan(`${value}-01`);renderRefter();};
-    window.toggleRefter = (month,sid,date,checked) => { const week=maandagVan(date);if(refterWeekVerwerkt(week)&&!magRefterCorrigeren(week)){renderRefter();return;}const m=data.refter[month] ||= {}; m[sid] ||= {}; m[sid][date]=checked;if(data.refterBevestigingen?.[week])delete data.refterBevestigingen[week];markDirty();renderRefter(); };
+    function renderRefterMetScrollbehoud(){
+      const vorigeScrollY=window.scrollY;
+      const tabel=document.querySelector('.refter-print-wrap');
+      const vorigeScrollX=tabel?.scrollLeft||0;
+      renderRefter();
+      requestAnimationFrame(()=>{
+        window.scrollTo(0,vorigeScrollY);
+        const nieuweTabel=document.querySelector('.refter-print-wrap');
+        if(nieuweTabel)nieuweTabel.scrollLeft=vorigeScrollX;
+      });
+    }
+    window.toggleRefter = (month,sid,date,checked) => { const week=maandagVan(date);if(refterWeekVerwerkt(week)&&!magRefterCorrigeren(week)){renderRefterMetScrollbehoud();return;}const m=data.refter[month] ||= {}; m[sid] ||= {}; m[sid][date]=checked;if(data.refterBevestigingen?.[week])delete data.refterBevestigingen[week];markDirty();renderRefterMetScrollbehoud(); };
 
     function renderActivities(){
       activityMonth = activityMonth || huidigeSchoolMaand();

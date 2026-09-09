@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="nl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Fototoestemming - De Linde</title>
+  <style>
+    :root{--ink:#20342b;--muted:#66746d;--line:#d9e2dd;--green:#2f7450;--soft:#f3f8f5;--red:#9b2c2c;--redsoft:#fff1f1;--yellow:#fff4bf}
+    *{box-sizing:border-box}body{margin:0;background:#eef4f0;color:var(--ink);font:16px/1.45 system-ui,-apple-system,Segoe UI,sans-serif}
+    header{background:#fff;border-bottom:1px solid var(--line);padding:18px clamp(16px,4vw,42px);display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
+    h1,h2,p{margin-top:0}h1{margin-bottom:2px;font-size:clamp(23px,3vw,32px)}header p{margin:0;color:var(--muted)}
+    main{width:min(1050px,calc(100% - 28px));margin:24px auto 48px}.card{background:#fff;border:1px solid var(--line);border-radius:18px;padding:20px;box-shadow:0 5px 18px rgba(30,55,43,.07);margin-bottom:16px}
+    .status{padding:13px 15px;border-radius:12px;background:var(--yellow);font-weight:750}.status.ok{background:#e4f5e9;color:#205f3d}.status.error{background:var(--redsoft);color:var(--red)}
+    .toolbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.toolbar select,.toolbar input{min-height:42px;border:1px solid #b9c9c0;border-radius:10px;padding:8px 11px;font:inherit}.toolbar input{flex:1;min-width:210px}
+    button,.back{border:0;border-radius:11px;padding:10px 15px;background:var(--green);color:#fff;font:inherit;font-weight:800;cursor:pointer;text-decoration:none}button.secondary,.back{background:#e7efea;color:var(--ink)}button:disabled{opacity:.55;cursor:wait}
+    .class-block{border:1px solid var(--line);border-radius:14px;margin:12px 0;overflow:hidden}.class-block h3{margin:0;padding:11px 15px;background:var(--soft)}
+    .student{display:flex;gap:12px;align-items:center;padding:10px 15px;border-top:1px solid #edf1ef}.student input{width:20px;height:20px;accent-color:var(--red)}.student label{font-weight:650;cursor:pointer;flex:1}
+    .exceptions{display:grid;gap:10px}.exception{border:1px solid #efb7b7;border-left:7px solid #c83e3e;border-radius:12px;background:var(--redsoft);padding:13px 15px;display:flex;justify-content:space-between;gap:14px}.exception strong{color:#7f1d1d}.empty{padding:24px;text-align:center;color:var(--muted);background:var(--soft);border-radius:12px}
+    .meta{font-size:14px;color:var(--muted)}.hidden{display:none!important}
+  </style>
+</head>
+<body>
+  <header>
+    <div><h1>📷 Fototoestemming</h1><p>Schoolbreed overzicht per schooljaar</p></div>
+    <a class="back" href="index.html">← Terug naar start</a>
+  </header>
+  <main>
+    <div id="status" class="status">Gegevens worden geladen…</div>
+
+    <section class="card">
+      <div class="toolbar">
+        <label for="schooljaar"><strong>Schooljaar</strong></label>
+        <select id="schooljaar"></select>
+        <input id="zoek" type="search" placeholder="Zoek op naam of klas">
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>🚫 Mag niet op de foto</h2>
+      <p>Alleen de uitzonderingen worden hier getoond. Na bevestiging mogen alle andere leerlingen dat schooljaar wel op de foto.</p>
+      <div id="overzicht" class="exceptions"><div class="empty">Nog geen gegevens geladen.</div></div>
+      <p id="controleInfo" class="meta"></p>
+    </section>
+
+    <section id="beheer" class="card hidden">
+      <h2>Lijst beheren</h2>
+      <p>Vink uitsluitend leerlingen aan die in het gekozen schooljaar <strong>niet</strong> op de foto mogen. Bevestigen past alleen deze aparte fotolijst aan; leerlingfiches en overgangsnotities blijven onaangeroerd.</p>
+      <div id="leerlingen"><div class="empty">Klaslijsten worden geladen…</div></div>
+      <div class="toolbar" style="margin-top:16px">
+        <button id="bewaar">Lijst bevestigen en bewaren</button>
+        <span id="selectieInfo" class="meta"></span>
+      </div>
+    </section>
+  </main>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+    import { getFirestore, collection, doc, getDoc, getDocs, onSnapshot, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+    const app=initializeApp({apiKey:"AIzaSyA7KxXMvZ4dzBQDut3CMyWUblLte2tFzoQ",authDomain:"huiswerkapp-a311e.firebaseapp.com",projectId:"huiswerkapp-a311e",storageBucket:"huiswerkapp-a311e.appspot.com",messagingSenderId:"797169941164",appId:"1:797169941164:web:511d9618079f1378d0fd09"});
+    const auth=getAuth(app),db=getFirestore(app),$=id=>document.getElementById(id);
+    const esc=v=>String(v??'').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#039;');
+    const huidigSchooljaar=()=>{const n=new Date(),y=n.getMonth()>=8?n.getFullYear():n.getFullYear()-1;return `${y}-${y+1}`};
+    const jaren=()=>{const y=Number(huidigSchooljaar().slice(0,4));return [`${y-1}-${y}`,`${y}-${y+1}`,`${y+1}-${y+2}`]};
+    const actief=(s,jaar)=>{const van=`${jaar.slice(0,4)}-09-01`,tot=`${jaar.slice(5)}-06-30`;return !s.startNiet&&(!s.start||s.start<=tot)&&(!s.end||s.end>=van)};
+    const naam=s=>String(s.name||s.naam||`${s.first||s.firstName||''} ${s.last||s.lastName||''}`).replace(/\s+/g,' ').trim();
+    const klasSort=(a,b)=>a.localeCompare(b,'nl',{numeric:true});
+    let user=null,role='',schooljaar=huidigSchooljaar(),instelling={bevestigd:false,uitzonderingen:[],gecontroleerdeLeerlingen:[]},klasleerlingen=[],unsub=null;
+
+    function ref(){return doc(db,'schoolbeheer',schooljaar,'instellingen','fototoestemming')}
+    function magBeheren(){return role==='secretariaat'||role==='beheerder'}
+    function datumTekst(v){const d=v?.toDate?v.toDate():v?new Date(v):null;return d&&!Number.isNaN(d.getTime())?d.toLocaleString('nl-BE',{dateStyle:'long',timeStyle:'short'}):''}
+    function renderOverzicht(){
+      const q=$('zoek').value.trim().toLocaleLowerCase('nl');
+      const lijst=(instelling.uitzonderingen||[]).filter(x=>!q||`${x.naam} ${x.klas}`.toLocaleLowerCase('nl').includes(q)).sort((a,b)=>klasSort(a.klas,b.klas)||a.naam.localeCompare(b.naam,'nl'));
+      const gecontroleerdeIds=new Set((instelling.gecontroleerdeLeerlingen||[]).map(x=>String(x.leerlingId||'')).filter(Boolean));
+      const nieuweLeerlingen=magBeheren()&&instelling.bevestigd?klasleerlingen.filter(x=>x.leerling.id&&!gecontroleerdeIds.has(String(x.leerling.id))):[];
+      if(!instelling.bevestigd){
+        $('status').className='status';$('status').textContent=`Fototoestemmingen voor ${schooljaar} zijn nog niet bevestigd door het secretariaat.`;
+        $('overzicht').innerHTML='<div class="empty">Nog te controleren voor dit schooljaar.</div>';
+      }else if(nieuweLeerlingen.length){
+        $('status').className='status';$('status').textContent=`${nieuweLeerlingen.length} nieuwe leerling(en) wachten nog op controle. Duid eventuele uitzonderingen aan en bevestig de lijst opnieuw.`;
+        $('overzicht').innerHTML=(lijst.length?lijst.map(x=>`<div class="exception"><strong>${esc(x.naam)}</strong><span>Klas ${esc(x.klas)}</span></div>`).join(''):'<div class="empty">Er waren nog geen uitzonderingen.</div>')+`<div class="empty"><strong>Nog te controleren:</strong> ${nieuweLeerlingen.map(x=>`${esc(naam(x.leerling))} (${esc(x.klas)})`).join(', ')}</div>`;
+      }else{
+        $('status').className='status ok';$('status').textContent=`Fototoestemmingen ${schooljaar} zijn gecontroleerd. ${instelling.uitzonderingen?.length||0} leerling(en) mogen niet op de foto.`;
+        $('overzicht').innerHTML=lijst.length?lijst.map(x=>`<div class="exception"><strong>${esc(x.naam)}</strong><span>Klas ${esc(x.klas)}</span></div>`).join(''):'<div class="empty">Alle leerlingen mogen op de foto.</div>';
+      }
+      const wanneer=datumTekst(instelling.gecontroleerdOp);
+      $('controleInfo').textContent=instelling.bevestigd?`Gecontroleerd${wanneer?` op ${wanneer}`:''}${instelling.gecontroleerdDoor?` door ${instelling.gecontroleerdDoor}`:''}.`:'';
+    }
+    function selectieSleutel(klas,s){return `${klas}|${String(s.id||'')}|${naam(s).toLocaleLowerCase('nl')}`}
+    function renderBeheer(){
+      $('beheer').classList.toggle('hidden',!magBeheren());if(!magBeheren())return;
+      const gekozen=new Set((instelling.uitzonderingen||[]).map(x=>`${x.klas}|${String(x.leerlingId||'')}|${String(x.naam||'').toLocaleLowerCase('nl')}`));
+      const groepen=new Map();klasleerlingen.forEach(x=>{if(!groepen.has(x.klas))groepen.set(x.klas,[]);groepen.get(x.klas).push(x.leerling)});
+      $('leerlingen').innerHTML=[...groepen.entries()].sort(([a],[b])=>klasSort(a,b)).map(([klas,ls])=>`<div class="class-block"><h3>${esc(klas)}</h3>${ls.sort((a,b)=>naam(a).localeCompare(naam(b),'nl')).map(s=>{const key=selectieSleutel(klas,s);return `<div class="student"><input class="foto-keuze" type="checkbox" id="f_${esc(String(s.id||key).replace(/[^a-z0-9_-]/gi,'_'))}" data-klas="${esc(klas)}" data-id="${esc(s.id||'')}" data-naam="${esc(naam(s))}" ${gekozen.has(key)?'checked':''}><label for="f_${esc(String(s.id||key).replace(/[^a-z0-9_-]/gi,'_'))}">${esc(naam(s))}</label></div>`}).join('')}</div>`).join('')||'<div class="empty">Geen actieve leerlingen gevonden.</div>';
+      document.querySelectorAll('.foto-keuze').forEach(x=>x.addEventListener('change',updateSelectieInfo));updateSelectieInfo();
+    }
+    function updateSelectieInfo(){$('selectieInfo').textContent=`${document.querySelectorAll('.foto-keuze:checked').length} leerling(en) aangeduid als mag niet op foto.`}
+    async function laadKlassen(){
+      if(!magBeheren()){klasleerlingen=[];return}
+      const snap=await getDocs(collection(db,'schoolbeheer',schooljaar,'klassen'));klasleerlingen=[];
+      snap.forEach(d=>(d.data().leerlingen||[]).filter(s=>actief(s,schooljaar)).forEach(leerling=>klasleerlingen.push({klas:d.id,leerling})));
+    }
+    async function laad(){
+      if(unsub){unsub();unsub=null}$('status').className='status';$('status').textContent='Gegevens worden geladen…';
+      await laadKlassen();
+      unsub=onSnapshot(ref(),snap=>{instelling=snap.exists()?{bevestigd:false,uitzonderingen:[],gecontroleerdeLeerlingen:[],...snap.data()}:{bevestigd:false,uitzonderingen:[],gecontroleerdeLeerlingen:[]};renderOverzicht();renderBeheer()},err=>{$('status').className='status error';$('status').textContent=`Laden mislukt: ${err.message}`});
+    }
+    $('bewaar').addEventListener('click',async()=>{
+      if(!magBeheren())return;
+      const knop=$('bewaar');knop.disabled=true;knop.textContent='Bezig met bewaren…';
+      try{
+        const uitzonderingen=[...document.querySelectorAll('.foto-keuze:checked')].map(x=>({leerlingId:x.dataset.id||'',naam:x.dataset.naam,klas:x.dataset.klas}));
+        const gecontroleerdeLeerlingen=klasleerlingen.map(x=>({leerlingId:String(x.leerling.id||''),naam:naam(x.leerling),klas:x.klas}));
+        await setDoc(ref(),{schooljaar,bevestigd:true,uitzonderingen,gecontroleerdeLeerlingen,gecontroleerdOp:serverTimestamp(),gecontroleerdDoor:user.email||user.uid},{merge:true});
+      }catch(err){alert(`Bewaren mislukt: ${err.message}`)}finally{knop.disabled=false;knop.textContent='Lijst bevestigen en bewaren'}
+    });
+    $('zoek').addEventListener('input',renderOverzicht);$('schooljaar').addEventListener('change',()=>{schooljaar=$('schooljaar').value;laad()});
+    onAuthStateChanged(auth,async u=>{
+      if(!u){location.href='index.html';return}user=u;
+      const r=await getDoc(doc(db,'schoolrollen',u.uid));role=r.exists()?String(r.data().rol||'').trim().toLowerCase():'';
+      if(role==='beheerder'){const sim=localStorage.getItem('lindeSimuleerRol_'+u.uid);if(sim)role=String(sim).toLowerCase()}
+      $('schooljaar').innerHTML=jaren().map(j=>`<option ${j===schooljaar?'selected':''}>${j}</option>`).join('');await laad();
+    });
+  </script>
+</body>
+</html>

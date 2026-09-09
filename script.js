@@ -120,16 +120,15 @@ function toonRefterHerinneringOpStart(rol, klasDocs) {
   const bevestigingen = klasDocs.filter(x => x.snap?.exists()).map(x => !!x.snap.data()?.refterBevestigingen?.[weekSleutel]);
   if (!bevestigingen.length) return;
   const bevestigd = bevestigingen.every(Boolean);
+  if (bevestigd) return;
   const format = datum => datum.toLocaleDateString('nl-BE',{day:'numeric',month:'long'});
   const blok = document.createElement('a');
   blok.id = 'portaalRefterHerinnering';
-  blok.className = `portaal-refter-herinnering${bevestigd?' is-bevestigd':''}`;
+  blok.className = 'portaal-refter-herinnering';
   blok.href = 'schoolbeheer.html?open=refter';
   blok.target = '_blank';
   blok.rel = 'noopener';
-  blok.innerHTML = bevestigd
-    ? `<span><strong>✓ Refterlijst van de voorbije week is bevestigd</strong>Het secretariaat ziet dat je controle klaar is voor woensdag ${format(deadline)}.</span><span class="refter-herinnering-knop">Refterlijst bekijken</span>`
-    : `<span><strong>⚠ Refterlijst nakijken tegen woensdag ${format(deadline)}</strong>Controleer de voorbije schoolweek en bevestig ze daarna, ook wanneer niemand afwezig was.</span><span class="refter-herinnering-knop">Nu nakijken</span>`;
+  blok.innerHTML = `<span><strong>⚠ Refterlijst nakijken tegen woensdag ${format(deadline)}</strong>Controleer de voorbije schoolweek en bevestig ze daarna, ook wanneer niemand afwezig was.</span><span class="refter-herinnering-knop">Nu nakijken</span>`;
   document.getElementById('administratiePortaalGrid')?.insertAdjacentElement('beforebegin', blok);
 }
 
@@ -289,6 +288,8 @@ function pasKnoppenToe(huistakenKnop, overgangKnop, schoolbeheerKnop, bestelling
   if (voorbladenKnop) voorbladenKnop.style.display = (heeftKlasbeheer || rolNaam === 'zorgleerkracht') ? '' : 'none';
   const gokOverzichtKnop = document.getElementById('gokOverzichtKeuzeKnop');
   if (gokOverzichtKnop) gokOverzichtKnop.style.display = !isSecretariaat && (heeftKlasbeheer || isSchoolBreed) ? '' : 'none';
+  const fotoOverzichtKnop = document.getElementById('fotoOverzichtKeuzeKnop');
+  if (fotoOverzichtKnop) fotoOverzichtKnop.style.display = '';
   if (schoolbeheerKnop) {
     schoolbeheerKnop.style.display = (isSecretariaat || isSchoolBreed || heeftKlasbeheer) ? '' : 'none';
     if (isSecretariaat) {
@@ -521,7 +522,6 @@ async function toonSchooloverzichtKnopAlsNodig(user) {
       pasKnoppenToe(huistakenKnop, overgangKnop, schoolbeheerKnop, bestellingenKnop, oudercontactKnop, schoolKnop, groeigroepenKnop, zorgoverlegKnop, huiswerkklasKnop,
         klasafsprakenKnop,
         cached.isSchoolBreed, cached.isSecretariaat, cached.heeftKlasbeheer, cached.rol || '');
-      toonPortaalLaden(false);
       if (klasafsprakenKnop) klasafsprakenKnop.style.display = magKlasafsprakenTesten(user) ? '' : 'none';
     }
   } catch (e) { /* cache onleesbaar, gewoon doorgaan */ }
