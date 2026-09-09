@@ -3,6 +3,9 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
   <title>Fototoestemming - De Linde</title>
   <style>
     :root{--ink:#20342b;--muted:#66746d;--line:#d9e2dd;--green:#2f7450;--soft:#f3f8f5;--red:#9b2c2c;--redsoft:#fff1f1;--yellow:#fff4bf}
@@ -37,26 +40,16 @@
 
     <section class="card">
       <h2>🚫 Mag niet op de foto</h2>
-      <p>Alleen de uitzonderingen worden hier getoond. Na bevestiging mogen alle andere leerlingen dat schooljaar wel op de foto.</p>
+      <p>Dit overzicht wordt automatisch opgebouwd vanuit de klaslijsten. Alleen de uitzonderingen worden hier getoond; je hoeft hier niets opnieuw aan te duiden.</p>
       <div id="overzicht" class="exceptions"><div class="empty">Nog geen gegevens geladen.</div></div>
       <p id="controleInfo" class="meta"></p>
-    </section>
-
-    <section id="beheer" class="card hidden">
-      <h2>Lijst beheren</h2>
-      <p>Vink uitsluitend leerlingen aan die in het gekozen schooljaar <strong>niet</strong> op de foto mogen. Bevestigen past alleen deze aparte fotolijst aan; leerlingfiches en overgangsnotities blijven onaangeroerd.</p>
-      <div id="leerlingen"><div class="empty">Klaslijsten worden geladen…</div></div>
-      <div class="toolbar" style="margin-top:16px">
-        <button id="bewaar">Lijst bevestigen en bewaren</button>
-        <span id="selectieInfo" class="meta"></span>
-      </div>
     </section>
   </main>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
     import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-    import { getFirestore, collection, doc, getDoc, getDocs, onSnapshot, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    import { getFirestore, collection, doc, getDoc, getDocs, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
     const app=initializeApp({apiKey:"AIzaSyA7KxXMvZ4dzBQDut3CMyWUblLte2tFzoQ",authDomain:"huiswerkapp-a311e.firebaseapp.com",projectId:"huiswerkapp-a311e",storageBucket:"huiswerkapp-a311e.appspot.com",messagingSenderId:"797169941164",appId:"1:797169941164:web:511d9618079f1378d0fd09"});
     const auth=getAuth(app),db=getFirestore(app),$=id=>document.getElementById(id);
@@ -80,7 +73,7 @@
         $('status').className='status';$('status').textContent=`Fototoestemmingen voor ${schooljaar} zijn nog niet bevestigd door het secretariaat.`;
         $('overzicht').innerHTML='<div class="empty">Nog te controleren voor dit schooljaar.</div>';
       }else if(nieuweLeerlingen.length){
-        $('status').className='status';$('status').textContent=`${nieuweLeerlingen.length} nieuwe leerling(en) wachten nog op controle. Duid eventuele uitzonderingen aan en bevestig de lijst opnieuw.`;
+        $('status').className='status';$('status').textContent=`${nieuweLeerlingen.length} nieuwe leerling(en) wachten nog op controle. Open Klaslijsten, vink “Mag niet” aan indien nodig en bevestig de klas opnieuw.`;
         $('overzicht').innerHTML=(lijst.length?lijst.map(x=>`<div class="exception"><strong>${esc(x.naam)}</strong><span>Klas ${esc(x.klas)}</span></div>`).join(''):'<div class="empty">Er waren nog geen uitzonderingen.</div>')+`<div class="empty"><strong>Nog te controleren:</strong> ${nieuweLeerlingen.map(x=>`${esc(naam(x.leerling))} (${esc(x.klas)})`).join(', ')}</div>`;
       }else{
         $('status').className='status ok';$('status').textContent=`Fototoestemmingen ${schooljaar} zijn gecontroleerd. ${instelling.uitzonderingen?.length||0} leerling(en) mogen niet op de foto.`;
@@ -89,15 +82,6 @@
       const wanneer=datumTekst(instelling.gecontroleerdOp);
       $('controleInfo').textContent=instelling.bevestigd?`Gecontroleerd${wanneer?` op ${wanneer}`:''}${instelling.gecontroleerdDoor?` door ${instelling.gecontroleerdDoor}`:''}.`:'';
     }
-    function selectieSleutel(klas,s){return `${klas}|${String(s.id||'')}|${naam(s).toLocaleLowerCase('nl')}`}
-    function renderBeheer(){
-      $('beheer').classList.toggle('hidden',!magBeheren());if(!magBeheren())return;
-      const gekozen=new Set((instelling.uitzonderingen||[]).map(x=>`${x.klas}|${String(x.leerlingId||'')}|${String(x.naam||'').toLocaleLowerCase('nl')}`));
-      const groepen=new Map();klasleerlingen.forEach(x=>{if(!groepen.has(x.klas))groepen.set(x.klas,[]);groepen.get(x.klas).push(x.leerling)});
-      $('leerlingen').innerHTML=[...groepen.entries()].sort(([a],[b])=>klasSort(a,b)).map(([klas,ls])=>`<div class="class-block"><h3>${esc(klas)}</h3>${ls.sort((a,b)=>naam(a).localeCompare(naam(b),'nl')).map(s=>{const key=selectieSleutel(klas,s);return `<div class="student"><input class="foto-keuze" type="checkbox" id="f_${esc(String(s.id||key).replace(/[^a-z0-9_-]/gi,'_'))}" data-klas="${esc(klas)}" data-id="${esc(s.id||'')}" data-naam="${esc(naam(s))}" ${gekozen.has(key)?'checked':''}><label for="f_${esc(String(s.id||key).replace(/[^a-z0-9_-]/gi,'_'))}">${esc(naam(s))}</label></div>`}).join('')}</div>`).join('')||'<div class="empty">Geen actieve leerlingen gevonden.</div>';
-      document.querySelectorAll('.foto-keuze').forEach(x=>x.addEventListener('change',updateSelectieInfo));updateSelectieInfo();
-    }
-    function updateSelectieInfo(){$('selectieInfo').textContent=`${document.querySelectorAll('.foto-keuze:checked').length} leerling(en) aangeduid als mag niet op foto.`}
     async function laadKlassen(){
       if(!magBeheren()){klasleerlingen=[];return}
       const snap=await getDocs(collection(db,'schoolbeheer',schooljaar,'klassen'));klasleerlingen=[];
@@ -106,17 +90,8 @@
     async function laad(){
       if(unsub){unsub();unsub=null}$('status').className='status';$('status').textContent='Gegevens worden geladen…';
       await laadKlassen();
-      unsub=onSnapshot(ref(),snap=>{instelling=snap.exists()?{bevestigd:false,uitzonderingen:[],gecontroleerdeLeerlingen:[],...snap.data()}:{bevestigd:false,uitzonderingen:[],gecontroleerdeLeerlingen:[]};renderOverzicht();renderBeheer()},err=>{$('status').className='status error';$('status').textContent=`Laden mislukt: ${err.message}`});
+      unsub=onSnapshot(ref(),snap=>{instelling=snap.exists()?{bevestigd:false,uitzonderingen:[],gecontroleerdeLeerlingen:[],...snap.data()}:{bevestigd:false,uitzonderingen:[],gecontroleerdeLeerlingen:[]};renderOverzicht()},err=>{$('status').className='status error';$('status').textContent=`Laden mislukt: ${err.message}`});
     }
-    $('bewaar').addEventListener('click',async()=>{
-      if(!magBeheren())return;
-      const knop=$('bewaar');knop.disabled=true;knop.textContent='Bezig met bewaren…';
-      try{
-        const uitzonderingen=[...document.querySelectorAll('.foto-keuze:checked')].map(x=>({leerlingId:x.dataset.id||'',naam:x.dataset.naam,klas:x.dataset.klas}));
-        const gecontroleerdeLeerlingen=klasleerlingen.map(x=>({leerlingId:String(x.leerling.id||''),naam:naam(x.leerling),klas:x.klas}));
-        await setDoc(ref(),{schooljaar,bevestigd:true,uitzonderingen,gecontroleerdeLeerlingen,gecontroleerdOp:serverTimestamp(),gecontroleerdDoor:user.email||user.uid},{merge:true});
-      }catch(err){alert(`Bewaren mislukt: ${err.message}`)}finally{knop.disabled=false;knop.textContent='Lijst bevestigen en bewaren'}
-    });
     $('zoek').addEventListener('input',renderOverzicht);$('schooljaar').addEventListener('change',()=>{schooljaar=$('schooljaar').value;laad()});
     onAuthStateChanged(auth,async u=>{
       if(!u){location.href='index.html';return}user=u;
