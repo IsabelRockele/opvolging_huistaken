@@ -1512,6 +1512,7 @@ function redenHerstelBlokkade(inhoud, leerlingen, klas) {
   return '';
 }
 let overgangOpslagBlokkade = 'Het dossier is nog niet volledig gecontroleerd en geladen.';
+let nieuwOvergangProjectMogelijk = false;
 window.firebaseOvergang = {
   ready,
   async saveProject(data, opties = {}) {
@@ -1543,6 +1544,7 @@ window.firebaseOvergang = {
     const inhoud = snap.exists() ? snap.data() : null;
     const klas = await bepaalSchoolbeheerKlas();
     const getroffen = jaar === '2026-2027' && ['2A','3A'].includes(klas);
+    nieuwOvergangProjectMogelijk = !snap.exists() && !getroffen;
     overgangOpslagBlokkade = getroffen
       ? '2A en 3A worden gecontroleerd op ontbrekende overdrachtsinformatie. Bewaren is tijdelijk geblokkeerd; de GOK-lijst blijft apart behouden.'
       : !inhoud || !Array.isArray(inhoud.students)
@@ -1556,6 +1558,12 @@ window.firebaseOvergang = {
     return inhoud;
   },
   opslagBlokkade() { return overgangOpslagBlokkade; },
+  startNieuwProjectToestaan() {
+    if (!nieuwOvergangProjectMogelijk) return false;
+    overgangOpslagBlokkade = '';
+    nieuwOvergangProjectMogelijk = false;
+    return true;
+  },
   async loadSchoolbeheerKlasVoorJaar(jaar, klas) {
     await ready;
     if (!geldigSchooljaar(jaar) || !String(klas || '').trim()) return { klas: '', leerlingen: [] };
@@ -3857,6 +3865,22 @@ async function loadFirebaseProjectOnStart() {
       console.warn('Groeigroepen konden niet geladen worden voor overgangsbespreking', zorgResult.__zorggroepenError);
     }
     if (!data || !Array.isArray(data.students)) {
+      if (window.firebaseOvergang.startNieuwProjectToestaan()) {
+        const sync = await vulOntbrekendeLeerlingenUitSchoolbeheer();
+        if (sync.added) {
+          if (state.projectName === 'Nieuwe verdeling' && sync.klas) state.projectName = sync.klas;
+          pasCentraleFotoToestemmingToe(fotoResult);
+          writeSettings();
+          renderStudents();
+          if (typeof renderGroups === 'function') renderGroups();
+          updateBadges();
+          await startLiveGokSync();
+          await startLiveFotoSync();
+          markDirty();
+          setFirebaseStatus(`Nieuwe overgang voor ${sync.klas} klaargezet vanuit de centrale klaslijst: ${sync.added} leerlingen, inclusief de bestaande GOK-aanduidingen. Controleer de lijst en klik daarna bewust op Opslaan.`);
+          return;
+        }
+      }
       setFirebaseStatus(window.firebaseOvergang.opslagBlokkade());
       return;
     }
