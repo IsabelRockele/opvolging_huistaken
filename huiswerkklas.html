@@ -276,7 +276,10 @@ function localRows(){
   allClasses.forEach(klas=>(classStudents[klas]||[]).forEach(s=>{
     const key=studentKey(klas,s), existing=hw.enrolled[key]||{};
     if(s.homeworkClass || existing.active || (Array.isArray(s.homeworkClassHistory)&&s.homeworkClassHistory.length)){
-      rows.push({key,klas,name:name(s),local:ownClasses.includes(klas),active:true,free:!!(s.homeworkClassFree||existing.free),days:s.homeworkClassDays||existing.days||{},dayUncertain:!!(s.homeworkClassDayUncertain||existing.dayUncertain),mayGoHomeAlone:!!(s.magAlleenNaarHuis||existing.mayGoHomeAlone),start:s.homeworkClassStart||existing.start||"",end:s.homeworkClassEnd||existing.end||"",history:Array.isArray(s.homeworkClassHistory)?s.homeworkClassHistory:(existing.history||[])});
+      const days=s.homeworkClassDays||existing.days||{};
+      const storedDayUncertain=Object.prototype.hasOwnProperty.call(s,"homeworkClassDayUncertain")?!!s.homeworkClassDayUncertain:!!existing.dayUncertain;
+      const dayUncertain=storedDayUncertain&&!!days.dinsdag&&!!days.donderdag;
+      rows.push({key,klas,name:name(s),local:ownClasses.includes(klas),active:true,free:!!(s.homeworkClassFree||existing.free),days,dayUncertain,mayGoHomeAlone:!!(s.magAlleenNaarHuis||existing.mayGoHomeAlone),start:s.homeworkClassStart||existing.start||"",end:s.homeworkClassEnd||existing.end||"",history:Array.isArray(s.homeworkClassHistory)?s.homeworkClassHistory:(existing.history||[])});
     }
   }));
   Object.entries(hw.enrolled||{}).forEach(([key,v])=>{

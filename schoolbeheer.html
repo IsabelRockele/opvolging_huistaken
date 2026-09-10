@@ -2785,6 +2785,7 @@
       const s=data.leerlingen.find(x=>x.id===id);if(!s)return;
       const wasActief=!!s.homeworkClass;
       s.homeworkClassDays||={dinsdag:false,donderdag:false};s.homeworkClassDays[dag]=checked;
+      s.homeworkClassDayUncertain=false;
       s.homeworkClass=!!(s.homeworkClassDays.dinsdag||s.homeworkClassDays.donderdag);
       if(s.homeworkClass&&!wasActief&&!s.homeworkClassStart)s.homeworkClassStart=isoDatum(new Date());
       const hoofd=el?.closest(".homework-cell")?.querySelector("[data-homework-main]");if(hoofd)hoofd.checked=s.homeworkClass;
