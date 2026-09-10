@@ -138,10 +138,10 @@
   <section class="panel mobile-today" id="mobileTodayPanel">
     <div class="bar"><h2 style="margin:0">Huiswerkklas vandaag</h2></div>
     <div class="mobile-account"><span id="mobileAccount">Account laden…</span><button class="white" id="mobileLogoutBtn" type="button">Ander account / uitloggen</button></div>
-    <label>Datum<select id="mobileDate"></select></label>
-    <details class="mobile-help" id="mobileDateTools"><summary>Datum toevoegen of dag annuleren</summary><label>Nieuwe datum<input id="mobileNewDate" type="date"></label><div class="actions" style="margin:10px 0"><button class="white" id="mobileAddDateBtn">Datum toevoegen</button><button class="white" id="mobileCancelDateBtn" style="display:none">Deze dag gaat niet door</button></div></details>
+    <label>📅 Kies de datum<input id="mobileDate" type="date"></label>
+    <details class="mobile-help" id="mobileDateTools"><summary>Deze dag annuleren</summary><div class="actions" style="margin:10px 0"><button class="white" id="mobileCancelDateBtn" style="display:none">Deze dag gaat niet door</button></div></details>
     <div id="mobileTodayBody"></div>
-    <details class="mobile-help"><summary>Hoe werkt dit?</summary><p class="muted">Controleer de datum, vink de begeleiders en aanwezige kinderen aan en tik daarna op bewaren. Een verwerkte dag kan alleen door het secretariaat worden aangepast.</p></details>
+    <details class="mobile-help"><summary>Hoe werkt dit?</summary><p class="muted">Tik op de kalender en kies de datum. Vink daarna de begeleiders en aanwezige kinderen aan en tik op bewaren. Een verwerkte dag kan alleen door het secretariaat worden aangepast.</p></details>
     <button class="secondary mobile-save" id="mobileSaveBtn">✓ Aanwezigheden en begeleiders bewaren</button>
   </section>
   <section class="panel desktop-overview" id="planningPanel">
@@ -451,19 +451,19 @@ function mobileDagSleutel(d){const weekdag=new Date(`${d}T12:00:00`).getDay();re
 function updateMobileSaveButton(){const knop=$("mobileSaveBtn");if(knop)knop.textContent=mobileHasUnsavedChanges?"✓ Wijzigingen bewaren":"✓ Alles is bewaard"}
 function markMobileDirty(){mobileHasUnsavedChanges=true;updateMobileSaveButton()}
 function renderMobileToday(){
-  const dates=[...(hw.dates||[])].sort(),keuze=$("mobileDate"),body=$("mobileTodayBody"),nieuwDatum=$("mobileNewDate"),annuleerKnop=$("mobileCancelDateBtn");
-  if(nieuwDatum&&!nieuwDatum.value)nieuwDatum.value=todayIso();
+  const dates=[...(hw.dates||[])].sort(),keuze=$("mobileDate"),body=$("mobileTodayBody"),annuleerKnop=$("mobileCancelDateBtn");
   if(!magAanwezighedenInvullen()){
-    keuze.innerHTML='<option>Geen toegang</option>';keuze.disabled=true;
+    keuze.value="";keuze.disabled=true;
     body.innerHTML='<div class="notice"><strong>Alleen aangeduide begeleiders kunnen de huiswerkklas invullen.</strong><p class="muted">Vraag secretariaat of de beheerder om je bij Begeleiders aan te vinken wanneer je de huiswerkklas begeleidt.</p></div>';
     $("mobileSaveBtn").disabled=true;$("mobileDateTools").style.display="none";return;
   }
   $("mobileDateTools").style.display="block";
-  if(!dates.length){keuze.innerHTML='<option>Geen datum</option>';keuze.disabled=true;annuleerKnop.style.display="none";body.innerHTML='<div class="empty">Er is nog geen huiswerkklasdatum toegevoegd. Open hierboven Datum toevoegen of dag annuleren.</div>';$("mobileSaveBtn").disabled=true;return}
+  keuze.disabled=false;
+  keuze.onchange=()=>openMobileDate(keuze.value);
+  if(!dates.length){mobileSelectedDate="";keuze.value=todayIso();annuleerKnop.style.display="none";body.innerHTML='<div class="empty">Tik op de kalender en kies de dinsdag of donderdag die je wilt invullen.</div>';$("mobileSaveBtn").disabled=true;return}
   keuze.disabled=false;$("mobileSaveBtn").disabled=false;
   if(!dates.includes(mobileSelectedDate))mobileSelectedDate=dates.includes(todayIso())?todayIso():(dates.filter(d=>d<=todayIso()).at(-1)||dates[0]);
-  keuze.innerHTML=dates.map(d=>`<option value="${esc(d)}" ${d===mobileSelectedDate?"selected":""}>${esc(formatSupervisorDate(d))}${isCancelledDate(d)?" - gaat niet door":""}</option>`).join("");
-  keuze.onchange=()=>{mobileSelectedDate=keuze.value;mobileHasUnsavedChanges=false;renderMobileToday()};
+  keuze.value=mobileSelectedDate;
   annuleerKnop.style.display="inline-block";annuleerKnop.textContent=isCancelledDate(mobileSelectedDate)?"Dag opnieuw activeren":"Deze dag gaat niet door";
   if(isCancelledDate(mobileSelectedDate)){body.innerHTML=`<div class="notice"><strong>Huiswerkklas gaat niet door op ${esc(formatSupervisorDate(mobileSelectedDate))}.</strong></div>`;$("mobileSaveBtn").disabled=true;return;}
   const dag=mobileDagSleutel(mobileSelectedDate),alle=localRows(),gepland=alle.filter(r=>dag?geplandOpDatum(r,mobileSelectedDate):planningVoorDatum(r,mobileSelectedDate).active),rows=[...new Map(gepland.map(r=>[r.key,r])).values()],locked=(!!hw.processedDates?.[mobileSelectedDate]&&!isSecretariaat())||!magAanwezighedenInvullen(),gekozen=new Set(hw.supervisors?.[mobileSelectedDate]||[]);
@@ -553,11 +553,13 @@ async function toggleCancelledDateFor(d){
   }
   render();await save();
 }
-async function addMobileDate(){
+async function openMobileDate(d){
   if(!magAanwezighedenInvullen())return;
-  const d=$("mobileNewDate").value;if(!d)return alert("Kies eerst een datum.");
-  if(!mobileDagSleutel(d))return alert("De huiswerkklas kan alleen op een dinsdag of donderdag worden toegevoegd.");
+  if(!d)return;
+  if(mobileHasUnsavedChanges){$("mobileDate").value=mobileSelectedDate;return alert("Bewaar eerst de wijzigingen van de huidige datum.")}
+  if(!mobileDagSleutel(d)){$("mobileDate").value=mobileSelectedDate||todayIso();return alert("De huiswerkklas kan alleen op een dinsdag of donderdag worden ingevuld.")}
   const doelMaand=d.slice(0,7);if(doelMaand!==month)await openMonth(doelMaand);
+  if((hw.dates||[]).includes(d)){date=d;mobileSelectedDate=d;mobileHasUnsavedChanges=false;$("dateInput").value=d;renderMobileToday();return}
   hw.dates=[...new Set([...(hw.dates||[]),d])].sort();date=d;mobileSelectedDate=d;$("dateInput").value=d;
   render();await save();
 }
@@ -676,7 +678,6 @@ onAuthStateChanged(auth,async u=>{
   $("nextMonthBtn").onclick=()=>shiftMonth(1);
   $("currentMonthBtn").onclick=()=>openMonth(currentMonth());
   $("mobileSaveBtn").onclick=save;
-  $("mobileAddDateBtn").onclick=addMobileDate;
   $("mobileCancelDateBtn").onclick=()=>toggleCancelledDateFor(mobileSelectedDate);
   $("quickAddClass").onchange=()=>{$("quickAddSearch").value="";renderQuickAddStudents();};
   $("quickAddSearch").oninput=renderQuickAddStudents;
@@ -685,7 +686,7 @@ onAuthStateChanged(auth,async u=>{
   $("logoutBtn").onclick=()=>signOut(auth).then(()=>location.href="index.html");
   $("mobileLogoutBtn").onclick=()=>signOut(auth).then(()=>location.href="index.html?naLogin=huiswerkklas-gsm");
   try{await loadData()}catch(err){
-    console.error(err);$("status").textContent="Laden mislukt";$("mobileDate").innerHTML='<option>Niet beschikbaar</option>';$("mobileDate").disabled=true;$("mobileSaveBtn").disabled=true;
+    console.error(err);$("status").textContent="Laden mislukt";$("mobileDate").value="";$("mobileDate").disabled=true;$("mobileSaveBtn").disabled=true;
     $("mobileTodayBody").innerHTML=`<div class="notice"><strong>De huiswerkklasgegevens konden niet worden geladen.</strong><p class="muted">Controleer of bovenaan het juiste schoolmailadres staat. Tik anders op Ander account / uitloggen en meld opnieuw aan.</p><small class="muted">Fout: ${esc(err?.code||err?.message||"onbekend")}</small></div>`;
   }
 });
