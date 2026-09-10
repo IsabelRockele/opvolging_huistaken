@@ -243,6 +243,8 @@
     .kolom-keuze{display:flex;align-items:center;gap:5px;min-width:0}.kolom-keuze label{flex:1;margin:0}.kolom-alleen{padding:4px 7px!important;border-radius:8px!important;font-size:11px!important;background:#edf2f8!important;white-space:nowrap}.kolommen-snelacties{grid-column:1/-1;display:flex;align-items:center;gap:7px;flex-wrap:wrap;padding-bottom:8px;border-bottom:1px solid var(--line)}
     .klaslijst-table th:nth-child(1),.klaslijst-table td:nth-child(1){position:sticky;left:0;z-index:4;background:#fff;min-width:170px}.klaslijst-table th:nth-child(2),.klaslijst-table td:nth-child(2){position:sticky;left:170px;z-index:4;background:#fff;min-width:190px;box-shadow:6px 0 8px -8px rgba(11,35,65,.65)}.klaslijst-table th:nth-child(1),.klaslijst-table th:nth-child(2){z-index:7;background:#eef3f9}.klaslijst-table tr.colleague td:nth-child(1),.klaslijst-table tr.colleague td:nth-child(2){background:#fff5c8}
     @media(max-width:620px){.kolommen-menu{position:fixed;left:10px;right:10px;top:70px;min-width:0;max-height:calc(100vh - 90px);overflow:auto;grid-template-columns:1fr}.kolommen-snelacties{grid-column:1}.klaslijst-table th:nth-child(1),.klaslijst-table td:nth-child(1){min-width:130px}.klaslijst-table th:nth-child(2),.klaslijst-table td:nth-child(2){left:130px;min-width:150px}}
+    .class-list-mainbar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:10px}.class-list-mainbar h2{margin:0}.class-list-mainbar .actions{margin-left:auto}.class-actions-details{margin:8px 0 10px;border:1px solid var(--line);border-radius:12px;background:#f7f9fc}.class-actions-details>summary{cursor:pointer;list-style:none;padding:10px 13px;font-weight:850;display:flex;align-items:center;gap:8px}.class-actions-details>summary::-webkit-details-marker{display:none}.class-actions-details>summary::after{content:"+";margin-left:auto;font-size:20px}.class-actions-details[open]>summary::after{content:"−"}.class-actions-details .class-actions{border-top:1px solid var(--line);border-radius:0;padding:10px 12px}.compact-summary{cursor:pointer;list-style:none;display:flex;align-items:center;gap:8px;font-weight:850}.compact-summary::-webkit-details-marker{display:none}.compact-summary::after{content:"⌄";margin-left:auto}.compact-info[open] .compact-summary::after{content:"⌃"}.compact-info>div{padding-top:9px}
+    @media(max-width:620px){.class-list-mainbar{align-items:flex-start}.class-list-mainbar .actions{width:100%;margin-left:0}.class-list-mainbar .actions>*{flex:1}.class-actions-details .class-actions{display:grid;grid-template-columns:1fr}.class-actions-details .hint{display:none}}
     .mf-klas { margin-bottom: 32px; }
     .mf-klas-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:6px; }
     .mf-klas-header h3 { margin:0; font-size:1.15rem; }
@@ -2315,7 +2317,7 @@
         ${isSecretary()?`<button class="green" onclick="herstelLeerlingDatumsHuidigSchooljaar()">Datums herstellen naar ${esc(schooljaar)}</button>`:""}
       </div>`;
     }
-    function renderClassList(){ $("content").innerHTML = `<div class="panel"><div class="bar"><h2>Klaslijst <span class="muted" style="font-weight:400">${esc(activeClass)}</span></h2><button class="green no-print" onclick="downloadKlaslijstWord()">📄 Klaslijst als Word</button></div>${classListContent()}</div>`; }
+    function renderClassList(){ $("content").innerHTML = `<div class="panel">${classListContent()}</div>`; }
 
     async function klasleerkrachtNaamVoorWord(){
       try{
@@ -2349,7 +2351,10 @@
       const canManageClasses = isSecretary();
       const canImportDashboard = isSchoolBreedRole() && !isSecretary();
       const toolButtons = `
-        <div class="class-actions no-print">
+        <details class="class-actions-details no-print" ${classListMode?"open":""}>
+          <summary>Acties voor deze klas</summary><div class="class-actions">
+          <button class="tool-word" onclick="downloadKlaslijstWord()">📄 Klaslijst als Word</button>
+          ${(role==="klasleerkracht"||isSecretary())?`<button class="tool-homework" onclick="printKlasHuiswerkOverzicht()">🖨️ Huiswerkklasoverzicht</button>`:""}
           <button class="tool-paste ${classListMode==="plakken"?"active":""}" onclick="openClassListTool('plakken')" title="Een volledige namenlijst plakken">📋 Klaslijst plakken</button>
           <button class="tool-new ${classListMode==="nieuw"?"active":""}" onclick="openClassListTool('nieuw')" title="Eén nieuwe leerling toevoegen">＋ Nieuwe leerling</button>
           ${canManageClasses ? `<button class="tool-excel ${classListMode==="excel"?"active":""}" onclick="openClassListTool('excel')" title="Een Excel- of CSV-bestand verwerken">📊 Excel importeren</button>` : ""}
@@ -2357,7 +2362,7 @@
           ${canImportDashboard ? `<button class="tool-dashboard ${classListMode==="dashboard"?"active":""}" onclick="openClassListTool('dashboard')" title="Alleen ontbrekende dashboardnamen toevoegen">↻ Dashboardnamen aanvullen</button>` : ""}
           ${canManageClasses ? `<button class="tool-manage ${classListMode==="beheer"?"active":""}" onclick="openClassListTool('beheer')" title="Een klas aanmaken of verwijderen">⚙ Klassen beheren</button>` : ""}
           <span class="hint">Kies alleen wat je nu nodig hebt.</span>
-        </div>`;
+        </div></details>`;
 
       let toolPanel = "";
       if(classListMode === "plakken"){
@@ -2425,19 +2430,12 @@
         </section>`;
       }
 
-      return `<div class="bar"><p class="muted">Namen kan je bewerken bij typfouten. Uitschrijven bewaart vorige gegevens.</p>${screenTools("klaslijst")}</div>${helpPanel("klaslijst")}
+      return `<div class="class-list-mainbar"><div><h2>Klaslijst <span class="muted" style="font-weight:400">${esc(activeClass)}</span></h2><span class="muted small">${activeStudents().length} leerling(en)</span></div><div class="actions no-print">${kolommenKiezer()}${screenTools("klaslijst")}</div></div>${helpPanel("klaslijst")}
         ${legeKlasStartkaart()}
         ${toolButtons}
         ${toolPanel}
-        <div class="class-list-heading">
-          <h3>Leerlingen</h3>
-          <span class="muted small">${activeStudents().length} leerling(en)</span>
-          ${kanFotoAanpassen()?`<button class="small green no-print" onclick="bevestigFotoKlas()">📷 Hele klas bevestigen</button>`:""}
-          ${(role==="klasleerkracht"||isSecretary())?`<button class="small white no-print" onclick="printKlasHuiswerkOverzicht()">🖨️ Huiswerkklasoverzicht</button>`:""}
-          ${kolommenKiezer()}
-        </div>
         ${oudstenKlasSamenvatting()}
-        ${kanFotoAanpassen()?`<div class="notice no-print" style="margin:8px 0 12px;padding:10px 12px;background:#fff8d9;border-color:#ead17a"><strong>📷 Fototoestemming invullen</strong><p class="muted" style="margin:4px 0 0">Duid eerst alleen de kinderen aan die <strong>niet op de foto mogen</strong> of van wie het <strong>formulier ontbreekt</strong>. Klik daarna op <strong>Hele klas bevestigen</strong>; alle andere kinderen krijgen automatisch <strong>Mag wel op de foto</strong>. Klik op het gekleurde knopje in de fotokolom om een status te wijzigen.</p></div>`:""}
+        ${kanFotoAanpassen()?`<details class="notice compact-info no-print" style="margin:8px 0 10px;padding:10px 12px;background:#fff8d9;border-color:#ead17a"><summary class="compact-summary">📷 Fototoestemming</summary><div><p class="muted" style="margin:0 0 9px">Duid eerst alleen de kinderen aan die <strong>niet op de foto mogen</strong> of van wie het <strong>formulier ontbreekt</strong>. Bevestig daarna de klas; alle andere kinderen krijgen automatisch <strong>Mag wel op de foto</strong>.</p><button class="small green" onclick="bevestigFotoKlas()">Hele klas bevestigen</button></div></details>`:""}
         ${isSecretary()?`<div class="notice no-print" style="margin:8px 0 12px;padding:10px 12px;background:#eef4fa;border-color:#c3d3e3"><strong>Leerling vertrekt of is nooit gestart?</strong> Klik op de voornaam of achternaam van het kind om dit in te geven.</div>`:""}
         ${studentTable()}
         ${inactieveLeerlingenTabel()}`;
@@ -2733,7 +2731,7 @@
       const lijst=activeStudents().filter(s=>s.oudsteGezin);
       const kleuters=activeClass==="K1"?activeStudents().reduce((t,s)=>{const g=kleutergroepVoor(s);if(g==="K0")t.k0++;if(g==="K1")t.k1++;return t},{k0:0,k1:0}):null;
       const toonNamen=!isSecretary()&&!isSchoolBreedRole();
-      return `<section id="oudstenKlasSamenvatting" class="notice no-print" style="margin:0 0 12px"><div class="bar"><strong>Oudsten voor brieven: ${lijst.length}</strong>${toonNamen&&lijst.length?`<button type="button" class="white small" onclick="printKlasoudsten()">🖨️ Klasoudsten afdrukken</button>`:""}</div>${toonNamen?(lijst.length?`<p class="muted">${lijst.map(name).map(esc).join(" · ")}</p>`:`<p class="muted">Nog niemand aangeduid als oudste van het gezin op school.</p>`):""}${kleuters?`<p><strong>K0:</strong> ${kleuters.k0} (geboortejaar ${Number(schooljaar.slice(0,4))-2}) &nbsp; <strong>K1:</strong> ${kleuters.k1} (geboortejaar ${Number(schooljaar.slice(0,4))-3})</p>`:""}</section>`;
+      return `<details id="oudstenKlasSamenvatting" class="notice compact-info no-print" style="margin:0 0 10px"><summary class="compact-summary">✉️ Oudsten voor brieven (${lijst.length})</summary><div>${toonNamen?(lijst.length?`<p class="muted" style="margin:0 0 9px">${lijst.map(name).map(esc).join(" · ")}</p>`:`<p class="muted">Nog niemand aangeduid als oudste van het gezin op school.</p>`):""}${kleuters?`<p><strong>K0:</strong> ${kleuters.k0} (geboortejaar ${Number(schooljaar.slice(0,4))-2}) &nbsp; <strong>K1:</strong> ${kleuters.k1} (geboortejaar ${Number(schooljaar.slice(0,4))-3})</p>`:""}${toonNamen&&lijst.length?`<button type="button" class="white small" onclick="printKlasoudsten()">🖨️ Klasoudsten afdrukken</button>`:""}</div></details>`;
     }
     window.printKlasoudsten=()=>{
       const lijst=activeStudents().filter(s=>s.oudsteGezin);
