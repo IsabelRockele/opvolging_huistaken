@@ -2421,10 +2421,11 @@
         <div class="class-list-heading">
           <h3>Leerlingen</h3>
           <span class="muted small">${activeStudents().length} leerling(en)</span>
-          ${isSecretary()?`<button class="small green no-print" onclick="bevestigFotoKlas()">📷 Hele klas bevestigen</button>`:""}
+          ${kanFotoAanpassen()?`<button class="small green no-print" onclick="bevestigFotoKlas()">📷 Hele klas bevestigen</button>`:""}
           ${kolommenKiezer()}
         </div>
         ${oudstenKlasSamenvatting()}
+        ${kanFotoAanpassen()?`<div class="notice no-print" style="margin:8px 0 12px;padding:10px 12px;background:#fff8d9;border-color:#ead17a"><strong>📷 Fototoestemming invullen</strong><p class="muted" style="margin:4px 0 0">Duid eerst alleen de kinderen aan die <strong>niet op de foto mogen</strong> of van wie het <strong>formulier ontbreekt</strong>. Klik daarna op <strong>Hele klas bevestigen</strong>; alle andere kinderen krijgen automatisch <strong>Mag wel op de foto</strong>. Klik op het gekleurde knopje in de fotokolom om een status te wijzigen.</p></div>`:""}
         ${isSecretary()?`<div class="notice no-print" style="margin:8px 0 12px;padding:10px 12px;background:#eef4fa;border-color:#c3d3e3"><strong>Leerling vertrekt of is nooit gestart?</strong> Klik op de voornaam of achternaam van het kind om dit in te geven.</div>`:""}
         ${studentTable()}
         ${inactieveLeerlingenTabel()}`;
@@ -2895,7 +2896,7 @@
       }catch(err){console.error(err);alert("De fototoestemming kon niet worden bewaard: "+err.message);}
     };
     window.bevestigFotoKlas=async()=>{
-      if(!isSecretary())return;
+      if(!kanFotoAanpassen())return;
       const leerlingen=activeStudents();if(!leerlingen.length)return;
       if(!confirm(`Fototoestemming voor ${activeClass} bevestigen?\n\nAlle ${leerlingen.length} leerlingen gelden daarna als gecontroleerd. Wie als “mag niet” of “formulier ontbreekt” is aangeduid, behoudt die status. De rest mag op de foto.`))return;
       try{
