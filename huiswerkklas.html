@@ -223,19 +223,22 @@ async function loadClasses(){
   allClasses=[...new Set([...DEFAULT_CLASSES,...snap.docs.map(d=>d.id)])].sort((a,b)=>a.localeCompare(b,"nl",{numeric:true}));
 }
 async function loadSupervisorConfig(){
-  const [configSnap,koppelingenSnap]=await Promise.all([getDoc(supervisorConfigRef()),getDocs(collection(db,"klasleerkrachten"))]);
+  const configSnap=await getDoc(supervisorConfigRef());
   const kandidaten=new Map();
-  koppelingenSnap.forEach(d=>{
-    const item=d.data()||{};if(String(item.schooljaar||schooljaar)!==schooljaar)return;
-    const names=Array.isArray(item.leerkracht_namen)?item.leerkracht_namen:[];
-    const emails=Array.isArray(item.leerkracht_emails)?item.leerkracht_emails:[];
-    const uids=Array.isArray(item.leerkracht_uids)?item.leerkracht_uids:[];
-    const lengte=Math.max(names.length,emails.length,uids.length);
-    for(let i=0;i<lengte;i++){
-      const entry={name:String(names[i]||emails[i]||"Leerkracht").trim(),email:String(emails[i]||"").trim().toLowerCase(),uid:String(uids[i]||"").trim()};
-      const key=supervisorKey(entry);if(key&&!kandidaten.has(key))kandidaten.set(key,entry);
-    }
-  });
+  if(isSecretariaat()){
+    const koppelingenSnap=await getDocs(collection(db,"klasleerkrachten"));
+    koppelingenSnap.forEach(d=>{
+      const item=d.data()||{};if(String(item.schooljaar||schooljaar)!==schooljaar)return;
+      const names=Array.isArray(item.leerkracht_namen)?item.leerkracht_namen:[];
+      const emails=Array.isArray(item.leerkracht_emails)?item.leerkracht_emails:[];
+      const uids=Array.isArray(item.leerkracht_uids)?item.leerkracht_uids:[];
+      const lengte=Math.max(names.length,emails.length,uids.length);
+      for(let i=0;i<lengte;i++){
+        const entry={name:String(names[i]||emails[i]||"Leerkracht").trim(),email:String(emails[i]||"").trim().toLowerCase(),uid:String(uids[i]||"").trim()};
+        const key=supervisorKey(entry);if(key&&!kandidaten.has(key))kandidaten.set(key,entry);
+      }
+    });
+  }
   supervisorCandidates=[...kandidaten.values()].sort((a,b)=>a.name.localeCompare(b.name,"nl"));
   const opgeslagen=configSnap.exists()&&Array.isArray(configSnap.data().begeleiders)?configSnap.data().begeleiders:[];
   supervisorConfigIsExplicit=opgeslagen.length>0;
