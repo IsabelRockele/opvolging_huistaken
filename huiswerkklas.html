@@ -102,7 +102,6 @@
         <button class="white teacher-extra" id="pdfBtn">📄 Klasoverzicht downloaden (A5)</button>
         <a class="button white" id="qrSheetBtn" href="output/pdf/qr-huiswerkklas.pdf" target="_blank" rel="noopener" style="display:none">📱 QR-blad openen / afdrukken</a>
       </div>
-      <div class="bar" id="extraDesktopTools" style="margin-top:12px"><button class="white" id="testPreviewBtn" style="display:none">🧪 Testvoorbeeld tonen</button></div>
     </div>
   </section>
   <section class="notice werking-notice" id="workingNotice">
@@ -110,7 +109,7 @@
     <span class="muted" id="workHelp">Klasleerkrachten duiden in Klaslijsten bij hun eigen klas aan welke kinderen naar de huiswerkklas gaan. Ontbreekt een leerling? Voeg die eerst toe via <a href="schoolbeheer.html" target="_blank" rel="noopener">Klaslijsten → Nieuwe leerling</a>. Hier verschijnen alleen kinderen die daar voor de huiswerkklas zijn aangeduid.</span>
   </section>
   <section class="panel mobile-today" id="mobileTodayPanel">
-    <div class="bar"><h2 style="margin:0">Huiswerkklas vandaag</h2><button class="white right" id="mobileTestBtn" style="display:none">🧪 Testmodus openen</button></div>
+    <div class="bar"><h2 style="margin:0">Huiswerkklas vandaag</h2></div>
     <label>Datum<select id="mobileDate"></select></label>
     <details class="mobile-help" id="mobileDateTools"><summary>Datum toevoegen of dag annuleren</summary><label>Nieuwe datum<input id="mobileNewDate" type="date"></label><div class="actions" style="margin:10px 0"><button class="white" id="mobileAddDateBtn">Datum toevoegen</button><button class="white" id="mobileCancelDateBtn" style="display:none">Deze dag gaat niet door</button></div></details>
     <div id="mobileTodayBody"></div>
@@ -322,11 +321,6 @@ function renderRoleTools(){
   const toegelatenKlassen=(isSchoolBreed()||secretary)?allClasses:ownClasses;
   $("pdfScope").innerHTML=`${(isSchoolBreed()||secretary)?'<option value="all">Alle klassen</option>':''}${toegelatenKlassen.map(k=>`<option value="${esc(k)}">Klas ${esc(k)}</option>`).join("")}`;
   updatePdfButton();
-  $("testPreviewBtn").style.display=realRole==="beheerder"?"inline-block":"none";
-  $("extraDesktopTools").style.display=realRole==="beheerder"?"flex":"none";
-  $("testPreviewBtn").textContent=demoMode?"🧪 Testmodus sluiten":"🧪 Testmodus openen";
-  $("mobileTestBtn").style.display=realRole==="beheerder"?"inline-block":"none";
-  $("mobileTestBtn").textContent=demoMode?"🧪 Test sluiten":"🧪 Test openen";
   $("qrSheetBtn").style.display=(realRole==="beheerder"||secretary)?"inline-flex":"none";
 }
 function updatePdfButton(){
@@ -560,7 +554,7 @@ onAuthStateChanged(auth,async u=>{
   if(!u){location.href="index.html?naLogin=huiswerkklas";return;}
   user=u; $("schooljaarInput").value=schooljaar; $("monthInput").value=month; $("dateInput").value=date;
   await loadRole();
-  demoMode=realRole==="beheerder"&&localStorage.getItem(testModeKey())==="1";
+  demoMode=false;
   $("saveBtn").onclick=save;
   $("addDateBtn").onclick=addDate;
   $("cancelDateBtn").onclick=toggleCancelledDate;
@@ -570,8 +564,6 @@ onAuthStateChanged(auth,async u=>{
   $("manageSupervisorsBtn").onclick=()=>{supervisorManagerOpen=!supervisorManagerOpen;renderSupervisors();};
   $("closeSupervisorManagerBtn").onclick=()=>{supervisorManagerOpen=false;renderSupervisors();};
   $("saveSupervisorConfigBtn").onclick=()=>saveSupervisorConfig().catch(err=>{console.error(err);alert("Begeleiders bewaren lukte niet: "+err.message);});
-  $("testPreviewBtn").onclick=toggleTestPreview;
-  $("mobileTestBtn").onclick=toggleTestPreview;
   $("openAttendanceBtn").onclick=()=>{if(!magAanwezighedenInvullen())return;desktopEntryOpen=true;render();window.scrollTo({top:0,left:0,behavior:"smooth"});};
   $("closeAttendanceBtn").onclick=()=>{desktopEntryOpen=false;render();window.scrollTo({top:0,left:0,behavior:"smooth"});};
   $("togglePlanningBtn").onclick=()=>{secretaryPlanningOpen=!secretaryPlanningOpen;render();};
