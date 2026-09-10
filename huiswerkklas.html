@@ -136,7 +136,7 @@
     <button class="secondary mobile-save" id="mobileSaveBtn">✓ Aanwezigheden en begeleiders bewaren</button>
   </section>
   <section class="panel desktop-overview" id="planningPanel">
-    <div class="bar"><div><h2 style="margin:0 0 4px">Algemeen overzicht inschrijvingen</h2><p class="muted" id="planningIntro" style="margin:0">Wie op dinsdag of donderdag komt en wie gratis of betalend deelneemt.</p></div><button class="white right" id="togglePlanningBtn" style="display:none">Overzicht openen</button><button class="secondary" id="openAttendanceBtn" style="display:none">Lijst invullen</button></div>
+    <div class="bar"><div><h2 style="margin:0 0 4px">Algemeen overzicht inschrijvingen</h2><p class="muted" id="planningIntro" style="margin:0">Wie op dinsdag of donderdag komt en wie gratis of betalend deelneemt.</p></div><button class="white right" id="aloneHomePdfBtn">🖨️ Lijst alleen naar huis</button><button class="white" id="togglePlanningBtn" style="display:none">Overzicht openen</button><button class="secondary" id="openAttendanceBtn" style="display:none">Lijst invullen</button></div>
     <label id="paidOnlyLabel" style="display:flex;align-items:center;gap:8px;margin:12px 0 0;font-size:14px"><input id="paidOnlyCheckbox" type="checkbox" style="width:20px;flex:0 0 auto"> Alleen betalende leerlingen tonen</label>
     <div id="planningOverview"></div>
   </section>
@@ -540,6 +540,23 @@ function downloadSupervisorsPdf(){
   y+=3;pdf.setFont("helvetica","bold");pdf.setFontSize(13);pdf.text("Maandtotaal per leerkracht",m,y);y+=7;supervisorNames().forEach(n=>{const totaal=dates.filter(d=>(hw.supervisors?.[d]||[]).includes(n)).length;pdf.setFont("helvetica","normal");pdf.setFontSize(10);pdf.text(n,m+3,y);pdf.setFont("helvetica","bold");pdf.text(`${totaal} keer`,190,y,{align:"right"});pdf.setDrawColor(225,220,212);pdf.line(m+2,y+2,195,y+2);y+=7;});
   pdf.setTextColor(117,104,85);pdf.setFont("helvetica","normal");pdf.setFontSize(8);pdf.text("GO! Basisschool De Linde",105,290,{align:"center"});pdf.save(`begeleiders_huiswerkklas_${month}.pdf`);
 }
+function downloadAloneHomePdf(){
+  if(!window.jspdf?.jsPDF)return alert("De PDF-module is nog niet geladen. Probeer over enkele seconden opnieuw.");
+  const rows=localRows().filter(r=>r.mayGoHomeAlone).sort((a,b)=>(a.klas||"").localeCompare(b.klas||"","nl",{numeric:true})||pdfLeerlingNaam(a.name).localeCompare(pdfLeerlingNaam(b.name),"nl"));
+  if(!rows.length)return alert("Er zijn momenteel geen kinderen met toestemming om alleen naar huis te gaan.");
+  const {jsPDF}=window.jspdf,pdf=new jsPDF({orientation:"portrait",unit:"mm",format:"a4"}),m=15,pageW=210,pageH=297,rowH=9,cols=[m,m+25,m+126,pageW-m],vandaag=new Date().toLocaleDateString("nl-BE");
+  function kop(vervolg=false){
+    pdf.setFillColor(107,93,82);pdf.rect(0,0,pageW,25,"F");pdf.setTextColor(255,255,255);pdf.setFont("helvetica","bold");pdf.setFontSize(17);pdf.text(`Alleen naar huis${vervolg?" - vervolg":""}`,m,11);pdf.setFont("helvetica","normal");pdf.setFontSize(9);pdf.text(`Huiswerkklas · schooljaar ${schooljaar} · afgedrukt ${vandaag}`,m,18);
+    pdf.setFillColor(238,243,249);pdf.rect(m,31,pageW-(m*2),9,"F");pdf.setTextColor(51,75,112);pdf.setFont("helvetica","bold");pdf.setFontSize(10);pdf.text("Klas",cols[0]+2,37);pdf.text("Leerling",cols[1]+2,37);pdf.text("Huiswerkklasdag",cols[2]+2,37);pdf.setDrawColor(190,199,210);[...cols].forEach(x=>pdf.line(x,31,x,40));pdf.line(m,40,pageW-m,40);return 40;
+  }
+  let y=kop();rows.forEach(r=>{
+    if(y+rowH>pageH-15){pdf.addPage();y=kop(true);}
+    const dagen=r.dayUncertain?"nog na te vragen":[r.days?.dinsdag?"dinsdag":"",r.days?.donderdag?"donderdag":""].filter(Boolean).join(" en ");
+    pdf.setTextColor(44,31,14);pdf.setFont("helvetica","normal");pdf.setFontSize(10);pdf.text(String(r.klas||""),cols[0]+2,y+6);pdf.text(pdfLeerlingNaam(r.name),cols[1]+2,y+6,{maxWidth:97});pdf.text(dagen||"—",cols[2]+2,y+6,{maxWidth:48});pdf.setDrawColor(215,220,226);[...cols].forEach(x=>pdf.line(x,y,x,y+rowH));pdf.line(m,y+rowH,pageW-m,y+rowH);y+=rowH;
+  });
+  const pages=pdf.getNumberOfPages();for(let i=1;i<=pages;i++){pdf.setPage(i);pdf.setTextColor(117,104,85);pdf.setFont("helvetica","normal");pdf.setFontSize(8);pdf.text(`GO! Basisschool De Linde · pagina ${i} van ${pages}`,pageW/2,pageH-7,{align:"center"});}
+  pdf.save(`huiswerkklas_alleen_naar_huis_${schooljaar}.pdf`);
+}
 function downloadParticipantsPdf(){
   if(!window.jspdf?.jsPDF)return alert("De PDF-module is nog niet geladen. Probeer over enkele seconden opnieuw.");
   const scope=$("pdfScope")?.value||"all",rows=localRows().filter(r=>scope==="all"||r.klas===scope),{jsPDF}=window.jspdf,pdf=new jsPDF({orientation:"portrait",unit:"mm",format:scope==="all"?"a4":"a5"});
@@ -610,6 +627,7 @@ onAuthStateChanged(auth,async u=>{
   $("pdfBtn").onclick=downloadParticipantsPdf;
   $("pdfScope").onchange=updatePdfButton;
   $("supervisorPdfBtn").onclick=downloadSupervisorsPdf;
+  $("aloneHomePdfBtn").onclick=downloadAloneHomePdf;
   $("manageSupervisorsBtn").onclick=()=>{supervisorManagerOpen=!supervisorManagerOpen;renderSupervisors();};
   $("closeSupervisorManagerBtn").onclick=()=>{supervisorManagerOpen=false;renderSupervisors();};
   $("saveSupervisorConfigBtn").onclick=()=>saveSupervisorConfig().catch(err=>{console.error(err);alert("Begeleiders bewaren lukte niet: "+err.message);});
