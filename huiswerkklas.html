@@ -242,7 +242,12 @@ async function loadSupervisorConfig(){
   supervisorCandidates=[...kandidaten.values()].sort((a,b)=>a.name.localeCompare(b.name,"nl"));
   const opgeslagen=configSnap.exists()&&Array.isArray(configSnap.data().begeleiders)?configSnap.data().begeleiders:[];
   supervisorConfigIsExplicit=opgeslagen.length>0;
-  if(opgeslagen.length) supervisorConfig=opgeslagen.map(x=>typeof x==="string"?{name:x,email:"",uid:""}:x).filter(x=>x&&x.name);
+  if(opgeslagen.length) supervisorConfig=opgeslagen.map(x=>{
+    const oud=typeof x==="string"?{name:x,email:"",uid:""}:x;
+    if(!oud?.name)return null;
+    const gekoppeld=supervisorCandidates.find(k=>k.name.toLowerCase()===String(oud.name).toLowerCase());
+    return {...oud,email:String(oud.email||gekoppeld?.email||"").trim().toLowerCase(),uid:String(oud.uid||gekoppeld?.uid||"").trim()};
+  }).filter(Boolean);
   else supervisorConfig=DEFAULT_SUPERVISORS.map(name=>supervisorCandidates.find(x=>x.name.toLowerCase()===name.toLowerCase())||{name,email:"",uid:""});
 }
 async function loadData(){
@@ -422,6 +427,8 @@ async function saveSupervisorConfig(){
   const kandidaten=$("supervisorCandidateList")._kandidaten||[];
   const gekozen=[...document.querySelectorAll("[data-supervisor-candidate]:checked")].map(ch=>kandidaten[Number(ch.dataset.supervisorCandidate)]).filter(Boolean);
   if(!gekozen.length)return alert("Vink minstens één begeleider aan.");
+  const zonderAccount=gekozen.filter(x=>!x.email&&!x.uid);
+  if(zonderAccount.length)return alert(`Deze begeleider${zonderAccount.length===1?" heeft":"s hebben"} nog geen gekoppeld schoolmailadres: ${zonderAccount.map(x=>x.name).join(", ")}. Vul dit eerst aan bij Klasleerkrachten.`);
   await setDoc(supervisorConfigRef(),{
     schooljaar,
     begeleiders:gekozen,
