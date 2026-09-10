@@ -189,6 +189,7 @@ function isGekoppeldAanGroep(groep) {
         && (
           isSecretariaat()
           || isSchoolBreed()
+          || isHuiswerkklasBegeleider(schooljaar)
           || (
             exists(/databases/$(database)/documents/klasleerkrachten/$(schooljaar + "_" + klasId))
             && (

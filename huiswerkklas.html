@@ -261,7 +261,7 @@ function localRows(){
   });
   return rows.sort((a,b)=>(a.klas||"").localeCompare(b.klas||"","nl",{numeric:true})||(a.name||"").localeCompare(b.name||"","nl"));
 }
-function quickAddClasses(){return (isSchoolBreed()||isSecretariaat())?allClasses:ownClasses;}
+function quickAddClasses(){return (isSchoolBreed()||isSecretariaat()||isConfiguredSupervisor())?allClasses:ownClasses;}
 function quickAddCandidates(){
   const klas=$("quickAddClass")?.value||"", zoek=($("quickAddSearch")?.value||"").trim().toLocaleLowerCase("nl");
   return (classStudents[klas]||[]).filter(s=>!s.homeworkClass&&!hw.enrolled?.[studentKey(klas,s)]?.active).filter(s=>!zoek||name(s).toLocaleLowerCase("nl").includes(zoek));
@@ -302,7 +302,7 @@ function gekozenWerkdatum(){const dates=[...(hw.dates||[])].sort();if(!dates.len
 function zichtbareWerkdatums(){const alle=[...(hw.dates||[])].sort();if(isSecretariaat()&&!secretaryDayView)return alle;const gekozen=gekozenWerkdatum();return gekozen?[gekozen]:[];}
 function renderPlanningOverview(){
   let rows=localRows();
-  if(role==="klasleerkracht"&&!demoMode)rows=rows.filter(r=>ownClasses.includes(r.klas));
+  if(role==="klasleerkracht"&&!demoMode&&!isConfiguredSupervisor())rows=rows.filter(r=>ownClasses.includes(r.klas));
   const nogNavragen=rows.filter(r=>r.dayUncertain),perKlas=new Map();
   nogNavragen.forEach(r=>{if(!perKlas.has(r.klas))perKlas.set(r.klas,[]);perKlas.get(r.klas).push(r)});
   const opvolgHtml=nogNavragen.length?`<details class="notice" style="margin-top:14px;background:#fff6cf;border-color:#e5bd3d"><summary style="cursor:pointer;font-weight:850">⚠️ Dag nog na te vragen (${nogNavragen.length})</summary><div style="padding-top:10px"><p class="muted" style="margin:0 0 10px">Deze kinderen staan voorlopig op dinsdag én donderdag. Spreek de ouders aan en pas daarna de juiste dag aan in Klaslijsten.</p>${[...perKlas.entries()].map(([klas,lijst])=>`<div class="bar" style="margin-top:8px;gap:10px"><span><strong>Klas ${esc(klas)}:</strong> ${lijst.map(r=>esc(r.name)).join(" · ")}</span><button type="button" class="white small" onclick="printDagNavragenKlas('${esc(klas)}')">🖨️ Afdrukken</button></div>`).join("")}</div></details>`:"";
@@ -364,7 +364,9 @@ function renderRoleTools(){
   $("cancelDateBtn").textContent=isCancelledDate(gekozenDatum)?"Dag opnieuw activeren":"Deze dag gaat niet door";
   $("workHelp").innerHTML=secretary
     ? "Secretariaat ziet hier de aanwezigheden voor de facturatie. Verwerk tot een datum of verwerk de hele maand; die dagen worden dan geblokkeerd voor klasleerkrachten. Secretariaat kan fouten wel nog aanpassen."
-    : 'Klasleerkrachten duiden in Klaslijsten bij hun eigen klas aan welke kinderen naar de huiswerkklas gaan. Ontbreekt een leerling? Voeg die eerst toe via <a href="schoolbeheer.html" target="_blank" rel="noopener">Klaslijsten → Nieuwe leerling</a>. Hier verschijnen alleen kinderen die daar voor de huiswerkklas zijn aangeduid.';
+    : isConfiguredSupervisor()
+      ? 'Als aangeduide begeleider zie je hier alle klassen. Je kunt aanwezigheden invullen en een vergeten inschrijving rechtstreeks toevoegen.'
+      : 'Klasleerkrachten duiden in Klaslijsten bij hun eigen klas aan welke kinderen naar de huiswerkklas gaan. Ontbreekt een leerling? Voeg die eerst toe via <a href="schoolbeheer.html" target="_blank" rel="noopener">Klaslijsten → Nieuwe leerling</a>. Hier verschijnen alleen kinderen die daar voor de huiswerkklas zijn aangeduid.';
   const toegelatenKlassen=(isSchoolBreed()||secretary)?allClasses:ownClasses;
   $("pdfScope").innerHTML=`${(isSchoolBreed()||secretary)?'<option value="all">Alle klassen</option>':''}${toegelatenKlassen.map(k=>`<option value="${esc(k)}">Klas ${esc(k)}</option>`).join("")}`;
   updatePdfButton();

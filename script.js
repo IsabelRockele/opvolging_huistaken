@@ -42,7 +42,7 @@ onAuthStateChanged(auth, (user) => {
 
   if (isIndex) {
     if (new URLSearchParams(location.search).get('naLogin') === 'huiswerkklas') {
-      location.href = 'huiswerkklas.html?v=20260910-kind-toevoegen-1';
+      location.href = 'huiswerkklas.html?v=20260910-begeleider-alle-klassen-1';
       return;
     }
     const kaart = document.getElementById('ingelogd-kaart');
