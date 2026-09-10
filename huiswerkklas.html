@@ -365,7 +365,7 @@ function renderRoleTools(){
   $("openDayBtn").style.display=secretary?"inline-block":"none";
   $("monthOverviewBtn").style.display=(secretary&&secretaryDayView)?"inline-block":"none";
   document.querySelectorAll(".teacher-extra").forEach(el=>el.style.display=secretary?"none":"");
-  const magLaptopInvullen=["klasleerkracht","zorgleerkracht","zorgcoordinator"].includes(role)&&magAanwezighedenInvullen();
+  const magLaptopInvullen=!secretary&&magAanwezighedenInvullen();
   $("togglePlanningBtn").style.display=secretary?"inline-block":"none";
   $("togglePlanningBtn").textContent=secretaryPlanningOpen?"Overzicht sluiten":"Overzicht openen";
   $("planningOverview").style.display=(!secretary||secretaryPlanningOpen)?"block":"none";
