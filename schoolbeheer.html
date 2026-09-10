@@ -1403,10 +1403,8 @@
         setStatus("Bewaard", true);
         setActiveNav(tab==="leerlingenstart"?"leerlingen":tab);
         if(Date.now()>=lokaleBewaringTot||activiteitVerwerkingGewijzigd||aankoopVerwerkingGewijzigd){
-          const positie=window.scrollY;
-          render();
+          renderMetScrollbehoud();
           renderKlasPills();
-          requestAnimationFrame(()=>window.scrollTo({top:positie,left:0,behavior:"auto"}));
         }
         verbergSchermLaden();
       }, err => {
@@ -2833,7 +2831,7 @@
       s.homeworkClassHistory.push({from,action,days,free,changedAt:new Date().toISOString(),changedBy:user?.email||user?.uid||""});s.homeworkClassHistory.sort((a,b)=>String(a.from||"").localeCompare(String(b.from||"")));
       if(action==="stop"){s.homeworkClass=false;s.homeworkClassEnd=new Date(new Date(`${from}T12:00:00`).getTime()-86400000).toISOString().slice(0,10);}
       else{s.homeworkClass=true;s.homeworkClassDays=days;s.homeworkClassFree=free;s.homeworkClassEnd="";if(!s.homeworkClassStart||from<s.homeworkClassStart)s.homeworkClassStart=from;}
-      markDirty();document.getElementById("huiswerkWijzigOverlay")?.remove();render();
+      markDirty();document.getElementById("huiswerkWijzigOverlay")?.remove();renderMetScrollbehoud();
     };
     window.leaveStudent = id => {
       const s=data.leerlingen.find(x=>x.id===id);if(!s)return;

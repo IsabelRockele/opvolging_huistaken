@@ -125,7 +125,7 @@ function toonRefterHerinneringOpStart(rol, klasDocs) {
   const blok = document.createElement('a');
   blok.id = 'portaalRefterHerinnering';
   blok.className = 'portaal-refter-herinnering';
-  blok.href = 'schoolbeheer.html?v=20260910-huiswerk-2&open=refter';
+  blok.href = 'schoolbeheer.html?v=20260910-huiswerk-3&open=refter';
   blok.target = '_blank';
   blok.rel = 'noopener';
   blok.innerHTML = `<span><strong>⚠ Refterlijst nakijken tegen woensdag ${format(deadline)}</strong>Controleer de voorbije schoolweek en bevestig ze daarna, ook wanneer niemand afwezig was.</span><span class="refter-herinnering-knop">Nu nakijken</span>`;
@@ -293,11 +293,11 @@ function pasKnoppenToe(huistakenKnop, overgangKnop, schoolbeheerKnop, bestelling
   if (schoolbeheerKnop) {
     schoolbeheerKnop.style.display = (isSecretariaat || isSchoolBreed || heeftKlasbeheer) ? '' : 'none';
     if (isSecretariaat) {
-      vulTegel(schoolbeheerKnop, 'schoolbeheer.html?v=20260910-huiswerk-2', '📋', 'Administratie & meldingen', 'Beheer klaslijsten, stuur meldingen, koppel leerkrachten en bereid het schooljaar voor.');
+      vulTegel(schoolbeheerKnop, 'schoolbeheer.html?v=20260910-huiswerk-3', '📋', 'Administratie & meldingen', 'Beheer klaslijsten, stuur meldingen, koppel leerkrachten en bereid het schooljaar voor.');
     } else if (isSchoolBreed) {
-      vulTegel(schoolbeheerKnop, 'schoolbeheer.html?v=20260910-huiswerk-2', '🏫', 'Klaslijsten & opvolging', 'Bekijk per klas de lijsten, meldingen, refter, activiteiten en aankopen.');
+      vulTegel(schoolbeheerKnop, 'schoolbeheer.html?v=20260910-huiswerk-3', '🏫', 'Klaslijsten & opvolging', 'Bekijk per klas de lijsten, meldingen, refter, activiteiten en aankopen.');
     } else {
-      vulTegel(schoolbeheerKnop, 'schoolbeheer.html?v=20260910-huiswerk-2', '🏫', 'Mijn klasorganisatie', 'Open je klaslijst, meldingen, refter, activiteiten en aankopen.');
+      vulTegel(schoolbeheerKnop, 'schoolbeheer.html?v=20260910-huiswerk-3', '🏫', 'Mijn klasorganisatie', 'Open je klaslijst, meldingen, refter, activiteiten en aankopen.');
     }
   }
   if (bestellingenKnop) bestellingenKnop.style.display = (isSecretariaat || heeftKlasbeheer) ? '' : 'none';
