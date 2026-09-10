@@ -41,8 +41,11 @@ onAuthStateChanged(auth, (user) => {
     location.pathname.endsWith('/opvolging_huistaken/');
 
   if (isIndex) {
-    if (new URLSearchParams(location.search).get('naLogin') === 'huiswerkklas') {
-      location.href = 'huiswerkklas.html?v=20260910-alleen-naar-huis-pdf-1';
+    const naLogin = new URLSearchParams(location.search).get('naLogin');
+    if (naLogin === 'huiswerkklas' || naLogin === 'huiswerkklas-gsm') {
+      location.href = naLogin === 'huiswerkklas-gsm'
+        ? 'huiswerkklas.html?modus=gsm'
+        : 'huiswerkklas.html?v=20260910-alleen-naar-huis-pdf-1';
       return;
     }
     const kaart = document.getElementById('ingelogd-kaart');

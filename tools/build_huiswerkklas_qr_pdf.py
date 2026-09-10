@@ -11,7 +11,7 @@ from reportlab.pdfgen import canvas
 
 ROOT = Path(__file__).resolve().parents[1]
 OUTPUT = ROOT / "output" / "pdf" / "qr-huiswerkklas.pdf"
-URL = "https://isabelrockele.github.io/opvolging_huistaken/huiswerkklas.html"
+URL = "https://isabelrockele.github.io/opvolging_huistaken/huiswerkklas.html?modus=gsm"
 
 
 def centered(c, text, y, font="Helvetica", size=11, color=HexColor("#2c1f0e")):
