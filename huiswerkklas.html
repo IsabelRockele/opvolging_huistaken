@@ -78,9 +78,11 @@
     body.qr-mobile .desktop-controls,body.qr-mobile .desktop-overview,body.qr-mobile .werking-notice,body.qr-mobile .quick-add,body.qr-mobile .list-panel,body.qr-mobile #supervisorPanel,body.qr-mobile header .bar{display:none!important}
     body.qr-mobile header{padding:10px 12px}
     body.qr-mobile .brand img{width:44px;height:44px}
+    .save-toast{position:fixed;z-index:100;left:50%;bottom:22px;transform:translateX(-50%);width:min(520px,calc(100% - 24px));padding:14px 18px;border:2px solid #58a977;border-radius:14px;background:#e6f7ec;color:#1f5f38;font-weight:900;text-align:center;box-shadow:0 10px 30px #0003}
   </style>
 </head>
 <body>
+<div class="save-toast" id="saveToast" role="status" aria-live="polite" style="display:none"></div>
 <header>
   <div class="brand"><img src="afbeeldingen/schoollogo.png" alt="logo" onerror="this.style.display='none'"><div><h1>Huiswerkklas</h1><div id="status" class="sub">Laden...</div></div></div>
   <div class="bar"><a class="button ghost" href="index.html">Keuzescherm</a><button id="logoutBtn" class="ghost">Uitloggen</button></div>
@@ -178,6 +180,8 @@ if(qrMobileMode)document.body.classList.add("qr-mobile");
 const DEFAULT_CLASSES=["K1","K2","K3","1A","2A","3A","4A","5A","6A"], COLORS=["#93c47d","#6fa8dc","#ffd966","#e6a5c8","#b4a7d6","#76a5af","#f6b26b","#8fce00","#c27ba0"];
 const DEFAULT_SUPERVISORS=["Stevens Lara","Verheyden Leen","Boeykens Steffi","De Bruyn Lotte","Vanhorenbeeck Kelly","Bierbooms Laura"];
 const $=id=>document.getElementById(id), esc=v=>String(v??"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;");
+let saveToastTimer=null;
+function toonBewaarmelding(tekst){const melding=$("saveToast");melding.textContent=tekst;melding.style.display="block";clearTimeout(saveToastTimer);saveToastTimer=setTimeout(()=>{melding.style.display="none"},5000)}
 let user=null, role="", realRole="", demoMode=false, desktopEntryOpen=false, secretaryPlanningOpen=false, secretaryMoreOpen=false, secretaryDayView=false, planningPaidOnly=false, attendancePaidOnly=false, supervisorManagerOpen=false, supervisorConfig=[], supervisorCandidates=[], supervisorConfigIsExplicit=false, schooljaar=currentSchooljaar(), month=currentMonth(), date=todayIso(), mobileSelectedDate="", ownClasses=[], allClasses=[], classStudents={}, hw={enrolled:{},attendance:{},supervisors:{}};
 async function setDoc(ref,payload,options){
   await probeerVeiligheidskopie(ref,{reden:"Huiswerkklas vóór opslag",schooljaar,klas:"schoolbreed",gebruiker:user?.email||user?.uid||""},(melding,err)=>{console.warn(melding,err);const status=document.getElementById("status");if(status)status.textContent="Let op: reservekopie mislukt";});
@@ -437,7 +441,7 @@ async function saveSupervisorConfig(){
     updatedAt:serverTimestamp(),
     updatedBy:user.email||user.uid
   },{merge:true});
-  supervisorConfig=gekozen;supervisorConfigIsExplicit=true;supervisorManagerOpen=false;render();$("status").textContent=`✓ ${gekozen.length} begeleider${gekozen.length===1?"":"s"} bewaard`;
+  supervisorConfig=gekozen;supervisorConfigIsExplicit=true;supervisorManagerOpen=false;render();const melding=`✓ ${gekozen.length} begeleider${gekozen.length===1?"":"s"} bewaard`;$("status").textContent=melding;toonBewaarmelding(melding);
 }
 function mobileDagSleutel(d){const weekdag=new Date(`${d}T12:00:00`).getDay();return weekdag===2?"dinsdag":weekdag===4?"donderdag":"";}
 function renderMobileToday(){
@@ -489,6 +493,7 @@ async function save(){
   await setDoc(monthRef(),{...hw,schooljaar,month,bewaarTot:bewaarTotVoorSchooljaar(),bewaartermijnJaren:BEWAAR_JAREN_HUISWERKKLAS,updatedAt:serverTimestamp(),updatedBy:user.email||user.uid},{merge:true});
   render();
   $("status").textContent=demoMode?"TESTMODUS · ✓ Testgegevens bewaard":"✓ Bewaard";
+  toonBewaarmelding(demoMode?"✓ Testgegevens bewaard":`✓ Aanwezigheden en begeleiders voor ${formatSupervisorDate(mobileSelectedDate||gekozenWerkdatum())} bewaard`);
   const knop=$("mobileSaveBtn"),normaal="✓ Aanwezigheden en begeleiders bewaren";knop.textContent=demoMode?"✓ Testgegevens bewaard":"✓ Bewaard";setTimeout(()=>{knop.textContent=normaal},1800);
 }
 async function saveNoRender(){
