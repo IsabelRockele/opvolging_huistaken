@@ -22,6 +22,12 @@ service cloud.firestore {
            in ['secretariaat', 'beheerder'];
     }
 
+    function isKlasleerkracht() {
+      return request.auth != null
+        && exists(/databases/$(database)/documents/schoolrollen/$(request.auth.uid))
+        && get(/databases/$(database)/documents/schoolrollen/$(request.auth.uid)).data.rol == 'klasleerkracht';
+    }
+
     function isZorgleerkracht() {
       return request.auth != null
         && exists(/databases/$(database)/documents/schoolrollen/$(request.auth.uid))
@@ -201,7 +207,7 @@ function isGekoppeldAanGroep(groep) {
 
     match /schoolbeheer/{schooljaar}/instellingen/{docId} {
       allow read: if request.auth != null;
-      allow write: if isSecretariaat();
+      allow write: if isSecretariaat() || (docId == 'fototoestemming' && isKlasleerkracht());
     }
 
     match /overgangsbesprekingen/{schooljaar}/projecten/{projectId} {

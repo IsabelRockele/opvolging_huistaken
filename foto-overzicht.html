@@ -18,7 +18,7 @@
     button,.back{border:0;border-radius:11px;padding:10px 15px;background:var(--green);color:#fff;font:inherit;font-weight:800;cursor:pointer;text-decoration:none}button.secondary,.back{background:#e7efea;color:var(--ink)}button:disabled{opacity:.55;cursor:wait}
     .class-block{border:1px solid var(--line);border-radius:14px;margin:12px 0;overflow:hidden}.class-block h3{margin:0;padding:11px 15px;background:var(--soft)}
     .student{display:flex;gap:12px;align-items:center;padding:10px 15px;border-top:1px solid #edf1ef}.student input{width:20px;height:20px;accent-color:var(--red)}.student label{font-weight:650;cursor:pointer;flex:1}
-    .exceptions{display:grid;gap:10px}.exception{border:1px solid #efb7b7;border-left:7px solid #c83e3e;border-radius:12px;background:var(--redsoft);padding:13px 15px;display:flex;justify-content:space-between;gap:14px}.exception strong{color:#7f1d1d}.empty{padding:24px;text-align:center;color:var(--muted);background:var(--soft);border-radius:12px}
+    .exceptions{display:grid;gap:10px}.exception{border:1px solid #efb7b7;border-left:7px solid #c83e3e;border-radius:12px;background:var(--redsoft);padding:13px 15px;display:flex;justify-content:space-between;gap:14px}.exception strong{color:#7f1d1d}.missing{border-color:#ead17a;border-left-color:#c28b00;background:#fff9dc}.missing strong{color:#755600}.empty{padding:24px;text-align:center;color:var(--muted);background:var(--soft);border-radius:12px}
     .meta{font-size:14px;color:var(--muted)}.hidden{display:none!important}
   </style>
 </head>
@@ -44,6 +44,11 @@
       <div id="overzicht" class="exceptions"><div class="empty">Nog geen gegevens geladen.</div></div>
       <p id="controleInfo" class="meta"></p>
     </section>
+    <section class="card">
+      <h2>⚠️ Formulier ontbreekt</h2>
+      <p>Hier staan de ouders van wie de fototoestemming nog opgevolgd moet worden.</p>
+      <div id="ontbrekendOverzicht" class="exceptions"><div class="empty">Nog geen gegevens geladen.</div></div>
+    </section>
   </main>
 
   <script type="module">
@@ -59,7 +64,7 @@
     const actief=(s,jaar)=>{const van=`${jaar.slice(0,4)}-09-01`,tot=`${jaar.slice(5)}-06-30`;return !s.startNiet&&(!s.start||s.start<=tot)&&(!s.end||s.end>=van)};
     const naam=s=>String(s.name||s.naam||`${s.first||s.firstName||''} ${s.last||s.lastName||''}`).replace(/\s+/g,' ').trim();
     const klasSort=(a,b)=>a.localeCompare(b,'nl',{numeric:true});
-    let user=null,role='',schooljaar=huidigSchooljaar(),instelling={bevestigd:false,uitzonderingen:[],gecontroleerdeLeerlingen:[]},klasleerlingen=[],unsub=null;
+    let user=null,role='',schooljaar=huidigSchooljaar(),instelling={bevestigd:false,uitzonderingen:[],ontbrekendeFormulieren:[],gecontroleerdeLeerlingen:[]},klasleerlingen=[],unsub=null;
 
     function ref(){return doc(db,'schoolbeheer',schooljaar,'instellingen','fototoestemming')}
     function magBeheren(){return role==='secretariaat'||role==='beheerder'}
@@ -67,18 +72,20 @@
     function renderOverzicht(){
       const q=$('zoek').value.trim().toLocaleLowerCase('nl');
       const lijst=(instelling.uitzonderingen||[]).filter(x=>!q||`${x.naam} ${x.klas}`.toLocaleLowerCase('nl').includes(q)).sort((a,b)=>klasSort(a.klas,b.klas)||a.naam.localeCompare(b.naam,'nl'));
+      const ontbrekend=(instelling.ontbrekendeFormulieren||[]).filter(x=>!q||`${x.naam} ${x.klas}`.toLocaleLowerCase('nl').includes(q)).sort((a,b)=>klasSort(a.klas,b.klas)||a.naam.localeCompare(b.naam,'nl'));
       const gecontroleerdeIds=new Set((instelling.gecontroleerdeLeerlingen||[]).map(x=>String(x.leerlingId||'')).filter(Boolean));
       const nieuweLeerlingen=magBeheren()&&instelling.bevestigd?klasleerlingen.filter(x=>x.leerling.id&&!gecontroleerdeIds.has(String(x.leerling.id))):[];
       if(!instelling.bevestigd){
         $('status').className='status';$('status').textContent=`Fototoestemmingen voor ${schooljaar} zijn nog niet bevestigd door het secretariaat.`;
         $('overzicht').innerHTML='<div class="empty">Nog te controleren voor dit schooljaar.</div>';
       }else if(nieuweLeerlingen.length){
-        $('status').className='status';$('status').textContent=`${nieuweLeerlingen.length} nieuwe leerling(en) wachten nog op controle. Open Klaslijsten, vink “Mag niet” aan indien nodig en bevestig de klas opnieuw.`;
+        $('status').className='status';$('status').textContent=`${nieuweLeerlingen.length} nieuwe leerling(en) staan nog op “Nog na te vragen”. Klik in Klaslijsten op hun naam om de fotostatus in te vullen.`;
         $('overzicht').innerHTML=(lijst.length?lijst.map(x=>`<div class="exception"><strong>${esc(x.naam)}</strong><span>Klas ${esc(x.klas)}</span></div>`).join(''):'<div class="empty">Er waren nog geen uitzonderingen.</div>')+`<div class="empty"><strong>Nog te controleren:</strong> ${nieuweLeerlingen.map(x=>`${esc(naam(x.leerling))} (${esc(x.klas)})`).join(', ')}</div>`;
       }else{
-        $('status').className='status ok';$('status').textContent=`Fototoestemmingen ${schooljaar} zijn gecontroleerd. ${instelling.uitzonderingen?.length||0} leerling(en) mogen niet op de foto.`;
+        $('status').className=ontbrekend.length?'status':'status ok';$('status').textContent=`Fototoestemmingen ${schooljaar}: ${instelling.uitzonderingen?.length||0} mogen niet op de foto en ${instelling.ontbrekendeFormulieren?.length||0} formulier(en) ontbreken nog.`;
         $('overzicht').innerHTML=lijst.length?lijst.map(x=>`<div class="exception"><strong>${esc(x.naam)}</strong><span>Klas ${esc(x.klas)}</span></div>`).join(''):'<div class="empty">Alle leerlingen mogen op de foto.</div>';
       }
+      $('ontbrekendOverzicht').innerHTML=ontbrekend.length?ontbrekend.map(x=>`<div class="exception missing"><strong>${esc(x.naam)}</strong><span>Klas ${esc(x.klas)}</span></div>`).join(''):'<div class="empty">Geen ontbrekende formulieren.</div>';
       const wanneer=datumTekst(instelling.gecontroleerdOp);
       $('controleInfo').textContent=instelling.bevestigd?`Gecontroleerd${wanneer?` op ${wanneer}`:''}${instelling.gecontroleerdDoor?` door ${instelling.gecontroleerdDoor}`:''}.`:'';
     }
@@ -90,7 +97,7 @@
     async function laad(){
       if(unsub){unsub();unsub=null}$('status').className='status';$('status').textContent='Gegevens worden geladen…';
       await laadKlassen();
-      unsub=onSnapshot(ref(),snap=>{instelling=snap.exists()?{bevestigd:false,uitzonderingen:[],gecontroleerdeLeerlingen:[],...snap.data()}:{bevestigd:false,uitzonderingen:[],gecontroleerdeLeerlingen:[]};renderOverzicht()},err=>{$('status').className='status error';$('status').textContent=`Laden mislukt: ${err.message}`});
+      unsub=onSnapshot(ref(),snap=>{instelling=snap.exists()?{bevestigd:false,uitzonderingen:[],ontbrekendeFormulieren:[],gecontroleerdeLeerlingen:[],...snap.data()}:{bevestigd:false,uitzonderingen:[],ontbrekendeFormulieren:[],gecontroleerdeLeerlingen:[]};renderOverzicht()},err=>{$('status').className='status error';$('status').textContent=`Laden mislukt: ${err.message}`});
     }
     $('zoek').addEventListener('input',renderOverzicht);$('schooljaar').addEventListener('change',()=>{schooljaar=$('schooljaar').value;laad()});
     onAuthStateChanged(auth,async u=>{

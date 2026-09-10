@@ -125,7 +125,7 @@ function toonRefterHerinneringOpStart(rol, klasDocs) {
   const blok = document.createElement('a');
   blok.id = 'portaalRefterHerinnering';
   blok.className = 'portaal-refter-herinnering';
-  blok.href = 'schoolbeheer.html?v=20260909-8&open=refter';
+  blok.href = 'schoolbeheer.html?v=20260910-foto-1&open=refter';
   blok.target = '_blank';
   blok.rel = 'noopener';
   blok.innerHTML = `<span><strong>⚠ Refterlijst nakijken tegen woensdag ${format(deadline)}</strong>Controleer de voorbije schoolweek en bevestig ze daarna, ook wanneer niemand afwezig was.</span><span class="refter-herinnering-knop">Nu nakijken</span>`;
@@ -293,11 +293,11 @@ function pasKnoppenToe(huistakenKnop, overgangKnop, schoolbeheerKnop, bestelling
   if (schoolbeheerKnop) {
     schoolbeheerKnop.style.display = (isSecretariaat || isSchoolBreed || heeftKlasbeheer) ? '' : 'none';
     if (isSecretariaat) {
-      vulTegel(schoolbeheerKnop, 'schoolbeheer.html?v=20260909-8', '📋', 'Administratie & meldingen', 'Beheer klaslijsten, stuur meldingen, koppel leerkrachten en bereid het schooljaar voor.');
+      vulTegel(schoolbeheerKnop, 'schoolbeheer.html?v=20260910-foto-1', '📋', 'Administratie & meldingen', 'Beheer klaslijsten, stuur meldingen, koppel leerkrachten en bereid het schooljaar voor.');
     } else if (isSchoolBreed) {
-      vulTegel(schoolbeheerKnop, 'schoolbeheer.html?v=20260909-8', '🏫', 'Klaslijsten & opvolging', 'Bekijk per klas de lijsten, meldingen, refter, activiteiten en aankopen.');
+      vulTegel(schoolbeheerKnop, 'schoolbeheer.html?v=20260910-foto-1', '🏫', 'Klaslijsten & opvolging', 'Bekijk per klas de lijsten, meldingen, refter, activiteiten en aankopen.');
     } else {
-      vulTegel(schoolbeheerKnop, 'schoolbeheer.html?v=20260909-8', '🏫', 'Mijn klasorganisatie', 'Open je klaslijst, meldingen, refter, activiteiten en aankopen.');
+      vulTegel(schoolbeheerKnop, 'schoolbeheer.html?v=20260910-foto-1', '🏫', 'Mijn klasorganisatie', 'Open je klaslijst, meldingen, refter, activiteiten en aankopen.');
     }
   }
   if (bestellingenKnop) bestellingenKnop.style.display = (isSecretariaat || heeftKlasbeheer) ? '' : 'none';
@@ -342,7 +342,7 @@ function pasKnoppenToe(huistakenKnop, overgangKnop, schoolbeheerKnop, bestelling
     vulTegel(oudercontactKnop, 'schooloverzicht.html?mode=oudercontact', '&#128172;', 'Oudercontact per klas', 'Kies eerst een klas en open daarna de oudercontactvoorbereidingen.');
   } else {
     vulTegel(huistakenKnop, 'dashboard.html', '&#128230;', 'Huistaken opvolgen', 'Open de opvolging van je klas voor het afgeven van huistaken per leerling.');
-    vulTegel(overgangKnop, 'overgangsbespreking.html', '&#128196;', 'Overgangsbespreking', 'Werk leerlingenfiches bij en bereid de overdracht naar de volgende klas voor.');
+    vulTegel(overgangKnop, 'overgangsbespreking.html?v=20260910-foto-1', '&#128196;', 'Overgangsbespreking', 'Werk leerlingenfiches bij en bereid de overdracht naar de volgende klas voor.');
     vulTegel(oudercontactKnop, 'oudercontact.html', '&#128172;', 'Oudercontact', 'Bereid gesprekken per leerling voor en maak een nette PDF voor ouders.');
   }
 }

@@ -1624,13 +1624,13 @@ window.firebaseOvergang = {
   async loadFotoToestemming() {
     await ready;
     const snap = await getDoc(doc(db, "schoolbeheer", schooljaar, "instellingen", "fototoestemming"));
-    return snap.exists() ? { bevestigd: false, uitzonderingen: [], gecontroleerdeLeerlingen: [], ...snap.data() } : { bevestigd: false, uitzonderingen: [], gecontroleerdeLeerlingen: [] };
+    return snap.exists() ? { bevestigd: false, uitzonderingen: [], ontbrekendeFormulieren: [], gecontroleerdeLeerlingen: [], ...snap.data() } : { bevestigd: false, uitzonderingen: [], ontbrekendeFormulieren: [], gecontroleerdeLeerlingen: [] };
   },
   async watchFotoToestemming(callback) {
     await ready;
     if (typeof callback !== 'function') return () => {};
     return onSnapshot(doc(db, "schoolbeheer", schooljaar, "instellingen", "fototoestemming"), snap => {
-      callback(snap.exists() ? { bevestigd: false, uitzonderingen: [], gecontroleerdeLeerlingen: [], ...snap.data() } : { bevestigd: false, uitzonderingen: [], gecontroleerdeLeerlingen: [] });
+      callback(snap.exists() ? { bevestigd: false, uitzonderingen: [], ontbrekendeFormulieren: [], gecontroleerdeLeerlingen: [], ...snap.data() } : { bevestigd: false, uitzonderingen: [], ontbrekendeFormulieren: [], gecontroleerdeLeerlingen: [] });
     }, err => console.warn('Live fototoestemming kon niet worden geladen:', err));
   },
   async watchSchoolbeheerLeerlingen(callback) {
@@ -2896,21 +2896,25 @@ function schoolbeheerNaamNaarRij(s) {
   return parsed ? {...parsed, officialFirstName: parsed.firstName, callName: '', schoolbeheerId: String(s.id || s.schoolbeheerId || '').trim(), hasGokData: false, gok: 'nee', gokKenmerken: [], gokNote: ''} : null;
 }
 
-let fotoToestemmingInstelling = { bevestigd:false, uitzonderingen:[], gecontroleerdeLeerlingen:[] };
+let fotoToestemmingInstelling = { bevestigd:false, uitzonderingen:[], ontbrekendeFormulieren:[], gecontroleerdeLeerlingen:[] };
 function fotoStatusVoorStudent(s) {
-  if (!fotoToestemmingInstelling.bevestigd || !s.fotoToestemmingCentraal) return 'onbekend';
+  if (s.fotoToestemmingStatus) return s.fotoToestemmingStatus;
+  if (!fotoToestemmingInstelling.bevestigd || !s.fotoToestemmingCentraal) return 'controleren';
   return s.magOpFoto ? 'ja' : 'nee';
 }
 function fotoTekstVoorStudent(s) {
   const status = fotoStatusVoorStudent(s);
-  return status === 'ja' ? '✅ Mag op foto' : status === 'nee' ? '🚫 Mag NIET op foto' : '⏳ Fototoestemming nog te controleren';
+  return status === 'ja' ? '✅ Mag op foto' : status === 'nee' ? '🚫 Mag NIET op foto' : status === 'onbekend' ? '⚠️ Fototoestemming onbekend — formulier ontbreekt' : '⏳ Fototoestemming nog na te vragen';
 }
 function pasCentraleFotoToestemmingToe(instelling) {
-  fotoToestemmingInstelling = instelling || { bevestigd:false, uitzonderingen:[], gecontroleerdeLeerlingen:[] };
+  fotoToestemmingInstelling = instelling || { bevestigd:false, uitzonderingen:[], ontbrekendeFormulieren:[], gecontroleerdeLeerlingen:[] };
   if (!fotoToestemmingInstelling.bevestigd || !Array.isArray(state.students)) return 0;
   const uitzonderingen = Array.isArray(fotoToestemmingInstelling.uitzonderingen) ? fotoToestemmingInstelling.uitzonderingen : [];
   const ids = new Set(uitzonderingen.map(x => String(x.leerlingId || '')).filter(Boolean));
   const namen = new Set(uitzonderingen.map(x => String(x.naam || '').trim().toLocaleLowerCase('nl').replace(/\s+/g,' ')).filter(Boolean));
+  const ontbrekend = Array.isArray(fotoToestemmingInstelling.ontbrekendeFormulieren) ? fotoToestemmingInstelling.ontbrekendeFormulieren : [];
+  const ontbrekendeIds = new Set(ontbrekend.map(x => String(x.leerlingId || '')).filter(Boolean));
+  const ontbrekendeNamen = new Set(ontbrekend.map(x => String(x.naam || '').trim().toLocaleLowerCase('nl').replace(/\s+/g,' ')).filter(Boolean));
   const gecontroleerde = Array.isArray(fotoToestemmingInstelling.gecontroleerdeLeerlingen) ? fotoToestemmingInstelling.gecontroleerdeLeerlingen : [];
   const gecontroleerdeIds = new Set(gecontroleerde.map(x => String(x.leerlingId || '')).filter(Boolean));
   const gecontroleerdeNamen = new Set(gecontroleerde.map(x => String(x.naam || '').trim().toLocaleLowerCase('nl').replace(/\s+/g,' ')).filter(Boolean));
@@ -2919,12 +2923,15 @@ function pasCentraleFotoToestemmingToe(instelling) {
     const volledigeNaam = `${String(s.firstName || '').trim()} ${String(s.lastName || '').trim()}`.trim().toLocaleLowerCase('nl').replace(/\s+/g,' ');
     const leerlingId = String(s.schoolbeheerId || '');
     const uitzondering = ids.has(leerlingId) || namen.has(volledigeNaam);
-    const isGecontroleerd = uitzondering || gecontroleerdeIds.has(leerlingId) || gecontroleerdeNamen.has(volledigeNaam);
-    const magOpFoto = !uitzondering;
-    if (s.fotoToestemmingCentraal !== isGecontroleerd || (isGecontroleerd && s.magOpFoto !== magOpFoto)) gewijzigd++;
+    const formulierOntbreekt = ontbrekendeIds.has(leerlingId) || ontbrekendeNamen.has(volledigeNaam);
+    const isGecontroleerd = uitzondering || formulierOntbreekt || gecontroleerdeIds.has(leerlingId) || gecontroleerdeNamen.has(volledigeNaam);
+    const status = uitzondering ? 'nee' : formulierOntbreekt ? 'onbekend' : isGecontroleerd ? 'ja' : 'controleren';
+    const magOpFoto = status === 'ja';
+    if (s.fotoToestemmingCentraal !== isGecontroleerd || s.fotoToestemmingStatus !== status || (isGecontroleerd && s.magOpFoto !== magOpFoto)) gewijzigd++;
     if (isGecontroleerd) s.magOpFoto = magOpFoto;
     s.fotoToestemmingSchooljaar = fotoToestemmingInstelling.schooljaar || '';
     s.fotoToestemmingCentraal = isGecontroleerd;
+    s.fotoToestemmingStatus = status;
   });
   return gewijzigd;
 }
@@ -3836,7 +3843,7 @@ async function loadFirebaseProjectOnStart() {
       window.firebaseOvergang.loadProject(),
       window.firebaseOvergang.loadZorggroepen().catch(err => ({ __zorggroepenError: err })),
       window.firebaseOvergang.loadHuistakenSignalen().catch(() => ({})),
-      window.firebaseOvergang.loadFotoToestemming().catch(() => ({ bevestigd:false, uitzonderingen:[], gecontroleerdeLeerlingen:[] }))
+      window.firebaseOvergang.loadFotoToestemming().catch(() => ({ bevestigd:false, uitzonderingen:[], ontbrekendeFormulieren:[], gecontroleerdeLeerlingen:[] }))
     ]);
     huistakenSignalen = huiswerkResult || {};
     if (Array.isArray(zorgResult)) {
@@ -4631,14 +4638,16 @@ function renderTransferOnline() {
 
   // Foto
   const nietOpFoto = fotoToestemmingInstelling.bevestigd ? s.filter(x => fotoStatusVoorStudent(x) === 'nee') : [];
-  const fotoCount = nietOpFoto.length;
+  const fotoOnbekend = fotoToestemmingInstelling.bevestigd ? s.filter(x => ['onbekend','controleren'].includes(fotoStatusVoorStudent(x))) : [];
+  const fotoCount = nietOpFoto.length + fotoOnbekend.length;
   const fotoInhoud = (() => {
     if (!fotoToestemmingInstelling.bevestigd) return `<div class="transfer-subsectie"><p class="transfer-empty">Fototoestemmingen voor dit schooljaar zijn nog niet gecontroleerd door het secretariaat.</p></div>`;
     if (!fotoCount) return `<div class="transfer-subsectie"><p class="transfer-empty">Alle leerlingen mogen op foto.</p></div>`;
-    return `<div class="transfer-subsectie"><h4>🚫 Mag NIET op foto</h4>` +
-      [...nietOpFoto].sort((a,b) => (a.lastName||'').localeCompare(b.lastName||'','nl')).map(st =>
+    const nietHtml = nietOpFoto.length ? `<div class="transfer-subsectie"><h4>🚫 Mag NIET op foto</h4>` + [...nietOpFoto].sort((a,b) => (a.lastName||'').localeCompare(b.lastName||'','nl')).map(st =>
         `<div class="transfer-leerling-row"><span class="transfer-leerling-naam transfer-leerling-klik" onclick="openFicheModal('${st.id}')" style="color:#991b1b;font-weight:800">${esc(st.name)}</span></div>`
-      ).join('') + '</div>';
+      ).join('') + '</div>' : '';
+    const onbekendHtml = fotoOnbekend.length ? `<div class="transfer-subsectie"><h4>⚠️ Nog op te volgen</h4>` + [...fotoOnbekend].sort((a,b) => (a.lastName||'').localeCompare(b.lastName||'','nl')).map(st => `<div class="transfer-leerling-row"><span class="transfer-leerling-naam transfer-leerling-klik" onclick="openFicheModal('${st.id}')" style="color:#8a6500;font-weight:800">${esc(st.name)}</span><span>${fotoStatusVoorStudent(st)==='onbekend'?'formulier ontbreekt':'nog na te vragen'}</span></div>`).join('') + '</div>' : '';
+    return nietHtml + onbekendHtml;
   })();
   secties.push({ id:'foto', emoji:'📷', titel:'Foto', kleur:'#fee2e2', count: fotoCount, inhoud: fotoInhoud });
 
@@ -4813,8 +4822,9 @@ function openOverzichtKlasPdf() {
         (() => {
           if (!fotoToestemmingInstelling.bevestigd) return '<p class="empty">Fototoestemmingen voor dit schooljaar zijn nog niet gecontroleerd door het secretariaat.</p>';
           const nietOpFoto = sorteer(leerlingen.filter(x => fotoStatusVoorStudent(x) === 'nee'));
-          return nietOpFoto.length
-            ? nietOpFoto.map(s => `<div class="leerling-rij"><strong>${esc(s.name)}</strong><span class="extra foto-nee">🚫 MAG NIET OP FOTO</span></div>`).join('')
+          const opvolgen = sorteer(leerlingen.filter(x => ['onbekend','controleren'].includes(fotoStatusVoorStudent(x))));
+          return nietOpFoto.length || opvolgen.length
+            ? nietOpFoto.map(s => `<div class="leerling-rij"><strong>${esc(s.name)}</strong><span class="extra foto-nee">🚫 MAG NIET OP FOTO</span></div>`).join('') + opvolgen.map(s => `<div class="leerling-rij"><strong>${esc(s.name)}</strong><span class="extra">⚠️ ${fotoStatusVoorStudent(s)==='onbekend'?'FORMULIER ONTBREEKT':'NOG NA TE VRAGEN'}</span></div>`).join('')
             : '<p class="empty">Alle leerlingen mogen op foto.</p>';
         })()
       }</div>`
@@ -5325,7 +5335,7 @@ function sfPreviewDossier(id, mode) {
       s.medicalNote ? 'medisch' : ''
     ].filter(Boolean).join(' · ') || '-'}</td>
     <td>${esc(badmutsLabel(s.badmuts))}</td>
-    <td>${fotoStatusVoorStudent(s) === 'ja' ? 'Ja' : fotoStatusVoorStudent(s) === 'nee' ? 'Nee' : 'nog te controleren'}</td>
+    <td>${fotoStatusVoorStudent(s) === 'ja' ? 'Ja' : fotoStatusVoorStudent(s) === 'nee' ? 'Nee' : fotoStatusVoorStudent(s) === 'onbekend' ? 'Formulier ontbreekt' : 'Nog na te vragen'}</td>
     <td>${ingevuldeNotities(s)}</td>
   </tr>`).join('');
   sfBox(`<h2>${esc(dossier.titel || 'Overdracht')}</h2>
