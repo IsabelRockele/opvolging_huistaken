@@ -1242,8 +1242,17 @@
       if(fotoUnsub){fotoUnsub();fotoUnsub=null;}
       fotoUnsub=onSnapshot(fotoToestemmingRef(),snap=>{
         fotoToestemmingData=snap.exists()?{bevestigd:false,uitzonderingen:[],ontbrekendeFormulieren:[],gecontroleerdeLeerlingen:[],...snap.data()}:{bevestigd:false,uitzonderingen:[],ontbrekendeFormulieren:[],gecontroleerdeLeerlingen:[]};
-        if(data&&(tab==="klaslijst"||tab==="leerlingenstart"||(tab==="administratie"&&adminPanel==="klaslijsten")))render();
+        if(data&&(tab==="klaslijst"||tab==="leerlingenstart"||(tab==="administratie"&&adminPanel==="klaslijsten")))renderMetScrollbehoud();
       },err=>console.warn("Fototoestemming laden mislukt",err));
+    }
+    function renderMetScrollbehoud(){
+      const paginaY=window.scrollY,paginaX=window.scrollX;
+      const tabelPosities=[...document.querySelectorAll(".table-wrap")].map(el=>({top:el.scrollTop,left:el.scrollLeft}));
+      render();
+      requestAnimationFrame(()=>{
+        window.scrollTo(paginaX,paginaY);
+        document.querySelectorAll(".table-wrap").forEach((el,i)=>{const pos=tabelPosities[i];if(pos){el.scrollTop=pos.top;el.scrollLeft=pos.left;}});
+      });
     }
     function schooljaarOffset(jaar, offset){
       const start = Number(String(jaar || schooljaar).slice(0,4)) + offset;
@@ -2881,7 +2890,7 @@
       overlay.innerHTML=`<div style="max-width:460px;margin:80px auto;background:#fff;border-radius:18px;padding:22px;box-shadow:0 20px 60px rgba(0,0,0,.28)"><div class="bar"><div><h2 style="margin:0">📷 Fototoestemming</h2><p class="muted" style="margin:4px 0 0"><strong>${esc(name(s))}</strong> · ${esc(activeClass)}</p></div><button class="white small" onclick="document.getElementById('fotoBeheerOverlay').remove()" aria-label="Sluiten">✕</button></div><div class="foto-modal-keuzes"><label><input type="radio" name="beheerFotoSnel" value="controleren" ${status==="controleren"?'checked':''}> ⏳ Nog na te vragen</label><label><input type="radio" name="beheerFotoSnel" value="ja" ${status==="ja"?'checked':''}> ✅ Mag op de foto</label><label><input type="radio" name="beheerFotoSnel" value="nee" ${status==="nee"?'checked':''}> 🚫 Mag niet op de foto</label><label><input type="radio" name="beheerFotoSnel" value="onbekend" ${status==="onbekend"?'checked':''}> ⚠️ Formulier ontbreekt</label></div><div class="actions" style="margin-top:16px"><button class="green" onclick="bewaarFotoSnel('${s.id}')">Bewaren</button><button class="white" onclick="document.getElementById('fotoBeheerOverlay').remove()">Annuleren</button></div></div>`;
       overlay.addEventListener("click",e=>{if(e.target===overlay)overlay.remove()});document.body.appendChild(overlay);
     };
-    window.bewaarFotoSnel=async id=>{const status=document.querySelector('input[name="beheerFotoSnel"]:checked')?.value||"controleren";await zetFotoStatus(id,status);document.getElementById("fotoBeheerOverlay")?.remove();render();};
+    window.bewaarFotoSnel=async id=>{const status=document.querySelector('input[name="beheerFotoSnel"]:checked')?.value||"controleren";await zetFotoStatus(id,status);document.getElementById("fotoBeheerOverlay")?.remove();renderMetScrollbehoud();};
     window.zetFotoStatus=async(id,status)=>{
       if(!kanFotoAanpassen())return;
       const s=(data.leerlingen||[]).find(x=>x.id===id);if(!s)return;
