@@ -2,7 +2,7 @@
   "short_name": "Huiswerkklas",
   "name": "Huiswerkklas - De Linde",
   "id": "huiswerkklas.html",
-  "start_url": "huiswerkklas.html",
+  "start_url": "huiswerkklas.html?modus=gsm",
   "scope": "./",
   "display": "standalone",
   "background_color": "#f5f0e8",
