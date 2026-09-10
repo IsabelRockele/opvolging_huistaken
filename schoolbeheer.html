@@ -1522,7 +1522,7 @@
     }
 
     function markDirty(){ setStatus("Wijzigingen..."); clearTimeout(saveTimer); saveTimer = setTimeout(saveNow, 600); }
-    async function saveNow(){ if(!data) return; lokaleBewaringTot=Date.now()+2500; data.bewaarTot = bewaarTotVoorSchooljaar(); data.bewaartermijnJaren = BEWAAR_JAREN_SCHOOLBEHEER; data.bijgewerktOp = new Date().toISOString(); await setDoc(classRef(), data); setStatus("Bewaard", true); }
+    async function saveNow(){ if(!data) return; lokaleBewaringTot=Date.now()+2500; data.klas=activeClass; data.schooljaar=schooljaar; data.bewaarTot = bewaarTotVoorSchooljaar(); data.bewaartermijnJaren = BEWAAR_JAREN_SCHOOLBEHEER; data.bijgewerktOp = new Date().toISOString(); await setDoc(classRef(), data); setStatus("Bewaard", true); }
 
     function maandNaam(month){
       const d=new Date(`${month}-15T12:00:00`);

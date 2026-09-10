@@ -1265,7 +1265,8 @@ async function laadOvergangKlassen() {
       ...koppeling,
       id: d.id,
       klasId: d.id,
-      klasNaam: koppeling.klasNaam || item.klasNaam || item.klas || d.id,
+      klas: d.id,
+      klasNaam: d.id,
       leerlingAantal: Array.isArray(item.leerlingen) ? item.leerlingen.length : 0
     });
   });
