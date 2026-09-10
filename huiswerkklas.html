@@ -70,6 +70,7 @@
     .mobile-class-group{margin:13px 0 16px;border:1px solid var(--line);border-radius:12px;overflow:hidden;background:#fff}.mobile-class-heading{display:flex;align-items:center;gap:8px;margin:0;padding:9px 12px;background:#f1f5f9;font-size:16px}.mobile-class-heading .stripe-dot{width:7px;height:25px;border-radius:6px;display:inline-block}.mobile-class-group .mobile-person{padding-left:12px;padding-right:12px}.mobile-class-group .mobile-person:first-of-type{border-top:0}
     .mobile-supervisors{display:grid;gap:7px;margin:10px 0 15px}.mobile-supervisors label{display:flex;align-items:center;gap:9px;border:1px solid var(--line);border-radius:10px;padding:10px;font-size:14px;margin:0}.mobile-supervisors input{width:23px;height:23px;flex:0 0 auto}
     .mobile-help{margin-top:12px;border:1px solid var(--line);border-radius:10px;padding:0 11px;background:#fff}.mobile-help summary{padding:10px 0;font-weight:800;cursor:pointer}.mobile-help p{margin:0 0 11px}
+    .mobile-account{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px;padding:9px 11px;border-radius:10px;background:#eef3f9}.mobile-account span{min-width:0;font-size:12px;color:#536985;overflow-wrap:anywhere}.mobile-account button{flex:0 0 auto;padding:7px 9px;font-size:12px}
     .quick-add{padding:0;overflow:hidden}.quick-add>summary{cursor:pointer;list-style:none;padding:13px 16px;font-size:17px;font-weight:900;display:flex;align-items:center;gap:8px}.quick-add>summary::-webkit-details-marker{display:none}.quick-add>summary::after{content:"+";margin-left:auto;font-size:22px}.quick-add[open]>summary::after{content:"−"}.quick-add-body{border-top:1px solid var(--line);padding:14px 16px}.quick-add-grid{display:grid;grid-template-columns:minmax(120px,180px) minmax(220px,1fr) minmax(190px,260px) auto;gap:10px;align-items:end}.quick-add-message{margin-top:9px;font-size:13px;font-weight:800;color:#2f7a50}
     @media(max-width:900px){.quick-add-grid{grid-template-columns:1fr}.quick-add-grid button{width:100%;padding:12px}.quick-add>summary{padding:14px}.quick-add-body{padding:12px}}
     @media(max-width:900px){main{padding:10px}.toolbar,.two{grid-template-columns:1fr}.right{margin-left:0}.attendance-row{grid-template-columns:10px 60px 1fr 32px}.mobile-today{display:block}.list-panel,.desktop-controls,.desktop-overview,.werking-notice,.quick-add,header .bar{display:none!important}#supervisorPanel{display:none!important}header{padding:10px 12px}.brand img{width:44px;height:44px}}
@@ -136,6 +137,7 @@
   </details>
   <section class="panel mobile-today" id="mobileTodayPanel">
     <div class="bar"><h2 style="margin:0">Huiswerkklas vandaag</h2></div>
+    <div class="mobile-account"><span id="mobileAccount">Account laden…</span><button class="white" id="mobileLogoutBtn" type="button">Ander account / uitloggen</button></div>
     <label>Datum<select id="mobileDate"></select></label>
     <details class="mobile-help" id="mobileDateTools"><summary>Datum toevoegen of dag annuleren</summary><label>Nieuwe datum<input id="mobileNewDate" type="date"></label><div class="actions" style="margin:10px 0"><button class="white" id="mobileAddDateBtn">Datum toevoegen</button><button class="white" id="mobileCancelDateBtn" style="display:none">Deze dag gaat niet door</button></div></details>
     <div id="mobileTodayBody"></div>
@@ -199,6 +201,8 @@ function isSecretariaat(){return ["secretariaat","beheerder"].includes(role);}
 function supervisorNames(){return supervisorConfig.length?supervisorConfig.map(x=>x.name).filter(Boolean):[...DEFAULT_SUPERVISORS];}
 function supervisorConfigRef(){return doc(db,"huiswerkklas",schooljaar,"maanden","configuratie");}
 function supervisorKey(x){return String(x.uid||x.email||x.name||"").trim().toLowerCase();}
+function supervisorNameKey(x){return String(x||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().replace(/[^a-z0-9]+/g," ").trim().split(/\s+/).filter(Boolean).sort().join(" ")}
+function supervisorMatchesName(x,name){const doel=supervisorNameKey(name),mailNaam=supervisorNameKey(String(x?.email||"").split("@")[0]);return supervisorNameKey(x?.name)===doel||!!mailNaam&&mailNaam===doel}
 function isConfiguredSupervisor(){const email=(user?.email||"").toLowerCase();return supervisorConfig.some(x=>(x.uid&&x.uid===user?.uid)||(x.email&&x.email.toLowerCase()===email));}
 function magAanwezighedenInvullen(){return isSecretariaat()||realRole==="beheerder"||isConfiguredSupervisor();}
 function isCancelledDate(d){return !!hw.cancelledDates?.[d];}
@@ -249,10 +253,10 @@ async function loadSupervisorConfig(){
   if(opgeslagen.length) supervisorConfig=opgeslagen.map(x=>{
     const oud=typeof x==="string"?{name:x,email:"",uid:""}:x;
     if(!oud?.name)return null;
-    const gekoppeld=supervisorCandidates.find(k=>k.name.toLowerCase()===String(oud.name).toLowerCase());
+    const gekoppeld=supervisorCandidates.find(k=>supervisorMatchesName(k,oud.name));
     return {...oud,email:String(oud.email||gekoppeld?.email||"").trim().toLowerCase(),uid:String(oud.uid||gekoppeld?.uid||"").trim()};
   }).filter(Boolean);
-  else supervisorConfig=DEFAULT_SUPERVISORS.map(name=>supervisorCandidates.find(x=>x.name.toLowerCase()===name.toLowerCase())||{name,email:"",uid:""});
+  else supervisorConfig=DEFAULT_SUPERVISORS.map(name=>supervisorCandidates.find(x=>supervisorMatchesName(x,name))||{name,email:"",uid:""});
 }
 async function loadData(){
   schooljaar=$("schooljaarInput").value||schooljaar; month=$("monthInput").value||month; date=$("dateInput").value||date;
@@ -424,15 +428,15 @@ function renderSupervisorManager(){
   const doel=$("supervisorCandidateList"),gekozen=new Set(supervisorConfig.map(supervisorKey));
   const kandidaten=[...supervisorCandidates];
   supervisorConfig.forEach(x=>{if(!kandidaten.some(k=>supervisorKey(k)===supervisorKey(x)))kandidaten.push(x)});
-  doel.innerHTML=kandidaten.map((x,i)=>`<label><input type="checkbox" data-supervisor-candidate="${i}" ${gekozen.has(supervisorKey(x))?"checked":""}> <span><strong>${esc(x.name)}</strong>${x.email?`<small style="display:block;color:var(--muted)">${esc(x.email)}</small>`:""}</span></label>`).join("")||'<div class="empty">Er zijn nog geen gekoppelde leerkrachten gevonden.</div>';
+  doel.innerHTML=kandidaten.map((x,i)=>`<label><input type="checkbox" data-supervisor-candidate="${i}" ${gekozen.has(supervisorKey(x))?"checked":""}> <span style="min-width:0;flex:1"><strong>${esc(x.name)}</strong>${x.email?`<small style="display:block;color:var(--muted)">${esc(x.email)}</small>`:`<input type="email" data-supervisor-email="${i}" placeholder="schoolmailadres invullen" style="margin-top:5px;padding:6px 8px;font-size:12px">`}</span></label>`).join("")||'<div class="empty">Er zijn nog geen gekoppelde leerkrachten gevonden.</div>';
   doel._kandidaten=kandidaten;
 }
 async function saveSupervisorConfig(){
   const kandidaten=$("supervisorCandidateList")._kandidaten||[];
-  const gekozen=[...document.querySelectorAll("[data-supervisor-candidate]:checked")].map(ch=>kandidaten[Number(ch.dataset.supervisorCandidate)]).filter(Boolean);
+  const gekozen=[...document.querySelectorAll("[data-supervisor-candidate]:checked")].map(ch=>{const i=Number(ch.dataset.supervisorCandidate),x=kandidaten[i],ingevuld=document.querySelector(`[data-supervisor-email="${i}"]`)?.value.trim().toLowerCase();return x?{...x,email:ingevuld||x.email||""}:null}).filter(Boolean);
   if(!gekozen.length)return alert("Vink minstens één begeleider aan.");
   const zonderAccount=gekozen.filter(x=>!x.email&&!x.uid);
-  if(zonderAccount.length)return alert(`Deze begeleider${zonderAccount.length===1?" heeft":"s hebben"} nog geen gekoppeld schoolmailadres: ${zonderAccount.map(x=>x.name).join(", ")}. Vul dit eerst aan bij Klasleerkrachten.`);
+  if(zonderAccount.length)return alert(`Vul bij deze begeleider${zonderAccount.length===1?"":"s"} eerst het schoolmailadres in: ${zonderAccount.map(x=>x.name).join(", ")}.`);
   await setDoc(supervisorConfigRef(),{
     schooljaar,
     begeleiders:gekozen,
@@ -646,6 +650,7 @@ function downloadParticipantsPdf(){
 onAuthStateChanged(auth,async u=>{
   if(!u){location.href=`index.html?naLogin=${qrMobileMode?"huiswerkklas-gsm":"huiswerkklas"}`;return;}
   user=u; $("schooljaarInput").value=schooljaar; $("monthInput").value=month; $("dateInput").value=date;
+  $("mobileAccount").textContent=`Aangemeld als ${u.email||"onbekend account"}`;
   await loadRole();
   demoMode=false;
   $("saveBtn").onclick=save;
@@ -678,7 +683,11 @@ onAuthStateChanged(auth,async u=>{
   $("quickAddBtn").onclick=()=>quickAddStudent().catch(err=>{console.error(err);alert("Toevoegen lukte niet: "+err.message);});
   $("schooljaarInput").onchange=loadData; $("monthInput").onchange=()=>openMonth($("monthInput").value); $("dateInput").onchange=()=>{date=$("dateInput").value;renderRoleTools();};
   $("logoutBtn").onclick=()=>signOut(auth).then(()=>location.href="index.html");
-  await loadData();
+  $("mobileLogoutBtn").onclick=()=>signOut(auth).then(()=>location.href="index.html?naLogin=huiswerkklas-gsm");
+  try{await loadData()}catch(err){
+    console.error(err);$("status").textContent="Laden mislukt";$("mobileDate").innerHTML='<option>Niet beschikbaar</option>';$("mobileDate").disabled=true;$("mobileSaveBtn").disabled=true;
+    $("mobileTodayBody").innerHTML=`<div class="notice"><strong>De huiswerkklasgegevens konden niet worden geladen.</strong><p class="muted">Controleer of bovenaan het juiste schoolmailadres staat. Tik anders op Ander account / uitloggen en meld opnieuw aan.</p><small class="muted">Fout: ${esc(err?.code||err?.message||"onbekend")}</small></div>`;
+  }
 });
 </script>
 <script src="tool-wegwijzer.js"></script>
