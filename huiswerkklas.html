@@ -70,6 +70,8 @@
     .mobile-class-group{margin:13px 0 16px;border:1px solid var(--line);border-radius:12px;overflow:hidden;background:#fff}.mobile-class-heading{display:flex;align-items:center;gap:8px;margin:0;padding:9px 12px;background:#f1f5f9;font-size:16px}.mobile-class-heading .stripe-dot{width:7px;height:25px;border-radius:6px;display:inline-block}.mobile-class-group .mobile-person{padding-left:12px;padding-right:12px}.mobile-class-group .mobile-person:first-of-type{border-top:0}
     .mobile-supervisors{display:grid;gap:7px;margin:10px 0 15px}.mobile-supervisors label{display:flex;align-items:center;gap:9px;border:1px solid var(--line);border-radius:10px;padding:10px;font-size:14px;margin:0}.mobile-supervisors input{width:23px;height:23px;flex:0 0 auto}
     .mobile-help{margin-top:12px;border:1px solid var(--line);border-radius:10px;padding:0 11px;background:#fff}.mobile-help summary{padding:10px 0;font-weight:800;cursor:pointer}.mobile-help p{margin:0 0 11px}
+    .quick-add{padding:0;overflow:hidden}.quick-add>summary{cursor:pointer;list-style:none;padding:13px 16px;font-size:17px;font-weight:900;display:flex;align-items:center;gap:8px}.quick-add>summary::-webkit-details-marker{display:none}.quick-add>summary::after{content:"+";margin-left:auto;font-size:22px}.quick-add[open]>summary::after{content:"−"}.quick-add-body{border-top:1px solid var(--line);padding:14px 16px}.quick-add-grid{display:grid;grid-template-columns:minmax(120px,180px) minmax(220px,1fr) minmax(190px,260px) auto;gap:10px;align-items:end}.quick-add-message{margin-top:9px;font-size:13px;font-weight:800;color:#2f7a50}
+    @media(max-width:900px){.quick-add-grid{grid-template-columns:1fr}.quick-add-grid button{width:100%;padding:12px}.quick-add>summary{padding:14px}.quick-add-body{padding:12px}}
     @media(max-width:900px){main{padding:10px}.toolbar,.two{grid-template-columns:1fr}.right{margin-left:0}.attendance-row{grid-template-columns:10px 60px 1fr 32px}.mobile-today{display:block}.list-panel,.desktop-controls,.desktop-overview,.werking-notice{display:none!important}#supervisorPanel{display:none!important}header{padding:10px 12px}.brand img{width:44px;height:44px}}
   </style>
 </head>
@@ -108,6 +110,23 @@
     <strong>Werking:</strong>
     <span class="muted" id="workHelp">Klasleerkrachten duiden in Klaslijsten bij hun eigen klas aan welke kinderen naar de huiswerkklas gaan. Ontbreekt een leerling? Voeg die eerst toe via <a href="schoolbeheer.html" target="_blank" rel="noopener">Klaslijsten → Nieuwe leerling</a>. Hier verschijnen alleen kinderen die daar voor de huiswerkklas zijn aangeduid.</span>
   </section>
+  <details class="panel quick-add" id="quickAddPanel">
+    <summary>➕ Kind toevoegen aan de huiswerkklas</summary>
+    <div class="quick-add-body">
+      <p class="muted" style="margin:0 0 12px">Voor een kind dat toch deelneemt, maar nog niet was aangeduid. Kies eerst de klas en zoek daarna de naam.</p>
+      <div class="quick-add-grid">
+        <label>Klas<select id="quickAddClass"></select></label>
+        <label>Naam zoeken<input id="quickAddSearch" type="search" placeholder="Typ een voor- of achternaam" autocomplete="off"></label>
+        <label>Leerling<select id="quickAddStudent"></select></label>
+        <button class="secondary" id="quickAddBtn" type="button">Toevoegen</button>
+      </div>
+      <div class="quick-add-grid" style="margin-top:10px;grid-template-columns:minmax(220px,300px) minmax(160px,220px)">
+        <label>Wanneer?<select id="quickAddDays"><option value="dinsdag">Dinsdag</option><option value="donderdag">Donderdag</option><option value="beide">Dinsdag én donderdag</option><option value="onbekend">Dinsdag of donderdag — nog navragen</option></select></label>
+        <label style="display:flex;align-items:center;gap:8px;margin:0 0 8px;font-size:14px"><input id="quickAddFree" type="checkbox" style="width:21px;flex:0 0 auto"> Gratis via schooladvies</label>
+      </div>
+      <div class="quick-add-message" id="quickAddMessage"></div>
+    </div>
+  </details>
   <section class="panel mobile-today" id="mobileTodayPanel">
     <div class="bar"><h2 style="margin:0">Huiswerkklas vandaag</h2></div>
     <label>Datum<select id="mobileDate"></select></label>
@@ -241,6 +260,34 @@ function localRows(){
     if(v?.active!==false && !rows.some(r=>r.key===key))rows.push({key,klas:v.klas||"",name:v.name||"",local:false,active:true,free:!!v.free,days:v.days||{},start:v.start||"",end:v.end||"",history:v.history||[]});
   });
   return rows.sort((a,b)=>(a.klas||"").localeCompare(b.klas||"","nl",{numeric:true})||(a.name||"").localeCompare(b.name||"","nl"));
+}
+function quickAddClasses(){return (isSchoolBreed()||isSecretariaat())?allClasses:ownClasses;}
+function quickAddCandidates(){
+  const klas=$("quickAddClass")?.value||"", zoek=($("quickAddSearch")?.value||"").trim().toLocaleLowerCase("nl");
+  return (classStudents[klas]||[]).filter(s=>!s.homeworkClass&&!hw.enrolled?.[studentKey(klas,s)]?.active).filter(s=>!zoek||name(s).toLocaleLowerCase("nl").includes(zoek));
+}
+function renderQuickAddClasses(){
+  const select=$("quickAddClass"),klassen=quickAddClasses();if(!select)return;
+  const huidig=select.value;select.innerHTML=klassen.map(k=>`<option value="${esc(k)}">${esc(k)}</option>`).join("");
+  if(klassen.includes(huidig))select.value=huidig;
+  $("quickAddPanel").style.display=klassen.length?"block":"none";renderQuickAddStudents();
+}
+function renderQuickAddStudents(){
+  const select=$("quickAddStudent"),lijst=quickAddCandidates();if(!select)return;
+  select.innerHTML=lijst.length?lijst.map(s=>`<option value="${esc(s.id||studentKey($("quickAddClass").value,s))}">${esc(name(s))}</option>`).join(""):'<option value="">Geen leerling gevonden</option>';
+  $("quickAddBtn").disabled=!lijst.length;
+}
+async function quickAddStudent(){
+  const klas=$("quickAddClass").value,id=$("quickAddStudent").value,dagKeuze=$("quickAddDays").value;
+  const s=(classStudents[klas]||[]).find(x=>String(x.id||studentKey(klas,x))===id);if(!s)return alert("Kies eerst een leerling.");
+  if(s.homeworkClass)return alert(`${name(s)} staat al ingeschreven voor de huiswerkklas.`);
+  const days={dinsdag:dagKeuze==="dinsdag"||dagKeuze==="beide"||dagKeuze==="onbekend",donderdag:dagKeuze==="donderdag"||dagKeuze==="beide"||dagKeuze==="onbekend"},free=$("quickAddFree").checked,from=todayIso();
+  const snap=await getDoc(doc(db,"schoolbeheer",schooljaar,"klassen",klas));if(!snap.exists())return alert("De klasgegevens konden niet worden gevonden.");
+  const klasData=snap.data(),leerling=(klasData.leerlingen||[]).find(x=>String(x.id||studentKey(klas,x))===id);if(!leerling)return alert("De leerling werd intussen niet meer in deze klas gevonden. Vernieuw de pagina.");
+  leerling.homeworkClass=true;leerling.homeworkClassDays=days;leerling.homeworkClassDayUncertain=dagKeuze==="onbekend";leerling.homeworkClassFree=free;leerling.homeworkClassStart=from;leerling.homeworkClassEnd="";leerling.homeworkClassHistory=Array.isArray(leerling.homeworkClassHistory)?leerling.homeworkClassHistory:[];
+  leerling.homeworkClassHistory.push({from,action:"start",days,free,changedAt:new Date().toISOString(),changedBy:user?.email||user?.uid||"huiswerkklas"});
+  klasData.bijgewerktOp=new Date().toISOString();await setDoc(doc(db,"schoolbeheer",schooljaar,"klassen",klas),klasData);
+  const y=window.scrollY;$("quickAddMessage").textContent=`✓ ${name(leerling)} is toegevoegd.`;$("quickAddSearch").value="";$("quickAddFree").checked=false;await loadData();$("quickAddPanel").open=true;$("quickAddMessage").textContent=`✓ ${name(leerling)} is toegevoegd.`;window.scrollTo(0,y);
 }
 function planningVoorDatum(r,d){
   const historie=(r.history||[]).filter(h=>h.from&&h.from<=d).sort((a,b)=>String(a.from).localeCompare(String(b.from)));
@@ -406,7 +453,7 @@ function renderAttendanceSupervisorPicker(){
   doel.querySelectorAll("[data-supervisor-date]").forEach(ch=>ch.onchange=()=>{collectSupervisors();autoSave();});
 }
 function bindProcessedCheckboxes(){document.querySelectorAll("[data-lock-date]").forEach(ch=>ch.onchange=()=>{document.querySelectorAll(`[data-lock-date="${ch.dataset.lockDate}"]`).forEach(andere=>andere.checked=ch.checked);autoSave();});}
-function render(){ $("status").textContent=demoMode?`TESTMODUS · ${schooljaar} - ${month}`:`${schooljaar} - ${month}`; renderRoleTools(); renderPlanningOverview(); renderSupervisors(); renderAttendanceSupervisorPicker(); renderTable(); renderMobileToday(); bindProcessedCheckboxes(); }
+function render(){ $("status").textContent=demoMode?`TESTMODUS · ${schooljaar} - ${month}`:`${schooljaar} - ${month}`; renderRoleTools(); renderQuickAddClasses(); renderPlanningOverview(); renderSupervisors(); renderAttendanceSupervisorPicker(); renderTable(); renderMobileToday(); bindProcessedCheckboxes(); }
 function collectSupervisors(){
   document.querySelectorAll("[data-supervisor-date]").forEach(ch=>{const d=ch.dataset.supervisorDate,n=ch.dataset.supervisorName;hw.supervisors[d]||=[];const set=new Set(hw.supervisors[d]);ch.checked?set.add(n):set.delete(n);hw.supervisors[d]=[...set]});
   if(mobileSelectedDate){hw.supervisors[mobileSelectedDate]=[...document.querySelectorAll("[data-mobile-supervisor]:checked")].map(ch=>ch.dataset.mobileSupervisor)}
@@ -579,6 +626,9 @@ onAuthStateChanged(auth,async u=>{
   $("mobileSaveBtn").onclick=save;
   $("mobileAddDateBtn").onclick=addMobileDate;
   $("mobileCancelDateBtn").onclick=()=>toggleCancelledDateFor(mobileSelectedDate);
+  $("quickAddClass").onchange=()=>{$("quickAddSearch").value="";renderQuickAddStudents();};
+  $("quickAddSearch").oninput=renderQuickAddStudents;
+  $("quickAddBtn").onclick=()=>quickAddStudent().catch(err=>{console.error(err);alert("Toevoegen lukte niet: "+err.message);});
   $("schooljaarInput").onchange=loadData; $("monthInput").onchange=()=>openMonth($("monthInput").value); $("dateInput").onchange=()=>{date=$("dateInput").value;renderRoleTools();};
   $("logoutBtn").onclick=()=>signOut(auth).then(()=>location.href="index.html");
   await loadData();
