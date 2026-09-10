@@ -42,7 +42,7 @@ onAuthStateChanged(auth, (user) => {
 
   if (isIndex) {
     if (new URLSearchParams(location.search).get('naLogin') === 'huiswerkklas') {
-      location.href = 'huiswerkklas.html?v=20260910-dag-navragen-1';
+      location.href = 'huiswerkklas.html?v=20260910-alleen-huis-1';
       return;
     }
     const kaart = document.getElementById('ingelogd-kaart');
@@ -125,7 +125,7 @@ function toonRefterHerinneringOpStart(rol, klasDocs) {
   const blok = document.createElement('a');
   blok.id = 'portaalRefterHerinnering';
   blok.className = 'portaal-refter-herinnering';
-  blok.href = 'schoolbeheer.html?v=20260910-huiswerk-4&open=refter';
+  blok.href = 'schoolbeheer.html?v=20260910-alleen-huis-1&open=refter';
   blok.target = '_blank';
   blok.rel = 'noopener';
   blok.innerHTML = `<span><strong>⚠ Refterlijst nakijken tegen woensdag ${format(deadline)}</strong>Controleer de voorbije schoolweek en bevestig ze daarna, ook wanneer niemand afwezig was.</span><span class="refter-herinnering-knop">Nu nakijken</span>`;
@@ -293,11 +293,11 @@ function pasKnoppenToe(huistakenKnop, overgangKnop, schoolbeheerKnop, bestelling
   if (schoolbeheerKnop) {
     schoolbeheerKnop.style.display = (isSecretariaat || isSchoolBreed || heeftKlasbeheer) ? '' : 'none';
     if (isSecretariaat) {
-      vulTegel(schoolbeheerKnop, 'schoolbeheer.html?v=20260910-huiswerk-4', '📋', 'Administratie & meldingen', 'Beheer klaslijsten, stuur meldingen, koppel leerkrachten en bereid het schooljaar voor.');
+      vulTegel(schoolbeheerKnop, 'schoolbeheer.html?v=20260910-alleen-huis-1', '📋', 'Administratie & meldingen', 'Beheer klaslijsten, stuur meldingen, koppel leerkrachten en bereid het schooljaar voor.');
     } else if (isSchoolBreed) {
-      vulTegel(schoolbeheerKnop, 'schoolbeheer.html?v=20260910-huiswerk-4', '🏫', 'Klaslijsten & opvolging', 'Bekijk per klas de lijsten, meldingen, refter, activiteiten en aankopen.');
+      vulTegel(schoolbeheerKnop, 'schoolbeheer.html?v=20260910-alleen-huis-1', '🏫', 'Klaslijsten & opvolging', 'Bekijk per klas de lijsten, meldingen, refter, activiteiten en aankopen.');
     } else {
-      vulTegel(schoolbeheerKnop, 'schoolbeheer.html?v=20260910-huiswerk-4', '🏫', 'Mijn klasorganisatie', 'Open je klaslijst, meldingen, refter, activiteiten en aankopen.');
+      vulTegel(schoolbeheerKnop, 'schoolbeheer.html?v=20260910-alleen-huis-1', '🏫', 'Mijn klasorganisatie', 'Open je klaslijst, meldingen, refter, activiteiten en aankopen.');
     }
   }
   if (bestellingenKnop) bestellingenKnop.style.display = (isSecretariaat || heeftKlasbeheer) ? '' : 'none';
