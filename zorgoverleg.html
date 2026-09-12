@@ -69,6 +69,7 @@
     .fase-badge.fase-3{background:#e51b18;color:#fff}
     .zorgfase-card{display:grid;grid-template-columns:minmax(230px,360px) 1fr;gap:12px;align-items:end;border:1px solid #cfc4df;border-radius:14px;background:#f8f5fc;padding:12px 14px;margin-bottom:14px}
     .zorgfase-card label{margin:0}.zorgfase-uitleg{font-size:12px;color:#665a73;line-height:1.45}
+    .fasehistoriek{grid-column:1/-1;border-top:1px solid #ded5e8;padding-top:9px;font-size:12px;color:#51406e;line-height:1.55}.fasehistoriek-regel{display:block;margin-top:3px}
     .fasevragen{border:1px solid #cfc4df;border-radius:14px;background:#fcfaff;margin-bottom:14px;overflow:hidden}
     .fasevragen-summary,.zorgoverdracht-summary{display:flex;align-items:center;justify-content:space-between;gap:12px;cursor:pointer;list-style:none;padding:12px 14px;font-weight:900}
     .fasevragen-summary::-webkit-details-marker,.zorgoverdracht-summary::-webkit-details-marker{display:none}
@@ -372,6 +373,16 @@ function laatsteZorgfase(studentKey){
   const fases=items.map(item=>item.data?.entries?.[studentKey]?.zorgfase).filter(value=>value!==undefined&&value!==null&&String(value)!=="");
   return fases.length?String(fases[fases.length-1]):String(zorgOverdracht?.[studentKey]?.waarden?.zorgfase||"");
 }
+function zorgfaseHistoriekVoor(studentKey){
+  const regels=[],gezien=new Set();let laatste=String(zorgOverdracht?.[studentKey]?.waarden?.zorgfase||"");
+  if(laatste){const bron=zorgOverdracht?.[studentKey];regels.push({datum:bron?.bronJaar||"Vorig schooljaar",van:"",naar:laatste,overgenomen:true});}
+  [...overlegHistoriek,{maand,data}].sort((a,b)=>a.maand.localeCompare(b.maand)).forEach(item=>{
+    const entry=item.data?.entries?.[studentKey]||{},events=Array.isArray(entry.zorgfaseHistoriek)?entry.zorgfaseHistoriek:[];
+    if(events.length){events.forEach(event=>{const van=String(event.van??laatste),naar=String(event.naar??"");if(!naar||van===naar)return;const sleutel=`${event.datum||item.maand}|${van}|${naar}`;if(!gezien.has(sleutel)){gezien.add(sleutel);regels.push({datum:event.datum||item.maand,van,naar});}laatste=naar;});return;}
+    const fase=String(entry.zorgfase??"");if(!fase||fase===laatste)return;const sleutel=`${item.maand}|${laatste}|${fase}`;if(!gezien.has(sleutel)){gezien.add(sleutel);regels.push({datum:item.maand,van:laatste,naar:fase,maand:true});}laatste=fase;
+  });
+  return regels;
+}
 function leerlingHeeftInvulling(studentKey){
   const entry=data.entries?.[studentKey]||{};
   const eigenNotitie=[...FIELD_TABS.map(([field])=>field),...FASE_VELDEN].some(field=>String(entry[field]||"").trim());
@@ -387,7 +398,8 @@ function renderStudentTabs(){
 function renderZorgfase(studentKey){
   const current=data.entries?.[studentKey]?.zorgfase;
   const value=current!==undefined&&current!==null&&String(current)!==""?String(current):laatsteZorgfase(studentKey);
-  return `<section class="zorgfase-card"><label>Zorgfase van deze leerling<select data-zorgfase onchange="wisselZorgfase(this.value)" ${isArchiefJaar()?"disabled":""}><option value="">Nog niet aangeduid</option>${ZORGFASES.map(([id,label])=>`<option value="${id}" ${value===id?"selected":""}>${esc(label)}</option>`).join("")}</select></label><div class="zorgfase-uitleg"><strong>De volledige zorglijn blijft bij de leerling.</strong><br>Als je de fase wijzigt, blijven alle eerdere notities, acties en evaluaties zichtbaar.</div></section>`;
+  const historiek=zorgfaseHistoriekVoor(studentKey),historiekHtml=historiek.length?`<div class="fasehistoriek"><strong>Fasehistoriek</strong>${historiek.map(h=>`<span class="fasehistoriek-regel">${esc(h.overgenomen?h.datum:h.maand?maandLabel(h.datum):new Date(`${h.datum}T12:00:00`).toLocaleDateString("nl-BE"))}: ${h.van?`${esc(zorgfaseLabel(h.van))} → `:"Gestart in "}${esc(zorgfaseLabel(h.naar))}</span>`).join("")}</div>`:"";
+  return `<section class="zorgfase-card"><label>Zorgfase van deze leerling<select data-zorgfase onchange="wisselZorgfase(this.value)" ${isArchiefJaar()?"disabled":""}><option value="">Nog niet aangeduid</option>${ZORGFASES.map(([id,label])=>`<option value="${id}" ${value===id?"selected":""}>${esc(label)}</option>`).join("")}</select></label><div class="zorgfase-uitleg"><strong>De volledige zorglijn blijft bij de leerling.</strong><br>Pas de zorgfase hier aan wanneer een leerling op- of afschaalt. Elke overgang wordt met datum bewaard.</div>${historiekHtml}</section>`;
 }
 function laatsteFaseWaarde(studentKey,field){
   const items=[...overlegHistoriek].sort((a,b)=>a.maand.localeCompare(b.maand));
@@ -525,7 +537,12 @@ function faseChecklistKeuze(el){
   zetBewaarstatus("Wijzigingen nog niet bewaard","dirty");
   render();
 }
-function wisselZorgfase(value){collectCurrent();const studentKey=key(leerlingen[activeStudentIndex]);data.entries[studentKey].zorgfase=String(value??"");faseVragenOpen=!!value;render();}
+function wisselZorgfase(value){
+  const studentKey=key(leerlingen[activeStudentIndex]),nieuweFase=String(value??""),entryVoor=data.entries?.[studentKey]||{},oudeFase=Object.prototype.hasOwnProperty.call(entryVoor,"zorgfase")?String(entryVoor.zorgfase??""):laatsteZorgfase(studentKey);
+  collectCurrent();data.entries[studentKey]={...(data.entries[studentKey]||{})};
+  if(nieuweFase&&nieuweFase!==oudeFase){data.entries[studentKey].zorgfaseHistoriek=Array.isArray(data.entries[studentKey].zorgfaseHistoriek)?data.entries[studentKey].zorgfaseHistoriek:[];data.entries[studentKey].zorgfaseHistoriek.push({datum:new Date().toISOString().slice(0,10),van:oudeFase,naar:nieuweFase,gewijzigdDoor:user?.email||user?.uid||""});}
+  data.entries[studentKey].zorgfase=nieuweFase;faseVragenOpen=!!nieuweFase;zetBewaarstatus("Wijzigingen nog niet bewaard","dirty");render();
+}
 function openStudent(index){
   if(index<0||index>=leerlingen.length)return;
   collectCurrent();
