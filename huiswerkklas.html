@@ -207,7 +207,7 @@ function isSecretariaat(){return ["secretariaat","beheerder"].includes(role);}
 function begeleiderWeergavenaam(x){
   const raw=String(x?.name||x||"").trim(),email=String(x?.email||"").trim().toLowerCase(),sleutel=supervisorNameKey(raw);
   const perEmail={"anu.buyse@hotmail.be":"Buyse Anuschka","lara.stevens@hotmail.com":"Stevens Lara","laura.bierbooms@bsdelinde.net":"Bierbooms Laura","hanne.dekeersmaeker@bsdelinde.net":"De Keersmaeker Hanne","davy.marchand@bsdelinde.net":"Marchand Davy"};
-  const perNaam={"anuschka juf":"Buyse Anuschka","lara juf":"Stevens Lara","laura juf":"Bierbooms Laura","hanne juf":"De Keersmaeker Hanne","davy meester":"Marchand Davy"};
+  const perNaam={"anuschka juf":"Buyse Anuschka","juf lara":"Stevens Lara","juf laura":"Bierbooms Laura","hanne juf":"De Keersmaeker Hanne","davy meester":"Marchand Davy"};
   return perEmail[email]||perNaam[sleutel]||raw;
 }
 function stilleBeheerder(x){const email=String(x?.email||"").trim().toLowerCase(),naam=supervisorNameKey(x?.name||x||"");return email==="isabel.rockele@bsdelinde.net"||naam==="isabel juf"||naam==="isabel rockele";}
