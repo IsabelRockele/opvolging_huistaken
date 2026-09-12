@@ -18,6 +18,7 @@
     label{display:block;font-weight:800;font-size:12px;color:#4b3b2d;margin-bottom:4px} input,select,textarea{font:inherit;width:100%;border:1px solid var(--line);border-radius:10px;padding:8px 10px;background:#fff}
     .titel-label{position:relative}.bewaarstatus-inline{position:absolute;left:2px;top:100%;display:block;min-height:16px;margin-top:4px;font-size:11px;font-weight:700;color:var(--muted);white-space:nowrap}
     .bewaarstatus-inline.dirty{color:#9a5a00}.bewaarstatus-inline.saving{color:#665a73}.bewaarstatus-inline.saved{color:#2f7430}.bewaarstatus-inline.error{color:#a82424}
+    .save-toast{position:fixed;z-index:1000;left:50%;bottom:24px;transform:translateX(-50%);width:min(520px,calc(100% - 28px));padding:14px 18px;border:2px solid #58a977;border-radius:14px;background:#e6f7ec;color:#1f5f38;font-weight:900;text-align:center;box-shadow:0 10px 30px #0003}.save-toast.error{border-color:#c95b55;background:#fff0ef;color:#8a2924}
     textarea{min-height:62px;resize:vertical}.toolbar{display:grid;grid-template-columns:150px 150px 180px 1fr auto auto;gap:10px;align-items:end;padding-bottom:16px}
     .leerling-card{border:1px solid var(--line);border-radius:14px;overflow:hidden;background:#fff;margin-bottom:12px}
     .leerling-head{background:#f7faf5;border:0;padding:10px 12px;display:flex;justify-content:space-between;gap:10px;align-items:center;width:100%;text-align:left;color:var(--text)}
@@ -131,6 +132,7 @@
   </style>
 </head>
 <body>
+<div class="save-toast" id="saveToast" role="status" aria-live="polite" style="display:none"></div>
 <header>
   <div class="brand"><img src="afbeeldingen/schoollogo.png" alt="logo" onerror="this.style.display='none'"><div><h1>Zorgoverleg</h1><div id="status" class="sub">Laden...</div></div></div>
   <div class="bar"><a class="button ghost" href="index.html">Keuzescherm</a><button id="logoutBtn" class="ghost">Uitloggen</button></div>
@@ -605,11 +607,13 @@ async function toggleZorgGeschiedenis(){
 }
 function zorgoverlegBewaarPayload(){const jaren=bewaarJarenVoorKlas(activeKlas);return {...data,schooljaar,klas:activeKlas,maand,bewaarTot:bewaarTotVoorSchooljaar(schooljaar,jaren),bewaartermijnJaren:jaren,updatedAt:serverTimestamp(),updatedBy:user.email||user.uid};}
 function zetBewaarstatus(text,klasse=""){const el=$("titelSaveStatus");if(!el)return;el.textContent=text;el.className=`bewaarstatus-inline ${klasse}`.trim();}
+let saveToastTimer=null;
+function toonBewaarmelding(tekst,isFout=false){const melding=$("saveToast");melding.textContent=tekst;melding.classList.toggle("error",isFout);melding.style.display="block";clearTimeout(saveToastTimer);saveToastTimer=setTimeout(()=>{melding.style.display="none";},5000);}
 async function save(){
   if(isArchiefJaar()){alert("Dit is een vorig schooljaar. Je kan het bekijken, maar niet per ongeluk overschrijven.");return;}
   collect();$("status").textContent="Bewaren...";zetBewaarstatus("Bezig met bewaren...","saving");
-  try{await setDoc(overlegRef(),zorgoverlegBewaarPayload(),{merge:true});render();$("status").textContent="Bewaard";zetBewaarstatus("Titel en gegevens bewaard ✓","saved");}
-  catch(err){$("status").textContent="Bewaren mislukt";zetBewaarstatus("Bewaren mislukt","error");alert("Bewaren lukte niet: "+err.message);}
+  try{await setDoc(overlegRef(),zorgoverlegBewaarPayload(),{merge:true});render();$("status").textContent="Bewaard";zetBewaarstatus("Titel en gegevens bewaard ✓","saved");toonBewaarmelding("✓ Zorgoverleg opgeslagen");}
+  catch(err){$("status").textContent="Bewaren mislukt";zetBewaarstatus("Bewaren mislukt","error");toonBewaarmelding("Bewaren mislukt — probeer opnieuw",true);alert("Bewaren lukte niet: "+err.message);}
 }
 async function saveAndGoNext(){
   if(isArchiefJaar()){goToStudent(activeStudentIndex+1);return;}
@@ -622,9 +626,11 @@ async function saveAndGoNext(){
     await setDoc(overlegRef(),zorgoverlegBewaarPayload(),{merge:true});
     $("status").textContent="Bewaard";
     zetBewaarstatus("Titel en gegevens bewaard ✓","saved");
+    toonBewaarmelding("✓ Zorgoverleg opgeslagen");
   }catch(err){
     $("status").textContent="Bewaren mislukt";
     zetBewaarstatus("Bewaren mislukt","error");
+    toonBewaarmelding("Bewaren mislukt — probeer opnieuw",true);
     alert("Bewaren lukte niet: " + err.message);
   }
 }
