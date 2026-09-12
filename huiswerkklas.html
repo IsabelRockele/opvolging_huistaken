@@ -72,6 +72,7 @@
     .mobile-help{margin-top:12px;border:1px solid var(--line);border-radius:10px;padding:0 11px;background:#fff}.mobile-help summary{padding:10px 0;font-weight:800;cursor:pointer}.mobile-help p{margin:0 0 11px}
     .mobile-account{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px;padding:9px 11px;border-radius:10px;background:#eef3f9}.mobile-account span{min-width:0;font-size:12px;color:#536985;overflow-wrap:anywhere}.mobile-account button{flex:0 0 auto;padding:7px 9px;font-size:12px}
     .quick-add{padding:0;overflow:hidden}.quick-add>summary{cursor:pointer;list-style:none;padding:13px 16px;font-size:17px;font-weight:900;display:flex;align-items:center;gap:8px}.quick-add>summary::-webkit-details-marker{display:none}.quick-add>summary::after{content:"+";margin-left:auto;font-size:22px}.quick-add[open]>summary::after{content:"−"}.quick-add-body{border-top:1px solid var(--line);padding:14px 16px}.quick-add-grid{display:grid;grid-template-columns:minmax(120px,180px) minmax(220px,1fr) minmax(190px,260px) auto;gap:10px;align-items:end}.quick-add-message{margin-top:9px;font-size:13px;font-weight:800;color:#2f7a50}
+    .fold-panel{padding:0;overflow:hidden}.fold-panel>summary{cursor:pointer;list-style:none;padding:17px 18px;font-size:21px;font-weight:900;display:flex;align-items:center;gap:10px}.fold-panel>summary::-webkit-details-marker{display:none}.fold-panel>summary::after{content:"Openen +";margin-left:auto;font-size:13px;color:var(--muted)}.fold-panel[open]>summary::after{content:"Sluiten −"}.fold-panel[open]>summary{border-bottom:1px solid var(--line)}.fold-panel-body{padding:16px 18px}
     @media(max-width:900px){.quick-add-grid{grid-template-columns:1fr}.quick-add-grid button{width:100%;padding:12px}.quick-add>summary{padding:14px}.quick-add-body{padding:12px}}
     @media(max-width:900px){main{padding:10px}.toolbar,.two{grid-template-columns:1fr}.right{margin-left:0}.attendance-row{grid-template-columns:10px 60px 1fr 32px}.mobile-today{display:block}.list-panel,.desktop-controls,.desktop-overview,.werking-notice,header .bar{display:none!important}#supervisorPanel{display:none!important}header{padding:10px 12px}.brand img{width:44px;height:44px}}
     body.qr-mobile main{padding:10px;max-width:720px;margin:0 auto}
@@ -149,25 +150,25 @@
     <label id="paidOnlyLabel" style="display:flex;align-items:center;gap:8px;margin:12px 0 0;font-size:14px"><input id="paidOnlyCheckbox" type="checkbox" style="width:20px;flex:0 0 auto"> Alleen betalende leerlingen tonen</label>
     <div id="planningOverview"></div>
   </section>
-  <section class="panel" id="supervisorPanel" style="display:none">
-    <div class="bar"><h2 style="margin:0">Begeleiders</h2><div class="actions right"><button class="white" id="manageSupervisorsBtn">⚙️ Begeleiders beheren</button><button class="white" id="supervisorPdfBtn">📄 PDF begeleiders</button></div></div>
+  <details class="panel fold-panel" id="supervisorPanel" style="display:none">
+    <summary><span>Begeleiders</span><span class="tag" id="supervisorCountTag">0 aangeduid</span></summary>
+    <div class="fold-panel-body"><div class="bar"><div class="actions right"><button class="white" id="manageSupervisorsBtn">⚙️ Begeleiders beheren</button><button class="white" id="supervisorPdfBtn">📄 PDF begeleiders</button></div></div>
     <div id="supervisorManager" class="notice" style="display:none;margin-top:12px">
       <div class="bar"><div><strong>Wie mag de huiswerkklas begeleiden?</strong><p class="muted" style="margin:4px 0 0">Vink de leerkrachten aan. Zij verschijnen daarna op laptop en gsm en krijgen de begeleidersrechten.</p></div><button class="white" id="closeSupervisorManagerBtn">Sluiten</button></div>
       <div id="supervisorCandidateList" class="begeleider-keuzes" style="grid-template-columns:repeat(auto-fit,minmax(220px,1fr));margin-top:12px"></div>
       <div class="actions" style="margin-top:12px"><button class="secondary" id="saveSupervisorConfigBtn">✓ Begeleiders bewaren</button></div>
     </div>
-    <div id="supervisorDays"></div>
-  </section>
-  <section class="panel list-panel" id="attendancePanel">
-    <div class="bar">
-      <h2>Leerlingen</h2>
+    <div id="supervisorDays"></div></div>
+  </details>
+  <details class="panel list-panel fold-panel" id="attendancePanel" open>
+    <summary><span>Leerlingen</span><span class="tag" id="countTag">0 leerlingen</span></summary>
+    <div class="fold-panel-body"><div class="bar">
       <label id="attendancePaidOnlyLabel" style="display:none;align-items:center;gap:8px;margin:0 0 0 auto;font-size:14px"><input id="attendancePaidOnlyCheckbox" type="checkbox" style="width:20px;flex:0 0 auto"> Alleen betalende tonen</label>
-      <span class="tag right" id="countTag">0 leerlingen</span>
       <button class="white" id="closeAttendanceBtn" style="display:none">← Terug naar overzicht</button>
     </div>
     <div id="attendanceSupervisorPicker"></div>
-    <div id="homeworkTable"></div>
-  </section>
+    <div id="homeworkTable"></div></div>
+  </details>
 </main>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script type="module">
@@ -427,8 +428,10 @@ function renderSupervisors(){
   $("supervisorManager").style.display=supervisorManagerOpen?"block":"none";
   if(supervisorManagerOpen)renderSupervisorManager();
   panel.style.display="block";const alleDatums=[...(hw.dates||[])].sort(),dates=zichtbareWerkdatums();
+  const namen=supervisorNames(),aangeduid=dates.length===1?(hw.supervisors?.[dates[0]]||[]).length:0;
+  $("supervisorCountTag").textContent=dates.length===1?`${aangeduid} aangeduid`:`${namen.length} begeleiders`;
   if(!alleDatums.length){doel.innerHTML='<div class="empty">Voeg eerst een huiswerkklasdatum toe. Daarna kun je hier de begeleiders aanduiden.</div>';return}
-  const namen=supervisorNames(),totalen=Object.fromEntries(namen.map(n=>[n,0]));
+  const totalen=Object.fromEntries(namen.map(n=>[n,0]));
   alleDatums.filter(d=>!isCancelledDate(d)).forEach(d=>(hw.supervisors?.[d]||[]).forEach(n=>{if(n in totalen)totalen[n]++}));
   doel.innerHTML=`<div class="supervisor-table-wrap"><table><thead><tr><th class="class-col"></th><th class="name-col">Leerkracht</th>${dates.map(d=>`<th class="date-col">${esc(d.slice(8,10)+"/"+d.slice(5,7))}${isCancelledDate(d)?'<span class="lock-note">gaat niet door</span>':`<label class="lock-note"><input type="checkbox" data-lock-date="${esc(d)}" ${hw.processedDates?.[d]?"checked":""}> verwerkt</label>`}</th>`).join("")}<th class="total-col">Deze maand</th></tr></thead><tbody>${namen.map(n=>`<tr><td class="class-col teacher-icon">👩‍🏫</td><td class="name-col"><strong>${esc(n)}</strong></td>${dates.map(d=>`<td class="date-col">${isCancelledDate(d)?'—':`<input type="checkbox" data-supervisor-date="${esc(d)}" data-supervisor-name="${esc(n)}" ${(hw.supervisors?.[d]||[]).includes(n)?"checked":""} ${voorbijeDatumVergrendeld(d)?"disabled":""}>`}</td>`).join("")}<td class="total-col">${totalen[n]}</td></tr>`).join("")}</tbody></table></div>`;
   document.querySelectorAll("[data-supervisor-date]").forEach(ch=>ch.onchange=()=>{collectSupervisors();renderSupervisors();bindProcessedCheckboxes();autoSave()});
