@@ -886,7 +886,8 @@ function toonMiniBar(el){
   }
   miniBar.addEventListener('pointerdown', e => {
     saveSelection();
-    e.stopPropagation();
+    // Niet stoppen tijdens de capturefase: pictogrammen in de miniwerkbalk
+    // verwerken zelf pointerdown en moeten die gebeurtenis kunnen ontvangen.
   }, true);
 
   // Knoppen
