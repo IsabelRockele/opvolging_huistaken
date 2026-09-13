@@ -775,9 +775,10 @@ requestAnimationFrame(() => {
       item.appendChild(i);
       item.addEventListener('pointerdown', e => {
         e.preventDefault(); e.stopPropagation();
-        handlePictoInsert(img.src, null);
+        // Geef het vak en de cursor van deze miniwerkbalk expliciet mee. Zo
+        // kan een klik nooit in een eerder geselecteerde dag terechtkomen.
+        handlePictoInsert(img.getAttribute('src') || img.src, null, miniBarTarget, _savedRange);
         mtPictoGrid.classList.remove('open');
-        pushSnapshot();
       });
       mtPictoGrid.appendChild(item);
     });
@@ -1630,14 +1631,23 @@ function toonMiniBar(el){
     document.getElementById('pictoModeHint').textContent = 'Inline: klik eerst in de tekst waar het picto moet komen, dan kies je picto.';
   });
 
-  function handlePictoInsert(src, ev){
+  function handlePictoInsert(src, ev, toolbarTarget=null, toolbarRange=null){
     const sel=window.getSelection();
     const ae=document.activeElement;
     const wantInline = _pictoModus === 'inline' || (ev && (ev.ctrlKey || ev.metaKey));
 
     /* Inline in tekst */
     if (wantInline){
-      restoreSelection(); // herstel cursor die verloren ging bij dock/toolbar-klik
+      // Een miniwerkbalk beschikt over de cursor van het vak waarvoor hij
+      // geopend werd. Gebruik die eerst; de algemene herstelroute blijft de
+      // fallback voor het vaste pictogrammenpaneel.
+      if (toolbarRange && toolbarRange.commonAncestorContainer && toolbarRange.commonAncestorContainer.isConnected !== false){
+        const currentSel = window.getSelection();
+        currentSel.removeAllRanges();
+        currentSel.addRange(toolbarRange.cloneRange());
+      } else {
+        restoreSelection();
+      }
       const sel = window.getSelection();
       const editable = sel && sel.rangeCount ? inEditable(sel.anchorNode) : null;
       if (editable){
@@ -1687,7 +1697,16 @@ pushSnapshot();
     const pic = makeFreePicto(src);
 
     let host = null;
-    if (lastFocusedHost && lastFocusedHost.isConnected) {
+    if (toolbarTarget && toolbarTarget.isConnected) {
+      if (toolbarTarget === notesPanel || toolbarTarget === notesBody) {
+        host = notesPanel;
+      } else if (toolbarTarget.classList && toolbarTarget.classList.contains('day')) {
+        host = (lastFocusedHost && toolbarTarget.contains(lastFocusedHost))
+          ? lastFocusedHost
+          : (toolbarTarget.querySelector('.body') || toolbarTarget);
+      }
+    }
+    if (!host && lastFocusedHost && lastFocusedHost.isConnected) {
       host = lastFocusedHost;
     } else if (activeHost && activeHost.isConnected) {
       host = activeHost;
@@ -2058,6 +2077,11 @@ if (ce) {
       planBoxEl.innerHTML = data.plan || '';
       ensureTaskDeleteButtons(d);
     }
+
+    // De klasse van het takenvak zit niet in de bewaarde innerHTML. Herstel ze
+    // na het laden, zodat de lege invoerregel onder een bestaande takenlijst
+    // opnieuw verborgen wordt.
+    updatePlanBoxClass(d);
 
     const br=d.querySelector(`[data-key="d${idx}.bring"]`);
     if (br && data.bring !== undefined) { br.innerHTML = data.bring; }
