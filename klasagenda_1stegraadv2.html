@@ -1383,10 +1383,13 @@ function toonMiniBar(el){
     const sel = window.getSelection();
     if (!sel || !sel.rangeCount) return;
     const ed = inEditable(sel.anchorNode);
-    if (ed && !sel.isCollapsed){
+    // Bewaar ook een ingeklapte selectie (de gewone tekstcursor). Knoppen in
+    // de zwevende werkbalk kunnen de browserfocus verplaatsen voordat het
+    // pictogram wordt ingevoegd.
+    if (ed){
       lastTextRange = sel.getRangeAt(0).cloneRange();
       lastTextRangeAt = Date.now();
-      syncFontSizeControlsFromSelection();
+      if (!sel.isCollapsed) syncFontSizeControlsFromSelection();
     }
   });
 
@@ -1701,6 +1704,9 @@ pushSnapshot();
     }
     pic.dataset.host = hostType;
 
+    // Mededelingen hebben een eigen binnenvak. Daarin blijft het pictogram
+    // zichtbaar en worden de coördinaten niet ten opzichte van de kop berekend.
+    if (host === notesPanel) host = notesPanel.querySelector('.panelInner') || notesPanel;
     host.appendChild(pic);
 
     // Slim plaatsen: links in het vak, kleine marge bovenaan
@@ -1857,8 +1863,9 @@ pushSnapshot();
       const dropEl = document.elementFromPoint(e.clientX, e.clientY);
       node.style.pointerEvents = oldPE;
 
-      let host = dropEl ? dropEl.closest('.bringBox, .panel, .day .body, .day') : null;
+      let host = dropEl ? dropEl.closest('.bringBox, .panelInner, .panel, .day .body, .day') : null;
       if(!host) host = hostAtStart || document.querySelector('.page');
+      if (host === notesPanel) host = notesPanel.querySelector('.panelInner') || notesPanel;
 
       const nodeRect = node.getBoundingClientRect();
       const hostRect = host.getBoundingClientRect();
@@ -2098,7 +2105,7 @@ if (ce) {
     (list||[]).forEach(p=>{
       const node=makeFreePicto(p.src);
       node.style.left=p.left||'10px'; node.style.top=p.top||'10px'; if(p.width) node.style.width=p.width;
-      notesPanel.appendChild(node);
+      (notesPanel.querySelector('.panelInner') || notesPanel).appendChild(node);
     });
   }
 
