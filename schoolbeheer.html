@@ -3326,18 +3326,28 @@ return `<div class="notice no-print" style="margin:14px 0;background:${verwerkt?
     window.kiesRefterWeek=value=>{const week=geldigeRefterWeek(value);if(!week)return alert("Kies een datum binnen het schooljaar.");gekozenRefterWeek=week;renderRefter();};
     window.wisselRefterWeek=richting=>{const nieuw=datumPlusDagen(standaardRefterWeek(),Number(richting)*7);if(nieuw<eersteRefterWeek()||nieuw>laatsteRefterWeek())return;gekozenRefterWeek=nieuw;renderRefter();};
     window.wisselRefterMaand=value=>{gekozenRefterWeek=geldigeRefterWeek(`${value}-01`)||maandagVan(`${value}-01`);renderRefter();};
-    function renderRefterMetScrollbehoud(){
-      const vorigeScrollY=window.scrollY;
-      const tabel=document.querySelector('.refter-print-wrap');
-      const vorigeScrollX=tabel?.scrollLeft||0;
-      renderRefter();
-      requestAnimationFrame(()=>{
-        window.scrollTo(0,vorigeScrollY);
-        const nieuweTabel=document.querySelector('.refter-print-wrap');
-        if(nieuweTabel)nieuweTabel.scrollLeft=vorigeScrollX;
-      });
-    }
-    window.toggleRefter = (month,sid,date,checked) => { const week=maandagVan(date);if(refterWeekVerwerkt(week)&&!magRefterCorrigeren(week)){renderRefterMetScrollbehoud();return;}const m=data.refter[month] ||= {}; m[sid] ||= {}; m[sid][date]=checked;if(data.refterBevestigingen?.[week])delete data.refterBevestigingen[week];markDirty();renderRefterMetScrollbehoud(); };
+    window.toggleRefter = (month,sid,date,checked) => {
+      const week=maandagVan(date),vak=document.activeElement;
+      if(refterWeekVerwerkt(week)&&!magRefterCorrigeren(week)){
+        if(vak?.type==='checkbox')vak.checked=!checked;
+        return;
+      }
+      const m=data.refter[month] ||= {};m[sid] ||= {};m[sid][date]=checked;
+      if(data.refterBevestigingen?.[week]){
+        delete data.refterBevestigingen[week];
+        const melding=document.querySelector('.refter-confirmatie');
+        if(melding){
+          melding.classList.remove('refter-confirmatie');
+          melding.innerHTML='<strong>○ Bevestiging ingetrokken na wijziging</strong><p class="muted">Controleer de volledige week opnieuw en bevestig ze daarna opnieuw.</p><button class="green" onclick="bevestigRefterWeek(\''+week+'\')">✓ Alles nagekeken — deze week klopt</button>';
+        }
+      }
+      if(vak?.type==='checkbox'){
+        vak.closest('label')?.setAttribute('title',checked?'Afwezig — klik om te verwijderen':'Klik om afwezig aan te duiden');
+        const print=vak.closest('td')?.querySelector('.print-absence');
+        if(print){print.textContent=checked?'X':'·';print.classList.toggle('empty',!checked);}
+      }
+      markDirty();
+    };
 
     function renderActivities(){
       activityMonth = activityMonth || huidigeSchoolMaand();
