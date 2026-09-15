@@ -179,6 +179,16 @@
     .refter-week-table col.refter-name-col{width:35%!important}
     .refter-week-table col.refter-day-col{width:13%!important}
     .refter-week-table th.day,.refter-week-table td.day{text-align:center;vertical-align:middle}
+    .refter-print-wrap{max-height:none!important;overflow:visible!important}
+    .refter-print-wrap .refter-week-table{min-width:0!important}
+    .refter-print-wrap .refter-week-table th,.refter-print-wrap .refter-week-table td{padding:7px 6px}
+    .refter-print-wrap .refter-week-table th:first-child,
+    .refter-print-wrap .refter-week-table td:first-child{position:static!important;min-width:0!important;width:auto!important;box-shadow:none!important}
+    .refter-opvolg-week{padding:13px 15px;border:1px solid #a7cbb4;border-radius:12px;background:#f3faf5;margin-top:10px}
+    .refter-opvolg-week:first-child{border-width:2px;border-color:#4b9a68}
+    .refter-archief-maand{margin-top:9px;border:1px solid var(--line);border-radius:12px;background:#fff}
+    .refter-archief-maand>summary{cursor:pointer;padding:12px 14px;font-weight:850;background:#eef6ff;border-radius:12px}
+    .refter-archief-inhoud{padding:3px 14px 14px}
     .refter-week-nav{display:flex!important;align-items:flex-end;justify-content:center;gap:10px;flex-wrap:wrap;margin:14px 0 8px;padding:10px 12px;background:#f5f8fb;border:1px solid #cbd8e6;border-radius:12px}
     .refter-week-nav label{flex:0 0 230px!important;max-width:230px!important;margin:0}
     .refter-week-nav button{white-space:nowrap;margin-bottom:1px}
@@ -1323,6 +1333,7 @@
         });
         renderKlasPills();
         if(tab==="refter"&&$("refterWeekKlassen"))laadRefterWeekStatus(standaardRefterWeek()).catch(console.warn);
+        if(tab==="opvolging")renderOpvolging();
       },err=>console.warn("Testoverzicht laden mislukt",err));
     }
 
@@ -1599,10 +1610,25 @@
       const bron=new Map(liveKlasDocumenten);if(data)bron.set(activeClass,data);
       const month=schoolMonths().includes(opvolgMaand)?opvolgMaand:huidigeSchoolMaand();opvolgMaand=month;
       const kaart=(soort,icoon,titel)=>`<section class="notice"><h3>${icoon} ${titel}</h3><p class="muted">Open een klas voor ${esc(maandNaam(month))}. Geel betekent dat er nog iets verwerkt moet worden.</p><div class="actions">${allClasses.map(k=>{const s=maandStatus(bron.get(k),month),open=s[`${soort}Open`]||0,aantal=s[`${soort}Aantal`]||0;return`<button class="${open?'heeft-open':'white'}" onclick="openOpvolgingKlas('${k}','${soort}','${month}')">${open?'● ':aantal?'✓ ':''}${k}${open?` — ${open} nieuw`:aantal?' — bekeken':''}</button>`}).join("")}</div></section>`;
-      $("content").innerHTML=`<div class="panel"><div class="bar"><div><h2>Schoolbreed opvolgen</h2><p class="muted">Kies een maand en doorloop daarna alle klassen voor Refter, Activiteiten of Aankopen. Ook verwerkte lijsten blijven openklikken.</p></div><label style="max-width:220px">Maand<select onchange="kiesOpvolgMaand(this.value)">${schoolMonths().map(m=>`<option value="${m}" ${m===month?'selected':''}>${esc(maandNaam(m))}</option>`).join("")}</select></label></div><div class="opvolg-keuzes">${kaart('refter','🍽️','Refterlijsten')}${kaart('activiteit','🚌','Activiteiten')}${kaart('aankoop','🛍️','Aankopen')}</div></div>`;
+      const klaar=[];
+      const verwerkt=[];
+      allClasses.forEach(klas=>{
+        const kd=bron.get(klas);if(!kd)return;
+        refterWekenVoorOpvolging(kd,false).forEach(week=>klaar.push({klas,week}));
+        refterWekenVoorOpvolging(kd,true).forEach(week=>verwerkt.push({klas,week}));
+      });
+      klaar.sort((a,b)=>a.week.localeCompare(b.week)||vergelijkKlassen(a.klas,b.klas));
+      verwerkt.sort((a,b)=>b.week.localeCompare(a.week)||vergelijkKlassen(a.klas,b.klas));
+      const klaarPerWeek=new Map();klaar.forEach(x=>{if(!klaarPerWeek.has(x.week))klaarPerWeek.set(x.week,[]);klaarPerWeek.get(x.week).push(x.klas)});
+      const verwerkteMaanden=new Map();verwerkt.forEach(x=>{const kd=bron.get(x.klas),m=refterWeekDagen(x.week).find(d=>d.date>=startDate()&&d.date<=endDate()&&!isFree(d.date,kd))?.date.slice(0,7)||x.week.slice(0,7);if(!verwerkteMaanden.has(m))verwerkteMaanden.set(m,new Map());const weken=verwerkteMaanden.get(m);if(!weken.has(x.week))weken.set(x.week,[]);weken.get(x.week).push(x.klas)});
+      const klaarHtml=klaar.length?`<p class="muted">Alleen volledig voorbije, door de leerkracht bevestigde weken staan hier. De oudste staat bovenaan.</p>${[...klaarPerWeek].map(([week,klassen],i)=>`<div class="refter-opvolg-week"><strong>${i===0?'Eerst verwerken: ':''}week ${formatDate(week)} – ${formatDate(datumPlusDagen(week,4))}</strong><div class="actions" style="margin-top:8px">${klassen.map(k=>`<button class="green" onclick="openOpvolgingRefter('${esc(k)}','${week}')">${esc(k)} verwerken</button>`).join('')}</div></div>`).join('')}`:`<div class="notice" style="background:#eef8f1;border-color:#8fc5a4"><strong>✓ Geen bevestigde refterweken meer te verwerken</strong><p class="muted" style="margin-bottom:0">Onbevestigde en nog niet volledig voorbije weken worden hier bewust niet getoond.</p></div>`;
+      const archiefHtml=verwerkteMaanden.size?[...verwerkteMaanden].map(([m,weken])=>`<details class="refter-archief-maand"><summary>📁 ${esc(maandNaam(m))}</summary><div class="refter-archief-inhoud">${[...weken].map(([week,klassen])=>`<details style="margin-top:10px"><summary style="cursor:pointer;font-weight:750">📁 Week ${formatDate(week)} – ${formatDate(datumPlusDagen(week,4))}</summary><div class="actions" style="padding:9px 0 2px">${klassen.map(k=>`<button class="white small" onclick="openOpvolgingRefter('${esc(k)}','${week}')">${esc(k)}</button>`).join('')}</div></details>`).join('')}</div></details>`).join(''):'<p class="muted">Nog geen verwerkte refterweken.</p>';
+      $("content").innerHTML=`<div class="panel"><div class="bar"><div><h2>Schoolbreed opvolgen</h2><p class="muted">De oudste taken staan eerst. Afgewerkte refterweken vind je onderaan in het archief.</p></div></div><section style="margin-top:18px"><h3>🍽️ Refter — te verwerken</h3>${klaarHtml}<details style="margin-top:18px"><summary style="cursor:pointer;font-size:17px;font-weight:850">📁 Verwerkte refterweken</summary><div style="padding-top:5px">${archiefHtml}</div></details></section><hr style="margin:26px 0;border:0;border-top:1px solid var(--line)"><div class="bar"><h3 style="margin:0">Activiteiten en aankopen</h3><label style="max-width:220px">Maand<select onchange="kiesOpvolgMaand(this.value)">${schoolMonths().map(m=>`<option value="${m}" ${m===month?'selected':''}>${esc(maandNaam(m))}</option>`).join("")}</select></label></div><div class="opvolg-keuzes">${kaart('activiteit','🚌','Activiteiten')}${kaart('aankoop','🛍️','Aankopen')}</div></div>`;
     }
     window.kiesOpvolgMaand=month=>{opvolgMaand=month;renderOpvolging()};
     window.openOpvolgingKlas=async(klas,soort,month)=>{await openClass(klas,true);openMaandOnderdeel(soort==="activiteit"?"activiteiten":soort==="aankoop"?"aankopen":soort,month,true)};
+    window.openOpvolgingRefter=async(klas,week)=>{await openClass(klas,true);secretariaatOpvolgModus=true;gekozenRefterWeek=week;tab="refter";setActiveNav("");render()};
+    window.terugNaarRefterOpvolging=()=>{secretariaatOpvolgModus=false;gekozenRefterWeek="";tab="opvolging";renderKlasPills();render()};
 
     function render(){
       if(!data) return;
@@ -3031,15 +3057,15 @@
     };
 
     function daysInMonth(month){ const [y,m]=month.split("-").map(Number); const last=new Date(y,m,0).getDate(); return Array.from({length:last},(_,i)=>{const d=`${month}-${String(i+1).padStart(2,"0")}`; return {date:d,day:i+1,week:new Date(d+"T12:00:00").getDay()};}); }
-    function algemeneVrijeDag(date){ const w=new Date(date+"T12:00:00").getDay(); return w===0||w===3||w===6||(data.vrijeDagen||[]).some(v=>date>=v.start&&date<=v.end); }
-    function refterVrijeDagVoor(date){
-      return (data.refterVrijeDagen||[]).find(v => {
+    function algemeneVrijeDag(date,bron=data){ const w=new Date(date+"T12:00:00").getDay(); return w===0||w===3||w===6||(bron?.vrijeDagen||[]).some(v=>date>=v.start&&date<=v.end); }
+    function refterVrijeDagVoor(date,bron=data){
+      return (bron?.refterVrijeDagen||[]).find(v => {
         const start = v.date || v.datum || v.start;
         const end = v.end || start;
         return start && date >= start && date <= end;
       });
     }
-    function isFree(date){ return algemeneVrijeDag(date) || !!refterVrijeDagVoor(date); }
+    function isFree(date,bron=data){ return algemeneVrijeDag(date,bron) || !!refterVrijeDagVoor(date,bron); }
     function refterVrijeDagenVoorMaand(month){
       return (data.refterVrijeDagen||[])
         .filter(v => String(v.date || v.datum || v.start || "").slice(0,7) === month)
@@ -3089,7 +3115,15 @@
       if(vandaag>endDate())return laatsteRefterWeek();
       return maandagVan(vandaag);
     }
-    function refterWeekHeeftSchooldag(weekStart){return refterWeekDagen(weekStart).some(d=>d.date>=startDate()&&d.date<=endDate()&&!isFree(d.date));}
+    function refterWeekHeeftSchooldag(weekStart,bron=data){return refterWeekDagen(weekStart).some(d=>d.date>=startDate()&&d.date<=endDate()&&!isFree(d.date,bron));}
+    function refterWekenVoorOpvolging(bron=data,verwerkt=false,vandaag=isoDatum(new Date())){
+      const resultaat=[];
+      for(let week=eersteRefterWeek();week<=laatsteRefterWeek()&&datumPlusDagen(week,4)<vandaag;week=datumPlusDagen(week,7)){
+        if(!refterWeekHeeftSchooldag(week,bron))continue;
+        if(verwerkt?refterWeekVerwerkt(week,bron):refterWeekBevestiging(week,bron)&&!refterWeekVerwerkt(week,bron))resultaat.push(week);
+      }
+      return resultaat;
+    }
     function refterWeekNaVerwerking(){
       const vandaag=isoDatum(new Date());
       for(let week=eersteRefterWeek();week<=laatsteRefterWeek()&&datumPlusDagen(week,4)<vandaag;week=datumPlusDagen(week,7)){
@@ -3103,7 +3137,7 @@
       const weken=bron?.processed?.refterWeken;
       if(weken)return !!weken[weekStart];
       const legacy=bron?.processed?.refter||"";
-      const laatste=[...refterWeekDagen(weekStart)].reverse().find(d=>d.date>=startDate()&&d.date<=endDate()&&!isFree(d.date))?.date||"";
+      const laatste=[...refterWeekDagen(weekStart)].reverse().find(d=>d.date>=startDate()&&d.date<=endDate()&&!isFree(d.date,bron))?.date||"";
       return !!legacy&&!!laatste&&legacy>=laatste;
     }
     function refterWeekBevestiging(weekStart,bron=data){return bron?.refterBevestigingen?.[weekStart]||null;}
@@ -3200,8 +3234,12 @@ return `<div class="notice no-print" style="margin:14px 0;background:${verwerkt?
       const weken=initialiseerRefterWeken();
       if(verwerkt)delete weken[weekStart];else weken[weekStart]={verwerktOp:new Date().toISOString(),door:user.email||user.uid||""};
       // Alleen na verwerken doorschakelen; bij ongedaan maken blijft de week open.
-      if(!verwerkt)gekozenRefterWeek=refterWeekNaVerwerking();
-      markDirty();renderRefter();
+      if(secretariaatOpvolgModus){
+        markDirty();terugNaarRefterOpvolging();
+      }else{
+        if(!verwerkt)gekozenRefterWeek=refterWeekNaVerwerking();
+        markDirty();renderRefter();
+      }
     };
     async function laadRefterWeekStatus(weekStart){
       if(!isSecretary())return;
@@ -3303,8 +3341,11 @@ return `<div class="notice no-print" style="margin:14px 0;background:${verwerkt?
       const grenzen=maandGrenzen(month),students=leerlingenInPeriode(grenzen.van,grenzen.tot),verwerkt=refterWeekVerwerkt(weekStart);
       const weekLabel=`${formatDate(days[0].date)} – ${formatDate(days[4].date)}`;
       const refterFreeForm=`<div id="refterFreeForm" class="notice no-print refter-free-form" hidden><div class="refter-free-form-inhoud"><strong>Geen refter voor de hele klas op één dag</strong><p class="muted" style="margin-top:4px">Gebruik dit alleen bij bijvoorbeeld een schoolreis. De gekozen dag wordt grijs en de reden blijft zichtbaar.</p><div class="row"><label style="max-width:190px">Datum<input id="refterFreeDate" type="date" min="${weekStart}" max="${weekEnd}" value="${weekStart}"></label><label>Reden<input id="refterFreeReason" placeholder="bv. Schoolreis - betaald via activiteit"></label><button class="green" onclick="addRefterVrijeDag()">Datum markeren</button></div></div></div>`;
-      const klasStatus=isSecretary()&&secretariaatOpvolgModus?`<div class="notice no-print" style="margin:14px 0"><strong>Status van deze week per klas</strong><p class="muted">Je ziet of de leerkracht de week heeft bevestigd en of het secretariaat ze al heeft verwerkt. Klik op een klas om haar week te openen.</p><div id="refterWeekKlassen" class="actions"><span class="muted">Statussen laden…</span></div></div>`:"";
-      $("content").innerHTML=`<div class="panel"><div class="bar"><div><h2>Refter <span class="muted" style="font-weight:400">${esc(activeClass)}</span></h2><p class="muted"><strong>Duid alleen afwezige leerlingen aan: een rood kruisje betekent afwezig.</strong> Lege vakjes betekenen aanwezig. ${verwerkt?"Deze schoolweek is verwerkt en vergrendeld.":""}</p></div><div class="actions no-print"><button class="white" onclick="wisselRefterWeek(-1)">← Vorige week</button><label style="max-width:185px">Week van<input id="refterWeek" type="date" min="${eersteRefterWeek()}" max="${laatsteRefterWeek()}" value="${weekStart}" onchange="kiesRefterWeek(this.value)"></label><button class="white" onclick="wisselRefterWeek(1)">Volgende week →</button></div>${screenTools("refter")}</div>${maandOnderdeelNavigatie("refter",month)}<div class="notice" style="text-align:center;padding:10px"><strong>Schoolweek ${weekLabel}</strong></div>${helpPanel("refter")}${refterWoensdagBlok(weekStart)}${klasStatus}${refterFreeForm}${refterVrijeDagenBlok(month)}<div class="table-wrap refter-print-wrap"><table class="refter-print-table refter-week-table"><colgroup><col class="refter-name-col">${days.map(()=>`<col class="refter-day-col">`).join("")}</colgroup><thead><tr><th>Leerling</th>${days.map(d=>{const buiten=d.date<startDate()||d.date>endDate(),freeInfo=refterVrijeDagVoor(d.date),free=buiten||isFree(d.date);return`<th class="day ${free?"grey":""} ${verwerkt&&!free?"locked-head":""}" title="${buiten?"Buiten het schooljaar":freeInfo?esc(freeInfo.reason||freeInfo.reden||"Geen refter"):free?"Vrije dag":""}">${["","ma","di","wo","do","vr"][d.week]}<br>${d.day}/${Number(d.date.slice(5,7))}${freeInfo?'<br><span class="tag">geen refter</span>':verwerkt&&!free?'<br><span class="teacher-lock">&#128274;</span>':""}</th>`}).join("")}</tr></thead><tbody>${students.map(s=>`<tr class="${s.colleague?"colleague":""}"><td><strong>${esc(name(s))}</strong>${s.colleague?'<span class="tag green">collega</span>':''}</td>${days.map(d=>{const buiten=d.date<startDate()||d.date>endDate(),nietActief=!leerlingActiefOp(s,d.date),freeInfo=refterVrijeDagVoor(d.date),free=buiten||nietActief||isFree(d.date);if(free)return`<td class="day grey" title="${nietActief?"Leerling niet actief op deze datum":buiten?"Buiten het schooljaar":freeInfo?esc(freeInfo.reason||freeInfo.reden||"Geen refter"):"Vrije dag"}">-</td>`;if(s.colleague)return`<td class="day collega-dag" title="Kind van collega — geen refter">-</td>`;const maand=d.date.slice(0,7),m=data.refter[maand]||{},afwezig=!!m[s.id]?.[d.date];return`<td class="day ${verwerkt?"locked":""}"><label class="refter-afwezig-vak" title="${afwezig?"Afwezig — klik om te verwijderen":"Klik om afwezig aan te duiden"}"><input type="checkbox" ${afwezig?"checked":""} ${verwerkt&&!isSecretary()?"disabled":""} onchange="toggleRefter('${maand}','${s.id}','${d.date}',this.checked)"><span class="refter-afwezig-teken" aria-hidden="true"></span></label><span class="print-absence ${afwezig?"":"empty"}">${afwezig?"X":"·"}</span>${verwerkt&&!isSecretary()?'<br><span class="teacher-lock">&#128274;</span>':verwerkt?'<br><span class="tag done">verwerkt</span>':''}</td>`}).join("")}</tr>`).join("")}</tbody></table></div></div>`;
+      const weekBediening=isSecretary()&&secretariaatOpvolgModus
+        ? `<div class="actions no-print"><button class="white" onclick="terugNaarRefterOpvolging()">← Terug naar refteropvolging</button></div>`
+        : `<div class="actions no-print"><button class="white" onclick="wisselRefterWeek(-1)">← Vorige week</button><label style="max-width:185px">Week van<input id="refterWeek" type="date" min="${eersteRefterWeek()}" max="${laatsteRefterWeek()}" value="${weekStart}" onchange="kiesRefterWeek(this.value)"></label><button class="white" onclick="wisselRefterWeek(1)">Volgende week →</button></div>`;
+      const onderdeelNav=isSecretary()&&secretariaatOpvolgModus?"":maandOnderdeelNavigatie("refter",month);
+      $("content").innerHTML=`<div class="panel"><div class="bar"><div><h2>Refter <span class="muted" style="font-weight:400">${esc(activeClass)}</span></h2><p class="muted"><strong>Duid alleen afwezige leerlingen aan: een rood kruisje betekent afwezig.</strong> Lege vakjes betekenen aanwezig. ${verwerkt?"Deze schoolweek is verwerkt en vergrendeld.":""}</p></div>${weekBediening}${screenTools("refter")}</div>${onderdeelNav}<div class="notice" style="text-align:center;padding:10px"><strong>Schoolweek ${weekLabel}</strong></div>${helpPanel("refter")}${refterWoensdagBlok(weekStart)}${refterFreeForm}${refterVrijeDagenBlok(month)}<div class="table-wrap refter-print-wrap no-scroll-mirror"><table class="refter-print-table refter-week-table"><colgroup><col class="refter-name-col">${days.map(()=>`<col class="refter-day-col">`).join("")}</colgroup><thead><tr><th>Leerling</th>${days.map(d=>{const buiten=d.date<startDate()||d.date>endDate(),freeInfo=refterVrijeDagVoor(d.date),free=buiten||isFree(d.date);return`<th class="day ${free?"grey":""} ${verwerkt&&!free?"locked-head":""}" title="${buiten?"Buiten het schooljaar":freeInfo?esc(freeInfo.reason||freeInfo.reden||"Geen refter"):free?"Vrije dag":""}">${["","ma","di","wo","do","vr"][d.week]}<br>${d.day}/${Number(d.date.slice(5,7))}${freeInfo?'<br><span class="tag">geen refter</span>':verwerkt&&!free?'<br><span class="teacher-lock">&#128274;</span>':""}</th>`}).join("")}</tr></thead><tbody>${students.map(s=>`<tr class="${s.colleague?"colleague":""}"><td><strong>${esc(name(s))}</strong>${s.colleague?'<span class="tag green">collega</span>':''}</td>${days.map(d=>{const buiten=d.date<startDate()||d.date>endDate(),nietActief=!leerlingActiefOp(s,d.date),freeInfo=refterVrijeDagVoor(d.date),free=buiten||nietActief||isFree(d.date);if(free)return`<td class="day grey" title="${nietActief?"Leerling niet actief op deze datum":buiten?"Buiten het schooljaar":freeInfo?esc(freeInfo.reason||freeInfo.reden||"Geen refter"):"Vrije dag"}">-</td>`;if(s.colleague)return`<td class="day collega-dag" title="Kind van collega — geen refter">-</td>`;const maand=d.date.slice(0,7),m=data.refter[maand]||{},afwezig=!!m[s.id]?.[d.date];return`<td class="day ${verwerkt?"locked":""}"><label class="refter-afwezig-vak" title="${afwezig?"Afwezig — klik om te verwijderen":"Klik om afwezig aan te duiden"}"><input type="checkbox" ${afwezig?"checked":""} ${verwerkt&&!isSecretary()?"disabled":""} onchange="toggleRefter('${maand}','${s.id}','${d.date}',this.checked)"><span class="refter-afwezig-teken" aria-hidden="true"></span></label><span class="print-absence ${afwezig?"":"empty"}">${afwezig?"X":"·"}</span>${verwerkt&&!isSecretary()?'<br><span class="teacher-lock">&#128274;</span>':verwerkt?'<br><span class="tag done">verwerkt</span>':''}</td>`}).join("")}</tr>`).join("")}</tbody></table></div></div>`;
       const refterPaneel=$("content").querySelector(".panel"),weekNav=refterPaneel?.querySelector(".bar .actions.no-print"),weekTitel=refterPaneel?.querySelector(":scope > .notice"),geenRefterForm=refterPaneel?.querySelector(".refter-free-form"),refterTabel=refterPaneel?.querySelector(".refter-print-wrap");
       if(weekTitel&&refterTabel){weekTitel.classList.add("refter-week-titel");refterTabel.before(weekTitel);}
       if(verwerkt&&weekTitel)weekTitel.insertAdjacentHTML("beforeend",'<div style="margin-top:6px;color:#245c39;font-weight:800">🔒 Reeds verwerkt door het secretariaat</div><div class="muted">Deze schoolweek is vergrendeld voor klas- en zorgleerkrachten.</div>');
@@ -3333,7 +3374,9 @@ return `<div class="notice no-print" style="margin:14px 0;background:${verwerkt?
         return;
       }
       const m=data.refter[month] ||= {};m[sid] ||= {};m[sid][date]=checked;
-      if(data.refterBevestigingen?.[week]){
+      // Een correctie door het secretariaat is de definitieve administratieve
+      // aanpassing en mag de controle van de leerkracht niet opnieuw openen.
+      if(!isSecretary()&&data.refterBevestigingen?.[week]){
         delete data.refterBevestigingen[week];
         const melding=document.querySelector('.refter-confirmatie');
         if(melding){
@@ -4154,6 +4197,7 @@ return `<div class="notice no-print" style="margin:14px 0;background:${verwerkt?
           adminPanel="klaslijsten";classListMode="";
         }
         if(tab === "refter" && vorigeTab !== "refter") {gekozenRefterWeek = "";refterCorrectieSleutel="";}
+        if(isSecretary()&&tab==="refter"){secretariaatOpvolgModus=false;gekozenRefterWeek="";}
         if(tab === "administratie" && isSecretary()){adminPanel = "wegwijzer";adminNavigatieOpen=false;secretariaatModulesOpen=false;}
         renderKlasPills();
         render();

@@ -20,6 +20,11 @@
     button,a.button{border:0;border-radius:12px;background:var(--yellow);color:var(--text);font-weight:800;padding:9px 14px;cursor:pointer;text-decoration:none;font:inherit}
     button.ghost,a.ghost{background:rgba(255,255,255,.16);color:#fff;border:1px solid rgba(255,255,255,.3)}
     button.secondary{background:var(--mint)} button.white,a.button.white{background:#fff;border:1px solid var(--line)}
+    #saveBtn{min-width:170px;font-size:16px;padding:11px 18px;background:#bfe8dc;border:2px solid #4f9b78}
+    #saveBtn.is-saving{background:#fff2bd;border-color:#d6a928}
+    #saveBtn.is-saved{background:#dff3d8;border-color:#68a75e;color:#245d2c}
+    .compact-action{padding:7px 10px!important;font-size:13px!important}
+    .tool-wegwijzer{display:none!important}
     label{display:block;font-weight:800;font-size:12px;color:#4b3b2d;margin-bottom:4px}
     input,select{font:inherit;width:100%;border:1px solid var(--line);border-radius:10px;padding:8px 10px;background:#fff}
     input[type="checkbox"]{width:19px;height:19px;accent-color:#2f8f67}
@@ -35,7 +40,7 @@
     .attendance-row .stripe{width:8px;height:100%;min-height:28px;border-radius:999px}
     .empty{text-align:center;color:var(--muted);padding:24px}
     .tag{display:inline-flex;border-radius:999px;background:var(--green);padding:3px 8px;font-size:12px;font-weight:800;color:#315b2b}
-    .table-wrap{overflow:auto;border:1px solid var(--line);border-radius:8px;background:#fff;margin-top:10px;max-height:calc(100vh - 300px)}
+    .table-wrap{overflow-x:auto;overflow-y:visible;border:1px solid var(--line);border-radius:8px;background:#fff;margin-top:10px;max-height:none}
     table{border-collapse:separate;border-spacing:0;width:max-content;min-width:max-content}
     th,td{border-bottom:1px solid var(--line);padding:8px 9px;text-align:left;vertical-align:middle}
     th{background:#eef3f9;color:#536985;text-transform:uppercase;font-size:12px;letter-spacing:.03em;position:sticky;top:0;z-index:3}
@@ -62,7 +67,7 @@
     .begeleider-dag h3{margin:0 0 8px;font-size:15px}.begeleider-keuzes{display:grid;gap:6px}
     .begeleider-keuzes label{display:flex;align-items:center;gap:7px;margin:0;font-size:13px;font-weight:700}.begeleider-keuzes input{flex:0 0 auto}
     .begeleider-totalen{display:flex;flex-wrap:wrap;gap:7px;margin-top:12px}.begeleider-totaal{background:#eef3f9;border-radius:999px;padding:6px 10px;font-size:12px;font-weight:800}
-    .supervisor-table-wrap{overflow:auto;border:1px solid var(--line);border-radius:8px;background:#fff;margin-top:10px}
+    .supervisor-table-wrap{overflow-x:auto;overflow-y:visible;border:1px solid var(--line);border-radius:8px;background:#fff;margin-top:10px}
     .supervisor-table-wrap table{width:max-content;min-width:max-content}
     .teacher-icon{text-align:center;font-size:19px;background:#fff!important}
     .mobile-today{display:none}.mobile-save{position:sticky;bottom:10px;width:100%;font-size:17px;padding:13px;margin-top:14px;box-shadow:0 5px 18px #0003}
@@ -71,7 +76,7 @@
     .mobile-supervisors{display:grid;gap:7px;margin:10px 0 15px}.mobile-supervisors label{display:flex;align-items:center;gap:9px;border:1px solid var(--line);border-radius:10px;padding:10px;font-size:14px;margin:0}.mobile-supervisors input{width:23px;height:23px;flex:0 0 auto}
     .mobile-help{margin-top:12px;border:1px solid var(--line);border-radius:10px;padding:0 11px;background:#fff}.mobile-help summary{padding:10px 0;font-weight:800;cursor:pointer}.mobile-help p{margin:0 0 11px}
     .mobile-account{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px;padding:9px 11px;border-radius:10px;background:#eef3f9}.mobile-account span{min-width:0;font-size:12px;color:#536985;overflow-wrap:anywhere}.mobile-account button{flex:0 0 auto;padding:7px 9px;font-size:12px}
-    .quick-add{padding:0;overflow:hidden}.quick-add>summary{cursor:pointer;list-style:none;padding:13px 16px;font-size:17px;font-weight:900;display:flex;align-items:center;gap:8px}.quick-add>summary::-webkit-details-marker{display:none}.quick-add>summary::after{content:"+";margin-left:auto;font-size:22px}.quick-add[open]>summary::after{content:"−"}.quick-add-body{border-top:1px solid var(--line);padding:14px 16px}.quick-add-grid{display:grid;grid-template-columns:minmax(120px,180px) minmax(220px,1fr) minmax(190px,260px) auto;gap:10px;align-items:end}.quick-add-message{margin-top:9px;font-size:13px;font-weight:800;color:#2f7a50}
+    .quick-add{padding:0;overflow:hidden}.quick-add:not([open]){display:none!important}.quick-add>summary{display:none}.quick-add-body{padding:14px 16px}.quick-add-grid{display:grid;grid-template-columns:minmax(120px,180px) minmax(220px,1fr) minmax(190px,260px) auto;gap:10px;align-items:end}.quick-add-message{margin-top:9px;font-size:13px;font-weight:800;color:#2f7a50}
     .fold-panel{padding:0;overflow:hidden}.fold-panel>summary{cursor:pointer;list-style:none;padding:17px 18px;font-size:21px;font-weight:900;display:flex;align-items:center;gap:10px}.fold-panel>summary::-webkit-details-marker{display:none}.fold-panel>summary::after{content:"Openen +";margin-left:auto;font-size:13px;color:var(--muted)}.fold-panel[open]>summary::after{content:"Sluiten −"}.fold-panel[open]>summary{border-bottom:1px solid var(--line)}.fold-panel-body{padding:16px 18px}
     @media(max-width:900px){.quick-add-grid{grid-template-columns:1fr}.quick-add-grid button{width:100%;padding:12px}.quick-add>summary{padding:14px}.quick-add-body{padding:12px}}
     @media(max-width:900px){main{padding:10px}.toolbar,.two{grid-template-columns:1fr}.right{margin-left:0}.attendance-row{grid-template-columns:10px 60px 1fr 32px}.mobile-today{display:block}.list-panel,.desktop-controls,.desktop-overview,.werking-notice,header .bar{display:none!important}#supervisorPanel{display:none!important}header{padding:10px 12px}.brand img{width:44px;height:44px}}
@@ -81,6 +86,7 @@
     body.qr-mobile header{padding:10px 12px}
     body.qr-mobile .brand img{width:44px;height:44px}
     .save-toast{position:fixed;z-index:100;left:50%;bottom:22px;transform:translateX(-50%);width:min(520px,calc(100% - 24px));padding:14px 18px;border:2px solid #58a977;border-radius:14px;background:#e6f7ec;color:#1f5f38;font-weight:900;text-align:center;box-shadow:0 10px 30px #0003}
+    .werking-notice{padding:0;overflow:hidden}.werking-notice:not([open]){display:none!important}.werking-notice>summary{display:none}.werking-uitleg{padding:11px 14px}.werking-uitleg ol{margin:9px 0 0;padding-left:22px}.werking-uitleg li+li{margin-top:5px}
   </style>
 </head>
 <body>
@@ -95,17 +101,18 @@
       <button class="white" id="previousMonthBtn">← Vorige maand</button>
       <label style="width:175px;margin:0">Maand bekijken<input id="monthInput" type="month"></label>
       <button class="white" id="nextMonthBtn">Volgende maand →</button>
-      <button class="white" id="currentMonthBtn">Deze maand</button>
+      <label style="width:175px;margin:0"><span id="dateLabel">Datum kiezen</span><input id="dateInput" type="date"></label>
       <button class="white" id="monthOverviewBtn" style="display:none">Terug naar maandoverzicht</button>
       <button class="secondary" id="saveBtn">✓ Bewaren</button>
+      <button class="white compact-action" id="quickAddTopBtn">＋ Kind</button>
+      <button class="white compact-action" id="helpTopBtn">❓ Uitleg</button>
       <button class="white" id="planningTopBtn" style="display:none">Algemeen inschrijvingsoverzicht</button>
-      <button class="white" id="secretaryOptionsBtn" style="display:none">Meer opties</button>
+      <button class="white" id="secretaryOptionsBtn">Meer opties</button>
     </div>
     <div class="options-drawer" id="secretaryAdvancedPanel">
       <h3 id="extraOptionsTitle">Extra opties</h3>
       <div class="toolbar">
         <label class="teacher-extra">Schooljaar<input id="schooljaarInput"></label>
-        <label><span id="dateLabel">Per dag bekijken</span><input id="dateInput" type="date"></label>
         <button class="white" id="openDayBtn" style="display:none">Dag openen</button>
         <button class="white teacher-extra" id="addDateBtn">Datum toevoegen</button>
         <button class="white" id="cancelDateBtn" style="display:none">Deze dag gaat niet door</button>
@@ -115,10 +122,10 @@
       </div>
     </div>
   </section>
-  <section class="notice werking-notice" id="workingNotice">
-    <strong>Werking:</strong>
-    <span class="muted" id="workHelp">Klasleerkrachten duiden in Klaslijsten bij hun eigen klas aan welke kinderen naar de huiswerkklas gaan. Ontbreekt een leerling? Voeg die eerst toe via <a href="schoolbeheer.html" target="_blank" rel="noopener">Klaslijsten → Nieuwe leerling</a>. Hier verschijnen alleen kinderen die daar voor de huiswerkklas zijn aangeduid.</span>
-  </section>
+  <details class="notice werking-notice" id="workingNotice">
+    <summary>Uitleg</summary>
+    <div class="werking-uitleg"><span class="muted" id="workHelp">Klasleerkrachten duiden in Klaslijsten bij hun eigen klas aan welke kinderen naar de huiswerkklas gaan.</span><ol><li>Controleer de datum en vink de aanwezige leerlingen aan.</li><li>Wacht tot de knop <strong>✓ Bewaard</strong> toont voordat je een andere datum opent.</li><li>Een leerling ontbreekt? Gebruik <strong>＋ Kind</strong>.</li><li>Een uitzonderlijke dag gaat niet door? Gebruik <strong>Meer opties</strong>.</li></ol></div>
+  </details>
   <details class="panel quick-add" id="quickAddPanel">
     <summary>➕ Kind toevoegen aan de huiswerkklas</summary>
     <div class="quick-add-body">
@@ -161,7 +168,7 @@
     <div id="supervisorDays"></div></div>
   </details>
   <details class="panel list-panel fold-panel" id="attendancePanel" open>
-    <summary><span>Leerlingen</span><span class="tag" id="countTag">0 leerlingen</span></summary>
+    <summary><span id="attendanceTitle">Aanwezigen</span><span class="tag" id="countTag">0 leerlingen</span></summary>
     <div class="fold-panel-body"><div class="bar">
       <label id="attendancePaidOnlyLabel" style="display:none;align-items:center;gap:8px;margin:0 0 0 auto;font-size:14px"><input id="attendancePaidOnlyCheckbox" type="checkbox" style="width:20px;flex:0 0 auto"> Alleen betalende tonen</label>
       <button class="white" id="closeAttendanceBtn" style="display:none">← Terug naar overzicht</button>
@@ -283,6 +290,7 @@ async function loadData(){
   const hwSnap=await getDoc(monthRef());
   hw=hwSnap.exists()?hwSnap.data():(demoMode?maakTestgegevens():{enrolled:{},attendance:{},dates:[],processedDates:{},supervisors:{}});
   hw.enrolled||={}; hw.attendance||={}; hw.dates||=[]; hw.processedDates||={}; hw.supervisors||={}; hw.cancelledDates||={};
+  if(!isSecretariaat()&&magAanwezighedenInvullen())desktopEntryOpen=true;
   render();
 }
 function localRows(){
@@ -310,7 +318,7 @@ function renderQuickAddClasses(){
   const select=$("quickAddClass"),klassen=quickAddClasses();if(!select)return;
   const huidig=select.value;select.innerHTML=klassen.map(k=>`<option value="${esc(k)}">${esc(k)}</option>`).join("");
   if(klassen.includes(huidig))select.value=huidig;
-  $("quickAddPanel").style.display=klassen.length?"block":"none";renderQuickAddStudents();
+  $("quickAddTopBtn").style.display=klassen.length?"inline-block":"none";if(!klassen.length)$("quickAddPanel").open=false;renderQuickAddStudents();
 }
 function renderQuickAddStudents(){
   const select=$("quickAddStudent"),lijst=quickAddCandidates();if(!select)return;
@@ -338,7 +346,7 @@ function geplandOpDatum(r,d){if(isCancelledDate(d))return false;const p=planning
 function enrolledList(){
   return Object.entries(hw.enrolled||{}).filter(([,v])=>v&&v.active!==false).map(([key,v])=>({key,...v})).sort((a,b)=>(a.klas||"").localeCompare(b.klas||"","nl",{numeric:true})||(a.name||"").localeCompare(b.name||"","nl"));
 }
-function gekozenWerkdatum(){const dates=[...(hw.dates||[])].sort();if(!dates.length)return "";if(dates.includes(date))return date;const gekozen=dates.filter(d=>d<=todayIso()).at(-1)||dates[0];date=gekozen;if($("dateInput"))$("dateInput").value=gekozen;return gekozen}
+function gekozenWerkdatum(){const dates=[...(hw.dates||[])].sort();return dates.includes(date)?date:""}
 function zichtbareWerkdatums(){const alle=[...(hw.dates||[])].sort();if(isSecretariaat()&&!secretaryDayView)return alle;const gekozen=gekozenWerkdatum();return gekozen?[gekozen]:[];}
 function renderPlanningOverview(){
   let rows=localRows();
@@ -363,6 +371,8 @@ window.printDagNavragenKlas=klas=>{
 };
 function renderTable(){
   const dates=zichtbareWerkdatums(),dag=dates.length===1?mobileDagSleutel(dates[0]):"",alleRijen=localRows(),dagRijen=dag?alleRijen.filter(r=>geplandOpDatum(r,dates[0])):alleRijen,rows=attendancePaidOnly?dagRijen.filter(r=>dates.length?!planningVoorDatum(r,dates[0]).free:!r.free):dagRijen;
+  $("attendanceTitle").textContent=dates.length===1?`Aanwezigen op ${formatSupervisorDate(dates[0])}`:"Aanwezigen";
+  if(!dates.length){$("countTag").textContent="geen huiswerkklas";$("homeworkTable").innerHTML=`<div class="notice"><strong>Geen huiswerkklas gepland op ${esc(formatSupervisorDate(date))}.</strong><p class="muted" style="margin-bottom:0">Er wordt niet automatisch naar een oudere dag teruggesprongen. Wil je een andere datum raadplegen, kies die dan bewust via <strong>Meer opties</strong>.</p></div>`;return;}
   if(dates.length===1&&isCancelledDate(dates[0])){$("countTag").textContent="gaat niet door";$("homeworkTable").innerHTML=`<div class="notice"><strong>Huiswerkklas gaat niet door op ${esc(formatSupervisorDate(dates[0]))}.</strong><p class="muted">Er worden voor deze dag geen aanwezigheden, begeleiders of betalingen geregistreerd.</p></div>`;return;}
   $("attendancePaidOnlyCheckbox").checked=attendancePaidOnly;
   const enrolledCount=rows.filter(r=>r.active).length;
@@ -375,28 +385,31 @@ function renderTable(){
 }
 function renderRoleTools(){
   const secretary=isSecretariaat();
+  const magLaptopInvullen=!secretary&&magAanwezighedenInvullen();
   $("attendancePaidOnlyLabel").style.display=secretary?"flex":"none";
-  $("planningTopBtn").style.display=secretary?"inline-block":"none";
-  $("planningTopBtn").textContent=secretaryPlanningOpen?"Inschrijvingsoverzicht sluiten":"Algemeen inschrijvingsoverzicht";
+  $("planningTopBtn").style.display=(secretary||magLaptopInvullen)?"inline-block":"none";
+  $("planningTopBtn").textContent=secretary
+    ? (secretaryPlanningOpen?"Inschrijvingsoverzicht sluiten":"Algemeen inschrijvingsoverzicht")
+    : (desktopEntryOpen?"Inschrijvingen bekijken":"Terug naar aanwezigheden");
   $("planningPanel").style.display=(!secretary&&!desktopEntryOpen)||secretaryPlanningOpen?"block":"none";
-  $("secretaryOptionsBtn").style.display=secretary?"inline-block":"none";
+  $("secretaryOptionsBtn").style.display="inline-block";
   $("secretaryOptionsBtn").textContent=secretaryMoreOpen?"Minder opties":"Meer opties";
-  $("secretaryAdvancedPanel").style.display=(!secretary||secretaryMoreOpen)?"block":"none";
+  $("secretaryAdvancedPanel").style.display=secretaryMoreOpen?"block":"none";
   $("secretaryAdvancedPanel").classList.toggle("secretary-popover",secretary);
   $("extraOptionsTitle").textContent=secretary?"Per dag bekijken":"Extra opties";
   $("openDayBtn").style.display=secretary?"inline-block":"none";
   $("monthOverviewBtn").style.display=(secretary&&secretaryDayView)?"inline-block":"none";
   document.querySelectorAll(".teacher-extra").forEach(el=>el.style.display=secretary?"none":"");
-  const magLaptopInvullen=!secretary&&magAanwezighedenInvullen();
   $("togglePlanningBtn").style.display=secretary?"inline-block":"none";
   $("togglePlanningBtn").textContent=secretaryPlanningOpen?"Overzicht sluiten":"Overzicht openen";
   $("planningOverview").style.display=(!secretary||secretaryPlanningOpen)?"block":"none";
   $("openAttendanceBtn").style.display=magLaptopInvullen?"inline-block":"none";
   $("openAttendanceBtn").textContent="Lijst invullen";
   $("attendancePanel").style.display=(secretary||desktopEntryOpen)?"block":"none";
-  $("closeAttendanceBtn").style.display=(!secretary&&desktopEntryOpen)?"inline-block":"none";
-  const wegwijzer=document.querySelector(".tool-wegwijzer");if(wegwijzer)wegwijzer.style.display=secretary?"none":"block";
-  $("workingNotice").style.display=secretary?"none":"block";
+  $("closeAttendanceBtn").style.display="none";
+  const wegwijzer=document.querySelector(".tool-wegwijzer");if(wegwijzer)wegwijzer.style.display="none";
+  if(secretary)$("workingNotice").open=false;
+  $("helpTopBtn").style.display=secretary?"none":"inline-block";
   $("dateInput").closest("label").style.display="block";
   $("dateLabel").textContent=secretary?"Datum":"Datum kiezen / toevoegen";
   $("addDateBtn").style.display=magAanwezighedenInvullen()?"inline-block":"none";
@@ -500,7 +513,7 @@ function renderMobileToday(){
 function renderAttendanceSupervisorPicker(){
   const doel=$("attendanceSupervisorPicker");if(!doel)return;
   if(isSecretariaat()||!desktopEntryOpen||!magAanwezighedenInvullen()){doel.innerHTML="";return;}
-  const d=gekozenWerkdatum();if(!d){doel.innerHTML='<div class="notice"><strong>Voeg eerst een huiswerkklasdatum toe.</strong></div>';return;}
+  const d=gekozenWerkdatum();if(!d){doel.innerHTML="";return;}
   if(isCancelledDate(d)){doel.innerHTML="";return;}
   const gekozen=new Set(zichtbareBegeleiderNamen(hw.supervisors?.[d])),locked=(!!hw.processedDates?.[d]&&realRole!=="beheerder")||voorbijeDatumVergrendeld(d);
   doel.innerHTML=`<div class="notice" style="margin:12px 0"><strong>Begeleiders op ${esc(formatSupervisorDate(d))}</strong><p class="muted" style="margin:4px 0 10px">Vink aan wie vandaag de huiswerkklas begeleidt.</p><div class="mobile-supervisors" style="grid-template-columns:repeat(auto-fit,minmax(210px,1fr));margin-bottom:0">${supervisorNames().map(n=>`<label><input type="checkbox" data-supervisor-date="${esc(d)}" data-supervisor-name="${esc(n)}" ${gekozen.has(n)?"checked":""} ${locked?"disabled":""}> ${esc(n)}</label>`).join("")}</div></div>`;
@@ -520,11 +533,13 @@ function collect(){
   document.querySelectorAll("[data-lock-date]").forEach(ch=>{hw.processedDates[ch.dataset.lockDate]=ch.checked;});
 }
 async function save(){
+  setDesktopSaveButton("saving");
   collect();
   await setDoc(monthRef(),{...hw,schooljaar,month,bewaarTot:bewaarTotVoorSchooljaar(),bewaartermijnJaren:BEWAAR_JAREN_HUISWERKKLAS,updatedAt:serverTimestamp(),updatedBy:user.email||user.uid},{merge:true});
   mobileHasUnsavedChanges=false;
   render();
   $("status").textContent=demoMode?"TESTMODUS · ✓ Testgegevens bewaard":"✓ Bewaard";
+  setDesktopSaveButton("saved");
   toonBewaarmelding(demoMode?"✓ Testgegevens bewaard":`✓ Aanwezigheden en begeleiders voor ${formatSupervisorDate(mobileSelectedDate||gekozenWerkdatum())} bewaard`);
   updateMobileSaveButton();
 }
@@ -532,16 +547,19 @@ async function saveNoRender(){
   collect();
   await setDoc(monthRef(),{...hw,schooljaar,month,bewaarTot:bewaarTotVoorSchooljaar(),bewaartermijnJaren:BEWAAR_JAREN_HUISWERKKLAS,updatedAt:serverTimestamp(),updatedBy:user.email||user.uid},{merge:true});
   $("status").textContent=demoMode?"Testgegevens bewaard":"Bewaard";
+  setDesktopSaveButton("saved");
 }
 let autoSaveTimer=null;
+function setDesktopSaveButton(status){const knop=$("saveBtn");if(!knop)return;knop.classList.toggle("is-saving",status==="saving");knop.classList.toggle("is-saved",status==="saved");knop.textContent=status==="saving"?"Bezig met bewaren…":status==="saved"?"✓ Bewaard":"✓ Wijzigingen bewaren";}
 function autoSave(){
   $("status").textContent="Bewaren...";
+  setDesktopSaveButton("saving");
   clearTimeout(autoSaveTimer);
   autoSaveTimer=setTimeout(()=>saveNoRender().catch(err=>{console.error(err);$("status").textContent="Bewaren mislukt";alert("Bewaren lukte niet: "+err.message);}),350);
 }
-async function openMonth(value){
+async function openMonth(value,gewensteDatum=""){
   if(!/^\d{4}-\d{2}$/.test(value))return;
-  month=value;date=`${value}-01`;secretaryDayView=false;secretaryMoreOpen=false;$("monthInput").value=value;$("dateInput").value=date;mobileSelectedDate="";await loadData();
+  month=value;date=gewensteDatum&&gewensteDatum.slice(0,7)===value?gewensteDatum:`${value}-01`;secretaryDayView=false;secretaryMoreOpen=false;$("monthInput").value=value;$("dateInput").value=date;mobileSelectedDate="";await loadData();
 }
 async function shiftMonth(amount){const [y,m]=($("monthInput").value||month).split("-").map(Number),d=new Date(y,m-1+amount,1);await openMonth(`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}`);}
 async function addDate(){
@@ -682,6 +700,8 @@ onAuthStateChanged(auth,async u=>{
   await loadRole();
   demoMode=false;
   $("saveBtn").onclick=save;
+  $("quickAddTopBtn").onclick=()=>{const paneel=$("quickAddPanel");paneel.open=!paneel.open;$("quickAddTopBtn").textContent=paneel.open?"− Kind sluiten":"＋ Kind";if(paneel.open)paneel.scrollIntoView({behavior:"smooth",block:"start"});};
+  $("helpTopBtn").onclick=()=>{const paneel=$("workingNotice");paneel.open=!paneel.open;$("helpTopBtn").textContent=paneel.open?"❓ Uitleg sluiten":"❓ Uitleg";if(paneel.open)paneel.scrollIntoView({behavior:"smooth",block:"start"});};
   $("addDateBtn").onclick=addDate;
   $("cancelDateBtn").onclick=toggleCancelledDate;
   $("pdfBtn").onclick=downloadParticipantsPdf;
@@ -694,7 +714,7 @@ onAuthStateChanged(auth,async u=>{
   $("openAttendanceBtn").onclick=()=>{if(!magAanwezighedenInvullen())return;desktopEntryOpen=true;render();window.scrollTo({top:0,left:0,behavior:"smooth"});};
   $("closeAttendanceBtn").onclick=()=>{desktopEntryOpen=false;render();window.scrollTo({top:0,left:0,behavior:"smooth"});};
   $("togglePlanningBtn").onclick=()=>{secretaryPlanningOpen=!secretaryPlanningOpen;render();};
-  $("planningTopBtn").onclick=()=>{secretaryPlanningOpen=!secretaryPlanningOpen;render();if(secretaryPlanningOpen)$("planningPanel").scrollIntoView({behavior:"smooth",block:"start"});};
+  $("planningTopBtn").onclick=()=>{if(isSecretariaat()){secretaryPlanningOpen=!secretaryPlanningOpen;render();if(secretaryPlanningOpen)$("planningPanel").scrollIntoView({behavior:"smooth",block:"start"});return;}desktopEntryOpen=!desktopEntryOpen;render();window.scrollTo({top:0,left:0,behavior:"smooth"});};
   $("paidOnlyCheckbox").onchange=()=>{planningPaidOnly=$("paidOnlyCheckbox").checked;renderPlanningOverview();};
   $("attendancePaidOnlyCheckbox").onchange=()=>{attendancePaidOnly=$("attendancePaidOnlyCheckbox").checked;renderTable();};
   $("secretaryOptionsBtn").onclick=()=>{secretaryMoreOpen=!secretaryMoreOpen;render();};
@@ -702,13 +722,12 @@ onAuthStateChanged(auth,async u=>{
   $("monthOverviewBtn").onclick=()=>{secretaryDayView=false;render();};
   $("previousMonthBtn").onclick=()=>shiftMonth(-1);
   $("nextMonthBtn").onclick=()=>shiftMonth(1);
-  $("currentMonthBtn").onclick=()=>openMonth(currentMonth());
   $("mobileSaveBtn").onclick=save;
   $("mobileCancelDateBtn").onclick=()=>toggleCancelledDateFor(mobileSelectedDate);
   $("quickAddClass").onchange=()=>{$("quickAddSearch").value="";renderQuickAddStudents();};
   $("quickAddSearch").oninput=renderQuickAddStudents;
   $("quickAddBtn").onclick=()=>quickAddStudent().catch(err=>{console.error(err);alert("Toevoegen lukte niet: "+err.message);});
-  $("schooljaarInput").onchange=loadData; $("monthInput").onchange=()=>openMonth($("monthInput").value); $("dateInput").onchange=()=>{date=$("dateInput").value;renderRoleTools();};
+  $("schooljaarInput").onchange=loadData; $("monthInput").onchange=()=>openMonth($("monthInput").value); $("dateInput").onchange=()=>{date=$("dateInput").value;secretaryMoreOpen=false;render();$("attendancePanel").scrollIntoView({behavior:"smooth",block:"start"});};
   $("logoutBtn").onclick=()=>signOut(auth).then(()=>location.href="index.html");
   $("mobileLogoutBtn").onclick=()=>signOut(auth).then(()=>location.href="index.html?naLogin=huiswerkklas-gsm");
   try{await loadData()}catch(err){
