@@ -70,6 +70,16 @@
     .supervisor-table-wrap{overflow-x:auto;overflow-y:visible;border:1px solid var(--line);border-radius:8px;background:#fff;margin-top:10px}
     .supervisor-table-wrap table{width:max-content;min-width:max-content}
     .teacher-icon{text-align:center;font-size:19px;background:#fff!important}
+    .supervisor-month-intro{margin:0 0 10px;padding:10px 12px;border-radius:10px;background:#eef7ff;color:#36536f;font-size:13px;line-height:1.45}
+    .supervisor-month-list{display:grid;gap:8px}
+    .supervisor-month-row{border:1px solid var(--line);border-radius:11px;background:#fff;overflow:hidden}
+    .supervisor-month-row>summary{display:grid;grid-template-columns:32px minmax(180px,1fr) auto auto;align-items:center;gap:10px;padding:11px 13px;cursor:pointer;list-style:none}
+    .supervisor-month-row>summary::-webkit-details-marker{display:none}
+    .supervisor-month-row>summary::after{content:"Datums bekijken +";font-size:12px;color:#536985;font-weight:800;margin-left:8px}
+    .supervisor-month-row[open]>summary::after{content:"Datums sluiten −"}
+    .supervisor-month-row .monthly-count{justify-self:end;border-radius:999px;background:#dff3d8;color:#315b2b;padding:5px 9px;font-size:12px;font-weight:900}
+    .supervisor-date-list{padding:0 13px 12px 55px;border-top:1px solid #eee5d8;color:#536985;font-size:13px;line-height:1.65}
+    .amount-col{text-align:right!important;width:92px;min-width:92px;max-width:92px;font-weight:900;background:#eef7ff}
     .mobile-today{display:none}.mobile-save{position:sticky;bottom:10px;width:100%;font-size:17px;padding:13px;margin-top:14px;box-shadow:0 5px 18px #0003}
     .mobile-person{display:flex;align-items:center;gap:10px;border-top:1px solid #eee5d8;padding:11px 3px}.mobile-person input{width:25px;height:25px;flex:0 0 auto}.mobile-person span{font-weight:800}.mobile-person small{display:block;color:var(--muted);font-weight:400;margin-top:2px}
     .mobile-class-group{margin:13px 0 16px;border:1px solid var(--line);border-radius:12px;overflow:hidden;background:#fff}.mobile-class-heading{display:flex;align-items:center;gap:8px;margin:0;padding:9px 12px;background:#f1f5f9;font-size:16px}.mobile-class-heading .stripe-dot{width:7px;height:25px;border-radius:6px;display:inline-block}.mobile-class-group .mobile-person{padding-left:12px;padding-right:12px}.mobile-class-group .mobile-person:first-of-type{border-top:0}
@@ -158,8 +168,8 @@
     <div id="planningOverview"></div>
   </section>
   <details class="panel fold-panel" id="supervisorPanel" style="display:none">
-    <summary><span>Begeleiders</span><span class="tag" id="supervisorCountTag">0 aangeduid</span></summary>
-    <div class="fold-panel-body"><div class="bar"><div class="actions right"><button class="white" id="manageSupervisorsBtn">⚙️ Begeleiders beheren</button><button class="white" id="supervisorPdfBtn">📄 PDF begeleiders</button></div></div>
+    <summary><span>Begeleiders — maandoverzicht</span><span class="tag" id="supervisorCountTag">0 begeleidersbeurten</span></summary>
+    <div class="fold-panel-body"><div class="bar"><div class="actions right"><button class="white" id="manageSupervisorsBtn">⚙️ Begeleiders beheren</button><button class="white" id="supervisorPdfBtn">📄 PDF maandoverzicht</button></div></div>
     <div id="supervisorManager" class="notice" style="display:none;margin-top:12px">
       <div class="bar"><div><strong>Wie mag de huiswerkklas begeleiden?</strong><p class="muted" style="margin:4px 0 0">Vink de leerkrachten aan. Zij verschijnen daarna op laptop en gsm en krijgen de begeleidersrechten.</p></div><button class="white" id="closeSupervisorManagerBtn">Sluiten</button></div>
       <div id="supervisorCandidateList" class="begeleider-keuzes" style="grid-template-columns:repeat(auto-fit,minmax(220px,1fr));margin-top:12px"></div>
@@ -302,7 +312,8 @@ function localRows(){
       const days=s.homeworkClassDays||existing.days||{};
       const storedDayUncertain=Object.prototype.hasOwnProperty.call(s,"homeworkClassDayUncertain")?!!s.homeworkClassDayUncertain:!!existing.dayUncertain;
       const dayUncertain=storedDayUncertain&&!!days.dinsdag&&!!days.donderdag;
-      rows.push({key,klas,name:name(s),local:ownClasses.includes(klas),active:true,free:!!(s.homeworkClassFree||existing.free),days,dayUncertain,mayGoHomeAlone:!!(s.magAlleenNaarHuis||existing.mayGoHomeAlone),start:s.homeworkClassStart||existing.start||"",end:s.homeworkClassEnd||existing.end||"",history:Array.isArray(s.homeworkClassHistory)?s.homeworkClassHistory:(existing.history||[])});
+      const free=Object.prototype.hasOwnProperty.call(s,"homeworkClassFree")?!!s.homeworkClassFree:!!existing.free;
+      rows.push({key,klas,name:name(s),local:ownClasses.includes(klas),active:true,free,days,dayUncertain,mayGoHomeAlone:!!(s.magAlleenNaarHuis||existing.mayGoHomeAlone),start:s.homeworkClassStart||existing.start||"",end:s.homeworkClassEnd||existing.end||"",history:Array.isArray(s.homeworkClassHistory)?s.homeworkClassHistory:(existing.history||[])});
     }
   }));
   Object.entries(hw.enrolled||{}).forEach(([key,v])=>{
@@ -344,6 +355,11 @@ function planningVoorDatum(r,d){
   return {active:(!r.start||d>=r.start)&&(!r.end||d<=r.end),days:r.days||{},free:!!r.free};
 }
 function geplandOpDatum(r,d){if(isCancelledDate(d))return false;const p=planningVoorDatum(r,d);return p.active&&!!p.days?.[mobileDagSleutel(d)];}
+const HUISWERKKLAS_PRIJS_PER_KEER=10;
+function aanwezigheidOpDatum(r,d){return !isCancelledDate(d)&&!!hw.attendance?.[d]?.[r.key]&&planningVoorDatum(r,d).active;}
+function aanwezighedenTotaal(r,dates){return dates.reduce((totaal,d)=>totaal+(aanwezigheidOpDatum(r,d)?1:0),0);}
+function bedragTotaal(r,dates){return dates.reduce((totaal,d)=>totaal+(aanwezigheidOpDatum(r,d)&&!planningVoorDatum(r,d).free?HUISWERKKLAS_PRIJS_PER_KEER:0),0);}
+function euroBedrag(bedrag){return new Intl.NumberFormat("nl-BE",{style:"currency",currency:"EUR",minimumFractionDigits:0,maximumFractionDigits:0}).format(bedrag);}
 function enrolledList(){
   return Object.entries(hw.enrolled||{}).filter(([,v])=>v&&v.active!==false).map(([key,v])=>({key,...v})).sort((a,b)=>(a.klas||"").localeCompare(b.klas||"","nl",{numeric:true})||(a.name||"").localeCompare(b.name||"","nl"));
 }
@@ -381,7 +397,7 @@ function renderTable(){
   $("countTag").textContent=`${enrolledCount} leerling${enrolledCount===1?"":"en"}`;
   if(!rows.length){$("homeworkTable").innerHTML=`<div class="empty">Geen leerlingen gevonden.</div>`;return;}
   const oudeDatum=dates.length===1&&isVoorbijeDatum(dates[0])?dates[0]:"",wijzigBalk=oudeDatum&&voorbijeDatumVergrendeld(oudeDatum)?oudeDatumDefinitiefVergrendeld(oudeDatum)?'<div class="notice"><strong>Deze dag is verwerkt door het secretariaat.</strong> Alleen beheerder of secretariaat kan nog iets wijzigen.</div>':`<div class="notice"><strong>Deze voorbije dag is beschermd.</strong> <button type="button" class="white" onclick="ontgrendelOudeHuiswerkdatum('${esc(oudeDatum)}')">Iets wijzigen?</button></div>`:"";
-  $("homeworkTable").innerHTML=`${wijzigBalk}<div class="table-wrap"><table><thead><tr><th class="class-col">Klas</th><th class="name-col">Leerling</th>${dates.map(d=>`<th class="date-col">${esc(d.slice(8,10)+"/"+d.slice(5,7))}${isCancelledDate(d)?'<span class="lock-note">gaat niet door</span>':voorbijeDatumVergrendeld(d)?'<span class="lock-note">afgesloten</span>':isSecretariaat()?`<label class="lock-note"><input type="checkbox" data-lock-date="${esc(d)}" ${hw.processedDates?.[d]?"checked":""}> verwerkt</label>`:hw.processedDates?.[d]?`<span class="lock-note">verwerkt</span>`:""}</th>`).join("")}<th class="total-col">Totaal</th></tr></thead><tbody>${rows.map(r=>{const total=dates.reduce((sum,d)=>sum+(!isCancelledDate(d)&&hw.attendance?.[d]?.[r.key]&&planningVoorDatum(r,d).active?1:0),0),dagen=[r.days?.dinsdag?'di':'',r.days?.donderdag?'do':''].filter(Boolean).join(' + ');return `<tr class="${r.free?"free-row":""}"><td class="class-col"><span class="class-chip"><span class="stripe-dot" style="background:${colorForClass(r.klas)}"></span>${esc(r.klas)}</span></td><td class="name-col"><strong>${esc(r.name)}</strong>${dagen?`<span class="pay-badge">${dagen}</span>`:''}${r.mayGoHomeAlone?'<span class="pay-badge" style="background:#dff3d8;color:#315b2b">alleen naar huis</span>':''}<span class="pay-badge ${r.free?"free":"paid"}">${r.free?"gratis":"betalend"}</span></td>${dates.map(d=>{const gepland=geplandOpDatum(r,d),locked=(!!hw.processedDates?.[d]&&!isSecretariaat()&&realRole!=="beheerder")||voorbijeDatumVergrendeld(d);return gepland?`<td class="date-col"><input type="checkbox" data-present="${esc(r.key)}" data-date="${esc(d)}" ${hw.attendance?.[d]?.[r.key]?"checked":""} ${locked?"disabled":""}></td>`:`<td class="date-col day-empty">—</td>`;}).join("")}<td class="total-col">${total}</td></tr>`;}).join("")}</tbody></table></div>`;
+  $("homeworkTable").innerHTML=`${wijzigBalk}<div class="table-wrap"><table><thead><tr><th class="class-col">Klas</th><th class="name-col">Leerling</th>${dates.map(d=>`<th class="date-col">${esc(d.slice(8,10)+"/"+d.slice(5,7))}${isCancelledDate(d)?'<span class="lock-note">gaat niet door</span>':voorbijeDatumVergrendeld(d)?'<span class="lock-note">afgesloten</span>':isSecretariaat()?`<label class="lock-note"><input type="checkbox" data-lock-date="${esc(d)}" ${hw.processedDates?.[d]?"checked":""}> verwerkt</label>`:hw.processedDates?.[d]?`<span class="lock-note">verwerkt</span>`:""}</th>`).join("")}<th class="total-col">Totaal</th>${isSecretariaat()?'<th class="amount-col">Prijs<br><span class="lock-note">€10/keer</span></th>':''}</tr></thead><tbody>${rows.map(r=>{const total=aanwezighedenTotaal(r,dates),bedrag=bedragTotaal(r,dates),dagen=[r.days?.dinsdag?'di':'',r.days?.donderdag?'do':''].filter(Boolean).join(' + ');return `<tr class="${r.free?"free-row":""}"><td class="class-col"><span class="class-chip"><span class="stripe-dot" style="background:${colorForClass(r.klas)}"></span>${esc(r.klas)}</span></td><td class="name-col"><strong>${esc(r.name)}</strong>${dagen?`<span class="pay-badge">${dagen}</span>`:''}${r.mayGoHomeAlone?'<span class="pay-badge" style="background:#dff3d8;color:#315b2b">alleen naar huis</span>':''}<span class="pay-badge ${r.free?"free":"paid"}">${r.free?"gratis":"betalend"}</span></td>${dates.map(d=>{const gepland=geplandOpDatum(r,d),locked=(!!hw.processedDates?.[d]&&!isSecretariaat()&&realRole!=="beheerder")||voorbijeDatumVergrendeld(d);return gepland?`<td class="date-col"><input type="checkbox" data-present="${esc(r.key)}" data-date="${esc(d)}" ${hw.attendance?.[d]?.[r.key]?"checked":""} ${locked?"disabled":""}></td>`:`<td class="date-col day-empty">—</td>`;}).join("")}<td class="total-col">${total}</td>${isSecretariaat()?`<td class="amount-col">${esc(euroBedrag(bedrag))}</td>`:''}</tr>`;}).join("")}</tbody></table></div>`;
   document.querySelectorAll("[data-present]").forEach(ch=>ch.onchange=()=>autoSave());
   document.querySelectorAll("[data-lock-date]").forEach(ch=>ch.onchange=()=>autoSave());
 }
@@ -450,14 +466,13 @@ function renderSupervisors(){
   $("manageSupervisorsBtn").style.display=isSecretariaat()?"inline-block":"none";
   $("supervisorManager").style.display=supervisorManagerOpen?"block":"none";
   if(supervisorManagerOpen)renderSupervisorManager();
-  panel.style.display="block";const alleDatums=[...(hw.dates||[])].sort(),dates=zichtbareWerkdatums();
-  const namen=supervisorNames(),aangeduid=dates.length===1?zichtbareBegeleiderNamen(hw.supervisors?.[dates[0]]).length:0;
-  $("supervisorCountTag").textContent=dates.length===1?`${aangeduid} aangeduid`:`${namen.length} begeleiders`;
+  panel.style.display="block";const alleDatums=[...(hw.dates||[])].filter(d=>d.startsWith(month)).sort();
+  const geregistreerdeNamen=alleDatums.flatMap(d=>zichtbareBegeleiderNamen(hw.supervisors?.[d])),namen=[...new Set([...supervisorNames(),...geregistreerdeNamen])].sort((a,b)=>a.localeCompare(b,"nl"));
   if(!alleDatums.length){doel.innerHTML='<div class="empty">Voeg eerst een huiswerkklasdatum toe. Daarna kun je hier de begeleiders aanduiden.</div>';return}
-  const totalen=Object.fromEntries(namen.map(n=>[n,0]));
-  alleDatums.filter(d=>!isCancelledDate(d)).forEach(d=>zichtbareBegeleiderNamen(hw.supervisors?.[d]).forEach(n=>{if(n in totalen)totalen[n]++}));
-  doel.innerHTML=`<div class="supervisor-table-wrap"><table><thead><tr><th class="class-col"></th><th class="name-col">Leerkracht</th>${dates.map(d=>`<th class="date-col">${esc(d.slice(8,10)+"/"+d.slice(5,7))}${isCancelledDate(d)?'<span class="lock-note">gaat niet door</span>':`<label class="lock-note"><input type="checkbox" data-lock-date="${esc(d)}" ${hw.processedDates?.[d]?"checked":""}> verwerkt</label>`}</th>`).join("")}<th class="total-col">Deze maand</th></tr></thead><tbody>${namen.map(n=>`<tr><td class="class-col teacher-icon">👩‍🏫</td><td class="name-col"><strong>${esc(n)}</strong></td>${dates.map(d=>`<td class="date-col">${isCancelledDate(d)?'—':`<input type="checkbox" data-supervisor-date="${esc(d)}" data-supervisor-name="${esc(n)}" ${zichtbareBegeleiderNamen(hw.supervisors?.[d]).includes(n)?"checked":""} ${voorbijeDatumVergrendeld(d)?"disabled":""}>`}</td>`).join("")}<td class="total-col">${totalen[n]}</td></tr>`).join("")}</tbody></table></div>`;
-  document.querySelectorAll("[data-supervisor-date]").forEach(ch=>ch.onchange=()=>{collectSupervisors();renderSupervisors();bindProcessedCheckboxes();autoSave()});
+  const datumsPerNaam=Object.fromEntries(namen.map(n=>[n,alleDatums.filter(d=>!isCancelledDate(d)&&zichtbareBegeleiderNamen(hw.supervisors?.[d]).includes(n))]));
+  const totaalBeurten=Object.values(datumsPerNaam).reduce((totaal,datums)=>totaal+datums.length,0);
+  $("supervisorCountTag").textContent=`${totaalBeurten} begeleidersbeurt${totaalBeurten===1?"":"en"}`;
+  doel.innerHTML=`<p class="supervisor-month-intro"><strong>Maandoverzicht ${esc(new Date(`${month}-01T12:00:00`).toLocaleDateString("nl-BE",{month:"long",year:"numeric"}))}</strong><br>Dit overzicht is bedoeld om één keer per maand door te geven aan de gemeente. Klik op een naam om de geregistreerde datums te bekijken.</p><div class="supervisor-month-list">${namen.map(n=>{const datums=datumsPerNaam[n];return `<details class="supervisor-month-row"><summary><span aria-hidden="true">👩‍🏫</span><strong>${esc(n)}</strong><span class="monthly-count">${datums.length} keer</span></summary><div class="supervisor-date-list">${datums.length?datums.map(d=>`<div>${esc(formatSupervisorDate(d))}</div>`).join(""):"Geen werkdagen geregistreerd in deze maand."}</div></details>`;}).join("")}</div>`;
 }
 function renderSupervisorManager(){
   const doel=$("supervisorCandidateList"),gekozen=new Set(supervisorConfig.map(supervisorKey));
@@ -612,11 +627,10 @@ async function openMobileDate(d){
 function pdfLeerlingNaam(naam){return String(naam||"").replace(",","").trim();}
 function downloadSupervisorsPdf(){
   if(!window.jspdf?.jsPDF)return alert("De PDF-module is nog niet geladen. Probeer over enkele seconden opnieuw.");
-  collectSupervisors();const dates=[...(hw.dates||[])].filter(d=>!isCancelledDate(d)).sort(),{jsPDF}=window.jspdf,pdf=new jsPDF({orientation:"portrait",unit:"mm",format:"a4"}),m=15;
+  collectSupervisors();const dates=[...(hw.dates||[])].filter(d=>d.startsWith(month)&&!isCancelledDate(d)).sort(),geregistreerde=dates.flatMap(d=>zichtbareBegeleiderNamen(hw.supervisors?.[d])),namen=[...new Set([...supervisorNames(),...geregistreerde])].sort((a,b)=>a.localeCompare(b,"nl")),{jsPDF}=window.jspdf,pdf=new jsPDF({orientation:"portrait",unit:"mm",format:"a4"}),m=15;
   pdf.setFillColor(107,93,82);pdf.rect(0,0,210,25,"F");pdf.setTextColor(255,255,255);pdf.setFont("helvetica","bold");pdf.setFontSize(17);pdf.text("Begeleiders huiswerkklas",m,11);pdf.setFont("helvetica","normal");pdf.setFontSize(10);pdf.text(`Schooljaar ${schooljaar} - maand ${month.slice(5,7)}/${month.slice(0,4)}`,m,18);
-  let y=35;pdf.setTextColor(44,31,14);pdf.setFont("helvetica","bold");pdf.setFontSize(13);pdf.text("Registratie per datum",m,y);y+=7;
-  dates.forEach(d=>{const namen=zichtbareBegeleiderNamen(hw.supervisors?.[d]);pdf.setFillColor(238,243,249);pdf.roundedRect(m,y,180,8,2,2,"F");pdf.setFont("helvetica","bold");pdf.setFontSize(10);pdf.text(formatSupervisorDate(d),m+3,y+5.5);y+=11;pdf.setFont("helvetica","normal");pdf.text(namen.length?namen.join(", "):"Geen begeleider aangeduid",m+3,y,{maxWidth:174});y+=Math.max(8,Math.ceil((namen.join(", ").length||24)/90)*5);});
-  y+=3;pdf.setFont("helvetica","bold");pdf.setFontSize(13);pdf.text("Maandtotaal per leerkracht",m,y);y+=7;supervisorNames().forEach(n=>{const totaal=dates.filter(d=>zichtbareBegeleiderNamen(hw.supervisors?.[d]).includes(n)).length;pdf.setFont("helvetica","normal");pdf.setFontSize(10);pdf.text(n,m+3,y);pdf.setFont("helvetica","bold");pdf.text(`${totaal} keer`,190,y,{align:"right"});pdf.setDrawColor(225,220,212);pdf.line(m+2,y+2,195,y+2);y+=7;});
+  let y=35;pdf.setTextColor(44,31,14);pdf.setFont("helvetica","bold");pdf.setFontSize(13);pdf.text("Maandtotaal per begeleider",m,y);y+=8;
+  namen.forEach(n=>{const werkdagen=dates.filter(d=>zichtbareBegeleiderNamen(hw.supervisors?.[d]).includes(n));if(y+Math.max(14,werkdagen.length*5+9)>282){pdf.addPage();y=18;}pdf.setFillColor(238,243,249);pdf.roundedRect(m,y-5,180,8,2,2,"F");pdf.setFont("helvetica","bold");pdf.setFontSize(10);pdf.text(n,m+3,y);pdf.text(`${werkdagen.length} keer`,190,y,{align:"right"});y+=7;pdf.setFont("helvetica","normal");pdf.setFontSize(9);if(werkdagen.length){werkdagen.forEach(d=>{pdf.text(formatSupervisorDate(d),m+6,y);y+=5;});}else{pdf.setTextColor(117,104,85);pdf.text("Geen werkdagen geregistreerd",m+6,y);pdf.setTextColor(44,31,14);y+=5;}y+=4;});
   pdf.setTextColor(117,104,85);pdf.setFont("helvetica","normal");pdf.setFontSize(8);pdf.text("GO! Basisschool De Linde",105,290,{align:"center"});pdf.save(`begeleiders_huiswerkklas_${month}.pdf`);
 }
 function downloadAloneHomePdf(){
