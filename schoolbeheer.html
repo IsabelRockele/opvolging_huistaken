@@ -1568,16 +1568,15 @@
       const aankopen=(bron.aankopen||[]).filter(p=>String(p.date||"").slice(0,7)===month);
       const aankoopOpen=aankopen.filter(p=>!p.processed).length;
       const aankoopVerwerkt=aankopen.filter(p=>p.processed).length;
-      const refterOpen=refterWekenVoorOpvolging(bron,false).filter(week=>refterWeekDagen(week).some(d=>d.date.slice(0,7)===month&&!algemeneVrijeDag(d.date,bron))).length;
-      const verwerkteRefterWeken=Object.keys(bron.processed?.refterWeken||{}).filter(week=>Array.from({length:5},(_,i)=>datumPlusDagen(week,i)).some(d=>d.slice(0,7)===month)).length;
+      const refterOpen=Object.keys(bron.refterBevestigingen||{}).filter(week=>!refterWeekVerwerkt(week,bron)&&refterWeekDagen(week).some(d=>d.date.slice(0,7)===month&&!algemeneVrijeDag(d.date,bron))).length;
       return {refterOpen,activiteitOpen,aankoopOpen,totaal:refterOpen+activiteitOpen+aankoopOpen,
-        activiteitAantal:activiteiten.length,activiteitWacht,activiteitVerwerkt,aankoopAantal:aankopen.length,aankoopVerwerkt,refterAantal:verwerkteRefterWeken};
+        activiteitAantal:activiteiten.length,activiteitWacht,activiteitVerwerkt,aankoopAantal:aankopen.length,aankoopVerwerkt,refterAantal:0};
     }
     function secretariaatOpenAantal(bron){return schoolMonths().reduce((n,m)=>n+maandStatus(bron,m).totaal,0)}
     function onderdeelStatusTekst(soort,status){
       const open=status[`${soort}Open`]||0,aantal=status[`${soort}Aantal`]||0;
-      if(soort==="refter"&&open)return `${open} ${open===1?"week":"weken"} bevestigd — verwerken`;
-      if(soort==="refter")return aantal?"verwerkt":"niets te verwerken";
+      if(soort==="refter"&&open)return open===1?"bevestigd — verwerken":`${open} weken bevestigd — verwerken`;
+      if(soort==="refter")return "niets te verwerken";
       if(open)return `${open} nieuw${open===1?"":"e"}`;
       if(aantal)return "verwerkt / nagekeken";
       return "nog niets ingevuld";
@@ -1586,7 +1585,7 @@
       const months=schoolMonths();
       $("content").innerHTML=`<div class="panel"><div class="bar"><div><h2>${esc(activeClass)} — maandoverzicht</h2><p class="muted">Open een maand en kies daarna Refter, Activiteiten of Aankopen. Een gele map bevat iets dat nog opgevolgd moet worden.</p></div><button class="white no-print" onclick="openLeerlingenVoorKlas()">👥 Leerlingen beheren</button></div>
         <div class="maandmappen">${months.map(month=>{const s=maandStatus(data,month);return`<details class="maandmap ${s.totaal?'heeft-open':''}"><summary><span>${esc(maandNaam(month))}</span>${s.totaal?`<span class="maandmap-status">${s.totaal} nieuw</span>`:""}</summary><div class="maandmap-inhoud">
-          <button class="maandmap-knop ${s.refterOpen?'nieuw':s.refterAantal?'verwerkt':''}" onclick="openMaandOnderdeel('refter','${month}')"><span>🍽️ Refter<small>${esc(onderdeelStatusTekst('refter',s))}</small></span><span>›</span></button>
+          <button class="maandmap-knop ${s.refterOpen?'nieuw':''}" onclick="openMaandOnderdeel('refter','${month}')"><span>🍽️ Refter<small>${esc(onderdeelStatusTekst('refter',s))}</small></span><span>›</span></button>
           <button class="maandmap-knop ${s.activiteitOpen?'nieuw':s.activiteitAantal?'verwerkt':''}" onclick="openMaandOnderdeel('activiteiten','${month}')"><span>🚌 Activiteiten<small>${esc(onderdeelStatusTekst('activiteit',s))}</small></span><span>›</span></button>
           <button class="maandmap-knop ${s.aankoopOpen?'nieuw':s.aankoopAantal?'verwerkt':''}" onclick="openMaandOnderdeel('aankopen','${month}')"><span>🛍️ Aankopen<small>${esc(onderdeelStatusTekst('aankoop',s))}</small></span><span>›</span></button>
         </div></details>`}).join("")}</div></div>`;
