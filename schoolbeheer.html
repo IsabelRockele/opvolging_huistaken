@@ -1176,7 +1176,7 @@
         activeClass = "", schooljaar = huidigSchooljaar(), data = null, unsub = null,
         activityMonth = "", purchaseMonth = "", gekozenRefterMaand = "", gekozenRefterWeek = "", opvolgMaand = "", secretariaatOpvolgModus = false,
         tab = "administratie", adminPanel = "wegwijzer", classListMode = "", saveTimer = null,
-        excelImportVoorbeeld = [], excelImportBestandsnaam = "", kalenderImportVoorbeeld = [], lokaleBewaringTot = 0,
+        excelImportVoorbeeld = [], excelImportBestandsnaam = "", kalenderImportVoorbeeld = [], kalenderBewaardeGroepen = new Map(), lokaleBewaringTot = 0,
         fotoToestemmingData = {bevestigd:false,uitzonderingen:[],ontbrekendeFormulieren:[],gecontroleerdeLeerlingen:[]}, fotoUnsub = null;
     let testOverzichtUnsub = null;
     const actieveTestKlassen = new Map();
@@ -3791,11 +3791,29 @@
       doel.innerHTML='<div class="notice">Bewaarde gegevens ophalen…</div>';
       try{
         const snaps=await Promise.all(allClasses.map(async klas=>({klas,snap:await getDoc(classRef(klas))}))),map=new Map();
-        const voeg=(type,date,text,klas,extra={})=>{const key=`${type}|${date}|${String(text).toLocaleLowerCase("nl")}`;if(!map.has(key))map.set(key,{type,date,text,classes:new Set(),...extra});const item=map.get(key);item.classes.add(klas);if(extra.cancelled)item.cancelled=true;};
-        for(const {klas,snap} of snaps){if(!snap.exists())continue;const kd=snap.data();for(const v of kd.vrijeDagen||[]){if(!v.aangemaaktDoor)continue;voeg("Vrije dag",v.start||"",v.naam||"Vrije dag",klas);}for(const a of kd.activiteiten||[]){if(!a.aangemaaktDoor)continue;voeg("Activiteit",a.date||"",a.name||"Activiteit",klas,{cancelled:!!a.cancelled});}}
+        const voeg=(type,date,text,klas,extra={})=>{const key=`${type}|${date}|${String(text).toLocaleLowerCase("nl")}`;if(!map.has(key))map.set(key,{type,date,text,classes:new Set(),price:Number(extra.price||0),cancelled:false,processed:false});const item=map.get(key);item.classes.add(klas);if(extra.cancelled)item.cancelled=true;if(extra.processed)item.processed=true;if(type==="Activiteit")item.price=Number(extra.price||0);};
+        for(const {klas,snap} of snaps){if(!snap.exists())continue;const kd=snap.data();for(const v of kd.vrijeDagen||[]){if(!v.aangemaaktDoor)continue;voeg("Vrije dag",v.start||"",v.naam||"Vrije dag",klas);}for(const a of kd.activiteiten||[]){if(!a.aangemaaktDoor)continue;voeg("Activiteit",a.date||"",a.name||"Activiteit",klas,{price:a.price,cancelled:!!a.cancelled,processed:!!a.processed});}}
         const list=[...map.values()].sort((a,b)=>a.date.localeCompare(b.date)||a.text.localeCompare(b.text,"nl"));
-        doel.innerHTML=list.length?`<div class="table-wrap"><table><thead><tr><th>Datum</th><th>Soort</th><th>Omschrijving</th><th>Klassen</th></tr></thead><tbody>${list.map(x=>`<tr><td>${esc(x.date)}</td><td>${x.type==="Vrije dag"?'<span class="tag done">vrije dag</span>':x.cancelled?'<span class="tag" style="background:#f5cccc">geannuleerd</span>':'<span class="tag">activiteit</span>'}</td><td>${esc(x.text)}</td><td>${[...x.classes].sort(vergelijkKlassen).map(esc).join(", ")}</td></tr>`).join("")}</tbody></table></div>`:'<div class="notice">Nog geen voorbereide gegevens bewaard voor dit schooljaar.</div>';
+        kalenderBewaardeGroepen=new Map(list.map((x,i)=>[`kal-${i}`,x]));
+        doel.innerHTML=list.length?`<div class="table-wrap"><table><thead><tr><th>Datum</th><th>Soort</th><th>Omschrijving</th><th>Prijs</th><th>Klassen</th><th class="no-print">Aanpassen</th></tr></thead><tbody>${list.map((x,i)=>`<tr><td>${esc(x.date)}</td><td>${x.type==="Vrije dag"?'<span class="tag done">vrije dag</span>':x.cancelled?'<span class="tag" style="background:#f5cccc">geannuleerd</span>':'<span class="tag">activiteit</span>'}</td><td>${esc(x.text)}</td><td>${x.type==="Activiteit"?`&euro;${Number(x.price||0).toFixed(2)}`:"—"}</td><td>${[...x.classes].sort(vergelijkKlassen).map(esc).join(", ")}</td><td class="no-print">${x.type==="Activiteit"?`<button class="white small" onclick="openKalenderActiviteitWijzigen('kal-${i}')">Datum/prijs wijzigen</button>`:""}</td></tr>`).join("")}</tbody></table></div>`:'<div class="notice">Nog geen voorbereide gegevens bewaard voor dit schooljaar.</div>';
       }catch(err){console.error(err);doel.innerHTML='<div class="notice">Het overzicht kon niet worden opgehaald. Vernieuw de pagina en probeer opnieuw.</div>';}
+    };
+    window.openKalenderActiviteitWijzigen=sleutel=>{
+      if(!isSecretary())return;const item=kalenderBewaardeGroepen.get(sleutel);if(!item||item.type!=="Activiteit")return;
+      if(item.processed)return alert("Deze activiteit werd al verwerkt. Open eerst de activiteit bij de betrokken klas en maak de verwerking ongedaan voordat je datum of prijs wijzigt.");
+      document.getElementById("kalenderActiviteitWijzigOverlay")?.remove();
+      const overlay=document.createElement("div");overlay.id="kalenderActiviteitWijzigOverlay";overlay.dataset.sleutel=sleutel;overlay.style.cssText="position:fixed;inset:0;background:rgba(25,35,45,.58);z-index:10000;padding:20px;overflow:auto";
+      overlay.innerHTML=`<div style="max-width:600px;margin:55px auto;background:#fff;border-radius:18px;padding:22px;box-shadow:0 20px 60px rgba(0,0,0,.28)"><div class="bar"><div><h2 style="margin:0">Activiteit wijzigen</h2><p class="muted" style="margin:5px 0 0"><strong>${esc(item.text)}</strong></p></div><button class="white" onclick="document.getElementById('kalenderActiviteitWijzigOverlay').remove()">Sluiten</button></div><div class="notice" style="margin:14px 0"><strong>Wordt aangepast bij:</strong> ${[...item.classes].sort(vergelijkKlassen).map(esc).join(", ")}<p class="muted" style="margin-bottom:0">Aanwezigheden en bevestigingen blijven bewaard.</p></div><div class="grid grid-2"><label>Nieuwe datum<input id="kalWijzigDatum" type="date" min="${startDate()}" max="${endDate()}" value="${esc(item.date)}"></label><label>Prijs per leerling (&euro;)<input id="kalWijzigPrijs" type="number" min="0" step="0.01" value="${Number(item.price||0).toFixed(2)}"></label></div><div class="actions" style="margin-top:18px"><button class="green" onclick="bewaarKalenderActiviteitWijziging()">Wijziging bewaren</button><button class="white" onclick="document.getElementById('kalenderActiviteitWijzigOverlay').remove()">Annuleren</button></div></div>`;
+      document.body.appendChild(overlay);
+    };
+    window.bewaarKalenderActiviteitWijziging=async()=>{
+      const overlay=document.getElementById("kalenderActiviteitWijzigOverlay"),item=kalenderBewaardeGroepen.get(overlay?.dataset.sleutel||""),nieuweDatum=$("kalWijzigDatum")?.value||"",nieuwePrijs=Number($("kalWijzigPrijs")?.value||0);
+      if(!overlay||!item)return;if(!nieuweDatum||nieuweDatum<startDate()||nieuweDatum>endDate())return alert(`Kies een datum binnen schooljaar ${schooljaar}.`);if(nieuwePrijs<0)return alert("De prijs kan niet negatief zijn.");
+      if(!confirm(`${item.text} aanpassen naar ${nieuweDatum} en €${nieuwePrijs.toFixed(2)} per leerling?\n\nDit wordt toegepast bij: ${[...item.classes].sort(vergelijkKlassen).join(", ")}.`))return;
+      try{toonSchermLaden("Activiteit aanpassen…");let aangepast=0;
+        for(const klas of item.classes){const ref=classRef(klas),snap=await getDoc(ref);if(!snap.exists())continue;const kd=snap.data();let gewijzigd=false;(kd.activiteiten||[]).forEach(a=>{if(String(a.date||"")===item.date&&String(a.name||"").trim().toLocaleLowerCase("nl")===String(item.text).trim().toLocaleLowerCase("nl")){a.date=nieuweDatum;a.price=nieuwePrijs;a.gewijzigdDoor=user.email||user.uid||"";a.gewijzigdOp=new Date().toISOString();gewijzigd=true;aangepast++;}});if(gewijzigd){kd.bijgewerktOp=new Date().toISOString();await setDoc(ref,kd);if(klas===activeClass)data=kd;}}
+        overlay.remove();await laadKalenderBewaarOverzicht();alert(`De datum en prijs zijn aangepast bij ${aangepast} klasactiviteit${aangepast===1?"":"en"}.`);
+      }catch(err){console.error(err);alert("De activiteit kon niet volledig worden aangepast. Vernieuw het overzicht en controleer de betrokken klassen.");}finally{verbergSchermLaden();}
     };
     window.leesJaarkalenderBestand=async()=>{
       const file=$("kalenderFile")?.files?.[0]; if(!file)return alert("Kies eerst het Excelbestand met de jaarkalender.");
