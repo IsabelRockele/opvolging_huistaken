@@ -1563,8 +1563,11 @@
       bron ||= {};
       const activiteiten=(bron.activiteiten||[]).filter(a=>!a.cancelled&&String(a.date||"").slice(0,7)===month);
       const activiteitOpen=activiteiten.filter(a=>a.attendanceConfirmed&&!a.processed).length;
+      const activiteitWacht=activiteiten.filter(a=>!a.attendanceConfirmed&&!a.processed).length;
+      const activiteitVerwerkt=activiteiten.filter(a=>a.processed).length;
       const aankopen=(bron.aankopen||[]).filter(p=>String(p.date||"").slice(0,7)===month);
       const aankoopOpen=aankopen.filter(p=>!p.processed).length;
+      const aankoopVerwerkt=aankopen.filter(p=>p.processed).length;
       const refterMaand=bron.refter?.[month]||{};
       const refterDatums=new Set();
       Object.values(refterMaand).forEach(perLeerling=>Object.entries(perLeerling||{}).forEach(([datum,afwezig])=>{if(afwezig)refterDatums.add(datum)}));
@@ -1576,7 +1579,7 @@
       }).length;
       const verwerkteRefterWeken=Object.keys(bron.processed?.refterWeken||{}).filter(week=>Array.from({length:5},(_,i)=>datumPlusDagen(week,i)).some(d=>d.slice(0,7)===month)).length;
       return {refterOpen,activiteitOpen,aankoopOpen,totaal:refterOpen+activiteitOpen+aankoopOpen,
-        activiteitAantal:activiteiten.length,aankoopAantal:aankopen.length,refterAantal:refterDatums.size+verwerkteRefterWeken};
+        activiteitAantal:activiteiten.length,activiteitWacht,activiteitVerwerkt,aankoopAantal:aankopen.length,aankoopVerwerkt,refterAantal:refterDatums.size+verwerkteRefterWeken};
     }
     function secretariaatOpenAantal(bron){return schoolMonths().reduce((n,m)=>n+maandStatus(bron,m).totaal,0)}
     function onderdeelStatusTekst(soort,status){
@@ -1631,7 +1634,7 @@
     function renderOpvolging(){
       const bron=new Map(liveKlasDocumenten);if(data)bron.set(activeClass,data);
       const month=schoolMonths().includes(opvolgMaand)?opvolgMaand:huidigeSchoolMaand();opvolgMaand=month;
-      const kaart=(soort,icoon,titel)=>`<section class="notice"><h3>${icoon} ${titel}</h3><p class="muted">Open een klas voor ${esc(maandNaam(month))}. Geel betekent dat er nog iets verwerkt moet worden.</p><div class="actions">${allClasses.map(k=>{const s=maandStatus(bron.get(k),month),open=s[`${soort}Open`]||0,aantal=s[`${soort}Aantal`]||0;return`<button class="${open?'heeft-open':'white'}" onclick="openOpvolgingKlas('${k}','${soort}','${month}')">${open?'● ':aantal?'✓ ':''}${k}${open?` — ${open} nieuw`:aantal?' — bekeken':''}</button>`}).join("")}</div></section>`;
+      const kaart=(soort,icoon,titel)=>`<section class="notice"><h3>${icoon} ${titel}</h3><p class="muted">Open een klas voor ${esc(maandNaam(month))}. Geel betekent dat er nu iets verwerkt kan worden.</p><div class="actions">${allClasses.map(k=>{const s=maandStatus(bron.get(k),month),open=s[`${soort}Open`]||0,aantal=s[`${soort}Aantal`]||0,wacht=soort==='activiteit'?(s.activiteitWacht||0):0;const status=open?`● ${k} — ${open} te verwerken`:wacht?`⏳ ${k} — wacht op bevestiging`:aantal?`✓ ${k} — alles verwerkt`:`${k} — geen gegevens`;return`<button class="${open?'heeft-open':'white'}" onclick="openOpvolgingKlas('${k}','${soort}','${month}')">${status}</button>`}).join("")}</div></section>`;
       const klaar=[];
       const verwerkt=[];
       allClasses.forEach(klas=>{
