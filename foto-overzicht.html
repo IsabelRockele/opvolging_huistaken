@@ -69,10 +69,20 @@
     function ref(){return doc(db,'schoolbeheer',schooljaar,'instellingen','fototoestemming')}
     function magBeheren(){return role==='secretariaat'||role==='beheerder'}
     function datumTekst(v){const d=v?.toDate?v.toDate():v?new Date(v):null;return d&&!Number.isNaN(d.getTime())?d.toLocaleString('nl-BE',{dateStyle:'long',timeStyle:'short'}):''}
+    function actieveFotoRegistratie(x){
+      const id=String(x?.leerlingId||'');
+      const naamSleutel=String(x?.naam||'').trim().toLocaleLowerCase('nl').replace(/\s+/g,' ');
+      const klas=String(x?.klas||'');
+      return klasleerlingen.some(item=>{
+        const leerlingId=String(item.leerling?.id||'');
+        const leerlingNaam=naam(item.leerling).toLocaleLowerCase('nl').replace(/\s+/g,' ');
+        return (id&&leerlingId===id)||(item.klas===klas&&naamSleutel&&leerlingNaam===naamSleutel);
+      });
+    }
     function renderOverzicht(){
       const q=$('zoek').value.trim().toLocaleLowerCase('nl');
-      const lijst=(instelling.uitzonderingen||[]).filter(x=>!q||`${x.naam} ${x.klas}`.toLocaleLowerCase('nl').includes(q)).sort((a,b)=>klasSort(a.klas,b.klas)||a.naam.localeCompare(b.naam,'nl'));
-      const ontbrekend=(instelling.ontbrekendeFormulieren||[]).filter(x=>!q||`${x.naam} ${x.klas}`.toLocaleLowerCase('nl').includes(q)).sort((a,b)=>klasSort(a.klas,b.klas)||a.naam.localeCompare(b.naam,'nl'));
+      const lijst=(instelling.uitzonderingen||[]).filter(actieveFotoRegistratie).filter(x=>!q||`${x.naam} ${x.klas}`.toLocaleLowerCase('nl').includes(q)).sort((a,b)=>klasSort(a.klas,b.klas)||a.naam.localeCompare(b.naam,'nl'));
+      const ontbrekend=(instelling.ontbrekendeFormulieren||[]).filter(actieveFotoRegistratie).filter(x=>!q||`${x.naam} ${x.klas}`.toLocaleLowerCase('nl').includes(q)).sort((a,b)=>klasSort(a.klas,b.klas)||a.naam.localeCompare(b.naam,'nl'));
       const gecontroleerdeIds=new Set((instelling.gecontroleerdeLeerlingen||[]).map(x=>String(x.leerlingId||'')).filter(Boolean));
       const nieuweLeerlingen=magBeheren()&&instelling.bevestigd?klasleerlingen.filter(x=>x.leerling.id&&!gecontroleerdeIds.has(String(x.leerling.id))):[];
       if(!instelling.bevestigd){
@@ -82,7 +92,7 @@
         $('status').className='status';$('status').textContent=`${nieuweLeerlingen.length} nieuwe leerling(en) staan nog op “Nog na te vragen”. Klik in Klaslijsten op hun naam om de fotostatus in te vullen.`;
         $('overzicht').innerHTML=(lijst.length?lijst.map(x=>`<div class="exception"><strong>${esc(x.naam)}</strong><span>Klas ${esc(x.klas)}</span></div>`).join(''):'<div class="empty">Er waren nog geen uitzonderingen.</div>')+`<div class="empty"><strong>Nog te controleren:</strong> ${nieuweLeerlingen.map(x=>`${esc(naam(x.leerling))} (${esc(x.klas)})`).join(', ')}</div>`;
       }else{
-        $('status').className=ontbrekend.length?'status':'status ok';$('status').textContent=`Fototoestemmingen ${schooljaar}: ${instelling.uitzonderingen?.length||0} mogen niet op de foto en ${instelling.ontbrekendeFormulieren?.length||0} formulier(en) ontbreken nog.`;
+        $('status').className=ontbrekend.length?'status':'status ok';$('status').textContent=`Fototoestemmingen ${schooljaar}: ${lijst.length} mogen niet op de foto en ${ontbrekend.length} formulier(en) ontbreken nog.`;
         $('overzicht').innerHTML=lijst.length?lijst.map(x=>`<div class="exception"><strong>${esc(x.naam)}</strong><span>Klas ${esc(x.klas)}</span></div>`).join(''):'<div class="empty">Alle leerlingen mogen op de foto.</div>';
       }
       $('ontbrekendOverzicht').innerHTML=ontbrekend.length?ontbrekend.map(x=>`<div class="exception missing"><strong>${esc(x.naam)}</strong><span>Klas ${esc(x.klas)}</span></div>`).join(''):'<div class="empty">Geen ontbrekende formulieren.</div>';
