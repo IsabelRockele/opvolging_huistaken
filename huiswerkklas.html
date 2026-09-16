@@ -231,7 +231,7 @@ function colorForClass(klas){const i=Math.max(0,DEFAULT_CLASSES.indexOf(klas));r
 function monthRef(){return doc(db,"huiswerkklas",schooljaar,"maanden",demoMode?`test-${user.uid}-${month}`:month);}
 function testModeKey(){return `lindeHuiswerkklasTest_${user?.uid||""}`;}
 function bewaarTotVoorSchooljaar(jaar=schooljaar, extraJaren=BEWAAR_JAREN_HUISWERKKLAS){return `${Number(String(jaar).slice(0,4))+extraJaren}-08-31`;}
-function activeStudents(list,dateForCheck=`${month}-15`){return (list||[]).filter(s=>(!s.start||s.start<=dateForCheck)&&(!s.end||s.end>=dateForCheck)).sort((a,b)=>nameSortKey(a).localeCompare(nameSortKey(b),"nl"));}
+function activeStudents(list,dateForCheck=`${month}-15`){return (list||[]).filter(s=>s?.startNiet!==true&&s?.actief!==false&&s?.inactief!==true&&(!s.start||s.start<=dateForCheck)&&(!s.end||s.end>=dateForCheck)).sort((a,b)=>nameSortKey(a).localeCompare(nameSortKey(b),"nl"));}
 async function loadRole(){
   const snap=await getDoc(doc(db,"schoolrollen",user.uid));
   realRole=snap.exists()?String(snap.data().rol||"").toLowerCase():"";role=realRole;
@@ -295,8 +295,9 @@ async function loadData(){
 }
 function localRows(){
   const rows=[];
+  const actieveSleutels=new Set();
   allClasses.forEach(klas=>(classStudents[klas]||[]).forEach(s=>{
-    const key=studentKey(klas,s), existing=hw.enrolled[key]||{};
+    const key=studentKey(klas,s), existing=hw.enrolled[key]||{};actieveSleutels.add(key);
     if(s.homeworkClass || existing.active || (Array.isArray(s.homeworkClassHistory)&&s.homeworkClassHistory.length)){
       const days=s.homeworkClassDays||existing.days||{};
       const storedDayUncertain=Object.prototype.hasOwnProperty.call(s,"homeworkClassDayUncertain")?!!s.homeworkClassDayUncertain:!!existing.dayUncertain;
@@ -305,7 +306,7 @@ function localRows(){
     }
   }));
   Object.entries(hw.enrolled||{}).forEach(([key,v])=>{
-    if(v?.active!==false && !rows.some(r=>r.key===key))rows.push({key,klas:v.klas||"",name:v.name||"",local:false,active:true,free:!!v.free,days:v.days||{},start:v.start||"",end:v.end||"",history:v.history||[]});
+    if(v?.active!==false&&actieveSleutels.has(key)&&!rows.some(r=>r.key===key))rows.push({key,klas:v.klas||"",name:v.name||"",local:false,active:true,free:!!v.free,days:v.days||{},start:v.start||"",end:v.end||"",history:v.history||[]});
   });
   return rows.sort((a,b)=>(a.klas||"").localeCompare(b.klas||"","nl",{numeric:true})||(a.name||"").localeCompare(b.name||"","nl"));
 }
@@ -358,7 +359,8 @@ function renderPlanningOverview(){
   $("paidOnlyCheckbox").checked=planningPaidOnly;
   const doel=$("planningOverview");
   if(!rows.length){doel.innerHTML='<div class="empty">Er zijn nog geen leerlingen voor de huiswerkklas aangeduid.</div>';return}
-  doel.innerHTML=opvolgHtml+`<div class="table-wrap" style="max-height:none"><table class="planning-table"><thead><tr><th>Klas</th><th>Leerling</th><th>Dinsdag</th><th>Donderdag</th><th>Alleen naar huis</th><th>Periode</th><th>Betaling</th></tr></thead><tbody>${rows.map(r=>`<tr class="${r.free?"free-row":""}"><td><span class="class-chip"><span class="stripe-dot" style="background:${colorForClass(r.klas)}"></span>${esc(r.klas)}</span></td><td><strong>${esc(r.name)}</strong>${r.dayUncertain?'<span class="pay-badge" style="background:#fff0ad;color:#725500">dag navragen</span>':''}</td><td class="${r.days?.dinsdag?"day-check":"day-empty"}">${r.days?.dinsdag?"✓":"—"}</td><td class="${r.days?.donderdag?"day-check":"day-empty"}">${r.days?.donderdag?"✓":"—"}</td><td class="${r.mayGoHomeAlone?"day-check":"day-empty"}">${r.mayGoHomeAlone?"✓":"—"}</td><td>${r.start?esc(r.start.slice(8,10)+"/"+r.start.slice(5,7)+"/"+r.start.slice(0,4)):"start schooljaar"}${r.end?` t.e.m. ${esc(r.end.slice(8,10)+"/"+r.end.slice(5,7)+"/"+r.end.slice(0,4))}`:""}</td><td><span class="pay-badge ${r.free?"free":"paid"}">${r.free?"Gratis":"Betalend"}</span></td></tr>`).join("")}</tbody></table></div>`;
+  const dinsdagAantal=rows.filter(r=>r.days?.dinsdag).length,donderdagAantal=rows.filter(r=>r.days?.donderdag).length;
+  doel.innerHTML=opvolgHtml+`<div class="table-wrap" style="max-height:none"><table class="planning-table"><thead><tr><th>Klas</th><th>Leerling</th><th>Dinsdag (${dinsdagAantal})</th><th>Donderdag (${donderdagAantal})</th><th>Alleen naar huis</th><th>Periode</th><th>Betaling</th></tr></thead><tbody>${rows.map(r=>`<tr class="${r.free?"free-row":""}"><td><span class="class-chip"><span class="stripe-dot" style="background:${colorForClass(r.klas)}"></span>${esc(r.klas)}</span></td><td><strong>${esc(r.name)}</strong>${r.dayUncertain?'<span class="pay-badge" style="background:#fff0ad;color:#725500">dag navragen</span>':''}</td><td class="${r.days?.dinsdag?"day-check":"day-empty"}">${r.days?.dinsdag?"✓":"—"}</td><td class="${r.days?.donderdag?"day-check":"day-empty"}">${r.days?.donderdag?"✓":"—"}</td><td class="${r.mayGoHomeAlone?"day-check":"day-empty"}">${r.mayGoHomeAlone?"✓":"—"}</td><td>${r.start?esc(r.start.slice(8,10)+"/"+r.start.slice(5,7)+"/"+r.start.slice(0,4)):"start schooljaar"}${r.end?` t.e.m. ${esc(r.end.slice(8,10)+"/"+r.end.slice(5,7)+"/"+r.end.slice(0,4))}`:""}</td><td><span class="pay-badge ${r.free?"free":"paid"}">${r.free?"Gratis":"Betalend"}</span></td></tr>`).join("")}</tbody></table></div>`;
 }
 window.printDagNavragenKlas=klas=>{
   const leerlingen=localRows().filter(r=>r.klas===klas&&r.dayUncertain);
