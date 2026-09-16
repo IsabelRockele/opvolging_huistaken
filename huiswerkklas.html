@@ -23,6 +23,7 @@
     #saveBtn{min-width:170px;font-size:16px;padding:11px 18px;background:#bfe8dc;border:2px solid #4f9b78}
     #saveBtn.is-saving{background:#fff2bd;border-color:#d6a928}
     #saveBtn.is-saved{background:#dff3d8;border-color:#68a75e;color:#245d2c}
+    #supervisorReportedBtn.is-saved{background:#dff3d8;border:2px solid #68a75e;color:#245d2c}
     .compact-action{padding:7px 10px!important;font-size:13px!important}
     .tool-wegwijzer{display:none!important}
     label{display:block;font-weight:800;font-size:12px;color:#4b3b2d;margin-bottom:4px}
@@ -169,7 +170,7 @@
   </section>
   <details class="panel fold-panel" id="supervisorPanel" style="display:none">
     <summary><span>Begeleiders — maandoverzicht</span><span class="tag" id="supervisorCountTag">0 begeleidersbeurten</span></summary>
-    <div class="fold-panel-body"><div class="bar"><div class="actions right"><button class="white" id="manageSupervisorsBtn">⚙️ Begeleiders beheren</button><button class="white" id="supervisorPdfBtn">📄 PDF maandoverzicht</button></div></div>
+    <div class="fold-panel-body"><div class="bar"><div class="actions right"><button class="white" id="manageSupervisorsBtn">⚙️ Begeleiders beheren</button><button class="white" id="supervisorPdfBtn">📄 PDF maandoverzicht</button><button class="secondary" id="supervisorReportedBtn">Doorgegeven aan gemeente</button></div></div>
     <div id="supervisorManager" class="notice" style="display:none;margin-top:12px">
       <div class="bar"><div><strong>Wie mag de huiswerkklas begeleiden?</strong><p class="muted" style="margin:4px 0 0">Vink de leerkrachten aan. Zij verschijnen daarna op laptop en gsm en krijgen de begeleidersrechten.</p></div><button class="white" id="closeSupervisorManagerBtn">Sluiten</button></div>
       <div id="supervisorCandidateList" class="begeleider-keuzes" style="grid-template-columns:repeat(auto-fit,minmax(220px,1fr));margin-top:12px"></div>
@@ -460,8 +461,11 @@ async function toggleTestPreview(){
 }
 function formatSupervisorDate(d){const datum=new Date(`${d}T12:00:00`);return `${datum.toLocaleDateString("nl-BE",{weekday:"long"})} ${d.slice(8,10)}/${d.slice(5,7)}`;}
 function renderSupervisors(){
-  const panel=$("supervisorPanel"),doel=$("supervisorDays");
+  const panel=$("supervisorPanel"),doel=$("supervisorDays"),doorgegeven=!!hw.supervisorsReported?.reported;
   if(!isSecretariaat()){panel.style.display="none";return}
+  $("supervisorReportedBtn").textContent=doorgegeven?"✓ Doorgegeven aan gemeente":"Doorgegeven aan gemeente";
+  $("supervisorReportedBtn").classList.toggle("is-saved",doorgegeven);
+  $("supervisorReportedBtn").title=doorgegeven?`Verwerkt${hw.supervisorsReported?.reportedBy?` door ${hw.supervisorsReported.reportedBy}`:""}`:"Klik wanneer dit maandoverzicht aan de gemeente is doorgegeven";
   $("manageSupervisorsBtn").style.display=isSecretariaat()?"inline-block":"none";
   $("supervisorManager").style.display=supervisorManagerOpen?"block":"none";
   if(supervisorManagerOpen)renderSupervisorManager();
@@ -472,6 +476,19 @@ function renderSupervisors(){
   const totaalBeurten=Object.values(datumsPerNaam).reduce((totaal,datums)=>totaal+datums.length,0);
   $("supervisorCountTag").textContent=`${totaalBeurten} begeleidersbeurt${totaalBeurten===1?"":"en"} · ${euroBedrag(totaalBeurten*BEGELEIDER_VERGOEDING_PER_KEER)}`;
   doel.innerHTML=`<p class="supervisor-month-intro"><strong>Maandoverzicht ${esc(new Date(`${month}-01T12:00:00`).toLocaleDateString("nl-BE",{month:"long",year:"numeric"}))}</strong><br>Elke gewerkte keer telt voor <strong>${esc(euroBedrag(BEGELEIDER_VERGOEDING_PER_KEER))}</strong>. Dit overzicht is bedoeld om één keer per maand door te geven aan de gemeente. Klik op een naam om de geregistreerde datums te bekijken.</p><div class="supervisor-month-list">${namen.map(n=>{const datums=datumsPerNaam[n];return `<details class="supervisor-month-row"><summary><span aria-hidden="true">👩‍🏫</span><strong>${esc(n)}</strong><span class="monthly-count">${datums.length} keer</span><span class="supervisor-date-action" aria-hidden="true"></span><span class="monthly-amount">${esc(euroBedrag(datums.length*BEGELEIDER_VERGOEDING_PER_KEER))}</span></summary><div class="supervisor-date-list">${datums.length?datums.map(d=>`<div>${esc(formatSupervisorDate(d))}</div>`).join(""):"Geen werkdagen geregistreerd in deze maand."}</div></details>`;}).join("")}</div>`;
+}
+async function toggleSupervisorsReported(){
+  if(!isSecretariaat())return;
+  const reeds=!!hw.supervisorsReported?.reported;
+  if(reeds){
+    if(!confirm(`De markering “doorgegeven aan gemeente” voor ${month} opnieuw verwijderen?`))return;
+    hw.supervisorsReported=null;
+  }else{
+    if(!confirm(`Bevestig dat het begeleidersoverzicht van ${month} aan de gemeente is doorgegeven.`))return;
+    hw.supervisorsReported={reported:true,reportedAt:new Date().toISOString(),reportedBy:user.email||user.uid||""};
+  }
+  await setDoc(monthRef(),{supervisorsReported:hw.supervisorsReported,updatedAt:serverTimestamp(),updatedBy:user.email||user.uid},{merge:true});
+  render();toonBewaarmelding(reeds?"Markering verwijderd":"✓ Doorgegeven aan gemeente en als verwerkt bewaard");
 }
 function renderSupervisorManager(){
   const doel=$("supervisorCandidateList"),gekozen=new Set(supervisorConfig.map(supervisorKey));
@@ -723,6 +740,7 @@ onAuthStateChanged(auth,async u=>{
   $("pdfBtn").onclick=downloadParticipantsPdf;
   $("pdfScope").onchange=updatePdfButton;
   $("supervisorPdfBtn").onclick=downloadSupervisorsPdf;
+  $("supervisorReportedBtn").onclick=()=>toggleSupervisorsReported().catch(err=>{console.error(err);alert("De verwerking bewaren lukte niet: "+err.message);});
   $("aloneHomePdfBtn").onclick=downloadAloneHomePdf;
   $("manageSupervisorsBtn").onclick=()=>{supervisorManagerOpen=!supervisorManagerOpen;renderSupervisors();};
   $("closeSupervisorManagerBtn").onclick=()=>{supervisorManagerOpen=false;renderSupervisors();};
