@@ -1568,22 +1568,16 @@
       const aankopen=(bron.aankopen||[]).filter(p=>String(p.date||"").slice(0,7)===month);
       const aankoopOpen=aankopen.filter(p=>!p.processed).length;
       const aankoopVerwerkt=aankopen.filter(p=>p.processed).length;
-      const refterMaand=bron.refter?.[month]||{};
-      const refterDatums=new Set();
-      Object.values(refterMaand).forEach(perLeerling=>Object.entries(perLeerling||{}).forEach(([datum,afwezig])=>{if(afwezig)refterDatums.add(datum)}));
-      const refterOpen=[...refterDatums].filter(datum=>{
-        const week=maandagVan(datum),weken=bron.processed?.refterWeken||{};
-        if(weken[week])return false;
-        const legacy=bron.processed?.refter||"";
-        return !legacy||datum>legacy;
-      }).length;
+      const refterOpen=refterWekenVoorOpvolging(bron,false).filter(week=>refterWeekDagen(week).some(d=>d.date.slice(0,7)===month&&!algemeneVrijeDag(d.date,bron))).length;
       const verwerkteRefterWeken=Object.keys(bron.processed?.refterWeken||{}).filter(week=>Array.from({length:5},(_,i)=>datumPlusDagen(week,i)).some(d=>d.slice(0,7)===month)).length;
       return {refterOpen,activiteitOpen,aankoopOpen,totaal:refterOpen+activiteitOpen+aankoopOpen,
-        activiteitAantal:activiteiten.length,activiteitWacht,activiteitVerwerkt,aankoopAantal:aankopen.length,aankoopVerwerkt,refterAantal:refterDatums.size+verwerkteRefterWeken};
+        activiteitAantal:activiteiten.length,activiteitWacht,activiteitVerwerkt,aankoopAantal:aankopen.length,aankoopVerwerkt,refterAantal:verwerkteRefterWeken};
     }
     function secretariaatOpenAantal(bron){return schoolMonths().reduce((n,m)=>n+maandStatus(bron,m).totaal,0)}
     function onderdeelStatusTekst(soort,status){
       const open=status[`${soort}Open`]||0,aantal=status[`${soort}Aantal`]||0;
+      if(soort==="refter"&&open)return `${open} ${open===1?"week":"weken"} bevestigd — verwerken`;
+      if(soort==="refter")return aantal?"verwerkt":"niets te verwerken";
       if(open)return `${open} nieuw${open===1?"":"e"}`;
       if(aantal)return "verwerkt / nagekeken";
       return "nog niets ingevuld";
