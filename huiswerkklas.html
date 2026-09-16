@@ -73,11 +73,12 @@
     .supervisor-month-intro{margin:0 0 10px;padding:10px 12px;border-radius:10px;background:#eef7ff;color:#36536f;font-size:13px;line-height:1.45}
     .supervisor-month-list{display:grid;gap:6px;width:min(720px,100%)}
     .supervisor-month-row{border:1px solid var(--line);border-radius:11px;background:#fff;overflow:hidden}
-    .supervisor-month-row>summary{display:grid;grid-template-columns:24px max-content max-content max-content;justify-content:start;align-items:center;gap:9px;padding:7px 11px;cursor:pointer;list-style:none}
+    .supervisor-month-row>summary{display:grid;grid-template-columns:24px 190px 76px 132px 72px;justify-content:start;align-items:center;gap:9px;padding:7px 11px;cursor:pointer;list-style:none}
     .supervisor-month-row>summary::-webkit-details-marker{display:none}
-    .supervisor-month-row>summary::after{content:"Datums bekijken +";font-size:12px;color:#536985;font-weight:800;margin-left:2px}
-    .supervisor-month-row[open]>summary::after{content:"Datums sluiten −"}
+    .supervisor-date-action::after{content:"Datums bekijken +";font-size:12px;color:#536985;font-weight:800}
+    .supervisor-month-row[open] .supervisor-date-action::after{content:"Datums sluiten −"}
     .supervisor-month-row .monthly-count{justify-self:end;border-radius:999px;background:#dff3d8;color:#315b2b;padding:5px 9px;font-size:12px;font-weight:900}
+    .supervisor-month-row .monthly-amount{justify-self:end;font-weight:900;color:#315b47}
     .supervisor-date-list{padding:5px 11px 8px 44px;border-top:1px solid #eee5d8;color:#536985;font-size:13px;line-height:1.55}
     .mobile-today{display:none}.mobile-save{position:sticky;bottom:10px;width:100%;font-size:17px;padding:13px;margin-top:14px;box-shadow:0 5px 18px #0003}
     .mobile-person{display:flex;align-items:center;gap:10px;border-top:1px solid #eee5d8;padding:11px 3px}.mobile-person input{width:25px;height:25px;flex:0 0 auto}.mobile-person span{font-weight:800}.mobile-person small{display:block;color:var(--muted);font-weight:400;margin-top:2px}
@@ -470,7 +471,7 @@ function renderSupervisors(){
   const datumsPerNaam=Object.fromEntries(namen.map(n=>[n,alleDatums.filter(d=>!isCancelledDate(d)&&zichtbareBegeleiderNamen(hw.supervisors?.[d]).includes(n))]));
   const totaalBeurten=Object.values(datumsPerNaam).reduce((totaal,datums)=>totaal+datums.length,0);
   $("supervisorCountTag").textContent=`${totaalBeurten} begeleidersbeurt${totaalBeurten===1?"":"en"} · ${euroBedrag(totaalBeurten*BEGELEIDER_VERGOEDING_PER_KEER)}`;
-  doel.innerHTML=`<p class="supervisor-month-intro"><strong>Maandoverzicht ${esc(new Date(`${month}-01T12:00:00`).toLocaleDateString("nl-BE",{month:"long",year:"numeric"}))}</strong><br>Elke gewerkte keer telt voor <strong>${esc(euroBedrag(BEGELEIDER_VERGOEDING_PER_KEER))}</strong>. Dit overzicht is bedoeld om één keer per maand door te geven aan de gemeente. Klik op een naam om de geregistreerde datums te bekijken.</p><div class="supervisor-month-list">${namen.map(n=>{const datums=datumsPerNaam[n];return `<details class="supervisor-month-row"><summary><span aria-hidden="true">👩‍🏫</span><strong>${esc(n)}</strong><span class="monthly-count">${datums.length} keer · ${esc(euroBedrag(datums.length*BEGELEIDER_VERGOEDING_PER_KEER))}</span></summary><div class="supervisor-date-list">${datums.length?datums.map(d=>`<div>${esc(formatSupervisorDate(d))}</div>`).join(""):"Geen werkdagen geregistreerd in deze maand."}</div></details>`;}).join("")}</div>`;
+  doel.innerHTML=`<p class="supervisor-month-intro"><strong>Maandoverzicht ${esc(new Date(`${month}-01T12:00:00`).toLocaleDateString("nl-BE",{month:"long",year:"numeric"}))}</strong><br>Elke gewerkte keer telt voor <strong>${esc(euroBedrag(BEGELEIDER_VERGOEDING_PER_KEER))}</strong>. Dit overzicht is bedoeld om één keer per maand door te geven aan de gemeente. Klik op een naam om de geregistreerde datums te bekijken.</p><div class="supervisor-month-list">${namen.map(n=>{const datums=datumsPerNaam[n];return `<details class="supervisor-month-row"><summary><span aria-hidden="true">👩‍🏫</span><strong>${esc(n)}</strong><span class="monthly-count">${datums.length} keer</span><span class="supervisor-date-action" aria-hidden="true"></span><span class="monthly-amount">${esc(euroBedrag(datums.length*BEGELEIDER_VERGOEDING_PER_KEER))}</span></summary><div class="supervisor-date-list">${datums.length?datums.map(d=>`<div>${esc(formatSupervisorDate(d))}</div>`).join(""):"Geen werkdagen geregistreerd in deze maand."}</div></details>`;}).join("")}</div>`;
 }
 function renderSupervisorManager(){
   const doel=$("supervisorCandidateList"),gekozen=new Set(supervisorConfig.map(supervisorKey));
