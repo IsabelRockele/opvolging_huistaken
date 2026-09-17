@@ -203,7 +203,7 @@ const DEFAULT_SUPERVISORS=["Stevens Lara","Verheyden Leen","Boeykens Steffi","De
 const $=id=>document.getElementById(id), esc=v=>String(v??"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;");
 let saveToastTimer=null;
 function toonBewaarmelding(tekst){const melding=$("saveToast");melding.textContent=tekst;melding.style.display="block";clearTimeout(saveToastTimer);saveToastTimer=setTimeout(()=>{melding.style.display="none"},5000)}
-let user=null, role="", realRole="", demoMode=false, desktopEntryOpen=false, secretaryPlanningOpen=false, secretaryMoreOpen=false, secretaryDayView=false, planningPaidOnly=false, attendancePaidOnly=false, supervisorManagerOpen=false, supervisorConfig=[], supervisorCandidates=[], supervisorConfigIsExplicit=false, schooljaar=currentSchooljaar(), month=currentMonth(), date=todayIso(), mobileSelectedDate="", mobileHasUnsavedChanges=false, unlockedPastDates=new Set(), ownClasses=[], allClasses=[], classStudents={}, hw={enrolled:{},attendance:{},supervisors:{}};
+let user=null, role="", realRole="", demoMode=false, desktopEntryOpen=false, secretaryPlanningOpen=false, secretaryMoreOpen=false, secretaryDayView=false, planningPaidOnly=false, attendancePaidOnly=false, supervisorManagerOpen=false, supervisorConfig=[], supervisorCandidates=[], supervisorConfigIsExplicit=false, schooljaar=currentSchooljaar(), month=currentMonth(), date=todayIso(), mobileSelectedDate="", mobileHasUnsavedChanges=false, unlockedPastDates=new Set(), ownClasses=[], allClasses=[], classStudents={}, calendarFreeDays=[], hw={enrolled:{},attendance:{},supervisors:{}};
 async function setDoc(ref,payload,options){
   await probeerVeiligheidskopie(ref,{reden:"Huiswerkklas vóór opslag",schooljaar,klas:"schoolbreed",gebruiker:user?.email||user?.uid||""},(melding,err)=>{console.warn(melding,err);const status=document.getElementById("status");if(status)status.textContent="Let op: reservekopie mislukt";});
   return firestoreSetDoc(ref,payload,options);
@@ -212,6 +212,16 @@ const BEWAAR_JAREN_HUISWERKKLAS=2;
 function currentSchooljaar(){const n=new Date(), y=n.getMonth()>=7?n.getFullYear():n.getFullYear()-1;return `${y}-${y+1}`;}
 function currentMonth(){const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}`;}
 function todayIso(){const d=new Date(),p=n=>String(n).padStart(2,"0");return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}`;}
+function isoDatum(d){const p=n=>String(n).padStart(2,"0");return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}`;}
+function vrijeSchooldag(d){return calendarFreeDays.some(v=>d>=v.start&&d<=v.end);}
+function automatischeHuiswerkdatums(){
+  const [jaar,maandNummer]=month.split("-").map(Number),eerste=new Date(jaar,maandNummer-1,1,12),laatste=new Date(jaar,maandNummer,0,12),schoolStart=`${schooljaar.slice(0,4)}-09-01`,schoolEinde=`${schooljaar.slice(5)}-06-30`,datums=[];
+  for(const dag=new Date(eerste);dag<=laatste;dag.setDate(dag.getDate()+1)){
+    const d=isoDatum(dag),weekdag=dag.getDay();
+    if((weekdag===2||weekdag===4)&&d>=schoolStart&&d<=schoolEinde&&!vrijeSchooldag(d))datums.push(d);
+  }
+  return datums;
+}
 function isVoorbijeDatum(d){return !!d&&d<todayIso();}
 function magOudeDatumOntgrendelen(){return false;}
 function voorbijeDatumVergrendeld(d){return isVoorbijeDatum(d)&&!isSecretariaat()&&realRole!=="beheerder";}
@@ -293,14 +303,20 @@ async function loadSupervisorConfig(){
 async function loadData(){
   schooljaar=$("schooljaarInput").value||schooljaar; month=$("monthInput").value||month; date=$("dateInput").value||date;
   await Promise.all([loadClasses(),loadSupervisorConfig()]);
-  classStudents={};
+  classStudents={};calendarFreeDays=[];
   await Promise.all(allClasses.map(async klas=>{
     const snap=await getDoc(doc(db,"schoolbeheer",schooljaar,"klassen",klas));
-    classStudents[klas]=snap.exists()?activeStudents(snap.data().leerlingen||[]):[];
+    const klasData=snap.exists()?snap.data():{};
+    classStudents[klas]=activeStudents(klasData.leerlingen||[]);
+    for(const vrijeDag of klasData.vrijeDagen||[]){
+      const start=String(vrijeDag.start||vrijeDag.date||"").slice(0,10),end=String(vrijeDag.end||vrijeDag.start||vrijeDag.date||"").slice(0,10);
+      if(start&&end&&!calendarFreeDays.some(v=>v.start===start&&v.end===end))calendarFreeDays.push({start,end});
+    }
   }));
   const hwSnap=await getDoc(monthRef());
   hw=hwSnap.exists()?hwSnap.data():(demoMode?maakTestgegevens():{enrolled:{},attendance:{},dates:[],processedDates:{},supervisors:{}});
   hw.enrolled||={}; hw.attendance||={}; hw.dates||=[]; hw.processedDates||={}; hw.supervisors||={}; hw.cancelledDates||={};
+  hw.dates=[...new Set([...hw.dates,...automatischeHuiswerkdatums()])].filter(d=>!vrijeSchooldag(d)).sort();
   if(!isSecretariaat()&&magAanwezighedenInvullen())desktopEntryOpen=true;
   render();
 }
