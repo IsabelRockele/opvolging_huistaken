@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="nl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Maak een QR-code · De Linde</title>
+  <link rel="stylesheet" href="qr-maker.css">
+  <script defer src="vendor/qrcode-1.4.4.js"></script>
+  <script defer src="qr-maker.js"></script>
+</head>
+<body>
+  <header><div><h1>Maak een QR-code</h1><p>Een link naar een oefening, filmpje of website, klaar voor je klas.</p></div><a href="index.html">← Keuzescherm</a></header>
+  <main>
+    <section class="panel invoer" aria-labelledby="invoerTitel">
+      <span class="badge">Speel- en leeratelier</span>
+      <h2 id="invoerTitel">Van link naar QR-code</h2>
+      <p>Plak je link, maak de code en zet hem op een werkblad of hang hem op in je klas.</p>
+      <form id="qrForm" novalidate>
+        <label for="link">Link naar de website</label>
+        <input id="link" type="text" inputmode="url" autocomplete="off" spellcheck="false" placeholder="https://www.voorbeeld.be/oefening" aria-describedby="linkHulp melding" required>
+        <p id="linkHulp" class="hint">Ook een adres zonder https:// mag. Gebruik de volledige, blijvende link.</p>
+        <label for="titel">Titel <span class="optioneel">(optioneel)</span></label>
+        <input id="titel" type="text" maxlength="100" placeholder="Bijvoorbeeld: Oefen de tafels">
+        <button class="primary" type="submit">Maak mijn QR-code</button>
+      </form>
+      <p id="melding" role="status" aria-live="polite"></p>
+      <aside><strong>Geen vervaldatum</strong><p>De link zit rechtstreeks in de QR-code. Er is geen abonnement of tijdelijke QR-dienst nodig. De code blijft bruikbaar zolang de gekoppelde pagina bestaat en toegankelijk blijft.</p><p>Een gewijzigde link vraagt een nieuwe QR-code. Een pagina waarvoor je moet inloggen, blijft ook na het scannen afgeschermd.</p></aside>
+      <p class="hint">Je link wordt op dit toestel omgezet en wordt niet naar een QR-dienst verstuurd.</p>
+    </section>
+    <section class="panel resultaat" aria-labelledby="voorbeeldTitel">
+      <div class="preview-kop"><h2 id="voorbeeldTitel">Jouw QR-code</h2><span class="badge">Klaar om te delen</span></div>
+      <p id="leeg">Je QR-code verschijnt hier zodra je een link toevoegt.</p>
+      <div id="kaart" hidden>
+        <h3 id="kaartTitel"></h3>
+        <canvas id="qrCanvas" role="img" aria-label="QR-code voor de opgegeven link"></canvas>
+        <p id="bestemming"></p>
+      </div>
+      <div class="acties">
+        <button id="download" type="button" disabled>Download PNG</button>
+        <button id="svgDownload" type="button" disabled>Download SVG</button>
+        <button id="afdrukken" type="button" disabled>Afdrukken</button>
+      </div>
+      <p class="hint">PNG voor je werkblad, SVG om scherp te vergroten. Bij afdrukken staat de titel boven de code. Scan de code eerst even met je telefoon om de bestemming te controleren.</p>
+    </section>
+  </main>
+</body>
+</html>
