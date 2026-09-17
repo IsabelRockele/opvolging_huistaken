@@ -1078,6 +1078,22 @@
     .class-oldest-names{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:6px 20px;list-style:none;padding:0;margin:0 0 12px}
     .class-list-disclosures .photo-permission-summary{flex-wrap:wrap;gap:8px}
     .photo-permission-summary button{padding:4px 8px;font-size:12px;line-height:18px}
+    /* Eén scrollgebied voor de klaslijst, met vaste kolomkoppen. */
+    @media screen{
+      body:has(.student-page-table){height:100vh;height:100dvh;min-height:0;overflow:hidden}
+      body:has(.student-page-table) #shell{min-height:0}
+      body:has(.student-page-table) #main{min-width:0;min-height:0;overflow:auto;isolation:isolate}
+      body:has(.student-page-table) #content .table-wrap{max-height:none;overflow:visible}
+      .student-page-table{border-radius:0}
+      .student-page-table .klaslijst-table thead th{position:sticky;top:0;z-index:5;background:#eef3f9}
+      .student-page-table .klaslijst-table th:first-child,.student-page-table .klaslijst-table td:first-child{width:250px;min-width:250px}
+      .student-page-table .klaslijst-table th:nth-child(2),.student-page-table .klaslijst-table td:nth-child(2){left:250px}
+      .student-page-table .klaslijst-table thead th:nth-child(-n+2){z-index:8}
+    }
+    @media screen and (max-width:620px){
+      .student-page-table .klaslijst-table th:first-child,.student-page-table .klaslijst-table td:first-child{width:130px;min-width:130px}
+      .student-page-table .klaslijst-table th:nth-child(2),.student-page-table .klaslijst-table td:nth-child(2){left:130px}
+    }
   </style>
 </head>
 <body>
@@ -3013,7 +3029,7 @@
       }catch(err){fotoToestemmingData=vorige;renderMetScrollbehoud();console.error(err);alert("De klasbevestiging kon niet worden bewaard: "+err.message);}
     };
     function studentTable(){
-      return `<div class="table-wrap"><table class="klaslijst-table"><thead><tr><th>Achternaam</th><th>Officiële voornaam</th>${optioneleKolom('roepnaam','<th>Roepnaam<span class="th-sub">optioneel</span></th>')}${optioneleKolom('geboortejaar','<th>Geboortejaar</th>')}${activeClass==="K1"?optioneleKolom('groep','<th>Groep</th>'):""}${optioneleKolom('oudste','<th class="check-col">Oudste<br>gezin</th>')}${optioneleKolom('collega','<th class="check-col">Kind collega</th>')}${optioneleKolom('huiswerk','<th class="homework-cell">Huiswerkklas<span class="th-sub">deelname en betaling</span></th>')}${optioneleKolom('alleenhuis','<th class="check-col">Alleen naar huis<span class="th-sub">toestemming ouders</span></th>')}${optioneleKolom('foto','<th class="photo-cell">Foto<span class="th-sub">toestemming dit schooljaar</span></th>')}</tr></thead><tbody>${activeStudents().map(s=>`<tr class="${s.colleague?"colleague":""}">
+      return `<div class="table-wrap student-page-table no-scroll-mirror"><table class="klaslijst-table"><thead><tr><th>Achternaam</th><th>Officiële voornaam</th>${optioneleKolom('roepnaam','<th>Roepnaam<span class="th-sub">optioneel</span></th>')}${optioneleKolom('geboortejaar','<th>Geboortejaar</th>')}${activeClass==="K1"?optioneleKolom('groep','<th>Groep</th>'):""}${optioneleKolom('oudste','<th class="check-col">Oudste<br>gezin</th>')}${optioneleKolom('collega','<th class="check-col">Kind collega</th>')}${optioneleKolom('huiswerk','<th class="homework-cell">Huiswerkklas<span class="th-sub">deelname en betaling</span></th>')}${optioneleKolom('alleenhuis','<th class="check-col">Alleen naar huis<span class="th-sub">toestemming ouders</span></th>')}${optioneleKolom('foto','<th class="photo-cell">Foto<span class="th-sub">toestemming dit schooljaar</span></th>')}</tr></thead><tbody>${activeStudents().map(s=>`<tr class="${s.colleague?"colleague":""}">
         <td><button class="leerling-naam-knop" onclick="openLeerlingBeheer('${s.id}')" title="Klik om ${esc(name(s))} te beheren">${esc(s.last||"")}</button></td>
         <td><button class="leerling-naam-knop" onclick="openLeerlingBeheer('${s.id}')" title="Klik om ${esc(name(s))} te beheren">${esc(s.first||"")}</button></td>
         ${optioneleKolom('roepnaam',`<td><input class="name-input" value="${esc(s.roepnaam||"")}" placeholder="bv. Haroun" onchange="updateStudent('${s.id}','roepnaam',this.value)"></td>`)}
