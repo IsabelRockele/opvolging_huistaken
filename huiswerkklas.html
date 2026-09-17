@@ -182,6 +182,7 @@
     <summary><span id="attendanceTitle">Aanwezigen</span><span class="tag" id="countTag">0 leerlingen</span></summary>
     <div class="fold-panel-body"><div class="bar">
       <label id="attendancePaidOnlyLabel" style="display:none;align-items:center;gap:8px;margin:0 0 0 auto;font-size:14px"><input id="attendancePaidOnlyCheckbox" type="checkbox" style="width:20px;flex:0 0 auto"> Alleen betalende tonen</label>
+      <label id="attendancePresentOnlyLabel" style="display:none;align-items:center;gap:8px;margin:0;font-size:14px"><input id="attendancePresentOnlyCheckbox" type="checkbox" style="width:20px;flex:0 0 auto"> Enkel aanwezigen tonen</label>
       <button class="white" id="closeAttendanceBtn" style="display:none">← Terug naar overzicht</button>
     </div>
     <div id="attendanceSupervisorPicker"></div>
@@ -412,8 +413,10 @@ window.printDagNavragenKlas=klas=>{
   venster.document.write(`<!doctype html><html lang="nl"><head><meta charset="utf-8"><title>Huiswerkklasdag navragen — ${esc(klas)}</title><style>@page{size:A4 portrait;margin:15mm}*{box-sizing:border-box}body{font-family:Arial,sans-serif;color:#17212b;margin:0}h1{font-size:24px;margin:0 0 4px}.meta{color:#52606d;margin-bottom:18px}p{margin:0 0 14px}table{width:100%;border-collapse:collapse}th,td{border:1px solid #9aa8b6;padding:10px 8px;text-align:left;height:42px}th{background:#eef3f9;font-size:13px}.vak{text-align:center;width:90px;font-size:24px}td:first-child{width:34px;text-align:center}td:last-child{width:150px}footer{margin-top:14px;color:#6b7785;font-size:11px}@media print{button{display:none}}</style></head><body><h1>Huiswerkklas — dag nog na te vragen</h1><div class="meta"><strong>Klas ${esc(klas)}</strong> · Schooljaar ${esc(schooljaar)}</div><p>Vraag aan de ouders op welke dag hun kind naar de huiswerkklas komt. Pas de keuze daarna aan in de klaslijst.</p><table><thead><tr><th>Nr.</th><th>Leerling</th><th>Dinsdag</th><th>Donderdag</th><th>Ouders gesproken</th><th>Notitie</th></tr></thead><tbody>${rijen}</tbody></table><footer>Afgedrukt op ${esc(new Date().toLocaleDateString("nl-BE"))}</footer><script>window.addEventListener('load',()=>setTimeout(()=>window.print(),150));<\/script></body></html>`);
   venster.document.close();
 };
+let attendancePresentOnly=false;
 function renderTable(){
-  const dates=zichtbareWerkdatums(),dag=dates.length===1?mobileDagSleutel(dates[0]):"",alleRijen=localRows(),dagRijen=dag?alleRijen.filter(r=>geplandOpDatum(r,dates[0])):alleRijen,rows=attendancePaidOnly?dagRijen.filter(r=>dates.length?!planningVoorDatum(r,dates[0]).free:!r.free):dagRijen;
+  const dates=zichtbareWerkdatums(),dag=dates.length===1?mobileDagSleutel(dates[0]):"",alleRijen=localRows(),dagRijen=dag?alleRijen.filter(r=>geplandOpDatum(r,dates[0])):alleRijen,betalendeRijen=attendancePaidOnly?dagRijen.filter(r=>dates.length?!planningVoorDatum(r,dates[0]).free:!r.free):dagRijen,rows=attendancePresentOnly?betalendeRijen.filter(r=>aanwezighedenTotaal(r,dates)>0):betalendeRijen;
+  $("attendancePresentOnlyCheckbox").checked=attendancePresentOnly;
   $("attendanceTitle").textContent=dates.length===1?`Aanwezigen op ${formatSupervisorDate(dates[0])}`:"Aanwezigen";
   if(!dates.length&&isSecretariaat()&&!secretaryDayView){$("countTag").textContent="geen geregistreerde dagen";$("homeworkTable").innerHTML='<div class="empty">Er zijn deze maand nog geen huiswerkklasdagen geregistreerd. Alleen ingevulde dagen tot en met vandaag verschijnen hier.</div>';return;}
   if(!dates.length){$("countTag").textContent="geen huiswerkklas";$("homeworkTable").innerHTML=`<div class="notice"><strong>Geen huiswerkklas gepland op ${esc(formatSupervisorDate(date))}.</strong><p class="muted" style="margin-bottom:0">Er wordt niet automatisch naar een oudere dag teruggesprongen. Wil je een andere datum raadplegen, kies die dan bewust via <strong>Meer opties</strong>.</p></div>`;return;}
@@ -421,7 +424,7 @@ function renderTable(){
   $("attendancePaidOnlyCheckbox").checked=attendancePaidOnly;
   const enrolledCount=rows.filter(r=>r.active).length;
   $("countTag").textContent=`${enrolledCount} leerling${enrolledCount===1?"":"en"}`;
-  if(!rows.length){$("homeworkTable").innerHTML=`<div class="empty">Geen leerlingen gevonden.</div>`;return;}
+  if(!rows.length){$("homeworkTable").innerHTML=`<div class="empty">${attendancePresentOnly||attendancePaidOnly?"Geen leerlingen voldoen aan de gekozen filters.":"Geen leerlingen gevonden."}</div>`;return;}
   const oudeDatum=dates.length===1&&isVoorbijeDatum(dates[0])?dates[0]:"",wijzigBalk=oudeDatum&&voorbijeDatumVergrendeld(oudeDatum)?oudeDatumDefinitiefVergrendeld(oudeDatum)?'<div class="notice"><strong>Deze dag is verwerkt door het secretariaat.</strong> Alleen beheerder of secretariaat kan nog iets wijzigen.</div>':'<div class="notice"><strong>Deze voorbije dag is alleen-lezen.</strong> Zie je een fout? Geef die door aan het secretariaat.</div>':"";
   $("homeworkTable").innerHTML=`${wijzigBalk}<div class="table-wrap"><table><thead><tr><th class="class-col">Klas</th><th class="name-col">Leerling</th>${dates.map(d=>`<th class="date-col">${esc(d.slice(8,10)+"/"+d.slice(5,7))}${isCancelledDate(d)?'<span class="lock-note">gaat niet door</span>':voorbijeDatumVergrendeld(d)?'<span class="lock-note">afgesloten</span>':isSecretariaat()?`<label class="lock-note"><input type="checkbox" data-lock-date="${esc(d)}" ${hw.processedDates?.[d]?"checked":""}> verwerkt</label>`:hw.processedDates?.[d]?`<span class="lock-note">verwerkt</span>`:""}</th>`).join("")}<th class="total-col">Totaal</th></tr></thead><tbody>${rows.map(r=>{const total=aanwezighedenTotaal(r,dates),dagen=[r.days?.dinsdag?'di':'',r.days?.donderdag?'do':''].filter(Boolean).join(' + ');return `<tr class="${r.free?"free-row":""}"><td class="class-col"><span class="class-chip"><span class="stripe-dot" style="background:${colorForClass(r.klas)}"></span>${esc(r.klas)}</span></td><td class="name-col"><strong>${esc(r.name)}</strong>${dagen?`<span class="pay-badge">${dagen}</span>`:''}${r.mayGoHomeAlone?'<span class="pay-badge" style="background:#dff3d8;color:#315b2b">alleen naar huis</span>':''}<span class="pay-badge ${r.free?"free":"paid"}">${r.free?"gratis":"betalend"}</span></td>${dates.map(d=>{const gepland=geplandOpDatum(r,d),locked=(!!hw.processedDates?.[d]&&!isSecretariaat()&&realRole!=="beheerder")||voorbijeDatumVergrendeld(d);return gepland?`<td class="date-col"><input type="checkbox" data-present="${esc(r.key)}" data-date="${esc(d)}" ${hw.attendance?.[d]?.[r.key]?"checked":""} ${locked?"disabled":""}></td>`:`<td class="date-col day-empty">—</td>`;}).join("")}<td class="total-col">${total}</td></tr>`;}).join("")}</tbody></table></div>`;
   document.querySelectorAll("[data-present]").forEach(ch=>ch.onchange=()=>autoSave());
@@ -431,6 +434,7 @@ function renderRoleTools(){
   const secretary=isSecretariaat();
   const magLaptopInvullen=!secretary&&magAanwezighedenInvullen();
   $("attendancePaidOnlyLabel").style.display=secretary?"flex":"none";
+  $("attendancePresentOnlyLabel").style.display=secretary?"flex":"none";
   $("planningTopBtn").style.display=(secretary||magLaptopInvullen)?"inline-block":"none";
   $("planningTopBtn").textContent=secretary
     ? (secretaryPlanningOpen?"Inschrijvingsoverzicht sluiten":"Algemeen inschrijvingsoverzicht")
@@ -787,6 +791,7 @@ onAuthStateChanged(auth,async u=>{
   $("planningTopBtn").onclick=()=>{if(isSecretariaat()){secretaryPlanningOpen=!secretaryPlanningOpen;render();if(secretaryPlanningOpen)$("planningPanel").scrollIntoView({behavior:"smooth",block:"start"});return;}desktopEntryOpen=!desktopEntryOpen;render();window.scrollTo({top:0,left:0,behavior:"smooth"});};
   $("paidOnlyCheckbox").onchange=()=>{planningPaidOnly=$("paidOnlyCheckbox").checked;renderPlanningOverview();};
   $("attendancePaidOnlyCheckbox").onchange=()=>{attendancePaidOnly=$("attendancePaidOnlyCheckbox").checked;renderTable();};
+  $("attendancePresentOnlyCheckbox").onchange=()=>{attendancePresentOnly=$("attendancePresentOnlyCheckbox").checked;renderTable();};
   $("secretaryOptionsBtn").onclick=()=>{secretaryMoreOpen=!secretaryMoreOpen;render();};
   $("openDayBtn").onclick=()=>{date=$("dateInput").value||date;if(!date||date.slice(0,7)!==month)return alert("Kies een datum binnen de bekeken maand.");secretaryDayView=true;secretaryMoreOpen=false;render();};
   $("monthOverviewBtn").onclick=()=>{secretaryDayView=false;render();};
