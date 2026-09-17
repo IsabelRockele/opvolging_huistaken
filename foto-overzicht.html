@@ -81,8 +81,13 @@
     }
     function renderOverzicht(){
       const q=$('zoek').value.trim().toLocaleLowerCase('nl');
-      const lijst=(instelling.uitzonderingen||[]).filter(actieveFotoRegistratie).filter(x=>!q||`${x.naam} ${x.klas}`.toLocaleLowerCase('nl').includes(q)).sort((a,b)=>klasSort(a.klas,b.klas)||a.naam.localeCompare(b.naam,'nl'));
-      const ontbrekend=(instelling.ontbrekendeFormulieren||[]).filter(actieveFotoRegistratie).filter(x=>!q||`${x.naam} ${x.klas}`.toLocaleLowerCase('nl').includes(q)).sort((a,b)=>klasSort(a.klas,b.klas)||a.naam.localeCompare(b.naam,'nl'));
+      // Alleen secretariaat en beheer kunnen alle actuele klaslijsten laden en
+      // daarmee oude registraties wegfilteren. Andere personeelsleden lezen het
+      // centraal bevestigde foto-overzicht rechtstreeks; hun klaslijst is hier
+      // bewust leeg en mag dus niet als filter worden gebruikt.
+      const zichtbareRegistraties=items=>magBeheren()?items.filter(actieveFotoRegistratie):items;
+      const lijst=zichtbareRegistraties(instelling.uitzonderingen||[]).filter(x=>!q||`${x.naam} ${x.klas}`.toLocaleLowerCase('nl').includes(q)).sort((a,b)=>klasSort(a.klas,b.klas)||a.naam.localeCompare(b.naam,'nl'));
+      const ontbrekend=zichtbareRegistraties(instelling.ontbrekendeFormulieren||[]).filter(x=>!q||`${x.naam} ${x.klas}`.toLocaleLowerCase('nl').includes(q)).sort((a,b)=>klasSort(a.klas,b.klas)||a.naam.localeCompare(b.naam,'nl'));
       const gecontroleerdeIds=new Set((instelling.gecontroleerdeLeerlingen||[]).map(x=>String(x.leerlingId||'')).filter(Boolean));
       const nieuweLeerlingen=magBeheren()&&instelling.bevestigd?klasleerlingen.filter(x=>x.leerling.id&&!gecontroleerdeIds.has(String(x.leerling.id))):[];
       if(!instelling.bevestigd){
