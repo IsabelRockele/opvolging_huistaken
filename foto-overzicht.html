@@ -54,7 +54,7 @@
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
     import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-    import { getFirestore, collection, doc, getDoc, getDocs, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    import { getFirestore, collection, doc, getDoc, getDocs, onSnapshot, query, where, setDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
     const app=initializeApp({apiKey:"AIzaSyA7KxXMvZ4dzBQDut3CMyWUblLte2tFzoQ",authDomain:"huiswerkapp-a311e.firebaseapp.com",projectId:"huiswerkapp-a311e",storageBucket:"huiswerkapp-a311e.appspot.com",messagingSenderId:"797169941164",appId:"1:797169941164:web:511d9618079f1378d0fd09"});
     const auth=getAuth(app),db=getFirestore(app),$=id=>document.getElementById(id);
@@ -64,7 +64,7 @@
     const actief=(s,jaar)=>{const van=`${jaar.slice(0,4)}-09-01`,tot=`${jaar.slice(5)}-06-30`;return !s.startNiet&&(!s.start||s.start<=tot)&&(!s.end||s.end>=van)};
     const naam=s=>String(s.name||s.naam||`${s.first||s.firstName||''} ${s.last||s.lastName||''}`).replace(/\s+/g,' ').trim();
     const klasSort=(a,b)=>a.localeCompare(b,'nl',{numeric:true});
-    let user=null,role='',schooljaar=huidigSchooljaar(),instelling={bevestigd:false,uitzonderingen:[],ontbrekendeFormulieren:[],gecontroleerdeLeerlingen:[]},klasleerlingen=[],unsub=null;
+    let user=null,role='',werkelijkeRole='',schooljaar=huidigSchooljaar(),instelling={bevestigd:false,uitzonderingen:[],ontbrekendeFormulieren:[],gecontroleerdeLeerlingen:[]},klasleerlingen=[],geladenKlassen=new Set(),unsub=null;
 
     function ref(){return doc(db,'schoolbeheer',schooljaar,'instellingen','fototoestemming')}
     function magBeheren(){return role==='secretariaat'||role==='beheerder'}
@@ -73,6 +73,9 @@
       const id=String(x?.leerlingId||'');
       const naamSleutel=String(x?.naam||'').trim().toLocaleLowerCase('nl').replace(/\s+/g,' ');
       const klas=String(x?.klas||'');
+      // Een klas die deze gebruiker niet mag laden, kunnen we niet veilig
+      // controleren. De centraal bevestigde registratie blijft dan zichtbaar.
+      if(!geladenKlassen.has(klas))return true;
       return klasleerlingen.some(item=>{
         const leerlingId=String(item.leerling?.id||'');
         const leerlingNaam=naam(item.leerling).toLocaleLowerCase('nl').replace(/\s+/g,' ');
@@ -81,11 +84,7 @@
     }
     function renderOverzicht(){
       const q=$('zoek').value.trim().toLocaleLowerCase('nl');
-      // Alleen secretariaat en beheer kunnen alle actuele klaslijsten laden en
-      // daarmee oude registraties wegfilteren. Andere personeelsleden lezen het
-      // centraal bevestigde foto-overzicht rechtstreeks; hun klaslijst is hier
-      // bewust leeg en mag dus niet als filter worden gebruikt.
-      const zichtbareRegistraties=items=>magBeheren()?items.filter(actieveFotoRegistratie):items;
+      const zichtbareRegistraties=items=>items.filter(actieveFotoRegistratie);
       const lijst=zichtbareRegistraties(instelling.uitzonderingen||[]).filter(x=>!q||`${x.naam} ${x.klas}`.toLocaleLowerCase('nl').includes(q)).sort((a,b)=>klasSort(a.klas,b.klas)||a.naam.localeCompare(b.naam,'nl'));
       const ontbrekend=zichtbareRegistraties(instelling.ontbrekendeFormulieren||[]).filter(x=>!q||`${x.naam} ${x.klas}`.toLocaleLowerCase('nl').includes(q)).sort((a,b)=>klasSort(a.klas,b.klas)||a.naam.localeCompare(b.naam,'nl'));
       const gecontroleerdeIds=new Set((instelling.gecontroleerdeLeerlingen||[]).map(x=>String(x.leerlingId||'')).filter(Boolean));
@@ -105,19 +104,44 @@
       $('controleInfo').textContent=instelling.bevestigd?`Gecontroleerd${wanneer?` op ${wanneer}`:''}${instelling.gecontroleerdDoor?` door ${instelling.gecontroleerdDoor}`:''}.`:'';
     }
     async function laadKlassen(){
-      if(!magBeheren()){klasleerlingen=[];return}
-      const snap=await getDocs(collection(db,'schoolbeheer',schooljaar,'klassen'));klasleerlingen=[];
-      snap.forEach(d=>(d.data().leerlingen||[]).filter(s=>actief(s,schooljaar)).forEach(leerling=>klasleerlingen.push({klas:d.id,leerling})));
+      klasleerlingen=[];geladenKlassen=new Set();
+      const magAlles=['secretariaat','beheerder','directie','zorgcoordinator','zorgleerkracht'].includes(werkelijkeRole);
+      if(magAlles){
+        const snap=await getDocs(collection(db,'schoolbeheer',schooljaar,'klassen'));
+        snap.forEach(d=>{geladenKlassen.add(d.id);(d.data().leerlingen||[]).filter(s=>actief(s,schooljaar)).forEach(leerling=>klasleerlingen.push({klas:d.id,leerling}))});
+        return;
+      }
+      const email=(user.email||'').trim().toLowerCase();
+      const koppelingen=await Promise.all([
+        getDocs(query(collection(db,'klasleerkrachten'),where('leerkracht_uids','array-contains',user.uid))),
+        email?getDocs(query(collection(db,'klasleerkrachten'),where('leerkracht_emails','array-contains',email))):Promise.resolve({docs:[]})
+      ]);
+      const klassen=new Set();
+      koppelingen.forEach(snap=>snap.docs.forEach(d=>{const x=d.data();if(String(x.schooljaar||schooljaar)===schooljaar&&x.klas)klassen.add(String(x.klas).trim())}));
+      const docs=await Promise.all([...klassen].map(klas=>getDoc(doc(db,'schoolbeheer',schooljaar,'klassen',klas))));
+      docs.forEach((snap,i)=>{const klas=[...klassen][i];geladenKlassen.add(klas);if(snap.exists())(snap.data().leerlingen||[]).filter(s=>actief(s,schooljaar)).forEach(leerling=>klasleerlingen.push({klas,leerling}))});
     }
     async function laad(){
       if(unsub){unsub();unsub=null}$('status').className='status';$('status').textContent='Gegevens worden geladen…';
       await laadKlassen();
-      unsub=onSnapshot(ref(),snap=>{instelling=snap.exists()?{bevestigd:false,uitzonderingen:[],ontbrekendeFormulieren:[],gecontroleerdeLeerlingen:[],...snap.data()}:{bevestigd:false,uitzonderingen:[],ontbrekendeFormulieren:[],gecontroleerdeLeerlingen:[]};renderOverzicht()},err=>{$('status').className='status error';$('status').textContent=`Laden mislukt: ${err.message}`});
+      unsub=onSnapshot(ref(),async snap=>{
+        instelling=snap.exists()?{bevestigd:false,uitzonderingen:[],ontbrekendeFormulieren:[],gecontroleerdeLeerlingen:[],...snap.data()}:{bevestigd:false,uitzonderingen:[],ontbrekendeFormulieren:[],gecontroleerdeLeerlingen:[]};
+        const opgeschoond={
+          uitzonderingen:(instelling.uitzonderingen||[]).filter(actieveFotoRegistratie),
+          ontbrekendeFormulieren:(instelling.ontbrekendeFormulieren||[]).filter(actieveFotoRegistratie),
+          gecontroleerdeLeerlingen:(instelling.gecontroleerdeLeerlingen||[]).filter(actieveFotoRegistratie)
+        };
+        const gewijzigd=Object.keys(opgeschoond).some(k=>opgeschoond[k].length!==(instelling[k]||[]).length);
+        instelling={...instelling,...opgeschoond};renderOverzicht();
+        // Secretariaat/beheer verwijdert verouderde vermeldingen ook centraal,
+        // zodat leerkrachten zonder toegang tot die klas ze evenmin nog zien.
+        if(gewijzigd&&['secretariaat','beheerder'].includes(werkelijkeRole))setDoc(ref(),opgeschoond,{merge:true}).catch(err=>console.warn('Verouderde fotoregistraties opschonen mislukt',err));
+      },err=>{$('status').className='status error';$('status').textContent=`Laden mislukt: ${err.message}`});
     }
     $('zoek').addEventListener('input',renderOverzicht);$('schooljaar').addEventListener('change',()=>{schooljaar=$('schooljaar').value;laad()});
     onAuthStateChanged(auth,async u=>{
       if(!u){location.href='index.html';return}user=u;
-      const r=await getDoc(doc(db,'schoolrollen',u.uid));role=r.exists()?String(r.data().rol||'').trim().toLowerCase():'';
+      const r=await getDoc(doc(db,'schoolrollen',u.uid));werkelijkeRole=r.exists()?String(r.data().rol||'').trim().toLowerCase():'';role=werkelijkeRole;
       if(role==='beheerder'){const sim=localStorage.getItem('lindeSimuleerRol_'+u.uid);if(sim)role=String(sim).toLowerCase()}
       $('schooljaar').innerHTML=jaren().map(j=>`<option ${j===schooljaar?'selected':''}>${j}</option>`).join('');await laad();
     });
