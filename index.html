@@ -499,20 +499,30 @@
       margin: 0 auto 12px;
     }
 
-    .wachtwoord-veld-wrap input[type="password"],
-    .wachtwoord-veld-wrap input[type="text"] {
+    #auth .wachtwoord-veld-wrap input[type="password"],
+    #auth .wachtwoord-veld-wrap input[type="text"] {
+      display: block;
+      width: 100%;
+      max-width: 340px;
       margin-bottom: 0 !important;
       padding-right: 48px !important;
+      border: 1.5px solid var(--rand-donker);
+      border-radius: 10px;
+      font-family: inherit;
+      font-size: 1em;
+      background: var(--creme);
+      color: var(--tekst);
     }
 
-    .toon-wachtwoord-knop {
+    #auth .toon-wachtwoord-knop {
       position: absolute;
       right: 8px;
       top: 50%;
       transform: translateY(-50%);
-      width: 36px;
+      width: 36px !important;
       height: 36px;
       min-width: 36px !important;
+      max-width: 36px !important;
       padding: 0 !important;
       border-radius: 9px !important;
       border: 1px solid var(--rand-donker) !important;
@@ -523,7 +533,7 @@
       line-height: 1;
     }
 
-    .toon-wachtwoord-knop:hover {
+    #auth .toon-wachtwoord-knop:hover {
       transform: translateY(-50%) !important;
       background: var(--creme-warm) !important;
     }
