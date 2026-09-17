@@ -695,6 +695,7 @@
         <button type="button" id="toonKlaslijstWerkbladBtn">📋 Ontbrekende namen toevoegen</button>
         <button type="button" id="toonFichesWerkbladBtn" class="ghost active">&#128101; Leerlingenfiches</button>
         <button type="button" id="toonBlokWerkbladBtn" class="ghost">🧩 Per onderdeel invullen</button>
+        <button type="button" class="ghost" onclick="printBadmutsen()">🖨️ Badmutsen afdrukken (A4)</button>
         <span class="hint">Werk per kind of vul één onderdeel meteen voor de hele klas in.</span>
       </div>
 
@@ -3456,6 +3457,36 @@ function blokWerkHuiswerkklas(students) {
       <td><textarea oninput="autoGrowTextarea(this);updateBlokWerkveld('${s.id}','notes',this.value)" placeholder="Algemene notitie indien nodig...">${esc(s.notes || '')}</textarea></td>
     </tr>`;
   }).join('')}</tbody></table>`;
+}
+function badmutsenAfdrukHtml(students, klas) {
+  const kleuren={rood:['Rood','#dc4646'],blauw_ondiep:['Blauw ondiep','#68a8e8'],blauw_diep:['Blauw diep','#244e99'],groen:['Groen','#39965a']};
+  const groepen=students.length>32?[students.slice(0,Math.ceil(students.length/2)),students.slice(Math.ceil(students.length/2))]:[students];
+  const tabel=groep=>`<table><thead><tr><th>Leerling</th><th>Kleur badmuts</th></tr></thead><tbody>${groep.map(s=>{
+    const kleur=kleuren[s.badmuts]||['Geen / onbekend','#fff'];
+    const naam=s.name||[s.firstName,s.lastName].filter(Boolean).join(' ');
+    return `<tr><td>${esc(naam)}</td><td><span class="kleur" style="background:${kleur[1]}"></span>${kleur[0]}</td></tr>`;
+  }).join('')}</tbody></table>`;
+  return `<!doctype html><html lang="nl"><head><meta charset="utf-8"><title>Badmutsen — ${esc(klas)}</title><style>
+    @page{size:A4 portrait;margin:10mm}*{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;color:#172c40;background:#eef2f6}
+    .toolbar{padding:12px;text-align:center}.toolbar button{padding:9px 15px;cursor:pointer}.blad{width:190mm;height:276mm;margin:0 auto;background:#fff;overflow:hidden}
+    #inhoud{width:190mm;transform-origin:top left}h1{font-size:21px;margin:0 0 5px}.meta{font-size:12px;color:#526575;margin:0 0 14px}
+    .tabellen{display:grid;grid-template-columns:repeat(${groepen.length},minmax(0,1fr));gap:7mm;align-items:start}table{width:100%;border-collapse:collapse;table-layout:fixed;font-size:${groepen.length===2?10:12}px}
+    th,td{text-align:left;border:1px solid #bbc7d1;padding:5px 7px;overflow-wrap:anywhere;line-height:1.3}th{background:#eaf0f5;font-weight:700}th:first-child{width:60%}tr{break-inside:avoid}
+    .kleur{display:inline-block;width:9px;height:9px;border:1px solid #666;border-radius:50%;margin-right:5px}footer{font-size:10px;color:#526575;margin-top:12px}
+    @media print{body{background:#fff}.toolbar{display:none}.blad{margin:0}*{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
+  </style></head><body><div class="toolbar"><button onclick="pasOpA4();window.print()">Afdrukken / bewaren als PDF</button></div><main class="blad"><div id="inhoud"><h1>Badmutsen — ${esc(klas)}</h1><p class="meta">${students.length} leerlingen · ${new Date().toLocaleDateString('nl-BE')}</p><div class="tabellen">${groepen.map(tabel).join('')}</div><footer>GO! Basisschool De Linde · Geen / onbekend = nog geen kleur ingevuld</footer></div></main><script>
+    function pasOpA4(){const inhoud=document.getElementById('inhoud'),blad=document.querySelector('.blad');inhoud.style.transform='none';const schaal=Math.min(1,blad.clientHeight/inhoud.scrollHeight,blad.clientWidth/inhoud.scrollWidth);inhoud.style.transform='scale('+schaal+')';}
+    window.addEventListener('load',pasOpA4);window.addEventListener('beforeprint',pasOpA4);
+  <\/script></body></html>`;
+}
+function printBadmutsen() {
+  const students=sortedStudentsForWork();
+  if(!students.length)return alert('Er zijn nog geen leerlingen in deze klas.');
+  const klas=typeof beheerKlas!=='undefined'&&beheerKlas?beheerKlas:state.projectName||'Klas';
+  const win=window.open('','_blank');
+  if(!win)return alert('Sta pop-ups toe om de badmutsenlijst te openen.');
+  win.document.write(badmutsenAfdrukHtml(students,klas));
+  win.document.close();
 }
 function blokWerkBadmutsen(students) {
   return `<table class="blokwerk-table compact"><colgroup><col class="bw-name"><col class="bw-xs"><col></colgroup><thead><tr><th>Leerling</th><th>Badmuts</th><th></th></tr></thead><tbody>${students.map(s => `<tr>
