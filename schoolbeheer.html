@@ -1075,6 +1075,9 @@
     .class-list-disclosures>details[open]{flex-basis:100%}
     .class-list-disclosures>details>div{padding:10px 12px;border-top:1px solid var(--line);margin:0}
     .class-list-hint{margin:4px 0 8px}
+    .class-oldest-names{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:6px 20px;list-style:none;padding:0;margin:0 0 12px}
+    .class-list-disclosures .photo-permission-summary{flex-wrap:wrap;gap:8px}
+    .photo-permission-summary button{padding:4px 8px;font-size:12px;line-height:18px}
   </style>
 </head>
 <body>
@@ -2507,7 +2510,7 @@
         <div class="class-list-disclosures no-print">
         ${toolButtons}
         ${oudstenKlasSamenvatting()}
-        ${kanFotoAanpassen()?`<details class="notice compact-info no-print" style="margin:8px 0 10px;padding:10px 12px;background:#fff8d9;border-color:#ead17a"><summary class="compact-summary">📷 Fototoestemming</summary><div><p class="muted" style="margin:0 0 9px">Duid eerst alleen de kinderen aan die <strong>niet op de foto mogen</strong> of van wie het <strong>formulier ontbreekt</strong>. Bevestig daarna de klas; alle andere kinderen krijgen automatisch <strong>Mag wel op de foto</strong>.</p><button class="small green" onclick="bevestigFotoKlas()">Hele klas bevestigen</button></div></details>`:""}
+        ${kanFotoAanpassen()?`<details class="notice compact-info no-print" style="margin:8px 0 10px;padding:10px 12px;background:#fff8d9;border-color:#ead17a"><summary class="compact-summary photo-permission-summary"><span>📷 Fototoestemming</span><button type="button" class="small green" onclick="event.preventDefault();event.stopPropagation();bevestigFotoKlas()" aria-label="Fototoestemming voor de hele klas bevestigen">Bevestigen</button></summary><div><p class="muted" style="margin:0 0 9px">Duid eerst alleen de kinderen aan die <strong>niet op de foto mogen</strong> of van wie het <strong>formulier ontbreekt</strong>. Bevestig daarna de klas; alle andere kinderen krijgen automatisch <strong>Mag wel op de foto</strong>.</p></div></details>`:""}
         </div>
         ${toolPanel}
         ${isSecretary()?`<p class="muted small no-print class-list-hint">Leerling vertrekt of is nooit gestart? Klik op de naam in de lijst.</p>`:""}
@@ -2804,8 +2807,7 @@
     function oudstenKlasSamenvatting(){
       const lijst=activeStudents().filter(s=>s.oudsteGezin);
       const kleuters=activeClass==="K1"?activeStudents().reduce((t,s)=>{const g=kleutergroepVoor(s);if(g==="K0")t.k0++;if(g==="K1")t.k1++;return t},{k0:0,k1:0}):null;
-      const toonNamen=!isSecretary()&&!isSchoolBreedRole();
-      return `<details id="oudstenKlasSamenvatting" class="notice compact-info no-print" style="margin:0 0 10px"><summary class="compact-summary">✉️ Oudsten voor brieven (${lijst.length})</summary><div>${toonNamen?(lijst.length?`<p class="muted" style="margin:0 0 9px">${lijst.map(name).map(esc).join(" · ")}</p>`:`<p class="muted">Nog niemand aangeduid als oudste van het gezin op school.</p>`):""}${kleuters?`<p><strong>K0:</strong> ${kleuters.k0} (geboortejaar ${Number(schooljaar.slice(0,4))-2}) &nbsp; <strong>K1:</strong> ${kleuters.k1} (geboortejaar ${Number(schooljaar.slice(0,4))-3})</p>`:""}${toonNamen&&lijst.length?`<button type="button" class="white small" onclick="printKlasoudsten()">🖨️ Klasoudsten afdrukken</button>`:""}</div></details>`;
+      return `<details id="oudstenKlasSamenvatting" class="notice compact-info no-print" style="margin:0 0 10px"><summary class="compact-summary">✉️ Oudsten voor brieven (${lijst.length})</summary><div>${lijst.length?`<ul class="class-oldest-names">${lijst.map(s=>`<li>${esc(name(s))}</li>`).join("")}</ul>`:`<p class="muted">Nog niemand aangeduid als oudste van het gezin op school.</p>`}${kleuters?`<p><strong>K0:</strong> ${kleuters.k0} (geboortejaar ${Number(schooljaar.slice(0,4))-2}) &nbsp; <strong>K1:</strong> ${kleuters.k1} (geboortejaar ${Number(schooljaar.slice(0,4))-3})</p>`:""}${lijst.length?`<button type="button" class="white small" onclick="printKlasoudsten()">🖨️ Klasoudsten afdrukken</button>`:""}</div></details>`;
     }
     window.printKlasoudsten=()=>{
       const lijst=activeStudents().filter(s=>s.oudsteGezin);
