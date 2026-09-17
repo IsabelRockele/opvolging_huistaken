@@ -1065,6 +1065,16 @@
         box-shadow: none!important;
       }
     }
+    /* Compacte kop en uitklapknoppen boven de klaslijst. */
+    .class-list-mainbar .actions{display:flex;align-items:center;justify-content:flex-end;flex-wrap:wrap;gap:6px}
+    .class-list-mainbar .screen-tools{margin:0;display:flex;gap:6px}
+    .class-list-mainbar .kolommen-kiezer{width:auto;margin:0}
+    .class-list-disclosures{display:flex;flex-wrap:wrap;align-items:flex-start;gap:8px;margin:6px 0 10px}
+    .class-list-disclosures>details{flex:1 1 200px;min-width:0;margin:0!important;padding:0!important;border:1px solid var(--line);border-radius:10px;background:#f7f9fc!important}
+    .class-list-disclosures>details>summary{padding:10px 12px;min-height:42px;font-size:14px;line-height:20px}
+    .class-list-disclosures>details[open]{flex-basis:100%}
+    .class-list-disclosures>details>div{padding:10px 12px;border-top:1px solid var(--line);margin:0}
+    .class-list-hint{margin:4px 0 8px}
   </style>
 </head>
 <body>
@@ -1636,7 +1646,7 @@
     window.openLeerlingenKlas=async klas=>{tab="leerlingen";adminPanel="klaslijsten";classListMode="";await openClass(klas,true);renderKlasPills();render()};
     window.toonLeerlingenStart=()=>{tab="leerlingenstart";classListMode="";renderKlasPills();render()};
     function renderLeerlingenSecretariaat(){
-      $("content").innerHTML=`<div class="panel"><div class="bar"><div><h2>Leerlingen — ${esc(activeClass)}</h2><p class="muted">Gebruik dit scherm alleen wanneer je leerlingen wilt toevoegen, verbeteren, importeren of verplaatsen.</p></div><div class="actions"><button class="white" onclick="toonLeerlingenStart()">← Alle klassen</button><button class="white" onclick="terugNaarKlasMaanden()">📁 Maanden ${esc(activeClass)}</button></div></div><div id="leerlingenSecretariaatBody"></div></div>`;
+      $("content").innerHTML=`<div class="panel"><div id="leerlingenSecretariaatBody"></div></div>`;
       const tijdelijk=document.createElement("div");tijdelijk.id="adminBody";$("leerlingenSecretariaatBody").appendChild(tijdelijk);
       renderAdminClasslists();
     }
@@ -2414,7 +2424,7 @@
       const canImportDashboard = isSchoolBreedRole() && !isSecretary();
       const toolButtons = `
         <details class="class-actions-details no-print" ${classListMode?"open":""}>
-          <summary>Acties voor deze klas</summary><div class="class-actions">
+          <summary>Acties</summary><div class="class-actions">
           <button class="tool-word" onclick="downloadKlaslijstWord()">📄 Klaslijst als Word</button>
           ${(role==="klasleerkracht"||isSecretary())?`<button class="tool-homework" onclick="printKlasHuiswerkOverzicht()">🖨️ Huiswerkklasoverzicht</button>`:""}
           <button class="tool-paste ${classListMode==="plakken"?"active":""}" onclick="openClassListTool('plakken')" title="Een volledige namenlijst plakken">📋 Klaslijst plakken</button>
@@ -2492,13 +2502,15 @@
         </section>`;
       }
 
-      return `<div class="class-list-mainbar"><div><h2>Klaslijst <span class="muted" style="font-weight:400">${esc(activeClass)}</span></h2><span class="muted small">${activeStudents().length} leerling(en)</span></div><div class="actions no-print">${kolommenKiezer()}${screenTools("klaslijst")}</div></div>${helpPanel("klaslijst")}
+      return `<div class="class-list-mainbar"><div><h2>Klaslijst <span class="muted" style="font-weight:400">${esc(activeClass)}</span></h2><span class="muted small">${activeStudents().length} leerling(en)</span></div><div class="actions no-print">${tab==="leerlingen"?`<button class="white small" onclick="toonLeerlingenStart()">← Alle klassen</button><button class="white small" onclick="terugNaarKlasMaanden()">📁 Maanden</button>`:""}${kolommenKiezer()}${screenTools("klaslijst")}</div></div>${helpPanel("klaslijst")}
         ${legeKlasStartkaart()}
+        <div class="class-list-disclosures no-print">
         ${toolButtons}
-        ${toolPanel}
         ${oudstenKlasSamenvatting()}
         ${kanFotoAanpassen()?`<details class="notice compact-info no-print" style="margin:8px 0 10px;padding:10px 12px;background:#fff8d9;border-color:#ead17a"><summary class="compact-summary">📷 Fototoestemming</summary><div><p class="muted" style="margin:0 0 9px">Duid eerst alleen de kinderen aan die <strong>niet op de foto mogen</strong> of van wie het <strong>formulier ontbreekt</strong>. Bevestig daarna de klas; alle andere kinderen krijgen automatisch <strong>Mag wel op de foto</strong>.</p><button class="small green" onclick="bevestigFotoKlas()">Hele klas bevestigen</button></div></details>`:""}
-        ${isSecretary()?`<div class="notice no-print" style="margin:8px 0 12px;padding:10px 12px;background:#eef4fa;border-color:#c3d3e3"><strong>Leerling vertrekt of is nooit gestart?</strong> Klik op de voornaam of achternaam van het kind om dit in te geven.</div>`:""}
+        </div>
+        ${toolPanel}
+        ${isSecretary()?`<p class="muted small no-print class-list-hint">Leerling vertrekt of is nooit gestart? Klik op de naam in de lijst.</p>`:""}
         ${studentTable()}
         ${inactieveLeerlingenTabel()}`;
     }
