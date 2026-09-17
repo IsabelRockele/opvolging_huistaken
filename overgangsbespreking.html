@@ -1488,6 +1488,7 @@ async function bepaalSchoolbeheerKlas() {
   }
   return klas;
 }
+window.badmutsenKlasNaam = bepaalSchoolbeheerKlas;
 
 function schoolbeheerNameKey(s) {
   return `${String(s.first || s.firstName || '').trim().toLowerCase()} ${String(s.last || s.lastName || '').trim().toLowerCase()}`.replace(/\s+/g, ' ').trim();
@@ -3479,14 +3480,16 @@ function badmutsenAfdrukHtml(students, klas) {
     window.addEventListener('load',pasOpA4);window.addEventListener('beforeprint',pasOpA4);
   <\/script></body></html>`;
 }
-function printBadmutsen() {
+async function printBadmutsen() {
   const students=sortedStudentsForWork();
   if(!students.length)return alert('Er zijn nog geen leerlingen in deze klas.');
-  const klas=typeof beheerKlas!=='undefined'&&beheerKlas?beheerKlas:state.projectName||'Klas';
   const win=window.open('','_blank');
   if(!win)return alert('Sta pop-ups toe om de badmutsenlijst te openen.');
-  win.document.write(badmutsenAfdrukHtml(students,klas));
-  win.document.close();
+  try{
+    const klas=String(window.beheerKlasLabel||await window.badmutsenKlasNaam()||state.projectName||'Klas').trim();
+    win.document.write(badmutsenAfdrukHtml(students,klas));
+    win.document.close();
+  }catch(err){win.close();console.error(err);alert('De klasnaam kon niet geladen worden. Probeer de badmutsenlijst opnieuw te openen.');}
 }
 function blokWerkBadmutsen(students) {
   return `<table class="blokwerk-table compact"><colgroup><col class="bw-name"><col class="bw-xs"><col></colgroup><thead><tr><th>Leerling</th><th>Badmuts</th><th></th></tr></thead><tbody>${students.map(s => `<tr>
