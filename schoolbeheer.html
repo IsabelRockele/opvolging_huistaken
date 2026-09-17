@@ -1082,7 +1082,8 @@
     @media screen{
       body:has(.student-page-table){height:100vh;height:100dvh;min-height:0;overflow:hidden}
       body:has(.student-page-table) #shell{min-height:0}
-      body:has(.student-page-table) #main{min-width:0;min-height:0;overflow:auto;isolation:isolate}
+      body:has(.student-page-table) #main{min-width:0;min-height:0;overflow:auto;isolation:isolate;padding-top:0}
+      body:has(.student-page-table) #content{padding-top:22px}
       body:has(.student-page-table) #content .table-wrap{max-height:none;overflow:visible}
       .student-page-table{border-radius:0}
       .student-page-table .klaslijst-table thead th{position:sticky;top:0;z-index:5;background:#eef3f9}
@@ -1091,6 +1092,7 @@
       .student-page-table .klaslijst-table thead th:nth-child(-n+2){z-index:8}
     }
     @media screen and (max-width:620px){
+      body:has(.student-page-table) #content{padding-top:14px}
       .student-page-table .klaslijst-table th:first-child,.student-page-table .klaslijst-table td:first-child{width:130px;min-width:130px}
       .student-page-table .klaslijst-table th:nth-child(2),.student-page-table .klaslijst-table td:nth-child(2){left:130px}
     }
