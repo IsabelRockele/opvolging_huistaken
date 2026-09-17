@@ -313,8 +313,8 @@ function localRows(){
       const days=s.homeworkClassDays||existing.days||{};
       const storedDayUncertain=Object.prototype.hasOwnProperty.call(s,"homeworkClassDayUncertain")?!!s.homeworkClassDayUncertain:!!existing.dayUncertain;
       const dayUncertain=storedDayUncertain&&!!days.dinsdag&&!!days.donderdag;
-      const free=Object.prototype.hasOwnProperty.call(s,"homeworkClassFree")?!!s.homeworkClassFree:!!existing.free;
-      rows.push({key,klas,name:name(s),local:ownClasses.includes(klas),active:true,free,days,dayUncertain,mayGoHomeAlone:!!(s.magAlleenNaarHuis||existing.mayGoHomeAlone),start:s.homeworkClassStart||existing.start||"",end:s.homeworkClassEnd||existing.end||"",history:Array.isArray(s.homeworkClassHistory)?s.homeworkClassHistory:(existing.history||[])});
+      const free=!!s.colleague||(Object.prototype.hasOwnProperty.call(s,"homeworkClassFree")?!!s.homeworkClassFree:!!existing.free);
+      rows.push({key,klas,name:name(s),local:ownClasses.includes(klas),active:true,free,colleague:!!s.colleague,days,dayUncertain,mayGoHomeAlone:!!(s.magAlleenNaarHuis||existing.mayGoHomeAlone),start:s.homeworkClassStart||existing.start||"",end:s.homeworkClassEnd||existing.end||"",history:Array.isArray(s.homeworkClassHistory)?s.homeworkClassHistory:(existing.history||[])});
     }
   }));
   Object.entries(hw.enrolled||{}).forEach(([key,v])=>{
@@ -336,13 +336,14 @@ function renderQuickAddClasses(){
 function renderQuickAddStudents(){
   const select=$("quickAddStudent"),lijst=quickAddCandidates();if(!select)return;
   select.innerHTML=lijst.length?lijst.map(s=>`<option value="${esc(s.id||studentKey($("quickAddClass").value,s))}">${esc(name(s))}</option>`).join(""):'<option value="">Geen leerling gevonden</option>';
-  $("quickAddBtn").disabled=!lijst.length;
+  $("quickAddBtn").disabled=!lijst.length;werkQuickAddGratisBij();
 }
+function werkQuickAddGratisBij(){const klas=$("quickAddClass")?.value,id=$("quickAddStudent")?.value,s=(classStudents[klas]||[]).find(x=>String(x.id||studentKey(klas,x))===id),vak=$("quickAddFree");if(!vak)return;vak.checked=!!s?.colleague;vak.disabled=!!s?.colleague;vak.closest("label").lastChild.textContent=s?.colleague?" Gratis — automatisch voor een kind van een collega":" Gratis via schooladvies";}
 async function quickAddStudent(){
   const klas=$("quickAddClass").value,id=$("quickAddStudent").value,dagKeuze=$("quickAddDays").value;
   const s=(classStudents[klas]||[]).find(x=>String(x.id||studentKey(klas,x))===id);if(!s)return alert("Kies eerst een leerling.");
   if(s.homeworkClass)return alert(`${name(s)} staat al ingeschreven voor de huiswerkklas.`);
-  const days={dinsdag:dagKeuze==="dinsdag"||dagKeuze==="beide"||dagKeuze==="onbekend",donderdag:dagKeuze==="donderdag"||dagKeuze==="beide"||dagKeuze==="onbekend"},free=$("quickAddFree").checked,from=todayIso();
+  const days={dinsdag:dagKeuze==="dinsdag"||dagKeuze==="beide"||dagKeuze==="onbekend",donderdag:dagKeuze==="donderdag"||dagKeuze==="beide"||dagKeuze==="onbekend"},free=!!s.colleague||$("quickAddFree").checked,from=todayIso();
   const snap=await getDoc(doc(db,"schoolbeheer",schooljaar,"klassen",klas));if(!snap.exists())return alert("De klasgegevens konden niet worden gevonden.");
   const klasData=snap.data(),leerling=(klasData.leerlingen||[]).find(x=>String(x.id||studentKey(klas,x))===id);if(!leerling)return alert("De leerling werd intussen niet meer in deze klas gevonden. Vernieuw de pagina.");
   leerling.homeworkClass=true;leerling.homeworkClassDays=days;leerling.homeworkClassDayUncertain=dagKeuze==="onbekend";leerling.homeworkClassFree=free;leerling.homeworkClassStart=from;leerling.homeworkClassEnd="";leerling.homeworkClassHistory=Array.isArray(leerling.homeworkClassHistory)?leerling.homeworkClassHistory:[];
@@ -352,8 +353,8 @@ async function quickAddStudent(){
 }
 function planningVoorDatum(r,d){
   const historie=(r.history||[]).filter(h=>h.from&&h.from<=d).sort((a,b)=>String(a.from).localeCompare(String(b.from)));
-  const laatste=historie.at(-1);if(laatste)return laatste.action==="stop"?{active:false,days:{},free:!!laatste.free}:{active:true,days:laatste.days||{},free:!!laatste.free};
-  return {active:(!r.start||d>=r.start)&&(!r.end||d<=r.end),days:r.days||{},free:!!r.free};
+  const laatste=historie.at(-1);if(laatste)return laatste.action==="stop"?{active:false,days:{},free:!!r.colleague||!!laatste.free}:{active:true,days:laatste.days||{},free:!!r.colleague||!!laatste.free};
+  return {active:(!r.start||d>=r.start)&&(!r.end||d<=r.end),days:r.days||{},free:!!r.colleague||!!r.free};
 }
 function geplandOpDatum(r,d){if(isCancelledDate(d))return false;const p=planningVoorDatum(r,d);return p.active&&!!p.days?.[mobileDagSleutel(d)];}
 const BEGELEIDER_VERGOEDING_PER_KEER=10;
@@ -760,6 +761,7 @@ onAuthStateChanged(auth,async u=>{
   $("mobileCancelDateBtn").onclick=()=>toggleCancelledDateFor(mobileSelectedDate);
   $("quickAddClass").onchange=()=>{$("quickAddSearch").value="";renderQuickAddStudents();};
   $("quickAddSearch").oninput=renderQuickAddStudents;
+  $("quickAddStudent").onchange=werkQuickAddGratisBij;
   $("quickAddBtn").onclick=()=>quickAddStudent().catch(err=>{console.error(err);alert("Toevoegen lukte niet: "+err.message);});
   $("schooljaarInput").onchange=loadData; $("monthInput").onchange=()=>openMonth($("monthInput").value); $("dateInput").onchange=()=>{date=$("dateInput").value;secretaryMoreOpen=false;render();$("attendancePanel").scrollIntoView({behavior:"smooth",block:"start"});};
   $("logoutBtn").onclick=()=>signOut(auth).then(()=>location.href="index.html");
