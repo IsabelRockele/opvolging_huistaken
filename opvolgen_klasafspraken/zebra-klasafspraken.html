@@ -118,6 +118,8 @@ textarea.s-input { min-height: 140px; resize: vertical; }
 .wk { border: 1.5px solid #E8D5B0; border-radius: 8px; padding: 8px 14px; font-size: 13px; font-weight: 700; cursor: pointer; background: white; color: #B08050; font-family: inherit; transition: all .15s; flex:1; min-width:40px; }
 .wk.actief { border-color: #E67E22; background: #E67E22; color: white; box-shadow: 0 3px 8px rgba(230,126,34,0.3); }
 .opgeslagen { font-size: 11px; color: #27AE60; background: #EAFAF1; border: 1px solid #ABEBC6; border-radius: 6px; padding: 3px 10px; display: inline-block; margin-bottom: 10px; }
+.week-correctie { margin-top:10px; width:100%; border:1.5px solid #E8D5B0; border-radius:9px; padding:9px 10px; background:#FFF8EF; color:#8B6040; font:700 12px inherit; cursor:pointer; }
+.week-correctie:hover { border-color:#E67E22; color:#C0610A; background:#FFF3E0; }
 
 @media (max-width: 900px) {
   .setup-grid { grid-template-columns: 1fr; }
@@ -546,6 +548,8 @@ textarea.s-input { min-height: 140px; resize: vertical; }
             <button class="wk" id="wk3" onclick="setWeek(3)">3</button>
             <button class="wk" id="wk4" onclick="setWeek(4)">4</button>
           </div>
+          <div class="veld-hint">Een week kiezen opent die week; je gegevens worden automatisch bewaard.</div>
+          <button type="button" class="week-correctie" onclick="schuifWekenEenPlaatsTerug()">↶ Ingevulde weken één plaats terugschuiven</button>
         </div>
 
         <div class="setup-sectie">
@@ -801,8 +805,7 @@ function bewaarHuidigeWeekVoortgang() {
 }
 
 function laadVoortgangVoorWeek(n) {
-  const weekHeeftMedaille = namen.some(naam => !!(med[naam] && med[naam][n - 1]));
-  const opgeslagen = weekHeeftMedaille ? weekVoortgang[String(n)] : null;
+  const opgeslagen = weekVoortgang[String(n)];
   vg = opgeslagen ? kopieerData(opgeslagen) : maakLegeVoortgang();
   namen.forEach(naam => {
     if (!vg[naam] || !Array.isArray(vg[naam].dagen)) {
@@ -1093,6 +1096,39 @@ function setWeek(n) {
   try{localStorage.setItem(SK.week,n);}catch(e){}
   slaVgOp();
   if (document.getElementById('spel').style.display === 'block') tekenGrid();
+}
+
+function schuifWekenEenPlaatsTerug() {
+  bewaarHuidigeWeekVoortgang();
+  const heeftInvoer = Object.values(weekVoortgang).some(week =>
+    Object.values(week || {}).some(v => v && Array.isArray(v.dagen) && v.dagen.some(d => d !== null))
+  ) || Object.values(med).some(rij => Array.isArray(rij) && rij.some(Boolean));
+  if (!heeftInvoer) {
+    alert('Er is nog geen weekinvoer om te verschuiven.');
+    return;
+  }
+  if (!confirm('Week 2 wordt week 1, week 3 wordt week 2 en week 4 wordt week 3. Week 4 wordt daarna leeg. Je overige gegevens blijven bewaard. Doorgaan?')) return;
+
+  const oud = kopieerData(weekVoortgang);
+  weekVoortgang = {
+    '1': kopieerData(oud['2'] || maakLegeVoortgang()),
+    '2': kopieerData(oud['3'] || maakLegeVoortgang()),
+    '3': kopieerData(oud['4'] || maakLegeVoortgang()),
+    '4': maakLegeVoortgang()
+  };
+  namen.forEach(naam => {
+    const rij = Array.isArray(med[naam]) ? med[naam] : [false, false, false, false];
+    med[naam] = [!!rij[1], !!rij[2], !!rij[3], false];
+  });
+  weekNr = Math.max(1, weekNr - 1);
+  laadVoortgangVoorWeek(weekNr);
+  updateWkChips();
+  slaVgOp();
+  try { localStorage.setItem(SK.week, weekNr); } catch(e) {}
+  const badge = document.getElementById('opgeslagenBadge');
+  if (badge) { badge.textContent = '✓ Weken verschoven en bewaard'; badge.style.display = 'inline-block'; }
+  if (document.getElementById('spel').style.display === 'block') tekenGrid();
+  alert('Klaar: je vroegere week 2 staat nu in week 1 en je vroegere week 3 in week 2.');
 }
 function updateWkChips() {
   for(let i=1;i<=4;i++) { const el=document.getElementById('wk'+i); if(el) el.className='wk'+(weekNr===i?' actief':''); }
