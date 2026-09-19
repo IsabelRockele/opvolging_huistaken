@@ -118,6 +118,7 @@
       <button class="white compact-action" id="quickAddTopBtn">＋ Kind</button>
       <button class="white compact-action" id="helpTopBtn">❓ Uitleg</button>
       <button class="white" id="planningTopBtn" style="display:none">Algemeen inschrijvingsoverzicht</button>
+      <button class="white" id="monthArchivePdfBtn" style="display:none" title="Download de bewaarde gegevens van de gekozen maand voor alle klassen" onclick="downloadHuiswerkMaandarchief()">📄 Maandlijsten PDF</button>
       <button class="white" id="secretaryOptionsBtn">Meer opties</button>
     </div>
     <div class="options-drawer" id="secretaryAdvancedPanel">
@@ -471,6 +472,7 @@ function renderRoleTools(){
       : 'Klasleerkrachten duiden in Klaslijsten bij hun eigen klas aan welke kinderen naar de huiswerkklas gaan. Ontbreekt een leerling? Voeg die eerst toe via <a href="schoolbeheer.html" target="_blank" rel="noopener">Klaslijsten → Nieuwe leerling</a>. Hier verschijnen alleen kinderen die daar voor de huiswerkklas zijn aangeduid.';
   const toegelatenKlassen=(isSchoolBreed()||secretary)?allClasses:ownClasses;
   $("pdfScope").innerHTML=`${(isSchoolBreed()||secretary)?'<option value="all">Alle klassen</option>':''}${toegelatenKlassen.map(k=>`<option value="${esc(k)}">Klas ${esc(k)}</option>`).join("")}`;
+  $("monthArchivePdfBtn").style.display=secretary?"inline-block":"none";
   updatePdfButton();
   $("qrSheetBtn").style.display=(realRole==="beheerder"||secretary)?"inline-flex":"none";
 }
@@ -707,6 +709,22 @@ function downloadAloneHomePdf(){
   const pages=pdf.getNumberOfPages();for(let i=1;i<=pages;i++){pdf.setPage(i);pdf.setTextColor(117,104,85);pdf.setFont("helvetica","normal");pdf.setFontSize(8);pdf.text(`GO! Basisschool De Linde · pagina ${i} van ${pages}`,pageW/2,pageH-7,{align:"center"});}
   pdf.save(`huiswerkklas_alleen_naar_huis_${schooljaar}.pdf`);
 }
+window.downloadHuiswerkMaandarchief=async()=>{
+  if(!isSecretariaat())return;
+  const knop=$("monthArchivePdfBtn"),jaar=schooljaar,maand=month;knop.disabled=true;
+  try{
+    if(demoMode)throw Error("Verlaat de testmodus om de echte maandlijsten te downloaden.");
+    if(!window.jspdf?.jsPDF)throw Error("De PDF-module is nog niet geladen. Probeer opnieuw.");
+    const [{maakMaandOverzichten,maakMaandPdf},klasSnap,hwSnap]=await Promise.all([
+      import('./maandarchief.js?v=20260919-1'),
+      getDocs(collection(db,"schoolbeheer",jaar,"klassen")),
+      getDoc(doc(db,"huiswerkklas",jaar,"maanden",maand))
+    ]);
+    const opties={soort:'huiswerkklas',maand,schooljaar:jaar,klassen:klasSnap.docs.map(d=>({...d.data(),klas:d.id})),huiswerk:hwSnap.exists()?hwSnap.data():{}};
+    if(!opties.klassen.length)throw Error("Geen klasgegevens gevonden voor dit schooljaar.");
+    maakMaandPdf(window.jspdf.jsPDF,{...opties,overzichten:maakMaandOverzichten(opties)}).save(`${jaar}_${maand}_huiswerkklas_alle-klassen.pdf`);
+  }catch(err){console.error(err);alert("Download mislukt: "+err.message);}finally{knop.disabled=false;}
+};
 function downloadParticipantsPdf(){
   if(!window.jspdf?.jsPDF)return alert("De PDF-module is nog niet geladen. Probeer over enkele seconden opnieuw.");
   const scope=$("pdfScope")?.value||"all",rows=localRows().filter(r=>scope==="all"||r.klas===scope),{jsPDF}=window.jspdf,pdf=new jsPDF({orientation:"portrait",unit:"mm",format:scope==="all"?"a4":"a5"});
