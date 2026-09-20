@@ -1,0 +1,38 @@
+# Zisa-klasrace in het schoolportaal
+
+Zisa-klasrace vervangt de zichtbare tegel van TafelExpeditie. De map `tafelexpeditie` blijft intact. Het spel staat onder `klasrace/` binnen dezelfde website en gebruikt Firebase-project `huiswerkapp-a311e`. Een aparte website, Cloudflare-database of Cloud Functions is niet nodig.
+
+## In de klas
+
+1. Meld je aan in het schoolportaal en open Zisa-klasrace.
+2. Vul een herkenbare klasnaam in, bijvoorbeeld 2A - juf Isabel.
+3. Kies de oefeningen en zet de race klaar.
+4. Laat kinderen de nieuwe QR-code op het bord scannen en hun voornaam invullen.
+5. Controleer de wachtlijst. Klik per kind op Toelaten of Weigeren.
+6. Start zodra alle aanmeldingen behandeld zijn. Maximaal 32 kinderen kunnen meespelen.
+
+Elke nieuwe race heeft een eigen code en eigen deelnemers. Andere leerkrachten kunnen tegelijk een eigen race starten. Alleen de eigenaar kan toelaten, verwijderen, starten, stoppen of het volgende dicteewoord openen. Toegelaten leerlingen kunnen alleen hun eigen voortgang aanpassen. Leerlingen hoeven zelf geen account of wachtwoord te maken: Firebase gebruikt een anonieme toestelidentiteit.
+
+Bij dezelfde voornaam gebruiken kinderen ook hun klasnummer. Na herladen wordt dezelfde deelname hervat op hetzelfde toestel en in dezelfde browser. Gebruik voor verschillende kinderen aparte toestellen/browserprofielen. Een gedeeld toestel wisselen kan via een nieuwe race; tijdens een lopende race hoort het toestel bij dezelfde deelnemer.
+
+Een racecode is 24 uur bruikbaar. Maak elke les een nieuwe race. Een oefen-QR voor zelfstandig spelling oefenen blijft 30 dagen bruikbaar. Dit is geen centrale langetermijnopvolging zoals TafelExpeditie.
+
+Een kind dat wegvalt kan je via Deelnemers beheren verwijderen, zodat een dictee verder kan. Het bord werkt de stand rechtstreeks bij wanneer er iets verandert. Gebruik internet op het bord en op de leerlingtoestellen.
+
+## Bron en publicatie
+
+- `Zisa-Klasrace/`: bewerkbare bron.
+- `klasrace/`: gebouwde website, mee publiceren via de bestaande GitHub Pages-site.
+- `firestore-klasrace.rules.snippet`: afzonderlijke toegangsregels voor het spel.
+- `firestore.rules`: volledige regels, inclusief het spel.
+- `firebase.klasrace.json`: gerichte publicatie van databaseregels.
+
+Bouwen vanuit `Zisa-Klasrace`: `npm ci`, `npm run check`, `npm run build`. Node 22.13 of nieuwer. De bouw vult alleen de uitvoermap `../klasrace` opnieuw.
+
+De eerdere bestanden `worker.ts`, `wrangler.json`, `app/api`, `lib/database.ts` en `drizzle` zijn alleen de oorspronkelijke Cloudflare-versie en worden niet gebruikt door de schoolversie. De oude uitleg staat in LEGACY-CLOUDFLARE.md.
+
+De test in `tests/firebase-game.test.mjs` is een echte online integratietest. Ze draait alleen met `KLASRACE_LIVE_TEST=1`, maakt eigen tijdelijke accounts en spelgegevens en verwijdert die daarna. Ze gebruikt de al aangemelde Firebase-beheerder van de ontwikkelcomputer. Zonder die vlag wordt de online test overgeslagen.
+
+## Nog controleren op school
+
+Test de QR-code, de schermvullende stand en het geluid eenmaal met het echte smartboard en twee iPads. De Nederlandse dicteestem komt van het toestel; Azure Dena is in dit pakket nog niet gekoppeld. Gebruik een hoofdtelefoon bij zelfstandig dictee. De leerlingresultaten zijn bedoeld voor oefenen, niet als beveiligde toetsafname.

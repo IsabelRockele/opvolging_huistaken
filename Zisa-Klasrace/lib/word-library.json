@@ -1,0 +1,3255 @@
+{
+  "format": "zisa-bibliotheek",
+  "version": 1,
+  "groups": [
+    {
+      "id": "kort",
+      "title": "Korte klinkers",
+      "description": "Woorden met a, e, i, o of u.",
+      "entries": [
+        {
+          "label": "de kat",
+          "answer": "kat",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de kat"
+        },
+        {
+          "label": "de jas",
+          "answer": "jas",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de jas"
+        },
+        {
+          "label": "de man",
+          "answer": "man",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de man"
+        },
+        {
+          "label": "de pen",
+          "answer": "pen",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de pen"
+        },
+        {
+          "label": "het mes",
+          "answer": "mes",
+          "article": "het",
+          "caseSensitive": false,
+          "spoken": "het mes"
+        },
+        {
+          "label": "de pet",
+          "answer": "pet",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de pet"
+        },
+        {
+          "label": "de vis",
+          "answer": "vis",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de vis"
+        },
+        {
+          "label": "de kip",
+          "answer": "kip",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de kip"
+        },
+        {
+          "label": "de sok",
+          "answer": "sok",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de sok"
+        },
+        {
+          "label": "het bos",
+          "answer": "bos",
+          "article": "het",
+          "caseSensitive": false,
+          "spoken": "het bos"
+        },
+        {
+          "label": "de bus",
+          "answer": "bus",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de bus"
+        },
+        {
+          "label": "de mus",
+          "answer": "mus",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de mus"
+        }
+      ]
+    },
+    {
+      "id": "lang",
+      "title": "Lange klinkers: aa, ee, oo, uu",
+      "description": "Een lange klinker, dubbel geschreven.",
+      "entries": [
+        {
+          "label": "de maan",
+          "answer": "maan",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de maan"
+        },
+        {
+          "label": "het raam",
+          "answer": "raam",
+          "article": "het",
+          "caseSensitive": false,
+          "spoken": "het raam"
+        },
+        {
+          "label": "de kaas",
+          "answer": "kaas",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de kaas"
+        },
+        {
+          "label": "het been",
+          "answer": "been",
+          "article": "het",
+          "caseSensitive": false,
+          "spoken": "het been"
+        },
+        {
+          "label": "de zeep",
+          "answer": "zeep",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de zeep"
+        },
+        {
+          "label": "de peer",
+          "answer": "peer",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de peer"
+        },
+        {
+          "label": "de boom",
+          "answer": "boom",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de boom"
+        },
+        {
+          "label": "de roos",
+          "answer": "roos",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de roos"
+        },
+        {
+          "label": "de boot",
+          "answer": "boot",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de boot"
+        },
+        {
+          "label": "de muur",
+          "answer": "muur",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de muur"
+        },
+        {
+          "label": "het vuur",
+          "answer": "vuur",
+          "article": "het",
+          "caseSensitive": false,
+          "spoken": "het vuur"
+        },
+        {
+          "label": "duur",
+          "answer": "duur",
+          "caseSensitive": false,
+          "spoken": "duur"
+        }
+      ]
+    },
+    {
+      "id": "oe",
+      "title": "Tweetekenklanken: oe",
+      "description": "Herken en schrijf oe.",
+      "entries": [
+        {
+          "label": "het boek",
+          "answer": "boek",
+          "article": "het",
+          "caseSensitive": false,
+          "spoken": "het boek"
+        },
+        {
+          "label": "de koek",
+          "answer": "koek",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de koek"
+        },
+        {
+          "label": "de doek",
+          "answer": "doek",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de doek"
+        },
+        {
+          "label": "de voet",
+          "answer": "voet",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de voet"
+        },
+        {
+          "label": "de hoed",
+          "answer": "hoed",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de hoed"
+        },
+        {
+          "label": "de soep",
+          "answer": "soep",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de soep"
+        },
+        {
+          "label": "de poes",
+          "answer": "poes",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de poes"
+        },
+        {
+          "label": "de boer",
+          "answer": "boer",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de boer"
+        },
+        {
+          "label": "de stoel",
+          "answer": "stoel",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de stoel"
+        },
+        {
+          "label": "de schoen",
+          "answer": "schoen",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de schoen"
+        },
+        {
+          "label": "groen",
+          "answer": "groen",
+          "caseSensitive": false,
+          "spoken": "groen"
+        },
+        {
+          "label": "de bloem",
+          "answer": "bloem",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de bloem"
+        }
+      ]
+    },
+    {
+      "id": "eu",
+      "title": "Tweetekenklanken: eu",
+      "description": "Herken en schrijf eu.",
+      "entries": [
+        {
+          "label": "de neus",
+          "answer": "neus",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de neus"
+        },
+        {
+          "label": "de reus",
+          "answer": "reus",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de reus"
+        },
+        {
+          "label": "de deur",
+          "answer": "deur",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de deur"
+        },
+        {
+          "label": "de beuk",
+          "answer": "beuk",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de beuk"
+        },
+        {
+          "label": "leuk",
+          "answer": "leuk",
+          "caseSensitive": false,
+          "spoken": "leuk"
+        },
+        {
+          "label": "de jeuk",
+          "answer": "jeuk",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de jeuk"
+        },
+        {
+          "label": "de deuk",
+          "answer": "deuk",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de deuk"
+        },
+        {
+          "label": "de heup",
+          "answer": "heup",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de heup"
+        },
+        {
+          "label": "de keus",
+          "answer": "keus",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de keus"
+        },
+        {
+          "label": "de kleur",
+          "answer": "kleur",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de kleur"
+        }
+      ]
+    },
+    {
+      "id": "ui",
+      "title": "Tweetekenklanken: ui",
+      "description": "Herken en schrijf ui.",
+      "entries": [
+        {
+          "label": "het huis",
+          "answer": "huis",
+          "article": "het",
+          "caseSensitive": false,
+          "spoken": "het huis"
+        },
+        {
+          "label": "de muis",
+          "answer": "muis",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de muis"
+        },
+        {
+          "label": "de tuin",
+          "answer": "tuin",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de tuin"
+        },
+        {
+          "label": "de duim",
+          "answer": "duim",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de duim"
+        },
+        {
+          "label": "de buik",
+          "answer": "buik",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de buik"
+        },
+        {
+          "label": "de ruit",
+          "answer": "ruit",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de ruit"
+        },
+        {
+          "label": "de uil",
+          "answer": "uil",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de uil"
+        },
+        {
+          "label": "de buis",
+          "answer": "buis",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de buis"
+        },
+        {
+          "label": "het kruis",
+          "answer": "kruis",
+          "article": "het",
+          "caseSensitive": false,
+          "spoken": "het kruis"
+        },
+        {
+          "label": "bruin",
+          "answer": "bruin",
+          "caseSensitive": false,
+          "spoken": "bruin"
+        },
+        {
+          "label": "het fruit",
+          "answer": "fruit",
+          "article": "het",
+          "caseSensitive": false,
+          "spoken": "het fruit"
+        },
+        {
+          "label": "de fluit",
+          "answer": "fluit",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de fluit"
+        }
+      ]
+    },
+    {
+      "id": "ie",
+      "title": "Tweetekenklanken: ie",
+      "description": "Herken en schrijf ie.",
+      "entries": [
+        {
+          "label": "de mier",
+          "answer": "mier",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de mier"
+        },
+        {
+          "label": "de riem",
+          "answer": "riem",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de riem"
+        },
+        {
+          "label": "het wiel",
+          "answer": "wiel",
+          "article": "het",
+          "caseSensitive": false,
+          "spoken": "het wiel"
+        },
+        {
+          "label": "de fiets",
+          "answer": "fiets",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de fiets"
+        },
+        {
+          "label": "de kies",
+          "answer": "kies",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de kies"
+        },
+        {
+          "label": "de brief",
+          "answer": "brief",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de brief"
+        },
+        {
+          "label": "de dief",
+          "answer": "dief",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de dief"
+        },
+        {
+          "label": "het dier",
+          "answer": "dier",
+          "article": "het",
+          "caseSensitive": false,
+          "spoken": "het dier"
+        },
+        {
+          "label": "ziek",
+          "answer": "ziek",
+          "caseSensitive": false,
+          "spoken": "ziek"
+        },
+        {
+          "label": "lief",
+          "answer": "lief",
+          "caseSensitive": false,
+          "spoken": "lief"
+        }
+      ]
+    },
+    {
+      "id": "ei-ij",
+      "title": "Onthoudwoorden: ei / ij",
+      "description": "Onthoud of je ei of ij schrijft.",
+      "entries": [
+        {
+          "label": "de geit",
+          "answer": "geit",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de geit"
+        },
+        {
+          "label": "de trein",
+          "answer": "trein",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de trein"
+        },
+        {
+          "label": "het plein",
+          "answer": "plein",
+          "article": "het",
+          "caseSensitive": false,
+          "spoken": "het plein"
+        },
+        {
+          "label": "klein",
+          "answer": "klein",
+          "caseSensitive": false,
+          "spoken": "klein"
+        },
+        {
+          "label": "de eik",
+          "answer": "eik",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de eik"
+        },
+        {
+          "label": "het zeil",
+          "answer": "zeil",
+          "article": "het",
+          "caseSensitive": false,
+          "spoken": "het zeil"
+        },
+        {
+          "label": "het ijs",
+          "answer": "ijs",
+          "article": "het",
+          "caseSensitive": false,
+          "spoken": "het ijs"
+        },
+        {
+          "label": "vijf",
+          "answer": "vijf",
+          "caseSensitive": false,
+          "spoken": "vijf"
+        },
+        {
+          "label": "de rijst",
+          "answer": "rijst",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de rijst"
+        },
+        {
+          "label": "de prijs",
+          "answer": "prijs",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de prijs"
+        },
+        {
+          "label": "grijs",
+          "answer": "grijs",
+          "caseSensitive": false,
+          "spoken": "grijs"
+        },
+        {
+          "label": "fijn",
+          "answer": "fijn",
+          "caseSensitive": false,
+          "spoken": "fijn"
+        }
+      ]
+    },
+    {
+      "id": "au-ou",
+      "title": "Onthoudwoorden: au / ou",
+      "description": "Onthoud of je au of ou schrijft.",
+      "entries": [
+        {
+          "label": "de pauw",
+          "answer": "pauw",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de pauw"
+        },
+        {
+          "label": "blauw",
+          "answer": "blauw",
+          "caseSensitive": false,
+          "spoken": "blauw"
+        },
+        {
+          "label": "gauw",
+          "answer": "gauw",
+          "caseSensitive": false,
+          "spoken": "gauw"
+        },
+        {
+          "label": "de saus",
+          "answer": "saus",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de saus"
+        },
+        {
+          "label": "flauw",
+          "answer": "flauw",
+          "caseSensitive": false,
+          "spoken": "flauw"
+        },
+        {
+          "label": "de klauw",
+          "answer": "klauw",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de klauw"
+        },
+        {
+          "label": "het hout",
+          "answer": "hout",
+          "article": "het",
+          "caseSensitive": false,
+          "spoken": "het hout"
+        },
+        {
+          "label": "het zout",
+          "answer": "zout",
+          "article": "het",
+          "caseSensitive": false,
+          "spoken": "het zout"
+        },
+        {
+          "label": "de fout",
+          "answer": "fout",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de fout"
+        },
+        {
+          "label": "koud",
+          "answer": "koud",
+          "caseSensitive": false,
+          "spoken": "koud"
+        },
+        {
+          "label": "het touw",
+          "answer": "touw",
+          "article": "het",
+          "caseSensitive": false,
+          "spoken": "het touw"
+        },
+        {
+          "label": "het goud",
+          "answer": "goud",
+          "article": "het",
+          "caseSensitive": false,
+          "spoken": "het goud"
+        }
+      ]
+    },
+    {
+      "id": "g-ch",
+      "title": "Onthoudwoorden: g / ch",
+      "description": "Onthoud of je g of ch schrijft.",
+      "entries": [
+        {
+          "label": "de dag",
+          "answer": "dag",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de dag"
+        },
+        {
+          "label": "de vlag",
+          "answer": "vlag",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de vlag"
+        },
+        {
+          "label": "de brug",
+          "answer": "brug",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de brug"
+        },
+        {
+          "label": "de rug",
+          "answer": "rug",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de rug"
+        },
+        {
+          "label": "de weg",
+          "answer": "weg",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de weg"
+        },
+        {
+          "label": "de mug",
+          "answer": "mug",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de mug"
+        },
+        {
+          "label": "de lach",
+          "answer": "lach",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de lach"
+        },
+        {
+          "label": "de pech",
+          "answer": "pech",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de pech"
+        },
+        {
+          "label": "zich",
+          "answer": "zich",
+          "caseSensitive": false,
+          "spoken": "zich"
+        },
+        {
+          "label": "toch",
+          "answer": "toch",
+          "caseSensitive": false,
+          "spoken": "toch"
+        },
+        {
+          "label": "de kachel",
+          "answer": "kachel",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de kachel"
+        },
+        {
+          "label": "acht",
+          "answer": "acht",
+          "caseSensitive": false,
+          "spoken": "acht"
+        }
+      ]
+    },
+    {
+      "id": "aai",
+      "title": "Woorden met aai",
+      "description": "Luister naar aai en schrijf alle letters.",
+      "entries": [
+        {
+          "label": "de haai",
+          "answer": "haai",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de haai"
+        },
+        {
+          "label": "de kraai",
+          "answer": "kraai",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de kraai"
+        },
+        {
+          "label": "de baai",
+          "answer": "baai",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de baai"
+        },
+        {
+          "label": "de zwaai",
+          "answer": "zwaai",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de zwaai"
+        },
+        {
+          "label": "de draai",
+          "answer": "draai",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de draai"
+        },
+        {
+          "label": "de aai",
+          "answer": "aai",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de aai"
+        },
+        {
+          "label": "saai",
+          "answer": "saai",
+          "caseSensitive": false,
+          "spoken": "saai"
+        },
+        {
+          "label": "fraai",
+          "answer": "fraai",
+          "caseSensitive": false,
+          "spoken": "fraai"
+        },
+        {
+          "label": "draaien",
+          "answer": "draaien",
+          "caseSensitive": false,
+          "spoken": "draaien"
+        },
+        {
+          "label": "zwaaien",
+          "answer": "zwaaien",
+          "caseSensitive": false,
+          "spoken": "zwaaien"
+        }
+      ]
+    },
+    {
+      "id": "ooi",
+      "title": "Woorden met ooi",
+      "description": "Luister naar ooi en schrijf alle letters.",
+      "entries": [
+        {
+          "label": "de kooi",
+          "answer": "kooi",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de kooi"
+        },
+        {
+          "label": "de plooi",
+          "answer": "plooi",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de plooi"
+        },
+        {
+          "label": "de prooi",
+          "answer": "prooi",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de prooi"
+        },
+        {
+          "label": "de tooi",
+          "answer": "tooi",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de tooi"
+        },
+        {
+          "label": "het hooi",
+          "answer": "hooi",
+          "article": "het",
+          "caseSensitive": false,
+          "spoken": "het hooi"
+        },
+        {
+          "label": "mooi",
+          "answer": "mooi",
+          "caseSensitive": false,
+          "spoken": "mooi"
+        },
+        {
+          "label": "ooit",
+          "answer": "ooit",
+          "caseSensitive": false,
+          "spoken": "ooit"
+        },
+        {
+          "label": "nooit",
+          "answer": "nooit",
+          "caseSensitive": false,
+          "spoken": "nooit"
+        },
+        {
+          "label": "gooien",
+          "answer": "gooien",
+          "caseSensitive": false,
+          "spoken": "gooien"
+        },
+        {
+          "label": "strooien",
+          "answer": "strooien",
+          "caseSensitive": false,
+          "spoken": "strooien"
+        }
+      ]
+    },
+    {
+      "id": "oei",
+      "title": "Woorden met oei",
+      "description": "Luister naar oei en schrijf alle letters.",
+      "entries": [
+        {
+          "label": "de boei",
+          "answer": "boei",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de boei"
+        },
+        {
+          "label": "de groei",
+          "answer": "groei",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de groei"
+        },
+        {
+          "label": "de bloei",
+          "answer": "bloei",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de bloei"
+        },
+        {
+          "label": "de sproeier",
+          "answer": "sproeier",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de sproeier"
+        },
+        {
+          "label": "de roeiboot",
+          "answer": "roeiboot",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de roeiboot"
+        },
+        {
+          "label": "groeien",
+          "answer": "groeien",
+          "caseSensitive": false,
+          "spoken": "groeien"
+        },
+        {
+          "label": "bloeien",
+          "answer": "bloeien",
+          "caseSensitive": false,
+          "spoken": "bloeien"
+        },
+        {
+          "label": "roeien",
+          "answer": "roeien",
+          "caseSensitive": false,
+          "spoken": "roeien"
+        },
+        {
+          "label": "loeien",
+          "answer": "loeien",
+          "caseSensitive": false,
+          "spoken": "loeien"
+        },
+        {
+          "label": "snoeien",
+          "answer": "snoeien",
+          "caseSensitive": false,
+          "spoken": "snoeien"
+        }
+      ]
+    },
+    {
+      "id": "eeuw",
+      "title": "Woorden met eeuw",
+      "description": "Vergeet de u voor de w niet.",
+      "entries": [
+        {
+          "label": "de leeuw",
+          "answer": "leeuw",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de leeuw"
+        },
+        {
+          "label": "de meeuw",
+          "answer": "meeuw",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de meeuw"
+        },
+        {
+          "label": "de sneeuw",
+          "answer": "sneeuw",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de sneeuw"
+        },
+        {
+          "label": "de eeuw",
+          "answer": "eeuw",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de eeuw"
+        },
+        {
+          "label": "de schreeuw",
+          "answer": "schreeuw",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de schreeuw"
+        },
+        {
+          "label": "de spreeuw",
+          "answer": "spreeuw",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de spreeuw"
+        },
+        {
+          "label": "geeuwen",
+          "answer": "geeuwen",
+          "caseSensitive": false,
+          "spoken": "geeuwen"
+        },
+        {
+          "label": "schreeuwen",
+          "answer": "schreeuwen",
+          "caseSensitive": false,
+          "spoken": "schreeuwen"
+        }
+      ]
+    },
+    {
+      "id": "ieuw",
+      "title": "Woorden met ieuw",
+      "description": "Vergeet de u voor de w niet.",
+      "entries": [
+        {
+          "label": "nieuw",
+          "answer": "nieuw",
+          "caseSensitive": false,
+          "spoken": "nieuw"
+        },
+        {
+          "label": "het nieuws",
+          "answer": "nieuws",
+          "article": "het",
+          "caseSensitive": false,
+          "spoken": "het nieuws"
+        },
+        {
+          "label": "opnieuw",
+          "answer": "opnieuw",
+          "caseSensitive": false,
+          "spoken": "opnieuw"
+        },
+        {
+          "label": "vernieuwen",
+          "answer": "vernieuwen",
+          "caseSensitive": false,
+          "spoken": "vernieuwen"
+        },
+        {
+          "label": "vernieuwd",
+          "answer": "vernieuwd",
+          "caseSensitive": false,
+          "spoken": "vernieuwd"
+        },
+        {
+          "label": "de nieuwbouw",
+          "answer": "nieuwbouw",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de nieuwbouw"
+        },
+        {
+          "label": "nieuwsgierig",
+          "answer": "nieuwsgierig",
+          "caseSensitive": false,
+          "spoken": "nieuwsgierig"
+        },
+        {
+          "label": "de nieuwkomer",
+          "answer": "nieuwkomer",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de nieuwkomer"
+        }
+      ]
+    },
+    {
+      "id": "uw",
+      "title": "Woorden met uw",
+      "description": "Herken en schrijf uw.",
+      "entries": [
+        {
+          "label": "de duw",
+          "answer": "duw",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de duw"
+        },
+        {
+          "label": "ruw",
+          "answer": "ruw",
+          "caseSensitive": false,
+          "spoken": "ruw"
+        },
+        {
+          "label": "uw",
+          "answer": "uw",
+          "caseSensitive": false,
+          "spoken": "uw"
+        },
+        {
+          "label": "de schaduw",
+          "answer": "schaduw",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de schaduw"
+        },
+        {
+          "label": "de zwaluw",
+          "answer": "zwaluw",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de zwaluw"
+        },
+        {
+          "label": "de waarschuwing",
+          "answer": "waarschuwing",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de waarschuwing"
+        },
+        {
+          "label": "waarschuwen",
+          "answer": "waarschuwen",
+          "caseSensitive": false,
+          "spoken": "waarschuwen"
+        },
+        {
+          "label": "schuw",
+          "answer": "schuw",
+          "caseSensitive": false,
+          "spoken": "schuw"
+        },
+        {
+          "label": "sluw",
+          "answer": "sluw",
+          "caseSensitive": false,
+          "spoken": "sluw"
+        },
+        {
+          "label": "duwen",
+          "answer": "duwen",
+          "caseSensitive": false,
+          "spoken": "duwen"
+        }
+      ]
+    },
+    {
+      "id": "eind-d-t",
+      "title": "Woorden op d of t",
+      "description": "Maak het woord langer om de eindletter te horen.",
+      "entries": [
+        {
+          "label": "de hond",
+          "answer": "hond",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de hond"
+        },
+        {
+          "label": "de hand",
+          "answer": "hand",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de hand"
+        },
+        {
+          "label": "het kind",
+          "answer": "kind",
+          "article": "het",
+          "caseSensitive": false,
+          "spoken": "het kind"
+        },
+        {
+          "label": "de mond",
+          "answer": "mond",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de mond"
+        },
+        {
+          "label": "het bed",
+          "answer": "bed",
+          "article": "het",
+          "caseSensitive": false,
+          "spoken": "het bed"
+        },
+        {
+          "label": "het paard",
+          "answer": "paard",
+          "article": "het",
+          "caseSensitive": false,
+          "spoken": "het paard"
+        },
+        {
+          "label": "de kat",
+          "answer": "kat",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de kat"
+        },
+        {
+          "label": "de pet",
+          "answer": "pet",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de pet"
+        },
+        {
+          "label": "de boot",
+          "answer": "boot",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de boot"
+        },
+        {
+          "label": "de voet",
+          "answer": "voet",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de voet"
+        },
+        {
+          "label": "de kast",
+          "answer": "kast",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de kast"
+        },
+        {
+          "label": "de staart",
+          "answer": "staart",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de staart"
+        },
+        {
+          "label": "de poort",
+          "answer": "poort",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de poort"
+        },
+        {
+          "label": "de baard",
+          "answer": "baard",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de baard"
+        },
+        {
+          "label": "het feest",
+          "answer": "feest",
+          "article": "het",
+          "caseSensitive": false,
+          "spoken": "het feest"
+        },
+        {
+          "label": "het brood",
+          "answer": "brood",
+          "article": "het",
+          "caseSensitive": false,
+          "spoken": "het brood"
+        }
+      ]
+    },
+    {
+      "id": "eind-b-p",
+      "title": "Woorden op b of p",
+      "description": "Maak het woord langer: krab wordt krabben. Luister naar de b of p.",
+      "entries": [
+        {
+          "label": "de krab",
+          "answer": "krab",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de krab"
+        },
+        {
+          "label": "het web",
+          "answer": "web",
+          "article": "het",
+          "caseSensitive": false,
+          "spoken": "het web"
+        },
+        {
+          "label": "de step",
+          "answer": "step",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de step"
+        },
+        {
+          "label": "de trap",
+          "answer": "trap",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de trap"
+        },
+        {
+          "label": "de rib",
+          "answer": "rib",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de rib"
+        },
+        {
+          "label": "de club",
+          "answer": "club",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de club"
+        },
+        {
+          "label": "de kip",
+          "answer": "kip",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de kip"
+        },
+        {
+          "label": "de kop",
+          "answer": "kop",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de kop"
+        },
+        {
+          "label": "de lip",
+          "answer": "lip",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de lip"
+        },
+        {
+          "label": "de dop",
+          "answer": "dop",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de dop"
+        },
+        {
+          "label": "de pop",
+          "answer": "pop",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de pop"
+        },
+        {
+          "label": "de soep",
+          "answer": "soep",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de soep"
+        },
+        {
+          "label": "hebben | Ik ___.",
+          "answer": "heb",
+          "sentence": "Ik ___.",
+          "infinitive": "hebben",
+          "tense": "tegenwoordige tijd",
+          "caseSensitive": false,
+          "spoken": "Ik heb. Typ alleen het woord heb."
+        }
+      ]
+    },
+    {
+      "id": "verenkelen",
+      "title": "Verenkelen: open lettergreep",
+      "description": "Een lange klinker aan het einde van een lettergreep schrijf je met één letter: boom → bomen.",
+      "entries": [
+        {
+          "label": "lopen",
+          "answer": "lopen",
+          "caseSensitive": false,
+          "spoken": "lopen"
+        },
+        {
+          "label": "slapen",
+          "answer": "slapen",
+          "caseSensitive": false,
+          "spoken": "slapen"
+        },
+        {
+          "label": "de bomen",
+          "answer": "bomen",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de bomen"
+        },
+        {
+          "label": "de ramen",
+          "answer": "ramen",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de ramen"
+        },
+        {
+          "label": "de manen",
+          "answer": "manen",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de manen"
+        },
+        {
+          "label": "de benen",
+          "answer": "benen",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de benen"
+        },
+        {
+          "label": "de stenen",
+          "answer": "stenen",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de stenen"
+        },
+        {
+          "label": "de muren",
+          "answer": "muren",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de muren"
+        },
+        {
+          "label": "de buren",
+          "answer": "buren",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de buren"
+        },
+        {
+          "label": "de boten",
+          "answer": "boten",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de boten"
+        },
+        {
+          "label": "de poten",
+          "answer": "poten",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de poten"
+        },
+        {
+          "label": "de rozen",
+          "answer": "rozen",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de rozen"
+        },
+        {
+          "label": "de schapen",
+          "answer": "schapen",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de schapen"
+        },
+        {
+          "label": "de apen",
+          "answer": "apen",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de apen"
+        },
+        {
+          "label": "maken",
+          "answer": "maken",
+          "caseSensitive": false,
+          "spoken": "maken"
+        },
+        {
+          "label": "koken",
+          "answer": "koken",
+          "caseSensitive": false,
+          "spoken": "koken"
+        },
+        {
+          "label": "spelen",
+          "answer": "spelen",
+          "caseSensitive": false,
+          "spoken": "spelen"
+        },
+        {
+          "label": "lezen",
+          "answer": "lezen",
+          "caseSensitive": false,
+          "spoken": "lezen"
+        }
+      ]
+    },
+    {
+      "id": "verdubbelen",
+      "title": "Verdubbelen: gesloten lettergreep",
+      "description": "Na een korte klinker verdubbel je hier de medeklinker: bom → bommen.",
+      "entries": [
+        {
+          "label": "de bommen",
+          "answer": "bommen",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de bommen"
+        },
+        {
+          "label": "de kikker",
+          "answer": "kikker",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de kikker"
+        },
+        {
+          "label": "de kippen",
+          "answer": "kippen",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de kippen"
+        },
+        {
+          "label": "de katten",
+          "answer": "katten",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de katten"
+        },
+        {
+          "label": "de petten",
+          "answer": "petten",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de petten"
+        },
+        {
+          "label": "de bedden",
+          "answer": "bedden",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de bedden"
+        },
+        {
+          "label": "de pennen",
+          "answer": "pennen",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de pennen"
+        },
+        {
+          "label": "de ballen",
+          "answer": "ballen",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de ballen"
+        },
+        {
+          "label": "de bussen",
+          "answer": "bussen",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de bussen"
+        },
+        {
+          "label": "de messen",
+          "answer": "messen",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de messen"
+        },
+        {
+          "label": "de sokken",
+          "answer": "sokken",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de sokken"
+        },
+        {
+          "label": "de vissen",
+          "answer": "vissen",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de vissen"
+        },
+        {
+          "label": "de takken",
+          "answer": "takken",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de takken"
+        },
+        {
+          "label": "de jassen",
+          "answer": "jassen",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de jassen"
+        },
+        {
+          "label": "de mussen",
+          "answer": "mussen",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de mussen"
+        },
+        {
+          "label": "bakken",
+          "answer": "bakken",
+          "caseSensitive": false,
+          "spoken": "bakken"
+        },
+        {
+          "label": "rennen",
+          "answer": "rennen",
+          "caseSensitive": false,
+          "spoken": "rennen"
+        },
+        {
+          "label": "bellen",
+          "answer": "bellen",
+          "caseSensitive": false,
+          "spoken": "bellen"
+        }
+      ]
+    },
+    {
+      "id": "ig",
+      "title": "Woorden op -ig",
+      "description": "Je hoort vaak een doffe klank, maar schrijft ig.",
+      "entries": [
+        {
+          "label": "aardig",
+          "answer": "aardig",
+          "caseSensitive": false,
+          "spoken": "aardig"
+        },
+        {
+          "label": "jarig",
+          "answer": "jarig",
+          "caseSensitive": false,
+          "spoken": "jarig"
+        },
+        {
+          "label": "haastig",
+          "answer": "haastig",
+          "caseSensitive": false,
+          "spoken": "haastig"
+        },
+        {
+          "label": "rustig",
+          "answer": "rustig",
+          "caseSensitive": false,
+          "spoken": "rustig"
+        },
+        {
+          "label": "handig",
+          "answer": "handig",
+          "caseSensitive": false,
+          "spoken": "handig"
+        },
+        {
+          "label": "lastig",
+          "answer": "lastig",
+          "caseSensitive": false,
+          "spoken": "lastig"
+        },
+        {
+          "label": "grappig",
+          "answer": "grappig",
+          "caseSensitive": false,
+          "spoken": "grappig"
+        },
+        {
+          "label": "gelukkig",
+          "answer": "gelukkig",
+          "caseSensitive": false,
+          "spoken": "gelukkig"
+        },
+        {
+          "label": "verdrietig",
+          "answer": "verdrietig",
+          "caseSensitive": false,
+          "spoken": "verdrietig"
+        },
+        {
+          "label": "zonnig",
+          "answer": "zonnig",
+          "caseSensitive": false,
+          "spoken": "zonnig"
+        },
+        {
+          "label": "hongerig",
+          "answer": "hongerig",
+          "caseSensitive": false,
+          "spoken": "hongerig"
+        },
+        {
+          "label": "dorstig",
+          "answer": "dorstig",
+          "caseSensitive": false,
+          "spoken": "dorstig"
+        }
+      ]
+    },
+    {
+      "id": "lijk",
+      "title": "Woorden op -lijk",
+      "description": "Herken het achtervoegsel lijk.",
+      "entries": [
+        {
+          "label": "vrolijk",
+          "answer": "vrolijk",
+          "caseSensitive": false,
+          "spoken": "vrolijk"
+        },
+        {
+          "label": "eerlijk",
+          "answer": "eerlijk",
+          "caseSensitive": false,
+          "spoken": "eerlijk"
+        },
+        {
+          "label": "heerlijk",
+          "answer": "heerlijk",
+          "caseSensitive": false,
+          "spoken": "heerlijk"
+        },
+        {
+          "label": "lelijk",
+          "answer": "lelijk",
+          "caseSensitive": false,
+          "spoken": "lelijk"
+        },
+        {
+          "label": "moeilijk",
+          "answer": "moeilijk",
+          "caseSensitive": false,
+          "spoken": "moeilijk"
+        },
+        {
+          "label": "makkelijk",
+          "answer": "makkelijk",
+          "caseSensitive": false,
+          "spoken": "makkelijk"
+        },
+        {
+          "label": "duidelijk",
+          "answer": "duidelijk",
+          "caseSensitive": false,
+          "spoken": "duidelijk"
+        },
+        {
+          "label": "vriendelijk",
+          "answer": "vriendelijk",
+          "caseSensitive": false,
+          "spoken": "vriendelijk"
+        },
+        {
+          "label": "gevaarlijk",
+          "answer": "gevaarlijk",
+          "caseSensitive": false,
+          "spoken": "gevaarlijk"
+        },
+        {
+          "label": "natuurlijk",
+          "answer": "natuurlijk",
+          "caseSensitive": false,
+          "spoken": "natuurlijk"
+        }
+      ]
+    },
+    {
+      "id": "heid",
+      "title": "Woorden op -heid",
+      "description": "Het achtervoegsel heid eindigt op een d.",
+      "entries": [
+        {
+          "label": "de vrijheid",
+          "answer": "vrijheid",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de vrijheid"
+        },
+        {
+          "label": "de waarheid",
+          "answer": "waarheid",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de waarheid"
+        },
+        {
+          "label": "de schoonheid",
+          "answer": "schoonheid",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de schoonheid"
+        },
+        {
+          "label": "de snelheid",
+          "answer": "snelheid",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de snelheid"
+        },
+        {
+          "label": "de veiligheid",
+          "answer": "veiligheid",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de veiligheid"
+        },
+        {
+          "label": "de gezondheid",
+          "answer": "gezondheid",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de gezondheid"
+        },
+        {
+          "label": "de eerlijkheid",
+          "answer": "eerlijkheid",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de eerlijkheid"
+        },
+        {
+          "label": "de duidelijkheid",
+          "answer": "duidelijkheid",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de duidelijkheid"
+        },
+        {
+          "label": "de vrolijkheid",
+          "answer": "vrolijkheid",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de vrolijkheid"
+        },
+        {
+          "label": "de vriendelijkheid",
+          "answer": "vriendelijkheid",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de vriendelijkheid"
+        }
+      ]
+    },
+    {
+      "id": "sch",
+      "title": "Woorden met sch",
+      "description": "Woorden die beginnen met sch.",
+      "entries": [
+        {
+          "label": "het schaap",
+          "answer": "schaap",
+          "article": "het",
+          "caseSensitive": false,
+          "spoken": "het schaap"
+        },
+        {
+          "label": "de school",
+          "answer": "school",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de school"
+        },
+        {
+          "label": "het schip",
+          "answer": "schip",
+          "article": "het",
+          "caseSensitive": false,
+          "spoken": "het schip"
+        },
+        {
+          "label": "de schoen",
+          "answer": "schoen",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de schoen"
+        },
+        {
+          "label": "de schaar",
+          "answer": "schaar",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de schaar"
+        },
+        {
+          "label": "de schelp",
+          "answer": "schelp",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de schelp"
+        },
+        {
+          "label": "de schat",
+          "answer": "schat",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de schat"
+        },
+        {
+          "label": "de schop",
+          "answer": "schop",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de schop"
+        },
+        {
+          "label": "de schuur",
+          "answer": "schuur",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de schuur"
+        },
+        {
+          "label": "de schaal",
+          "answer": "schaal",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de schaal"
+        }
+      ]
+    },
+    {
+      "id": "ng",
+      "title": "Woorden met ng",
+      "description": "Woorden die eindigen op ng.",
+      "entries": [
+        {
+          "label": "de ring",
+          "answer": "ring",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de ring"
+        },
+        {
+          "label": "lang",
+          "answer": "lang",
+          "caseSensitive": false,
+          "spoken": "lang"
+        },
+        {
+          "label": "bang",
+          "answer": "bang",
+          "caseSensitive": false,
+          "spoken": "bang"
+        },
+        {
+          "label": "de wang",
+          "answer": "wang",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de wang"
+        },
+        {
+          "label": "de tong",
+          "answer": "tong",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de tong"
+        },
+        {
+          "label": "jong",
+          "answer": "jong",
+          "caseSensitive": false,
+          "spoken": "jong"
+        },
+        {
+          "label": "het ding",
+          "answer": "ding",
+          "article": "het",
+          "caseSensitive": false,
+          "spoken": "het ding"
+        },
+        {
+          "label": "de zang",
+          "answer": "zang",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de zang"
+        },
+        {
+          "label": "de gang",
+          "answer": "gang",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de gang"
+        },
+        {
+          "label": "de slang",
+          "answer": "slang",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de slang"
+        }
+      ]
+    },
+    {
+      "id": "nk",
+      "title": "Woorden met nk",
+      "description": "Woorden die eindigen op nk.",
+      "entries": [
+        {
+          "label": "de bank",
+          "answer": "bank",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de bank"
+        },
+        {
+          "label": "de dank",
+          "answer": "dank",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de dank"
+        },
+        {
+          "label": "de vonk",
+          "answer": "vonk",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de vonk"
+        },
+        {
+          "label": "de pink",
+          "answer": "pink",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de pink"
+        },
+        {
+          "label": "de vink",
+          "answer": "vink",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de vink"
+        },
+        {
+          "label": "het zink",
+          "answer": "zink",
+          "article": "het",
+          "caseSensitive": false,
+          "spoken": "het zink"
+        },
+        {
+          "label": "de stank",
+          "answer": "stank",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de stank"
+        },
+        {
+          "label": "de plank",
+          "answer": "plank",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de plank"
+        },
+        {
+          "label": "de drank",
+          "answer": "drank",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de drank"
+        },
+        {
+          "label": "de klank",
+          "answer": "klank",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de klank"
+        }
+      ]
+    },
+    {
+      "id": "clusters",
+      "title": "Meer medeklinkers samen",
+      "description": "Twee of meer medeklinkers naast elkaar.",
+      "entries": [
+        {
+          "label": "de klas",
+          "answer": "klas",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de klas"
+        },
+        {
+          "label": "de klok",
+          "answer": "klok",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de klok"
+        },
+        {
+          "label": "het glas",
+          "answer": "glas",
+          "article": "het",
+          "caseSensitive": false,
+          "spoken": "het glas"
+        },
+        {
+          "label": "de ster",
+          "answer": "ster",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de ster"
+        },
+        {
+          "label": "de spin",
+          "answer": "spin",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de spin"
+        },
+        {
+          "label": "de slak",
+          "answer": "slak",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de slak"
+        },
+        {
+          "label": "de trap",
+          "answer": "trap",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de trap"
+        },
+        {
+          "label": "de brug",
+          "answer": "brug",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de brug"
+        },
+        {
+          "label": "de tent",
+          "answer": "tent",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de tent"
+        },
+        {
+          "label": "de melk",
+          "answer": "melk",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de melk"
+        },
+        {
+          "label": "de kast",
+          "answer": "kast",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de kast"
+        },
+        {
+          "label": "de berg",
+          "answer": "berg",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de berg"
+        }
+      ]
+    },
+    {
+      "id": "landen",
+      "title": "Hoofdletters: landen",
+      "description": "Landennamen beginnen met een hoofdletter.",
+      "entries": [
+        {
+          "label": "België",
+          "answer": "België",
+          "caseSensitive": true,
+          "spoken": "België"
+        },
+        {
+          "label": "Nederland",
+          "answer": "Nederland",
+          "caseSensitive": true,
+          "spoken": "Nederland"
+        },
+        {
+          "label": "Frankrijk",
+          "answer": "Frankrijk",
+          "caseSensitive": true,
+          "spoken": "Frankrijk"
+        },
+        {
+          "label": "Duitsland",
+          "answer": "Duitsland",
+          "caseSensitive": true,
+          "spoken": "Duitsland"
+        },
+        {
+          "label": "Spanje",
+          "answer": "Spanje",
+          "caseSensitive": true,
+          "spoken": "Spanje"
+        },
+        {
+          "label": "Italië",
+          "answer": "Italië",
+          "caseSensitive": true,
+          "spoken": "Italië"
+        },
+        {
+          "label": "Portugal",
+          "answer": "Portugal",
+          "caseSensitive": true,
+          "spoken": "Portugal"
+        },
+        {
+          "label": "Zweden",
+          "answer": "Zweden",
+          "caseSensitive": true,
+          "spoken": "Zweden"
+        },
+        {
+          "label": "Polen",
+          "answer": "Polen",
+          "caseSensitive": true,
+          "spoken": "Polen"
+        },
+        {
+          "label": "Griekenland",
+          "answer": "Griekenland",
+          "caseSensitive": true,
+          "spoken": "Griekenland"
+        }
+      ]
+    },
+    {
+      "id": "personen",
+      "title": "Hoofdletters: personen",
+      "description": "Persoonsnamen beginnen met een hoofdletter.",
+      "entries": [
+        {
+          "label": "Noor",
+          "answer": "Noor",
+          "caseSensitive": true,
+          "spoken": "Noor"
+        },
+        {
+          "label": "Milan",
+          "answer": "Milan",
+          "caseSensitive": true,
+          "spoken": "Milan"
+        },
+        {
+          "label": "Emma",
+          "answer": "Emma",
+          "caseSensitive": true,
+          "spoken": "Emma"
+        },
+        {
+          "label": "Lotte",
+          "answer": "Lotte",
+          "caseSensitive": true,
+          "spoken": "Lotte"
+        },
+        {
+          "label": "Adam",
+          "answer": "Adam",
+          "caseSensitive": true,
+          "spoken": "Adam"
+        },
+        {
+          "label": "Jules",
+          "answer": "Jules",
+          "caseSensitive": true,
+          "spoken": "Jules"
+        },
+        {
+          "label": "Fien",
+          "answer": "Fien",
+          "caseSensitive": true,
+          "spoken": "Fien"
+        },
+        {
+          "label": "Louis",
+          "answer": "Louis",
+          "caseSensitive": true,
+          "spoken": "Louis"
+        },
+        {
+          "label": "Yara",
+          "answer": "Yara",
+          "caseSensitive": true,
+          "spoken": "Yara"
+        },
+        {
+          "label": "Isabel",
+          "answer": "Isabel",
+          "caseSensitive": true,
+          "spoken": "Isabel"
+        }
+      ]
+    },
+    {
+      "id": "plaatsen",
+      "title": "Hoofdletters: steden en gemeenten",
+      "description": "Plaatsnamen beginnen met een hoofdletter.",
+      "entries": [
+        {
+          "label": "Bornem",
+          "answer": "Bornem",
+          "caseSensitive": true,
+          "spoken": "Bornem"
+        },
+        {
+          "label": "Puurs",
+          "answer": "Puurs",
+          "caseSensitive": true,
+          "spoken": "Puurs"
+        },
+        {
+          "label": "Antwerpen",
+          "answer": "Antwerpen",
+          "caseSensitive": true,
+          "spoken": "Antwerpen"
+        },
+        {
+          "label": "Brussel",
+          "answer": "Brussel",
+          "caseSensitive": true,
+          "spoken": "Brussel"
+        },
+        {
+          "label": "Gent",
+          "answer": "Gent",
+          "caseSensitive": true,
+          "spoken": "Gent"
+        },
+        {
+          "label": "Brugge",
+          "answer": "Brugge",
+          "caseSensitive": true,
+          "spoken": "Brugge"
+        },
+        {
+          "label": "Mechelen",
+          "answer": "Mechelen",
+          "caseSensitive": true,
+          "spoken": "Mechelen"
+        },
+        {
+          "label": "Leuven",
+          "answer": "Leuven",
+          "caseSensitive": true,
+          "spoken": "Leuven"
+        },
+        {
+          "label": "Hasselt",
+          "answer": "Hasselt",
+          "caseSensitive": true,
+          "spoken": "Hasselt"
+        },
+        {
+          "label": "Sint-Niklaas",
+          "answer": "Sint-Niklaas",
+          "caseSensitive": true,
+          "spoken": "Sint-Niklaas"
+        }
+      ]
+    },
+    {
+      "id": "leenwoorden",
+      "title": "Leenwoorden",
+      "description": "Woorden die uit andere talen komen.",
+      "entries": [
+        {
+          "label": "de pizza",
+          "answer": "pizza",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de pizza"
+        },
+        {
+          "label": "de computer",
+          "answer": "computer",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de computer"
+        },
+        {
+          "label": "de baby",
+          "answer": "baby",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de baby"
+        },
+        {
+          "label": "de taxi",
+          "answer": "taxi",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de taxi"
+        },
+        {
+          "label": "het cadeau",
+          "answer": "cadeau",
+          "article": "het",
+          "caseSensitive": false,
+          "spoken": "het cadeau"
+        },
+        {
+          "label": "het bureau",
+          "answer": "bureau",
+          "article": "het",
+          "caseSensitive": false,
+          "spoken": "het bureau"
+        },
+        {
+          "label": "het restaurant",
+          "answer": "restaurant",
+          "article": "het",
+          "caseSensitive": false,
+          "spoken": "het restaurant"
+        },
+        {
+          "label": "de garage",
+          "answer": "garage",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de garage"
+        },
+        {
+          "label": "de shampoo",
+          "answer": "shampoo",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de shampoo"
+        },
+        {
+          "label": "het weekend",
+          "answer": "weekend",
+          "article": "het",
+          "caseSensitive": false,
+          "spoken": "het weekend"
+        },
+        {
+          "label": "de paraplu",
+          "answer": "paraplu",
+          "article": "de",
+          "caseSensitive": false,
+          "spoken": "de paraplu"
+        },
+        {
+          "label": "het team",
+          "answer": "team",
+          "article": "het",
+          "caseSensitive": false,
+          "spoken": "het team"
+        }
+      ]
+    },
+    {
+      "id": "werk-tt",
+      "title": "Werkwoorden: tegenwoordige tijd",
+      "description": "Vul de juiste werkwoordsvorm in. De infinitief en de tijd staan erbij.",
+      "entries": [
+        {
+          "label": "lopen | Vandaag ___ ik naar school.",
+          "answer": "loop",
+          "sentence": "Vandaag ___ ik naar school.",
+          "infinitive": "lopen",
+          "tense": "tegenwoordige tijd",
+          "caseSensitive": false,
+          "spoken": "Vul de juiste vorm van lopen in. tegenwoordige tijd. Vandaag puntje puntje puntje ik naar school."
+        },
+        {
+          "label": "lopen | Elke ochtend ___ Noor naar school.",
+          "answer": "loopt",
+          "sentence": "Elke ochtend ___ Noor naar school.",
+          "infinitive": "lopen",
+          "tense": "tegenwoordige tijd",
+          "caseSensitive": false,
+          "spoken": "Vul de juiste vorm van lopen in. tegenwoordige tijd. Elke ochtend puntje puntje puntje Noor naar school."
+        },
+        {
+          "label": "lopen | Vandaag ___ wij naar school.",
+          "answer": "lopen",
+          "sentence": "Vandaag ___ wij naar school.",
+          "infinitive": "lopen",
+          "tense": "tegenwoordige tijd",
+          "caseSensitive": false,
+          "spoken": "Vul de juiste vorm van lopen in. tegenwoordige tijd. Vandaag puntje puntje puntje wij naar school."
+        },
+        {
+          "label": "spelen | Elke dag ___ hij buiten.",
+          "answer": "speelt",
+          "sentence": "Elke dag ___ hij buiten.",
+          "infinitive": "spelen",
+          "tense": "tegenwoordige tijd",
+          "caseSensitive": false,
+          "spoken": "Vul de juiste vorm van spelen in. tegenwoordige tijd. Elke dag puntje puntje puntje hij buiten."
+        },
+        {
+          "label": "maken | Nu ___ ik een tekening.",
+          "answer": "maak",
+          "sentence": "Nu ___ ik een tekening.",
+          "infinitive": "maken",
+          "tense": "tegenwoordige tijd",
+          "caseSensitive": false,
+          "spoken": "Vul de juiste vorm van maken in. tegenwoordige tijd. Nu puntje puntje puntje ik een tekening."
+        },
+        {
+          "label": "schrijven | Vandaag ___ Noor een brief.",
+          "answer": "schrijft",
+          "sentence": "Vandaag ___ Noor een brief.",
+          "infinitive": "schrijven",
+          "tense": "tegenwoordige tijd",
+          "caseSensitive": false,
+          "spoken": "Vul de juiste vorm van schrijven in. tegenwoordige tijd. Vandaag puntje puntje puntje Noor een brief."
+        },
+        {
+          "label": "trekken | Nu ___ jij je jas aan.",
+          "answer": "trekt",
+          "sentence": "Nu ___ jij je jas aan.",
+          "infinitive": "trekken",
+          "tense": "tegenwoordige tijd",
+          "caseSensitive": false,
+          "spoken": "Vul de juiste vorm van trekken in. tegenwoordige tijd. Nu puntje puntje puntje jij je jas aan."
+        },
+        {
+          "label": "worden | Vandaag ___ jij acht jaar.",
+          "answer": "wordt",
+          "sentence": "Vandaag ___ jij acht jaar.",
+          "infinitive": "worden",
+          "tense": "tegenwoordige tijd",
+          "caseSensitive": false,
+          "spoken": "Vul de juiste vorm van worden in. tegenwoordige tijd. Vandaag puntje puntje puntje jij acht jaar."
+        },
+        {
+          "label": "lezen | Elke dag ___ hij zijn boek.",
+          "answer": "leest",
+          "sentence": "Elke dag ___ hij zijn boek.",
+          "infinitive": "lezen",
+          "tense": "tegenwoordige tijd",
+          "caseSensitive": false,
+          "spoken": "Vul de juiste vorm van lezen in. tegenwoordige tijd. Elke dag puntje puntje puntje hij zijn boek."
+        },
+        {
+          "label": "vinden | Vandaag ___ jij het antwoord.",
+          "answer": "vindt",
+          "sentence": "Vandaag ___ jij het antwoord.",
+          "infinitive": "vinden",
+          "tense": "tegenwoordige tijd",
+          "caseSensitive": false,
+          "spoken": "Vul de juiste vorm van vinden in. tegenwoordige tijd. Vandaag puntje puntje puntje jij het antwoord."
+        }
+      ]
+    },
+    {
+      "id": "werk-vt",
+      "title": "Werkwoorden: verleden tijd",
+      "description": "Vul de juiste werkwoordsvorm in. De infinitief en de tijd staan erbij.",
+      "entries": [
+        {
+          "label": "lopen | Gisteren ___ ik naar school.",
+          "answer": "liep",
+          "sentence": "Gisteren ___ ik naar school.",
+          "infinitive": "lopen",
+          "tense": "verleden tijd",
+          "caseSensitive": false,
+          "spoken": "Vul de juiste vorm van lopen in. verleden tijd. Gisteren puntje puntje puntje ik naar school."
+        },
+        {
+          "label": "lopen | Gisteren ___ wij naar school.",
+          "answer": "liepen",
+          "sentence": "Gisteren ___ wij naar school.",
+          "infinitive": "lopen",
+          "tense": "verleden tijd",
+          "caseSensitive": false,
+          "spoken": "Vul de juiste vorm van lopen in. verleden tijd. Gisteren puntje puntje puntje wij naar school."
+        },
+        {
+          "label": "spelen | Gisteren ___ Noor buiten.",
+          "answer": "speelde",
+          "sentence": "Gisteren ___ Noor buiten.",
+          "infinitive": "spelen",
+          "tense": "verleden tijd",
+          "caseSensitive": false,
+          "spoken": "Vul de juiste vorm van spelen in. verleden tijd. Gisteren puntje puntje puntje Noor buiten."
+        },
+        {
+          "label": "spelen | Gisteren ___ wij buiten.",
+          "answer": "speelden",
+          "sentence": "Gisteren ___ wij buiten.",
+          "infinitive": "spelen",
+          "tense": "verleden tijd",
+          "caseSensitive": false,
+          "spoken": "Vul de juiste vorm van spelen in. verleden tijd. Gisteren puntje puntje puntje wij buiten."
+        },
+        {
+          "label": "maken | Gisteren ___ ik een tekening.",
+          "answer": "maakte",
+          "sentence": "Gisteren ___ ik een tekening.",
+          "infinitive": "maken",
+          "tense": "verleden tijd",
+          "caseSensitive": false,
+          "spoken": "Vul de juiste vorm van maken in. verleden tijd. Gisteren puntje puntje puntje ik een tekening."
+        },
+        {
+          "label": "maken | Gisteren ___ wij een tekening.",
+          "answer": "maakten",
+          "sentence": "Gisteren ___ wij een tekening.",
+          "infinitive": "maken",
+          "tense": "verleden tijd",
+          "caseSensitive": false,
+          "spoken": "Vul de juiste vorm van maken in. verleden tijd. Gisteren puntje puntje puntje wij een tekening."
+        },
+        {
+          "label": "schrijven | Gisteren ___ Noor een brief.",
+          "answer": "schreef",
+          "sentence": "Gisteren ___ Noor een brief.",
+          "infinitive": "schrijven",
+          "tense": "verleden tijd",
+          "caseSensitive": false,
+          "spoken": "Vul de juiste vorm van schrijven in. verleden tijd. Gisteren puntje puntje puntje Noor een brief."
+        },
+        {
+          "label": "lezen | Gisteren ___ hij een boek.",
+          "answer": "las",
+          "sentence": "Gisteren ___ hij een boek.",
+          "infinitive": "lezen",
+          "tense": "verleden tijd",
+          "caseSensitive": false,
+          "spoken": "Vul de juiste vorm van lezen in. verleden tijd. Gisteren puntje puntje puntje hij een boek."
+        },
+        {
+          "label": "worden | Gisteren ___ jij acht jaar.",
+          "answer": "werd",
+          "sentence": "Gisteren ___ jij acht jaar.",
+          "infinitive": "worden",
+          "tense": "verleden tijd",
+          "caseSensitive": false,
+          "spoken": "Vul de juiste vorm van worden in. verleden tijd. Gisteren puntje puntje puntje jij acht jaar."
+        },
+        {
+          "label": "vinden | Gisteren ___ ik mijn sleutel.",
+          "answer": "vond",
+          "sentence": "Gisteren ___ ik mijn sleutel.",
+          "infinitive": "vinden",
+          "tense": "verleden tijd",
+          "caseSensitive": false,
+          "spoken": "Vul de juiste vorm van vinden in. verleden tijd. Gisteren puntje puntje puntje ik mijn sleutel."
+        }
+      ]
+    },
+    {
+      "id": "werk-vtt",
+      "title": "Werkwoorden: voltooid tegenwoordige tijd",
+      "description": "Vul de juiste werkwoordsvorm in. De infinitief en de tijd staan erbij.",
+      "entries": [
+        {
+          "label": "spelen | Ik heb gisteren buiten ___.",
+          "answer": "gespeeld",
+          "sentence": "Ik heb gisteren buiten ___.",
+          "infinitive": "spelen",
+          "tense": "voltooid tegenwoordige tijd",
+          "caseSensitive": false,
+          "spoken": "Vul de juiste vorm van spelen in. voltooid tegenwoordige tijd. Ik heb gisteren buiten puntje puntje puntje."
+        },
+        {
+          "label": "maken | Wij hebben een tekening ___.",
+          "answer": "gemaakt",
+          "sentence": "Wij hebben een tekening ___.",
+          "infinitive": "maken",
+          "tense": "voltooid tegenwoordige tijd",
+          "caseSensitive": false,
+          "spoken": "Vul de juiste vorm van maken in. voltooid tegenwoordige tijd. Wij hebben een tekening puntje puntje puntje."
+        },
+        {
+          "label": "schrijven | Noor heeft een brief ___.",
+          "answer": "geschreven",
+          "sentence": "Noor heeft een brief ___.",
+          "infinitive": "schrijven",
+          "tense": "voltooid tegenwoordige tijd",
+          "caseSensitive": false,
+          "spoken": "Vul de juiste vorm van schrijven in. voltooid tegenwoordige tijd. Noor heeft een brief puntje puntje puntje."
+        },
+        {
+          "label": "lezen | Hij heeft zijn boek ___.",
+          "answer": "gelezen",
+          "sentence": "Hij heeft zijn boek ___.",
+          "infinitive": "lezen",
+          "tense": "voltooid tegenwoordige tijd",
+          "caseSensitive": false,
+          "spoken": "Vul de juiste vorm van lezen in. voltooid tegenwoordige tijd. Hij heeft zijn boek puntje puntje puntje."
+        },
+        {
+          "label": "lopen | Ik ben naar school ___.",
+          "answer": "gelopen",
+          "sentence": "Ik ben naar school ___.",
+          "infinitive": "lopen",
+          "tense": "voltooid tegenwoordige tijd",
+          "caseSensitive": false,
+          "spoken": "Vul de juiste vorm van lopen in. voltooid tegenwoordige tijd. Ik ben naar school puntje puntje puntje."
+        },
+        {
+          "label": "vinden | Jij hebt je sleutel ___.",
+          "answer": "gevonden",
+          "sentence": "Jij hebt je sleutel ___.",
+          "infinitive": "vinden",
+          "tense": "voltooid tegenwoordige tijd",
+          "caseSensitive": false,
+          "spoken": "Vul de juiste vorm van vinden in. voltooid tegenwoordige tijd. Jij hebt je sleutel puntje puntje puntje."
+        },
+        {
+          "label": "werken | Wij hebben hard ___.",
+          "answer": "gewerkt",
+          "sentence": "Wij hebben hard ___.",
+          "infinitive": "werken",
+          "tense": "voltooid tegenwoordige tijd",
+          "caseSensitive": false,
+          "spoken": "Vul de juiste vorm van werken in. voltooid tegenwoordige tijd. Wij hebben hard puntje puntje puntje."
+        },
+        {
+          "label": "poetsen | Ik heb mijn tanden ___.",
+          "answer": "gepoetst",
+          "sentence": "Ik heb mijn tanden ___.",
+          "infinitive": "poetsen",
+          "tense": "voltooid tegenwoordige tijd",
+          "caseSensitive": false,
+          "spoken": "Vul de juiste vorm van poetsen in. voltooid tegenwoordige tijd. Ik heb mijn tanden puntje puntje puntje."
+        }
+      ]
+    },
+    {
+      "id": "werk-tt-ik",
+      "title": "D/t/dt: ik-vorm",
+      "description": "Ik: schrijf de stam.",
+      "entries": [
+        {
+          "label": "worden | Ik ___ morgen acht jaar.",
+          "answer": "word",
+          "sentence": "Ik ___ morgen acht jaar.",
+          "infinitive": "worden",
+          "tense": "tegenwoordige tijd",
+          "caseSensitive": false,
+          "spoken": "Vul de juiste vorm van worden in. Tegenwoordige tijd. Ik puntje puntje puntje morgen acht jaar."
+        },
+        {
+          "label": "vinden | Ik ___ mijn sleutel.",
+          "answer": "vind",
+          "sentence": "Ik ___ mijn sleutel.",
+          "infinitive": "vinden",
+          "tense": "tegenwoordige tijd",
+          "caseSensitive": false,
+          "spoken": "Vul de juiste vorm van vinden in. Tegenwoordige tijd. Ik puntje puntje puntje mijn sleutel."
+        },
+        {
+          "label": "wachten | Ik ___ op de bus.",
+          "answer": "wacht",
+          "sentence": "Ik ___ op de bus.",
+          "infinitive": "wachten",
+          "tense": "tegenwoordige tijd",
+          "caseSensitive": false,
+          "spoken": "Vul de juiste vorm van wachten in. Tegenwoordige tijd. Ik puntje puntje puntje op de bus."
+        },
+        {
+          "label": "rijden | Ik ___ met mijn fiets.",
+          "answer": "rijd",
+          "sentence": "Ik ___ met mijn fiets.",
+          "infinitive": "rijden",
+          "tense": "tegenwoordige tijd",
+          "caseSensitive": false,
+          "spoken": "Vul de juiste vorm van rijden in. Tegenwoordige tijd. Ik puntje puntje puntje met mijn fiets."
+        },
+        {
+          "label": "houden | Ik ___ mijn jas vast.",
+          "answer": "houd",
+          "sentence": "Ik ___ mijn jas vast.",
+          "infinitive": "houden",
+          "tense": "tegenwoordige tijd",
+          "caseSensitive": false,
+          "spoken": "Vul de juiste vorm van houden in. Tegenwoordige tijd. Ik puntje puntje puntje mijn jas vast."
+        },
+        {
+          "label": "redden | Ik ___ de planten.",
+          "answer": "red",
+          "sentence": "Ik ___ de planten.",
+          "infinitive": "redden",
+          "tense": "tegenwoordige tijd",
+          "caseSensitive": false,
+          "spoken": "Vul de juiste vorm van redden in. Tegenwoordige tijd. Ik puntje puntje puntje de planten."
+        },
+        {
+          "label": "doen | Ik ___ het licht aan.",
+          "answer": "doe",
+          "sentence": "Ik ___ het licht aan.",
+          "infinitive": "doen",
+          "tense": "tegenwoordige tijd",
+          "caseSensitive": false,
+          "spoken": "Vul de juiste vorm van doen in. Tegenwoordige tijd. Ik puntje puntje puntje het licht aan."
+        },
+        {
+          "label": "pakken | Ik ___ mijn boek.",
+          "answer": "pak",
+          "sentence": "Ik ___ mijn boek.",
+          "infinitive": "pakken",
+          "tense": "tegenwoordige tijd",
+          "caseSensitive": false,
+          "spoken": "Vul de juiste vorm van pakken in. Tegenwoordige tijd. Ik puntje puntje puntje mijn boek."
+        },
+        {
+          "label": "antwoorden | Ik ___ op de vraag.",
+          "answer": "antwoord",
+          "sentence": "Ik ___ op de vraag.",
+          "infinitive": "antwoorden",
+          "tense": "tegenwoordige tijd",
+          "caseSensitive": false,
+          "spoken": "Vul de juiste vorm van antwoorden in. Tegenwoordige tijd. Ik puntje puntje puntje op de vraag."
+        },
+        {
+          "label": "binden | Ik ___ mijn veters vast.",
+          "answer": "bind",
+          "sentence": "Ik ___ mijn veters vast.",
+          "infinitive": "binden",
+          "tense": "tegenwoordige tijd",
+          "caseSensitive": false,
+          "spoken": "Vul de juiste vorm van binden in. Tegenwoordige tijd. Ik puntje puntje puntje mijn veters vast."
+        }
+      ]
+    },
+    {
+      "id": "werk-tt-jij",
+      "title": "D/t/dt: jij, hij en zij",
+      "description": "Stam + t. Eindigt de stam op d, dan schrijf je dt.",
+      "entries": [
+        {
+          "label": "worden | Jij ___ morgen acht jaar.",
+          "answer": "wordt",
+          "sentence": "Jij ___ morgen acht jaar.",
+          "infinitive": "worden",
+          "tense": "tegenwoordige tijd",
+          "caseSensitive": false,
+          "spoken": "Vul de juiste vorm van worden in. Tegenwoordige tijd. Jij puntje puntje puntje morgen acht jaar."
+        },
+        {
+          "label": "vinden | Hij ___ de sleutel.",
+          "answer": "vindt",
+          "sentence": "Hij ___ de sleutel.",
+          "infinitive": "vinden",
+          "tense": "tegenwoordige tijd",
+          "caseSensitive": false,
+          "spoken": "Vul de juiste vorm van vinden in. Tegenwoordige tijd. Hij puntje puntje puntje de sleutel."
+        },
+        {
+          "label": "rijden | Zij ___ met haar fiets.",
+          "answer": "rijdt",
+          "sentence": "Zij ___ met haar fiets.",
+          "infinitive": "rijden",
+          "tense": "tegenwoordige tijd",
+          "caseSensitive": false,
+          "spoken": "Vul de juiste vorm van rijden in. Tegenwoordige tijd. Zij puntje puntje puntje met haar fiets."
+        },
+        {
+          "label": "houden | Jij ___ je jas vast.",
+          "answer": "houdt",
+          "sentence": "Jij ___ je jas vast.",
+          "infinitive": "houden",
+          "tense": "tegenwoordige tijd",
+          "caseSensitive": false,
+          "spoken": "Vul de juiste vorm van houden in. Tegenwoordige tijd. Jij puntje puntje puntje je jas vast."
+        },
+        {
+          "label": "redden | Hij ___ de kat.",
+          "answer": "redt",
+          "sentence": "Hij ___ de kat.",
+          "infinitive": "redden",
+          "tense": "tegenwoordige tijd",
+          "caseSensitive": false,
+          "spoken": "Vul de juiste vorm van redden in. Tegenwoordige tijd. Hij puntje puntje puntje de kat."
+        },
+        {
+          "label": "antwoorden | Zij ___ op de vraag.",
+          "answer": "antwoordt",
+          "sentence": "Zij ___ op de vraag.",
+          "infinitive": "antwoorden",
+          "tense": "tegenwoordige tijd",
+          "caseSensitive": false,
+          "spoken": "Vul de juiste vorm van antwoorden in. Tegenwoordige tijd. Zij puntje puntje puntje op de vraag."
+        },
+        {
+          "label": "binden | Jij ___ je veters vast.",
+          "answer": "bindt",
+          "sentence": "Jij ___ je veters vast.",
+          "infinitive": "binden",
+          "tense": "tegenwoordige tijd",
+          "caseSensitive": false,
+          "spoken": "Vul de juiste vorm van binden in. Tegenwoordige tijd. Jij puntje puntje puntje je veters vast."
+        },
+        {
+          "label": "verzenden | Hij ___ het pakje.",
+          "answer": "verzendt",
+          "sentence": "Hij ___ het pakje.",
+          "infinitive": "verzenden",
+          "tense": "tegenwoordige tijd",
+          "caseSensitive": false,
+          "spoken": "Vul de juiste vorm van verzenden in. Tegenwoordige tijd. Hij puntje puntje puntje het pakje."
+        },
+        {
+          "label": "wachten | Jij ___ op de bus.",
+          "answer": "wacht",
+          "sentence": "Jij ___ op de bus.",
+          "infinitive": "wachten",
+          "tense": "tegenwoordige tijd",
+          "caseSensitive": false,
+          "spoken": "Vul de juiste vorm van wachten in. Tegenwoordige tijd. Jij puntje puntje puntje op de bus."
+        },
+        {
+          "label": "dekken | Hij ___ de tafel.",
+          "answer": "dekt",
+          "sentence": "Hij ___ de tafel.",
+          "infinitive": "dekken",
+          "tense": "tegenwoordige tijd",
+          "caseSensitive": false,
+          "spoken": "Vul de juiste vorm van dekken in. Tegenwoordige tijd. Hij puntje puntje puntje de tafel."
+        }
+      ]
+    },
+    {
+      "id": "werk-tt-vraag",
+      "title": "D/t/dt: jij achter het werkwoord",
+      "description": "Staat jij of je als onderwerp achter het werkwoord? Dan valt de extra t weg.",
+      "entries": [
+        {
+          "label": "worden | ___ jij morgen acht jaar?",
+          "answer": "word",
+          "sentence": "___ jij morgen acht jaar?",
+          "infinitive": "worden",
+          "tense": "tegenwoordige tijd",
+          "caseSensitive": false,
+          "spoken": "Vul de juiste vorm van worden in. Tegenwoordige tijd. puntje puntje puntje jij morgen acht jaar?"
+        },
+        {
+          "label": "vinden | ___ jij de sleutel?",
+          "answer": "vind",
+          "sentence": "___ jij de sleutel?",
+          "infinitive": "vinden",
+          "tense": "tegenwoordige tijd",
+          "caseSensitive": false,
+          "spoken": "Vul de juiste vorm van vinden in. Tegenwoordige tijd. puntje puntje puntje jij de sleutel?"
+        },
+        {
+          "label": "rijden | ___ jij met je fiets?",
+          "answer": "rijd",
+          "sentence": "___ jij met je fiets?",
+          "infinitive": "rijden",
+          "tense": "tegenwoordige tijd",
+          "caseSensitive": false,
+          "spoken": "Vul de juiste vorm van rijden in. Tegenwoordige tijd. puntje puntje puntje jij met je fiets?"
+        },
+        {
+          "label": "houden | ___ je mijn jas vast?",
+          "answer": "houd",
+          "sentence": "___ je mijn jas vast?",
+          "infinitive": "houden",
+          "tense": "tegenwoordige tijd",
+          "caseSensitive": false,
+          "spoken": "Vul de juiste vorm van houden in. Tegenwoordige tijd. puntje puntje puntje je mijn jas vast?"
+        },
+        {
+          "label": "redden | ___ jij de kat?",
+          "answer": "red",
+          "sentence": "___ jij de kat?",
+          "infinitive": "redden",
+          "tense": "tegenwoordige tijd",
+          "caseSensitive": false,
+          "spoken": "Vul de juiste vorm van redden in. Tegenwoordige tijd. puntje puntje puntje jij de kat?"
+        },
+        {
+          "label": "antwoorden | ___ jij op de vraag?",
+          "answer": "antwoord",
+          "sentence": "___ jij op de vraag?",
+          "infinitive": "antwoorden",
+          "tense": "tegenwoordige tijd",
+          "caseSensitive": false,
+          "spoken": "Vul de juiste vorm van antwoorden in. Tegenwoordige tijd. puntje puntje puntje jij op de vraag?"
+        },
+        {
+          "label": "binden | ___ je je veters vast?",
+          "answer": "bind",
+          "sentence": "___ je je veters vast?",
+          "infinitive": "binden",
+          "tense": "tegenwoordige tijd",
+          "caseSensitive": false,
+          "spoken": "Vul de juiste vorm van binden in. Tegenwoordige tijd. puntje puntje puntje je je veters vast?"
+        },
+        {
+          "label": "verzenden | ___ jij het pakje?",
+          "answer": "verzend",
+          "sentence": "___ jij het pakje?",
+          "infinitive": "verzenden",
+          "tense": "tegenwoordige tijd",
+          "caseSensitive": false,
+          "spoken": "Vul de juiste vorm van verzenden in. Tegenwoordige tijd. puntje puntje puntje jij het pakje?"
+        },
+        {
+          "label": "wachten | ___ jij op de bus?",
+          "answer": "wacht",
+          "sentence": "___ jij op de bus?",
+          "infinitive": "wachten",
+          "tense": "tegenwoordige tijd",
+          "caseSensitive": false,
+          "spoken": "Vul de juiste vorm van wachten in. Tegenwoordige tijd. puntje puntje puntje jij op de bus?"
+        },
+        {
+          "label": "dekken | ___ je de tafel?",
+          "answer": "dek",
+          "sentence": "___ je de tafel?",
+          "infinitive": "dekken",
+          "tense": "tegenwoordige tijd",
+          "caseSensitive": false,
+          "spoken": "Vul de juiste vorm van dekken in. Tegenwoordige tijd. puntje puntje puntje je de tafel?"
+        }
+      ]
+    },
+    {
+      "id": "werk-tt-onderwerp",
+      "title": "D/t/dt: wie is het onderwerp?",
+      "description": "Let op: je broer is hij. Bij u blijft de t ook in een vraag.",
+      "entries": [
+        {
+          "label": "worden | ___ je broer morgen acht jaar?",
+          "answer": "wordt",
+          "sentence": "___ je broer morgen acht jaar?",
+          "infinitive": "worden",
+          "tense": "tegenwoordige tijd",
+          "caseSensitive": false,
+          "spoken": "Vul de juiste vorm van worden in. Tegenwoordige tijd. puntje puntje puntje je broer morgen acht jaar?"
+        },
+        {
+          "label": "vinden | ___ je zus de sleutel?",
+          "answer": "vindt",
+          "sentence": "___ je zus de sleutel?",
+          "infinitive": "vinden",
+          "tense": "tegenwoordige tijd",
+          "caseSensitive": false,
+          "spoken": "Vul de juiste vorm van vinden in. Tegenwoordige tijd. puntje puntje puntje je zus de sleutel?"
+        },
+        {
+          "label": "rijden | ___ je papa met de auto?",
+          "answer": "rijdt",
+          "sentence": "___ je papa met de auto?",
+          "infinitive": "rijden",
+          "tense": "tegenwoordige tijd",
+          "caseSensitive": false,
+          "spoken": "Vul de juiste vorm van rijden in. Tegenwoordige tijd. puntje puntje puntje je papa met de auto?"
+        },
+        {
+          "label": "houden | ___ u mijn jas vast?",
+          "answer": "houdt",
+          "sentence": "___ u mijn jas vast?",
+          "infinitive": "houden",
+          "tense": "tegenwoordige tijd",
+          "caseSensitive": false,
+          "spoken": "Vul de juiste vorm van houden in. Tegenwoordige tijd. puntje puntje puntje u mijn jas vast?"
+        },
+        {
+          "label": "antwoorden | ___ u op de vraag?",
+          "answer": "antwoordt",
+          "sentence": "___ u op de vraag?",
+          "infinitive": "antwoorden",
+          "tense": "tegenwoordige tijd",
+          "caseSensitive": false,
+          "spoken": "Vul de juiste vorm van antwoorden in. Tegenwoordige tijd. puntje puntje puntje u op de vraag?"
+        },
+        {
+          "label": "vinden | Mijn mama ___ de sleutel.",
+          "answer": "vindt",
+          "sentence": "Mijn mama ___ de sleutel.",
+          "infinitive": "vinden",
+          "tense": "tegenwoordige tijd",
+          "caseSensitive": false,
+          "spoken": "Vul de juiste vorm van vinden in. Tegenwoordige tijd. Mijn mama puntje puntje puntje de sleutel."
+        },
+        {
+          "label": "houden | De hond ___ van spelen.",
+          "answer": "houdt",
+          "sentence": "De hond ___ van spelen.",
+          "infinitive": "houden",
+          "tense": "tegenwoordige tijd",
+          "caseSensitive": false,
+          "spoken": "Vul de juiste vorm van houden in. Tegenwoordige tijd. De hond puntje puntje puntje van spelen."
+        },
+        {
+          "label": "antwoorden | De juf ___ op de vraag.",
+          "answer": "antwoordt",
+          "sentence": "De juf ___ op de vraag.",
+          "infinitive": "antwoorden",
+          "tense": "tegenwoordige tijd",
+          "caseSensitive": false,
+          "spoken": "Vul de juiste vorm van antwoorden in. Tegenwoordige tijd. De juf puntje puntje puntje op de vraag."
+        },
+        {
+          "label": "worden | ___ hij morgen acht jaar?",
+          "answer": "wordt",
+          "sentence": "___ hij morgen acht jaar?",
+          "infinitive": "worden",
+          "tense": "tegenwoordige tijd",
+          "caseSensitive": false,
+          "spoken": "Vul de juiste vorm van worden in. Tegenwoordige tijd. puntje puntje puntje hij morgen acht jaar?"
+        },
+        {
+          "label": "rijden | ___ zij met haar fiets?",
+          "answer": "rijdt",
+          "sentence": "___ zij met haar fiets?",
+          "infinitive": "rijden",
+          "tense": "tegenwoordige tijd",
+          "caseSensitive": false,
+          "spoken": "Vul de juiste vorm van rijden in. Tegenwoordige tijd. puntje puntje puntje zij met haar fiets?"
+        }
+      ]
+    },
+    {
+      "id": "werk-tt-meervoud",
+      "title": "Tegenwoordige tijd: meervoud",
+      "description": "Bij wij, jullie en zij in het meervoud schrijf je de meervoudsvorm.",
+      "entries": [
+        {
+          "label": "worden | Wij ___ morgen acht jaar.",
+          "answer": "worden",
+          "sentence": "Wij ___ morgen acht jaar.",
+          "infinitive": "worden",
+          "tense": "tegenwoordige tijd",
+          "caseSensitive": false,
+          "spoken": "Vul de juiste vorm van worden in. Tegenwoordige tijd. Wij puntje puntje puntje morgen acht jaar."
+        },
+        {
+          "label": "vinden | Jullie ___ de sleutel.",
+          "answer": "vinden",
+          "sentence": "Jullie ___ de sleutel.",
+          "infinitive": "vinden",
+          "tense": "tegenwoordige tijd",
+          "caseSensitive": false,
+          "spoken": "Vul de juiste vorm van vinden in. Tegenwoordige tijd. Jullie puntje puntje puntje de sleutel."
+        },
+        {
+          "label": "rijden | Zij ___ samen naar school.",
+          "answer": "rijden",
+          "sentence": "Zij ___ samen naar school.",
+          "infinitive": "rijden",
+          "tense": "tegenwoordige tijd",
+          "caseSensitive": false,
+          "spoken": "Vul de juiste vorm van rijden in. Tegenwoordige tijd. Zij puntje puntje puntje samen naar school."
+        },
+        {
+          "label": "houden | Wij ___ van spelen.",
+          "answer": "houden",
+          "sentence": "Wij ___ van spelen.",
+          "infinitive": "houden",
+          "tense": "tegenwoordige tijd",
+          "caseSensitive": false,
+          "spoken": "Vul de juiste vorm van houden in. Tegenwoordige tijd. Wij puntje puntje puntje van spelen."
+        },
+        {
+          "label": "antwoorden | Jullie ___ op de vraag.",
+          "answer": "antwoorden",
+          "sentence": "Jullie ___ op de vraag.",
+          "infinitive": "antwoorden",
+          "tense": "tegenwoordige tijd",
+          "caseSensitive": false,
+          "spoken": "Vul de juiste vorm van antwoorden in. Tegenwoordige tijd. Jullie puntje puntje puntje op de vraag."
+        },
+        {
+          "label": "wachten | Wij ___ op de bus.",
+          "answer": "wachten",
+          "sentence": "Wij ___ op de bus.",
+          "infinitive": "wachten",
+          "tense": "tegenwoordige tijd",
+          "caseSensitive": false,
+          "spoken": "Vul de juiste vorm van wachten in. Tegenwoordige tijd. Wij puntje puntje puntje op de bus."
+        },
+        {
+          "label": "dekken | Jullie ___ de tafel.",
+          "answer": "dekken",
+          "sentence": "Jullie ___ de tafel.",
+          "infinitive": "dekken",
+          "tense": "tegenwoordige tijd",
+          "caseSensitive": false,
+          "spoken": "Vul de juiste vorm van dekken in. Tegenwoordige tijd. Jullie puntje puntje puntje de tafel."
+        },
+        {
+          "label": "binden | Wij ___ onze veters vast.",
+          "answer": "binden",
+          "sentence": "Wij ___ onze veters vast.",
+          "infinitive": "binden",
+          "tense": "tegenwoordige tijd",
+          "caseSensitive": false,
+          "spoken": "Vul de juiste vorm van binden in. Tegenwoordige tijd. Wij puntje puntje puntje onze veters vast."
+        },
+        {
+          "label": "redden | De kinderen ___ de kat.",
+          "answer": "redden",
+          "sentence": "De kinderen ___ de kat.",
+          "infinitive": "redden",
+          "tense": "tegenwoordige tijd",
+          "caseSensitive": false,
+          "spoken": "Vul de juiste vorm van redden in. Tegenwoordige tijd. De kinderen puntje puntje puntje de kat."
+        },
+        {
+          "label": "verzenden | Zij ___ samen de pakjes.",
+          "answer": "verzenden",
+          "sentence": "Zij ___ samen de pakjes.",
+          "infinitive": "verzenden",
+          "tense": "tegenwoordige tijd",
+          "caseSensitive": false,
+          "spoken": "Vul de juiste vorm van verzenden in. Tegenwoordige tijd. Zij puntje puntje puntje samen de pakjes."
+        }
+      ]
+    }
+  ]
+}

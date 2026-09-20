@@ -506,6 +506,89 @@ match /schoolbeheer_groepen/{groepDocId} {
       allow read, write: if request.auth != null;
     }
 
+    // Zisa-klasrace: each game has its own owner and approved membership.
+    function klasraceTeacher() {
+      return request.auth != null
+        && exists(/databases/$(database)/documents/schoolrollen/$(request.auth.uid))
+        && get(/databases/$(database)/documents/schoolrollen/$(request.auth.uid)).data.rol
+          in ['klasleerkracht','beheerder','directie','zorgleerkracht','zorgcoordinator'];
+    }
+    match /zisa_klasrace/{code} {
+      function room() { return get(/databases/$(database)/documents/zisa_klasrace/$(code)).data; }
+      function owner() { return request.auth != null && room().owner == request.auth.uid; }
+      function active() { return room().expires > request.time.toMillis(); }
+      function member() {
+        return request.auth != null
+          && exists(/databases/$(database)/documents/zisa_klasrace/$(code)/players/$(request.auth.uid))
+          && get(/databases/$(database)/documents/zisa_klasrace/$(code)/players/$(request.auth.uid)).data.approved == true;
+      }
+      allow get: if request.auth != null;
+      allow list: if false;
+      allow create: if klasraceTeacher() && code.matches('^[A-Z2-9]{6}$')
+        && request.resource.data.owner == request.auth.uid
+        && request.resource.data.className is string && request.resource.data.className.size() <= 60
+        && request.resource.data.status == 'waiting'
+        && request.resource.data.approvedCount == 0 && request.resource.data.pendingCount == 0
+        && request.resource.data.expires <= request.time.toMillis() + 86410000;
+      allow update: if active() && (
+        (owner() && request.resource.data.owner == resource.data.owner
+          && request.resource.data.approvedCount >= 0 && request.resource.data.approvedCount <= 32
+          && request.resource.data.pendingCount >= 0 && request.resource.data.pendingCount <= 64)
+        || (request.auth != null && resource.data.status == 'waiting'
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['pendingCount'])
+          && request.resource.data.pendingCount == resource.data.pendingCount + 1
+          && request.resource.data.pendingCount <= 64
+          && !exists(/databases/$(database)/documents/zisa_klasrace/$(code)/players/$(request.auth.uid))
+          && getAfter(/databases/$(database)/documents/zisa_klasrace/$(code)/players/$(request.auth.uid)).data.uid == request.auth.uid));
+      allow delete: if owner();
+      match /private/{id} {
+        allow get: if active() && (owner() || member());
+        allow create: if klasraceTeacher()
+          && getAfter(/databases/$(database)/documents/zisa_klasrace/$(code)).data.owner == request.auth.uid;
+        allow update, delete: if owner();
+      }
+      match /names/{name} {
+        allow get: if request.auth != null && active();
+        allow create: if request.auth != null && active() && room().status == 'waiting'
+          && request.resource.data.keys().hasOnly(['uid'])
+          && request.resource.data.uid == request.auth.uid
+          && getAfter(/databases/$(database)/documents/zisa_klasrace/$(code)/players/$(request.auth.uid)).data.name.lower() == name;
+        allow delete: if owner();
+      }
+      match /players/{uid} {
+        allow get: if request.auth != null && active() && (request.auth.uid == uid || owner() || member());
+        allow list: if active() && (owner() || member());
+        allow create: if request.auth != null && request.auth.uid == uid && active() && room().status == 'waiting'
+          && request.resource.data.keys().hasOnly(['uid','id','name','approved','score','mistakes','finished','round','corrected'])
+          && request.resource.data.uid == uid && request.resource.data.id == uid
+          && request.resource.data.name is string && request.resource.data.name.size() > 0 && request.resource.data.name.size() <= 18
+          && request.resource.data.approved == false && request.resource.data.score == 0
+          && request.resource.data.mistakes == 0 && request.resource.data.finished == 0
+          && request.resource.data.round == -1 && request.resource.data.corrected == 0
+          && getAfter(/databases/$(database)/documents/zisa_klasrace/$(code)/names/$(request.resource.data.name.lower())).data.uid == uid
+          && getAfter(/databases/$(database)/documents/zisa_klasrace/$(code)).data.pendingCount == room().pendingCount + 1;
+        allow update: if active() && (owner() || (
+          request.auth != null && request.auth.uid == uid && resource.data.approved == true
+          && room().status == 'running'
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['score','mistakes','finished','round','corrected'])
+          && request.resource.data.score >= resource.data.score && request.resource.data.score <= resource.data.score + 1
+          && request.resource.data.score <= room().settings.count
+          && request.resource.data.mistakes >= resource.data.mistakes && request.resource.data.mistakes <= resource.data.mistakes + 1
+          && (request.resource.data.round == resource.data.round || request.resource.data.round == room().round)
+          && request.resource.data.corrected in [0,1]
+          && (request.resource.data.finished == 0 || request.resource.data.score == room().settings.count)));
+        allow delete: if owner();
+      }
+    }
+    match /zisa_klasrace_oefenen/{id} {
+      allow get: if resource.data.expires > request.time.toMillis();
+      allow list: if false;
+      allow create: if klasraceTeacher() && request.resource.data.owner == request.auth.uid
+        && request.resource.data.entries is list && request.resource.data.entries.size() > 0 && request.resource.data.entries.size() <= 40
+        && request.resource.data.expires <= request.time.toMillis() + 2592010000;
+      allow update, delete: if request.auth != null && resource.data.owner == request.auth.uid;
+    }
+
     match /{document=**} {
       allow read, write: if false;
     }

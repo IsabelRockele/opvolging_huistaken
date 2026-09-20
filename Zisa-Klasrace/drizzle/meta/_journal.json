@@ -1,0 +1,27 @@
+{
+  "version": "7",
+  "dialect": "sqlite",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "6",
+      "when": 1789658899175,
+      "tag": "0000_material_lionheart",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1789659549321,
+      "tag": "0001_spicy_owl",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1789674431998,
+      "tag": "0002_needy_mentor",
+      "breakpoints": true
+    }
+  ]
+}

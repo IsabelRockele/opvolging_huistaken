@@ -279,9 +279,9 @@ function pasKnoppenToe(huistakenKnop, overgangKnop, schoolbeheerKnop, bestelling
   if (zisaSpelgeneratorKnop) zisaSpelgeneratorKnop.style.display = !isSecretariaat ? '' : 'none';
   const taalgroeiKnop = document.getElementById('taalgroeiKeuzeKnop');
   if (taalgroeiKnop) taalgroeiKnop.style.display = !isSecretariaat ? '' : 'none';
-  const tafelExpeditieKnop = document.getElementById('tafelExpeditieKeuzeKnop');
-  const magTafelExpeditie = heeftKlasbeheer || ['beheerder', 'directie', 'zorgleerkracht', 'zorgcoordinator'].includes(rolNaam);
-  if (tafelExpeditieKnop) tafelExpeditieKnop.style.display = magTafelExpeditie && rolNaam !== 'secretariaat' ? '' : 'none';
+  const zisaKlasraceKnop = document.getElementById('zisaKlasraceKeuzeKnop');
+  const magZisaKlasrace = heeftKlasbeheer || ['beheerder', 'directie', 'zorgleerkracht', 'zorgcoordinator'].includes(rolNaam);
+  if (zisaKlasraceKnop) zisaKlasraceKnop.style.display = magZisaKlasrace && rolNaam !== 'secretariaat' ? '' : 'none';
   const klasnummersKnop = document.getElementById('klasnummersKeuzeKnop');
   if (klasnummersKnop) klasnummersKnop.style.display = (isSchoolBreed || heeftKlasbeheer) && !isSecretariaat ? '' : 'none';
   const afwezigheidsattestenKnop = document.getElementById('afwezigheidsattestenKeuzeKnop');
