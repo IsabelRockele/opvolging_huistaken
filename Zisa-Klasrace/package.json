@@ -11,7 +11,11 @@
     "build": "vite build",
     "dev": "vite --host 127.0.0.1",
     "check": "tsc --noEmit",
-    "test": "node build-test.mjs && node --test tests/firebase-game.test.mjs"
+    "test": "node build-test.mjs && node --test tests/*.test.mjs",
+    "audio:plan": "python maker/generate-dena.py --plan",
+    "audio:generate": "python maker/generate-dena.py",
+    "audio:verify": "python maker/generate-dena.py --verify",
+    "audio:test": "python -m unittest discover -s maker -p test_generate_dena.py"
   },
   "dependencies": {
     "class-variance-authority": "0.7.1",

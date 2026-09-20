@@ -35,7 +35,7 @@ De test in `tests/firebase-game.test.mjs` is een echte online integratietest. Ze
 
 ## Nog controleren op school
 
-Test de QR-code, de schermvullende stand en het geluid eenmaal met het echte smartboard en twee iPads. De Nederlandse dicteestem komt van het toestel; Azure Dena is in dit pakket nog niet gekoppeld. Gebruik een hoofdtelefoon bij zelfstandig dictee. De leerlingresultaten zijn bedoeld voor oefenen, niet als beveiligde toetsafname.
+Test de QR-code, de schermvullende stand en het geluid eenmaal met het echte smartboard en twee iPads. De dicteestem gebruikt uitsluitend vooraf gegenereerde Azure Dena-MP3's bij de website. Genereer de audio lokaal en publiceer ze samen met de website; zie DENA-AUDIO.md. Er is geen Blaze of extra server nodig. Gebruik een hoofdtelefoon bij zelfstandig dictee. De leerlingresultaten zijn bedoeld voor oefenen, niet als beveiligde toetsafname.
 
 ## Klaslijsten en schooljaar
 
@@ -44,3 +44,7 @@ De tool leest de klaslijsten van het actieve schooljaar in de huiswerkapp. Leerl
 Elke nieuwe race of oefen-QR krijgt een momentopname van de huidige klaslijst. Maak na wijzigingen aan de klaslijst een nieuwe QR-code. De schooljaargrens volgt de huiswerkapp (1 augustus); oude klaslinks verlopen uiterlijk op die grens. Nieuwe links gebruiken automatisch de nieuwe klaslijst. Bestaande links schuiven nooit door naar nieuwe leerlingen.
 
 De naamkeuze bij zelfstandig dictee is gekoppeld; de resultaten worden nog niet centraal opgeslagen. Een naam kiezen is geen controle van de identiteit.
+
+## Vaste Dena-audio
+
+Zie [DENA-AUDIO.md](DENA-AUDIO.md) voor het lokale makerhulpmiddel, veilig gebruik van de Azure-sleutel, F0-limieten en publicatie van nieuwe woorden en hun audio. Woorden zonder gepubliceerde audio krijgen een expliciete melding; er is geen vervangende toestelstem.

@@ -1,0 +1,1329 @@
+{
+  "version": 1,
+  "voice": "nl-BE-DenaNeural",
+  "region": "northeurope",
+  "format": "audio-24khz-48kbitrate-mono-mp3",
+  "rate": "-15%",
+  "files": {
+    "Adam": {
+      "file": "24bd934a066e693b2d2e7243995d0eae6f0892be386fa8a873d728ec6cdae3b3.mp3",
+      "sha256": "a813e7ac5d3bfc38c5f130fa0148e22a28c1c994c112f2cdba2caa0f973f0ce4"
+    },
+    "Antwerpen": {
+      "file": "e512d1f9cd7cc859ac4f3d6b52c4ce1d0fd0571731c5cc49148870b53e262400.mp3",
+      "sha256": "383dac58d013f154d598e2798752d10389e6ce7aff5b72cc813c65e515736743"
+    },
+    "België": {
+      "file": "41be7d7ec43d89599dd64b759e6bb9c5f31459138e9360985327a006567331ed.mp3",
+      "sha256": "ceb48f22bb972930b74f07b7dcf5d96df8a38b72fcbf48047c0307d02601bee0"
+    },
+    "Bornem": {
+      "file": "5459d365baf7db9ce8e8ce4861569647ac565d152970d16555d74bd0f2f750e8.mp3",
+      "sha256": "c128e13659a4b0185b19f1f819f223fa2d690ce5451323e30e0911bfdd4ff78f"
+    },
+    "Brugge": {
+      "file": "bb76d73ce6afbf25264794aa5dce31decb1f18eefbe1c4f2ac3ac8896464562a.mp3",
+      "sha256": "9b60e52479bfebe5504ab6890e81722c353214e1c5df989089caea255fd7ca94"
+    },
+    "Brussel": {
+      "file": "f878350ddbc0885e99d073ff4b89aff0071d339cbdbd7771c0537843ce83ecb5.mp3",
+      "sha256": "e3f6052c6f1ac7bb58b3f2199a19f66052318c2e3c9b276bf16e3185842d1c15"
+    },
+    "Duitsland": {
+      "file": "a1d27dfd057cb1835a58ca8c10120d7c192aed3d38a1210026bcd9a2472f29e0.mp3",
+      "sha256": "f671db4e0a28eafbaed5a798a2cfcec9df69a6faae4e9ed8cde13266b61eb9d2"
+    },
+    "Emma": {
+      "file": "ac8cd929e7f070f76146a717ba1b0ed8047536dce8463ce098e76cf10c647b48.mp3",
+      "sha256": "5c3a2d0cf4f2dc44ec3f0a7d82c54fbea9ed08f3e0a80fa1da46cb5e5d2109cc"
+    },
+    "Fien": {
+      "file": "c9b03ab8e8defd3a4dc1ea5f8b97c1a0eaf589342b395a5175111963909d037f.mp3",
+      "sha256": "b1cefbcb624bf4cb4466a5da70d861c026ca1e59ebcafef586d2e18d26988c59"
+    },
+    "Frankrijk": {
+      "file": "f56d95389625b206251df9dc63b219ad9aabe6d2c60f565ecaba519456759467.mp3",
+      "sha256": "6688425f1e2e4940160758859b189d11b57181812cc90069730622795517c685"
+    },
+    "Gent": {
+      "file": "1cff70ddb2020b0280e5f29c057fc6859c41cca54105eae7835f4bba6955433b.mp3",
+      "sha256": "a2c6bbfee25613a29315079c9c3aab9e1dd190f3ae0c26da31a63f7e44b8df60"
+    },
+    "Griekenland": {
+      "file": "7ab8907cbfc0c8a774b0df036d25ac58987f41a3dab5bc03b38346556b086491.mp3",
+      "sha256": "1295703e6d959fc50e8cd48c6ba514aed5da5e9b0b53ace7e76f587292e22250"
+    },
+    "Hasselt": {
+      "file": "0eba0c77df68f0ef74c3a212a8fa334f32eaf09f3829b57d249e2d7007084186.mp3",
+      "sha256": "7ed034df79ab1e814f50a773156fdf8572ddc2a7de27ba58f00e31cc96b1940d"
+    },
+    "Isabel": {
+      "file": "c2545c560e5a3dff524b2e7138e1755d0bff7be39b0833866b2eed48af06b7ce.mp3",
+      "sha256": "92524fe4fde339747703574f089ad8c76d77264964d50a83546000b7fd008045"
+    },
+    "Italië": {
+      "file": "0dfffba20783742353cedba615dc17b9dc813a60b4684ccfea7ed40e65842b96.mp3",
+      "sha256": "a943e1685640043837d50bdeeb4779c7a816dc06c68521b8c5c9a7c0cb6ffa01"
+    },
+    "Jules": {
+      "file": "90375da8cbe9b9dc99ca804419cd6ac37de64410568188476aa0e284c29f52fc.mp3",
+      "sha256": "e87bff2527ca5ff30e0b1e1c35c97d15ff1ab12772c5bab118f8d3af68c7bada"
+    },
+    "Leuven": {
+      "file": "10d252034a0e00e9052b5bea3ef37d1e90ba1d7815e4e74512dbf5683ababd7a.mp3",
+      "sha256": "ee712dba6aadd52bccb6852d9eadc97992e2e01a375e563cee215cb0135da564"
+    },
+    "Lotte": {
+      "file": "1c4ab03ac131b8209198640d3fe6cd828863204aefd7497f79ffb34aa42a3595.mp3",
+      "sha256": "c675ef62daa76a6b863eda086f985da9dadd914c1a0df261d0bbe4c5f97fead6"
+    },
+    "Louis": {
+      "file": "a2b29d269d353e52a21d17c6773d1e945396ffead7775376782c5c9b29a5dc26.mp3",
+      "sha256": "6192beddda0844e15c579e64677eaf5b37db344054374d45e439885aa8ec374e"
+    },
+    "Mechelen": {
+      "file": "4ff63e0b83d7b84287677d66ec19f441c8d74ff968fcaf083bf99379ddec704e.mp3",
+      "sha256": "d4096dabdb9df9e226f60405827f955949fe6b4cef619e1f23f4a77b8ce1042a"
+    },
+    "Milan": {
+      "file": "728ab656307b8c5c6746fb2fa22dd56216508787f1839b2568d4c0ed12f63ffc.mp3",
+      "sha256": "f6a7e4710b6e9d7558b292d855acf9d7f8c5f3a6069145d08ffc7a08b241fe32"
+    },
+    "Nederland": {
+      "file": "c99818c671326bf0cced4e7c97501f72caf579fdd111a0cc90d1600d592e505c.mp3",
+      "sha256": "12053777f0d5a3c292321dce0bbad981b9d5f593e9ab51d235706f7168f286be"
+    },
+    "Noor": {
+      "file": "8749fcd8060e0c983200d4f2bab5ea285b0fad5d0ba471f9362e42202a788a5e.mp3",
+      "sha256": "f533a3f7091a5ca9f8316770401e2717c0beeb5e1eb18cdb8a7a392fc0a60b67"
+    },
+    "Polen": {
+      "file": "df871930c82d75d0ad370c607a80f4e9833ab03c6a6fb896e2e2a58cfdfc0fbc.mp3",
+      "sha256": "5602ffbb905ee1d8fbbe28dbd294d7b91cc2f0150165841544fd6d9e7f1474fb"
+    },
+    "Portugal": {
+      "file": "bba37e2736c19e34c70076990a6c2ebee294698cf15ea8f75334549b0b8b1cb6.mp3",
+      "sha256": "eea06dcbc0eff30d0fe1ee6505cd4574fcdf5786a9374252d00f09872d19947f"
+    },
+    "Puurs": {
+      "file": "bc19b0c75d81bad72abc8aa4680d1ff37fc88d297b113cc6fcdd0e6a1b29c7ee.mp3",
+      "sha256": "e80401e59db3a990b2e19f82c073e08fb08a7df96eaebe39c4db7513f13b5c4d"
+    },
+    "Sint-Niklaas": {
+      "file": "ef4d5ad53dae0f4514edc5bfbb1bb84941ab46b14bcc745d6d317a86123d7975.mp3",
+      "sha256": "dd40a0faa1609e7756ffc0e9098fd028ae222cda897b8dfd304eca42c5bf5424"
+    },
+    "Spanje": {
+      "file": "fbbc915bf8c3696db17cb8add5cbdb75f5ab5880420848dba51f1348d6974d18.mp3",
+      "sha256": "06cbccf74af45ab9e5e3f106c1e38bc017e8d3f6116d5e63fab73cd6cbd640cc"
+    },
+    "Yara": {
+      "file": "01fe019a38dd8ab67928de588e90f0fe4b95ccfbbb10deec6d38d4094f505d83.mp3",
+      "sha256": "773f51d138692192087509d9ce4ae2d6b174a9e107df6bc6481901924858053b"
+    },
+    "Zweden": {
+      "file": "6215893306fdea7f7bddbaf6518717877b2065d96976142dd859e767764ff8d2.mp3",
+      "sha256": "2f04709c3e9c189c1e3ff2afe62fc6789b76bb7351d52c5460e9a063c725e8b2"
+    },
+    "aardig": {
+      "file": "cd5a847c81d72ceb52d84791bb501b0cd1e41f66f2b915e7d7714e63ceb28b77.mp3",
+      "sha256": "afcf6b9f499a5ad8270e5834d819090fd83efa1b9484f458dc89b250c1e6b4ff"
+    },
+    "acht": {
+      "file": "c3120acadf354001dda505a1da343ccbe95008dd563efc71624530d7d74e0b5a.mp3",
+      "sha256": "c345c49c964925d4a53579ff0dbd58d012f70d32abc26aee3c0cef7f0188d1a4"
+    },
+    "bakken": {
+      "file": "f0e8c529b0403d185e8bc0f80fc2758e9a797a514bfa69563a9081636bfbfe2f.mp3",
+      "sha256": "a927384e6a69565e18988f1d9641c2aca0ca5589cc04874f2475b045970d3a35"
+    },
+    "bang": {
+      "file": "de44f49804aed1392d32e22169b483d794610b49d8df549b46cba1eafc6d3c03.mp3",
+      "sha256": "15e5a9aed0d95b30c218820781b5fbddfcb64f67179f1578c928d0b9ea898e5b"
+    },
+    "bellen": {
+      "file": "8dc90414614ea236ac67b801372bd2d34d5ea5eefb097dbe6d508835a726a8aa.mp3",
+      "sha256": "9ee92f73a2fc9e3443d1eda3f5ad084ca6b19f8e866420be6ed2da43bdf37113"
+    },
+    "blauw": {
+      "file": "dca34b92ec76631515b7e9dbd18e3a719e36119c25b239ee054521653f5b641f.mp3",
+      "sha256": "c05c513e1850c6bb047f571d749c40d82bd31cc64b8199eb92fdbde146b64e63"
+    },
+    "bloeien": {
+      "file": "66322f448ef98fe984ed18317da52e288a697b46dcd1aceada7dad2bfb083f23.mp3",
+      "sha256": "570ec8290c26d42af2f83ff804911f448b64767e13d9f8ecdd1e68804a053a93"
+    },
+    "bruin": {
+      "file": "71e0a54652c795405581b9d7cdbdc158c5a27ec8ca7eb63b0a697a1305cb4648.mp3",
+      "sha256": "c8645a9c8e54bde86b0723386370b851f14925e72865282d724fd20849708b12"
+    },
+    "de aai": {
+      "file": "1836765d06f31b535c5a762ea031707c17f6873a31cb33d091df19e68892fca7.mp3",
+      "sha256": "cd9280cbcf0c837ccddd498cdb235747edd04a699697a5ab6cc42a3d01f4d24d"
+    },
+    "de apen": {
+      "file": "a57e81c373b54afe6af6f7337c00e7ea95e4a45ee9e87711aee7c03daa9a0ff0.mp3",
+      "sha256": "7bc8865841b4399d0d8fcc30dd630913c449eee06eaaa7cebc2abbf24af73e72"
+    },
+    "de baai": {
+      "file": "a50304ab537f9dc2f486e8d8bee4e5b09c72d7fc22e3631bbdbbe9892ca86d5f.mp3",
+      "sha256": "bcc19a420a1b4bc06d77dabdfe5d16fb3e87018f61389cfda56805ccd053876d"
+    },
+    "de baard": {
+      "file": "d093cda4c3989c28f57383e75e1c9119a0ad7f12534c9e312548436bc7136416.mp3",
+      "sha256": "8c48d084af16f5e10034528ee3de295f977c9e05a6c74efcee271f9fc3364790"
+    },
+    "de baby": {
+      "file": "b9294423e3613e97d4d144965c4821ed6f4bd3220f6a21f4d69425493f12b0be.mp3",
+      "sha256": "8f84b8d1d62f746bbfb18c572489730232d30073019ec34c2dc7a6a68cec1bc8"
+    },
+    "de ballen": {
+      "file": "36aa86e8b237981040d486e1ebb58e45f1fac678673157116f67ced23f605836.mp3",
+      "sha256": "0951efc8e461ba8c247a9fe735c70d60494e38e160296ec3fa2a9ad7d5d7ca9d"
+    },
+    "de bank": {
+      "file": "d89228117ee0550b309b9e1599f13c39d752ec539a97b4bde93e57be51c563a7.mp3",
+      "sha256": "6525f7ad34ffbf7f9692c9ada6f2b6ee40fc297a3e3d9035fa76f9fa6c442ad9"
+    },
+    "de bedden": {
+      "file": "9e92b63525007e874742edd4a01d59ae8cb4da9426f244cc735351ff6d0c2268.mp3",
+      "sha256": "1a03baf9d3af20e14dd1556acbb3c3cb22f2838282ff0cdf3d7ff3787cce3796"
+    },
+    "de benen": {
+      "file": "296f6da2e3a18b5e9aaa88b2c7d3dfeed999396b96f97089ae987041b0a61e57.mp3",
+      "sha256": "e1d5728167cd5a6764db0eb1a949c4e3e2056426488cea19410039a3ad7883cc"
+    },
+    "de berg": {
+      "file": "05384484b12fd1d8b9d7eb14b3ae7d8aee2c31cecadbead40839c0530d93c912.mp3",
+      "sha256": "b60542c4938bc2c19b84c4d3e12fb15899b064a332723bec6ef37f8b0509e309"
+    },
+    "de beuk": {
+      "file": "3bdd137035ba580ec428536fcde184f672ea8b83edb6c78bbf991259cba3af7c.mp3",
+      "sha256": "17c62dca167a7aa1d2924691f1508290aefd2f4414504b0b2ba474aea975a1bd"
+    },
+    "de bloei": {
+      "file": "04be92f1e086833854e7dbe4e1c000dedf35dd124bcf6289df03d91454d7df01.mp3",
+      "sha256": "3485b65a44309351c7be8fb4f09025c39594db183b8283b6d0b5290ea1f10892"
+    },
+    "de bloem": {
+      "file": "1ed2cfe43862e84892cd8614c8b475ea2a28c9194a3c3d63f68dd5da47df2bc9.mp3",
+      "sha256": "3c3df5f1d791856d9597a9e0e32fe2dd739249cda04fa01d6b074b77377255ee"
+    },
+    "de boei": {
+      "file": "20fd360cbed53969c5b6d7ca039220d920d10aeaf42f3692d1e0fa0415432a9a.mp3",
+      "sha256": "a85220d16aa397f6b1281094c935530b755d0615e38a3a582c4767d1c0f51620"
+    },
+    "de boer": {
+      "file": "c2d517057ef26ff8df680f1229cac8ecf891886f22b6cf012d05227ca3ffeebb.mp3",
+      "sha256": "a695616251bcc75e90133d26fdcded3977b25060f50916e78ecd6016b58292e0"
+    },
+    "de bomen": {
+      "file": "38d559276b649268eeca40fd115a156e50c689d91b39dde5c2b5584f7635242b.mp3",
+      "sha256": "7f7cd584a0a5381a498cca3343a899c8712b79bdf8e5eac2c3d3194ce0ef6e54"
+    },
+    "de bommen": {
+      "file": "5523e72423b1adc60d1450ddd32af8d2e4f8c3aed68015347ce6b844363be1fc.mp3",
+      "sha256": "63cea3ec43b24103534f45c531582ac9e7d203d9408232a63b853dc22b9263ba"
+    },
+    "de boom": {
+      "file": "104b1f7e160e9930eaacd9d74a84afdf372598a23b58df8c2ecbd2a568239fb2.mp3",
+      "sha256": "cb0bf5abf0db0c0d509f3ef27751ba30257e5a3509470964df89f2859edf6948"
+    },
+    "de boot": {
+      "file": "bfcf83420b6ecce6f32f1616754255f2e9996a0c0519e57b466db6ff81c5cdae.mp3",
+      "sha256": "1011955f30e1a58fea565774be55bb54fea6cbccc7973b0dca856490cd6d01cb"
+    },
+    "de boten": {
+      "file": "feebd400e1e7d7a0164d51a15596fb59b4c7fa5d7795be1453bf1d8b1afc6eb1.mp3",
+      "sha256": "b4abe5c8f22d18bcc18d4deb2943711673119e6b1491a676d472ef7bc5db8321"
+    },
+    "de brief": {
+      "file": "d816d2d3730614c682d7b8a5427a4b134fd21ab96eec3f7b2da94518aac218e1.mp3",
+      "sha256": "cf98aa2885a511ffad17306d68f8140768ce78cdb48116e0e1d55bb0f7d02b32"
+    },
+    "de brug": {
+      "file": "aca21d17b74fbf4ccd3e8292103ecb772795efa1d268d543b01e82be590314fc.mp3",
+      "sha256": "a422d8e81706b04fb900daed1c89fc0dd0e4ff5a3b892d0f40e0e4f9d4c8b93f"
+    },
+    "de buik": {
+      "file": "494066cf0aa2bb88da18856663671a0798200fe260b0e83e4d45b6bca3ea91ee.mp3",
+      "sha256": "14f1130a26ec36b18a340720456059c88454ac62e3c77023908e9053f055b5fd"
+    },
+    "de buis": {
+      "file": "f21a0ed6e7e7c909472513f46bba7b4c833df92ebc7a3d6ef1abe17ebe16fe18.mp3",
+      "sha256": "d391af56c37ddc563541db438722c467e5d5bb10105f85aa9130e72d64c29b48"
+    },
+    "de buren": {
+      "file": "eec11556c3c6ba998125cca42ee5dba4bfb39479fad264e15b7689a26107aa0d.mp3",
+      "sha256": "e16eb29e886a1e4b0325f42850c86bc785b6229331bf1c6342fa083f159cc280"
+    },
+    "de bus": {
+      "file": "b00be1337413d798389f9bbb48c03ab6226c4bc0f46d19a9174a2200944de6d5.mp3",
+      "sha256": "40ee9bd16eac087020ae7dc3c1b3c1742c430d451bc8f9d1b18311b5567ee009"
+    },
+    "de bussen": {
+      "file": "9518fa9cb4209b6d1b09c5b74ac3871118c4df000da980365db7b0743ffd229b.mp3",
+      "sha256": "126d6743c753c0d61c67f1df3b83341a7e47c8456d12e4182367c0eade39d4e9"
+    },
+    "de club": {
+      "file": "9fe2d45c2ceac01c5256852eb382b94b6d9bf6edc1ee0ee7e22c46f42afc3783.mp3",
+      "sha256": "e32d699c1db911aa76fbc6cef64ba8fe45362098dc155734d9deab131151da71"
+    },
+    "de computer": {
+      "file": "dba0c5ca27b9967fd1ead4f509f62568a5a7fe3fcc7bf1c40f3efada8aefc5e6.mp3",
+      "sha256": "2be3850548bc5fb33722f87c43c0edc2807701b44bc6204372a464048da03845"
+    },
+    "de dag": {
+      "file": "5d38c6784ad57d6ee388c1925898bb7246fcf16e86baac726a30051f41d5af77.mp3",
+      "sha256": "be0ff89fcaabc261f8337c9e348ab5e525df130e87eb18a01870fae674711b0d"
+    },
+    "de dank": {
+      "file": "44a84b501d469103219724cd96c3d97b7193f117a8c27cca23aad1347baada6e.mp3",
+      "sha256": "7778d1c729912a05f088e314a52c54aa72e08cad8f00a5fe5c90cffd7d12f687"
+    },
+    "de deuk": {
+      "file": "2c8ffd508f707ada068e5af75dfd5d1d0a8d49c86ab1003bb106c974bc01979b.mp3",
+      "sha256": "f66eeb54fa0dfc6f8221f003b5d6e92a9999d1613f95d7269f7b988a478d9b28"
+    },
+    "de deur": {
+      "file": "16d907c34bc71bc65d3b3a59bda1b63e038ebb5244b577fa9a43fd313d43a253.mp3",
+      "sha256": "d049c0234bb4c6c4705a73d6658f7e6ea5b1236a35c784b92a9ccd44c94741f2"
+    },
+    "de dief": {
+      "file": "e8f1163a738cfb2db9f0d6c51883f0e8ac8559f0b997bc629bb87185b351637d.mp3",
+      "sha256": "bd3c89e47c98ad87c639314fab709e890f4c1cd37473145eb30d0d55b3267f00"
+    },
+    "de doek": {
+      "file": "90ed6dad3802b592c6a8430fdf266cb1d413694f8902bda61d223582df0ea336.mp3",
+      "sha256": "907cdc4c8e17afc085ea1a2f260e59c0710fa8335cf1376daaee878307342bb6"
+    },
+    "de dop": {
+      "file": "6c227e15aece4a127b8158880f9922efc88cb6856d1eae497a02a314eed7aa9c.mp3",
+      "sha256": "a0d7efd3c252ad9d53ec886302c8b47a292334cad1a82a8b0f4eb71c8434ad35"
+    },
+    "de draai": {
+      "file": "acef05f6bfc45ca7db8f26d5bfe72065b5f59a4fc6872d5412dc95ea712700ec.mp3",
+      "sha256": "369fe718d71f5f3e464b97ab1cbc79c5830b960ade511fbefac811532248ad04"
+    },
+    "de drank": {
+      "file": "6c215a51e563620c8614fd5df8eb8f699ea4d68926f7c3fe6180c6f62260f749.mp3",
+      "sha256": "befcb4966dce07ffd607648af730dfb6a4266c8ddeee64193d31bf902e5420c7"
+    },
+    "de duidelijkheid": {
+      "file": "502ba64236a69cf6474d2b0dc8a8130fc6e85a81e3700cc814d8c76964b44211.mp3",
+      "sha256": "1e8d09d22c5342fe43f5170120b856b48bba09e95b9406c1d664b45467b251dd"
+    },
+    "de duim": {
+      "file": "2d86e071e19fc46431869b604d625a40354983caff5aef35c4c12d2146696e41.mp3",
+      "sha256": "0894bf200854f703a9ecbe94cdf2b5790b7614c25871564ce33d36dcacb32f4f"
+    },
+    "de duw": {
+      "file": "937388edebeaee9c96623e6d6708d98e14b770a19ad99ce3d6fa64820bffcbc8.mp3",
+      "sha256": "4b9ed016b3d0fa4587f5adbb72b1f84cf9f7a77d3eb33d4a1a648480339ac3a1"
+    },
+    "de eerlijkheid": {
+      "file": "2c0a18fe2f311791fffe448d7365f488a6628f3a21ed1efc3512d0c4c0206400.mp3",
+      "sha256": "b298ddbcef441d2a75392d9bcc7daab6a4fa0e5c29f7d56fd36ddb1292ff8bee"
+    },
+    "de eeuw": {
+      "file": "4e54fc5ebb2ade2dafb5c8148373bdc83c0dfa4722309eec5451e420647db977.mp3",
+      "sha256": "24b4b4bd57e29ad42fea7b3d77b8ddb482bccc6423add25ced940ea7360b1db6"
+    },
+    "de eik": {
+      "file": "bbb0c4503ef60d78044c4b89f7f2575d487013f8e89a7d4663edcd6feab23d22.mp3",
+      "sha256": "4861be6ca0b0034fc1313bdc4bf0122878b5eb5d8d546c33859895a44fc94809"
+    },
+    "de fiets": {
+      "file": "cd9c00c744fc7eade987bbefa30e61c03562078885815c8d33c154931b5d2a04.mp3",
+      "sha256": "5fc70269cec744dad32c3426f046ed961f9f4be060745b8526f25c2b1d1d3e92"
+    },
+    "de fluit": {
+      "file": "d9ca8a6d6d467ca048f288a2a8d3e9ba72bb556920399463e944f205c7cd3efc.mp3",
+      "sha256": "8b8b288c9ea7a9cd2e63f98cb816c7e0be1244ee7dd6b5450220bca117d80d3b"
+    },
+    "de fout": {
+      "file": "d08dbdcc6a3094c2ea37137cdcff61f1b1ed77d468f6635f7c67d366b6836477.mp3",
+      "sha256": "efe0f946b6289e31388a78b6046d4e4ad2eceeb8b9392de8b9b99a3abe002400"
+    },
+    "de gang": {
+      "file": "14a90ab65524369c5474a949f287a2fe5f30a178cfcbb181ae55b5e9d37edbca.mp3",
+      "sha256": "8901071aaea290f9d6feec1ab19d12bc4fe9c2b69aff0cb5a3f3b749e26dfecb"
+    },
+    "de garage": {
+      "file": "66a55c72ae88cc0ee741fdac6737c29d2391cbdd23da98975a910073a7d32ec6.mp3",
+      "sha256": "5af6be41dfcf0f4a4d38a6ec42728046c1fd2e87ef81efb4fb625f72d087e6c6"
+    },
+    "de geit": {
+      "file": "425b06d84105259ac965e0bab347492ac93447ea03f486477cf50733897fb05e.mp3",
+      "sha256": "851596946f78d768f75bdb9ecd7cd74d776be6960da42be01c212f2c033d3701"
+    },
+    "de gezondheid": {
+      "file": "3076bdec54d7c2c9ea8326f2541f91566a6f7ff76a69ed74d1b91b25bb9a5f4b.mp3",
+      "sha256": "67d03a71b2055e9e544e0831457fa3dbcfc4d21a85407f55a032ef27521609d0"
+    },
+    "de groei": {
+      "file": "996ef44953f14c233252f9471f245ce381a4e582bf437fc99e566757d95572fd.mp3",
+      "sha256": "a597a1ac12e332dde98df31ae0eae25d1eae979d1f6c1da8cb65bff8d3e89d1c"
+    },
+    "de haai": {
+      "file": "6e6035329ce5f2b684a006f3aa64f918fb2a81ea7540d46cca8ffc9a814da9a6.mp3",
+      "sha256": "d850879c9ed4cb0f315a9b9d96b9e3ac679249871a3f88c87eb60ef7f35de153"
+    },
+    "de hand": {
+      "file": "21066bcceb8d36ee298584d72cf8d56feab61ce6662fbc13895e32051d6bc2e7.mp3",
+      "sha256": "ac51f1a4b3e09f899367ccd4318bb2df394813f86e51557789c1ee450276ce53"
+    },
+    "de heup": {
+      "file": "11fda0f07368000b22bd95e0894f4b7ee19bbe545a86d9acb28876d524ae4cde.mp3",
+      "sha256": "baad30022603b5e8e7e4d843322840df474b4c617e89336db2cc8194ad0d4955"
+    },
+    "de hoed": {
+      "file": "a0ccf9c773cc698904e06fb390b75f2758aeb9f44607672a31fb8f1d49636094.mp3",
+      "sha256": "a7807fe929020f5916879a9d493aef79cc56513400be02bec004fe6036213081"
+    },
+    "de hond": {
+      "file": "d511336430c9257be80762e9e1e673d3719610327d0826b44f984e2a3b4ff818.mp3",
+      "sha256": "c06f05ad9c44943540eae5fbd15ef0d7281d3304c9bac1e9bbf59c5b5000fdcf"
+    },
+    "de jas": {
+      "file": "b5b625284b44b33af5a409f407c1a8f682bbba5ebf3279c6db2b650db2ccf2ee.mp3",
+      "sha256": "6397bc9ed57f07037e9457b445740642b615e09eeb7906338a23078168651f74"
+    },
+    "de jassen": {
+      "file": "d442b43d538841deb7d474338888afc3f781d89e7d97edaeecd5e3494ed03e20.mp3",
+      "sha256": "e12d29dbee807d90e115c28986a537611d6c7b011d996867d670827c3833e583"
+    },
+    "de jeuk": {
+      "file": "d095bf573a138d77b495ce7171fe5e70f6205d35b7fbdf0524ff007ccb583501.mp3",
+      "sha256": "38cd4a0320923cfed2d8e96d8cb99faab25dae8e0922b48596be55e7771054a7"
+    },
+    "de kaas": {
+      "file": "72ecb71f17c6e086e5dd726c271e12de5893581803853eb2cba1401ccfb8e1f9.mp3",
+      "sha256": "75f1105d811e73e0bea3c94b7bfe33c02b8d96b543cd68d492868f14d9ec114d"
+    },
+    "de kachel": {
+      "file": "55feda902b8e0275ce28ac45318ff2268c5dd36911f488bb45c43a9a43f45f26.mp3",
+      "sha256": "c6dc5fd0456da2cf1dcd2f73d25db194147d6a92d908fc0ae871081c0bb069e1"
+    },
+    "de kast": {
+      "file": "fd9688d7b387cb655efc2a320d1753341d11350ba4f8e434d45da8e45c3f82e5.mp3",
+      "sha256": "6df45a50a4228352130ca285956d3145ba9e1d826853dfffddd6cd88e2ed3fa9"
+    },
+    "de kat": {
+      "file": "68a6ab9c4748fac95cdff257df471500ebe427448b3876d534f12b929c54cdf0.mp3",
+      "sha256": "2943cb15c25ea814e23d7284c7e31456b2a7c2d7f4865e71ee4ed34fa9b45eca"
+    },
+    "de katten": {
+      "file": "c9823895d5e048cfa0e1792a320a62a9cd854c041b7952081b41d31cdcfe47b6.mp3",
+      "sha256": "a8b84944b84d9e1d9747383d2b6562ec67d20a7a5b4a4cdd46c10634dad318f1"
+    },
+    "de keus": {
+      "file": "0839e9a5dd9648cb6eebde85127d0f20aa4e55a026e0f76eb8bd4243c95515e9.mp3",
+      "sha256": "5bb2f30b8b80047d11262b1c599fef7810867e8ce7e23a9ddb5a07073099f0b7"
+    },
+    "de kies": {
+      "file": "18f721f6d69c0ac0bdc3293b99095075ffc4ce6e9c934eb21b4e58c7274a6ca4.mp3",
+      "sha256": "d45707abe0c77bd3a423adb656a94acf6465b0ce44e1a7a9cf51310e9b9b9399"
+    },
+    "de kikker": {
+      "file": "f95025859b9c9561eb78b09ea5bc00d95d65ec1709d92cad967ca847a5db6b68.mp3",
+      "sha256": "055c2d4009e2979d24e3cea8aa4a24c26f53e4088d4c0912c38556188d427bc0"
+    },
+    "de kip": {
+      "file": "751416ee7de506c4623047c4385f8c6f19d392176065b8af8ba365e4a1af04e6.mp3",
+      "sha256": "5c51a2225179d68ac8a4c47f1b7a9b5532c116509311fc5e45d476785dc41501"
+    },
+    "de kippen": {
+      "file": "8655738b8d73b09757bf8d5d478cc473fb2dedbbfb5054b7ec69913c67b1091c.mp3",
+      "sha256": "7c28a23eb8b80746bb9dd1514a5fb2f5ef545eff1ac94b9fcd64522ce455ccd1"
+    },
+    "de klank": {
+      "file": "c4d8710439be22f39ce07e107a51082c552f51ad089e0ca1b01819717705f882.mp3",
+      "sha256": "2e8cab3771232bec928784ab76404f15682cb6d78072a85f3a8ae61a379b1c99"
+    },
+    "de klas": {
+      "file": "651120785f44a80d164d7818785ba7c26f3a9b5845a8dc3638f505c7d4ab7766.mp3",
+      "sha256": "49a11e304d594cda13de9b5f9b3f8be079aa6c21c00bd40a5ca143555ce97bcd"
+    },
+    "de klauw": {
+      "file": "1f5e787e53b421fe24cd5b73ea1926ecb8c1d1aa9083e3edab390bfdf18a645b.mp3",
+      "sha256": "7a85ea433ff08b1105c7131cd43d24cbbe4d76357ceda09495a09cf3b10104d1"
+    },
+    "de kleur": {
+      "file": "01a6dba0f7e8d2024a40426443158413ac5f9b3cf708cb9b6e208043670483fe.mp3",
+      "sha256": "9d427bcc098eed3ad646b3c80a560042d5cb106fe9df9244ce8848aa6768d5f6"
+    },
+    "de klok": {
+      "file": "fb51293396a1d1b08417e45078ebdd07c49ef94de3162b585d77057c9a329d69.mp3",
+      "sha256": "8c4f4df3be6d417b112611a308fe8c6c8bbaa3021deb0fb3f0c684a4a203b89b"
+    },
+    "de koek": {
+      "file": "2f103be6643e954cffb87ddecdb9dd445b772a2adf19d545e624b582c9b9fe2f.mp3",
+      "sha256": "332c7f25e02800c8b71897173c19cf186e8f5aabbc06bc4d5b3137adcee93817"
+    },
+    "de kooi": {
+      "file": "d502ef789da1ca32d2361938a52e3c3d7031660249bc5607add8fd7187fb770e.mp3",
+      "sha256": "4f847e80afeb9cab437a052e9fc37ba10ee42ab45770a24f297733569e702641"
+    },
+    "de kop": {
+      "file": "b411aed7bcc044d6b04788c2571c8b517c928ef9f8f005037c8eb86b8e94b0cf.mp3",
+      "sha256": "905bcb5bc46ece027d4751dd1769112d79d79caebba1722767feda4d639e7f05"
+    },
+    "de kraai": {
+      "file": "9dca6ebe4ae6e9e8ac2b1cd7cfa0c16bd8c94866912b84d77fcb9ddcd56ff1e1.mp3",
+      "sha256": "57ea18973f5b8a95250b15c072f647f514fd8b977230deb57821412708e127aa"
+    },
+    "de krab": {
+      "file": "b7da0692f3074a3928dec08c93b3978fae295a7cbb1236b2d61f70487c94a073.mp3",
+      "sha256": "87457eec501a60ec1466ad0159e36b70e782481a6b3835132b331b107bb4ea56"
+    },
+    "de lach": {
+      "file": "c37ec4ba4c488ecc28f3cb53cd15fc51b1ba8a7deff9aa3444eb35194747e3dd.mp3",
+      "sha256": "df60a6a1194345c1c147f18e00e92dd008a833db2d1ec019c5b5e725b734120d"
+    },
+    "de leeuw": {
+      "file": "6f7c55c4b1dfb6c1e2cf37e3e991f2d1b2fcc17e209845e85e20e704f5de0cd8.mp3",
+      "sha256": "c3b3dc489a933f33312cd4e99033e8304c54ca4fa3c699e87a5cc4ddfab3c67d"
+    },
+    "de lip": {
+      "file": "d82c1bbccad4bce1c7bc61085e43810b951d420b93f83cd11cb509b92c2989d5.mp3",
+      "sha256": "798e5c88dadc83b7acdbb74fa5d6236c7f53f804a2f718b8818ffa3e122d211b"
+    },
+    "de maan": {
+      "file": "009df3966020a8ea9a0c35707a6124bfb4c12b1b6c10eb491d202a8e9804d94e.mp3",
+      "sha256": "806f4db89c16061afb7a3864e36f704b8049270c3aa026ab6046860de44d2d9d"
+    },
+    "de man": {
+      "file": "24f3342b52c8d7608dd84dbf15112592b0031bfd8241e9088508c5e957571d2d.mp3",
+      "sha256": "e843a03377b1b5ffd0bfe7c56691d8b7f5ac12159a766715a19816eb498675f6"
+    },
+    "de manen": {
+      "file": "b63448b25c177ca04dcc0610de94208fcc6a51f7785c3a44a28279ff58475ff3.mp3",
+      "sha256": "c4a48192f74d26f62e3b3e938c99d3c05131fb0746a1bf16d82c9d56fe15e799"
+    },
+    "de meeuw": {
+      "file": "b3ea139646b266c4ab6447d90db2a63c9d570c2e7fa1b150c2b593f411857455.mp3",
+      "sha256": "767b9944511ebbf19640461d091eef93bb26c69fb75d74a5beb878c46125e01b"
+    },
+    "de melk": {
+      "file": "7fc3b53933c4f3a21f834fb9d3ff337fddb025a2e1de444ff438aa8b5a4f50a3.mp3",
+      "sha256": "0b60c09dbcbba202a623cdcdef7bca723cd85f5bf6813af8e16ac176b83cdaab"
+    },
+    "de messen": {
+      "file": "d0b67c41859d28a5370ced7a4321e763d4120b91a9121e9432576de939c334f1.mp3",
+      "sha256": "67ca5da56a41fc814f4118ec106a5dd61c97c156f81bd6e2b7e8c4e0679ddf4a"
+    },
+    "de mier": {
+      "file": "a19395c3b126ef5bfc08eebbbede254c37149ca0c05181ce560cfef0b6dd9b8a.mp3",
+      "sha256": "3590441038ef61dbac9aecd47eb26387d68a9fa37383ac2ddc16cd7f9278a535"
+    },
+    "de mond": {
+      "file": "0e8eb2ec1d3d2ac5a6f3b6c10fb549052d503df97e93cb9748a6eb7df37a2a51.mp3",
+      "sha256": "168ac55cfd9a624b7a4fe98d5ebf05809dbafc0431a10d51cf83300bf01738c2"
+    },
+    "de mug": {
+      "file": "5022f56904c76c225b281bfec68245b981676ca3fb94c7036994c34c2bcf41a5.mp3",
+      "sha256": "46d87854f00c508e24bb5873d3a339d7e0f2ec5a864fa06d427cc1f67cd16187"
+    },
+    "de muis": {
+      "file": "1eaed410127694e8faedbc825ad905f79c895da8639000b4087877d5cd2ca349.mp3",
+      "sha256": "7bd4b7257545bb75a4389937e5d00fab9be609c5bb79fc5f10e96357cc8255ae"
+    },
+    "de muren": {
+      "file": "5e71f199f828f7d93ad57c359e533033d8830af9093f78ca43f4d59c33a67350.mp3",
+      "sha256": "fe8ddee6448b95d9c7c6c068a4aeaffcf4b86ce40f81200c3825b415d2d98eb9"
+    },
+    "de mus": {
+      "file": "535e9bd98336a7fb28c6c6e0815e1cd3666776e6da300d1ea97a369b6da73ead.mp3",
+      "sha256": "dcad3c093cbde1b7bced796885adacee83e784883be181b2771afa28a13c7022"
+    },
+    "de mussen": {
+      "file": "f5f7eeebf7a1d69d20622d10351980ff8730761f462fdf8f435b3265acb542e1.mp3",
+      "sha256": "e5c5fb4f1eefe3bb0efee81f804e5e61a760f2d55e81c84d51595b271af65133"
+    },
+    "de muur": {
+      "file": "664cb28201d035e0a51a0c52b3123f814f035b95a501196deb2947e91a4fc776.mp3",
+      "sha256": "9e742eaa55382b75677fd5f242eb6e8a15ba4591946858b5462ce6c7ded7adf8"
+    },
+    "de neus": {
+      "file": "90be14d225021373fa3a08d535ecb5f986791c4e6a970ba7637dd3f0cb5e8b75.mp3",
+      "sha256": "3d82de4ebdc06950b4f077e7896470639cf318fb9deedcb4bb836ae085687699"
+    },
+    "de nieuwbouw": {
+      "file": "7e9eb5894904269c3dd782cc357435372802d31c9b16e04e966d536b37ad8193.mp3",
+      "sha256": "b2c2cffb3366d6b4117131515aa4babea0da37f98483a0de716c3abc5ca67e05"
+    },
+    "de nieuwkomer": {
+      "file": "cb6fed287c5cafbd580447a478d2946c9bdc9e2eebb2a53b8d440d67bada6654.mp3",
+      "sha256": "e87f011151d20873707d2bfd83e4f7e3a8ec03c25560c71f9fba6725822640bd"
+    },
+    "de paraplu": {
+      "file": "77f890ec57c2c8a5c25e826587985bbba63d118dee52d8cc01fc9e5cb8582ef4.mp3",
+      "sha256": "2103fed5e399e6b62bdba3651c4844740846163f015d36a6ac28e646708ebaa5"
+    },
+    "de pauw": {
+      "file": "47a3f287cb4d0042fb6b098224e8f04655c873cbfbab199f905e42a743896e95.mp3",
+      "sha256": "e0f8a97e4de582196cb1bdf130d601a2e1ecc8f69b77bae5a39ada8389b618d7"
+    },
+    "de pech": {
+      "file": "32b9122675a0a7307f4ba10520b61ea5e7620c9a3a755a54c7ebad135f0b24d1.mp3",
+      "sha256": "3cb91919ce6fa9a9a7692c1226bd9d6cc75f0c9383ae483769aba2163cd2e884"
+    },
+    "de peer": {
+      "file": "0d20478bdc26482741a119b386e2b20895d0baef31ce7bd8e056d13f1d8f4de1.mp3",
+      "sha256": "dd9e7834bc523ec30545ceaa599d04637a52214f8af04d8acca981c0af1a6c42"
+    },
+    "de pen": {
+      "file": "b76d8cc773ff8e59fb3a29eec37e78ba84119611c843f5e055b5eb20fb8d6a4c.mp3",
+      "sha256": "401fa87a3a0b321dbfb179083f055cdb0f2a32417ad6a5ce4ca5f4aed0883103"
+    },
+    "de pennen": {
+      "file": "4285e3578476f864cb51bde40c79bb1b9118ff3d70c6f68d970a01660cb8c500.mp3",
+      "sha256": "5d5b1743bf982406534438c920e4cf2e6ec760e3316f0b6510c3dcd4e161a770"
+    },
+    "de pet": {
+      "file": "3ac84f8ad7d805f2b06644e19f593575a2ed85757d992c3ea75bd368c0e78a6e.mp3",
+      "sha256": "27710f8e83f293845b564b7e8c41aaf993d6632d46b475ad7780d41ab17e986a"
+    },
+    "de petten": {
+      "file": "2c597580b8fc5a595beb4904ca295d7e8b22b3e8ed231d9fca24024738a42e89.mp3",
+      "sha256": "86dd82c53dca94a85e2d2a8a6afa0b6e84ac51c385810eac56aa78fc7852123f"
+    },
+    "de pink": {
+      "file": "3a320b55a4dbfe00304543435b4b32f752ce3421dc48bc636d94e061aaffe7ce.mp3",
+      "sha256": "cae63011d80002336b15fa4cda0a0fc7c3175a10b64991d59f512262812ab24f"
+    },
+    "de pizza": {
+      "file": "b021d088f40d0c2af75173912b58840568a71f38c699ce7fa63d53b46b6e4ebe.mp3",
+      "sha256": "00673ca6695ddff3c5febf4eb6694c1a97a2a81b4aec733ad73c28a0234ea176"
+    },
+    "de plank": {
+      "file": "a7ff00ac9dedd73adee3f966837c43fa31e313a07f35eed198bc1384289d3f2e.mp3",
+      "sha256": "5ab8700d1950538e544cd94b1e4ba2e7f77ad38a257b0e59cefe6cf98c1c776a"
+    },
+    "de plooi": {
+      "file": "1bac20b418c3c6ee769303800b3b67c0f167b2e6a4b74da11a357626460b2d95.mp3",
+      "sha256": "d16aa1243de8e53ec3805e38bf9d24584983567462567cbdb3c4d1641b849075"
+    },
+    "de poes": {
+      "file": "1271eca5c42a77d731475f102b1c369e64d09ad444e0886a1fe5302a5c4db3af.mp3",
+      "sha256": "c1fa4ba147968371edd7769bae7210a4e0bc4131833e0280cd2ede39f44eba3d"
+    },
+    "de poort": {
+      "file": "cb01a24697853b6e49ea3edc13556fdb4c4326dccb1ff27c56c2630ba07897fc.mp3",
+      "sha256": "2581b8e35ae6494f30e2b62558a7ad9468394c86f468f095230cc1ea23fad8a6"
+    },
+    "de pop": {
+      "file": "76f3b73236849524b384d17b1780cbfbbb94fa733c65c1c06cf7e56581058ee3.mp3",
+      "sha256": "916aa0be41086ea9a906edd63f30523d496b7be2a30b5cc6a10c901aa251619d"
+    },
+    "de poten": {
+      "file": "4deb7c8c16d39515661c59e44f5da3d521aadeb34ecbbc70ad224446596b2890.mp3",
+      "sha256": "aa282fcf3594fff4400599858dabba580eafa41391822cd6fbf32f7f21d688ba"
+    },
+    "de prijs": {
+      "file": "c518d89db7779dd17ea704195ad16a3d3a133183bab17b6342db24668304375b.mp3",
+      "sha256": "38d7fd48f61a693fa36446935cfc7f581a28b3d8f38fac11944a83a5c8c56599"
+    },
+    "de prooi": {
+      "file": "3cfbd9f8788d4199b9ff17be26a6fc85bfd2818e200c081eace2ee3a6a21b8fa.mp3",
+      "sha256": "818361ff7f06ae7b14f9f0e31b15f2b43dc2123ba3dd179dfa85fa395872f93f"
+    },
+    "de ramen": {
+      "file": "72fa3dd00fbebd457b0224f294bfb2f606483441628ecb43d1d5b238635f0533.mp3",
+      "sha256": "1ef1eea6caa4cdec752cd2c4a134c5e38449af28180398b59ca8f33cc9b3310c"
+    },
+    "de reus": {
+      "file": "3860e9e2d5121149ac9b5036f4931aab6f50dea5f37b1454323d1ffe4f18acbb.mp3",
+      "sha256": "eda26fbdd2f19f4814b0f7bc5886405400c9305b394efed31fcdcf10d06c27e4"
+    },
+    "de rib": {
+      "file": "8c67a65d4ab87f0fea88a4a3867c6e558716c1e415a40b938eed0a2101052e08.mp3",
+      "sha256": "da26645021c3174fa2f754d3696ca3d4e8aafd184b32342682d80187b6aaf4c7"
+    },
+    "de riem": {
+      "file": "e9017db392d404815966669a79162fe61cdbe0bf826add9cec5fba4c81f43357.mp3",
+      "sha256": "941e935bd27d7b854ee2d9459ebd0e399d0f08540ae15b5940b4a0b185580606"
+    },
+    "de rijst": {
+      "file": "4d7a3177a5f8a13d0a66964d2b73d3d89aa4a14f0873228ac2f963c600981d02.mp3",
+      "sha256": "e8d0df6ff9694a58c85ced32007e5f85a29472edeed7daf6a00608c0ada2e4a7"
+    },
+    "de ring": {
+      "file": "95248551a566094eae94d25b764e966718d60590e1df9a437f62b3d735fde155.mp3",
+      "sha256": "05c249f033842f66634f7bbec08825fb1a48c3d755a062a27027bc822cae61cf"
+    },
+    "de roeiboot": {
+      "file": "1b57558e49d34fea3a150a0df14c0414de658e1a9576020605c9746587ab2fec.mp3",
+      "sha256": "39b46f218ff1dbd5965a4dc0fb62c9c905d95e4849572be614c6a281d43ca3b4"
+    },
+    "de roos": {
+      "file": "958a6a6326799b0218b4a0638df2f487dca4345c9beb6c207004064a8922d8a4.mp3",
+      "sha256": "4f2f28c6ebd4d18e8763232accf154473cdbf7c37ef335fab173907ba78ceec1"
+    },
+    "de rozen": {
+      "file": "6f49ed93f4d567741298af5ec4afabf2960e52302f9fc2bdc73e604b32d5e00d.mp3",
+      "sha256": "a5976471d4a092e29fae1ea758de069068773c4e35afa6ef870bf66cd43acba8"
+    },
+    "de rug": {
+      "file": "ea252f658af56680ef7f0cd4b0a6a8d44d7e8aa7acb6e1ff45bb875b3e38e357.mp3",
+      "sha256": "85ed3880de223dc0c9b9521486bee932a38e00a726c6ac428b04df7510748211"
+    },
+    "de ruit": {
+      "file": "db3c0e6583a6e121f4b2c79746c9886e6b738ef24ff7fec6a478763d6c254cac.mp3",
+      "sha256": "a9223800922301fffb3a2342ca10a6ac7b9613f13bd5676a4413f347ec8cee8b"
+    },
+    "de saus": {
+      "file": "e8ccf1e7f001a13acd058f791013f9ff9542fd156ecc662d5ad3c489da6219a7.mp3",
+      "sha256": "b59dc187b488e0ddd55aca38c0be18b5fc07118244aae100a96ad21905ad1c0d"
+    },
+    "de schaal": {
+      "file": "b148af6ea4668dcac0324dbd633063df06883c2048d73545d1459febc3d120df.mp3",
+      "sha256": "2aea20f59eaddc1f82c844d6efbd5d33c3624d2de0e3b67037975fcd28045ac6"
+    },
+    "de schaar": {
+      "file": "1a66f7b836e5847c940babd7e208e22a78f5162919ad1da79cdd2330e31b2a81.mp3",
+      "sha256": "fe878ef890c6e44190954d9f3bcdbb9d5d11c6f8cb42675c8bf3207f41a59c52"
+    },
+    "de schaduw": {
+      "file": "5efd574db3e1f4ea0ed1e45a66cde86c57870ae87c2b99a347fc8e6351e80d6a.mp3",
+      "sha256": "d811847e5f3a10006fc8673118a801e6fa8e03248dd81838e91f0d9b9fca0829"
+    },
+    "de schapen": {
+      "file": "83588de55b0af650a5ee07d3c6b53283c44d14923b88072b051a4826be61ff4f.mp3",
+      "sha256": "ce446217c1cd2fe97c711c6cbeaa57393e5827a37c29b6fe0041806b17af1392"
+    },
+    "de schat": {
+      "file": "8885b7261028ec755e9b26b2ff77be2b04d7d266c0abd33c0f06e51db175282e.mp3",
+      "sha256": "eb3c3a60e05f3174c9ef9cb58c3c0eee1c9571081e06e25edbed7f726924adbf"
+    },
+    "de schelp": {
+      "file": "eab4ea96c0991029598b8626f0c545b69f03373ed274b7d8d6a7910e0b887fe4.mp3",
+      "sha256": "1895b330d055ff361f275937175b32d8addb70bb38601c60c50fa6d717c8bb45"
+    },
+    "de schoen": {
+      "file": "3807bebb348e34c00b34661d7422ee407f01b99ebcc09e64f90bd6378d3264a9.mp3",
+      "sha256": "9bfa527e8eaadfcbe23dfd67cda06e9366dbfe5266d6e1e5455f71354ae4bf7b"
+    },
+    "de school": {
+      "file": "d8005cf4dcd9ede2372b610112089144a71adb8d9d8742e3db2bb470cb0eb421.mp3",
+      "sha256": "92ef9d9399cb668804e99d972058656c542a128ca4f897e8028a51e0a57adc65"
+    },
+    "de schoonheid": {
+      "file": "02b66316ac5f9a5b2518dcf15abf1acaecb884f3f54172dc8365142021c81cc2.mp3",
+      "sha256": "65bdf074a14aadf438ad08d9aaaf203ea0b91d6a32d30fa7bd59ec1bed4c756a"
+    },
+    "de schop": {
+      "file": "f84b1a5a710c1d409349087bf5753d629ab3d67244f182fffd7f19b504267c63.mp3",
+      "sha256": "c7514fbdd85caee23ddb8cbbef44cb1d23baf324c49c80191c5183d387a94f47"
+    },
+    "de schreeuw": {
+      "file": "d50945729fe0c2271d3c98dba2a47369ad843a5f7ea99c3e97650f1914da6990.mp3",
+      "sha256": "184ec0f963a2a160df66f2b19cf618205f01da82a0cb1dfe735c626e0f60f884"
+    },
+    "de schuur": {
+      "file": "3dda5698a1c4ec2bfae235d25893a3f5f836c5f865d58adeb978f45ea8fff289.mp3",
+      "sha256": "696f0572eb1c84ebba37ba5c09a5fb1f4035b1ea0443e47458b5e4db029961ed"
+    },
+    "de shampoo": {
+      "file": "067c32f45e889a1bce6e51af0d7c3016d4ae0e81d3e4b33f32246c5bb3566437.mp3",
+      "sha256": "a9f39eda0f75eb9de25112691da1d71d9af4acd77cfa11b6822df00ad8fddaae"
+    },
+    "de slak": {
+      "file": "b1593ffd475b8ce62c19822ee91984879ffd3fded5ff8e01f008f4b357876e9c.mp3",
+      "sha256": "f8feefdb90c1be51abfd2b107c6692e19125acec1c4f00499af5e0ce2d53ddc6"
+    },
+    "de slang": {
+      "file": "34c736043d2baef1452ed90ea98e2f15b0516a55d93cb8eb02f5f6117df4f11d.mp3",
+      "sha256": "f8990f7ed1441a092f1dfc919bcde6953bf66ff75bde2ab059879e8d918508a3"
+    },
+    "de sneeuw": {
+      "file": "a36049a8b71946c99a645a001ff9a2050b576b4b5742ee6f28102da56a2bde8a.mp3",
+      "sha256": "829a38ca744454a2b9289d5c145d63b7cc57533558918e0fc522a0da17146fa6"
+    },
+    "de snelheid": {
+      "file": "29f4cc1080d0fbf5441b946bc397ccf3e482b158ed0fda1fda899d65936a61c3.mp3",
+      "sha256": "d57ffc392847f4a3c026609141c3ab861430b0e86d890b740cf39f691384dd7d"
+    },
+    "de soep": {
+      "file": "6a0725eef04fbd256a8c3c452b3c85fe33db9c809aa6f0641b89375d7f76b55e.mp3",
+      "sha256": "d6baa2170e2fee8d2ac7e4085eccc965a072001a76ff3462f408094028df52b3"
+    },
+    "de sok": {
+      "file": "b6929e7cecf23dcd4ca82623c0e09a8a854ff0ef05c4d13db3030d844ac7b2f2.mp3",
+      "sha256": "32e736f303cf48c35860e18aa3e8ab0f43069bc626080c272bfe9a50a5debc91"
+    },
+    "de sokken": {
+      "file": "f371f96c3ac78b6fadd6ac8fe75fe883d81d776324fdba6dd3dc1059aa96e2bb.mp3",
+      "sha256": "fc3d59ef82ab76248ab0cbe0c42cefcc4e22d1661267f91b2230811454db0d36"
+    },
+    "de spin": {
+      "file": "42a08c3096d6e035dcfcd4e9fd576e6a1c0b026456a0a8dfbcbbb3b605f7a19b.mp3",
+      "sha256": "cf7add7a2ea6841b62b58bf02a3c4f67cfc4bb865dacd43be50088a2fdfc0929"
+    },
+    "de spreeuw": {
+      "file": "3ff34982937f17592c0fb60b5b207277d4e63708d6e2f7d55226c8f6cd0e7ec4.mp3",
+      "sha256": "0798e6961a81f6417cc3423bf2d044e0492a8f3c899133e4ddaa1ae6a9ee2a56"
+    },
+    "de sproeier": {
+      "file": "745008bfce9a256fd45cd5d38eabd9a1f9b3a7b1be952b39981952570a1f3005.mp3",
+      "sha256": "a21e9db055cd9edc1fbdb25caa25424885b8f1cf02522946367dc7ef76938edd"
+    },
+    "de staart": {
+      "file": "9b2a2e4dd0acce85af7ab739d79da1401cc215f057b9a3ba27c3f39cfe6d8b23.mp3",
+      "sha256": "3f881443c7f1abc5fa658885d36af20e1b2780f7c3744109eb51783b1801e331"
+    },
+    "de stank": {
+      "file": "14ff1c82c748dcd63d2b2e603631e43c4a0546253456780c426b9ed74021efb0.mp3",
+      "sha256": "c6e3d3375e38810fb1826d29364a91360612b730d0971f2c722c58c149cf7a50"
+    },
+    "de stenen": {
+      "file": "d266f4b0a73b525815b293025e609319f7f72d369d6f5652474c970306ef316b.mp3",
+      "sha256": "a4b4175579365ec6e7e859ff5b87899b03d07eb18b74551ebe373f51d2eb530d"
+    },
+    "de step": {
+      "file": "d68b70feb0080b7d4fdbd003d88f3556e738469a78f79d6312de5f397edfdb03.mp3",
+      "sha256": "0aa3bf3ad4939ea63e986f3dd567eb6ced4bce5d87fce440a142abcbe611a1e1"
+    },
+    "de ster": {
+      "file": "a1bfd8d34b6fea59412b2f551e285aeccb486cb4aa21afbf5c2c5a0268ab7294.mp3",
+      "sha256": "d311591206b169672961df2ffb9fde4ff208c5204880137f7ea50f85466d2fb3"
+    },
+    "de stoel": {
+      "file": "7bb14b7b71779aefcd0b995d7a72d8e11244cd34da72a453bc73103c3b55b298.mp3",
+      "sha256": "1cdc6aae0bd3a2555494390d3c2cd7c606f0cd09efa4aa1d34999129d2fe7e39"
+    },
+    "de takken": {
+      "file": "80bb9a8197f277c6a8c4430d7f9ada4bd52f33351acdd7476664302e7e42b10f.mp3",
+      "sha256": "8c04a4aba471454223e32a8f8e862defc30e7fd98cec13a1cb0fa6fee7fb14b2"
+    },
+    "de taxi": {
+      "file": "611de6970b2259fb56ab927bee08689cf71cea15fd65796f7d475f498541bd44.mp3",
+      "sha256": "a9c62f5993cb7dc98ce9cd9332f3bd12ae1a83585abd96346af5ec2a5b565fcd"
+    },
+    "de tent": {
+      "file": "f2cf77006cb9b397cc7e06e90a6b4639d7fd3ac067c1dc1572ca353e5c3e2af2.mp3",
+      "sha256": "63cb7930cd54936aca5bdfcc13e67eadd145829ed66c2826ef562f5463aa88f5"
+    },
+    "de tong": {
+      "file": "19d09b3107c4e55b25ffce8b7a1037259404744013192b18db4668fd2d92f8d3.mp3",
+      "sha256": "fc958a0d90411e287a2812d9973aa0806d4d5b665a31f73c5e15db1d6dcaeaab"
+    },
+    "de tooi": {
+      "file": "23fd9b4f7d39088551c941ffb4a17665ca598f49b49f2ada9f02f19d08f56f5b.mp3",
+      "sha256": "f6f257673aba9267fd2456620d3c4ba0fff4b8eb33acf289cb2a730a9eb83208"
+    },
+    "de trap": {
+      "file": "26ff7549a5526c8a5d7c75af5b6502a6e1037bf07ae294b91c2321a0204568e5.mp3",
+      "sha256": "68aa95042e42f5386d1f8b79a496075449c82cc263c7650b55edb0932f73fb17"
+    },
+    "de trein": {
+      "file": "68ce6c2173b9e97fe1fdd21e0ecc7e3a2f79998ab7f77c0449b219a4087066b8.mp3",
+      "sha256": "6811d98c15113913362256b1049f7dd68527cbacc35344665fd599e05f0c22c3"
+    },
+    "de tuin": {
+      "file": "a10516e4fd8aa25d736edd842d3f3850c03e2e2943ede45663705d26f2e8edc7.mp3",
+      "sha256": "bb0a461f63200e064137c21b280859e3d088263c4b50c36f907cd9f30e2e39af"
+    },
+    "de uil": {
+      "file": "bf6acf32624577a4d68e95bcc07a3d27ad8b609e880ab9d6e6dae51766cd7a83.mp3",
+      "sha256": "b9ba244b5dc9562731ab76dac88bb509a53ca2e1ded505de2f4ddeb71ac26971"
+    },
+    "de veiligheid": {
+      "file": "e2ade9494ec1dde4f1ecb4f6aeffb1f175878c5d40b8cf3fb5eaed0cc9e1f1c3.mp3",
+      "sha256": "e511b49417e6624c5e5ad47d3a24cbaf48d6ec00fbbac27e643c3d384fbf60f8"
+    },
+    "de vink": {
+      "file": "f8b052ea1da4bf3883491c408a3a20fa1f653d1ceb73d55e3ff4c9da12771dfb.mp3",
+      "sha256": "6c7b107b7471e8ef042427c2c8fa7caa25b39af2ed2de231f89376c16a82aa4b"
+    },
+    "de vis": {
+      "file": "dc87102387ab6b6040f6e1db47b877f6318f734b8e0c6def0cc251667bab903f.mp3",
+      "sha256": "39d83bd050b8cd6ebff5c3ba7dca82aa58f9f02dfdf290e4791ba9f6c75e309a"
+    },
+    "de vissen": {
+      "file": "85cc1ba07487a86f4dcc87b8fa957b411fea29255714993aad99850bd0cce1ba.mp3",
+      "sha256": "93b1ad47bc3a7cd1e747fd115acf735255a6971b04a5e7e8a6e6d5c6e2184859"
+    },
+    "de vlag": {
+      "file": "7e76b7f5088f79ebe72629c6daafd5a2905233739095ca1052f9e3d1379a0f2d.mp3",
+      "sha256": "dce4603f372ddb4312e472f44b3f110bace9ab39dd356150556aacb7f20683cc"
+    },
+    "de voet": {
+      "file": "c849ee4a3d134ef744a572c9792bf079868cf9d79b5c3e8cae374a48e5ae6435.mp3",
+      "sha256": "c923c70049062878344bbfc7bab47a393e33c5bbc373111899451f0ab1855a1d"
+    },
+    "de vonk": {
+      "file": "734b7056839990aa30fa1bab490117df0ba99c2fb2a7eb4007415773a31a13cf.mp3",
+      "sha256": "a5c5e3ceb818642ce12596d128032ff5926f731f12f92bd47b9051bb8461ebeb"
+    },
+    "de vriendelijkheid": {
+      "file": "c40d0744d2458f76d45d8b57bb4e8b82c3f55f4773bcab7735f056f1a20cd965.mp3",
+      "sha256": "e446ef2b05b6ebd1efed7ca32f7fa098c9f194e629c03791a2d5714313c117a3"
+    },
+    "de vrijheid": {
+      "file": "d8e5fdca6b33a45d01a1ea1f49ebcf4abc48364b7f7e23f497535ce0439ed3ec.mp3",
+      "sha256": "5353e8bab1724875ed5def83e4e78f1d93effe1dbf78cbb60320d7aea353892d"
+    },
+    "de vrolijkheid": {
+      "file": "b3b19e8e511a581d4b5dbaedb2854213841a885f55b8771f5c9d3f33fe5ee96a.mp3",
+      "sha256": "9f86a7b18ab5c73774f061df7e571c24fec66c6c8514a83e286ba45c32bc9c3a"
+    },
+    "de waarheid": {
+      "file": "9067e55ab89b07f9e6b4ae14a42326deba3468cacb8bde6ce5eff6964384ecd7.mp3",
+      "sha256": "2475544dcbfef761998c53293885cd78ce60ebba32de3fb1f73f11ef388f7054"
+    },
+    "de waarschuwing": {
+      "file": "a7bec65d4e12203d45e3aba82c49e8813d0db27360d7a4704cc910ed5ef07941.mp3",
+      "sha256": "752a7bf512404663fdf035c63f462d939b5c9e8866bf4e226a61f65c87a44c13"
+    },
+    "de wang": {
+      "file": "a3886f3b4b4e381b9305dca6365a8f3dd18b2dfb19989324fd1dd8dada598bcf.mp3",
+      "sha256": "4751382ec6eaa30ddf8cc4a0542850c22d12bf65a822caa8264432723aa75b71"
+    },
+    "de weg": {
+      "file": "a6548bfa25d3aa8222919b6d6b9c50900ced165ba2cdf31355dce98cfa100eff.mp3",
+      "sha256": "c8809b27d8c7fc7f4f0c91f7db4edc9a7d0f98c9017d7a781719fa3bdfa70dbc"
+    },
+    "de zang": {
+      "file": "58bbf45022fd17685f3e55dcc38e907e9615f49b7282d009ea095231e3775a12.mp3",
+      "sha256": "e0d37d3e94cefb7113b2abe823acb5b4b23ad478e99e6dcc163cb9782c7cb2ba"
+    },
+    "de zeep": {
+      "file": "6ac8fdc22d1902051e2a6727e28915fa804960c485af6e067a2d9ebdc43236bd.mp3",
+      "sha256": "b3756ae04f87d4d8fc49c45946b434213b02122d007c2c30170c5a05bf7352dd"
+    },
+    "de zwaai": {
+      "file": "f306496092f841e694e0c428c4e01d783d907829cb8d85091f1148fc2713e340.mp3",
+      "sha256": "f8a939b55d89a3ddc28b6f40bcbd05ac9f80bc1a890bd2aed0cf0f2656962451"
+    },
+    "de zwaluw": {
+      "file": "74b8ac1209ea4996d701d15b3417c94994bd47f96961d547db7e86c8662107b4.mp3",
+      "sha256": "8fc04eba68d1f63d7b5992119c4fceb34d77def4944c396852f35ba4ea427dcf"
+    },
+    "dorstig": {
+      "file": "765833730609631fcdd87cc2f599fea2114177f2159b7d80c96810f5c3ac08b7.mp3",
+      "sha256": "cf541c3a2def564f04538622adc2feaaa5a4ce16d43cde5cd7788a947c62bf22"
+    },
+    "draaien": {
+      "file": "4cf0354bf38730383906ace68a9d2c4fa1c567937b7164a174f75a9fb9e8ddd5.mp3",
+      "sha256": "4c83fda220fc6d39946e19486a5e7d7be50074f1477b65c742cbd9b756b45b57"
+    },
+    "duidelijk": {
+      "file": "2699acdc97f95a8c7f04196b1d6c7c493b694b158fb3e7590d17666bb88fd8cb.mp3",
+      "sha256": "93866e7a3ac160a7357b98eb20bba241db3f4c4247bd40ea42aa20848d3823b8"
+    },
+    "duur": {
+      "file": "78a130b718803b8ee1fd863741d3a1b540a4c2e6b29c1e7d4e257c1df3e9e32f.mp3",
+      "sha256": "7c335783e5e174de04812b72974e2dcdb686ae9277dd9ed9f060d59f7968e42e"
+    },
+    "duwen": {
+      "file": "0f53c6c9c9a6f751f09e2f514327ab0e216f37ccf85b72fd58dbe7696fe4b424.mp3",
+      "sha256": "b639c32c41ac01a7de6e6d9e84fa8a50ba02e725412247e0439d7b5f4886c6e7"
+    },
+    "eerlijk": {
+      "file": "6704adf8af5646a6764518308e812cab21c0acf08c114cb3ef435d4e46dce645.mp3",
+      "sha256": "acb0400d3775a3e6d38fbbf383d07a450479820abe758e5804a1165a7ba50a92"
+    },
+    "fijn": {
+      "file": "0f71079a7494fdd26bff85611c25ef30bd1af64386448b96a5c7a12b64158cd2.mp3",
+      "sha256": "22c11c0ebe8ab0e5de7d99384c32ceff17d00e20797304c547d475adbd32ec18"
+    },
+    "flauw": {
+      "file": "59400db0a4c82a05ce3b90f448e8a22732a9efbe083c5a99f8d5aba0c20a0e59.mp3",
+      "sha256": "aa588d2897ab765c9203a1988a804fcfeb822a11839c297cc9f2624fcc3d8410"
+    },
+    "fraai": {
+      "file": "520e1cb1a79695ffe84c9e0f5aca4297926d9b9203b2938f65b05c126f3eaae3.mp3",
+      "sha256": "dc764ef8854a1f2e7ca80ed644727e16e41682343da72014addf2524cd6ed437"
+    },
+    "gauw": {
+      "file": "c3c0dae1578728c6410402f5868a235c913d69efe76c6982df98a87dc297ba0c.mp3",
+      "sha256": "d892c71c149a8830aa1dbb90b407c1feffb6f16c1b9901dccbb95f4b84de2589"
+    },
+    "geeuwen": {
+      "file": "fc6cd0acc3e6c17971cdd7ed177c1128d1c6554ddbb7932e1256ac36b67f769f.mp3",
+      "sha256": "9619f48d1a7b86bac2ae34744b8cf3419991f9b44cbfb000deeacdf9f15bbf10"
+    },
+    "gelukkig": {
+      "file": "ecfd41073d98b49079755faf6d154195e6a8fff0a56adc0ad12a4ea9c532b1ca.mp3",
+      "sha256": "da74f182b3304d77d5d264b3a2606cb73721932ce92aa8d18ebd92414fc01c1a"
+    },
+    "gevaarlijk": {
+      "file": "7fb928cfd9e03dc00f753361d7722e7458fab866282c5c7b5031169df759092d.mp3",
+      "sha256": "adad91ee28bdb552c4334f43322a826d98d168fbcb4688932567f97ed7423a0b"
+    },
+    "gooien": {
+      "file": "42570fbe67f317b065724a77fba70b82ff9655a4d247f9b4eeee9b4b9a2a9e3e.mp3",
+      "sha256": "a06f78392223e884e23c8a0eda6a29a0140bcc07a31f8dcc928185b4677857b7"
+    },
+    "grappig": {
+      "file": "531fa465515930972ced7e3881f4f527dac686a47d8a5c9c1d336dfd6bfdd05a.mp3",
+      "sha256": "4a780702b18a3624dd7bb0ac2dddd2e26f7cbeb31351a785e7d4de63cb9f638a"
+    },
+    "grijs": {
+      "file": "4d4dfa0f0fdcabb82af62a3d74c02ee67942f463b0c116cb5b7ce8525c359e1a.mp3",
+      "sha256": "edae6da4ed8be9ab6f9a9e9a6259607e78da5b97cc6c733a0b8873d69df3f1f3"
+    },
+    "groeien": {
+      "file": "533f7e41e2d5df0da1fff1213ed5484da926682e72b72a62e6999a17e3c7490b.mp3",
+      "sha256": "4a57acf5028bef435c787df769704698fe9b8b14eb7dbcb6f0f55975a758b7cf"
+    },
+    "groen": {
+      "file": "553184b87e6a706d26bc108d84c03a68a675823962f2da3aa95266b04f633370.mp3",
+      "sha256": "07ba3dd6a4dcef85b65e6426ee87f1c3f619c64b6f87e60776739d291b892f14"
+    },
+    "haastig": {
+      "file": "f9aff3c344debabcf5d291ba79cb8bacb18fbb32f7338a11bada69e8fee94e96.mp3",
+      "sha256": "a1de05670bfe419dc86de30c9269f4417fe12bad3fa2f7ccb278948ebea8f479"
+    },
+    "handig": {
+      "file": "8d32d3b3192f920ea0ce69dd562a8cdb9d16577ee897cf732c2ac9e8874d57ad.mp3",
+      "sha256": "3ab4811fb087a6833032ba189e214fc5b5da999eca5de17131f54458cd82b413"
+    },
+    "heerlijk": {
+      "file": "552c696e9c6e37707a4ba78b5749d2351f867963b8a2e143237055bbf522d1d9.mp3",
+      "sha256": "aad4497b35b9c16991c12a93996d94f4e4eafb71cf59b87321c459a4cb7073aa"
+    },
+    "het bed": {
+      "file": "31b172b30758f238557981ec8fac8f3c74d4485ea3079b694716584f41af4b78.mp3",
+      "sha256": "050debca8f8732b432b5974e357fefafcac2f5c2ccae9a1e92bf54f6ea343d70"
+    },
+    "het been": {
+      "file": "a13558a42e89d305a680331330be078a752cad35a23b10b7532c162b0d7a5522.mp3",
+      "sha256": "f181fd9c5a03f0a79a6094d804e909bbfc489b1cede7da684159cc941266a9c4"
+    },
+    "het boek": {
+      "file": "547a54a1d38ac7fc56572f43b79df4539b6568be00105afa7a1030d51d00a24b.mp3",
+      "sha256": "8c3a014f9eb62de629e6377b5b3b1d403a093e6eb235397cab2aa95c76993b99"
+    },
+    "het bos": {
+      "file": "024cb721ecaf33ea8485a61a92f17455ea0e9186390629dec3c4b0839d3f409d.mp3",
+      "sha256": "3ee5cc27d189b94f7c224a0b7ddd2ce389dcbeda04365d489a9b5d4fb62dbfcb"
+    },
+    "het brood": {
+      "file": "c5b4ece116bfe853f953f0e7e7db4f5e88c7347d6bcd9b8b4a1361cebebc97ca.mp3",
+      "sha256": "eb0b95dc95eab7feb04b3ea7d529d0711a46513414d8213904ed20d72fb98eef"
+    },
+    "het bureau": {
+      "file": "11b595ca4e8051908fc1d6ce3892850acf0d6ddf681be0867cfd1388e5d68d87.mp3",
+      "sha256": "db02c49bce99fe221b2a1ce77a5affe3bec38bf4a107caa14fa124f33e762224"
+    },
+    "het cadeau": {
+      "file": "749b524417364f58feec84646884606364fa1a99d0d1e629c6e5529ce7496fbe.mp3",
+      "sha256": "da83a5a880b09768569fc1c8cd214585c021cc2ad2dad979f8ba6dc3734cf247"
+    },
+    "het dier": {
+      "file": "4bf3159c50d794367cd0d7ca67badc17990f023c2ff4a32042be0548f1dcf562.mp3",
+      "sha256": "a4a238001146de6a93ee522475d61c3586ddfbd6a16a878d3b2116c61f6e1dc0"
+    },
+    "het ding": {
+      "file": "7c1781d2930548ee248ee80ec503f3ed991cac6df0936f3f1424a2deee7370ba.mp3",
+      "sha256": "164b9f27f2fb77ab3543b473791799aadcac973f04826e497b3e891fe3150da0"
+    },
+    "het feest": {
+      "file": "1342c382868e82fdb49d7ac9d95cc1e9699a310f3620512ffbe6a3a0bae69d79.mp3",
+      "sha256": "6361da081be7031f4f8191debc9de0b88fba68eaca7b4ce234a97a9cdff5d328"
+    },
+    "het fruit": {
+      "file": "76f3e4128da6c7c28f749021667a2157f985b8a36f8e4b595a0b4e02024c5108.mp3",
+      "sha256": "1e48dbed6c91d185eb9a847e66e9690faea727853172b37464eed42b87e88198"
+    },
+    "het glas": {
+      "file": "7674132a272df056a81c00413867daf156f5a75dbbcaf39550baad067263c6bd.mp3",
+      "sha256": "8512d7d51b894730500f1d7f35749b1750fd05306633ee6e1f71a40a41a916af"
+    },
+    "het goud": {
+      "file": "84517e6b1b43e70e33e306bac3444387b3600c6281f0404b633d3d87445cf57d.mp3",
+      "sha256": "074b794423edc692ddce370370536ea84ec0ff56ce5d4649c72edb97320104a3"
+    },
+    "het hooi": {
+      "file": "9e4f8ebae5b1d4719d66d5676f7cabb6a36ad4bd5edcf8fb008d544beef71fd8.mp3",
+      "sha256": "f06430d741807a1bf49619e617f47011b5f25668650446c45b7efd5c53a8a14c"
+    },
+    "het hout": {
+      "file": "1d06495cfd1bae7073b3b91ae9dff9211cd21e149e81a23128b9e378655d1e60.mp3",
+      "sha256": "6947dc1f2ad72969fa91a74df65e735b9b0476a0ceefdff193627fa94ef1315c"
+    },
+    "het huis": {
+      "file": "5e1832fc8a06d16221ccfea355fe0819eff42170903bfd8782467ae089f20ec8.mp3",
+      "sha256": "b376b5e546998023b0b66d14cbf8df8e384bbab8eb60a00ca38a45e18024821f"
+    },
+    "het ijs": {
+      "file": "d2f672c95cda1a5b520a580a766ca0ac4400edbff8b69ff3eab6781715343f63.mp3",
+      "sha256": "d82c0273d564cc2d1907f5fef488629a56e82ba490eb21b9582ba708e381b61a"
+    },
+    "het kind": {
+      "file": "00a3817c30149f24208c029d4b6cfc1f245d6cf24fdc69b5302dff2eab1774c5.mp3",
+      "sha256": "26ac90f57f117aa8da93aa0f7a68feeface8ec23149dd8c1cf23b34820c4cb64"
+    },
+    "het kruis": {
+      "file": "86c1bb5d2ced8d481274b26fa62432b8eaea1c7c2aa249672608bf40bbd1754d.mp3",
+      "sha256": "17fb9a6887d4d6ecf738f9d0f66fe7ce77b74f618537014394a0ee75e9352169"
+    },
+    "het mes": {
+      "file": "5500aaaaa307f542567c61164da1c84c92d46f298a6563cad083c91eae1b0942.mp3",
+      "sha256": "42600ca699f5dade49d431fb3864e4aee394b7f8ab3cb70fca2dba068be08b97"
+    },
+    "het nieuws": {
+      "file": "5abe172bd77d49f19309c24c788e29d658118f79302f41a96a2f324770ac152c.mp3",
+      "sha256": "543ec2cebf6669c202d6db683d8daae060d7abe9b56c5c6a632dc04f8b2f6c39"
+    },
+    "het paard": {
+      "file": "592050f9ff8570b6d03e197c013d4d3ef62be3cd11f44568e0952437f01e28f3.mp3",
+      "sha256": "68dc909ffc995e35ee9eece52539353cf5f2805bcca9273fc98ad4b4aaa6c1b0"
+    },
+    "het plein": {
+      "file": "c2b944319f46209eb87b091aa9ad31b0908654ab3480e61b75084f9d0a977818.mp3",
+      "sha256": "c7f27c890d8dfe01cd24451f191fcd902fff047eef78591b28fe75ddcefa4eab"
+    },
+    "het raam": {
+      "file": "41a709e733a25a71449ca2df17479fef058f9fd143a9903d9b6818f7b0d9690a.mp3",
+      "sha256": "655177aa6f03dce8ab0bd7850a09077b7427ed16e9e176e1ef26e0ffad7b380e"
+    },
+    "het restaurant": {
+      "file": "4261df2a060e18a02b358ae33c98a877204eee8458c7a9b5ed005b7203003d70.mp3",
+      "sha256": "21ba5267d3851406d829204540f8ee81ba261138a2b5f031e118824dbb8fa816"
+    },
+    "het schaap": {
+      "file": "962b191c07650e1cc61678bf894cde81e3b23c3121b47409fa45187191df8ee7.mp3",
+      "sha256": "9780a31aa852da158a0fdd1d650150867aef3361ca5bb9a64feae81a0a816201"
+    },
+    "het schip": {
+      "file": "15f5408c7ff3075e025ebd7124a7a0cf5b32798010e9c195f4c504ac09853806.mp3",
+      "sha256": "02db927498dae3c62980fcbcaa177c58b19ffc91c5f8d701c9507597a0314ee5"
+    },
+    "het team": {
+      "file": "27774c56bbc999588199fe1debc2840de67efd218cf361189afdce4f333b3ece.mp3",
+      "sha256": "4a8b1aaa8aa7284218df970b6dce91190b751ab0842b55409da64c1a4d09be25"
+    },
+    "het touw": {
+      "file": "1679bc9d9eab9a433ee45fba9294ed93212c5fc595d1279422283ab4d77d97a2.mp3",
+      "sha256": "12d40e4d155a7fe4aa184b8f978c6b7e3c5c4c7e017a5d1e45d0defd6dc698cd"
+    },
+    "het vuur": {
+      "file": "3c0294defe01a67fe8e0491f1b45a917943a77cda9d81b4a5537bc31b590cc16.mp3",
+      "sha256": "37c4dc0568bebb4592a04e0ecce8a8027197e629caa465a07c247efe3f104dd3"
+    },
+    "het web": {
+      "file": "c1bd48715be98041de2486754c4e2b8941f68fb9c98fadde7b2c22a5d1a07d92.mp3",
+      "sha256": "7b65a5ecb876530911e6d7150226a9b4c653e03faa1a2ecb4b3efd3c59589658"
+    },
+    "het weekend": {
+      "file": "d2127ca54de8493c6e3eeeffb0da019b11dcd3c3d1ab514d260da847aa99a965.mp3",
+      "sha256": "9df92d06d35e9f396f0611ecf93b9af5e9146f453b07787f04d51311ccf9fe1e"
+    },
+    "het wiel": {
+      "file": "14225d4299c07fbb59e99809b80cf639cf7b82f7b7bc7f0a885a93ec86f30184.mp3",
+      "sha256": "08297408a48e9a2b7ec77de4788c818d010de2b82f3ba15ef3b5d70f16378dbd"
+    },
+    "het zeil": {
+      "file": "9b608f6320908a0ab75f7898b2beb9852578b3df3d116325ff83e8f91c69cd36.mp3",
+      "sha256": "2ed311a3e92812b8f0337bcddbd90761281147e6c6d76abf18f9066f75889dff"
+    },
+    "het zink": {
+      "file": "c7e78e854941d7e9a53e8efa081cfb512e2f6b2337c5aee60780f8b164e3e14f.mp3",
+      "sha256": "f5d4d88a7a1a11677ea141d3dde76f3eb37b159cab01004e6b53919cf8f138e6"
+    },
+    "het zout": {
+      "file": "45b0a5e481b19f7bd37c6a459f790ee4a07e53e7cfe002a67bcdd14b529d9cff.mp3",
+      "sha256": "7ccb7e9e97b68803000361e520c952b6f104af92d55c114d20205929d0a71247"
+    },
+    "hongerig": {
+      "file": "da7e59303a194214b628f64e68edbc1d5317e9f874a68ae549f39404a7d34bd2.mp3",
+      "sha256": "c45a9a43d5f33163294e9e9220a6650f639b10977885b7cb4d68b6ce27a90a18"
+    },
+    "jarig": {
+      "file": "440d563ee3d4ccc00ab8eadb87dc6a40791c5c4c587cece6d46dc34f9fc37c0e.mp3",
+      "sha256": "af3f361c77fe8d84f8074295c055607fc825489c344745842f76c892a9360414"
+    },
+    "jong": {
+      "file": "4292e2346523fe0b2ec3f016b6f682f282caa5536452c99a89e240a20d2a96b2.mp3",
+      "sha256": "cf60db42fca0c694e93bd41cc26903a493d6a5cffe0f6311669070510903b14d"
+    },
+    "klein": {
+      "file": "c9e90a083d513d61ffe8ae086247d753c91d2ef1e07877070dd18fcf97e3582f.mp3",
+      "sha256": "a5f8cc689c36555ac222fbc511b27205374bc6ff27027fc051c9f3e8bbffa9ec"
+    },
+    "koken": {
+      "file": "16738f4d73ad0403cb968d39b751be08a2d7069bf268bf3c53a9b236576bab18.mp3",
+      "sha256": "57a3732b1d6cac04736488398759db71afb77c35aea192fe9d8794acb0f3ad12"
+    },
+    "koud": {
+      "file": "d0537b5388e742c3ab6825144eb0a0ebb1578d9486b652863d4704211b15bcbe.mp3",
+      "sha256": "53e2c5f19edc0fe1e1a15eb0cc3bb622752bbdfa3756ff763de4413ea5e89a9c"
+    },
+    "lang": {
+      "file": "944f73b250f8874087e16b39cb1b272d2c0f8b33451c10bcb15c36fc9354edd2.mp3",
+      "sha256": "233bb7ec86e0892adecc01b020f6dbb51d093c691d866cda0ad56fde8240661c"
+    },
+    "lastig": {
+      "file": "d4f0f12ee85d5a43b0376dee386940f5e594dc1b0b065eab5691a8985fab6bb4.mp3",
+      "sha256": "3b26a243fd29ad474a87e175d7fac41e39c0f55c983fa684c083913c563d455d"
+    },
+    "lelijk": {
+      "file": "0e850205b1ae4f430740a60dbf5f85469597dba6cf752cdcced76d664fbe12dd.mp3",
+      "sha256": "9377332850a0dd1105806c2473b6379a96214cc69879c70c44b02862f0efc755"
+    },
+    "leuk": {
+      "file": "22eafa94c3015767edeaccc2ace2b09718e9a3b180cf50debed9df2bc4887667.mp3",
+      "sha256": "bc37e0ada640fa15afd44975cf70a4fc8b4d566752c59716ce9a48cda132fa8a"
+    },
+    "lezen": {
+      "file": "3843caa46f3c0c2a2fcf96c77795ecf506e3debe86f8fcc377caf34bdb1dad48.mp3",
+      "sha256": "c4cee003b4cdd6974f4e5a7efff88218bee6ddc7633a584d79800a7e7b54adbc"
+    },
+    "lief": {
+      "file": "d4675332a46902eeffe0e5dbab0222f0dba0e9b07414353b70c19b3dc7f19e05.mp3",
+      "sha256": "44f35fada60cc907980219a3334b0eaa060dc2c5d2e298d91f8cc4f5f0ed18e2"
+    },
+    "loeien": {
+      "file": "8c966f208dc893ebb5c0f45a200ab78f0573ae81dbdb1d5e8090fe679acde4a1.mp3",
+      "sha256": "626fa2afec70e8720cd3dab67d0b7ac9b3bcf9c4be074af53dc3b6cfde18e677"
+    },
+    "lopen": {
+      "file": "d6709b8dbd7d81e5b26f8d75790633dc0b455d3bf4f1e7ebc7a5168836038464.mp3",
+      "sha256": "eb6259ccf3a415cb69a7fe1d8912d987c5b6da2042aa0e0fcf6490a44040735c"
+    },
+    "maken": {
+      "file": "f5832f4ccce90e390c83fc9c422e0316d86680babb31030755cb917af07e18ef.mp3",
+      "sha256": "f18b97971d632a23ac48700fb8ddc4987d764e3ee6c31061e45c20b482941958"
+    },
+    "makkelijk": {
+      "file": "2d43b8a2f94c3fcdfe43876006fdf2a94e811bfa6184c5405290bc2c353678ea.mp3",
+      "sha256": "2d3496d81d1d7aa366718524275ac970fc19ee850e3768eb256a11fd3cd0a3e1"
+    },
+    "moeilijk": {
+      "file": "bb318587b57fc9e6d38d7fb35281f9c95f0303ffd250596910cf472b7835abd9.mp3",
+      "sha256": "718c6f75f3ba6ae1862eca7efb3e0c1654e9617d96bf9ee0feff7ca75635de54"
+    },
+    "mooi": {
+      "file": "b193d9d5b084f1bff316f2c769a30310321aa29fa82f12eab72c4b9579bc9d11.mp3",
+      "sha256": "ebf9657419b412a8c097a613eeba41f2e1a8368e0d3165a0fb0d0b27369cf4f9"
+    },
+    "natuurlijk": {
+      "file": "22ad76e40c9e231be5676766376efb257d09163338aace09b20a6047cbe99219.mp3",
+      "sha256": "1fd8ca10a61384e4fe6c9ac942e7f7278e02741c297f4eff4cd8c1e93624111d"
+    },
+    "nieuw": {
+      "file": "a0967a0857e565a3ee6b4d1ff1e5403bbb0f9f6da48e4197830464b2659e8740.mp3",
+      "sha256": "6eef1c8c8f45952f5051a63b3e770e0650c7f8d20e94165af003b772223be364"
+    },
+    "nieuwsgierig": {
+      "file": "d9e54d475a99a6cb90ec03c635800b2ec9d1f988121ebc4f63238e62fdcf321b.mp3",
+      "sha256": "0a790c313c2f81319be869d0f9c202560f11161e60cae41fef376c1e0f23c3ef"
+    },
+    "nooit": {
+      "file": "f29b7f1c7abc87067677568b4dc51176f39f49a41172300027a515eb650acea2.mp3",
+      "sha256": "68b09fe20ba1a5984550ae160df315448d21485e5eb2bc0fc7fdc1c00a2e88ff"
+    },
+    "ooit": {
+      "file": "d9bfaf841bcf4c91bf664b719e2240088df55bd3e4972bf91c2fbba6b29566e2.mp3",
+      "sha256": "9f0028597d294c4d8ac4390f110e15261851b0701e7497bf8185097f19c5c301"
+    },
+    "opnieuw": {
+      "file": "ffcb52fb9072f84c002bfa9733758ecd762c58542c4b2f04cdcb90bde16f39d9.mp3",
+      "sha256": "ddd49508755c3404a34e87033f728255ec1e315b41887c11b3e23ccab5cb9719"
+    },
+    "rennen": {
+      "file": "a5f2cc246191c0e34f2469d5d84a34ec3f575a4a3ff2ccb39b81e02f6985552b.mp3",
+      "sha256": "3671be67560e3d4c94bcda1519b9246278f571b8aca8773b141aa7be8abf1767"
+    },
+    "roeien": {
+      "file": "ff2f723adae19f8ede6fc26dfb6985d140c894d35afa70de6198d1276834b4d9.mp3",
+      "sha256": "0cb7b26bbb95cc7757ad32cb9a15acb056fef33b673252eddc6eb194488c23e6"
+    },
+    "rustig": {
+      "file": "aac3b6ff85b57a73351972be406c894c758e061be1a5ae20319c4ea79448ea90.mp3",
+      "sha256": "2df182c04200671e70707236ec486b48727ca04b2e5b8840713f5ba8dea11d24"
+    },
+    "ruw": {
+      "file": "4addcb010f03f40ca066c77761702b96487bf2ffc31d6c3b931afe46fd8d1745.mp3",
+      "sha256": "c62b9b87ecc0f445136f29cf42bb6b0e60f1244aba83083fcc355516bb5966bd"
+    },
+    "saai": {
+      "file": "4a5325bd977456dc87d5cc0554461152e3dd2081debfd6e28951aea538cfed4c.mp3",
+      "sha256": "84ff7f525d35ad2bd62c073bfe09e5cd458d6bdb2f68d120ea61190508d1f02f"
+    },
+    "schreeuwen": {
+      "file": "7863dffd7be11a18d77a2b982f98a710a6ff285e55dfec2da01b8e7d83d692b8.mp3",
+      "sha256": "f9a57d42b37d87b1776043caf1359766b1afd8aa56d4f31b68b17db28aaf35b2"
+    },
+    "schuw": {
+      "file": "7429dec75cbbe2ed4e43ba8fbb3adda9a2939ef31fdc02d8e22b31e68daa78a3.mp3",
+      "sha256": "88d0dfa967cf5a728784e66eccaead6679399955e98e83f0bf2d3ae097d6cbbb"
+    },
+    "slapen": {
+      "file": "716da7bd7b0c83c3e5140eed99b32fb76b6a8ba0ccda43181412b731c9a76df4.mp3",
+      "sha256": "4c12908af6a0968446a09cca6b1391f61b9754519dcf86eb10ee0b0f2053571d"
+    },
+    "sluw": {
+      "file": "70be3c6e131c7bf9b1af3a00801f84d1329656b9ab5724d57dae37710690c64e.mp3",
+      "sha256": "cd32ba72264dc72f8b0ea23b33a10ec66d265c9010ddb38e8f1da30cb8c9b0c3"
+    },
+    "snoeien": {
+      "file": "ab60069793f3c9b6a22cfc1b6f8f641cde8ae5cb84afe914bc289fadbdac57b0.mp3",
+      "sha256": "40bcec59a2d3879c1c0900bb24d0aa075a70ff715e4cb712e7363ebc164f0bde"
+    },
+    "spelen": {
+      "file": "b288ab96a0c0d86912afc3315f4a26a2d5b3d8f2f1114b0a013f2a46a0fe3370.mp3",
+      "sha256": "cec2ff2e6ff2e68266d8f0e8e4378db7ad3d9d7f3b28b3842a4c3f983727e25c"
+    },
+    "strooien": {
+      "file": "60742183ade276a6eaca10b1dcdefdfb4f3707212e6af7249490a3c98cba44c9.mp3",
+      "sha256": "da1e798945b230f55c2bb5214179dffa4c81f83284bd81c6b1419900bf71b707"
+    },
+    "toch": {
+      "file": "901a57a023e32405ec982be5fbcf12430d277be39bc3c5d921fefbc293ded23c.mp3",
+      "sha256": "e7f32f6c39a44c3d42b1a2b25f332ff918d8f8b8a6fc0f7ccd694b8ec6fab6b9"
+    },
+    "uw": {
+      "file": "cf1ef5cd427c467c6fd88edda57a911962c89a9d55363c11cc85e3daa68af443.mp3",
+      "sha256": "91dc78b745e59898c0396bfa0da5e47ffe72d4acf785138ec4e90f4b4d864c06"
+    },
+    "verdrietig": {
+      "file": "23f785fe126da356e16a7a9bf2a252df7b07fcb40a79a4ad9e29de88daabf0ea.mp3",
+      "sha256": "b6ddfa5816fca96617a539edcc9e8370d0c3e13317af076cf9a39c59bf207c6a"
+    },
+    "vernieuwd": {
+      "file": "6d1eec2a406f6b37ad483c8da9e33d411901116955c6cba42ff9e717e574c153.mp3",
+      "sha256": "f291d8ff85bac84135f740b42ffd656321cb81d72bf8844a3685cea579b7000f"
+    },
+    "vernieuwen": {
+      "file": "4a23e6be908e4f1ebf007e0fb70ea86268349d26b39fc0f8fafb753168128aec.mp3",
+      "sha256": "7a4508369ce695cfb2306463982b90b2707d402ac67db6e53a2e9b238c0e206e"
+    },
+    "vijf": {
+      "file": "be9df420b4dcb3da6d47222590b956e3bb55e31fb8c1801f8d5a7750a6d12274.mp3",
+      "sha256": "14c9c605897a1863fcb1a2b39b246224f1505b599a924a3298d39fa391027f56"
+    },
+    "vriendelijk": {
+      "file": "4c49ca2d30ce568202016a53ff08c29d8a660376020d29dca31f9f73029ed785.mp3",
+      "sha256": "47b219c609bd597576b40be450191fa5ae300a42c00a842b07d4e4046f2d62e9"
+    },
+    "vrolijk": {
+      "file": "87b0aa58ba6ac697007f8edf0261ba0347056a300cb26bd0c56df4323f38717e.mp3",
+      "sha256": "e51344ff924dc8c807629d3f59c2a0ab78a6eb1e31d74f0ab33ba8470c090853"
+    },
+    "waarschuwen": {
+      "file": "834fa5e4986f767176c71938bf225880237ad89dc4d3f32172b3fb5a05118f03.mp3",
+      "sha256": "287579952cb8750163b32ea59d5cc065c3f7771ed5cf32a7548fa2112dd5a541"
+    },
+    "zich": {
+      "file": "bd7e442611996ce096ab20cea27930134405eb4663fd36eb06799f0fd2f6bb45.mp3",
+      "sha256": "174dba5f3ab002564ba057a2357fd3333825b1a3711e25a50ff3c3509221855d"
+    },
+    "ziek": {
+      "file": "98d909483ea945f21bb8e77806308ccc3fba38089a043f85e2c1615e18bfc9a2.mp3",
+      "sha256": "fd94659e669c716fda574550a8df73866c0d12de90a4e495ead8fb7f71bdfd0a"
+    },
+    "zonnig": {
+      "file": "c4070224d8d9c880fb39a7716233ae19b38eb2ba934d221acd5f9d597c5e5c11.mp3",
+      "sha256": "e2209dc6ea57851df3569d4d36c38a8bb4b2988d2e622303c0853429fdad8e70"
+    },
+    "zwaaien": {
+      "file": "ae06e825dcfb89de5ed43b543dd9817fb636582a12678210f0043f25d63e3953.mp3",
+      "sha256": "a798b2ccf87481b61d73f79380afa56c5e10634b7fa9b897c5fd899dc18d121c"
+    }
+  }
+}

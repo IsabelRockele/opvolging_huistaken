@@ -1,23 +1,24 @@
 'use client';
-import {useEffect,useRef,useState} from 'react';
+import {useCallback,useEffect,useRef,useState} from 'react';
+import {denaUrl,prepareDena} from '@/lib/dena-audio';
+import {createDenaPlayer} from '@/lib/dena-player';
+import type {SpellingEntry} from '@/lib/spelling';
 export function useDictationVoice(){
- const [voices,setVoices]=useState<SpeechSynthesisVoice[]>([]),[voiceName,setVoiceName]=useState(''),[speaking,setSpeaking]=useState(false),[voiceError,setVoiceError]=useState('');
- const active=useRef<SpeechSynthesisUtterance|null>(null),locked=useRef(false);
- useEffect(()=>{if(!('speechSynthesis' in window))return;const load=()=>{const list=speechSynthesis.getVoices().filter(v=>/^nl([_-]|$)/i.test(v.lang));setVoices(list);setVoiceName(old=>list.some(v=>v.name===old)?old:list.find(v=>/BE/i.test(v.lang))?.name||list[0]?.name||'');};load();speechSynthesis.addEventListener('voiceschanged',load);return()=>{speechSynthesis.removeEventListener('voiceschanged',load);active.current=null;locked.current=false;speechSynthesis.cancel();};},[]);
- function cancel(){active.current=null;locked.current=false;setSpeaking(false);if('speechSynthesis' in window)speechSynthesis.cancel();}
+ const [speaking,setSpeaking]=useState(false),[voiceError,setVoiceError]=useState(''),[preparing,setPreparing]=useState(false),[progress,setProgress]=useState('');
+ const player=useRef<ReturnType<typeof createDenaPlayer>|null>(null),locked=useRef(false),mounted=useRef(true),job=useRef(0);
+ const cancel=useCallback(()=>{player.current?.stop();locked.current=false;setSpeaking(false);},[]);
+ useEffect(()=>{mounted.current=true;return()=>{mounted.current=false;job.current++;player.current?.stop();locked.current=false;};},[]);
+ const prepare=useCallback(async(entries:SpellingEntry[])=>{
+  const id=++job.current;setPreparing(true);setVoiceError('');
+  try{await prepareDena(entries,message=>{if(mounted.current&&job.current===id)setProgress(message);},()=>mounted.current&&job.current===id);}
+  catch(e){if(mounted.current&&job.current===id)setVoiceError((e as Error).message);throw e;}
+  finally{if(mounted.current&&job.current===id){setPreparing(false);setProgress('');}}
+ },[]);
  function speak(text:string,onStarted?:()=>void){
   if(locked.current)return;
-  if(!('speechSynthesis' in window)){setVoiceError('Voorlezen is niet beschikbaar. Probeer Safari op de iPad of een browser met Nederlandse spraak.');return;}
-  const available=speechSynthesis.getVoices().filter(v=>/^nl([_-]|$)/i.test(v.lang));
-  const voice=available.find(v=>v.name===voiceName)||available.find(v=>/BE/i.test(v.lang))||available[0];
-  speechSynthesis.cancel();const utterance=new SpeechSynthesisUtterance(text);utterance.lang=voice?.lang||'nl-BE';utterance.voice=voice||null;utterance.rate=.8;
-  active.current=utterance;locked.current=true;setSpeaking(true);setVoiceError('');
-  let started=false;const watchdog=setTimeout(()=>{if(active.current===utterance&&!started){active.current=null;locked.current=false;setSpeaking(false);speechSynthesis.cancel();setVoiceError('Er kon geen stem starten. Kies een Nederlandse stem en tik opnieuw op de luidspreker.');}},6000);
-  const done=()=>{clearTimeout(watchdog);if(active.current!==utterance)return;active.current=null;locked.current=false;setSpeaking(false);};
-  utterance.onstart=()=>{if(active.current!==utterance||started)return;started=true;clearTimeout(watchdog);onStarted?.();};
-  utterance.onend=done;
-  utterance.onerror=e=>{if(active.current!==utterance)return;done();if(e.error!=='interrupted'&&e.error!=='canceled')setVoiceError('Geen stem gehoord? Controleer het volume en kies een Nederlandse stem. Tik daarna opnieuw op de luidspreker.');};
-  speechSynthesis.speak(utterance);
+  const url=denaUrl(text);if(!url){setVoiceError('De Dena-audio is nog niet klaar. Klik op Audio opnieuw laden en daarna op de luidspreker.');return;}
+  player.current??=createDenaPlayer();locked.current=true;setSpeaking(true);setVoiceError('');
+  player.current.play(url,{started:onStarted,done:()=>{locked.current=false;if(mounted.current)setSpeaking(false);},error:message=>{if(mounted.current)setVoiceError(message);}});
  }
- return {voices,voiceName,setVoiceName,speaking,voiceError,speak,cancel};
+ return {speaking,voiceError,preparing,progress,prepare,speak,cancel};
 }
