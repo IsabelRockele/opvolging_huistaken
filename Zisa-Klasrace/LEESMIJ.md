@@ -5,9 +5,9 @@ Zisa-klasrace vervangt de zichtbare tegel van TafelExpeditie. De map `tafelexped
 ## In de klas
 
 1. Meld je aan in het schoolportaal en open Zisa-klasrace.
-2. Vul een herkenbare klasnaam in, bijvoorbeeld 2A - juf Isabel.
+2. Kies je klas uit de gekoppelde klaslijsten van de huiswerkapp.
 3. Kies de oefeningen en zet de race klaar.
-4. Laat kinderen de nieuwe QR-code op het bord scannen en hun voornaam invullen.
+4. Laat kinderen de nieuwe QR-code op het bord scannen en hun eigen naam kiezen.
 5. Controleer de wachtlijst. Klik per kind op Toelaten of Weigeren.
 6. Start zodra alle aanmeldingen behandeld zijn. Maximaal 32 kinderen kunnen meespelen.
 
@@ -36,3 +36,11 @@ De test in `tests/firebase-game.test.mjs` is een echte online integratietest. Ze
 ## Nog controleren op school
 
 Test de QR-code, de schermvullende stand en het geluid eenmaal met het echte smartboard en twee iPads. De Nederlandse dicteestem komt van het toestel; Azure Dena is in dit pakket nog niet gekoppeld. Gebruik een hoofdtelefoon bij zelfstandig dictee. De leerlingresultaten zijn bedoeld voor oefenen, niet als beveiligde toetsafname.
+
+## Klaslijsten en schooljaar
+
+De tool leest de klaslijsten van het actieve schooljaar in de huiswerkapp. Leerlingen worden met dezelfde sorteersleutel als de klasnummerlijst gerangschikt op achternaam en roepnaam. De naamkeuze toont klasnummer en voornaam in drie kolommen, van boven naar beneden en daarna de volgende kolom. Achternamen worden niet meegestuurd naar leerlinglinks.
+
+Elke nieuwe race of oefen-QR krijgt een momentopname van de huidige klaslijst. Maak na wijzigingen aan de klaslijst een nieuwe QR-code. De schooljaargrens volgt de huiswerkapp (1 augustus); oude klaslinks verlopen uiterlijk op die grens. Nieuwe links gebruiken automatisch de nieuwe klaslijst. Bestaande links schuiven nooit door naar nieuwe leerlingen.
+
+De naamkeuze bij zelfstandig dictee is gekoppeld; de resultaten worden nog niet centraal opgeslagen. Een naam kiezen is geen controle van de identiteit.

@@ -1,3 +1,4 @@
+import {teacherClasses,classRoster,schoolYear,schoolYearEnd} from './class-roster';
 import {questions,validSettings,publicQuestion} from './race';
 import {spellingCorrect,validEntry} from './spelling';
 
@@ -27,27 +28,33 @@ export function firebaseGame(f:any,auth:any,db:any){
   return w;
  }
  return async function api(b:any){
+  if(b.action==='teacher-classes')return teacherClasses(f,auth,db);
+  if(b.action==='class-roster')return classRoster(f,auth,db,b.className);
   if(b.action==='disconnect'){for(const w of watches.values())w.stops.forEach((stop:any)=>stop());watches.clear();return {ok:true};}
   if(b.action==='create'){
    const uid=await teacher();if(!validSettings(b.settings))throw Error('Controleer de gekozen oefeningen.');
    const className=String(b.className||'').trim();if(!className||className.length>60)throw Error('Vul je klasnaam in.');
+   const linked=b.classId?await classRoster(f,auth,db,b.classId):null;
+   const roster=linked?Object.fromEntries(linked.pupils.map(p=>[p.id,p])):{};
    const alphabet='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
    for(let i=0;i<8;i++){
     const code=Array.from(crypto.getRandomValues(new Uint8Array(6)),v=>alphabet[v%alphabet.length]).join('');
     const made=await runTransaction(db,async(t:any)=>{const ref=room(code);if((await t.get(ref)).exists())return false;
-     t.set(ref,{owner:uid,className,settings:clean({...b.settings,words:[],entries:[]}),status:'waiting',approvedCount:0,pendingCount:0,round:0,started:0,created:Date.now(),expires:Date.now()+86400000});
+     t.set(ref,{owner:uid,className:linked?.className||className,roster,schoolyear:linked?.schoolyear||'',settings:clean({...b.settings,words:[],entries:[]}),status:'waiting',approvedCount:0,pendingCount:0,round:0,started:0,created:Date.now(),expires:linked?Math.min(Date.now()+86400000,schoolYearEnd(linked.schoolyear)):Date.now()+86400000});
      t.set(quiz(code),clean({questions:questions(b.settings),entries:b.settings.entries||[]}));return true;});
     if(made)return {code,host:uid};
    }throw Error('Een eigen spelcode maken lukt even niet. Probeer opnieuw.');
   }
   if(b.action==='practice-create'){
    const owner=await teacher();if(!Array.isArray(b.entries)||!b.entries.length||b.entries.length>40||!b.entries.every(validEntry))throw Error('Kies 1 tot 40 geldige opdrachten.');
-   const id=crypto.randomUUID(),expires=Date.now()+30*86400000;await setDoc(doc(db,'zisa_klasrace_oefenen',id),clean({owner,title:String(b.title).slice(0,80),entries:b.entries,expires}));return {id,expires};
+   const linked=b.classId?await classRoster(f,auth,db,b.classId):null;
+   const id=crypto.randomUUID(),expires=linked?Math.min(Date.now()+30*86400000,schoolYearEnd(linked.schoolyear)):Date.now()+30*86400000;await setDoc(doc(db,'zisa_klasrace_oefenen',id),clean({owner,title:String(b.title).slice(0,80),entries:b.entries,expires,className:linked?.className||'',schoolyear:linked?.schoolyear||'',pupils:linked?.pupils||[]}));return {id,expires};
   }
   if(b.action==='practice-read'){
-   if(!/^[a-f0-9-]{36}$/.test(b.id))throw Error('Deze oefenlink klopt niet.');const s=await getDoc(doc(db,'zisa_klasrace_oefenen',b.id));if(!s.exists()||s.data().expires<Date.now())throw Error('Deze oefenlink is verlopen.');return s.data();
+   if(!/^[a-f0-9-]{36}$/.test(b.id))throw Error('Deze oefenlink klopt niet.');const s=await getDoc(doc(db,'zisa_klasrace_oefenen',b.id));if(!s.exists()||s.data().expires<Date.now())throw Error('Deze oefenlink is verlopen.');if(s.data().schoolyear&&s.data().schoolyear!==schoolYear())throw Error('Deze QR-code hoort bij een vorig schooljaar. Vraag je leerkracht de nieuwe QR-code.');return s.data();
   }
   const uid=await signedIn(),code=String(b.code||'').toUpperCase();if(!/^[A-Z2-9]{6}$/.test(code))throw Error('Deze racecode klopt niet.');
+  if(b.action==='join-info'){const r=required(await getDoc(room(code)));return {className:r.className,pupils:Object.values(r.roster||{}).sort((a:any,b:any)=>a.classNumber-b.classNumber)};}
   if(b.action==='read'){
    const host=b.host===uid,w=await snapshot(code,host);if(!w)return {loading:true};const r=w.room;
    if(host&&r.owner!==uid)throw Error('Dit is de race van een andere leerkracht.');
@@ -60,12 +67,13 @@ export function firebaseGame(f:any,auth:any,db:any){
    return {code,className:r.className,status:r.status,settings:r.settings,started:r.started,round:r.round,serverNow:Date.now(),hostPrompt:host&&r.settings.kind==='spelling'?w.quiz?.entries?.[r.round]||null:null,players:ps.map(show),pending:host?w.players.filter((p:any)=>!p.approved).map(show):[],me};
   }
   if(b.action==='join'){
-   const name=String(b.name||'').trim().slice(0,18).replace(/\//g,'-');if(!name)throw Error('Vul je voornaam in.');
+   let name=String(b.name||'').trim().slice(0,18).replace(/\//g,'-');
    return runTransaction(db,async(t:any)=>{
     const r=required(await t.get(room(code))),ref=player(code,uid),existing=await t.get(ref);if(existing.exists())return {id:existing.data().id,token:uid};
     if(r.status!=='waiting')throw Error('De race is al gestart. Wacht op de volgende ronde.');
+    const pupil=r.roster?.[b.studentId];if(Object.keys(r.roster||{}).length){if(!pupil)throw Error('Kies je naam uit de klaslijst.');name=pupil.name;}if(!name)throw Error('Vul je voornaam in.');
     const nameRef=doc(db,'zisa_klasrace',code,'names',name.toLowerCase());if((await t.get(nameRef)).exists())throw Error('Deze naam is al aangemeld. Gebruik ook je klasnummer.');
-    if(r.pendingCount>=64)throw Error('De wachtlijst is vol.');const id=uid;t.update(room(code),{pendingCount:r.pendingCount+1});t.set(nameRef,{uid});t.set(ref,{uid,id,name,approved:false,score:0,mistakes:0,finished:0,round:-1,corrected:0});return {token:uid,id};
+    if(r.pendingCount>=64)throw Error('De wachtlijst is vol.');const id=uid;t.update(room(code),{pendingCount:r.pendingCount+1});t.set(nameRef,{uid});t.set(ref,{uid,id,name,...(pupil?{studentId:pupil.id}:{}),approved:false,score:0,mistakes:0,finished:0,round:-1,corrected:0});return {token:uid,id};
    });
   }
   if(['approve','remove','start','end','next'].includes(b.action)){

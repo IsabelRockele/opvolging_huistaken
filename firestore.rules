@@ -559,9 +559,10 @@ match /schoolbeheer_groepen/{groepDocId} {
         allow get: if request.auth != null && active() && (request.auth.uid == uid || owner() || member());
         allow list: if active() && (owner() || member());
         allow create: if request.auth != null && request.auth.uid == uid && active() && room().status == 'waiting'
-          && request.resource.data.keys().hasOnly(['uid','id','name','approved','score','mistakes','finished','round','corrected'])
+          && request.resource.data.keys().hasOnly(['uid','id','name','studentId','approved','score','mistakes','finished','round','corrected'])
           && request.resource.data.uid == uid && request.resource.data.id == uid
           && request.resource.data.name is string && request.resource.data.name.size() > 0 && request.resource.data.name.size() <= 18
+          && (room().get('roster', {}).size() == 0 || (request.resource.data.studentId in room().roster && request.resource.data.name == room().roster[request.resource.data.studentId].name))
           && request.resource.data.approved == false && request.resource.data.score == 0
           && request.resource.data.mistakes == 0 && request.resource.data.finished == 0
           && request.resource.data.round == -1 && request.resource.data.corrected == 0

@@ -5,13 +5,19 @@ import {initializeApp,deleteApp} from 'firebase/app';
 import {getAuth,createUserWithEmailAndPassword,signInAnonymously,deleteUser} from 'firebase/auth';
 import * as f from 'firebase/firestore';
 import {firebaseGame} from './.generated/firebase-game.mjs';
+import {schoolYear,schoolYearEnd} from './.generated/class-roster.mjs';
+test('schoolyear changes on the portal boundary and old links end there',()=>{
+ const OriginalDate=Date;let stamp=new OriginalDate(2027,6,31,12).getTime();
+ globalThis.Date=class extends OriginalDate{constructor(...args){super(...(args.length?args:[stamp]));}static now(){return stamp;}};
+ try{assert.equal(schoolYear(),'2026-2027');assert.equal(schoolYearEnd(),new OriginalDate(2027,7,1).getTime());stamp=new OriginalDate(2027,7,1,12).getTime();assert.equal(schoolYear(),'2027-2028');}finally{globalThis.Date=OriginalDate;}
+});
 const config={apiKey:'AIzaSyA7KxXMvZ4dzBQDut3CMyWUblLte2tFzoQ',projectId:'huiswerkapp-a311e',authDomain:'huiswerkapp-a311e.firebaseapp.com'};
 const settings={kind:'tables',words:[],tables:[2],multiply:true,divide:false,add:true,subtract:false,bridge:false,maxSplit:10,count:10};
 
 test('online: two teachers, two children, approval, isolation, answers and reconnect', {skip:process.env.KLASRACE_LIVE_TEST!=='1',timeout:120000},async()=>{
  const require=createRequire(import.meta.url),cli=require('C:/Users/isabe/AppData/Roaming/npm/node_modules/firebase-tools/lib/auth.js');
  const account=cli.getGlobalDefaultAccount(),tokens=await cli.getAccessToken(account.tokens.refresh_token,account.tokens.scopes);
- const apps=[],roles=[],rooms=[],practices=[];f.setLogLevel('silent');
+ const apps=[],roles=[],rooms=[],practices=[],classDocs=[];f.setLogLevel('silent');
  const admin=async(path,method='GET',body)=>{
   const r=await fetch('https://firestore.googleapis.com/v1/projects/huiswerkapp-a311e/databases/(default)/documents/'+path,{method,headers:{Authorization:'Bearer '+tokens.access_token,'Content-Type':'application/json'},body:body?JSON.stringify(body):undefined});
   if(!r.ok&&r.status!==404)throw Error('Test setup/cleanup: '+r.status);return r;
@@ -27,22 +33,32 @@ test('online: two teachers, two children, approval, isolation, answers and recon
  }
  try{
   const a=await client(true),b=await client(true),p=await client(false),q=await client(false);
-  const [ar,br]=await Promise.all([a.api({action:'create',settings,className:'TEST 2A'}),b.api({action:'create',settings,className:'TEST 2B'})]);rooms.push(ar.code,br.code);assert.notEqual(ar.code,br.code);
-  const [ap,bp]=await Promise.all([p.api({action:'join',code:ar.code,name:'Test Noor'}),q.api({action:'join',code:br.code,name:'Test Milan'})]);
+  const year=(await a.api({action:'teacher-classes'})).schoolyear,cls='TEST-'+crypto.randomUUID().slice(0,8);
+  const fv=v=>Array.isArray(v)?{arrayValue:{values:v.map(fv)}}:typeof v==='object'?{mapValue:{fields:Object.fromEntries(Object.entries(v).map(([k,x])=>[k,fv(x)]))}}:typeof v==='boolean'?{booleanValue:v}:typeof v==='number'?{integerValue:String(v)}:{stringValue:v};
+  const save=async(path,data)=>{classDocs.push(path);await admin(path,'PATCH',{fields:fv(data).mapValue.fields});};
+  await save('klasleerkrachten/'+year+'_'+cls,{schooljaar:year,klas:cls,leerkracht_uids:[a.auth.currentUser.uid],leerkracht_emails:[a.auth.currentUser.email]});
+  await save('schoolbeheer/'+year+'/klassen/'+cls,{leerlingen:[{id:'z',first:'Zoe',last:'Zwaan'},{id:'n',first:'Noor',last:'Aerts'},{id:'e',first:'Emma',last:'Aerts'},{id:'inactive',first:'Oud',last:'A',actief:false}]});
+  assert.deepEqual((await a.api({action:'teacher-classes'})).classes,[cls]);
+  await assert.rejects(b.api({action:'class-roster',className:cls}),/niet aan jouw account/);
+  const roster=await a.api({action:'class-roster',className:cls});
+  assert.deepEqual(roster.pupils.map(p=>[p.classNumber,p.firstName]),[[1,'Emma'],[2,'Noor'],[3,'Zoe']]);
+  assert.ok(!JSON.stringify(roster.pupils).includes('Aerts'));
+  const [ar,br]=await Promise.all([a.api({action:'create',settings,className:cls,classId:cls}),b.api({action:'create',settings,className:'TEST 2B'})]);rooms.push(ar.code,br.code);assert.notEqual(ar.code,br.code);
+  const [ap,bp]=await Promise.all([p.api({action:'join',code:ar.code,studentId:roster.pupils[1].id}),q.api({action:'join',code:br.code,name:'Test Milan'})]);
   assert.equal((await read(p,{code:ar.code})).me.approved,false);
   assert.equal((await read(a,ar)).players.length,0);
   await assert.rejects(f.updateDoc(f.doc(p.db,'zisa_klasrace',ar.code,'players',p.auth.currentUser.uid),{approved:true}),e=>e.code==='permission-denied');
   await assert.rejects(f.getDocs(f.collection(p.db,'zisa_klasrace',br.code,'players')),e=>e.code==='permission-denied');
   await assert.rejects(f.updateDoc(f.doc(a.db,'zisa_klasrace',br.code),{status:'ended'}),e=>e.code==='permission-denied');
   await Promise.all([a.api({action:'approve',...ar,playerId:ap.id}),b.api({action:'approve',...br,playerId:bp.id})]);
-  assert.deepEqual((await read(a,ar,r=>r.players.length===1)).players.map(p=>p.name),['Test Noor']);
+  assert.deepEqual((await read(a,ar,r=>r.players.length===1)).players.map(p=>p.name),['Noor (2)']);
   assert.deepEqual((await read(b,br,r=>r.players.length===1)).players.map(p=>p.name),['Test Milan']);
   await assert.rejects(f.getDoc(f.doc(p.db,'zisa_klasrace',br.code,'private','quiz')),e=>e.code==='permission-denied');
   await assert.rejects(f.updateDoc(f.doc(p.db,'zisa_klasrace',br.code,'players',q.auth.currentUser.uid),{score:1}),e=>e.code==='permission-denied');
-  assert.equal((await p.api({action:'join',code:ar.code,name:'Test Noor'})).id,ap.id);
-  const wrong=await q.api({action:'join',code:ar.code,name:'Verkeerde klas'});
+  assert.equal((await p.api({action:'join',code:ar.code,studentId:roster.pupils[1].id})).id,ap.id);
+  const wrong=await q.api({action:'join',code:ar.code,studentId:roster.pupils[0].id});
   await assert.rejects(a.api({action:'start',...ar}),/wachtende/);
-  assert.deepEqual((await read(a,ar,r=>r.pending.length===1)).players.map(p=>p.name),['Test Noor']);
+  assert.deepEqual((await read(a,ar,r=>r.pending.length===1)).players.map(p=>p.name),['Noor (2)']);
   await a.api({action:'remove',...ar,playerId:wrong.id});
   console.log('Approval and class isolation verified');await Promise.all([a.api({action:'start',...ar}),b.api({action:'start',...br})]);
   console.log('Both games started');await new Promise(r=>setTimeout(r,4300));
@@ -57,8 +73,9 @@ test('online: two teachers, two children, approval, isolation, answers and recon
   console.log('One game ended independently');await b.api({action:'remove',...br,playerId:bp.id});
   await assert.rejects(f.getDoc(f.doc(q.db,'zisa_klasrace',br.code,'private','quiz')),e=>e.code==='permission-denied');
   const entry={label:'de maan',answer:'maan',article:'de',caseSensitive:false,spoken:'de maan'};
-  const practice=await a.api({action:'practice-create',title:'Testdictee',entries:[entry]});practices.push(practice.id);
+  const practice=await a.api({action:'practice-create',classId:cls,title:'Testdictee',entries:[entry]});practices.push(practice.id);assert.ok(practice.expires<=schoolYearEnd(year));
   assert.equal((await q.api({action:'practice-read',id:practice.id})).entries[0].answer,'maan');
+  assert.deepEqual((await q.api({action:'practice-read',id:practice.id})).pupils.map(p=>p.classNumber),[1,2,3]);
   const spelling=await a.api({action:'create',className:'TEST dictee',settings:{...settings,kind:'spelling',words:['de maan'],entries:[entry],count:1}});rooms.push(spelling.code);
   const sp=await p.api({action:'join',code:spelling.code,name:'Test Noor'});await a.api({action:'approve',...spelling,playerId:sp.id});await a.api({action:'start',...spelling});
   await new Promise(r=>setTimeout(r,4300));
@@ -72,6 +89,7 @@ test('online: two teachers, two children, approval, isolation, answers and recon
   // Delete only the unique records created by this test.
   for(const code of rooms){for(const sub of ['players','names','private']){const response=await admin('zisa_klasrace/'+code+'/'+sub);if(response.ok){const data=await response.json();for(const d of data.documents||[])await admin(d.name.split('/documents/')[1],'DELETE');}}await admin('zisa_klasrace/'+code,'DELETE');}
   for(const id of practices)await admin('zisa_klasrace_oefenen/'+id,'DELETE');
+  for(const path of classDocs.reverse())await admin(path,'DELETE');
   for(const uid of roles)await admin('schoolrollen/'+uid,'DELETE');
   for(const {app,auth,db} of apps){await f.terminate(db);if(auth.currentUser)await deleteUser(auth.currentUser);await deleteApp(app);}
  }
