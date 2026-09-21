@@ -18,6 +18,7 @@
     button,.back{border:0;border-radius:11px;padding:10px 15px;background:var(--green);color:#fff;font:inherit;font-weight:800;cursor:pointer;text-decoration:none}button.secondary,.back{background:#e7efea;color:var(--ink)}button:disabled{opacity:.55;cursor:wait}
     .class-block{border:1px solid var(--line);border-radius:14px;margin:12px 0;overflow:hidden}.class-block h3{margin:0;padding:11px 15px;background:var(--soft)}
     .student{display:flex;gap:12px;align-items:center;padding:10px 15px;border-top:1px solid #edf1ef}.student input{width:20px;height:20px;accent-color:var(--red)}.student label{font-weight:650;cursor:pointer;flex:1}
+    #bewaarStatus{position:fixed;bottom:18px;right:18px;z-index:1000;max-width:calc(100% - 36px);padding:10px 15px;border:1px solid #bad8c3;border-radius:9px;background:#e4f5e9;color:#205f3d;box-shadow:0 3px 14px #0002;font-size:14px;font-weight:700}#bewaarStatus:empty{display:none}#bewaarStatus.fout{background:#fff1f1;color:#9b2c2c;border-color:#efb7b7}
     .exceptions{display:grid;gap:5px}
     .exception{display:grid;grid-template-columns:minmax(150px,1fr) 65px minmax(180px,1.6fr) auto;align-items:center;gap:8px 12px;border:1px solid #efb7b7;border-left:4px solid #c83e3e;border-radius:7px;background:var(--redsoft);padding:7px 10px;font-size:14px;line-height:1.35}
     .exception>strong{color:#7f1d1d;overflow-wrap:anywhere}.exception>span{white-space:nowrap}
@@ -64,6 +65,7 @@
     </section>
   </main>
 
+  <div id="bewaarStatus" role="status" aria-live="polite"></div>
   <script src="jspdf.umd.min.js"></script>
   <script type="module">
     import { wijzigFotoreden, zelfdeFotoregistratie, maakFotoPdf } from "./fototoestemming.js?v=20260921-2";
@@ -120,13 +122,15 @@
       if(reden===null)return;
       if(reden.length>2000){alert('Gebruik maximaal 2000 tekens voor de reden.');return;}
       button.disabled=true;
+      $('bewaarStatus').className='';$('bewaarStatus').textContent=`Reden voor ${leerling.naam} wordt opgeslagen…`;
       try{
         await runTransaction(db,async transaction=>{
           const snap=await transaction.get(documentRef),item=snap.exists()?snap.data():{};
           if(!(item.uitzonderingen||[]).some(x=>zelfdeFotoregistratie(x,leerling)))throw Error('Deze leerling staat niet meer bij “Mag niet op de foto”.');
           transaction.set(documentRef,{uitzonderingen:wijzigFotoreden(item,leerling,reden)},{merge:true});
         });
-      }catch(err){if(schooljaar===jaar)alert('De reden kon niet worden bewaard: '+err.message);}
+        if(schooljaar===jaar){$('bewaarStatus').className='';$('bewaarStatus').textContent=`✓ Reden opgeslagen voor ${leerling.naam}`;}
+      }catch(err){if(schooljaar===jaar){$('bewaarStatus').className='fout';$('bewaarStatus').textContent='Niet opgeslagen: '+err.message;alert('De reden kon niet worden bewaard: '+err.message);}}
       finally{button.disabled=false;}
     });
     async function downloadFotoPdf(){
@@ -162,6 +166,7 @@
       docs.forEach((snap,i)=>{const klas=[...klassen][i];geladenKlassen.add(klas);if(snap.exists())(snap.data().leerlingen||[]).filter(s=>actief(s,schooljaar)).forEach(leerling=>klasleerlingen.push({klas,leerling}))});
     }
     async function laad(){
+      $('bewaarStatus').textContent='';
       $('pdfFoto').disabled=true;
       if(unsub){unsub();unsub=null}$('status').className='status';$('status').textContent='Gegevens worden geladen…';
       await laadKlassen();
