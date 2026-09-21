@@ -19,7 +19,7 @@
     .class-block{border:1px solid var(--line);border-radius:14px;margin:12px 0;overflow:hidden}.class-block h3{margin:0;padding:11px 15px;background:var(--soft)}
     .student{display:flex;gap:12px;align-items:center;padding:10px 15px;border-top:1px solid #edf1ef}.student input{width:20px;height:20px;accent-color:var(--red)}.student label{font-weight:650;cursor:pointer;flex:1}
     .exceptions{display:grid;gap:10px}.exception{border:1px solid #efb7b7;border-left:7px solid #c83e3e;border-radius:12px;background:var(--redsoft);padding:13px 15px;display:flex;justify-content:space-between;gap:14px}.exception strong{color:#7f1d1d}.missing{border-color:#ead17a;border-left-color:#c28b00;background:#fff9dc}.missing strong{color:#755600}.empty{padding:24px;text-align:center;color:var(--muted);background:var(--soft);border-radius:12px}
-    .meta{font-size:14px;color:var(--muted)}.hidden{display:none!important}
+    .exception{flex-wrap:wrap}.foto-reden{flex-basis:100%;margin:0;white-space:pre-wrap;overflow-wrap:anywhere}.exception button{font-size:14px;padding:6px 10px}.meta{font-size:14px;color:var(--muted)}.hidden{display:none!important}
   </style>
 </head>
 <body>
@@ -40,21 +40,25 @@
 
     <section class="card">
       <h2>🚫 Mag niet op de foto</h2>
+      <button id="pdfNee" disabled>PDF downloaden — mag niet op de foto</button>
       <p>Dit overzicht wordt automatisch opgebouwd vanuit de klaslijsten. Alleen de uitzonderingen worden hier getoond; je hoeft hier niets opnieuw aan te duiden.</p>
       <div id="overzicht" class="exceptions"><div class="empty">Nog geen gegevens geladen.</div></div>
       <p id="controleInfo" class="meta"></p>
     </section>
     <section class="card">
       <h2>⚠️ Formulier ontbreekt</h2>
+      <button id="pdfOntbrekend" disabled>PDF downloaden — formulier ontbreekt</button>
       <p>Hier staan de ouders van wie de fototoestemming nog opgevolgd moet worden.</p>
       <div id="ontbrekendOverzicht" class="exceptions"><div class="empty">Nog geen gegevens geladen.</div></div>
     </section>
   </main>
 
+  <script src="jspdf.umd.min.js"></script>
   <script type="module">
+    import { wijzigFotoreden, zelfdeFotoregistratie, maakFotoPdf } from "./fototoestemming.js?v=20260921-1";
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
     import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-    import { getFirestore, collection, doc, getDoc, getDocs, onSnapshot, query, where, setDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    import { getFirestore, collection, doc, getDoc, getDocs, onSnapshot, query, where, runTransaction } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
     const app=initializeApp({apiKey:"AIzaSyA7KxXMvZ4dzBQDut3CMyWUblLte2tFzoQ",authDomain:"huiswerkapp-a311e.firebaseapp.com",projectId:"huiswerkapp-a311e",storageBucket:"huiswerkapp-a311e.appspot.com",messagingSenderId:"797169941164",appId:"1:797169941164:web:511d9618079f1378d0fd09"});
     const auth=getAuth(app),db=getFirestore(app),$=id=>document.getElementById(id);
@@ -82,27 +86,52 @@
         return (id&&leerlingId===id)||(item.klas===klas&&naamSleutel&&leerlingNaam===naamSleutel);
       });
     }
+    function fotoRij(x){
+      return `<div class="exception"><strong>${esc(x.naam)}</strong><span>Klas ${esc(x.klas)}</span><p class="foto-reden"><strong>Reden:</strong> ${esc(x.reden||'Geen reden ingevuld')}</p>${magBeheren()?`<button class="secondary" data-fotoreden="${esc(JSON.stringify(x))}">${x.reden?'Reden wijzigen':'Reden toevoegen'}</button>`:''}</div>`;
+    }
     function renderOverzicht(){
       const q=$('zoek').value.trim().toLocaleLowerCase('nl');
-      const zichtbareRegistraties=items=>items.filter(actieveFotoRegistratie);
-      const lijst=zichtbareRegistraties(instelling.uitzonderingen||[]).filter(x=>!q||`${x.naam} ${x.klas}`.toLocaleLowerCase('nl').includes(q)).sort((a,b)=>klasSort(a.klas,b.klas)||a.naam.localeCompare(b.naam,'nl'));
-      const ontbrekend=zichtbareRegistraties(instelling.ontbrekendeFormulieren||[]).filter(x=>!q||`${x.naam} ${x.klas}`.toLocaleLowerCase('nl').includes(q)).sort((a,b)=>klasSort(a.klas,b.klas)||a.naam.localeCompare(b.naam,'nl'));
+      const zichtbaar=items=>(items||[]).filter(actieveFotoRegistratie).filter(x=>!q||`${x.naam} ${x.klas}`.toLocaleLowerCase('nl').includes(q)).sort((a,b)=>klasSort(a.klas,b.klas)||a.naam.localeCompare(b.naam,'nl'));
+      const lijst=zichtbaar(instelling.uitzonderingen),ontbrekend=zichtbaar(instelling.ontbrekendeFormulieren);
       const gecontroleerdeIds=new Set((instelling.gecontroleerdeLeerlingen||[]).map(x=>String(x.leerlingId||'')).filter(Boolean));
       const nieuweLeerlingen=magBeheren()&&instelling.bevestigd?klasleerlingen.filter(x=>x.leerling.id&&!gecontroleerdeIds.has(String(x.leerling.id))):[];
-      if(!instelling.bevestigd){
-        $('status').className='status';$('status').textContent=`Fototoestemmingen voor ${schooljaar} zijn nog niet bevestigd door het secretariaat.`;
-        $('overzicht').innerHTML='<div class="empty">Nog te controleren voor dit schooljaar.</div>';
-      }else if(nieuweLeerlingen.length){
-        $('status').className='status';$('status').textContent=`${nieuweLeerlingen.length} nieuwe leerling(en) staan nog op “Nog na te vragen”. Klik in Klaslijsten op hun naam om de fotostatus in te vullen.`;
-        $('overzicht').innerHTML=(lijst.length?lijst.map(x=>`<div class="exception"><strong>${esc(x.naam)}</strong><span>Klas ${esc(x.klas)}</span></div>`).join(''):'<div class="empty">Er waren nog geen uitzonderingen.</div>')+`<div class="empty"><strong>Nog te controleren:</strong> ${nieuweLeerlingen.map(x=>`${esc(naam(x.leerling))} (${esc(x.klas)})`).join(', ')}</div>`;
-      }else{
-        $('status').className=ontbrekend.length?'status':'status ok';$('status').textContent=`Fototoestemmingen ${schooljaar}: ${lijst.length} mogen niet op de foto en ${ontbrekend.length} formulier(en) ontbreken nog.`;
-        $('overzicht').innerHTML=lijst.length?lijst.map(x=>`<div class="exception"><strong>${esc(x.naam)}</strong><span>Klas ${esc(x.klas)}</span></div>`).join(''):'<div class="empty">Alle leerlingen mogen op de foto.</div>';
-      }
-      $('ontbrekendOverzicht').innerHTML=ontbrekend.length?ontbrekend.map(x=>`<div class="exception missing"><strong>${esc(x.naam)}</strong><span>Klas ${esc(x.klas)}</span></div>`).join(''):'<div class="empty">Geen ontbrekende formulieren.</div>';
+      $('status').className=instelling.bevestigd&&!ontbrekend.length&&!nieuweLeerlingen.length?'status ok':'status';
+      $('status').textContent=!instelling.bevestigd?`Fototoestemmingen voor ${schooljaar} zijn nog niet bevestigd.`:nieuweLeerlingen.length?`${nieuweLeerlingen.length} nieuwe leerling(en) staan nog op “Nog na te vragen”. Vul hun fotostatus in de klaslijst in.`:`Fototoestemmingen ${schooljaar}: ${lijst.length} mogen niet op de foto en ${ontbrekend.length} formulier(en) ontbreken nog.`;
+      $('overzicht').innerHTML=lijst.length?lijst.map(fotoRij).join(''):`<div class="empty">${q?'Geen leerlingen gevonden.':instelling.bevestigd?'Geen geregistreerde uitzonderingen.':'Nog te controleren voor dit schooljaar.'}</div>`;
+      $('ontbrekendOverzicht').innerHTML=ontbrekend.length?ontbrekend.map(x=>`<div class="exception missing"><strong>${esc(x.naam)}</strong><span>Klas ${esc(x.klas)}</span></div>`).join(''):'<div class="empty">Geen ontbrekende formulieren gevonden.</div>';
       const wanneer=datumTekst(instelling.gecontroleerdOp);
-      $('controleInfo').textContent=instelling.bevestigd?`Gecontroleerd${wanneer?` op ${wanneer}`:''}${instelling.gecontroleerdDoor?` door ${instelling.gecontroleerdDoor}`:''}.`:'';
+      $('controleInfo').textContent=instelling.bevestigd?`Gecontroleerd${wanneer?` op ${wanneer}`:''}. De PDF bevat het volledige overzicht van dit schooljaar, ongeacht de zoekfilter.`:'';
     }
+    $('overzicht').addEventListener('click',async event=>{
+      const button=event.target.closest('[data-fotoreden]');if(!button||!magBeheren())return;
+      const leerling=JSON.parse(button.dataset.fotoreden),jaar=schooljaar,documentRef=ref();
+      const reden=prompt(`Reden / opmerking voor ${leerling.naam} (${leerling.klas}):`,leerling.reden||'');
+      if(reden===null)return;
+      if(reden.length>2000){alert('Gebruik maximaal 2000 tekens voor de reden.');return;}
+      button.disabled=true;
+      try{
+        await runTransaction(db,async transaction=>{
+          const snap=await transaction.get(documentRef),item=snap.exists()?snap.data():{};
+          if(!(item.uitzonderingen||[]).some(x=>zelfdeFotoregistratie(x,leerling)))throw Error('Deze leerling staat niet meer bij “Mag niet op de foto”.');
+          transaction.set(documentRef,{uitzonderingen:wijzigFotoreden(item,leerling,reden)},{merge:true});
+        });
+      }catch(err){if(schooljaar===jaar)alert('De reden kon niet worden bewaard: '+err.message);}
+      finally{button.disabled=false;}
+    });
+    async function downloadFotoPdf(soort){
+      const jaar=schooljaar,documentRef=ref(),button=$(soort==='nee'?'pdfNee':'pdfOntbrekend');button.disabled=true;
+      try{
+        const snap=await getDoc(documentRef);
+        if(jaar!==schooljaar)return;
+        if(!window.jspdf?.jsPDF)throw Error('De PDF-module is niet geladen. Vernieuw de pagina.');
+        const item=snap.exists()?snap.data():{};
+        const leerlingen=(item[soort==='nee'?'uitzonderingen':'ontbrekendeFormulieren']||[]).filter(actieveFotoRegistratie);
+        maakFotoPdf(window.jspdf.jsPDF,{soort,schooljaar:jaar,leerlingen}).save(`${jaar}_${soort==='nee'?'mag-niet-op-de-foto':'formulier-ontbreekt'}.pdf`);
+      }catch(err){alert('De PDF kon niet worden gemaakt: '+err.message);}
+      finally{if(jaar===schooljaar)button.disabled=false;}
+    }
+    $('pdfNee').addEventListener('click',()=>downloadFotoPdf('nee'));
+    $('pdfOntbrekend').addEventListener('click',()=>downloadFotoPdf('onbekend'));
     async function laadKlassen(){
       klasleerlingen=[];geladenKlassen=new Set();
       const magAlles=['secretariaat','beheerder','directie','zorgcoordinator','zorgleerkracht'].includes(werkelijkeRole);
@@ -122,6 +151,7 @@
       docs.forEach((snap,i)=>{const klas=[...klassen][i];geladenKlassen.add(klas);if(snap.exists())(snap.data().leerlingen||[]).filter(s=>actief(s,schooljaar)).forEach(leerling=>klasleerlingen.push({klas,leerling}))});
     }
     async function laad(){
+      $('pdfNee').disabled=true;$('pdfOntbrekend').disabled=true;
       if(unsub){unsub();unsub=null}$('status').className='status';$('status').textContent='Gegevens worden geladen…';
       await laadKlassen();
       unsub=onSnapshot(ref(),async snap=>{
@@ -131,11 +161,9 @@
           ontbrekendeFormulieren:(instelling.ontbrekendeFormulieren||[]).filter(actieveFotoRegistratie),
           gecontroleerdeLeerlingen:(instelling.gecontroleerdeLeerlingen||[]).filter(actieveFotoRegistratie)
         };
-        const gewijzigd=Object.keys(opgeschoond).some(k=>opgeschoond[k].length!==(instelling[k]||[]).length);
         instelling={...instelling,...opgeschoond};renderOverzicht();
-        // Secretariaat/beheer verwijdert verouderde vermeldingen ook centraal,
-        // zodat leerkrachten zonder toegang tot die klas ze evenmin nog zien.
-        if(gewijzigd&&['secretariaat','beheerder'].includes(werkelijkeRole))setDoc(ref(),opgeschoond,{merge:true}).catch(err=>console.warn('Verouderde fotoregistraties opschonen mislukt',err));
+        $('pdfNee').disabled=false;$('pdfOntbrekend').disabled=false;
+
       },err=>{$('status').className='status error';$('status').textContent=`Laden mislukt: ${err.message}`});
     }
     $('zoek').addEventListener('input',renderOverzicht);$('schooljaar').addEventListener('change',()=>{schooljaar=$('schooljaar').value;laad()});

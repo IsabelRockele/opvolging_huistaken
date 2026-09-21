@@ -1189,9 +1189,10 @@
   <script type="module">
     import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
     import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-    import { getFirestore, doc, getDoc, setDoc as firestoreSetDoc, deleteDoc as firestoreDeleteDoc, onSnapshot, collection, query, where, getDocs, writeBatch } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    import { getFirestore, doc, getDoc, setDoc as firestoreSetDoc, deleteDoc as firestoreDeleteDoc, onSnapshot, collection, query, where, getDocs, writeBatch, runTransaction } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
     import { maakVeiligheidskopie, probeerVeiligheidskopie } from "./firebase-veiligheid.js";
 
+    import { zelfdeFotoregistratie, wijzigFotostatus } from "./fototoestemming.js?v=20260921-1";
     const firebaseConfig = {
       apiKey: "AIzaSyA7KxXMvZ4dzBQDut3CMyWUblLte2tFzoQ",
       authDomain: "huiswerkapp-a311e.firebaseapp.com",
@@ -1437,9 +1438,19 @@
       allClasses = [...new Set([...DEFAULT_CLASSES, ...allowedClasses])];
     }
 
-    window.openClass = async function(klas, behoudAlgemeen=false){
+    let klasLaadVersie=0, klasWisselBewaring=null;
+    window.openClass = async function(klas, behoudAlgemeen=false, refterWeek=""){
+      const laadVersie=++klasLaadVersie;
+      // Bewaar uitgestelde wijzigingen nog bij de vorige klas.
+      if(saveTimer)klasWisselBewaring=saveNow();
+      if(klasWisselBewaring){
+        try{await klasWisselBewaring;}
+        catch(err){console.error(err);if(laadVersie===klasLaadVersie)alert("De vorige klas kon niet worden bewaard. Probeer opnieuw voordat je van klas wisselt.");return;}
+        finally{if(laadVersie===klasLaadVersie)klasWisselBewaring=null;}
+      }
+      if(laadVersie!==klasLaadVersie)return;
       toonSchermLaden(`${klas} laden…`);
-      if(isSecretary())gekozenRefterWeek="";
+      if(isSecretary())gekozenRefterWeek=refterWeek;
       activeClass = klas;
       const blijfInOnderdeel=["refter","activiteiten","aankopen","leerlingen"].includes(tab);
       if(isSecretary() && !behoudAlgemeen && !blijfInOnderdeel){
@@ -1451,9 +1462,12 @@
       luisterNaarFotoToestemming();
       renderScope();
       if(unsub) unsub();
+      data=null;
+      let eersteSnapshot=true;
       setStatus("Laden...");
       $("content").innerHTML = `<div class="panel"><h2>Laden</h2><p class="muted">We halen ${esc(activeClass)} op.</p></div>`;
       unsub = onSnapshot(classRef(), snap => {
+        if(laadVersie!==klasLaadVersie)return;
         if(!snap.exists()){
           if(isSecretary()){
             data=emptyClassDoc(activeClass);
@@ -1482,12 +1496,14 @@
         if(!isSecretary() && tab === "administratie") tab = "klaslijst";
         setStatus("Bewaard", true);
         setActiveNav(tab==="leerlingenstart"?"leerlingen":tab);
-        if(Date.now()>=lokaleBewaringTot||activiteitVerwerkingGewijzigd||aankoopVerwerkingGewijzigd){
+        if(eersteSnapshot||Date.now()>=lokaleBewaringTot||activiteitVerwerkingGewijzigd||aankoopVerwerkingGewijzigd){
           renderMetScrollbehoud();
           renderKlasPills();
         }
+        eersteSnapshot=false;
         verbergSchermLaden();
       }, err => {
+        if(laadVersie!==klasLaadVersie)return;
         console.error(err);
         $("content").innerHTML = `<div class="panel"><h2>Laden mislukt</h2><p class="muted">${esc(err.message)}</p></div>`;
         setStatus("Fout");
@@ -1597,7 +1613,7 @@
     }
 
     function markDirty(){ setStatus("Wijzigingen..."); clearTimeout(saveTimer); saveTimer = setTimeout(saveNow, 600); }
-    async function saveNow(){ if(!data) return; lokaleBewaringTot=Date.now()+2500; data.klas=activeClass; data.schooljaar=schooljaar; data.bewaarTot = bewaarTotVoorSchooljaar(); data.bewaartermijnJaren = BEWAAR_JAREN_SCHOOLBEHEER; data.bijgewerktOp = new Date().toISOString(); await setDoc(classRef(), data); setStatus("Bewaard", true); }
+    async function saveNow(){ clearTimeout(saveTimer);saveTimer=null;if(!data) return; lokaleBewaringTot=Date.now()+2500; data.klas=activeClass; data.schooljaar=schooljaar; data.bewaarTot = bewaarTotVoorSchooljaar(); data.bewaartermijnJaren = BEWAAR_JAREN_SCHOOLBEHEER; data.bijgewerktOp = new Date().toISOString(); await setDoc(classRef(), data); setStatus("Bewaard", true); }
 
     function maandNaam(month){
       const d=new Date(`${month}-15T12:00:00`);
@@ -1717,8 +1733,8 @@
       finally{knoppen.forEach(b=>b.disabled=false);}
     };
     window.kiesOpvolgMaand=month=>{opvolgMaand=month;renderOpvolging()};
-    window.openOpvolgingKlas=async(klas,soort,month,archief=false,aankoopCategorie="")=>{await openClass(klas,true);secretariaatOpvolgModus=true;secretariaatArchiefModus=archief?soort:"";secretariaatAankoopCategorie=soort==="aankoop"?aankoopCategorie:"";if(soort==="activiteit"){activityMonth=month;tab="activiteiten";}else{purchaseMonth=month;tab="aankopen";}setActiveNav("");render()};
-    window.openOpvolgingRefter=async(klas,week)=>{await openClass(klas,true);secretariaatOpvolgModus=true;gekozenRefterWeek=week;tab="refter";setActiveNav("");render()};
+    window.openOpvolgingKlas=async(klas,soort,month,archief=false,aankoopCategorie="")=>{secretariaatOpvolgModus=true;secretariaatArchiefModus=archief?soort:"";secretariaatAankoopCategorie=soort==="aankoop"?aankoopCategorie:"";if(soort==="activiteit"){activityMonth=month;tab="activiteiten";}else{purchaseMonth=month;tab="aankopen";}setActiveNav("");await openClass(klas,true)};
+    window.openOpvolgingRefter=async(klas,week)=>{secretariaatOpvolgModus=true;tab="refter";setActiveNav("");await openClass(klas,true,week)};
     window.terugNaarRefterOpvolging=()=>{secretariaatOpvolgModus=false;secretariaatArchiefModus="";secretariaatAankoopCategorie="";gekozenRefterWeek="";tab="opvolging";renderKlasPills();render()};
 
     function render(){
@@ -3004,7 +3020,7 @@
     window.toonAlleenKlasKolom=key=>{bewaarKlasKolommen(new Set(klasKolommen.map(([k])=>k).filter(k=>k!==key)));renderMetScrollbehoud();};
     window.toonAlleKlasKolommen=()=>{bewaarKlasKolommen(new Set());renderMetScrollbehoud();setTimeout(()=>{const keuze=document.querySelector('.kolommen-kiezer');if(keuze)keuze.open=true;},0);};
     function kanFotoAanpassen(){return isSecretary()||role==="klasleerkracht";}
-    function zelfdeFotoLeerling(x,id,naamKey){return (id&&String(x.leerlingId||"")===id)||String(x.naam||"").trim().toLocaleLowerCase("nl").replace(/\s+/g," ")===naamKey;}
+    function zelfdeFotoLeerling(x,id,naamKey){return zelfdeFotoregistratie(x,{leerlingId:id,naam:naamKey,klas:activeClass});}
     function fotoStatusKlaslijst(s){
       const id=String(s.id||""),naamKey=name(s).trim().toLocaleLowerCase("nl").replace(/\s+/g," ");
       const uitzonderingen=fotoToestemmingData.uitzonderingen||[],ontbrekend=fotoToestemmingData.ontbrekendeFormulieren||[],gecontroleerd=fotoToestemmingData.gecontroleerdeLeerlingen||[];
@@ -3021,38 +3037,43 @@
       const s=(data.leerlingen||[]).find(x=>x.id===id);if(!s)return;
       document.getElementById("fotoBeheerOverlay")?.remove();
       const status=fotoStatusKlaslijst(s),overlay=document.createElement("div");overlay.id="fotoBeheerOverlay";overlay.style.cssText="position:fixed;inset:0;background:rgba(25,35,45,.58);z-index:10000;padding:20px;overflow:auto";
-      overlay.innerHTML=`<div style="max-width:460px;margin:80px auto;background:#fff;border-radius:18px;padding:22px;box-shadow:0 20px 60px rgba(0,0,0,.28)"><div class="bar"><div><h2 style="margin:0">📷 Fototoestemming</h2><p class="muted" style="margin:4px 0 0"><strong>${esc(name(s))}</strong> · ${esc(activeClass)}</p></div><button class="white small" onclick="document.getElementById('fotoBeheerOverlay').remove()" aria-label="Sluiten">✕</button></div><div class="foto-modal-keuzes"><label><input type="radio" name="beheerFotoSnel" value="controleren" ${status==="controleren"?'checked':''}> ⏳ Nog na te vragen</label><label><input type="radio" name="beheerFotoSnel" value="ja" ${status==="ja"?'checked':''}> ✅ Mag op de foto</label><label><input type="radio" name="beheerFotoSnel" value="nee" ${status==="nee"?'checked':''}> 🚫 Mag niet op de foto</label><label><input type="radio" name="beheerFotoSnel" value="onbekend" ${status==="onbekend"?'checked':''}> ⚠️ Formulier ontbreekt</label></div><div class="actions" style="margin-top:16px"><button class="green" onclick="bewaarFotoSnel('${s.id}')">Bewaren</button><button class="white" onclick="document.getElementById('fotoBeheerOverlay').remove()">Annuleren</button></div></div>`;
+      const registratie=(fotoToestemmingData.uitzonderingen||[]).find(x=>zelfdeFotoLeerling(x,String(s.id||""),name(s)))||{};
+      overlay.innerHTML=`<div style="max-width:460px;margin:80px auto;background:#fff;border-radius:18px;padding:22px;box-shadow:0 20px 60px rgba(0,0,0,.28)"><div class="bar"><div><h2 style="margin:0">📷 Fototoestemming</h2><p class="muted" style="margin:4px 0 0"><strong>${esc(name(s))}</strong> · ${esc(activeClass)}</p></div><button class="white small" onclick="document.getElementById('fotoBeheerOverlay').remove()" aria-label="Sluiten">✕</button></div><div class="foto-modal-keuzes"><label><input type="radio" name="beheerFotoSnel" value="controleren" ${status==="controleren"?'checked':''}> ⏳ Nog na te vragen</label><label><input type="radio" name="beheerFotoSnel" value="ja" ${status==="ja"?'checked':''}> ✅ Mag op de foto</label><label><input type="radio" name="beheerFotoSnel" value="nee" ${status==="nee"?'checked':''}> 🚫 Mag niet op de foto</label><label><input type="radio" name="beheerFotoSnel" value="onbekend" ${status==="onbekend"?'checked':''}> ⚠️ Formulier ontbreekt</label></div><label id="fotoRedenVeld" style="margin-top:14px;${status==="nee"?"":"display:none"}">Reden / opmerking<textarea id="fotoReden" rows="3" maxlength="2000" placeholder="Reden die de ouder heeft aangeduid">${esc(registratie.reden||"")}</textarea></label><div class="actions" style="margin-top:16px"><button class="green" onclick="bewaarFotoSnel('${s.id}')">Bewaren</button><button class="white" onclick="document.getElementById('fotoBeheerOverlay').remove()">Annuleren</button></div></div>`;
+      overlay.addEventListener("change",()=>{overlay.querySelector("#fotoRedenVeld").style.display=overlay.querySelector('input[name="beheerFotoSnel"]:checked')?.value==="nee"?"":"none";});
       overlay.addEventListener("click",e=>{if(e.target===overlay)overlay.remove()});document.body.appendChild(overlay);
     };
-    window.bewaarFotoSnel=async id=>{const status=document.querySelector('input[name="beheerFotoSnel"]:checked')?.value||"controleren";await zetFotoStatus(id,status);document.getElementById("fotoBeheerOverlay")?.remove();renderMetScrollbehoud();};
-    window.zetFotoStatus=async(id,status)=>{
-      if(!kanFotoAanpassen())return;
-      const s=(data.leerlingen||[]).find(x=>x.id===id);if(!s)return;
+    window.bewaarFotoSnel=async id=>{const status=document.querySelector('input[name="beheerFotoSnel"]:checked')?.value||"controleren";const bewaard=await zetFotoStatus(id,status,$("fotoReden")?.value||"");if(bewaard){document.getElementById("fotoBeheerOverlay")?.remove();renderMetScrollbehoud();}};
+    window.zetFotoStatus=async(id,status,reden="")=>{
+      if(!kanFotoAanpassen())return false;
+      const s=(data.leerlingen||[]).find(x=>x.id===id);if(!s)return false;
+      const leerling={leerlingId:String(s.id||""),naam:name(s),klas:activeClass},jaar=schooljaar,ref=fotoToestemmingRef();
       try{
-        const ref=fotoToestemmingRef(),snap=await getDoc(ref),item=snap.exists()?{bevestigd:false,uitzonderingen:[],ontbrekendeFormulieren:[],gecontroleerdeLeerlingen:[],...snap.data()}:{bevestigd:false,uitzonderingen:[],ontbrekendeFormulieren:[],gecontroleerdeLeerlingen:[]};
-        const leerling={leerlingId:String(s.id||""),naam:name(s),klas:activeClass};
-        item.uitzonderingen=(item.uitzonderingen||[]).filter(x=>String(x.leerlingId||"")!==leerling.leerlingId);
-        item.ontbrekendeFormulieren=(item.ontbrekendeFormulieren||[]).filter(x=>String(x.leerlingId||"")!==leerling.leerlingId);
-        item.gecontroleerdeLeerlingen=(item.gecontroleerdeLeerlingen||[]).filter(x=>String(x.leerlingId||"")!==leerling.leerlingId);
-        if(status!=="controleren")item.gecontroleerdeLeerlingen.push(leerling);if(status==="nee")item.uitzonderingen.push(leerling);if(status==="onbekend")item.ontbrekendeFormulieren.push(leerling);
-        await firestoreSetDoc(ref,{schooljaar,bevestigd:true,uitzonderingen:item.uitzonderingen,ontbrekendeFormulieren:item.ontbrekendeFormulieren,gecontroleerdeLeerlingen:item.gecontroleerdeLeerlingen,gecontroleerdOp:new Date().toISOString(),gecontroleerdDoor:user.email||user.uid},{merge:true});
-      }catch(err){console.error(err);alert("De fototoestemming kon niet worden bewaard: "+err.message);}
+        const nieuw=await runTransaction(db,async transaction=>{
+          const snap=await transaction.get(ref),item=snap.exists()?snap.data():{};
+          const wijziging={schooljaar:jaar,bevestigd:true,...wijzigFotostatus(item,leerling,status,reden),gecontroleerdOp:new Date().toISOString(),gecontroleerdDoor:user.email||user.uid};
+          transaction.set(ref,wijziging,{merge:true});return wijziging;
+        });
+        if(schooljaar===jaar)fotoToestemmingData={...fotoToestemmingData,...nieuw};
+        return true;
+      }catch(err){console.error(err);alert("De fototoestemming kon niet worden bewaard: "+err.message);return false;}
     };
     window.bevestigFotoKlas=async()=>{
       if(!kanFotoAanpassen())return;
       const leerlingen=activeStudents();if(!leerlingen.length)return;
       if(!confirm(`Fototoestemming voor ${activeClass} bevestigen?\n\nAlle ${leerlingen.length} leerlingen gelden daarna als gecontroleerd. Wie als “mag niet” of “formulier ontbreekt” is aangeduid, behoudt die status. De rest mag op de foto.`))return;
-      const vorige={...fotoToestemmingData,uitzonderingen:[...(fotoToestemmingData.uitzonderingen||[])],ontbrekendeFormulieren:[...(fotoToestemmingData.ontbrekendeFormulieren||[])],gecontroleerdeLeerlingen:[...(fotoToestemmingData.gecontroleerdeLeerlingen||[])]};
+      const ref=fotoToestemmingRef(),jaar=schooljaar,klas=activeClass;
       try{
-        const ref=fotoToestemmingRef(),item={bevestigd:false,uitzonderingen:[],ontbrekendeFormulieren:[],gecontroleerdeLeerlingen:[],...vorige};
-        const ids=new Set(leerlingen.map(s=>String(s.id||"")));
-        item.gecontroleerdeLeerlingen=(item.gecontroleerdeLeerlingen||[]).filter(x=>!ids.has(String(x.leerlingId||"")));
-        leerlingen.forEach(s=>item.gecontroleerdeLeerlingen.push({leerlingId:String(s.id||""),naam:name(s),klas:activeClass}));
-        const nieuw={schooljaar,bevestigd:true,uitzonderingen:item.uitzonderingen||[],ontbrekendeFormulieren:item.ontbrekendeFormulieren||[],gecontroleerdeLeerlingen:item.gecontroleerdeLeerlingen,gecontroleerdOp:new Date().toISOString(),gecontroleerdDoor:user.email||user.uid};
-        fotoToestemmingData={...fotoToestemmingData,...nieuw};
+        const nieuw=await runTransaction(db,async transaction=>{
+          const snap=await transaction.get(ref),item=snap.exists()?snap.data():{};
+          const registraties=leerlingen.map(s=>({leerlingId:String(s.id||""),naam:name(s),klas}));
+          const gecontroleerd=(item.gecontroleerdeLeerlingen||[]).filter(x=>!registraties.some(s=>zelfdeFotoregistratie(x,s)));
+          const wijziging={schooljaar:jaar,bevestigd:true,gecontroleerdeLeerlingen:[...gecontroleerd,...registraties],gecontroleerdOp:new Date().toISOString(),gecontroleerdDoor:user.email||user.uid};
+          transaction.set(ref,wijziging,{merge:true});return {...item,...wijziging};
+        });
+        if(schooljaar===jaar)fotoToestemmingData=nieuw;
         renderMetScrollbehoud();
-        await firestoreSetDoc(ref,nieuw,{merge:true});
-      }catch(err){fotoToestemmingData=vorige;renderMetScrollbehoud();console.error(err);alert("De klasbevestiging kon niet worden bewaard: "+err.message);}
+      }catch(err){console.error(err);alert("De klasbevestiging kon niet worden bewaard: "+err.message);}
+
     };
     function studentTable(){
       return `<div class="table-wrap student-page-table no-scroll-mirror"><table class="klaslijst-table"><thead><tr><th>Achternaam</th><th>Officiële voornaam</th>${optioneleKolom('roepnaam','<th>Roepnaam<span class="th-sub">optioneel</span></th>')}${optioneleKolom('geboortejaar','<th>Geboortejaar</th>')}${activeClass==="K1"?optioneleKolom('groep','<th>Groep</th>'):""}${optioneleKolom('oudste','<th class="check-col">Oudste<br>gezin</th>')}${optioneleKolom('collega','<th class="check-col">Kind collega</th>')}${optioneleKolom('huiswerk','<th class="homework-cell">Huiswerkklas<span class="th-sub">deelname en betaling</span></th>')}${optioneleKolom('alleenhuis','<th class="check-col">Alleen naar huis<span class="th-sub">toestemming ouders</span></th>')}${optioneleKolom('foto','<th class="photo-cell">Foto<span class="th-sub">toestemming dit schooljaar</span></th>')}</tr></thead><tbody>${activeStudents().map(s=>`<tr class="${s.colleague?"colleague":""}">
