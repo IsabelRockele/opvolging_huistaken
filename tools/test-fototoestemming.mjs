@@ -48,3 +48,10 @@ view.instelling=opgeslagen;vm.runInContext('renderOverzicht()',view);
 assert.ok(!element('overzicht').innerHTML.includes(leerling.naam));assert.ok(!element('overzicht').innerHTML.includes('Geen publicatie'));
 console.log('Echte klaslijst-bewaarfunctie en vernieuwd foto-overzicht: naam en reden verdwijnen samen.');
 
+const samen=maakFotoPdf(jsPDF,{schooljaar:'2026-2027',uitzonderingen:leerlingen.slice(0,3),ontbrekendeFormulieren:[{naam:'Voorbeeld, Mila',klas:'1A'}]});
+assert.equal(samen.getNumberOfPages(),1);
+const tekst=samen.output();assert.ok(tekst.includes('Mag niet op de foto'));assert.ok(tekst.includes('Formulier ontbreekt'));assert.ok(tekst.includes('Voorbeeld, Mila'));
+fs.writeFileSync('tmp/pdfs/foto/samen.pdf',Buffer.from(samen.output('arraybuffer')));
+const grootSamen=maakFotoPdf(jsPDF,{schooljaar:'2026-2027',uitzonderingen:leerlingen,ontbrekendeFormulieren:leerlingen});
+assert.ok(grootSamen.getNumberOfPages()>3);
+console.log('Gecombineerde PDF bevat beide overzichten, samen op één pagina wanneer er plaats is.');

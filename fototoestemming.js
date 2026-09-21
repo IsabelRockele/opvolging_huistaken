@@ -21,28 +21,32 @@ export function wijzigFotoreden(item, leerling, reden) {
   return (item.uitzonderingen || []).map(x => zelfdeFotoregistratie(x, leerling) ? {...x, reden: reden.trim()} : x);
 }
 
-export function maakFotoPdf(jsPDF, {soort, schooljaar, leerlingen}) {
+export function maakFotoPdf(jsPDF, {soort, schooljaar, leerlingen, uitzonderingen = [], ontbrekendeFormulieren = []}) {
   const pdf = new jsPDF({unit:'mm', format:'a4'});
-  const metReden = soort === 'nee';
+  const secties = soort ? [{soort, leerlingen}] : [{soort:'nee', leerlingen:uitzonderingen}, {soort:'onbekend', leerlingen:ontbrekendeFormulieren}];
+  let y=22;
+  for (const [index, sectie] of secties.entries()) {
+  const metReden = sectie.soort === 'nee';
   const titel = metReden ? 'Mag niet op de foto' : 'Formulier ontbreekt';
   const widths = metReden ? [65, 22, 95] : [150, 32];
   const margin = 14, bottom = 280, lineHeight = 4.6;
-  let y;
   const pagina = (nieuw = false) => {
-    if (nieuw) pdf.addPage();
+    if (nieuw) {pdf.addPage();y=22;}
+    const top=y;
     pdf.setFont('helvetica','bold');pdf.setFontSize(20);pdf.setTextColor(170,35,35);
-    pdf.text(titel,margin,22);
+    pdf.text(titel,margin,top);
     pdf.setFont('helvetica','normal');pdf.setFontSize(10);pdf.setTextColor(80,80,80);
-    pdf.text(`Schooljaar ${schooljaar}`,margin,30);
-    y=39;
+    pdf.text(`Schooljaar ${schooljaar}`,margin,top+8);
+    y=top+17;
     pdf.setFont('helvetica','bold');pdf.setTextColor(30,30,30);
     let x=margin;
     (metReden?['Naam','Klas','Reden']:['Naam','Klas']).forEach((text,i)=>{pdf.text(text,x+2,y);x+=widths[i];});
     y+=3;pdf.setDrawColor(190,190,190);pdf.line(margin,y,196,y);y+=3;
     pdf.setFont('helvetica','normal');
   };
-  pagina();
-  const lijst=[...leerlingen].sort((a,b)=>String(a.klas).localeCompare(String(b.klas),'nl',{numeric:true})||String(a.naam).localeCompare(String(b.naam),'nl'));
+  if(index)y+=18;
+  pagina(y>230);
+  const lijst=[...sectie.leerlingen].sort((a,b)=>String(a.klas).localeCompare(String(b.klas),'nl',{numeric:true})||String(a.naam).localeCompare(String(b.naam),'nl'));
   for (const leerling of lijst) {
     const cells=[leerling.naam,leerling.klas,...(metReden?[leerling.reden||'Geen reden ingevuld']:[])];
     const lines=cells.map((text,i)=>pdf.splitTextToSize(String(text||''),widths[i]-4));
@@ -59,7 +63,8 @@ export function maakFotoPdf(jsPDF, {soort, schooljaar, leerlingen}) {
     }
     pdf.setDrawColor(225,225,225);pdf.line(margin,y,196,y);y+=2;
   }
-  if(!lijst.length)pdf.text('Geen leerlingen in dit overzicht.',margin,y+4);
+  if(!lijst.length){pdf.text('Geen leerlingen in dit overzicht.',margin,y+4);y+=9;}
+  }
   const count=pdf.getNumberOfPages();
   for(let i=1;i<=count;i++){pdf.setPage(i);pdf.setFontSize(8);pdf.setTextColor(110,110,110);pdf.text(`${i} / ${count}`,196,290,{align:'right'});}
   return pdf;

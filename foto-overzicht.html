@@ -52,14 +52,13 @@
 
     <section class="card">
       <h2>🚫 Mag niet op de foto</h2>
-      <button id="pdfNee" disabled>PDF downloaden — mag niet op de foto</button>
+      <button id="pdfFoto" disabled>PDF downloaden — beide overzichten</button>
       <p>Dit overzicht wordt automatisch opgebouwd vanuit de klaslijsten. Alleen de uitzonderingen worden hier getoond; je hoeft hier niets opnieuw aan te duiden.</p>
       <div id="overzicht" class="exceptions"><div class="empty">Nog geen gegevens geladen.</div></div>
       <p id="controleInfo" class="meta"></p>
     </section>
     <section class="card">
       <h2>⚠️ Formulier ontbreekt</h2>
-      <button id="pdfOntbrekend" disabled>PDF downloaden — formulier ontbreekt</button>
       <p>Hier staan de ouders van wie de fototoestemming nog opgevolgd moet worden.</p>
       <div id="ontbrekendOverzicht" class="exceptions"><div class="empty">Nog geen gegevens geladen.</div></div>
     </section>
@@ -67,7 +66,7 @@
 
   <script src="jspdf.umd.min.js"></script>
   <script type="module">
-    import { wijzigFotoreden, zelfdeFotoregistratie, maakFotoPdf } from "./fototoestemming.js?v=20260921-1";
+    import { wijzigFotoreden, zelfdeFotoregistratie, maakFotoPdf } from "./fototoestemming.js?v=20260921-2";
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
     import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
     import { getFirestore, collection, doc, getDoc, getDocs, onSnapshot, query, where, runTransaction } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
@@ -130,20 +129,20 @@
       }catch(err){if(schooljaar===jaar)alert('De reden kon niet worden bewaard: '+err.message);}
       finally{button.disabled=false;}
     });
-    async function downloadFotoPdf(soort){
-      const jaar=schooljaar,documentRef=ref(),button=$(soort==='nee'?'pdfNee':'pdfOntbrekend');button.disabled=true;
+    async function downloadFotoPdf(){
+      const jaar=schooljaar,documentRef=ref(),button=$('pdfFoto');button.disabled=true;
       try{
         const snap=await getDoc(documentRef);
         if(jaar!==schooljaar)return;
         if(!window.jspdf?.jsPDF)throw Error('De PDF-module is niet geladen. Vernieuw de pagina.');
         const item=snap.exists()?snap.data():{};
-        const leerlingen=(item[soort==='nee'?'uitzonderingen':'ontbrekendeFormulieren']||[]).filter(actieveFotoRegistratie);
-        maakFotoPdf(window.jspdf.jsPDF,{soort,schooljaar:jaar,leerlingen}).save(`${jaar}_${soort==='nee'?'mag-niet-op-de-foto':'formulier-ontbreekt'}.pdf`);
+        const uitzonderingen=(item.uitzonderingen||[]).filter(actieveFotoRegistratie);
+        const ontbrekendeFormulieren=(item.ontbrekendeFormulieren||[]).filter(actieveFotoRegistratie);
+        maakFotoPdf(window.jspdf.jsPDF,{schooljaar:jaar,uitzonderingen,ontbrekendeFormulieren}).save(`${jaar}_fototoestemming.pdf`);
       }catch(err){alert('De PDF kon niet worden gemaakt: '+err.message);}
       finally{if(jaar===schooljaar)button.disabled=false;}
     }
-    $('pdfNee').addEventListener('click',()=>downloadFotoPdf('nee'));
-    $('pdfOntbrekend').addEventListener('click',()=>downloadFotoPdf('onbekend'));
+    $('pdfFoto').addEventListener('click',downloadFotoPdf);
     async function laadKlassen(){
       klasleerlingen=[];geladenKlassen=new Set();
       const magAlles=['secretariaat','beheerder','directie','zorgcoordinator','zorgleerkracht'].includes(werkelijkeRole);
@@ -163,7 +162,7 @@
       docs.forEach((snap,i)=>{const klas=[...klassen][i];geladenKlassen.add(klas);if(snap.exists())(snap.data().leerlingen||[]).filter(s=>actief(s,schooljaar)).forEach(leerling=>klasleerlingen.push({klas,leerling}))});
     }
     async function laad(){
-      $('pdfNee').disabled=true;$('pdfOntbrekend').disabled=true;
+      $('pdfFoto').disabled=true;
       if(unsub){unsub();unsub=null}$('status').className='status';$('status').textContent='Gegevens worden geladen…';
       await laadKlassen();
       unsub=onSnapshot(ref(),async snap=>{
@@ -174,7 +173,7 @@
           gecontroleerdeLeerlingen:(instelling.gecontroleerdeLeerlingen||[]).filter(actieveFotoRegistratie)
         };
         instelling={...instelling,...opgeschoond};renderOverzicht();
-        $('pdfNee').disabled=false;$('pdfOntbrekend').disabled=false;
+        $('pdfFoto').disabled=false;
 
       },err=>{$('status').className='status error';$('status').textContent=`Laden mislukt: ${err.message}`});
     }
