@@ -18,8 +18,20 @@
     button,.back{border:0;border-radius:11px;padding:10px 15px;background:var(--green);color:#fff;font:inherit;font-weight:800;cursor:pointer;text-decoration:none}button.secondary,.back{background:#e7efea;color:var(--ink)}button:disabled{opacity:.55;cursor:wait}
     .class-block{border:1px solid var(--line);border-radius:14px;margin:12px 0;overflow:hidden}.class-block h3{margin:0;padding:11px 15px;background:var(--soft)}
     .student{display:flex;gap:12px;align-items:center;padding:10px 15px;border-top:1px solid #edf1ef}.student input{width:20px;height:20px;accent-color:var(--red)}.student label{font-weight:650;cursor:pointer;flex:1}
-    .exceptions{display:grid;gap:10px}.exception{border:1px solid #efb7b7;border-left:7px solid #c83e3e;border-radius:12px;background:var(--redsoft);padding:13px 15px;display:flex;justify-content:space-between;gap:14px}.exception strong{color:#7f1d1d}.missing{border-color:#ead17a;border-left-color:#c28b00;background:#fff9dc}.missing strong{color:#755600}.empty{padding:24px;text-align:center;color:var(--muted);background:var(--soft);border-radius:12px}
-    .exception{flex-wrap:wrap}.foto-reden{flex-basis:100%;margin:0;white-space:pre-wrap;overflow-wrap:anywhere}.exception button{font-size:14px;padding:6px 10px}.meta{font-size:14px;color:var(--muted)}.hidden{display:none!important}
+    .exceptions{display:grid;gap:5px}
+    .exception{display:grid;grid-template-columns:minmax(150px,1fr) 65px minmax(180px,1.6fr) auto;align-items:center;gap:8px 12px;border:1px solid #efb7b7;border-left:4px solid #c83e3e;border-radius:7px;background:var(--redsoft);padding:7px 10px;font-size:14px;line-height:1.35}
+    .exception>strong{color:#7f1d1d;overflow-wrap:anywhere}.exception>span{white-space:nowrap}
+    .foto-reden{margin:0;white-space:pre-wrap;overflow-wrap:anywhere}
+    .exception button{font-size:12px;padding:5px 8px;border-radius:6px;white-space:nowrap}
+    .missing{grid-template-columns:minmax(0,1fr) auto;border-color:#ead17a;border-left-color:#c28b00;background:#fff9dc}.missing strong{color:#755600}
+    .empty{padding:16px;text-align:center;color:var(--muted);background:var(--soft);border-radius:8px}
+    .meta{font-size:14px;color:var(--muted)}.hidden{display:none!important}
+    @media(max-width:700px){
+      .exception{grid-template-columns:minmax(0,1fr) auto;gap:5px 10px}
+      .foto-reden{grid-column:1}.exception button{grid-column:2;grid-row:2}
+    }
+    @media(max-width:380px){.exception button{grid-column:1 / -1;grid-row:auto;justify-self:start}.foto-reden{grid-column:1 / -1}}
+
   </style>
 </head>
 <body>
@@ -87,7 +99,7 @@
       });
     }
     function fotoRij(x){
-      return `<div class="exception"><strong>${esc(x.naam)}</strong><span>Klas ${esc(x.klas)}</span><p class="foto-reden"><strong>Reden:</strong> ${esc(x.reden||'Geen reden ingevuld')}</p>${magBeheren()?`<button class="secondary" data-fotoreden="${esc(JSON.stringify(x))}">${x.reden?'Reden wijzigen':'Reden toevoegen'}</button>`:''}</div>`;
+      return `<div class="exception"><strong>${esc(x.naam)}</strong><span>Klas ${esc(x.klas)}</span><p class="foto-reden"><strong>Reden:</strong> ${esc(x.reden||'Geen reden ingevuld')}</p>${magBeheren()?`<button class="secondary" data-fotoreden="${esc(JSON.stringify(x))}">${x.reden?'Wijzigen':'Reden toevoegen'}</button>`:''}</div>`;
     }
     function renderOverzicht(){
       const q=$('zoek').value.trim().toLocaleLowerCase('nl');
