@@ -12,8 +12,14 @@ const ctx={window:{},data,activeClass:'K1',schoolMonths:()=>['2026-09','2026-10'
 vm.createContext(ctx);vm.runInContext(code,ctx);
 const html=ctx.refterLeesarchiefMaand('2026-09');
 assert.ok(html.includes('>X</td>'));assert.ok(html.includes('>A</td>'));assert.ok(html.includes('bevestigd'));assert.ok(html.includes('verwerkt'));assert.ok(html.includes('voorlopig'));assert.ok(html.includes('Test &lt;naam&gt;'));
-assert.ok(!/<input|<button|onchange=|onclick=/.test(html));
+assert.ok(!/<input|onchange=|toggleRefter|markDirty/.test(html));assert.ok(html.includes('markeerRefterArchiefRij(this)'));assert.ok(html.includes('refter-archief-tabel'));assert.ok(!html.includes('min-width:1540'));
 assert.equal(JSON.stringify(data),before);assert.equal(ctx.refterLeesarchiefMaand('2027-09'),'');
 const archief=ctx.refterLeesarchief();assert.ok(archief.includes('2026-09'));assert.ok(!archief.includes('2026-10'));assert.ok(!/<details[^>]*\sopen[\s>]/.test(archief));
+const maakRij=()=>{const classes=new Set();const button={setAttribute:(k,v)=>button[k]=v};return {classList:{contains:c=>classes.has(c),add:c=>classes.add(c),remove:c=>classes.delete(c)},querySelector:()=>button,button};};
+const r1=maakRij(),r2=maakRij(),tabel={querySelectorAll:()=>[r1,r2]};
+for(const r of [r1,r2])r.button.closest=s=>s==='tr'?r:tabel;
+ctx.window.markeerRefterArchiefRij(r1.button);assert.equal(r1.button['aria-pressed'],'true');
+ctx.window.markeerRefterArchiefRij(r2.button);assert.equal(r1.button['aria-pressed'],'false');assert.equal(r2.button['aria-pressed'],'true');
+ctx.window.markeerRefterArchiefRij(r2.button);assert.equal(r2.button['aria-pressed'],'false');assert.equal(JSON.stringify(data),before);
 ctx.isSecretary=()=>true;assert.equal(ctx.refterLeesarchief(),'');
 console.log('Klasvolgorde, maandarchief, statussen, escaping en alleen-lezen zonder gegevenswijzigingen gecontroleerd.');
