@@ -1,5 +1,10 @@
 const naamKey = value => String(value || '').trim().toLocaleLowerCase('nl').replace(/\s+/g, ' ');
 
+export function vergelijkFotoklassen(a,b) {
+  const sleutel=v=>{const s=String(v||'').trim().toUpperCase(),k=s.match(/^K(\d+)(.*)$/),l=s.match(/^(\d+)(.*)$/);return k?[0,Number(k[1]),k[2]]:l?[1,Number(l[1]),l[2]]:[2,999,s];};
+  const x=sleutel(a),y=sleutel(b);return x[0]-y[0]||x[1]-y[1]||x[2].localeCompare(y[2],'nl');
+}
+
 export function zelfdeFotoregistratie(a, b) {
   if (a.leerlingId && b.leerlingId) return String(a.leerlingId) === String(b.leerlingId);
   return a.klas === b.klas && !!naamKey(a.naam) && naamKey(a.naam) === naamKey(b.naam);
@@ -46,7 +51,7 @@ export function maakFotoPdf(jsPDF, {soort, schooljaar, leerlingen, uitzonderinge
   };
   if(index)y+=18;
   pagina(y>230);
-  const lijst=[...sectie.leerlingen].sort((a,b)=>String(a.klas).localeCompare(String(b.klas),'nl',{numeric:true})||String(a.naam).localeCompare(String(b.naam),'nl'));
+  const lijst=[...sectie.leerlingen].sort((a,b)=>vergelijkFotoklassen(a.klas,b.klas)||String(a.naam).localeCompare(String(b.naam),'nl'));
   for (const leerling of lijst) {
     const cells=[leerling.naam,leerling.klas,...(metReden?[leerling.reden||'Geen reden ingevuld']:[])];
     const lines=cells.map((text,i)=>pdf.splitTextToSize(String(text||''),widths[i]-4));

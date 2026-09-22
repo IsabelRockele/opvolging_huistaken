@@ -3473,6 +3473,20 @@
       refterCorrectieSleutel=refterContextSleutel(week);renderRefter();
     };
     window.stopRefterCorrectie=()=>{refterCorrectieSleutel="";renderRefter();};
+    function refterLeesarchiefMaand(month){
+      if(!schoolMonths().includes(month))return "";
+      const vandaag=isoDatum(new Date()),grenzen=maandGrenzen(month),dagen=[];
+      for(let d=grenzen.van;d<=grenzen.tot;d=datumPlusDagen(d,1))dagen.push(d);
+      const leerlingen=leerlingenInPeriode(grenzen.van,grenzen.tot);
+      const status=d=>d>vandaag?"Nog niet voorbij":refterWeekVerwerkt(maandagVan(d))?"Verwerkt":refterWeekBevestiging(maandagVan(d))?"Bevestigd":"Nog niet bevestigd";
+      return `<p class="muted">Alleen-lezen · ${esc(activeClass)} · ${esc(maandNaam(month))}. <strong>X = afwezig</strong>, A = aanwezig volgens de lijst, – = geen refter of niet van toepassing. Bij nog niet bevestigde dagen is de lijst voorlopig. Een fout? Geef de naam en datum door aan het secretariaat.</p><div class="table-wrap" style="max-height:65vh"><table style="min-width:${220+dagen.length*44}px"><thead><tr><th>Leerling</th>${dagen.map(d=>`<th style="text-align:center" title="${esc(status(d))}">${Number(d.slice(8))}/${Number(d.slice(5,7))}<br><small>${isFree(d)?"–":d>vandaag?"later":refterWeekVerwerkt(maandagVan(d))?"verwerkt":refterWeekBevestiging(maandagVan(d))?"bevestigd":"voorlopig"}</small></th>`).join('')}</tr></thead><tbody>${leerlingen.map(s=>`<tr><td><strong>${esc(name(s))}</strong>${s.colleague?' (collega)':''}</td>${dagen.map(d=>{const reden=refterVrijeDagVoor(d),vrij=isFree(d)||!leerlingActiefOp(s,d)||s.colleague||d>vandaag,buiten=d<startDate()||d>endDate(),afwezig=!!data.refter?.[month]?.[s.id]?.[d];return `<td style="text-align:center;${vrij||buiten?'background:#eee;color:#777':afwezig?'background:#ffe6e6;color:#982727;font-weight:800':''}" title="${esc(reden?(reden.reason||reden.reden||'Geen refter'):d>vandaag?'Nog niet voorbij':vrij||buiten?'Niet van toepassing':status(d))}">${vrij||buiten?'–':afwezig?'X':'A'}</td>`;}).join('')}</tr>`).join('')}</tbody></table></div>`;
+    }
+    function refterLeesarchief(){
+      if(isSecretary())return "";
+      const maanden=schoolMonths().filter(m=>m<=isoDatum(new Date()).slice(0,7)).reverse();
+      return `<details class="no-print" style="margin:12px 0;padding:12px 15px;border:1px solid #b9cce0;border-radius:12px;background:#f4f8fc"><summary style="cursor:pointer;font-weight:850">📁 Refterarchief per maand — alleen-lezen</summary><p class="muted">Bekijk hier ook weken die je al bevestigd hebt. Je kunt in dit archief niets wijzigen.</p>${maanden.map(m=>`<details style="margin:10px 0" ontoggle="if(this.open)this.querySelector('.refter-leesmaand').innerHTML=refterLeesarchiefMaand('${m}')"><summary style="cursor:pointer;font-weight:750">📁 ${esc(maandNaam(m))}</summary><div class="refter-leesmaand"></div></details>`).join('')||'<p>Nog geen maanden om te bekijken.</p>'}</details>`;
+    }
+    window.refterLeesarchiefMaand=refterLeesarchiefMaand;
     function renderRefter(){
       const weekStart=standaardRefterWeek();gekozenRefterWeek=weekStart;
       const contextSleutel=refterContextSleutel(weekStart);
@@ -3506,6 +3520,7 @@
       if(verplichteRefterWeek()){
         weekNav?.querySelectorAll('button,input').forEach(el=>{if(!el.classList.contains('refter-geen-knop'))el.disabled=true;});
       }
+      if(!isSecretary())refterPaneel?.querySelector(".bar")?.insertAdjacentHTML("afterend",refterLeesarchief());
       laadRefterWeekStatus(weekStart).catch(console.warn);
     }
     window.selecteerRefterRij=cel=>{

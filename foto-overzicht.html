@@ -68,7 +68,7 @@
   <div id="bewaarStatus" role="status" aria-live="polite"></div>
   <script src="jspdf.umd.min.js"></script>
   <script type="module">
-    import { wijzigFotoreden, zelfdeFotoregistratie, maakFotoPdf } from "./fototoestemming.js?v=20260921-2";
+    import { vergelijkFotoklassen, wijzigFotoreden, zelfdeFotoregistratie, maakFotoPdf } from "./fototoestemming.js?v=20260922-1";
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
     import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
     import { getFirestore, collection, doc, getDoc, getDocs, onSnapshot, query, where, runTransaction } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
@@ -80,7 +80,7 @@
     const jaren=()=>{const y=Number(huidigSchooljaar().slice(0,4));return [`${y-1}-${y}`,`${y}-${y+1}`,`${y+1}-${y+2}`]};
     const actief=(s,jaar)=>{const van=`${jaar.slice(0,4)}-09-01`,tot=`${jaar.slice(5)}-06-30`;return !s.startNiet&&(!s.start||s.start<=tot)&&(!s.end||s.end>=van)};
     const naam=s=>String(s.name||s.naam||`${s.first||s.firstName||''} ${s.last||s.lastName||''}`).replace(/\s+/g,' ').trim();
-    const klasSort=(a,b)=>a.localeCompare(b,'nl',{numeric:true});
+    const klasSort=vergelijkFotoklassen;
     let user=null,role='',werkelijkeRole='',schooljaar=huidigSchooljaar(),instelling={bevestigd:false,uitzonderingen:[],ontbrekendeFormulieren:[],gecontroleerdeLeerlingen:[]},klasleerlingen=[],geladenKlassen=new Set(),unsub=null;
 
     function ref(){return doc(db,'schoolbeheer',schooljaar,'instellingen','fototoestemming')}
