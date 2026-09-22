@@ -89,10 +89,12 @@
     .mobile-account{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px;padding:9px 11px;border-radius:10px;background:#eef3f9}.mobile-account span{min-width:0;font-size:12px;color:#536985;overflow-wrap:anywhere}.mobile-account button{flex:0 0 auto;padding:7px 9px;font-size:12px}
     .quick-add{padding:0;overflow:hidden}.quick-add:not([open]){display:none!important}.quick-add>summary{display:none}.quick-add-body{padding:14px 16px}.quick-add-grid{display:grid;grid-template-columns:minmax(120px,180px) minmax(220px,1fr) minmax(190px,260px) auto;gap:10px;align-items:end}.quick-add-message{margin-top:9px;font-size:13px;font-weight:800;color:#2f7a50}
     .fold-panel{padding:0;overflow:hidden}.fold-panel>summary{cursor:pointer;list-style:none;padding:17px 18px;font-size:21px;font-weight:900;display:flex;align-items:center;gap:10px}.fold-panel>summary::-webkit-details-marker{display:none}.fold-panel>summary::after{content:"Openen +";margin-left:auto;font-size:13px;color:var(--muted)}.fold-panel[open]>summary::after{content:"Sluiten −"}.fold-panel[open]>summary{border-bottom:1px solid var(--line)}.fold-panel-body{padding:16px 18px}
-    @media(max-width:900px){.quick-add-grid{grid-template-columns:1fr}.quick-add-grid button{width:100%;padding:12px}.quick-add>summary{padding:14px}.quick-add-body{padding:12px}}
+    @media(max-width:900px){.quick-add-grid{grid-template-columns:1fr}.quick-add-grid button{width:100%;padding:12px}.quick-add>summary{display:block;padding:14px;cursor:pointer;font-weight:800}.quick-add-body{padding:12px}}
     @media(max-width:900px){main{padding:10px}.toolbar,.two{grid-template-columns:1fr}.right{margin-left:0}.attendance-row{grid-template-columns:10px 60px 1fr 32px}.mobile-today{display:block}.list-panel,.desktop-controls,.desktop-overview,.werking-notice,header .bar{display:none!important}#supervisorPanel{display:none!important}header{padding:10px 12px}.brand img{width:44px;height:44px}}
     body.qr-mobile main{padding:10px;max-width:720px;margin:0 auto}
     body.qr-mobile .mobile-today{display:block}
+    body.qr-mobile .quick-add-grid{grid-template-columns:1fr}
+    body.qr-mobile .quick-add>summary{display:block;padding:14px;cursor:pointer;font-weight:800}
     body.qr-mobile .desktop-controls,body.qr-mobile .desktop-overview,body.qr-mobile .werking-notice,body.qr-mobile .list-panel,body.qr-mobile #supervisorPanel,body.qr-mobile header .bar{display:none!important}
     body.qr-mobile header{padding:10px 12px}
     body.qr-mobile .brand img{width:44px;height:44px}
@@ -148,7 +150,7 @@
         <label>Leerling<select id="quickAddStudent"></select></label>
         <button class="secondary" id="quickAddBtn" type="button">Toevoegen</button>
       </div>
-      <div class="quick-add-grid" style="margin-top:10px;grid-template-columns:minmax(220px,300px) minmax(160px,220px)">
+      <div class="quick-add-grid" style="margin-top:10px">
         <label>Wanneer?<select id="quickAddDays"><option value="dinsdag">Dinsdag</option><option value="donderdag">Donderdag</option><option value="beide">Dinsdag én donderdag</option><option value="onbekend">Dinsdag of donderdag — nog navragen</option></select></label>
         <label style="display:flex;align-items:center;gap:8px;margin:0 0 8px;font-size:14px"><input id="quickAddFree" type="checkbox" style="width:21px;flex:0 0 auto"> Gratis via schooladvies</label>
       </div>
@@ -157,6 +159,7 @@
   </details>
   <section class="panel mobile-today" id="mobileTodayPanel">
     <div class="bar"><h2 style="margin:0">Huiswerkklas vandaag</h2></div>
+    <button class="white" id="mobileQuickAddBtn" type="button" style="display:none;width:100%;margin-bottom:12px" aria-controls="quickAddPanel" aria-expanded="false">＋ Leerling toevoegen</button>
     <div class="mobile-account"><span id="mobileAccount">Account laden…</span><button class="white" id="mobileLogoutBtn" type="button">Ander account / uitloggen</button></div>
     <label>📅 Kies de datum<input id="mobileDate" type="date"></label>
     <details class="mobile-help" id="mobileDateTools"><summary>Deze dag annuleren</summary><div class="actions" style="margin:10px 0"><button class="white" id="mobileCancelDateBtn" style="display:none">Deze dag gaat niet door</button></div></details>
@@ -349,6 +352,7 @@ function renderQuickAddClasses(){
   const select=$("quickAddClass"),klassen=quickAddClasses();if(!select)return;
   const huidig=select.value;select.innerHTML=klassen.map(k=>`<option value="${esc(k)}">${esc(k)}</option>`).join("");
   if(klassen.includes(huidig))select.value=huidig;
+  $("mobileQuickAddBtn").style.display=klassen.length?"block":"none";
   $("quickAddTopBtn").style.display=klassen.length?"inline-block":"none";if(!klassen.length)$("quickAddPanel").open=false;renderQuickAddStudents();
 }
 function renderQuickAddStudents(){
@@ -362,6 +366,7 @@ async function quickAddStudent(){
   const s=(classStudents[klas]||[]).find(x=>String(x.id||studentKey(klas,x))===id);if(!s)return alert("Kies eerst een leerling.");
   if(s.homeworkClass)return alert(`${name(s)} staat al ingeschreven voor de huiswerkklas.`);
   const days={dinsdag:dagKeuze==="dinsdag"||dagKeuze==="beide"||dagKeuze==="onbekend",donderdag:dagKeuze==="donderdag"||dagKeuze==="beide"||dagKeuze==="onbekend"},free=!!s.colleague||$("quickAddFree").checked,from=todayIso();
+  if(mobileHasUnsavedChanges)await save();
   const snap=await getDoc(doc(db,"schoolbeheer",schooljaar,"klassen",klas));if(!snap.exists())return alert("De klasgegevens konden niet worden gevonden.");
   const klasData=snap.data(),leerling=(klasData.leerlingen||[]).find(x=>String(x.id||studentKey(klas,x))===id);if(!leerling)return alert("De leerling werd intussen niet meer in deze klas gevonden. Vernieuw de pagina.");
   leerling.homeworkClass=true;leerling.homeworkClassDays=days;leerling.homeworkClassDayUncertain=dagKeuze==="onbekend";leerling.homeworkClassFree=free;leerling.homeworkClassStart=from;leerling.homeworkClassEnd="";leerling.homeworkClassHistory=Array.isArray(leerling.homeworkClassHistory)?leerling.homeworkClassHistory:[];
@@ -791,7 +796,10 @@ onAuthStateChanged(auth,async u=>{
   await loadRole();
   demoMode=false;
   $("saveBtn").onclick=save;
-  $("quickAddTopBtn").onclick=()=>{const paneel=$("quickAddPanel");paneel.open=!paneel.open;$("quickAddTopBtn").textContent=paneel.open?"− Kind sluiten":"＋ Kind";if(paneel.open)paneel.scrollIntoView({behavior:"smooth",block:"start"});};
+  const toggleQuickAdd=()=>{const paneel=$("quickAddPanel");paneel.open=!paneel.open;if(paneel.open){const dag=mobileDagSleutel(mobileSelectedDate||todayIso());if(dag)$("quickAddDays").value=dag;paneel.scrollIntoView({behavior:"smooth",block:"start"});}};
+  $("quickAddTopBtn").onclick=toggleQuickAdd;
+  $("mobileQuickAddBtn").onclick=toggleQuickAdd;
+  $("quickAddPanel").ontoggle=()=>{const open=$("quickAddPanel").open;$("quickAddTopBtn").textContent=open?"− Kind sluiten":"＋ Kind";$("mobileQuickAddBtn").textContent=open?"− Toevoegen sluiten":"＋ Leerling toevoegen";$("mobileQuickAddBtn").setAttribute("aria-expanded",String(open));};
   $("helpTopBtn").onclick=()=>{const paneel=$("workingNotice");paneel.open=!paneel.open;$("helpTopBtn").textContent=paneel.open?"❓ Uitleg sluiten":"❓ Uitleg";if(paneel.open)paneel.scrollIntoView({behavior:"smooth",block:"start"});};
   $("addDateBtn").onclick=addDate;
   $("cancelDateBtn").onclick=toggleCancelledDate;
