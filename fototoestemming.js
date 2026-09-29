@@ -10,7 +10,18 @@ export function zelfdeFotoregistratie(a, b) {
   return a.klas === b.klas && !!naamKey(a.naam) && naamKey(a.naam) === naamKey(b.naam);
 }
 
+// Nieuwe leerlingen zonder fotokeuze horen automatisch bij ontbrekende formulieren.
+export function ontbrekendeFotoformulieren(item, leerlingen) {
+  const lijst=[...(item.ontbrekendeFormulieren||[])];
+  const gekend=[...(item.gecontroleerdeLeerlingen||[]),...(item.uitzonderingen||[]),...lijst];
+  for(const leerling of leerlingen){
+    if(!gekend.some(x=>zelfdeFotoregistratie(x,leerling))){lijst.push({...leerling});gekend.push(leerling);}
+  }
+  return lijst;
+}
+
 export function wijzigFotostatus(item, leerling, status, reden = '') {
+  if(status==='controleren')status='onbekend';
   const result = {};
   for (const key of ['uitzonderingen', 'ontbrekendeFormulieren', 'gecontroleerdeLeerlingen']) {
     result[key] = (item[key] || []).filter(x => !zelfdeFotoregistratie(x, leerling));

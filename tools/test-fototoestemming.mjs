@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import {createRequire} from 'node:module';
 const require=createRequire(import.meta.url);
 const source=fs.readFileSync(new URL('../fototoestemming.js',import.meta.url),'utf8');
-const {wijzigFotostatus,wijzigFotoreden,zelfdeFotoregistratie,maakFotoPdf}=await import('data:text/javascript;base64,'+Buffer.from(source).toString('base64'));
+const {ontbrekendeFotoformulieren,wijzigFotostatus,wijzigFotoreden,zelfdeFotoregistratie,maakFotoPdf}=await import('data:text/javascript;base64,'+Buffer.from(source).toString('base64'));
 for(const file of ['schoolbeheer.html','foto-overzicht.html']){
  const html=fs.readFileSync(new URL('../'+file,import.meta.url),'utf8');
  for(const m of html.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/g))if(!m[1].includes('src='))new vm.Script(m[2].replace(/^\s*import\s.*?;\s*$/gm,''));
@@ -41,8 +41,8 @@ assert.equal(await context.window.zetFotoStatus('1','ja'),true);
 assert.equal(opgeslagen.uitzonderingen.length,0);
 const overview=fs.readFileSync(new URL('../foto-overzicht.html',import.meta.url),'utf8');
 const elements={};const element=id=>elements[id]||=(id==='zoek'?{value:''}:{innerHTML:'',textContent:''});
-const view=vm.createContext({$:element,instelling:{bevestigd:true,...wijzigFotostatus({},leerling,'nee','Geen publicatie')},schooljaar:'2026-2027',klasleerlingen:[],magBeheren:()=>true,actieveFotoRegistratie:()=>true,esc:x=>String(x),klasSort:(a,b)=>a.localeCompare(b),datumTekst:()=>'',Set});
-vm.runInContext(overview.slice(overview.indexOf('    function fotoRij('),overview.indexOf("    $('overzicht').addEventListener")),view);
+const view=vm.createContext({$:element,instelling:{bevestigd:true,...wijzigFotostatus({},leerling,'nee','Geen publicatie')},schooljaar:'2026-2027',klasleerlingen:[],naam:s=>s.naam,ontbrekendeFotoformulieren,magBeheren:()=>true,actieveFotoRegistratie:()=>true,esc:x=>String(x),klasSort:(a,b)=>a.localeCompare(b),datumTekst:()=>'',Set});
+vm.runInContext(overview.slice(overview.indexOf('    function ontbrekendeFotoLijst('),overview.indexOf("    $('overzicht').addEventListener")),view);
 vm.runInContext('renderOverzicht()',view);assert.ok(element('overzicht').innerHTML.includes('Geen publicatie'));
 view.instelling=opgeslagen;vm.runInContext('renderOverzicht()',view);
 assert.ok(!element('overzicht').innerHTML.includes(leerling.naam));assert.ok(!element('overzicht').innerHTML.includes('Geen publicatie'));
@@ -55,3 +55,20 @@ fs.writeFileSync('tmp/pdfs/foto/samen.pdf',Buffer.from(samen.output('arraybuffer
 const grootSamen=maakFotoPdf(jsPDF,{schooljaar:'2026-2027',uitzonderingen:leerlingen,ontbrekendeFormulieren:leerlingen});
 assert.ok(grootSamen.getNumberOfPages()>3);
 console.log('Gecombineerde PDF bevat beide overzichten, samen op één pagina wanneer er plaats is.');
+
+const nieuw={leerlingId:'nieuw',naam:'Nieuwe Leerling',klas:'K1'};
+assert.deepEqual(ontbrekendeFotoformulieren({},[nieuw]),[nieuw]);
+assert.equal(ontbrekendeFotoformulieren(wijzigFotostatus({},nieuw,'ja'),[nieuw]).length,0);
+assert.equal(ontbrekendeFotoformulieren(wijzigFotostatus({},nieuw,'nee'),[nieuw]).length,0);
+assert.equal(ontbrekendeFotoformulieren(wijzigFotostatus({},nieuw,'onbekend'),[nieuw]).length,1);
+assert.equal(wijzigFotostatus({},nieuw,'controleren').ontbrekendeFormulieren.length,1);
+view.klasleerlingen=[{klas:'K1',leerling:{id:'nieuw',naam:'Nieuwe Leerling'}}];vm.runInContext('renderOverzicht()',view);
+assert.ok(element('ontbrekendOverzicht').innerHTML.includes('Nieuwe Leerling'));
+assert.ok(!school.includes('value="controleren"'));
+const nieuwPdf=maakFotoPdf(jsPDF,{schooljaar:'2026-2027',uitzonderingen:[],ontbrekendeFormulieren:ontbrekendeFotoformulieren({},[nieuw])});assert.ok(nieuwPdf.output().includes('Nieuwe Leerling'));
+console.log('Nieuwe leerling verschijnt automatisch bij ontbrekende formulieren, ook in PDF; bestaande ja/nee behouden.');
+
+context.activeStudents=()=>[{id:'nieuw'}];context.zelfdeFotoregistratie=zelfdeFotoregistratie;context.ontbrekendeFotoformulieren=ontbrekendeFotoformulieren;context.confirm=()=>true;context.renderMetScrollbehoud=()=>{};
+vm.runInContext(school.slice(school.indexOf('    window.bevestigFotoKlas='),school.indexOf('    function studentTable()')),context);
+await context.window.bevestigFotoKlas();assert.ok(opgeslagen.ontbrekendeFormulieren.some(x=>x.leerlingId==='nieuw'));
+console.log('Klasbevestiging behoudt ontbrekende formulieren van nieuwe leerlingen.');

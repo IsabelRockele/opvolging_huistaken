@@ -68,7 +68,7 @@
   <div id="bewaarStatus" role="status" aria-live="polite"></div>
   <script src="jspdf.umd.min.js"></script>
   <script type="module">
-    import { vergelijkFotoklassen, wijzigFotoreden, zelfdeFotoregistratie, maakFotoPdf } from "./fototoestemming.js?v=20260922-1";
+    import { ontbrekendeFotoformulieren, vergelijkFotoklassen, wijzigFotoreden, zelfdeFotoregistratie, maakFotoPdf } from "./fototoestemming.js?v=20260929-2";
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
     import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
     import { getFirestore, collection, doc, getDoc, getDocs, onSnapshot, query, where, runTransaction } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
@@ -99,17 +99,19 @@
         return (id&&leerlingId===id)||(item.klas===klas&&naamSleutel&&leerlingNaam===naamSleutel);
       });
     }
+    function ontbrekendeFotoLijst(item){
+      const leerlingen=klasleerlingen.map(({klas,leerling})=>({leerlingId:String(leerling.id||''),naam:naam(leerling),klas}));
+      return ontbrekendeFotoformulieren(item,leerlingen).filter(actieveFotoRegistratie);
+    }
     function fotoRij(x){
       return `<div class="exception"><strong>${esc(x.naam)}</strong><span>Klas ${esc(x.klas)}</span><p class="foto-reden"><strong>Reden:</strong> ${esc(x.reden||'Geen reden ingevuld')}</p>${magBeheren()?`<button class="secondary" data-fotoreden="${esc(JSON.stringify(x))}">${x.reden?'Wijzigen':'Reden toevoegen'}</button>`:''}</div>`;
     }
     function renderOverzicht(){
       const q=$('zoek').value.trim().toLocaleLowerCase('nl');
       const zichtbaar=items=>(items||[]).filter(actieveFotoRegistratie).filter(x=>!q||`${x.naam} ${x.klas}`.toLocaleLowerCase('nl').includes(q)).sort((a,b)=>klasSort(a.klas,b.klas)||a.naam.localeCompare(b.naam,'nl'));
-      const lijst=zichtbaar(instelling.uitzonderingen),ontbrekend=zichtbaar(instelling.ontbrekendeFormulieren);
-      const gecontroleerdeIds=new Set((instelling.gecontroleerdeLeerlingen||[]).map(x=>String(x.leerlingId||'')).filter(Boolean));
-      const nieuweLeerlingen=magBeheren()&&instelling.bevestigd?klasleerlingen.filter(x=>x.leerling.id&&!gecontroleerdeIds.has(String(x.leerling.id))):[];
-      $('status').className=instelling.bevestigd&&!ontbrekend.length&&!nieuweLeerlingen.length?'status ok':'status';
-      $('status').textContent=!instelling.bevestigd?`Fototoestemmingen voor ${schooljaar} zijn nog niet bevestigd.`:nieuweLeerlingen.length?`${nieuweLeerlingen.length} nieuwe leerling(en) staan nog op “Nog na te vragen”. Vul hun fotostatus in de klaslijst in.`:`Fototoestemmingen ${schooljaar}: ${lijst.length} mogen niet op de foto en ${ontbrekend.length} formulier(en) ontbreken nog.`;
+      const lijst=zichtbaar(instelling.uitzonderingen),ontbrekend=zichtbaar(ontbrekendeFotoLijst(instelling));
+      $('status').className=instelling.bevestigd&&!ontbrekend.length?'status ok':'status';
+      $('status').textContent=!instelling.bevestigd?`Fototoestemmingen voor ${schooljaar} zijn nog niet bevestigd. ${ontbrekend.length} formulier(en) ontbreken nog.`:`Fototoestemmingen ${schooljaar}: ${lijst.length} mogen niet op de foto en ${ontbrekend.length} formulier(en) ontbreken nog.`;
       $('overzicht').innerHTML=lijst.length?lijst.map(fotoRij).join(''):`<div class="empty">${q?'Geen leerlingen gevonden.':instelling.bevestigd?'Geen geregistreerde uitzonderingen.':'Nog te controleren voor dit schooljaar.'}</div>`;
       $('ontbrekendOverzicht').innerHTML=ontbrekend.length?ontbrekend.map(x=>`<div class="exception missing"><strong>${esc(x.naam)}</strong><span>Klas ${esc(x.klas)}</span></div>`).join(''):'<div class="empty">Geen ontbrekende formulieren gevonden.</div>';
       const wanneer=datumTekst(instelling.gecontroleerdOp);
@@ -141,7 +143,7 @@
         if(!window.jspdf?.jsPDF)throw Error('De PDF-module is niet geladen. Vernieuw de pagina.');
         const item=snap.exists()?snap.data():{};
         const uitzonderingen=(item.uitzonderingen||[]).filter(actieveFotoRegistratie);
-        const ontbrekendeFormulieren=(item.ontbrekendeFormulieren||[]).filter(actieveFotoRegistratie);
+        const ontbrekendeFormulieren=ontbrekendeFotoLijst(item);
         maakFotoPdf(window.jspdf.jsPDF,{schooljaar:jaar,uitzonderingen,ontbrekendeFormulieren}).save(`${jaar}_fototoestemming.pdf`);
       }catch(err){alert('De PDF kon niet worden gemaakt: '+err.message);}
       finally{if(jaar===schooljaar)button.disabled=false;}
