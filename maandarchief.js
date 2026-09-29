@@ -1,3 +1,4 @@
+import { periodeStart, periodeDagen, periodeRecord } from "./refter-periodes.js?v=20260929-1";
 // Gedeelde, alleen-lezen maandexports voor secretariaat en huiswerkklas.
 const naam = s => [s.last || s.lastName, s.first || s.firstName].filter(Boolean).join(' ') || s.naam || s.name || 'Onbekende leerling';
 const sorteer = (a,b) => a.localeCompare(b,'nl',{numeric:true});
@@ -9,9 +10,9 @@ const maandag = d => plus(d,-((new Date(d+'T12:00:00Z').getUTCDay()+6)%7));
 function dagen(maand){const result=[];for(let d=maand+'-01';d.startsWith(maand);d=plus(d,1))result.push(d);return result;}
 function vrij(d,k){return [0,3,6].includes(new Date(d+'T12:00:00Z').getUTCDay())||(k.vrijeDagen||[]).some(v=>v.start<=d&&v.end>=d)||(k.refterVrijeDagen||[]).some(v=>{const start=v.date||v.datum||v.start;return start<=d&&(v.end||start)>=d;});}
 function verwerkt(d,k,jaar){
-  const week=maandag(d);
-  if(k.processed?.refterWeken)return !!k.processed.refterWeken[week];
-  const laatste=[4,3,2,1,0].map(n=>plus(week,n)).find(x=>x>=jaar.slice(0,4)+'-09-01'&&x<=jaar.slice(5)+'-06-30'&&!vrij(x,k));
+  const week=periodeStart(d);
+  if(k.processed?.refterWeken)return !!periodeRecord(k.processed.refterWeken,week);
+  const laatste=periodeDagen(week).reverse().find(x=>x>=jaar.slice(0,4)+'-09-01'&&x<=jaar.slice(5)+'-06-30'&&!vrij(x,k));
   return !!laatste&&!!k.processed?.refter&&k.processed.refter>=laatste;
 }
 function planning(r,d){const h=(r.history||[]).filter(x=>x.from&&x.from<=d).sort((a,b)=>sorteer(a.from,b.from)).at(-1);return h?{active:h.action!=='stop',days:h.days||{},free:!!r.colleague||!!h.free}:{active:actief(r,d),days:r.days||{},free:!!r.colleague||!!r.free};}
@@ -26,10 +27,10 @@ export function maakMaandOverzichten({soort,maand,schooljaar,klassen,huiswerk={}
     const leerlingen=(k.leerlingen||[]).filter(s=>ds.some(d=>actief(s,d))).sort((a,b)=>sorteer(naam(a),naam(b)));
     const sectie={klas,notities:[],tabellen:[]};
     if(soort==='refter'){
-      const stat=d=>vrij(d,k)?'-':d>vandaag?'Toekomst':verwerkt(d,k,schooljaar)?'Verwerkt':k.refterBevestigingen?.[maandag(d)]?'Bevestigd':'Niet bevestigd';
+      const stat=d=>vrij(d,k)?'-':d>vandaag?'Toekomst':verwerkt(d,k,schooljaar)?'Verwerkt':periodeRecord(k.refterBevestigingen,d)?'Bevestigd':'Niet bevestigd';
       sectie.notities.push('A = aanwezig (bevestigd); X = afwezig; ? = nog niet bevestigd; - = geen refter / niet van toepassing. Totaal telt alleen bevestigde aanwezigheden.');
       sectie.tabellen.push({kop:['Leerling',...ds.map(d=>d.slice(8)),'Totaal'],breedtes:[59,...ds.map(()=>6.5),16],rijen:leerlingen.map(s=>{const cells=ds.map(d=>vrij(d,k)||!actief(s,d)||s.colleague?'-':d>vandaag?'?':k.refter?.[maand]?.[s.id]?.[d]?'X':['Verwerkt','Bevestigd'].includes(stat(d))?'A':'?');return [naam(s)+(s.colleague?' (collega)':''),...cells,String(cells.filter(x=>x==='A').length)];})});
-      sectie.tabellen.push({kop:['Datums','Status / controle'],breedtes:[45,232],rijen:[...new Set(ds.filter(d=>!vrij(d,k)).map(maandag))].map(w=>{const dates=ds.filter(d=>maandag(d)===w&&!vrij(d,k));const b=k.refterBevestigingen?.[w];return [dates.map(datum).join(', '),[...new Set(dates.map(stat))].join(', ')+(b?` | Bevestigd: ${b.bevestigdOp||''} ${b.door||''}`:'')];})});
+      sectie.tabellen.push({kop:['Datums','Status / controle'],breedtes:[45,232],rijen:[...new Set(ds.filter(d=>!vrij(d,k)).map(periodeStart))].map(w=>{const dates=ds.filter(d=>periodeStart(d)===w&&!vrij(d,k));const b=periodeRecord(k.refterBevestigingen,w);return [dates.map(datum).join(', '),[...new Set(dates.map(stat))].join(', ')+(b?` | Bevestigd: ${b.bevestigdOp||''} ${b.door||''}`:'')];})});
       const vrijRedenen=(k.refterVrijeDagen||[]).filter(v=>{const start=v.date||v.datum||v.start;return start<=ds.at(-1)&&(v.end||start)>=ds[0];});
       vrijRedenen.forEach(v=>sectie.notities.push(`Geen refter ${datum(v.date||v.datum||v.start)}: ${v.reason||v.reden||'hele klas'}`));
     }else if(soort==='aankopen'){

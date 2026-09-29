@@ -1,4 +1,5 @@
-﻿import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { periodeStart, periodeDagen, periodeEind, periodes, periodeRecord, magBevestigen } from "./refter-periodes.js?v=20260929-1";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, sendPasswordResetEmail, signOut, updatePassword, updateEmail, reauthenticateWithCredential, EmailAuthProvider } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import { getFirestore, doc, getDoc, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
@@ -108,30 +109,31 @@ function meldingIsAfgehandeldVoor(m, user, zorgRol) {
 function toonRefterHerinneringOpStart(rol, klasDocs) {
   document.getElementById('portaalRefterHerinnering')?.remove();
   if (rol !== 'klasleerkracht') return;
-  const nu = new Date(), dag = nu.getDay();
-  if (dag < 1 || dag > 3) return;
-  const iso = datum => `${datum.getFullYear()}-${String(datum.getMonth()+1).padStart(2,'0')}-${String(datum.getDate()).padStart(2,'0')}`;
-  const verschuif = (datum, aantal) => { const kopie = new Date(datum); kopie.setDate(kopie.getDate()+aantal); return kopie; };
-  const deadline = verschuif(nu, 3-dag);
-  const eersteBron = klasDocs.find(x => x.snap?.exists())?.snap.data() || {};
-  const isVrij = datum => (eersteBron.vrijeDagen || []).some(v => datum >= v.start && datum <= v.end);
-  if (isVrij(iso(deadline))) return;
-  let weekStart = verschuif(deadline, -9);
-  const heeftSchooldag = start => [0,1,2,3,4].some(i => !isVrij(iso(verschuif(start,i))));
-  while (!heeftSchooldag(weekStart)) weekStart = verschuif(weekStart,-7);
-  const weekSleutel = iso(weekStart);
-  const bevestigingen = klasDocs.filter(x => x.snap?.exists()).map(x => !!x.snap.data()?.refterBevestigingen?.[weekSleutel]);
-  if (!bevestigingen.length) return;
-  const bevestigd = bevestigingen.every(Boolean);
-  if (bevestigd) return;
-  const format = datum => datum.toLocaleDateString('nl-BE',{day:'numeric',month:'long'});
+  const nu=new Date(),vandaag=`${nu.getFullYear()}-${String(nu.getMonth()+1).padStart(2,'0')}-${String(nu.getDate()).padStart(2,'0')}`;
+  const jaar=huidigSchooljaarVoorMeldingen(),van=jaar.slice(0,4)+'-09-01',tot=jaar.slice(5)+'-06-30';
+  if(vandaag<van||vandaag>tot)return;
+  const open=[];
+  klasDocs.filter(x=>x.snap?.exists()).forEach(x=>{
+    const bron=x.snap.data(),vrij=d=>[0,3,6].includes(new Date(d+'T12:00:00').getDay())||(bron.vrijeDagen||[]).some(v=>d>=v.start&&d<=v.end)||(bron.refterVrijeDagen||[]).some(v=>{const start=v.date||v.datum||v.start;return d>=start&&d<=(v.end||start);});
+    const week=periodes(van,tot).find(w=>{
+      if(w>vandaag||!magBevestigen(w,vandaag,vrij))return false;
+      if(periodeRecord(bron.refterBevestigingen,w))return false;
+      if(bron.processed?.refterWeken)return !periodeRecord(bron.processed.refterWeken,w);
+      const laatste=periodeDagen(w).filter(d=>!vrij(d)).at(-1);
+      return !bron.processed?.refter||bron.processed.refter<laatste;
+    });
+    if(week)open.push(week);
+  });
+  if(!open.length)return;
+  const weekSleutel=open.sort()[0];
+  const format=d=>new Date(d+'T12:00:00').toLocaleDateString('nl-BE',{day:'numeric',month:'long'});
   const blok = document.createElement('a');
   blok.id = 'portaalRefterHerinnering';
   blok.className = 'portaal-refter-herinnering';
   blok.href = 'schoolbeheer.html?v=20260910-compacte-klaslijst-1&open=refter';
   blok.target = '_blank';
   blok.rel = 'noopener';
-  blok.innerHTML = `<span><strong>⚠ Refterlijst nakijken tegen woensdag ${format(deadline)}</strong>Controleer de voorbije schoolweek en bevestig ze daarna, ook wanneer niemand afwezig was.</span><span class="refter-herinnering-knop">Nu nakijken</span>`;
+  blok.innerHTML = `<span><strong>⚠ Refterlijst nakijken en bevestigen</strong>Controleer ${format(weekSleutel)} tot en met ${format(periodeEind(weekSleutel))}. Ook een kort maanddeel moet apart bevestigd worden, ook wanneer niemand afwezig was.</span><span class="refter-herinnering-knop">Nu nakijken</span>`;
   document.getElementById('administratiePortaalGrid')?.insertAdjacentElement('beforebegin', blok);
 }
 

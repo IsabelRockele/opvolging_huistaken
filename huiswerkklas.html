@@ -721,7 +721,7 @@ window.downloadHuiswerkMaandarchief=async()=>{
     if(demoMode)throw Error("Verlaat de testmodus om de echte maandlijsten te downloaden.");
     if(!window.jspdf?.jsPDF)throw Error("De PDF-module is nog niet geladen. Probeer opnieuw.");
     const [{maakMaandOverzichten,maakMaandPdf},klasSnap,hwSnap]=await Promise.all([
-      import('./maandarchief.js?v=20260919-1'),
+      import('./maandarchief.js?v=20260929-1'),
       getDocs(collection(db,"schoolbeheer",jaar,"klassen")),
       getDoc(doc(db,"huiswerkklas",jaar,"maanden",maand))
     ]);

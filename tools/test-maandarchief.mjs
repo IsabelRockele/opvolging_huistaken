@@ -3,7 +3,8 @@ import vm from 'node:vm';
 import assert from 'node:assert/strict';
 import {createRequire} from 'node:module';
 const require=createRequire(import.meta.url);
-const source=fs.readFileSync(new URL('../maandarchief.js',import.meta.url),'utf8');
+const periodUrl='data:text/javascript;base64,'+Buffer.from(fs.readFileSync(new URL('../refter-periodes.js',import.meta.url),'utf8')).toString('base64');
+const source=fs.readFileSync(new URL('../maandarchief.js',import.meta.url),'utf8').replace('./refter-periodes.js?v=20260929-1',periodUrl);
 const {maakMaandOverzichten,maakMaandPdf}=await import('data:text/javascript;base64,'+Buffer.from(source).toString('base64'));
 for(const file of ['schoolbeheer.html','huiswerkklas.html']){
   const html=fs.readFileSync(new URL('../'+file,import.meta.url),'utf8');
@@ -23,6 +24,11 @@ const hw={enrolled:{'2A_old':{klas:'2A',name:'Uitgeschreven leerling',active:fal
 const homework=maakMaandOverzichten({...basis,soort:'huiswerkklas',huiswerk:hw})[0];
 assert.ok(homework.tabellen[0].rijen.some(r=>r[0]==='Uitgeschreven leerling'&&r.at(-2)==='1'));
 assert.deepEqual(homework.tabellen[0].rijen.find(r=>r[0]==='De Voorbeeld Noor').slice(1),['X','A*','-','1','0']);
+const alleenSeptember={...klas,refterBevestigingen:{'2026-09-28':{periodeTot:'2026-09-30'}},processed:{refterWeken:{'2026-09-28':{periodeTot:'2026-09-30'}}}};
+const oktober=maakMaandOverzichten({...basis,soort:'refter',klassen:[alleenSeptember]})[0];
+assert.equal(oktober.tabellen[0].rijen.find(r=>r[0]==='De Voorbeeld Noor')[1],'?');
+alleenSeptember.refterBevestigingen['2026-10-01']={periodeTot:'2026-10-02'};
+assert.equal(maakMaandOverzichten({...basis,soort:'refter',klassen:[alleenSeptember]})[0].tabellen[0].rijen.find(r=>r[0]==='De Voorbeeld Noor')[1],'A');
 assert.equal(JSON.stringify(klas),snapshot);
 assert.throws(()=>maakMaandOverzichten({...basis,soort:'refter',maand:'2027-10'}));
 const oudJaar=maakMaandOverzichten({...basis,schooljaar:'2025-2026',maand:'2025-10',soort:'aankopen'});assert.equal(oudJaar[0].tabellen[0].rijen.length,0);
