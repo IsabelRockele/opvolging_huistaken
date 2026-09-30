@@ -306,6 +306,9 @@ function pasKnoppenToe(huistakenKnop, overgangKnop, schoolbeheerKnop, bestelling
     }
   }
   if (bestellingenKnop) bestellingenKnop.style.display = (isSecretariaat || heeftKlasbeheer) ? '' : 'none';
+  const schoolverkoopKnop = document.getElementById('schoolverkoopKeuzeKnop');
+  const magSchoolverkoop = ['beheerder', 'directie', 'secretariaat'].includes(rolNaam);
+  if (schoolverkoopKnop) schoolverkoopKnop.style.display = magSchoolverkoop ? '' : 'none';
   const publiekeAgendaLinks = document.getElementById('publiekeAgendaLinks');
   if (publiekeAgendaLinks) publiekeAgendaLinks.style.display = 'none';
   const hulpbalk = document.getElementById('portaalHulpbalk');
