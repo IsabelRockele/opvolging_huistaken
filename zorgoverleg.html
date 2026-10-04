@@ -148,6 +148,18 @@
       <button id="pdfBtn">PDF leerling</button>
     </div>
   </section>
+  <section class="panel group-panel" id="klasobservatiePanel" hidden>
+    <button type="button" class="group-toggle" id="klasobservatieToggle" aria-expanded="false" aria-controls="klasobservatieBody">
+      <div><strong>Klasobservatie</strong><span>Algemene observaties over de hele klas bij dit overleg.</span></div>
+      <div class="group-arrow" id="klasobservatieArrow" aria-hidden="true">+</div>
+    </button>
+    <div class="group-body" id="klasobservatieBody">
+      <div id="klasobservatieHistoriek"></div>
+      <label for="klasobservatieInput">Observatie over de hele klas</label>
+      <textarea id="klasobservatieInput" rows="6" placeholder="Noteer hier wat je hebt geobserveerd bij de hele klas..."></textarea>
+      <div class="timeline-actions"><button type="button" id="klasobservatieSave">Observatie opslaan</button></div>
+    </div>
+  </section>
   <section class="panel group-panel" id="groupPanel">
     <button type="button" class="group-toggle" id="groupToggle">
       <div>
@@ -257,6 +269,7 @@ async function loadClasses(){
   classes=[...found].filter(Boolean).sort((a,b)=>a.localeCompare(b,"nl",{numeric:true}));
 }
 async function refreshSchooljaar(){
+  $("klasobservatiePanel").hidden=true;
   schooljaar=$("schooljaarSelect").value||huidigSchooljaar();
   $("maandSelect").innerHTML=schoolMonths().map(m=>`<option>${esc(m)}</option>`).join("");
   $("maandSelect").value=schoolMonths().find(m=>m===new Date().toISOString().slice(0,7))||schoolMonths()[0];
@@ -268,6 +281,7 @@ async function refreshSchooljaar(){
 function overlegRef(){return doc(db,"zorgoverleggen",schooljaar,"klassen",activeKlas,"maanden",maand);}
 function overlegRefFor(monthId){return doc(db,"zorgoverleggen",schooljaar,"klassen",activeKlas,"maanden",monthId);}
 async function openOverleg(){
+  $("klasobservatiePanel").hidden=true;
   activeKlas=$("klasSelect").value; maand=$("maandSelect").value; $("status").textContent=`${activeKlas} - ${maand}`;
   const klasSnap=await getDoc(doc(db,"schoolbeheer",schooljaar,"klassen",activeKlas));
   leerlingen=klasSnap.exists()?((klasSnap.data().leerlingen||[]).filter(isActieveLeerlingVoorOverleg).sort((a,b)=>naamSorteersleutel(a).localeCompare(naamSorteersleutel(b),"nl"))):[];
@@ -286,9 +300,30 @@ async function openOverleg(){
   $("titelInput").value=data.titel||`Zorgoverleg ${maand}`;
   zetBewaarstatus("");
   renderGroupActions();
+  renderKlasobservatie();
   render();
   if(isArchiefJaar()) $("status").textContent=`Archief ${schooljaar} - alleen lezen`;
 }
+function renderKlasobservatie(){
+  const panel=$("klasobservatiePanel"), input=$("klasobservatieInput");
+  input.value=data.klasobservatie||"";
+  input.disabled=isArchiefJaar();
+  $("klasobservatieSave").disabled=isArchiefJaar();
+  const history=overlegHistoriek.filter(item=>item.maand<maand&&String(item.data?.klasobservatie||"").trim()).sort((a,b)=>a.maand.localeCompare(b.maand));
+  $("klasobservatieHistoriek").innerHTML=history.length?`<details style="margin-bottom:12px"><summary>Vorige klasobservaties (${history.length})</summary>${history.map(item=>`<div class="previous"><strong>${esc(maandLabel(item.maand))}</strong>${esc(item.data.klasobservatie)}</div>`).join("")}</details>`:"";
+  panel.classList.toggle("open",!!input.value.trim());
+  $("klasobservatieToggle").setAttribute("aria-expanded",String(panel.classList.contains("open")));
+  $("klasobservatieArrow").textContent=panel.classList.contains("open")?"-":"+";
+  panel.hidden=false;
+}
+$("klasobservatieToggle").onclick=()=>{
+  const open=$("klasobservatiePanel").classList.toggle("open");
+  $("klasobservatieToggle").setAttribute("aria-expanded",String(open));
+  $("klasobservatieArrow").textContent=open?"-":"+";
+  if(open)$("klasobservatieInput").focus();
+};
+$("klasobservatieInput").oninput=()=>zetBewaarstatus("Klasobservatie nog niet bewaard","dirty");
+$("klasobservatieSave").onclick=save;
 function vorigBlok(value){return value?`<div class="previous"><strong>Vorige maand</strong>${esc(value)}</div>`:"";}
 function veld(id,label,val,type="textarea",prev=""){return `<label>${label}${type==="input"?`<input data-field="${id}" value="${esc(val||"")}">`:`<textarea data-field="${id}">${esc(val||"")}</textarea>`}${prev&&String(prev)!==String(val||"")?vorigBlok(prev):""}</label>`;}
 function studentPicker(item){
@@ -566,7 +601,7 @@ function goToStudent(index){
 }
 function switchField(field){collectCurrent();activeField=field;render();}
 function setFicheMode(value){collectCurrent();fullFicheMode=!!value;render();}
-function collect(){collectCurrent();collectGroupActions();}
+function collect(){collectCurrent();collectGroupActions();if(!$("klasobservatiePanel").hidden)data.klasobservatie=$("klasobservatieInput").value;}
 async function laadZorgGeschiedenisVoorLeerling(student){
   const targetKey=naamKey(naam(student));
   const jaren=vorigeSchooljaren();
