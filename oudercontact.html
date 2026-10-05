@@ -308,6 +308,7 @@ button:disabled{opacity:.5;cursor:not-allowed}
 </div>
 
 <script type="module">
+import { leerlingActief } from './klaswissel-model.mjs';
 // ── FIREBASE ──
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
@@ -592,16 +593,25 @@ async function laadLeerlingenUitOvergangsbespreking() {
   }
 }
 
+let centraleOcLeerlingen=[];
+function ocLeerlingenOpDatum(datum) {
+  return state.leerlingen.filter(l=>{
+    const centraal=centraleOcLeerlingen.find(s=>String(s.id)===String(l.schoolbeheerId||'') || leerlingNaamvariantenSchoolbeheer(s).some(n=>naamKey(n)===naamKey(l.naam)));
+    return !centraal || leerlingActief(centraal,schooljaar,datum||undefined);
+  });
+}
 async function laadLeerlingenUitSchoolbeheer() {
+  centraleOcLeerlingen=[];
   const klas = activeKlasId || beheerKlas || activeKlasNaam;
   if (!klas) return 0;
   try {
     const snap = await getDoc(doc(db, "schoolbeheer", schooljaar, "klassen", klas));
     if (!snap.exists()) return 0;
+    centraleOcLeerlingen=snap.data().leerlingen||[];
     const beginJaar = `${String(schooljaar).slice(0,4)}-09-01`;
     const eindJaar = `${Number(String(schooljaar).slice(0,4)) + 1}-08-31`;
     const leerlingen = (snap.data().leerlingen || [])
-      .filter(s => (!s.start || s.start <= eindJaar) && (!s.end || s.end >= beginJaar))
+      .filter(s => leerlingActief(s,schooljaar))
       .map(s => {
         const naam = leerlingNaamSchoolbeheer(s);
         return naam ? {
@@ -865,7 +875,7 @@ function renderOcLijst() {
   container.innerHTML = sorted.map(oc => {
     const gesprekken = oc.gesprekken || {};
     const ingevuld = Object.values(gesprekken).filter(g => heeftData(g)).length;
-    const leerlingen = oc.type === 'verplicht' ? state.leerlingen : state.leerlingen.filter(l => (oc.uitgenodigden||[]).includes(l.id));
+    const leerlingen = getLeerlingenVoorOc(oc);
     const totaal = leerlingen.length;
     return `<div class="oc-card" onclick="openOc('${oc.id}')">
       <div class="oc-card-info">
@@ -922,8 +932,8 @@ window.naarOcLijst = function() {
 // ── LEERLINGEN SIDEBAR ──
 function getLeerlingenVoorOc(oc) {
   let lijst = oc.type === 'verplicht'
-    ? [...state.leerlingen]
-    : state.leerlingen.filter(l => (oc.uitgenodigden||[]).includes(l.id));
+    ? ocLeerlingenOpDatum(oc.datum)
+    : ocLeerlingenOpDatum(oc.datum).filter(l => (oc.uitgenodigden||[]).includes(l.id));
 
   const gesprekken = oc.gesprekken || {};
   // Sorteer: eerst met uur (op tijd), dan zonder (alfabetisch)
@@ -1308,7 +1318,7 @@ function toggleUitnodigingCheckboxes(type, geselecteerd = [], bestaandeExtra = [
   if (type !== 'uitnodiging') { wrap.classList.add('hidden'); return; }
   wrap.classList.remove('hidden');
   extraNamen = [...bestaandeExtra];
-  $('uitnodigingCheckboxes').innerHTML = state.leerlingen.map(l =>
+  $('uitnodigingCheckboxes').innerHTML = ocLeerlingenOpDatum($('ocDatum').value).map(l =>
     `<label style="display:flex;align-items:center;gap:7px;font-size:13px;font-weight:600;cursor:pointer;padding:5px 8px;border:1px solid var(--border);border-radius:8px">
       <input type="checkbox" name="uitnodiging" value="${l.id}" style="width:auto" ${geselecteerd.includes(l.id)?'checked':''}/>
       ${esc(l.naam)}

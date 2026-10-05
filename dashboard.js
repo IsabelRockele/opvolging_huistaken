@@ -1,3 +1,4 @@
+import { leerlingActief } from './klaswissel-model.mjs';
 ﻿// Importeer Firebase services
 import { getAuth, onAuthStateChanged, signOut, updatePassword } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import {
@@ -143,12 +144,7 @@ function leerlingNaamSchoolbeheer(s) {
   return direct;
 }
 function isActieveSchoolbeheerLeerling(s) {
-  if (s?.startNiet === true) return false;
-  const eersteSchooldag = `${schooljaar.slice(0,4)}-09-01`;
-  const laatsteSchooldag = `${schooljaar.slice(5,9)}-06-30`;
-  const start = s?.start || s?.startDatum || '';
-  const einde = s?.end || s?.eindDatum || '';
-  return (!start || start <= laatsteSchooldag) && (!einde || einde >= eersteSchooldag);
+  return leerlingActief(s,schooljaar);
 }
 function isSchoolbeheerLeerling(leerling) {
   return Boolean(leerling?.schoolbeheerId || String(leerling?.id || '').startsWith('schoolbeheer_'));
@@ -394,7 +390,10 @@ async function laadLeerlingenUitSchoolbeheerVoorDashboard() {
       }
     }
     let bronLeerlingen;
-    if (groepSnap?.exists()) {
+    const centraleSnap=await getDoc(doc(db, "schoolbeheer", schooljaar, "klassen", klas));
+    if(centraleSnap.exists()) {
+      bronLeerlingen=centraleSnap.data().leerlingen||[];
+    } else if (groepSnap?.exists()) {
       // De huidige Schoolbeheer-app bewaart de klaslijsten per graadgroep.
       // Ook een lege klaslijst is hier een geldige, leidende lijst.
       bronLeerlingen = groepSnap.data().klassen?.[klas]?.leerlingen || [];

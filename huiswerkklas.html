@@ -257,7 +257,7 @@ function colorForClass(klas){const i=Math.max(0,DEFAULT_CLASSES.indexOf(klas));r
 function monthRef(){return doc(db,"huiswerkklas",schooljaar,"maanden",demoMode?`test-${user.uid}-${month}`:month);}
 function testModeKey(){return `lindeHuiswerkklasTest_${user?.uid||""}`;}
 function bewaarTotVoorSchooljaar(jaar=schooljaar, extraJaren=BEWAAR_JAREN_HUISWERKKLAS){return `${Number(String(jaar).slice(0,4))+extraJaren}-08-31`;}
-function activeStudents(list,dateForCheck=`${month}-15`){return (list||[]).filter(s=>s?.startNiet!==true&&s?.actief!==false&&s?.inactief!==true&&(!s.start||s.start<=dateForCheck)&&(!s.end||s.end>=dateForCheck)).sort((a,b)=>nameSortKey(a).localeCompare(nameSortKey(b),"nl"));}
+function activeStudents(list){const begin=month+'-01',einde=new Date(Number(month.slice(0,4)),Number(month.slice(5)),0).getDate();return (list||[]).filter(s=>s?.startNiet!==true&&s?.actief!==false&&s?.inactief!==true&&(!s.start||s.start<=`${month}-${einde}`)&&(!s.end||s.end>=begin)).sort((a,b)=>nameSortKey(a).localeCompare(nameSortKey(b),"nl"));}
 async function loadRole(){
   const snap=await getDoc(doc(db,"schoolrollen",user.uid));
   realRole=snap.exists()?String(snap.data().rol||"").toLowerCase():"";role=realRole;

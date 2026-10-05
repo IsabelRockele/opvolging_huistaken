@@ -33,6 +33,7 @@
     </section>
   </main>
   <script type="module">
+import { leerlingActief } from './klaswissel-model.mjs';
     import {initializeApp,getApps,getApp} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
     import {getAuth,onAuthStateChanged,signOut} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
     import {getFirestore,doc,getDoc,getDocs,collection,query,where,onSnapshot,runTransaction} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
@@ -47,7 +48,7 @@
     function klasSort(a,b){const key=v=>{const s=String(v).toUpperCase(),k=s.match(/^K(\d+)(.*)$/),l=s.match(/^(\d+)(.*)$/);return k?[0,+k[1],k[2]]:l?[1,+l[1],l[2]]:[2,999,s]},x=key(a),y=key(b);return x[0]-y[0]||x[1]-y[1]||x[2].localeCompare(y[2],"nl")}
     function naam(s){return `${s.last||s.lastName||""}, ${s.first||s.firstName||""}`.replace(/^, /,"").replace(/, $/,"")}
     function naamSorteersleutel(s){return `${s.last||s.lastName||""}${s.first||s.firstName||""}`.normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9]/gi,"").toLocaleLowerCase("nl")}
-    function actief(s){const start=`${schooljaar.slice(0,4)}-09-01`,einde=`${schooljaar.slice(5,9)}-06-30`;return (!s.start||s.start<=einde)&&(!s.end||s.end>=start)}
+    function actief(s){return leerlingActief(s,schooljaar)}
     function schoolbreed(){return ["beheerder","directie","zorgcoordinator","zorgleerkracht"].includes(role)}
     function magWijzigen(){return role!=="directie"&&role!=="secretariaat"}
     async function laadRol(){const snap=await getDoc(doc(db,"schoolrollen",user.uid));role=snap.exists()?String(snap.data().rol||"").trim().toLowerCase():"";if(role==="beheerder"){const sim=localStorage.getItem("lindeSimuleerRol_"+user.uid);if(["klasleerkracht","zorgleerkracht","secretariaat","beheerder"].includes(sim))role=sim}}

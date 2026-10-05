@@ -1,3 +1,4 @@
+import { leerlingActief } from './klaswissel-model.mjs';
 import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import { getFirestore, collection, doc, getDoc, getDocs, query, setDoc, where } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
@@ -15,7 +16,7 @@ function magOpenen(){return !["secretariaat","directie"].includes(role)}
 function leerlingId(s,i=0){return String(s.id||`${s.last||s.lastName||''}_${s.first||s.firstName||''}_${i}`).replaceAll('.', '_')}
 function volledigeNaam(s){const l=String(s.last||s.lastName||s.achternaam||"").trim(),f=String(s.first||s.firstName||s.voornaam||"").trim();return(l||f)?`${l}${l&&f?', ':''}${f}`:String(s.naam||s.name||"").trim()}
 function schooljaarDatums(){const j=$('schooljaar').value.trim();return{start:`${j.slice(0,4)}-09-01`,eind:`${j.slice(5,9)}-06-30`}}
-function hoortBijSchooljaar(s){const d=schooljaarDatums();return(!s.start||s.start<=d.eind)&&(!s.end||s.end>=d.start)}
+function hoortBijSchooljaar(s){return leerlingActief(s,$('schooljaar').value.trim())}
 function alfabetisch(ids){const map=new Map(leerlingen.map((s,i)=>[leerlingId(s,i),s]));return [...ids].sort((a,b)=>volledigeNaam(map.get(a)||{}).localeCompare(volledigeNaam(map.get(b)||{}),'nl'))}
 function leerlingMap(){return new Map(leerlingen.map((s,i)=>[leerlingId(s,i),s]))}
 function voorEenSeptember(){const start=Number($('schooljaar').value.slice(0,4)),grens=new Date(start,8,2);return new Date()<grens}

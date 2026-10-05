@@ -7,6 +7,7 @@
   <title>Groeiboek · intelligent puntenboek</title>
   <link rel="stylesheet" href="intelligent-puntenboek.css">
   <script type="module">
+    import { leerlingActief } from './klaswissel-model.mjs';
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
     import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
     import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
@@ -28,12 +29,15 @@
             `${startjaar - 1}-${startjaar}`
           ];
           for (const schooljaar of schooljaren) {
-            const snap = await getDoc(doc(getFirestore(app), "schoolbeheer_groepen", `${schooljaar}_graad1`));
+            let snap = await getDoc(doc(getFirestore(app), "schoolbeheer", schooljaar, "klassen", "2A"));
+            const centraal=snap.exists();
+            if(!centraal)snap=await getDoc(doc(getFirestore(app), "schoolbeheer_groepen", `${schooljaar}_graad1`));
             if (!snap.exists()) continue;
-            const leerlingen = (snap.data()?.klassen?.["2A"]?.leerlingen || [])
+            const leerlingen = (centraal?snap.data().leerlingen||[]:snap.data()?.klassen?.["2A"]?.leerlingen || [])
+              .filter(leerling=>leerlingActief(leerling,schooljaar))
               .map(leerling => ({
                 id: leerling.id,
-                name: [leerling.firstName, leerling.lastName].filter(Boolean).join(" ").trim()
+                name: [leerling.firstName||leerling.first, leerling.lastName||leerling.last].filter(Boolean).join(" ").trim()
               }))
               .filter(leerling => leerling.name);
             if (leerlingen.length) return { leerlingen, schooljaar };

@@ -6,7 +6,7 @@ const html = fs.readFileSync(require('node:path').join(__dirname, '..', 'schoolb
 function fixture() {
   const listeners=[], renders=[], writes=[];
   const content={innerHTML:''};
-  const c=vm.createContext({window:{}, console, Date, Map,
+  const c=vm.createContext({window:{}, console, Date, Map, structuredClone, kopieDocument:structuredClone, db:{},
     data:{klas:'1A',leerlingen:['vorige klas'],processed:{refterWeken:{week:true}}},
     activeClass:'1A',schooljaar:'2026-2027',tab:'refter',saveTimer:null,unsub:null,
     lokaleBewaringTot:Date.now()+2500,gekozenRefterWeek:'oud',
@@ -18,10 +18,13 @@ function fixture() {
     renderMetScrollbehoud:()=>renders.push({klas:c.activeClass,data:c.data,tab:c.tab,week:c.gekozenRefterWeek}),
     render:()=>{if(c.data)renders.push({klas:c.activeClass,data:c.data});},
     bewaarTotVoorSchooljaar:()=>'',BEWAAR_JAREN_SCHOOLBEHEER:2,
+    schoolbeheerVeiligheidskopie:async()=>{},
+    runTransaction:async(db,fn)=>{const pending=[];await fn({get:async()=>({data:()=>({})}),set:(ref,data)=>pending.push([ref,data])});for(const [ref,data] of pending)await c.setDoc(ref,data);},
     setDoc:async(ref,data)=>writes.push({ref,data:structuredClone(data)}),alert:message=>{throw Error(message);}
   });
   vm.runInContext(html.slice(html.indexOf('    let klasLaadVersie='),html.indexOf('    async function toonKlasNietGestart')),c);
-  vm.runInContext(html.slice(html.indexOf('    async function saveNow()'),html.indexOf('\n',html.indexOf('    async function saveNow()'))),c);
+  const saveStart=html.indexOf('    async function saveNow()');
+  vm.runInContext(html.slice(saveStart,html.indexOf('\n    }',saveStart)+6),c);
   for(const name of ['openOpvolgingRefter','openOpvolgingKlas']) {
     const start=html.indexOf('    window.'+name+'=');
     vm.runInContext(html.slice(start,html.indexOf('\n',start)),c);
@@ -59,7 +62,7 @@ test('snel doorklikken tijdens bewaren opent alleen de laatst gekozen klas',asyn
   f.c.setDoc=()=>new Promise(resolve=>{finish=resolve;});f.c.saveTimer=123;
   const first=f.c.window.openOpvolgingRefter('2A','2026-09-14');
   const last=f.c.window.openOpvolgingRefter('3A','2026-09-07');
-  assert.equal(f.listeners.length,0);finish();await Promise.all([first,last]);
+  assert.equal(f.listeners.length,0);await new Promise(setImmediate);finish();await Promise.all([first,last]);
   assert.equal(f.listeners.length,1);assert.equal(f.listeners[0].ref,'3A');
   f.deliver(0,'3A');assert.equal(f.renders[0].week,'2026-09-07');
 });

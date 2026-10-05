@@ -1,3 +1,4 @@
+import { leerlingActief } from './klaswissel-model.mjs';
 // gedragsopvolging.js
 // Module voor registreren en opvolgen van afspraken / sancties
 
@@ -202,6 +203,7 @@ btnOverzicht.addEventListener("click", () => {
   // Datum default = vandaag
   const vandaag = new Date().toISOString().split("T")[0];
   datumInput.value = vandaag;
+  datumInput.addEventListener('change',()=>{vulLeerlingSelect();renderOverzicht();});
 
   // Bij typewijziging: standaard speeltijden invullen
   typeSelect.addEventListener("change", () => {
@@ -226,11 +228,13 @@ console.log("DEBUG: Klik-event is gekoppeld aan voegRegistratieToe()");
 }
 
 // --- DATA KOPPELEN ---
+let gedragCentraleLeerlingen=[];
 async function vulGedragLeerlingenAanUitSchoolbeheer(bestaandeLeerlingen) {
   if (!actieveKlas) return bestaandeLeerlingen;
   try {
     const klasSnap = await getDoc(doc(db, 'schoolbeheer', gedragSchooljaar, 'klassen', actieveKlas));
     if (!klasSnap.exists()) return bestaandeLeerlingen;
+    gedragCentraleLeerlingen=klasSnap.data().leerlingen||[];
     const vandaag = new Date().toISOString().slice(0, 10);
     const centraleLeerlingen = (klasSnap.data().leerlingen || []).filter(s =>
       (!s.start || s.start <= vandaag) && (!s.end || s.end >= vandaag)
@@ -278,11 +282,6 @@ function koppelData() {
 
     vulLeerlingSelect();
 
-    if (!geselecteerdeLeerlingId && leerlingen.length > 0) {
-      geselecteerdeLeerlingId = leerlingen[0].id;
-      const select = document.getElementById("leerlingSelect");
-      if (select) select.value = geselecteerdeLeerlingId;
-    }
 
     renderOverzicht();
   });
@@ -295,7 +294,10 @@ function vulLeerlingSelect() {
   const huidige = select.value;
   select.innerHTML = '<option value="">Kies een leerling…</option>';
 
-  const gesorteerd = [...leerlingen].sort((a, b) =>
+  const gesorteerd = leerlingen.filter(l=>{
+    const centraal=gedragCentraleLeerlingen.find(s=>String(s.id)===String(l.schoolbeheerId||'') || gedragNaamKey(gedragNaam(s))===gedragNaamKey(l.naam));
+    return !centraal||leerlingActief(centraal,gedragSchooljaar,document.getElementById('datumInput').value||undefined);
+  }).sort((a, b) =>
     a.naam.localeCompare(b.naam, "nl", { sensitivity: "base" })
   );
 
@@ -307,8 +309,8 @@ function vulLeerlingSelect() {
   });
 
   // FIX: als nog geen selectie, eerste leerling kiezen
-  if (!geselecteerdeLeerlingId && leerlingen.length > 0) {
-    geselecteerdeLeerlingId = leerlingen[0].id;
+  if (!gesorteerd.some(s=>s.id===geselecteerdeLeerlingId)) {
+    geselecteerdeLeerlingId = gesorteerd[0]?.id||'';
   }
 
   select.value = geselecteerdeLeerlingId;

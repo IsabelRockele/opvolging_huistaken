@@ -68,6 +68,7 @@
   <div id="bewaarStatus" role="status" aria-live="polite"></div>
   <script src="jspdf.umd.min.js"></script>
   <script type="module">
+import { leerlingActief } from './klaswissel-model.mjs';
     import { ontbrekendeFotoformulieren, vergelijkFotoklassen, wijzigFotoreden, zelfdeFotoregistratie, maakFotoPdf } from "./fototoestemming.js?v=20260929-2";
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
     import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
@@ -78,7 +79,7 @@
     const esc=v=>String(v??'').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#039;');
     const huidigSchooljaar=()=>{const n=new Date(),y=n.getMonth()>=8?n.getFullYear():n.getFullYear()-1;return `${y}-${y+1}`};
     const jaren=()=>{const y=Number(huidigSchooljaar().slice(0,4));return [`${y-1}-${y}`,`${y}-${y+1}`,`${y+1}-${y+2}`]};
-    const actief=(s,jaar)=>{const van=`${jaar.slice(0,4)}-09-01`,tot=`${jaar.slice(5)}-06-30`;return !s.startNiet&&(!s.start||s.start<=tot)&&(!s.end||s.end>=van)};
+    const actief=(s,jaar)=>leerlingActief(s,jaar);
     const naam=s=>String(s.name||s.naam||`${s.first||s.firstName||''} ${s.last||s.lastName||''}`).replace(/\s+/g,' ').trim();
     const klasSort=vergelijkFotoklassen;
     let user=null,role='',werkelijkeRole='',schooljaar=huidigSchooljaar(),instelling={bevestigd:false,uitzonderingen:[],ontbrekendeFormulieren:[],gecontroleerdeLeerlingen:[]},klasleerlingen=[],geladenKlassen=new Set(),unsub=null;

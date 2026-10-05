@@ -1,3 +1,4 @@
+import { leerlingActief } from './klaswissel-model.mjs';
 import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import { getFirestore, collection, doc, getDoc, getDocs, query, where } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
@@ -15,7 +16,7 @@ function achternaam(s){const d=String(s.last||s.lastName||s.achternaam||"").trim
 function volledigeNaam(s){return [achternaam(s),voornaam(s)].filter(Boolean).join(" ")}
 function naamSorteersleutel(s){return `${achternaam(s)}${voornaam(s)}`.normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]/gi,'').toLocaleLowerCase('nl')}
 function leerlingId(s,i){return String(s.id||`${achternaam(s)}_${voornaam(s)}_${i}`)}
-function actief(s){const jaar=$('schooljaar').value.trim(),datum=`${jaar.slice(0,4)}-09-15`;return(!s.start||s.start<=datum)&&(!s.end||s.end>=datum)}
+function actief(s){return leerlingActief(s,$('schooljaar').value.trim())}
 function gekozen(){return leerlingen.map((s,i)=>({id:leerlingId(s,i),naam:volledigeNaam(s)})).filter(x=>geselecteerd.has(x.id)&&x.naam)}
 function magAlleKlassen(){return role==='zorgleerkracht'}
 function magGebruiken(){return role==='zorgleerkracht'||!['secretariaat','directie','zorgcoordinator','beheerder'].includes(role)}

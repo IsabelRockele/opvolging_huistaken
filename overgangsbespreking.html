@@ -1146,9 +1146,11 @@
 </div>
 
 <script type="module">
+import { leerlingActief } from './klaswissel-model.mjs';
+window.klaslijstLeerlingActief=leerlingActief;
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-import { getFirestore, collection, doc, getDoc, getDocs, onSnapshot, query, setDoc as firestoreSetDoc, serverTimestamp, where } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getFirestore, collection, doc, getDoc, getDocs, onSnapshot, query, setDoc as firestoreSetDoc, serverTimestamp, where, runTransaction } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 import { probeerVeiligheidskopie } from "./firebase-veiligheid.js";
 
 const firebaseConfig = {
@@ -1186,7 +1188,7 @@ const BEWAAR_JAREN_OVERGANG = 12; // Maximum: K1 tot einde lager onderwijs plus 
 const BEWAAR_JAREN_PER_STARTKLAS = { K1:12, K2:11, K3:10, "1A":9, "2A":8, "3A":7, "4A":6, "5A":5, "6A":4 };
 const BEWAAR_JAREN_SCHOOLBEHEER = 2; // Aanpasbaar: klaslijsten/refter/activiteiten/aankopen bewaren tot eind augustus na dit aantal schooljaren.
 
-async function setDoc(ref, data, options) {
+async function reservekopieOvergang(ref,data) {
   await probeerVeiligheidskopie(ref, {
     reden: 'Overgangsbespreking vóór opslag',
     schooljaar,
@@ -1196,6 +1198,9 @@ async function setDoc(ref, data, options) {
     console.warn(melding, err);
     document.getElementById('firebaseStatus')?.replaceChildren(document.createTextNode('Let op: reservekopie mislukt; gegevens worden wel bewaard.'));
   });
+}
+async function setDoc(ref, data, options) {
+  await reservekopieOvergang(ref,data);
   return firestoreSetDoc(ref, data, options);
 }
 
@@ -1501,7 +1506,8 @@ function redenHerstelBlokkade(inhoud, leerlingen, klas) {
   if (!Array.isArray(inhoud?.students) || !Array.isArray(leerlingen)) return 'Het dossier of de centrale klaslijst ontbreekt.';
   const actief = leerlingen.filter(s => !s.startNiet && (!s.start || s.start <= '2026-09-04') && (!s.end || s.end >= '2026-09-04'));
   const ids = new Set(actief.map(s => String(s.id || '')));
-  const fiches = inhoud.students;
+  const laterIngestroomd=new Set(leerlingen.filter(s=>s.klaswisselVanaf && s.bronKlas && s.start>'2026-09-04').map(s=>String(s.id)));
+  const fiches = [...inhoud.students.filter(s=>!laterIngestroomd.has(String(s.schoolbeheerId))),...(inhoud.klaswisselArchief||[]).filter(x=>x.datum>'2026-09-04').map(x=>x.fiche)];
   if (ids.has('') || ids.size !== actief.length) return 'De centrale klaslijst bevat ontbrekende of dubbele leerlingcodes.';
   if (fiches.length !== ids.size) return `Het dossier bevat ${fiches.length} fiches; de gecontroleerde klaslijst bevat ${ids.size} actieve kinderen.`;
   if (new Set(fiches.map(s => s.schoolbeheerId)).size !== fiches.length || new Set(fiches.map(s => s.id)).size !== fiches.length) return 'Er staan dubbele fiche- of leerlingcodes in het dossier.';
@@ -1516,6 +1522,7 @@ function redenHerstelBlokkade(inhoud, leerlingen, klas) {
 }
 let overgangOpslagBlokkade = 'Het dossier is nog niet volledig gecontroleerd en geladen.';
 let nieuwOvergangProjectMogelijk = false;
+const geladenKlaswisselVersies=new Map();
 window.firebaseOvergang = {
   ready,
   async saveProject(data, opties = {}) {
@@ -1524,7 +1531,8 @@ window.firebaseOvergang = {
     const bewaarSchooljaar = geldigSchooljaar(opties.schooljaar) ? opties.schooljaar : schooljaar;
     const dossierKlas = data.klas || data.className || data.class || beheerKlasLabel || "";
     const bewaarJaren = bewaarJarenVoorKlas(dossierKlas);
-    await setDoc(projectRef(bewaarSchooljaar), {
+    const ref=projectRef(bewaarSchooljaar);
+    const payload={
       ...data,
       eigenaar_uid: targetOvergangUserId || currentUser.uid,
       eigenaar_email: currentUser.email || "",
@@ -1534,7 +1542,13 @@ window.firebaseOvergang = {
       bewaarTot: bewaarTotVoorSchooljaar(bewaarSchooljaar, bewaarJaren),
       bewaartermijnJaren: bewaarJaren,
       updatedAt: serverTimestamp()
-    }, { merge: true });
+    };
+    await reservekopieOvergang(ref,payload);
+    await runTransaction(db,async tx=>{
+      const snap=await tx.get(ref);
+      if((snap.data()?.klaswisselVersie||0)!==(geladenKlaswisselVersies.get(ref.path)||0)) throw Error('Er is een leerling van klas veranderd. Herlaad de overgangsbespreking voordat je verder bewaart.');
+      tx.set(ref,{...payload,klaswisselVersie:snap.data()?.klaswisselVersie||0},{merge:true});
+    });
     if (!opties.skipSync && Array.isArray(data.students) && data.students.length) {
       try { await window.firebaseOvergang.syncZorgvelden(data.students); }
       catch (syncErr) { console.error('Sync zorgvelden naar schoolbeheer mislukt:', syncErr); }
@@ -1545,6 +1559,7 @@ window.firebaseOvergang = {
     overgangOpslagBlokkade = 'Het dossier wordt gecontroleerd. Bewaren is tijdelijk geblokkeerd.';
     const snap = await getDoc(projectRef(jaar));
     const inhoud = snap.exists() ? snap.data() : null;
+    geladenKlaswisselVersies.set(projectRef(jaar).path,inhoud?.klaswisselVersie||0);
     const klas = await bepaalSchoolbeheerKlas();
     const getroffen = jaar === '2026-2027' && ['2A','3A'].includes(klas);
     nieuwOvergangProjectMogelijk = !snap.exists() && !getroffen;
@@ -3029,7 +3044,7 @@ async function vulOntbrekendeLeerlingenUitSchoolbeheer() {
   const schoolStart = `${overgangJaar.slice(0,4)}-09-01`;
   const schoolEnd = `${overgangJaar.slice(5,9)}-06-30`;
   const rows = (bron.leerlingen || [])
-    .filter(s => (!s.start || s.start <= schoolEnd) && (!s.end || s.end >= schoolStart))
+    .filter(s => window.klaslijstLeerlingActief(s,overgangJaar))
     .map(schoolbeheerNaamNaarRij)
     .filter(row => row && (row.firstName || row.lastName));
   const norm = naamZoekKey;
