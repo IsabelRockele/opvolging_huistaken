@@ -1,6 +1,15 @@
 import assert from 'node:assert/strict';
-import {verplaatsKlasleerling,neemZorgMee,neemFicheMee,neemHuiswerkMee,leerlingActief,klasPeildatum} from '../klaswissel-model.mjs';
+import {verplaatsKlasleerling,neemZorgMee,neemFicheMee,neemHuiswerkMee,leerlingActief,klasPeildatum,gelijkeDocumentInhoud} from '../klaswissel-model.mjs';
 import {maakMaandOverzichten} from '../maandarchief.js';
+
+assert.equal(gelijkeDocumentInhoud({a:1,b:{c:2,d:3}},{b:{d:3,c:2},a:1}),true);
+assert.equal(gelijkeDocumentInhoud({a:1},{a:2}),false);
+assert.equal(gelijkeDocumentInhoud({a:null},{}),false);
+assert.equal(gelijkeDocumentInhoud({a:[1,2]},{a:[2,1]}),false);
+assert.equal(gelijkeDocumentInhoud({type:'document',notes:'oud'},{type:'document',notes:'nieuw'}),false);
+class Tijdstip {constructor(n){this.nanoseconds=n;} isEqual(other){return this.nanoseconds===other.nanoseconds;}}
+assert.equal(gelijkeDocumentInhoud({t:new Tijdstip(1)},{t:new Tijdstip(1)}),true);
+assert.equal(gelijkeDocumentInhoud({t:new Tijdstip(1)},{t:new Tijdstip(2)}),false);
 
 const kind={id:'kind',first:'Kind',last:'Test',start:'2026-09-01',end:'2027-06-30',gok:'ja',medicalNote:'Bewaren',homeworkClass:true,homeworkClassDays:{dinsdag:true}};
 const ander={id:'ander',first:'Ander',last:'Test',start:'2026-09-01',end:'2027-06-30'};

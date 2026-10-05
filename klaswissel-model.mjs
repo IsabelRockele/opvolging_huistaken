@@ -12,6 +12,21 @@ const naamKey = s => `${s.first||s.firstName||''}|${s.last||s.lastName||''}`.tri
 export const zorgKey = id => String(id).replace(/[^a-z0-9_-]+/gi,'_');
 const kopie = x => Array.isArray(x) ? x.map(kopie) : x && Object.getPrototypeOf(x)===Object.prototype ? Object.fromEntries(Object.entries(x).map(([k,v])=>[k,kopie(v)])) : x;
 export const kopieDocument=kopie;
+// Firestore-kaarten hebben geen betekenisvolle veldvolgorde. Arrays wel.
+export function gelijkeDocumentInhoud(a,b) {
+  if(Object.is(a,b))return true;
+  if(!a||!b||typeof a!=='object'||typeof b!=='object')return false;
+  if(Array.isArray(a)||Array.isArray(b))return Array.isArray(a)&&Array.isArray(b)&&a.length===b.length&&a.every((v,i)=>gelijkeDocumentInhoud(v,b[i]));
+  // Timestamp, GeoPoint en Bytes vergelijken met hun eigen getypeerde methode.
+  if(typeof a.isEqual==='function')return Object.getPrototypeOf(a)===Object.getPrototypeOf(b)&&a.isEqual(b);
+  if(a instanceof Date||b instanceof Date)return a instanceof Date&&b instanceof Date&&a.getTime()===b.getTime();
+  // DocumentReference bevat een cyclische Firestore-verbinding.
+  const ar=a.type==='document'&&a.firestore&&Object.getPrototypeOf(a)!==Object.prototype;
+  const br=b.type==='document'&&b.firestore&&Object.getPrototypeOf(b)!==Object.prototype;
+  if(ar||br)return !!ar&&!!br&&a.path===b.path&&a.firestore===b.firestore&&a.converter===b.converter;
+  const ak=Object.keys(a),bk=Object.keys(b);
+  return ak.length===bk.length&&ak.every(k=>Object.hasOwn(b,k)&&gelijkeDocumentInhoud(a[k],b[k]));
+}
 function eis(voorwaarde, melding) { if(!voorwaarde) throw Error(melding); }
 
 // Zuivere bewerking: uitsluitend de gekozen leerling; invoer wordt nooit gewijzigd.

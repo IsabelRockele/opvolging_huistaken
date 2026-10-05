@@ -4,11 +4,11 @@ const docs=new Map(),clone=structuredClone;
 const snap=ref=>({exists:()=>docs.has(ref.path),data:()=>clone(docs.get(ref.path))});
 let fail=false;
 globalThis.klaswisselTestFirestore={
-  doc:(db,...path)=>({path:path.join('/')}),getDoc:async ref=>snap(ref),
+  doc:(db,...path)=>({path:path.join('/')}),getDocFromServer:async ref=>snap(ref),
   runTransaction:async(db,fn)=>{const writes=[];await fn({get:async ref=>snap(ref),set:(ref,data)=>writes.push([ref.path,clone(data)])});if(fail)throw Error('Gesimuleerde bewaarfout');for(const [p,d] of writes)docs.set(p,d);}
 };
 let source=fs.readFileSync(new URL('../klaswissel.js',import.meta.url),'utf8');
-source=source.replace(/^import .*firebase-firestore.js';/m,'const {doc,getDoc,runTransaction}=globalThis.klaswisselTestFirestore;');
+source=source.replace(/^import .*firebase-firestore.js';/m,'const {doc,getDocFromServer,runTransaction}=globalThis.klaswisselTestFirestore;').replace('./klaswissel-model.mjs?v=20261005-inhoud','./klaswissel-model.mjs');
 for(const f of ['klaswissel-model.mjs','fototoestemming.js'])source=source.replace(`'./${f}'`,JSON.stringify(new URL('../'+f,import.meta.url).href));
 const {maakKlaswisselPlan,bewaarKlaswissel}=await import('data:text/javascript;base64,'+Buffer.from(source).toString('base64'));
 const jaar='2026-2027',b=`schoolbeheer/${jaar}/klassen/2A`,d=`schoolbeheer/${jaar}/klassen/1A`,bp=`overgangsbesprekingen/${jaar}/projecten/bron`,dp=`overgangsbesprekingen/${jaar}/projecten/doel`;
@@ -27,7 +27,12 @@ fail=true;await assert.rejects(()=>bewaarKlaswissel({},plan,'beheerder'),/bewaar
 docs.get(dp).students[0].notes='Nieuwe invoer door andere leerkracht';
 const gelijktijdig=clone([...docs]);
 await assert.rejects(()=>bewaarKlaswissel({},plan,'beheerder'),/intussen/);assert.deepEqual([...docs],gelijktijdig,'Gewijzigd dossier mag niet overschreven worden');
-plan=await maakKlaswisselPlan({},args);await bewaarKlaswissel({},plan,'beheerder');
+plan=await maakKlaswisselPlan({},args);
+// Firestore kan dezelfde velden vanuit de lokale cache en server in een andere
+// volgorde teruggeven. Dat is geen inhoudelijke wijziging.
+const andereVeldvolgorde=v=>Array.isArray(v)?v.map(andereVeldvolgorde):v&&typeof v==='object'?Object.fromEntries(Object.entries(v).reverse().map(([k,x])=>[k,andereVeldvolgorde(x)])):v;
+for(const [pad,inhoud] of docs)docs.set(pad,andereVeldvolgorde(inhoud));
+await bewaarKlaswissel({},plan,'beheerder');
 assert.equal(docs.get(b).leerlingen[0].end,'2026-10-04');assert.equal(docs.get(d).leerlingen[1].start,'2026-10-05');
 assert.equal(docs.get(dp).students[0].notes,'Nieuwe invoer door andere leerkracht');
 assert.equal(docs.get(dp).students[1].notes,'Gevulde fiche');

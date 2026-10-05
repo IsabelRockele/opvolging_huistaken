@@ -1,5 +1,5 @@
-import {doc,getDoc,runTransaction} from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
-import {verplaatsKlasleerling,neemZorgMee,neemFicheMee,neemHuiswerkMee,klasPeildatum} from './klaswissel-model.mjs';
+import {doc,getDocFromServer,runTransaction} from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+import {verplaatsKlasleerling,neemZorgMee,neemFicheMee,neemHuiswerkMee,klasPeildatum,gelijkeDocumentInhoud} from './klaswissel-model.mjs?v=20261005-inhoud';
 import {zelfdeFotoregistratie} from './fototoestemming.js';
 
 // Eén controleerbaar plan, gevolgd door één transactie met dezelfde bronversies.
@@ -7,7 +7,7 @@ import {zelfdeFotoregistratie} from './fototoestemming.js';
 export async function maakKlaswisselPlan(db,{jaar,van,naar,id,datum}) {
   const gelezen=new Map(), wijzigingen=new Map();
   async function lees(pad) {
-    if(!gelezen.has(pad)) { const ref=doc(db,pad), snap=await getDoc(ref); gelezen.set(pad,{ref,bestaat:snap.exists(),data:snap.exists()?snap.data():null}); }
+    if(!gelezen.has(pad)) { const ref=doc(db,pad), snap=await getDocFromServer(ref); gelezen.set(pad,{ref,bestaat:snap.exists(),data:snap.exists()?snap.data():null}); }
     return gelezen.get(pad).data;
   }
   const bronPad=`schoolbeheer/${jaar}/klassen/${van}`, doelPad=`schoolbeheer/${jaar}/klassen/${naar}`;
@@ -63,7 +63,10 @@ export async function bewaarKlaswissel(db,plan,gebruiker) {
   await runTransaction(db,async tx=>{
     for(const {ref,bestaat,data} of plan.gelezen.values()) {
       const snap=await tx.get(ref);
-      if(snap.exists()!==bestaat || JSON.stringify(snap.exists()?snap.data():null)!==JSON.stringify(data)) throw Error('Er zijn intussen gegevens gewijzigd. Maak een nieuw controle-overzicht; er is niets verplaatst.');
+      if(snap.exists()!==bestaat || !gelijkeDocumentInhoud(snap.exists()?snap.data():null,data)) {
+        const delen=ref.path.split('/'),onderdeel=delen[0]==='zorgoverleggen'?`het zorgoverleg van ${delen[3]} (${delen[5]})`:delen[0]==='overgangsbesprekingen'?'een overgangsbespreking':delen[0]==='huiswerkklas'?`de huiswerkklas (${delen[3]})`:delen[2]==='klassen'?`de klaslijst van ${delen[3]}`:'de klaskoppeling of fototoestemming';
+        throw Error(`Er zijn intussen gegevens gewijzigd in ${onderdeel}. Maak een nieuw controle-overzicht; er is niets verplaatst.`);
+      }
     }
     for(const [pad,nieuw] of plan.wijzigingen) {
       const oud=plan.gelezen.get(pad);
