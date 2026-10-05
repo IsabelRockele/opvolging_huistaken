@@ -25,7 +25,7 @@ export async function maakKlaswisselPlan(db,{jaar,van,naar,id,datum}) {
     if(!b) continue;
     const bewaartermijnJaren=({K1:12,K2:11,K3:10,'1A':9,'2A':8,'3A':7,'4A':6,'5A':5,'6A':4})[naar]||12;
     const nieuw=neemZorgMee(b,d||{titel:`Zorgoverleg ${maand}`,schooljaar:jaar,klas:naar,maand,bewaarTot:`${Number(jaar.slice(0,4))+bewaartermijnJaren}-08-31`,bewaartermijnJaren,entries:{},groupActions:[]},id,naam,van);
-    if(nieuw) {wijzigingen.set(pad,nieuw);zorgmaanden++;}
+    if(nieuw) {nieuw.klaswissel={leerlingId:id,zorgKey:String(id).replace(/[^a-z0-9_-]+/gi,'_'),van,naar,datum};wijzigingen.set(pad,nieuw);zorgmaanden++;}
   }
   async function projectPad(klas) {
     const koppeling=await lees(`klasleerkrachten/${jaar}_${klas}`);

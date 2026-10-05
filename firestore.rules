@@ -272,6 +272,26 @@ function isGekoppeldAanGroep(groep) {
     }
 
     match /zorgoverleggen/{schooljaar}/klassen/{klasId}/maanden/{maandId} {
+      // Secretariaat kan dossiers meenemen bij een gelijktijdige centrale klaswissel.
+      function secretariaatKlaswissel() {
+        let w = request.resource.data.klaswissel;
+        let bron = /databases/$(database)/documents/schoolbeheer/$(schooljaar)/klassen/$(w.van);
+        let doel = /databases/$(database)/documents/schoolbeheer/$(schooljaar)/klassen/$(w.naar);
+        let registratie = {'leerlingId':w.leerlingId,'van':w.van,'naar':w.naar,'datum':w.datum};
+        return isSecretariaat() && w.naar == klasId && w.van != w.naar
+          && getAfter(bron).data.get('klaswisselVersie',0) == get(bron).data.get('klaswisselVersie',0) + 1
+          && getAfter(doel).data.get('klaswisselVersie',0) == get(doel).data.get('klaswisselVersie',0) + 1
+          && getAfter(bron).data.klaswissels.hasAny([registratie])
+          && getAfter(doel).data.klaswissels.hasAny([registratie]);
+      }
+      allow get: if isSecretariaat();
+      allow create: if secretariaatKlaswissel()
+        && request.resource.data.keys().hasOnly(['titel','schooljaar','klas','maand','bewaarTot','bewaartermijnJaren','entries','groupActions','klaswisselVersie','klaswissel'])
+        && request.resource.data.entries.keys().hasOnly([request.resource.data.klaswissel.zorgKey]);
+      allow update: if secretariaatKlaswissel()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['entries','groupActions','klaswisselVersie','klaswissel'])
+        && request.resource.data.entries.diff(resource.data.get('entries',{})).affectedKeys().hasOnly([request.resource.data.klaswissel.zorgKey])
+        && request.resource.data.get('groupActions',[]).hasAll(resource.data.get('groupActions',[]));
       allow read, write: if request.auth != null && (
            isSchoolBreed()
           || (

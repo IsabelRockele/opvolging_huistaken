@@ -1207,7 +1207,7 @@
 
   <script type="module">
     import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import { openKlaswissel } from './klaswissel.js';
+    import { openKlaswissel } from './klaswissel.js?v=20261005-secretariaat';
     import { kopieDocument } from './klaswissel-model.mjs';
     import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
     import { periodeStart, periodeDagen, periodeEind, periodes, periodeRecord, splitsOudeRecords, maandLaatsteDag, magBevestigen } from "./refter-periodes.js?v=20260929-1";
@@ -2567,7 +2567,7 @@
       if(classListMode === "verplaatsen" && canManageClasses){
         const kandidaten=activeStudents();
         toolPanel = `<section class="class-tool-panel no-print">
-          <div class="bar"><div><h3>Leerlingen uit ${esc(activeClass)} naar een andere klas verplaatsen</h3><p class="muted small">Dit corrigeert een verkeerd geplaatste klaslijst vanaf het begin van ${esc(schooljaar)}. Voor één leerling die tijdens het schooljaar van klas verandert: klik op de leerlingnaam en kies als beheerder “Deze leerling verplaatsen vanaf datum”.</p></div><button class="small white right" onclick="openClassListTool('')">Sluiten</button></div>
+          <div class="bar"><div><h3>Leerlingen uit ${esc(activeClass)} naar een andere klas verplaatsen</h3><p class="muted small">Dit corrigeert een verkeerd geplaatste klaslijst vanaf het begin van ${esc(schooljaar)}. Voor één leerling die tijdens het schooljaar van klas verandert: klik op de leerlingnaam en kies “Deze leerling verplaatsen vanaf datum”.</p></div><button class="small white right" onclick="openClassListTool('')">Sluiten</button></div>
           <div class="verplaats-stappen"><div class="verplaats-stap"><strong>1. Kies doelklas</strong>Selecteer hieronder bijvoorbeeld 3A.</div><div class="verplaats-stap"><strong>2. Duid uitzonderingen aan</strong>Vink alleen leerlingen aan die in ${esc(activeClass)} moeten blijven.</div><div class="verplaats-stap"><strong>3. Controleer</strong>Bekijk eerst wie verhuist en wie blijft.</div><div class="verplaats-stap"><strong>4. Bewaar veilig</strong>Bevestig pas als beide lijsten juist zijn.</div></div>
           <div class="notice"><strong>Wat gebeurt er wanneer je bewaart?</strong><p class="muted">Aangevinkte leerlingen blijven in <strong>${esc(activeClass)}</strong>. Alle niet-aangevinkte leerlingen komen actief in de gekozen doelklas. Leerlingen die daar al staan blijven gewoon staan en namen worden niet dubbel toegevoegd. Oude reftergegevens, activiteiten en betalingen blijven raadpleegbaar. Later kun je in de doelklas nog nieuwkomers toevoegen of vertrekkers uitschrijven.</p></div>
           <label>Doelklas<select id="zelfdeJaarDoelKlas">${allClasses.filter(k=>k!==activeClass).map(k=>`<option value="${esc(k)}">${esc(k)}</option>`).join("")}</select></label>
@@ -3013,7 +3013,7 @@
     window.bewaarUitschrijving=()=>{const overlay=document.getElementById("uitschrijfOverlay"),s=data.leerlingen.find(x=>x.id===overlay?.dataset.studentId),d=document.getElementById("uitschrijfLaatsteDag")?.value;if(!s||!d)return;if(d<startDate()||d>endDate())return alert(`Kies een datum binnen schooljaar ${schooljaar}.`);s.end=d;s.uitschrijfReden="vertrokken tijdens schooljaar";s.bijgewerktOp=new Date().toISOString();delete s.startNiet;delete s.startNietReden;markDirty();overlay.remove();render()};
     window.sluitLeerlingBeheer=()=>document.getElementById("leerlingBeheerOverlay")?.remove();
     window.verplaatsDezeLeerling=id=>{
-      if(!isBeheerder())return;
+      if(!isSecretary())return;
       sluitLeerlingBeheer();
       openKlaswissel({db,jaar:schooljaar,van:activeClass,id,klassen:allClasses,gebruiker:user.email||user.uid,
         voorbereiden:async()=>{if(saveTimer)await saveNow();},
@@ -3024,7 +3024,7 @@
       sluitLeerlingBeheer();
       const overlay=document.createElement("div");overlay.id="leerlingBeheerOverlay";overlay.dataset.studentId=id;overlay.style.cssText="position:fixed;inset:0;background:rgba(25,35,45,.58);z-index:10000;padding:20px;overflow:auto";
       overlay.innerHTML=`<div style="max-width:620px;margin:55px auto;background:#fff;border-radius:18px;padding:22px;box-shadow:0 20px 60px rgba(0,0,0,.28)"><div class="bar"><div><h2 style="margin:0">Leerling beheren</h2><p class="muted" style="margin:4px 0 0">${esc(activeClass)} · ${esc(schooljaar)}</p></div><button class="white small" onclick="sluitLeerlingBeheer()" aria-label="Sluiten">✕</button></div><div class="grid" style="margin-top:15px"><label>Achternaam<input id="beheerAchternaam" value="${esc(s.last||"")}"></label><label>Officiële voornaam<input id="beheerVoornaam" value="${esc(s.first||"")}"></label><label>Startdatum<input id="beheerStartdatum" type="date" min="${startDate()}" max="${endDate()}" value="${esc(s.start||startDate())}"></label><label>Einddatum<input id="beheerEinddatum" type="date" min="${startDate()}" max="${endDate()}" value="${esc(s.end||endDate())}"></label></div><button class="green" style="margin-top:12px" onclick="bewaarLeerlingBeheer()">Gegevens bewaren</button><hr style="border:0;border-top:1px solid #d7e0ec;margin:20px 0"><h3 style="margin:0 0 5px">Uitzonderlijke situatie</h3><p class="muted" style="margin:0 0 12px">Alleen gebruiken wanneer deze leerling tijdens het schooljaar vertrekt of nooit gestart is.</p><div class="leerling-uitzonderingen-acties"><button class="pink" onclick="sluitLeerlingBeheer();leaveStudent('${s.id}')">📅 Vertrekt tijdens schooljaar</button>${isSecretary()?`<button class="danger" onclick="sluitLeerlingBeheer();startNietOpSchool('${s.id}')">🚫 Nooit gestart op school</button>`:""}</div></div>`;
-      if(isBeheerder()){
+      if(isSecretary()){
         const knop=document.createElement('button');knop.className='green';knop.textContent='↪ Deze leerling verplaatsen vanaf datum';knop.onclick=()=>verplaatsDezeLeerling(id);
         overlay.querySelector('.leerling-uitzonderingen-acties').prepend(knop);
       }
