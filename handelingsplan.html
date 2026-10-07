@@ -12,6 +12,16 @@
     <p id="melding" role="status" aria-live="polite">De leerlingkoppeling wordt gecontroleerd.</p>
     <div id="demoBanner" class="notice" hidden>Voorbeeld met een fictieve leerling. In deze demonstratie wordt niets online opgeslagen.</div>
     <div id="archief" class="notice" hidden></div>
+    <section id="leerlingKiezen" class="card" hidden>
+      <h2>Kies een leerling</h2>
+      <p id="keuzeJaar"></p>
+      <div class="grid">
+        <label>Klas<select id="keuzeKlas"></select></label>
+        <label>Leerling<select id="keuzeLeerling"></select></label>
+      </div>
+      <p><button id="openLeerling" type="button" disabled>Handelingsplannen openen</button></p>
+      <p>Je ziet de huidige leerlingen waarvoor je toegang hebt. Bij een leerling vind je ook de aanpak en evaluaties uit vorige schooljaren.</p>
+    </section>
     <section id="overzicht" hidden>
       <div class="section-head"><div><h2>Doelen en aanpak</h2><p>Alle handelingsplannen van dit kind, over de schooljaren heen.</p></div><button id="nieuw" type="button">Nieuw handelingsplan</button></div>
       <div id="plannen" class="plan-list"></div>

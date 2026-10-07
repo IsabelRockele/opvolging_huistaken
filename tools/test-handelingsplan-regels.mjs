@@ -33,6 +33,11 @@ try{
   [`overgangsbesprekingen/${year}/projecten/klas_2A`]:{eigenaar_uid:'teacher-a',eigenaar_email:'teacher-a@example.test',students:[{id:'fiche-a',schoolbeheerId:'pupil-vorig'}]}
  });
  const a=api('teacher-a');
+ assert.deepEqual((await a({action:'leerlingen'})).klassen.map(k=>k.klas),['2A']);
+ assert.deepEqual((await api('directie')({action:'leerlingen'})).klassen.map(k=>k.klas),['2A','3A']);
+ await assert.rejects(api('secretariaat')({action:'leerlingen'}));
+ assert.deepEqual((await a({action:'load',context:{...context,bron:'handelingsplan'}})).plannen,[]);
+ check('Startscherm: eigen klas voor klasleerkracht, alle klassen voor directie, openen vanuit tegel');
  assert.deepEqual((await a({action:'load',context})).plannen,[]);check('Eigen klas: leeg dossier openen en gevalideerde koppeling aanmaken');
  const save={action:'save',context,planId:'plan-a',operationId:'actie-1',expectedVersion:0,plan:p,eerdereAanpak:[prior]};
  await a(save);await a(save);

@@ -159,14 +159,29 @@ async function start(){
   options($('vakgebied'),[...new Set(catalog.doelen.map(g=>g.vakgebied))].sort((a,b)=>a.localeCompare(b,'nl')),'Alle vakgebieden',false);
   options($('leeftijd'),catalog.leeftijden,'Alle leeftijden',false);
   if(demo){$('demoBanner').hidden=false;api=(await import('./handelingsplan-demo.mjs')).createDemoApi(catalog);await load();return;}
-  if(!context.schooljaar || !context.bron)throw Error('Open deze pagina via de knop Handelingsplan bij een kind in zorgoverleg of overgangsbespreking.');
   const [{initializeApp},{getAuth,onAuthStateChanged},sdk,{createFirestoreApi}]=await Promise.all([
     import('https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js'),import('https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js'),import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js'),import('./handelingsplan-opslag.mjs')]);
   const app=initializeApp({apiKey:'AIzaSyA7KxXMvZ4dzBQDut3CMyWUblLte2tFzoQ',authDomain:'huiswerkapp-a311e.firebaseapp.com',projectId:'huiswerkapp-a311e',storageBucket:'huiswerkapp-a311e.appspot.com',messagingSenderId:'797169941164',appId:'1:797169941164:web:511d9618079f1378d0fd09'});
   onAuthStateChanged(getAuth(app),async user=>{
-    if(!user){$('overzicht').hidden=true;$('editor').hidden=true;dossier=null;message('Meld je aan via de toepassing en open daarna opnieuw het handelingsplan.',true);return;}
+    if(!user){$('overzicht').hidden=true;$('editor').hidden=true;$('leerlingKiezen').hidden=true;$('leerling').textContent='Aanmelden vereist';dossier=null;message('Meld je aan via het startscherm en open daarna opnieuw het handelingsplan.',true);return;}
     api=createFirestoreApi({sdk,db:sdk.getFirestore(app),user,catalog});
-    try{await load();}catch(e){message(e.message,true);}
+    try{
+      if(context.bron){await load();return;}
+      const lijst=await api({action:'leerlingen'});
+      $('leerling').textContent='Kies hieronder een klas en leerling';
+      $('keuzeJaar').textContent=`Schooljaar ${lijst.schooljaar}`;
+      options($('keuzeKlas'),lijst.klassen.map(k=>k.klas),'Kies een klas',false);
+      function vulLeerlingen(){
+        const leerlingen=lijst.klassen.find(k=>k.klas===$('keuzeKlas').value)?.leerlingen||[];
+        $('keuzeLeerling').innerHTML='<option value="">Kies een leerling</option>'+leerlingen.map(s=>`<option value="${esc(s.id)}">${esc(s.naam)}</option>`).join('');
+        $('openLeerling').disabled=true;
+      }
+      $('keuzeKlas').onchange=vulLeerlingen;
+      $('keuzeLeerling').onchange=()=>{$('openLeerling').disabled=!$('keuzeLeerling').value;};
+      $('openLeerling').onclick=()=>{if($('keuzeLeerling').value)location.href=`handelingsplan.html?${new URLSearchParams({bron:'handelingsplan',schooljaar:lijst.schooljaar,klas:$('keuzeKlas').value,leerlingId:$('keuzeLeerling').value})}`;};
+      if(lijst.klassen.length===1)$('keuzeKlas').value=lijst.klassen[0].klas;
+      vulLeerlingen();$('leerlingKiezen').hidden=false;message(lijst.klassen.length?'':'Er is voor dit schooljaar nog geen klas aan je account gekoppeld.');
+    }catch(e){message(e.message,true);}
   });
 }
 start().catch(e=>message(e.message,true));

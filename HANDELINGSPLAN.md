@@ -7,6 +7,9 @@ invoer in een overleg of leerlingfiche blijft staan.
 
 ## Gebruik
 
+- Startscherm: onder **Leerling en zorg** staat **Handelingsplan**. Kies een huidige
+  klas en leerling. Klasleerkrachten zien uitsluitend hun gekoppelde klassen;
+  schoolbrede zorgrollen en directie zien alle klassen.
 - Zorgoverleg: kies het kind en klik op **Handelingsplan**. Raadpleeg de plannen
   of maak een nieuw plan.
 - Overgangsbespreking: dezelfde knop staat in de leesfiche en de bewerkfiche.

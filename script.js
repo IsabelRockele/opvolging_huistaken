@@ -270,6 +270,8 @@ function pasKnoppenToe(huistakenKnop, overgangKnop, schoolbeheerKnop, bestelling
   if (groeigroepenKnop) groeigroepenKnop.style.display = (isSchoolBreed || heeftKlasbeheer) ? '' : 'none';
   if (oudercontactKnop) oudercontactKnop.style.display = (isSchoolBreed || heeftKlasbeheer) ? '' : 'none';
   if (zorgoverlegKnop) zorgoverlegKnop.style.display = (isSchoolBreed || heeftKlasbeheer) ? '' : 'none';
+  const handelingsplanKnop = document.getElementById('handelingsplanKeuzeKnop');
+  if (handelingsplanKnop) handelingsplanKnop.style.display = (isSchoolBreed || rolNaam === 'beheerder' || rolNaam === 'klasleerkracht') ? '' : 'none';
   if (huiswerkklasKnop) huiswerkklasKnop.style.display = (isSchoolBreed || isSecretariaat || heeftKlasbeheer) ? '' : 'none';
   if (klasafsprakenKnop) klasafsprakenKnop.style.display = 'none';
   const naametikettenKnop = document.getElementById('naametikettenKeuzeKnop');
@@ -510,6 +512,8 @@ async function toonSchooloverzichtKnopAlsNodig(user) {
   if (oudercontactKnop) oudercontactKnop.style.display = 'none';
   if (groeigroepenKnop) groeigroepenKnop.style.display = 'none';
   if (zorgoverlegKnop) zorgoverlegKnop.style.display = 'none';
+  const handelingsplanKnop = document.getElementById('handelingsplanKeuzeKnop');
+  if (handelingsplanKnop) handelingsplanKnop.style.display = 'none';
   if (huiswerkklasKnop) huiswerkklasKnop.style.display = 'none';
   if (klasafsprakenKnop) klasafsprakenKnop.style.display = magKlasafsprakenTesten(user) ? '' : 'none';
   if (naametikettenKnop) naametikettenKnop.style.display = 'none';
@@ -696,6 +700,8 @@ window.uitloggenVanIndex = function () {
       if (oudercontactKnop) oudercontactKnop.style.display = 'none';
       if (groeigroepenKnop) groeigroepenKnop.style.display = 'none';
       if (zorgoverlegKnop) zorgoverlegKnop.style.display = 'none';
+      const handelingsplanKnop = document.getElementById('handelingsplanKeuzeKnop');
+      if (handelingsplanKnop) handelingsplanKnop.style.display = 'none';
       if (huiswerkklasKnop) huiswerkklasKnop.style.display = 'none';
       if (publiekeAgendaLinks) publiekeAgendaLinks.style.display = '';
       document.body.classList.remove('start-ingelogd');
