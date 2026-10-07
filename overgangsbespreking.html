@@ -783,6 +783,7 @@
   <div class="modal" role="dialog" aria-modal="true">
     <div class="modal-header">
       <h2 id="modalTitle">Leerling toevoegen</h2>
+      <a id="handelingsplanBewerken" style="padding:8px 12px;text-decoration:none;background:#fff;color:#315b2b;border:1px solid #c5d5bc;border-radius:9px;font-size:13px;font-weight:700;flex-shrink:0" target="_blank" rel="noopener" hidden>Handelingsplan</a>
       <button class="modal-close" id="modalClose" title="Sluiten">✕</button>
     </div>
     <div class="modal-body" id="modalBody">
@@ -1138,6 +1139,7 @@
     </div>
     <div class="modal-body" style="padding:0" id="ficheModalBody"></div>
     <div class="modal-footer" style="justify-content:flex-end">
+      <a id="handelingsplanFiche" style="padding:8px 12px;text-decoration:none;background:#fff;color:#315b2b;border:1px solid #c5d5bc;border-radius:9px;font-size:13px;font-weight:700" target="_blank" rel="noopener">Handelingsplan</a>
       <button class="ghost small" id="fichePdfBtn" title="Deze fiche meteen downloaden als PDF">📥 Download PDF</button>
       <button class="ghost small" id="ficheEditBtn">✏️ Bewerken</button>
       <button class="modal-close ghost small" onclick="closeFicheModal()">Sluiten</button>
@@ -1475,6 +1477,11 @@ function projectRef(jaar = schooljaar) {
   }
   return doc(db, "overgangsbesprekingen", jaar, "projecten", targetOvergangUserId || currentUser.uid);
 }
+
+// Alleen een verwijzing openen: geen opslag of wijziging van deze fiche.
+window.handelingsplanOvergangUrl = ficheId => currentUser
+  ? `handelingsplan.html?${new URLSearchParams({bron:'overgangsbespreking',schooljaar,projectId:projectRef().id,ficheId}).toString()}`
+  : '';
 
 async function bepaalSchoolbeheerKlas() {
   await ready;
@@ -2370,6 +2377,9 @@ function openModal(studentId = null) {
   const isEdit = !!studentId;
   $('modalTitle').textContent = isEdit ? 'Leerling bewerken' : 'Leerling toevoegen';
   $('editId').value = studentId || '';
+  const handelingsplanLink = $('handelingsplanBewerken');
+  handelingsplanLink.hidden = !studentId || !window.handelingsplanOvergangUrl;
+  handelingsplanLink.href = studentId && window.handelingsplanOvergangUrl ? window.handelingsplanOvergangUrl(studentId) : '';
   $('modalDeleteBtn').style.display = isEdit ? '' : 'none';
 
   closeAllAccordions();
@@ -4430,6 +4440,8 @@ function openFicheModal(studentId) {
   const s = state.students.find(x => x.id === studentId);
   if (!s) return;
   $('ficheModalTitle').textContent = s.name;
+  $('handelingsplanFiche').href = window.handelingsplanOvergangUrl?.(studentId) || '';
+  $('handelingsplanFiche').hidden = !window.handelingsplanOvergangUrl;
   $('ficheEditBtn').onclick = () => { closeFicheModal(); openModal(studentId); };
   if ($('fichePdfBtn')) $('fichePdfBtn').onclick = () => downloadFichePdfEnkel(studentId); // fiche-pdf-download-codex
 

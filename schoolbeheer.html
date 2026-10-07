@@ -3198,7 +3198,7 @@
       verhuizen.forEach(s=>{
         const bron=bronNa.leerlingen.find(x=>x.id===s.id); if(bron){bron.end=grens;bron.verhuisdNaar=doel;bron.verhuisdOp=new Date().toISOString();}
         const key=classNameKey(s.first||s.firstName,s.last||s.lastName); if(bestaande.has(key)) return; bestaande.add(key);
-        doelNa.leerlingen.push({...structuredClone(s),id:uid(),sourceStudentId:s.id,bronKlas:activeClass,start:startDate(),end:endDate(),verhuisdOp:new Date().toISOString()});
+        doelNa.leerlingen.push({...structuredClone(s),id:uid(),sourceStudentId:s.id,handelingsplanId:s.handelingsplanId||s.previousStudentId||s.sourceStudentId||s.id,bronKlas:activeClass,start:startDate(),end:endDate(),verhuisdOp:new Date().toISOString()});
       });
       doelNa.leerlingen.sort(vergelijkLeerlingen); bronNa.bijgewerktOp=doelNa.bijgewerktOp=new Date().toISOString();
       await Promise.all([schoolbeheerVeiligheidskopie(bronRef,"Vóór leerlingen verplaatsen",true),schoolbeheerVeiligheidskopie(doelRef,"Vóór leerlingen ontvangen",true)]);
@@ -4156,7 +4156,7 @@
     };
     function volgendSchooljaarVan(huidig){ const start=Number(String(huidig||schooljaar).slice(0,4))+1; return `${start}-${start+1}`; }
     function studentVoorNieuwSchooljaar(s,doelSchooljaar){ return {
-      id:uid(),previousStudentId:s.id||"",first:s.first||s.firstName||"",last:s.last||s.lastName||"",
+      id:uid(),previousStudentId:s.id||"",handelingsplanId:s.handelingsplanId||s.previousStudentId||s.sourceStudentId||s.id,first:s.first||s.firstName||"",last:s.last||s.lastName||"",
       roepnaam:s.roepnaam||s.callingName||"",geboortejaar:String(s.geboortejaar||""),oudsteGezin:!!s.oudsteGezin,
       colleague:!!s.colleague,homeworkClass:!!s.homeworkClass,homeworkClassFree:!!s.colleague||!!s.homeworkClassFree,
       homeworkClassDays:{dinsdag:!!s.homeworkClassDays?.dinsdag,donderdag:!!s.homeworkClassDays?.donderdag},

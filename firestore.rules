@@ -610,6 +610,115 @@ match /schoolbeheer_groepen/{groepDocId} {
       allow update, delete: if request.auth != null && resource.data.owner == request.auth.uid;
     }
 
+    // BEGIN HANDELINGSPLAN - toevoeging, bestaande regels blijven ongewijzigd.
+    function hpRol() {
+      return isSchoolBreed() || isKlasleerkracht();
+    }
+    function hpJaar() {
+      // De schooljaargrens ligt op 1 september, tijdens de Belgische zomertijd.
+      let nu = request.time + duration.value(2, 'h');
+      let y = nu.month() >= 9 ? nu.year() : nu.year() - 1;
+      return string(y) + '-' + string(y + 1);
+    }
+    function hpLeerling(g) {
+      return get(/databases/$(database)/documents/schoolbeheer/$(g.schooljaar)/klassen/$(g.klas)).data.leerlingen[g.index];
+    }
+    function hpDag() {
+      let y = request.time.year();
+      let maart = timestamp.date(y,3,31);
+      let oktober = timestamp.date(y,10,31);
+      let zomerStart = maart - duration.value(maart.dayOfWeek() % 7,'d') + duration.value(1,'h');
+      let zomerEind = oktober - duration.value(oktober.dayOfWeek() % 7,'d') + duration.value(1,'h');
+      let nu = request.time + duration.value(request.time >= zomerStart && request.time < zomerEind ? 2 : 1,'h');
+      return string(nu.year()) + '-' + (nu.month() < 10 ? '0' : '') + string(nu.month()) + '-' + (nu.day() < 10 ? '0' : '') + string(nu.day());
+    }
+    function hpInschrijving(g) {
+      let s = hpLeerling(g);
+      let start = s.get('startDatum','') != '' ? s.startDatum : s.get('start','');
+      let eind = s.get('eindDatum','') != '' ? s.eindDatum : s.get('end','');
+      return request.auth != null && g.schooljaar == hpJaar()
+        && g.index is int && g.index >= 0 && s.id == g.leerlingId
+        && s.get('actief',true) != false && s.get('inactief',false) != true
+        && s.get('startNiet',false) != true && s.get('verhuisdNaar','') == ''
+        && (start == '' || start <= hpDag()) && (eind == '' || eind >= hpDag())
+        && (isSchoolBreed() || (isKlasleerkracht() && isGekoppeldAanKlas(g.schooljaar,g.klas)));
+    }
+    function hpOuder(s) {
+      return s.get('previousStudentId','') != '' ? s.previousStudentId : s.get('sourceStudentId','');
+    }
+    function hpBasis(s) {
+      let ouder = hpOuder(s);
+      return s.get('handelingsplanId','') != '' ? s.handelingsplanId
+        : ouder != '' && exists(/databases/$(database)/documents/handelingsplanCodes/$(ouder))
+          ? get(/databases/$(database)/documents/handelingsplanCodes/$(ouder)).data.dossierId
+          : ouder != '' ? ouder : s.id;
+    }
+    function hpGrant(root) {
+      return get(/databases/$(database)/documents/handelingsplanToegang/$(request.auth.uid)/leerlingen/$(root)).data;
+    }
+    function hpEigen(root) {
+      let g = hpGrant(root);
+      return g.dossierId == root && hpInschrijving(g)
+        && get(/databases/$(database)/documents/handelingsplanCodes/$(g.leerlingId)).data.dossierId == root;
+    }
+    function hpLezen(root) { return request.auth != null && (isSchoolBreed() || hpEigen(root)); }
+    match /handelingsplanCodes/{leerlingId} {
+      // Alleen koppelcodes, geen namen of zorginhoud. Nodig om de vorige code
+      // te volgen zonder een oude klaslijst aan een nieuwe leerkracht te tonen.
+      allow get: if request.auth != null && hpRol();
+      allow list, update, delete: if false;
+      allow create: if request.auth != null
+        && request.resource.data.keys().hasOnly(['leerlingId','dossierId','schooljaar','klas','index'])
+        && request.resource.data.leerlingId == leerlingId
+        && hpInschrijving(request.resource.data)
+        && request.resource.data.dossierId == hpBasis(hpLeerling(request.resource.data));
+    }
+    match /handelingsplanToegang/{uid}/leerlingen/{root} {
+      allow get: if request.auth != null && request.auth.uid == uid;
+      allow list, delete: if false;
+      allow create, update: if request.auth != null && request.auth.uid == uid
+        && request.resource.data.keys().hasOnly(['leerlingId','dossierId','schooljaar','klas','index'])
+        && request.resource.data.dossierId == root
+        && hpInschrijving(request.resource.data)
+        && getAfter(/databases/$(database)/documents/handelingsplanCodes/$(request.resource.data.leerlingId)).data.dossierId == root;
+    }
+    match /handelingsplannen/{root}/plannen/{planId} {
+      function geldigPlan(p) {
+        return p.kinddoel is string && p.kinddoel.size() > 0 && p.kinddoel.size() <= 6000
+          && p.aanpak is string && p.aanpak.size() <= 6000 && p.doel is map
+          && p.versie is int && p.versie > 0
+          && p.status in ['actief','bereikt','gepauzeerd','afgerond']
+          && p.updatedAt == request.time && p.auteurUid == request.auth.uid
+          && p.laatstSchooljaar == hpJaar() && p.laatsteKlas == hpGrant(root).klas
+          && getAfter(/databases/$(database)/documents/handelingsplannen/$(root)/plannen/$(planId)/historiek/$(p.bewaaractie)).data.plan == p;
+      }
+      allow read: if hpLezen(root);
+      allow create: if request.auth != null && hpEigen(root) && geldigPlan(request.resource.data)
+        && request.resource.data.versie == 1 && request.resource.data.createdAt == request.time
+        && request.resource.data.startSchooljaar == hpJaar() && request.resource.data.startKlas == hpGrant(root).klas;
+      allow update: if request.auth != null && hpEigen(root) && geldigPlan(request.resource.data)
+        && request.resource.data.versie == resource.data.versie + 1
+        && request.resource.data.createdAt == resource.data.createdAt
+        && request.resource.data.startSchooljaar == resource.data.startSchooljaar
+        && request.resource.data.startKlas == resource.data.startKlas
+        && request.resource.data.startdatum == resource.data.startdatum
+        && request.resource.data.doel == resource.data.doel;
+      allow delete: if false;
+      match /historiek/{actieId} {
+        allow read: if hpLezen(root);
+        allow update, delete: if false;
+        allow create: if request.auth != null && hpEigen(root)
+          && request.resource.data.auteurUid == request.auth.uid
+          && request.resource.data.datum == request.time
+          && request.resource.data.context.schooljaar == hpJaar()
+          && request.resource.data.context.klas == hpGrant(root).klas
+          && request.resource.data.plan == getAfter(/databases/$(database)/documents/handelingsplannen/$(root)/plannen/$(planId)).data
+          && request.resource.data.plan.bewaaractie == actieId
+          && request.resource.data.versie == request.resource.data.plan.versie
+          && request.resource.data.eerdereAanpak is list && request.resource.data.eerdereAanpak.size() <= 20;
+      }
+    }
+    // END HANDELINGSPLAN
     match /{document=**} {
       allow read, write: if false;
     }

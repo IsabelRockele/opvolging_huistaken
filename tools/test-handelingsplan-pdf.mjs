@@ -1,0 +1,18 @@
+import fs from 'node:fs';
+import {createRequire} from 'node:module';
+import assert from 'node:assert/strict';
+import {buildPlanPdf} from '../handelingsplan-pdf.mjs';
+import {createDemoApi} from '../handelingsplan-demo.mjs';
+const require=createRequire(import.meta.url),{jsPDF}=require('../jspdf.umd.min.js');
+const catalog=JSON.parse(fs.readFileSync(new URL('../handelingsplan-doelen.json',import.meta.url),'utf8'));
+const api=createDemoApi(catalog),data=await api({action:'load'}),plan=data.plannen[0];
+const prior={schooljaar:'2025-2026',klas:'1A',doel:'Tellen tot twintig',aanpak:'Oefenen met blokjes.',effect:'gedeeltelijk',resultaat:'Met materiaal lukt het.',bron:'Overgangsgesprek',ouders:'Kort thuis oefenen'};
+const events=[{datum:'2026-10-07',context:{schooljaar:'2026-2027',klas:'2A'},versie:1,auteur:'Voorbeeldleerkracht',plan,eerdereAanpak:[prior],evaluatie:null}];
+const pdf=buildPlanPdf(jsPDF,{...data,plan,events});
+fs.mkdirSync(new URL('../output/handelingsplan/',import.meta.url),{recursive:true});
+fs.writeFileSync(new URL('../output/handelingsplan/pdf-voorbeeld.pdf',import.meta.url),Buffer.from(pdf.output('arraybuffer')));
+const text=pdf.output();assert(text.includes('Toenmalig doel'));assert(text.includes('2025-2026 - 1A'));assert(text.includes('Voorbeeldleerkracht'));
+const long=buildPlanPdf(jsPDF,{...data,plan:{...plan,aanpak:('Lange observatie om paginaovergangen te controleren.\n').repeat(240)+'EINDE-LANGE-NOTITIE'},concept:true});
+assert(long.getNumberOfPages()>4);assert(long.output().includes('EINDE-LANGE-NOTITIE'));assert(long.output().includes('CONCEPT'));
+fs.writeFileSync(new URL('../output/handelingsplan/pdf-lang.pdf',import.meta.url),Buffer.from(long.output('arraybuffer')));
+console.log(`PDF met voorgeschiedenis: ${pdf.getNumberOfPages()} pagina's. Lange notitie: ${long.getNumberOfPages()} pagina's, eindtekst aanwezig.`);
