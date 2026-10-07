@@ -20,20 +20,23 @@ const path='handelingsplannen/pupil-vorig/plannen/plan-a';
 let checks=0;
 const check=label=>{checks++;console.log('OK '+label);};
 const db=uid=>env.authenticatedContext(uid,{email:uid+'@example.test'}).firestore();
-const api=uid=>createFirestoreApi({sdk,db:db(uid),user:{uid,email:uid+'@example.test'},catalog});
+const api=(uid,weergaveRol='')=>createFirestoreApi({sdk,db:db(uid),user:{uid,email:uid+'@example.test'},catalog,weergaveRol});
 async function seed(entries){await env.withSecurityRulesDisabled(async ctx=>{for(const [path,value] of Object.entries(entries))await sdk.setDoc(sdk.doc(ctx.firestore(),path),value);});}
 try{
  await env.clearFirestore();
  await seed({
   'schoolrollen/teacher-a':{rol:'klasleerkracht'},'schoolrollen/teacher-b':{rol:'klasleerkracht'},'schoolrollen/secretariaat':{rol:'secretariaat'},
   ...Object.fromEntries(['directie','zorgcoordinator','zorgleerkracht','beheerder'].map(r=>['schoolrollen/'+r,{rol:r}])),
-  [`klasleerkrachten/${year}_2A`]:{schooljaar:year,klas:'2A',leerkracht_uids:['teacher-a'],leerkracht_emails:[]},
+  [`klasleerkrachten/${year}_2A`]:{schooljaar:year,klas:'2A',leerkracht_uids:['teacher-a','beheerder'],leerkracht_emails:[]},
   [`klasleerkrachten/${year}_3A`]:{schooljaar:year,klas:'3A',leerkracht_uids:['teacher-b'],leerkracht_emails:[]},
   [`schoolbeheer/${year}/klassen/2A`]:{leerlingen:[student]},[`schoolbeheer/${year}/klassen/3A`]:{leerlingen:[{id:'pupil-b',first:'Ander'}]},
   [`overgangsbesprekingen/${year}/projecten/klas_2A`]:{eigenaar_uid:'teacher-a',eigenaar_email:'teacher-a@example.test',students:[{id:'fiche-a',schoolbeheerId:'pupil-vorig'}]}
  });
  const a=api('teacher-a');
  assert.deepEqual((await a({action:'leerlingen'})).klassen.map(k=>k.klas),['2A']);
+ assert.equal((await a({action:'leerlingen'})).eigenKlassen,true);
+ assert.deepEqual((await api('beheerder','klasleerkracht')({action:'leerlingen'})).klassen.map(k=>k.klas),['2A']);
+ assert.deepEqual((await api('teacher-a','beheerder')({action:'leerlingen'})).klassen.map(k=>k.klas),['2A']);
  assert.deepEqual((await api('directie')({action:'leerlingen'})).klassen.map(k=>k.klas),['2A','3A']);
  await assert.rejects(api('secretariaat')({action:'leerlingen'}));
  assert.deepEqual((await a({action:'load',context:{...context,bron:'handelingsplan'}})).plannen,[]);

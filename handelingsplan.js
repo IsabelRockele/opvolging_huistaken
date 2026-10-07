@@ -76,6 +76,10 @@ function paintHistory(events){
 function filters(){return Object.fromEntries(['vakgebied','leeftijd',...LEVELS].map(k=>[k,$(k).value]).concat([['zoek',$('zoekDoel').value]]));}
 function options(el,values,label,keep=true){const old=keep?el.value:'';el.innerHTML=`<option value="">${label}</option>`+values.map(v=>`<option value="${esc(v)}">${esc(v)}</option>`).join('');el.value=values.includes(old)?old:'';}
 function refreshFilters(changed){
+  if(!$('vakgebied').value){
+    LEVELS.forEach(l=>{options($(l),[],'Kies eerst een vakgebied',false);$(l).disabled=true;});
+    limit=35;paintResults();return;
+  }
   const index=LEVELS.indexOf(changed);
   if(changed==='vakgebied'||changed==='leeftijd')LEVELS.forEach(l=>$(l).value='');
   else if(index>=0)LEVELS.slice(index+1).forEach(l=>$(l).value='');
@@ -83,6 +87,11 @@ function refreshFilters(changed){
   limit=35;paintResults();
 }
 function paintResults(){
+  if(!$('vakgebied').value&&!$('zoekDoel').value.trim()){
+    $('aantalDoelen').textContent='Kies eerst een vakgebied of vul een zoekterm in.';
+    $('doelenResultaten').innerHTML='<p class="empty">Er is nog geen doel geselecteerd. Begin met een vakgebied en verfijn daarna op leeftijdsgroep en onderdeel.</p>';
+    $('meerDoelen').hidden=true;return;
+  }
   const matches=filterGoals(catalog.doelen,filters());
   $('aantalDoelen').textContent=`${matches.length} doelen gevonden · ${Math.min(limit,matches.length)} getoond`;
   $('doelenResultaten').innerHTML=matches.slice(0,limit).map(g=>`<article class="goal-item">${goalHtml(g)}<button type="button" data-select-goal="${esc(g.id)}">Dit doel kiezen</button></article>`).join('')||'<p>Geen doelen gevonden. Kies een andere filter of zoekterm.</p>';
@@ -159,12 +168,19 @@ async function start(){
   options($('vakgebied'),[...new Set(catalog.doelen.map(g=>g.vakgebied))].sort((a,b)=>a.localeCompare(b,'nl')),'Alle vakgebieden',false);
   options($('leeftijd'),catalog.leeftijden,'Alle leeftijden',false);
   if(demo){$('demoBanner').hidden=false;api=(await import('./handelingsplan-demo.mjs')).createDemoApi(catalog);await load();return;}
-  const [{initializeApp},{getAuth,onAuthStateChanged},sdk,{createFirestoreApi}]=await Promise.all([
+  const [{initializeApp},{getAuth,onAuthStateChanged,signOut},sdk,{createFirestoreApi}]=await Promise.all([
     import('https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js'),import('https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js'),import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js'),import('./handelingsplan-opslag.mjs')]);
   const app=initializeApp({apiKey:'AIzaSyA7KxXMvZ4dzBQDut3CMyWUblLte2tFzoQ',authDomain:'huiswerkapp-a311e.firebaseapp.com',projectId:'huiswerkapp-a311e',storageBucket:'huiswerkapp-a311e.appspot.com',messagingSenderId:'797169941164',appId:'1:797169941164:web:511d9618079f1378d0fd09'});
   onAuthStateChanged(getAuth(app),async user=>{
+    $('logoutBtn').hidden=!user;
     if(!user){$('overzicht').hidden=true;$('editor').hidden=true;$('leerlingKiezen').hidden=true;$('leerling').textContent='Aanmelden vereist';dossier=null;message('Meld je aan via het startscherm en open daarna opnieuw het handelingsplan.',true);return;}
-    api=createFirestoreApi({sdk,db:sdk.getFirestore(app),user,catalog});
+    let weergaveRol='';try{weergaveRol=localStorage.getItem('lindeSimuleerRol_'+user.uid)||'';}catch{}
+    api=createFirestoreApi({sdk,db:sdk.getFirestore(app),user,catalog,weergaveRol});
+    $('logoutBtn').onclick=async()=>{
+      if(busy){message('Wacht tot het bewaren voltooid is.',true);return;}
+      if(dirty&&!confirm('Je hebt onbewaarde wijzigingen. Toch uitloggen?'))return;
+      try{await signOut(getAuth(app));dirty=false;location.href='index.html';}catch(e){message('Uitloggen lukte niet: '+e.message,true);}
+    };
     try{
       if(context.bron){await load();return;}
       const lijst=await api({action:'leerlingen'});
@@ -179,7 +195,12 @@ async function start(){
       $('keuzeKlas').onchange=vulLeerlingen;
       $('keuzeLeerling').onchange=()=>{$('openLeerling').disabled=!$('keuzeLeerling').value;};
       $('openLeerling').onclick=()=>{if($('keuzeLeerling').value)location.href=`handelingsplan.html?${new URLSearchParams({bron:'handelingsplan',schooljaar:lijst.schooljaar,klas:$('keuzeKlas').value,leerlingId:$('keuzeLeerling').value})}`;};
-      if(lijst.klassen.length===1)$('keuzeKlas').value=lijst.klassen[0].klas;
+      const vasteKlas=lijst.klassen.length===1;
+      if(vasteKlas||lijst.eigenKlassen&&lijst.klassen.length)$('keuzeKlas').value=lijst.klassen[0].klas;
+      $('keuzeKlasLabel').hidden=vasteKlas;
+      $('eigenKlas').hidden=!vasteKlas;
+      $('eigenKlas').textContent=vasteKlas?`Klas ${lijst.klassen[0].klas}`:'';
+      if(lijst.eigenKlassen)$('leerling').textContent=vasteKlas?`Je klas: ${lijst.klassen[0].klas} · kies een leerling`:'Je eigen klassen · kies een leerling';
       vulLeerlingen();$('leerlingKiezen').hidden=false;message(lijst.klassen.length?'':'Er is voor dit schooljaar nog geen klas aan je account gekoppeld.');
     }catch(e){message(e.message,true);}
   });

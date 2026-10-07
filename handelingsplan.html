@@ -4,11 +4,20 @@
   <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="referrer" content="same-origin">
   <title>Individueel handelingsplan</title>
-  <link rel="stylesheet" href="handelingsplan.css">
+  <link rel="stylesheet" href="handelingsplan.css?v=20261007-zorgstijl">
 </head>
 <body>
-  <header><div><p class="eyebrow">Zorg voor de leerling</p><h1>Individueel handelingsplan</h1><p id="leerling">Leerlinggegevens laden…</p></div><div><button type="button" id="pdf" disabled title="Open eerst een handelingsplan">Bewaren als PDF</button> <button type="button" id="print" class="secondary">Afdrukken</button></div></header>
+  <header>
+    <div class="brand"><img src="afbeeldingen/schoollogo.png" alt="De Linde"><div><h1>Individueel handelingsplan</h1><p id="leerling" class="sub">Leerlinggegevens laden…</p></div></div>
+    <nav class="header-actions" aria-label="Navigatie"><a class="button ghost" href="index.html">Keuzescherm</a><button id="logoutBtn" class="ghost" type="button" hidden>Uitloggen</button></nav>
+  </header>
   <main>
+    <aside class="werkwijzer">
+      <strong>Zo werk je hier</strong>
+      <p>Kies een leerling, vertrek van een leerplandoel en bewaar de aanpak en evaluaties.</p>
+      <details><summary>Stappen en bewaren</summary><p>Kies een bestaand plan of maak een nieuw handelingsplan. Noteer wat je probeert, wat werkt en wat je met ouders afspreekt. Bij eerdere aanpak kun je ook het schooljaar en de klas van toen invullen. Klik op Handelingsplan bewaren vóór je verdergaat. Bewaarde versies blijven beschikbaar.</p></details>
+    </aside>
+    <div class="document-actions"><button type="button" id="pdf" disabled title="Open eerst een handelingsplan">Bewaren als PDF</button><button type="button" id="print" class="secondary">Afdrukken</button></div>
     <p id="melding" role="status" aria-live="polite">De leerlingkoppeling wordt gecontroleerd.</p>
     <div id="demoBanner" class="notice" hidden>Voorbeeld met een fictieve leerling. In deze demonstratie wordt niets online opgeslagen.</div>
     <div id="archief" class="notice" hidden></div>
@@ -16,7 +25,7 @@
       <h2>Kies een leerling</h2>
       <p id="keuzeJaar"></p>
       <div class="grid">
-        <label>Klas<select id="keuzeKlas"></select></label>
+        <p id="eigenKlas" hidden></p><label id="keuzeKlasLabel">Klas<select id="keuzeKlas"></select></label>
         <label>Leerling<select id="keuzeLeerling"></select></label>
       </div>
       <p><button id="openLeerling" type="button" disabled>Handelingsplannen openen</button></p>

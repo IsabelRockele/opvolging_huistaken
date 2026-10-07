@@ -6,21 +6,22 @@ export function normaliseer(value){
   if(Array.isArray(value))return value.map(normaliseer);
   return value&&typeof value==='object'?Object.fromEntries(Object.entries(value).map(([k,v])=>[k,normaliseer(v)])):value;
 }
-export function createFirestoreApi({sdk,db,user,catalog,now=()=>new Date()}){
+export function createFirestoreApi({sdk,db,user,catalog,weergaveRol='',now=()=>new Date()}){
   const {doc,collection,getDocFromServer:getDoc,getDocsFromServer:getDocs,query,where,runTransaction,serverTimestamp}=sdk;
   const ref=path=>doc(db,...path.split('/'));
   async function leerlingen(){
     const schooljaar=M.schoolYear(M.today(now())),day=M.today(now());
     const role=(await getDoc(ref(`schoolrollen/${user.uid}`))).data()?.rol;
     if(!['directie','beheerder','zorgcoordinator','zorgleerkracht','klasleerkracht'].includes(role))throw Error('Je hebt geen toegang tot handelingsplannen.');
+    const eigenKlassen=role==='klasleerkracht'||(role==='beheerder'&&weergaveRol==='klasleerkracht');
     let snaps;
-    if(role!=='klasleerkracht')snaps=(await getDocs(collection(db,'schoolbeheer',schooljaar,'klassen'))).docs;
+    if(!eigenKlassen)snaps=(await getDocs(collection(db,'schoolbeheer',schooljaar,'klassen'))).docs;
     else{
       const links=await Promise.all([getDocs(query(collection(db,'klasleerkrachten'),where('leerkracht_uids','array-contains',user.uid))),getDocs(query(collection(db,'klasleerkrachten'),where('leerkracht_emails','array-contains',user.email||'')))]);
       const classes=[...new Set(links.flatMap(s=>s.docs).filter(d=>d.id.startsWith(schooljaar+'_')).map(d=>d.id.slice(schooljaar.length+1)))];
       snaps=await Promise.all(classes.map(k=>getDoc(ref(`schoolbeheer/${schooljaar}/klassen/${k}`))));
     }
-    return {schooljaar,klassen:snaps.map(d=>({klas:d.id,leerlingen:(d.data()?.leerlingen||[]).filter(s=>s.id&&M.active(s,day)&&!s.verhuisdNaar).map(s=>({id:String(s.id),naam:[s.first||s.firstName,s.last||s.lastName].filter(Boolean).join(' ')||s.naam||'Leerling'})).sort((a,b)=>a.naam.localeCompare(b.naam,'nl'))})).sort((a,b)=>a.klas.localeCompare(b.klas,'nl',{numeric:true}))};
+    return {schooljaar,eigenKlassen,klassen:snaps.map(d=>({klas:d.id,leerlingen:(d.data()?.leerlingen||[]).filter(s=>s.id&&M.active(s,day)&&!s.verhuisdNaar).map(s=>({id:String(s.id),naam:[s.first||s.firstName,s.last||s.lastName].filter(Boolean).join(' ')||s.naam||'Leerling'})).sort((a,b)=>a.naam.localeCompare(b.naam,'nl'))})).sort((a,b)=>a.klas.localeCompare(b.klas,'nl',{numeric:true}))};
   }
   async function prepare(c){
     const jaar=M.year(c.schooljaar),day=M.today(now()),currentYear=M.schoolYear(day);
