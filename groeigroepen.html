@@ -347,6 +347,7 @@ import { getFirestore, collection, doc, getDoc, getDocs, setDoc as firestoreSetD
 import { maakVeiligheidskopie, probeerVeiligheidskopie } from "./firebase-veiligheid.js";
 import { LEERPLANDOELEN_NEDERLANDS } from "./leerplandoelen-nederlands.js";
 import { LEERPLANDOELEN_WISKUNDE } from "./leerplandoelen-wiskunde.js";
+import { LEERPLANDOELEN_AANVULLEND } from "./leerplandoelen-aanvullend.js";
 
 const firebaseConfig={apiKey:"AIzaSyA7KxXMvZ4dzBQDut3CMyWUblLte2tFzoQ",authDomain:"huiswerkapp-a311e.firebaseapp.com",projectId:"huiswerkapp-a311e",storageBucket:"huiswerkapp-a311e.appspot.com",messagingSenderId:"797169941164",appId:"1:797169941164:web:511d9618079f1378d0fd09"};
 const app=getApps().length?getApp():initializeApp(firebaseConfig);
@@ -670,12 +671,17 @@ function groeiplanStatusLabel(value){
     opvolgen:"opvolgen in klas"
   })[value||"actief"]||"in groeigroep";
 }
-const LEERPLANDOELEN_PER_GEBIED={Nederlands:LEERPLANDOELEN_NEDERLANDS,Wiskunde:LEERPLANDOELEN_WISKUNDE};
-function leergebiedVoorDoel(doel){return String(doel?.nummer||doel||"").startsWith("WI.")?"Wiskunde":"Nederlands";}
-function alleLeerplandoelen(){return [...LEERPLANDOELEN_NEDERLANDS,...LEERPLANDOELEN_WISKUNDE];}
+const LEERPLANDOELEN_PER_GEBIED={Nederlands:LEERPLANDOELEN_NEDERLANDS,Wiskunde:LEERPLANDOELEN_WISKUNDE,...LEERPLANDOELEN_AANVULLEND};
+function leergebiedVoorDoel(doel){
+  const nummer=String(doel?.nummer||doel||"");
+  return doel?.vakgebied||Object.entries(LEERPLANDOELEN_PER_GEBIED).find(([,doelen])=>doelen.some(d=>d.nummer===nummer))?.[0]||(nummer.startsWith("WI.")?"Wiskunde":"Nederlands");
+}
+function alleLeerplandoelen(){return Object.values(LEERPLANDOELEN_PER_GEBIED).flat();}
 function doelenVoorLeergebied(gebied){return LEERPLANDOELEN_PER_GEBIED[gebied]||LEERPLANDOELEN_NEDERLANDS;}
 function standaardLeergebied(){
   const vak=String(active?.groeiplan?.vak||"").toLowerCase();
+  const gebied=Object.keys(LEERPLANDOELEN_PER_GEBIED).find(g=>vak.includes(g.toLowerCase()));
+  if(gebied)return gebied;
   if(vak.includes("wisk")||vak.includes("reken"))return "Wiskunde";
   if((active?.domeinen||[]).some(id=>DOMAINEN.find(d=>d.id===id)?.groep==="Wiskunde"))return "Wiskunde";
   return "Nederlands";
@@ -829,7 +835,7 @@ function renderGroeiplan(){
           <div class="doelen-modal-inhoud">
             <div class="doelen-modal-links">
               <div class="doelen-filters">
-                <label>Leergebied<select id="leerplandoelGebied" onchange="ggKiesLeergebied()"><option value="Nederlands" ${standaardLeergebied()==="Nederlands"?'selected':''}>Nederlands</option><option value="Wiskunde" ${standaardLeergebied()==="Wiskunde"?'selected':''}>Wiskunde</option></select></label>
+                <label>Leergebied<select id="leerplandoelGebied" onchange="ggKiesLeergebied()">${Object.keys(LEERPLANDOELEN_PER_GEBIED).map(g=>`<option value="${esc(g)}" ${standaardLeergebied()===g?'selected':''}>${esc(g)}</option>`).join("")}</select></label>
                 <label>Onderdeel<select id="leerplandoelOnderdeel" onchange="ggKiesLeerplanOnderdeel()"><option value="">Kies een onderdeel…</option></select></label>
                 <label>Onderverdeling<select id="leerplandoelOnderverdeling" onchange="ggFilterLeerplandoelen()"><option value="">Alle onderverdelingen</option></select></label>
                 <label>Leeftijd<select id="leerplandoelLeeftijd" onchange="ggFilterLeerplandoelen()"><option value="">Alle leeftijden</option>${["2,5-4","4-5","5-6","6-7","7-8","8-9","9-10","10-11","11-12"].map(x=>`<option value="${x}">${x} jaar</option>`).join("")}</select></label>
