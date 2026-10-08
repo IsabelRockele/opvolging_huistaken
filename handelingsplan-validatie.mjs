@@ -51,9 +51,13 @@ function planInput(raw, goals, old) {
 }
 function evaluationInput(raw, plan, day) {
   if (!raw) return null;
-  const e = {datum:date(raw.datum), uitgevoerd:text(raw.uitgevoerd), observatie:text(raw.observatie), effect:text(raw.effect,60), doelbereik:text(raw.doelbereik,60), besluit:text(raw.besluit), ouders:text(raw.ouders || '')};
-  if (!e.uitgevoerd || !e.observatie || !e.besluit) fail('Vul uitvoering, observatie en besluit in.', 'invalid-argument');
-  if (!['werkt','gedeeltelijk','onvoldoende','nog-niet-te-beoordelen'].includes(e.effect) || !['bereikt','vooruitgang','nog-niet','niet-beoordeeld'].includes(e.doelbereik)) fail('Kies effect en doelbereik.', 'invalid-argument');
+  const e = {datum:date(raw.datum), observatie:text(raw.observatie), effect:text(raw.effect,60), besluit:text(raw.besluit), ouders:text(raw.ouders || '')};
+  if (!e.observatie || !e.besluit) fail('Vul observatie en besluit in.', 'invalid-argument');
+  if (!['werkt','gedeeltelijk','onvoldoende','nog-niet-te-beoordelen'].includes(e.effect)) fail('Kies het effect van de aanpak.', 'invalid-argument');
+  // Oudere schermen en evaluaties blijven hun oorspronkelijke velden behouden.
+  if(raw.uitgevoerd!==undefined)e.uitgevoerd=text(raw.uitgevoerd);
+  if(raw.doelbereik!==undefined){e.doelbereik=text(raw.doelbereik,60);if(!['bereikt','vooruitgang','nog-niet','niet-beoordeeld'].includes(e.doelbereik))fail('Kies een geldig doelbereik.', 'invalid-argument');}
+  if(raw.uitgevoerd===undefined&&raw.doelbereik===undefined&&raw.doelen===undefined)fail('Beoordeel de gekozen doelen.', 'invalid-argument');
   if (e.datum > day || e.datum < plan.startdatum || schoolYear(e.datum) !== schoolYear(day)) fail('Kies een evaluatiedatum in het lopende schooljaar, vanaf de start van het plan en niet in de toekomst.', 'invalid-argument');
   if(raw.doelen!==undefined){
     const targets=evaluatieDoelen(planDoelen(plan));

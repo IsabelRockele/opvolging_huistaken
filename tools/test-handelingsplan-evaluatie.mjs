@@ -31,3 +31,14 @@ assert.throws(()=>planInput({...input,doelen:[{doelId:other.id},{doelId:other.id
 const multiPdf=buildPlanPdf(jsPDF,{naam:'Test',klas:'2A',schooljaar:'2026-2027',plan:multi,evaluation:multiEval}).output();
 assert(multiPdf.includes('Nederlands'));assert(multiPdf.includes('Lezen met steun'));assert(multiPdf.includes('Wiskunde'));
 console.log('Meerdere vakgebieden, bijvoegen aan oud plan, behoud bestaande doelen, evaluaties en PDF gecontroleerd.');
+
+const {uitgevoerd,doelbereik,...compactRaw}=raw;
+const compact=evaluationInput(compactRaw,plan,'2026-10-08');
+assert(!('uitgevoerd' in compact));assert(!('doelbereik' in compact));
+assert.equal(compact.doelen[0].resultaat,'nog-niet');
+assert.equal(compact.doelen[0].actie,'Dagelijks tien minuten oefenen.');
+assert.throws(()=>evaluationInput({...compactRaw,observatie:''},plan,'2026-10-08'));
+assert.throws(()=>evaluationInput({...compactRaw,doelen:undefined},plan,'2026-10-08'));
+const compactPdf=buildPlanPdf(jsPDF,{naam:'Test',klas:'2A',schooljaar:'2026-2027',plan,evaluation:compact}).output();
+assert(!compactPdf.includes('(Uitgevoerd)'));assert(!compactPdf.includes('(Doelbereik)'));
+console.log('Compacte evaluatie zonder dubbele invoer, met behoud van oude velden en PDF getest.');

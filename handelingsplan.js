@@ -44,7 +44,7 @@ async function load(){
 }
 function toggleEval(open){
   evalOpen=open;$('evaluatieVelden').hidden=!open;$('evaluatieToevoegen').hidden=open;
-  ['datum','effect','uitgevoerd','observatie','doelbereik','besluit'].forEach(k=>{field(`eval_${k}`).required=open;});
+  ['datum','effect','observatie','besluit'].forEach(k=>{field(`eval_${k}`).required=open;});
   if(open && !field('eval_datum').value) field('eval_datum').value=dossier.vandaag;
   if(open)paintEvaluationGoals();else $('evaluatieDoelen').innerHTML='';
 }
@@ -55,7 +55,7 @@ function paintEvaluationGoals(){
   $('evaluatieDoelen').innerHTML=evaluatieDoelen(goals).map(d=>{
     const previous=current?.laatsteEvaluatie?.doelen?.find(p=>p.id===d.id);
     const signature=JSON.stringify([d.id,d.titel,d.tekst]),draft=drafts.get(signature)||{resultaat:'niet-beoordeeld',actie:''};
-    return `<details class="doel-evaluatie ${esc(draft.resultaat)}" data-eval-doel="${esc(d.id)}" data-eval-signature="${esc(signature)}"><summary><strong>${esc(d.vakgebied)} · ${esc(d.titel)}</strong><span class="goal-short">${esc(d.tekst)}</span><span class="resultaat-label">${esc(DOELRESULTAAT[draft.resultaat])}</span></summary><p>${esc(d.tekst)}</p>${previous?`<p class="meta">Vorige evaluatie: ${esc(DOELRESULTAAT[previous.resultaat])}${previous.actie?` · Vervolgactie toen: ${esc(previous.actie)}`:''}</p>`:''}<label>Resultaat<select data-doel-resultaat>${Object.entries(DOELRESULTAAT).map(([k,v])=>`<option value="${k}" ${draft.resultaat===k?'selected':''}>${v}</option>`).join('')}</select></label><label>Vervolgactie bij dit doel<textarea data-doel-actie maxlength="6000" placeholder="Wat gaan we doen, wie doet dit en wanneer evalueren we opnieuw?">${esc(draft.actie)}</textarea></label></details>`;
+    return `<details class="doel-evaluatie ${esc(draft.resultaat)}" data-eval-doel="${esc(d.id)}" data-eval-signature="${esc(signature)}"><summary><strong>${esc(d.vakgebied)} · ${esc(d.titel)}</strong><span class="goal-short">${esc(d.tekst)}</span><span class="resultaat-label">${esc(DOELRESULTAAT[draft.resultaat])}</span></summary><p>${esc(d.tekst)}</p>${previous?`<p class="meta">Vorige evaluatie: ${esc(DOELRESULTAAT[previous.resultaat])}${previous.actie?` · Vervolgactie toen: ${esc(previous.actie)}`:''}</p>`:''}<label>Resultaat<select data-doel-resultaat>${Object.entries(DOELRESULTAAT).map(([k,v])=>`<option value="${k}" ${draft.resultaat===k?'selected':''}>${v}</option>`).join('')}</select></label><details class="vervolgactie"><summary>Vervolgactie toevoegen of bekijken (optioneel)</summary><label>Vervolgactie bij dit doel<textarea data-doel-actie maxlength="6000" placeholder="Wat gaan we doen, wie doet dit en wanneer evalueren we opnieuw?">${esc(draft.actie)}</textarea></label></details></details>`;
   }).join('')||'<p>Kies eerst een leerplandoel bij stap 1.</p>';
   $('evaluatieDoelen').querySelectorAll('[data-doel-resultaat]').forEach(select=>select.onchange=()=>{const row=select.closest('[data-eval-doel]');row.className='doel-evaluatie '+select.value;row.querySelector('.resultaat-label').textContent=DOELRESULTAAT[select.value];});
 }
@@ -89,7 +89,7 @@ function planSnapshot(p){return `<div class="wide">${goalList(p)}</div>`+Object.
 function paintHistory(events){
   const earlier=events.flatMap(e=>(e.eerdereAanpak||[]).map(p=>({...p,ingevoerdOp:e.datum,auteur:e.auteur}))).sort((a,b)=>b.schooljaar.localeCompare(a.schooljaar)||a.klas.localeCompare(b.klas,'nl'));
   $('eerdereHistoriek').innerHTML=earlier.length?`<h4>Achteraf aangevulde aanpak per schooljaar en klas</h4>${earlier.map(p=>`<details open><summary>${esc(p.schooljaar)} · ${esc(p.klas)} · ${esc(p.doel)}</summary><p class="meta">Achteraf ingevoerd op ${dateLabel(p.ingevoerdOp)} door ${esc(p.auteur)}.</p>${priorHtml(p)}</details>`).join('')}<h4>Bewaarde versies van het handelingsplan</h4>`:'';
-  $('historiek').innerHTML=events.length?events.map(e=>`<details><summary>${dateLabel(e.datum)} · ${e.evaluatie?'Evaluatie en aanpak':e.eerdereAanpak?.length?'Eerdere aanpak aangevuld':'Plan bewaard'} · ${esc(e.context.schooljaar)} · ${esc(e.context.klas)} · versie ${e.versie}</summary><p class="meta">${esc(e.auteur)} · ${esc(e.context.klas)} · vanuit ${esc(e.context.bron)}</p>${e.evaluatie?`<div class="history-grid">${Object.entries({datum:'Evaluatiedatum',uitgevoerd:'Uitgevoerd',observatie:'Observatie',effect:'Effect van de aanpak',doelbereik:'Doelbereik',besluit:'Besluit',ouders:'Besproken met ouders'}).map(([k,label])=>`<div><strong>${label}</strong><p>${esc(k==='effect'?EFFECT[e.evaluatie[k]]:k==='doelbereik'?PROGRESS[e.evaluatie[k]]:e.evaluatie[k]||'—')}</p></div>`).join('')}</div>`:''}${outcomeHtml(e.evaluatie,e.plan)}<h4>Plan en afspraken op dat moment</h4><div class="history-grid">${planSnapshot(e.plan)}</div></details>`).join(''):'Nog geen bewaarde momenten.';
+  $('historiek').innerHTML=events.length?events.map(e=>`<details><summary>${dateLabel(e.datum)} · ${e.evaluatie?'Evaluatie en aanpak':e.eerdereAanpak?.length?'Eerdere aanpak aangevuld':'Plan bewaard'} · ${esc(e.context.schooljaar)} · ${esc(e.context.klas)} · versie ${e.versie}</summary><p class="meta">${esc(e.auteur)} · ${esc(e.context.klas)} · vanuit ${esc(e.context.bron)}</p>${e.evaluatie?`<div class="history-grid">${Object.entries({datum:'Evaluatiedatum',uitgevoerd:'Uitgevoerd',observatie:'Observatie',effect:'Effect van de aanpak',doelbereik:'Doelbereik',besluit:'Besluit',ouders:'Besproken met ouders'}).filter(([k])=>e.evaluatie[k]!==undefined).map(([k,label])=>`<div><strong>${label}</strong><p>${esc(k==='effect'?EFFECT[e.evaluatie[k]]:k==='doelbereik'?PROGRESS[e.evaluatie[k]]:e.evaluatie[k]||'—')}</p></div>`).join('')}</div>`:''}${outcomeHtml(e.evaluatie,e.plan)}<h4>Plan en afspraken op dat moment</h4><div class="history-grid">${planSnapshot(e.plan)}</div></details>`).join(''):'Nog geen bewaarde momenten.';
 }
 function filters(){return Object.fromEntries(['vakgebied','leeftijd',...LEVELS].map(k=>[k,$(k).value]).concat([['zoek',$('zoekDoel').value]]));}
 function options(el,values,label,keep=true){const old=keep?el.value:'';el.innerHTML=`<option value="">${label}</option>`+values.map(v=>`<option value="${esc(v)}">${esc(v)}</option>`).join('');el.value=values.includes(old)?old:'';}
@@ -124,7 +124,7 @@ function paintResults(){
 function draft(){
   const plan=Object.fromEntries(Object.keys(FIELDS).map(k=>[k,field(k).value]));
   plan.doelen=selectedGoals.map(({goal,items})=>({doelId:goal.id,doelItems:items}));
-  const evaluatie=evalOpen?Object.fromEntries(['datum','effect','uitgevoerd','observatie','doelbereik','besluit','ouders'].map(k=>[k,field(`eval_${k}`).value])):null;
+  const evaluatie=evalOpen?Object.fromEntries(['datum','effect','observatie','besluit','ouders'].map(k=>[k,field(`eval_${k}`).value])):null;
   if(evaluatie)evaluatie.doelen=[...$('evaluatieDoelen').querySelectorAll('[data-eval-doel]')].map(row=>({id:row.dataset.evalDoel,...evaluatieDoelen(selectedSnapshots()).find(d=>d.id===row.dataset.evalDoel),resultaat:row.querySelector('[data-doel-resultaat]').value,actie:row.querySelector('[data-doel-actie]').value}));
   return {plan,evaluatie,eerdereAanpak:structuredClone(priorDrafts)};
 }
@@ -159,7 +159,7 @@ $('eerdereKlaar').onclick=()=>{
 $('eerdereAnnuleren').onclick=()=>{if(!confirm('Deze nog niet toegevoegde eerdere aanpak weglaten?'))return;priorFields.filter(k=>k!=='schooljaar').forEach(k=>field(`eerder_${k}`).value='');$('eerdereVelden').hidden=true;$('eerdereToevoegen').hidden=false;};
 $('sluiten').onclick=()=>{if(dirty&&!confirm('Onbewaarde wijzigingen verlaten?'))return;dirty=false;historyToken++;$('editor').hidden=true;$('overzicht').hidden=false;$('pdf').disabled=true;};
 $('evaluatieToevoegen').onclick=()=>{toggleEval(true);dirtyMark();};
-$('evaluatieAnnuleren').onclick=()=>{if(!confirm('Deze nog niet bewaarde evaluatie weglaten?'))return;['datum','effect','uitgevoerd','observatie','doelbereik','besluit','ouders'].forEach(k=>field(`eval_${k}`).value='');toggleEval(false);dirtyMark();};
+$('evaluatieAnnuleren').onclick=()=>{if(!confirm('Deze nog niet bewaarde evaluatie weglaten?'))return;['datum','effect','observatie','besluit','ouders'].forEach(k=>field(`eval_${k}`).value='');toggleEval(false);dirtyMark();};
 $('kiesDoel').onclick=()=>{$('doelenDialog').showModal();refreshFilters('');};
 $('doelenSluiten').onclick=()=>$('doelenDialog').close();
 $('filters').addEventListener('change',e=>refreshFilters(e.target.id));

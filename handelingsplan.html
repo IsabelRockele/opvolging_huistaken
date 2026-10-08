@@ -4,7 +4,7 @@
   <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="referrer" content="same-origin">
   <title>Individueel handelingsplan</title>
-  <link rel="stylesheet" href="handelingsplan.css?v=20261008-multidoelen">
+  <link rel="stylesheet" href="handelingsplan.css?v=20261008-eenvoudige-evaluatie">
 </head>
 <body>
   <header>
@@ -76,9 +76,7 @@
               <div class="wide"><h4>Gekozen doelen evalueren</h4><p>Duid per doel aan wat bereikt is. Groen = bereikt, rood = nog niet bereikt. Noteer indien nodig een vervolgactie. Elke evaluatie begint zonder beoordeling.</p><div id="evaluatieDoelen"></div></div>
               <label>Datum evaluatie<input type="date" name="eval_datum"></label>
               <label>Effect van de aanpak<select name="eval_effect"><option value="">Kies…</option><option value="werkt">Werkt</option><option value="gedeeltelijk">Werkt gedeeltelijk</option><option value="onvoldoende">Werkt onvoldoende</option><option value="nog-niet-te-beoordelen">Nog niet te beoordelen</option></select></label>
-              <label class="wide">Wat hebben we daadwerkelijk gedaan?<textarea name="eval_uitgevoerd" maxlength="6000"></textarea></label>
               <label class="wide">Wat zien we bij het kind?<textarea name="eval_observatie" maxlength="6000"></textarea></label>
-              <label>Vooruitgang naar het doel<select name="eval_doelbereik"><option value="">Kies…</option><option value="bereikt">Doel bereikt</option><option value="vooruitgang">Vooruitgang, doel nog niet bereikt</option><option value="nog-niet">Nog geen vooruitgang</option><option value="niet-beoordeeld">Nog niet beoordeeld</option></select></label>
               <label class="wide">Besluit en volgende stap<textarea name="eval_besluit" maxlength="6000" placeholder="Verderzetten, aanpassen, pauzeren of afronden? Waarom?"></textarea></label>
               <label class="wide">Besproken met ouders<textarea name="eval_ouders" maxlength="6000" placeholder="Datum, reactie en eventuele nieuwe afspraken. Werk ook de actuele afspraken hierboven bij."></textarea></label>
               <button id="evaluatieAnnuleren" type="button" class="secondary">Deze nieuwe evaluatie weglaten</button>
@@ -105,6 +103,6 @@
     <p id="selectieAantal" role="status"></p><p id="aantalDoelen" role="status"></p><div id="doelenResultaten"></div><button id="meerDoelen" type="button" class="secondary" hidden>Meer doelen tonen</button>
   </dialog>
   <script src="jspdf.umd.min.js"></script>
-  <script type="module" src="handelingsplan.js?v=20261008-multidoelen"></script>
+  <script type="module" src="handelingsplan.js?v=20261008-eenvoudige-evaluatie"></script>
 </body>
 </html>
