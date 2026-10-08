@@ -1,0 +1,18 @@
+import assert from 'node:assert/strict';
+import {evaluationInput} from '../handelingsplan-validatie.mjs';
+import {evaluatieDoelen} from '../handelingsplan-evaluatie.mjs';
+import {buildPlanPdf} from '../handelingsplan-pdf.mjs';
+import {createRequire} from 'node:module';
+const {jsPDF}=createRequire(import.meta.url)('../jspdf.umd.min.js');
+const plan={startdatum:'2026-09-01',doel:{id:'test',nummer:'WI.TEST',vakgebied:'Wiskunde',tekst:'Gekozen leerplandoel',items:[{groep:'MIA',tekst:'Gekozen onderdeel'}]}};
+const raw={datum:'2026-10-08',uitgevoerd:'Oefenen',observatie:'Vordering',effect:'gedeeltelijk',doelbereik:'vooruitgang',besluit:'Verder oefenen',doelen:evaluatieDoelen(plan.doel).map((d,i)=>({...d,tekst:'Vervalste tekst',resultaat:i?'bereikt':'nog-niet',actie:i?'':'Dagelijks tien minuten oefenen.'}))};
+const e=evaluationInput(raw,plan,'2026-10-08');
+assert.equal(e.doelen[0].tekst,plan.doel.tekst);assert.equal(e.doelen[1].resultaat,'bereikt');assert.equal(e.doelen[0].actie,raw.doelen[0].actie);
+assert.throws(()=>evaluationInput({...raw,doelen:[raw.doelen[0],raw.doelen[0]]},plan,'2026-10-08'));
+assert.throws(()=>evaluationInput({...raw,doelen:[{...raw.doelen[0],resultaat:'onbekend'},raw.doelen[1]]},plan,'2026-10-08'));
+assert.throws(()=>evaluationInput({...raw,doelen:[]},plan,'2026-10-08'));
+assert.throws(()=>evaluationInput({...raw,doelen:[{...raw.doelen[0],actie:'x'.repeat(6001)},raw.doelen[1]]},plan,'2026-10-08'));
+const {doelen,...legacy}=raw;assert(!('doelen' in evaluationInput(legacy,plan,'2026-10-08')));
+const pdf=buildPlanPdf(jsPDF,{naam:'Fictieve leerling',klas:'2A',schooljaar:'2026-2027',plan,events:[{datum:raw.datum,context:{schooljaar:'2026-2027',klas:'2A'},versie:1,auteur:'Test',plan,evaluatie:e}]});
+assert(pdf.output().includes('Nog niet bereikt'));assert(pdf.output().includes('Dagelijks tien minuten oefenen.'));assert(pdf.output().includes('Gekozen onderdeel'));
+console.log('Doelevaluaties: vast gekozen doel, MIA, resultaten, vervolgacties, oudere evaluaties en PDF gecontroleerd.');

@@ -22,6 +22,12 @@ invoer in een overleg of leerlingfiche blijft staan.
 - Voeg evaluaties toe met uitgevoerde aanpak, observatie, effect, doelbereik,
   besluit en oudergesprek. Elke opslag bewaart een volledige onveranderlijke
   versie; eerdere aanpak wordt niet uit de historiek verwijderd.
+- Bij **Evaluatie toevoegen** verschijnen het leerplandoel en de gekozen MIA/begrippen
+  opnieuw. Kies per doel **Bereikt** (groen), **Nog niet bereikt** (rood) of
+  **Nog niet beoordeeld** (neutraal), en noteer indien nodig een vervolgactie.
+  De vorige beoordeling en actie blijven zichtbaar als herinnering. Nieuwe
+  evaluaties starten neutraal; oudere evaluaties krijgen geen verzonnen resultaat.
+  De resultaten en acties verschijnen in het overzicht, de historiek en de PDF.
 - Een bewaard leerplandoel blijft vast aan het plan hangen. Start een nieuw
   plan wanneer je aan een ander doel begint.
 - Met **Eerdere aanpak toevoegen** kun je ervaringen uit vorige leerjaren

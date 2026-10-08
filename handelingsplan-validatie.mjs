@@ -1,3 +1,4 @@
+import {evaluatieDoelen,DOELRESULTAAT} from './handelingsplan-evaluatie.mjs';
 function fail(message, code = 'failed-precondition') { const e = new Error(message); e.code = code; throw e; }
 function text(value, max = 6000) {
   if (typeof value !== 'string' || value.length > max) fail('Een veld ontbreekt of is te lang.', 'invalid-argument');
@@ -50,6 +51,15 @@ function evaluationInput(raw, plan, day) {
   if (!e.uitgevoerd || !e.observatie || !e.besluit) fail('Vul uitvoering, observatie en besluit in.', 'invalid-argument');
   if (!['werkt','gedeeltelijk','onvoldoende','nog-niet-te-beoordelen'].includes(e.effect) || !['bereikt','vooruitgang','nog-niet','niet-beoordeeld'].includes(e.doelbereik)) fail('Kies effect en doelbereik.', 'invalid-argument');
   if (e.datum > day || e.datum < plan.startdatum || schoolYear(e.datum) !== schoolYear(day)) fail('Kies een evaluatiedatum in het lopende schooljaar, vanaf de start van het plan en niet in de toekomst.', 'invalid-argument');
+  if(raw.doelen!==undefined){
+    const targets=evaluatieDoelen(plan.doel);
+    if(!Array.isArray(raw.doelen)||raw.doelen.length!==targets.length||new Set(raw.doelen.map(d=>d?.id)).size!==targets.length)fail('Controleer de evaluatie van de gekozen doelen.','invalid-argument');
+    e.doelen=targets.map(target=>{
+      const value=raw.doelen.find(d=>d?.id===target.id);
+      if(!value||!Object.hasOwn(DOELRESULTAAT,value.resultaat))fail('Kies een geldig resultaat per doel.','invalid-argument');
+      return {...target,resultaat:value.resultaat,actie:text(value.actie||'')};
+    });
+  }
   return e;
 }
 function priorInput(raw, day) {

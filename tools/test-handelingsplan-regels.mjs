@@ -5,6 +5,7 @@ import assert from 'node:assert/strict';
 import {createRequire} from 'node:module';
 import {createFirestoreApi,basisCode} from '../handelingsplan-opslag.mjs';
 import {today,schoolYear} from '../handelingsplan-validatie.mjs';
+import {evaluatieDoelen} from '../handelingsplan-evaluatie.mjs';
 const require=createRequire(new URL('../tmp/handelingsplan-tests/package.json',import.meta.url));
 const {initializeTestEnvironment,assertFails}=require('@firebase/rules-unit-testing');
 const sdk=require('firebase/firestore');
@@ -42,10 +43,13 @@ try{
  assert.deepEqual((await a({action:'load',context:{...context,bron:'handelingsplan'}})).plannen,[]);
  check('Startscherm: eigen klas voor klasleerkracht, alle klassen voor directie, openen vanuit tegel');
  assert.deepEqual((await a({action:'load',context})).plannen,[]);check('Eigen klas: leeg dossier openen en gevalideerde koppeling aanmaken');
- const save={action:'save',context,planId:'plan-a',operationId:'actie-1',expectedVersion:0,plan:p,eerdereAanpak:[prior]};
+ const evaluatie={datum:day,uitgevoerd:'Oefenen',observatie:'Nog ondersteuning nodig',effect:'gedeeltelijk',doelbereik:'vooruitgang',besluit:'Verderzetten',doelen:evaluatieDoelen({...catalog.doelen[0],items:[]}).map(d=>({...d,resultaat:'nog-niet',actie:'Dagelijks inoefenen'}))};
+ const save={action:'save',context,planId:'plan-a',operationId:'actie-1',expectedVersion:0,plan:p,eerdereAanpak:[prior],evaluatie};
  await a(save);await a(save);
  let loaded=await a({action:'load',context});assert.equal(loaded.plannen[0].versie,1);
  let hist=(await a({action:'history',context,planId:'plan-a'})).historiek;
+ assert.equal(hist[0].evaluatie.doelen[0].actie,'Dagelijks inoefenen');
+ assert.equal(loaded.plannen[0].laatsteEvaluatie.doelen[0].resultaat,'nog-niet');
  assert.equal(hist.length,1);assert.equal(hist[0].eerdereAanpak[0].klas,'1A');check('Bewaren, historiek, vroegere klas en herhaalde bewaaractie');
  await assert.rejects(a({...save,operationId:'stale'}),/collega/);check('Oude versie overschrijft geen werk van collega');
  for(const role of ['directie','zorgcoordinator','zorgleerkracht','beheerder']){

@@ -1,4 +1,5 @@
 import {FIELDS,STATUS,EFFECT,PROGRESS} from './handelingsplan-model.mjs';
+import {DOELRESULTAAT} from './handelingsplan-evaluatie.mjs';
 
 // Tekst wordt per regel gepagineerd; lange notities blijven volledig leesbaar.
 export function buildPlanPdf(jsPDF,{naam,klas,schooljaar,plan,events=[],priorDrafts=[],evaluation=null,concept=false}) {
@@ -16,7 +17,7 @@ export function buildPlanPdf(jsPDF,{naam,klas,schooljaar,plan,events=[],priorDra
   function field(label,value){if(y>bottom-15){pdf.addPage();y=22;}lines(label,10,true);lines(value);y+=3;}
   function snapshot(p){for(const [k,label] of Object.entries(FIELDS))field(label,k==='status'?STATUS[p[k]]:p[k]);}
   function prior(p){heading(`${p.schooljaar} - ${p.klas}`);for(const [key,label] of Object.entries({doel:'Toenmalig doel',periode:'Periode',aanpak:'Geprobeerd',effect:'Effect',resultaat:'Resultaat en wat we meenemen',ouders:'Ouderafspraken toen',bron:'Informatiebron / betrokken leerkracht'}))field(label,key==='effect'?EFFECT[p[key]]:p[key]);}
-  function evalFields(e){for(const [k,label] of Object.entries({datum:'Evaluatiedatum',uitgevoerd:'Uitgevoerd',observatie:'Observatie',effect:'Effect',doelbereik:'Doelbereik',besluit:'Besluit',ouders:'Besproken met ouders'}))field(label,k==='effect'?EFFECT[e[k]]:k==='doelbereik'?PROGRESS[e[k]]:e[k]);}
+  function evalFields(e){for(const [k,label] of Object.entries({datum:'Evaluatiedatum',uitgevoerd:'Uitgevoerd',observatie:'Observatie',effect:'Effect',doelbereik:'Doelbereik',besluit:'Besluit',ouders:'Besproken met ouders'}))field(label,k==='effect'?EFFECT[e[k]]:k==='doelbereik'?PROGRESS[e[k]]:e[k]);for(const d of e.doelen||[]){field(`${d.titel} - ${d.tekst}`,DOELRESULTAAT[d.resultaat]||'Nog niet beoordeeld');field('Vervolgactie bij dit doel',d.actie);}}
   lines('Individueel handelingsplan',20,true);y+=4;
   lines(`${naam} - ${klas} - ${schooljaar}`,12,true);y+=3;
   if(concept)lines('CONCEPT - bevat nog niet bewaarde invoer',10,true);

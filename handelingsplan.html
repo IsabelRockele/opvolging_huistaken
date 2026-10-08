@@ -4,7 +4,7 @@
   <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="referrer" content="same-origin">
   <title>Individueel handelingsplan</title>
-  <link rel="stylesheet" href="handelingsplan.css?v=20261007-zorgstijl">
+  <link rel="stylesheet" href="handelingsplan.css?v=20261008-doelevaluatie">
 </head>
 <body>
   <header>
@@ -73,6 +73,7 @@
           </section>
           <section class="card" id="evaluatieSectie"><div class="section-head"><div><h3>5. Evalueren en bijsturen</h3><p>Elke evaluatie blijft bewaard. Pas de aanpak hierboven aan als je wilt bijsturen.</p></div><button id="evaluatieToevoegen" type="button" class="secondary">Evaluatie toevoegen</button></div>
             <div id="evaluatieVelden" class="grid" hidden>
+              <div class="wide"><h4>Gekozen doelen evalueren</h4><p>Duid per doel aan wat bereikt is. Groen = bereikt, rood = nog niet bereikt. Noteer indien nodig een vervolgactie. Elke evaluatie begint zonder beoordeling.</p><div id="evaluatieDoelen"></div></div>
               <label>Datum evaluatie<input type="date" name="eval_datum"></label>
               <label>Effect van de aanpak<select name="eval_effect"><option value="">Kies…</option><option value="werkt">Werkt</option><option value="gedeeltelijk">Werkt gedeeltelijk</option><option value="onvoldoende">Werkt onvoldoende</option><option value="nog-niet-te-beoordelen">Nog niet te beoordelen</option></select></label>
               <label class="wide">Wat hebben we daadwerkelijk gedaan?<textarea name="eval_uitgevoerd" maxlength="6000"></textarea></label>
@@ -104,6 +105,6 @@
     <p id="aantalDoelen" role="status"></p><div id="doelenResultaten"></div><button id="meerDoelen" type="button" class="secondary" hidden>Meer doelen tonen</button>
   </dialog>
   <script src="jspdf.umd.min.js"></script>
-  <script type="module" src="handelingsplan.js"></script>
+  <script type="module" src="handelingsplan.js?v=20261008-doelevaluatie"></script>
 </body>
 </html>
