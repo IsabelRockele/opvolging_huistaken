@@ -418,6 +418,9 @@
     .activity-table thead th:not(:first-child) .actions{
       justify-content:center!important;
     }
+    .activity-add{margin:10px 0;border:1px solid #9dcdb6;border-radius:12px;background:#f5fbf8;padding:10px 14px}
+    .activity-add>summary{cursor:pointer;font-weight:800;color:#205c47}
+    .activity-add[open]>summary{margin-bottom:12px}
     .activity-table-wrap{max-height:none!important;overflow-x:auto!important;overflow-y:visible!important}
     .activity-table th{padding:9px 8px!important}
     .activity-kop{display:flex;flex-direction:column;align-items:center;gap:5px;text-align:center}
@@ -3638,15 +3641,15 @@
         <div class="bar" style="margin-bottom:6px"><strong>Voor welke klassen?</strong><div class="actions"><button type="button" class="white small" onclick="kiesAlleActiviteitKlassen(true)">Alle klassen</button><button type="button" class="white small" onclick="kiesAlleActiviteitKlassen(false)">Geen</button></div></div>
         <div class="class-picks" style="display:flex;gap:8px;flex-wrap:wrap">${allClasses.map(k=>`<label style="max-width:none"><input class="actClass" type="checkbox" value="${esc(k)}" ${k===activeClass?"checked":""}> ${esc(k)}</label>`).join("")}</div>
       </div>` : "";
-      const invoer = `<div class="notice no-print" style="margin:14px 0;background:#f5fbf8;border-color:#9dcdb6">
-        <strong>Nieuwe activiteit of uitstap</strong>
+      const invoer = `<details class="activity-add no-print">
+        <summary>Nieuwe activiteit of uitstap toevoegen</summary>
         <p class="muted">${isSecretary()?"Kies één of meerdere klassen. De activiteit verschijnt daarna bij elke gekozen klas.":"De activiteit wordt toegevoegd aan je eigen klas."} Oudercontacten en rapporten voer je hier niet in.</p>
         <div class="row"><label>Naam activiteit<input id="actName" placeholder="bv. Toneelvoorstelling" oninput="pasActiviteitPrijs(this.value,'actPrice')"></label><label style="max-width:190px">Datum<input id="actDate" type="date" value="${activityMonth}-01"></label><label style="max-width:150px">Prijs per leerling (&euro;)<input id="actPrice" type="number" min="0" step="0.01" value="0"></label>${klasKeuze}<button class="primary" onclick="addActivity()">${isSecretary()?"Toevoegen aan gekozen klassen":"Activiteit toevoegen"}</button></div>
-      </div>`;
+      </details>`;
       const werkwijze=isSecretary()?`<div class="notice"><strong>Controle voor secretariaat</strong><p class="muted">Je ziet pas groen of rood nadat de leerkracht de afwezigheden heeft nagekeken en bevestigd. Niet-aangevinkte leerlingen gelden dan als aanwezig.</p></div>`:`<div class="notice" style="background:#fff4bf;border:2px solid #dfa900"><strong style="font-size:18px">⚠ Vergeet niet te bevestigen</strong><ol style="margin:8px 0 0;padding-left:22px"><li>Vink <strong>alleen de afwezige leerlingen</strong> aan. Lege vakjes betekenen aanwezig.</li><li>Klik daarna bij <strong>iedere activiteit waarvan de datum bereikt is</strong> op de gele knop <strong>Bevestig afwezigheden</strong>.</li><li>Ook wanneer niemand afwezig was, moet je de lege lijst bevestigen.</li></ol><p style="margin:9px 0 0"><strong>Zonder deze bevestiging kan het secretariaat de activiteit niet verwerken.</strong></p></div>`;
       const openstaande=(data.activiteiten||[]).filter(a=>!a.cancelled&&!a.processed&&activiteitDatumBereikt(a)&&String(a.date||"").slice(0,7)===activityMonth&&!a.attendanceConfirmed);
       const openstaandeMelding=!isSecretary()&&openstaande.length?`<div class="notice activity-open-confirmations no-print"><strong>⚠ Nog te bevestigen (${openstaande.length})</strong><p style="margin:5px 0 0">${openstaande.map(a=>esc(a.name)).join(" · ")}</p></div>`:"";
-      $("content").innerHTML = `<div class="panel"><div class="bar"><div><h2>Activiteiten <span class="muted" style="font-weight:400">${esc(activeClass)}</span></h2><p class="muted">${isSecretary()?"Kijk de bevestigde afwezigheden na en verwerk de activiteit.":"Duid uitsluitend de afwezige leerlingen aan. Voorbije maanden zijn afgesloten."}</p></div>${maandKeuze}${screenTools("activiteiten")}</div>${maandOnderdeelNavigatie("activiteiten",activityMonth)}${helpPanel("activiteiten")}${lijstenLeesMelding()}${activityMonth===huidigeSchoolMaand()||isSecretary()?openstaandeMelding+werkwijze:""}${secretariaatOpvolgModus||(!isSecretary()&&activityMonth!==huidigeSchoolMaand())?"":invoer}${activitiesTable()}</div>`;
+      $("content").innerHTML = `<div class="panel"><div class="bar"><div><h2>Activiteiten <span class="muted" style="font-weight:400">${esc(activeClass)}</span></h2><p class="muted">${isSecretary()?"Kijk de bevestigde afwezigheden na en verwerk de activiteit.":"Duid alleen afwezige leerlingen aan en bevestig daarna de lijst."}</p></div>${maandKeuze}${screenTools("activiteiten")}</div>${maandOnderdeelNavigatie("activiteiten",activityMonth)}${helpPanel("activiteiten").replace("</section>",lijstenLeesMelding()+werkwijze+"</section>")}${activityMonth===huidigeSchoolMaand()||isSecretary()?openstaandeMelding:""}${secretariaatOpvolgModus||(!isSecretary()&&activityMonth!==huidigeSchoolMaand())?"":invoer}${activitiesTable()}</div>`;
     }
     function activiteitTellingen(a){
       const leerlingen=activeStudents(a.date||`${activityMonth}-15`),afwezigen=leerlingen.filter(s=>!!a.absent?.[s.id]);
