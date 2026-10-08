@@ -1,10 +1,10 @@
 import {LEVELS,STATUS,EFFECT,PROGRESS,FIELDS,esc,filterGoals,contextFromUrl} from './handelingsplan-model.mjs';
 import {buildPlanPdf} from './handelingsplan-pdf.mjs';
-import {evaluatieDoelen,DOELRESULTAAT} from './handelingsplan-evaluatie.mjs';
+import {evaluatieDoelen,DOELRESULTAAT,planDoelen} from './handelingsplan-evaluatie.mjs';
 const $ = id => document.getElementById(id), form = $('planForm');
 const demo = new URLSearchParams(location.search).get('demo') === '1';
 const context = contextFromUrl(location.search);
-let api, catalog, dossier, current = null, selectedGoal = null, goalItems = [], dirty = false, busy = false, evalOpen = false, operation = null, limit = 35, historyToken = 0;
+let api, catalog, dossier, current = null, selectedGoals = [], dirty = false, busy = false, evalOpen = false, operation = null, limit = 35, historyToken = 0;
 const uuid = () => crypto.randomUUID();
 const priorFields=['schooljaar','klas','periode','doel','aanpak','effect','resultaat','ouders','bron'];
 let priorDrafts=[];
@@ -18,12 +18,17 @@ function dirtyMark(){dirty=true;operation=null;$('bewaarStatus').textContent='Wi
 function field(name){return form.elements.namedItem(name);}
 function dateLabel(value){return value ? value.slice(0,10).split('-').reverse().join('/') : '—';}
 function goalHtml(g){return `<strong>${esc(g.vakgebied)} · ${esc(g.nummer)}</strong><p>${esc(g.tekst)}</p><p class="meta">${esc(LEVELS.map(k=>g[k]).filter(Boolean).join(' › '))}</p><p class="meta">Leeftijd: ${esc(g.leeftijden.join(', ') || 'niet aangeduid in bron')} jaar</p>${g.toelichting?.length?`<details><summary>Toelichting en voorbeelden uit de doelenset</summary>${g.toelichting.map(t=>`<p>${esc(t)}</p>`).join('')}</details>`:''}`;}
+function selectedSnapshots(){return selectedGoals.map(({goal,items})=>({...goal,items:items.map(i=>goal.items[i])}));}
+function goalSummary(g){return `<strong>${esc(g.vakgebied)} · ${esc(g.nummer)}</strong><span class="goal-short">${esc(g.tekst)}</span>`;}
+function goalList(plan){return planDoelen(plan).map(g=>`<details class="compact-goal"><summary>${goalSummary(g)}</summary>${goalHtml(g)}</details>`).join('');}
 function paintChosen(){
-  $('gekozenDoel').innerHTML=selectedGoal ? goalHtml(selectedGoal)+(selectedGoal.items?.length ? `<details><summary>Doel verfijnen met MIA / begrippen</summary>${selectedGoal.items.map((item,i)=>`<label class="item-check"><input type="checkbox" data-goal-item="${i}" ${goalItems.includes(i)?'checked':''} ${current?.versie?'disabled':''}><span><strong>${esc(item.groep)}</strong>: ${esc(item.tekst)}</span></label>`).join('')}</details>`:''):'Kies een doel uit de GO!-doelensets.';
-  $('gekozenDoel').querySelectorAll('[data-goal-item]').forEach(el=>el.onchange=()=>{goalItems=[...$('gekozenDoel').querySelectorAll('[data-goal-item]:checked')].map(x=>Number(x.dataset.goalItem));if(evalOpen)paintEvaluationGoals();dirtyMark();});
+  $('gekozenDoel').innerHTML=selectedGoals.length ? selectedGoals.map(({goal:g,items,locked},n)=>`<details class="compact-goal"><summary>${goalSummary(g)}</summary>${goalHtml(g)}${g.items?.length?`<p>Doel verfijnen met MIA / begrippen:</p>${g.items.map((item,i)=>`<label class="item-check"><input type="checkbox" data-goal-index="${n}" data-goal-item="${i}" ${items.includes(i)?'checked':''} ${locked?'disabled':''}><span><strong>${esc(item.groep)}</strong>: ${esc(item.tekst)}</span></label>`).join('')}`:''}${locked?'<p class="meta">Bewaard doel: blijft beschikbaar in dit plan.</p>':`<button type="button" class="secondary" data-remove-goal="${n}">Doel weglaten</button>`}</details>`).join(''):'Vink één of meerdere doelen aan, ook uit verschillende vakgebieden.';
+  $('gekozenDoel').querySelectorAll('[data-goal-item]').forEach(el=>el.onchange=()=>{const entry=selectedGoals[Number(el.dataset.goalIndex)],i=Number(el.dataset.goalItem);entry.items=el.checked?[...entry.items,i].sort((a,b)=>a-b):entry.items.filter(x=>x!==i);if(evalOpen)paintEvaluationGoals();dirtyMark();});
+  $('gekozenDoel').querySelectorAll('[data-remove-goal]').forEach(el=>el.onclick=()=>{selectedGoals.splice(Number(el.dataset.removeGoal),1);paintChosen();if(evalOpen)paintEvaluationGoals();dirtyMark();});
+  $('selectieAantal').textContent=`${selectedGoals.length} doelen gekozen · je selectie blijft behouden als je van vakgebied wisselt.`;
 }
 function paintOverview(){
-  $('plannen').innerHTML=dossier.plannen.length ? dossier.plannen.map(p=>`<article class="plan-card"><span class="badge ${p.status==='actief'?'':'closed'}">${esc(STATUS[p.status])}</span>${p.status==='actief' && p.evaluatiedatum < dossier.vandaag?'<span class="badge late">Evaluatie gepland vóór vandaag</span>':''}<h3>${esc(p.kinddoel)}</h3><p>${esc(p.doel.vakgebied)} · ${esc(p.doel.nummer)} — ${esc(p.doel.tekst)}</p><p class="meta">Gestart in ${esc(p.startSchooljaar)}${p.startKlas?` · ${esc(p.startKlas)}`:""} · volgende evaluatie ${dateLabel(p.evaluatiedatum)}</p>${p.laatsteEvaluatie?`<p><strong>Laatste evaluatie (${dateLabel(p.laatsteEvaluatie.datum)}):</strong> ${esc(EFFECT[p.laatsteEvaluatie.effect])}<br>${esc(p.laatsteEvaluatie.besluit)}</p>`:'<p>Nog geen evaluatie vastgelegd.</p>'}${outcomeHtml(p.laatsteEvaluatie)}<button class="secondary" type="button" data-plan="${esc(p.id)}">Plan en voorgeschiedenis bekijken</button></article>`).join(''):'<div class="empty"><h3>Nog geen handelingsplan</h3><p>Start vanuit een leerplandoel en leg vast hoe jullie eraan werken.</p></div>';
+  $('plannen').innerHTML=dossier.plannen.length ? dossier.plannen.map(p=>`<article class="plan-card"><span class="badge ${p.status==='actief'?'':'closed'}">${esc(STATUS[p.status])}</span>${p.status==='actief' && p.evaluatiedatum < dossier.vandaag?'<span class="badge late">Evaluatie gepland vóór vandaag</span>':''}<h3>${esc(p.kinddoel)}</h3>${goalList(p)}<p class="meta">Gestart in ${esc(p.startSchooljaar)}${p.startKlas?` · ${esc(p.startKlas)}`:""} · volgende evaluatie ${dateLabel(p.evaluatiedatum)}</p>${p.laatsteEvaluatie?`<p><strong>Laatste evaluatie (${dateLabel(p.laatsteEvaluatie.datum)}):</strong> ${esc(EFFECT[p.laatsteEvaluatie.effect])}<br>${esc(p.laatsteEvaluatie.besluit)}</p>`:'<p>Nog geen evaluatie vastgelegd.</p>'}${outcomeHtml(p.laatsteEvaluatie,p)}<button class="secondary" type="button" data-plan="${esc(p.id)}">Plan en voorgeschiedenis bekijken</button></article>`).join(''):'<div class="empty"><h3>Nog geen handelingsplan</h3><p>Start vanuit een leerplandoel en leg vast hoe jullie eraan werken.</p></div>';
   $('plannen').querySelectorAll('[data-plan]').forEach(b=>b.onclick=()=>openPlan(dossier.plannen.find(p=>p.id===b.dataset.plan)));
 }
 async function load(){
@@ -43,21 +48,21 @@ function toggleEval(open){
   if(open && !field('eval_datum').value) field('eval_datum').value=dossier.vandaag;
   if(open)paintEvaluationGoals();else $('evaluatieDoelen').innerHTML='';
 }
-function outcomeHtml(e){return (e?.doelen||[]).map(d=>`<div class="doel-evaluatie ${esc(d.resultaat)}"><strong>${esc(d.titel)} — ${esc(d.tekst)}</strong><p><span class="resultaat-label">${esc(DOELRESULTAAT[d.resultaat]||'Nog niet beoordeeld')}</span></p>${d.actie?`<p class="history-text"><strong>Vervolgactie:</strong> ${esc(d.actie)}</p>`:''}</div>`).join('');}
+function outcomeHtml(e,plan){return (e?.doelen||[]).map(d=>`<details class="doel-evaluatie ${esc(d.resultaat)}"><summary><strong>${esc(d.vakgebied||evaluatieDoelen(planDoelen(plan)).find(t=>t.id===d.id)?.vakgebied||'')} · ${esc(d.titel)}</strong><span class="goal-short">${esc(d.tekst)}</span><span class="resultaat-label">${esc(DOELRESULTAAT[d.resultaat]||'Nog niet beoordeeld')}</span></summary><p>${esc(d.tekst)}</p>${d.actie?`<p class="history-text"><strong>Vervolgactie:</strong> ${esc(d.actie)}</p>`:'<p>Geen vervolgactie genoteerd.</p>'}</details>`).join('');}
 function paintEvaluationGoals(){
   const drafts=new Map([...$('evaluatieDoelen').querySelectorAll('[data-eval-doel]')].map(row=>[row.dataset.evalSignature,{resultaat:row.querySelector('[data-doel-resultaat]').value,actie:row.querySelector('[data-doel-actie]').value}]));
-  const goal=selectedGoal?{...selectedGoal,items:goalItems.map(i=>selectedGoal.items[i])}:null;
-  $('evaluatieDoelen').innerHTML=evaluatieDoelen(goal).map(d=>{
+  const goals=selectedSnapshots();
+  $('evaluatieDoelen').innerHTML=evaluatieDoelen(goals).map(d=>{
     const previous=current?.laatsteEvaluatie?.doelen?.find(p=>p.id===d.id);
-    const signature=JSON.stringify([goal.id||goal.nummer,d.titel,d.tekst]),draft=drafts.get(signature)||{resultaat:'niet-beoordeeld',actie:''};
-    return `<div class="doel-evaluatie ${esc(draft.resultaat)}" data-eval-doel="${esc(d.id)}" data-eval-signature="${esc(signature)}"><strong>${esc(d.titel)} — ${esc(d.tekst)}</strong>${previous?`<p class="meta">Vorige evaluatie: ${esc(DOELRESULTAAT[previous.resultaat])}${previous.actie?` · Vervolgactie toen: ${esc(previous.actie)}`:''}</p>`:''}<label>Resultaat<select data-doel-resultaat>${Object.entries(DOELRESULTAAT).map(([k,v])=>`<option value="${k}" ${draft.resultaat===k?'selected':''}>${v}</option>`).join('')}</select></label><label>Vervolgactie bij dit doel<textarea data-doel-actie maxlength="6000" placeholder="Wat gaan we doen, wie doet dit en wanneer evalueren we opnieuw?">${esc(draft.actie)}</textarea></label></div>`;
+    const signature=JSON.stringify([d.id,d.titel,d.tekst]),draft=drafts.get(signature)||{resultaat:'niet-beoordeeld',actie:''};
+    return `<details class="doel-evaluatie ${esc(draft.resultaat)}" data-eval-doel="${esc(d.id)}" data-eval-signature="${esc(signature)}"><summary><strong>${esc(d.vakgebied)} · ${esc(d.titel)}</strong><span class="goal-short">${esc(d.tekst)}</span><span class="resultaat-label">${esc(DOELRESULTAAT[draft.resultaat])}</span></summary><p>${esc(d.tekst)}</p>${previous?`<p class="meta">Vorige evaluatie: ${esc(DOELRESULTAAT[previous.resultaat])}${previous.actie?` · Vervolgactie toen: ${esc(previous.actie)}`:''}</p>`:''}<label>Resultaat<select data-doel-resultaat>${Object.entries(DOELRESULTAAT).map(([k,v])=>`<option value="${k}" ${draft.resultaat===k?'selected':''}>${v}</option>`).join('')}</select></label><label>Vervolgactie bij dit doel<textarea data-doel-actie maxlength="6000" placeholder="Wat gaan we doen, wie doet dit en wanneer evalueren we opnieuw?">${esc(draft.actie)}</textarea></label></details>`;
   }).join('')||'<p>Kies eerst een leerplandoel bij stap 1.</p>';
-  $('evaluatieDoelen').querySelectorAll('[data-doel-resultaat]').forEach(select=>select.onchange=()=>{select.closest('[data-eval-doel]').className='doel-evaluatie '+select.value;});
+  $('evaluatieDoelen').querySelectorAll('[data-doel-resultaat]').forEach(select=>select.onchange=()=>{const row=select.closest('[data-eval-doel]');row.className='doel-evaluatie '+select.value;row.querySelector('.resultaat-label').textContent=DOELRESULTAAT[select.value];});
 }
 async function openPlan(p=null){
   if(dirty && !confirm('Je hebt onbewaarde wijzigingen. Wil je die verlaten?'))return;
   current=p?structuredClone(p):{id:uuid(),versie:0};
-  selectedGoal=p?.doel?structuredClone(p.doel):null;goalItems=selectedGoal?.items.map((_,i)=>i)||[];
+  selectedGoals=planDoelen(p).map(g=>({goal:structuredClone(g),items:(g.items||[]).map((_,i)=>i),locked:true}));
   form.reset();toggleEval(false);dirty=false;operation=null;$('bewaarStatus').textContent='';
   priorDrafts=[];paintPriorDrafts();$('eerdereVelden').hidden=true;$('eerdereToevoegen').hidden=false;$('eerdereFout').textContent='';
   const currentYear=Number(dossier.huidigSchooljaar.slice(0,4));
@@ -68,7 +73,7 @@ async function openPlan(p=null){
   field('startdatum').readOnly=!!p;
   field('startdatum').max=dossier.vandaag;field('eval_datum').max=dossier.vandaag;
   $('planVelden').disabled=!dossier.schrijfbaar;$('bewaar').hidden=!dossier.schrijfbaar;
-  $('kiesDoel').hidden=!!p || !dossier.schrijfbaar;
+  $('kiesDoel').hidden=!dossier.schrijfbaar;
   $('evaluatieSectie').hidden=!dossier.schrijfbaar;
   $('planTitel').textContent=p?'Handelingsplan':'Nieuw handelingsplan';
   message();
@@ -80,11 +85,11 @@ async function openPlan(p=null){
   if(p){try{const data=await api({action:'history',context,planId:p.id});if(token===historyToken)paintHistory(data.historiek);}catch(e){if(token===historyToken)$('historiek').textContent=`Voorgeschiedenis niet geladen: ${e.message}`;}}
   window.scrollTo({top:0,behavior:'smooth'});
 }
-function planSnapshot(p){return Object.entries(FIELDS).map(([key,label])=>`<div><strong>${esc(label)}</strong><p>${esc(key==='status'?STATUS[p[key]]:p[key] || '—')}</p></div>`).join('');}
+function planSnapshot(p){return `<div class="wide">${goalList(p)}</div>`+Object.entries(FIELDS).map(([key,label])=>`<div><strong>${esc(label)}</strong><p>${esc(key==='status'?STATUS[p[key]]:p[key] || '—')}</p></div>`).join('');}
 function paintHistory(events){
   const earlier=events.flatMap(e=>(e.eerdereAanpak||[]).map(p=>({...p,ingevoerdOp:e.datum,auteur:e.auteur}))).sort((a,b)=>b.schooljaar.localeCompare(a.schooljaar)||a.klas.localeCompare(b.klas,'nl'));
   $('eerdereHistoriek').innerHTML=earlier.length?`<h4>Achteraf aangevulde aanpak per schooljaar en klas</h4>${earlier.map(p=>`<details open><summary>${esc(p.schooljaar)} · ${esc(p.klas)} · ${esc(p.doel)}</summary><p class="meta">Achteraf ingevoerd op ${dateLabel(p.ingevoerdOp)} door ${esc(p.auteur)}.</p>${priorHtml(p)}</details>`).join('')}<h4>Bewaarde versies van het handelingsplan</h4>`:'';
-  $('historiek').innerHTML=events.length?events.map(e=>`<details><summary>${dateLabel(e.datum)} · ${e.evaluatie?'Evaluatie en aanpak':e.eerdereAanpak?.length?'Eerdere aanpak aangevuld':'Plan bewaard'} · ${esc(e.context.schooljaar)} · ${esc(e.context.klas)} · versie ${e.versie}</summary><p class="meta">${esc(e.auteur)} · ${esc(e.context.klas)} · vanuit ${esc(e.context.bron)}</p>${e.evaluatie?`<div class="history-grid">${Object.entries({datum:'Evaluatiedatum',uitgevoerd:'Uitgevoerd',observatie:'Observatie',effect:'Effect van de aanpak',doelbereik:'Doelbereik',besluit:'Besluit',ouders:'Besproken met ouders'}).map(([k,label])=>`<div><strong>${label}</strong><p>${esc(k==='effect'?EFFECT[e.evaluatie[k]]:k==='doelbereik'?PROGRESS[e.evaluatie[k]]:e.evaluatie[k]||'—')}</p></div>`).join('')}</div>`:''}${outcomeHtml(e.evaluatie)}<h4>Plan en afspraken op dat moment</h4><div class="history-grid">${planSnapshot(e.plan)}</div></details>`).join(''):'Nog geen bewaarde momenten.';
+  $('historiek').innerHTML=events.length?events.map(e=>`<details><summary>${dateLabel(e.datum)} · ${e.evaluatie?'Evaluatie en aanpak':e.eerdereAanpak?.length?'Eerdere aanpak aangevuld':'Plan bewaard'} · ${esc(e.context.schooljaar)} · ${esc(e.context.klas)} · versie ${e.versie}</summary><p class="meta">${esc(e.auteur)} · ${esc(e.context.klas)} · vanuit ${esc(e.context.bron)}</p>${e.evaluatie?`<div class="history-grid">${Object.entries({datum:'Evaluatiedatum',uitgevoerd:'Uitgevoerd',observatie:'Observatie',effect:'Effect van de aanpak',doelbereik:'Doelbereik',besluit:'Besluit',ouders:'Besproken met ouders'}).map(([k,label])=>`<div><strong>${label}</strong><p>${esc(k==='effect'?EFFECT[e.evaluatie[k]]:k==='doelbereik'?PROGRESS[e.evaluatie[k]]:e.evaluatie[k]||'—')}</p></div>`).join('')}</div>`:''}${outcomeHtml(e.evaluatie,e.plan)}<h4>Plan en afspraken op dat moment</h4><div class="history-grid">${planSnapshot(e.plan)}</div></details>`).join(''):'Nog geen bewaarde momenten.';
 }
 function filters(){return Object.fromEntries(['vakgebied','leeftijd',...LEVELS].map(k=>[k,$(k).value]).concat([['zoek',$('zoekDoel').value]]));}
 function options(el,values,label,keep=true){const old=keep?el.value:'';el.innerHTML=`<option value="">${label}</option>`+values.map(v=>`<option value="${esc(v)}">${esc(v)}</option>`).join('');el.value=values.includes(old)?old:'';}
@@ -100,6 +105,7 @@ function refreshFilters(changed){
   limit=35;paintResults();
 }
 function paintResults(){
+  paintChosen();
   if(!$('vakgebied').value&&!$('zoekDoel').value.trim()){
     $('aantalDoelen').textContent='Kies eerst een vakgebied of vul een zoekterm in.';
     $('doelenResultaten').innerHTML='<p class="empty">Er is nog geen doel geselecteerd. Begin met een vakgebied en verfijn daarna op leeftijdsgroep en onderdeel.</p>';
@@ -107,22 +113,26 @@ function paintResults(){
   }
   const matches=filterGoals(catalog.doelen,filters());
   $('aantalDoelen').textContent=`${matches.length} doelen gevonden · ${Math.min(limit,matches.length)} getoond`;
-  $('doelenResultaten').innerHTML=matches.slice(0,limit).map(g=>`<article class="goal-item">${goalHtml(g)}<button type="button" data-select-goal="${esc(g.id)}">Dit doel kiezen</button></article>`).join('')||'<p>Geen doelen gevonden. Kies een andere filter of zoekterm.</p>';
+  $('doelenResultaten').innerHTML=matches.slice(0,limit).map(g=>`<article class="goal-item"><label class="item-check"><input type="checkbox" data-select-goal="${esc(g.id)}" ${selectedGoals.some(x=>x.goal.id===g.id)?'checked':''} ${selectedGoals.some(x=>x.goal.id===g.id&&x.locked)?'disabled':''}><span>${goalSummary(g)}</span></label><details><summary>Details en toelichting</summary>${goalHtml(g)}</details></article>`).join('')||'<p>Geen doelen gevonden. Kies een andere filter of zoekterm.</p>';
   $('meerDoelen').hidden=matches.length<=limit;
-  $('doelenResultaten').querySelectorAll('[data-select-goal]').forEach(b=>b.onclick=()=>{selectedGoal=structuredClone(catalog.doelen.find(g=>g.id===b.dataset.selectGoal));goalItems=[];paintChosen();if(evalOpen)paintEvaluationGoals();dirtyMark();$('doelenDialog').close();});
+  $('doelenResultaten').querySelectorAll('[data-select-goal]').forEach(b=>b.onchange=()=>{
+    if(b.checked){if(selectedGoals.length>=20){b.checked=false;$('selectieAantal').textContent='Je kunt maximaal twintig doelen kiezen.';return;}selectedGoals.push({goal:structuredClone(catalog.doelen.find(g=>g.id===b.dataset.selectGoal)),items:[],locked:false});}
+    else selectedGoals=selectedGoals.filter(g=>g.goal.id!==b.dataset.selectGoal);
+    paintChosen();if(evalOpen)paintEvaluationGoals();dirtyMark();
+  });
 }
 function draft(){
   const plan=Object.fromEntries(Object.keys(FIELDS).map(k=>[k,field(k).value]));
-  plan.doelId=selectedGoal.id;plan.doelItems=goalItems;
+  plan.doelen=selectedGoals.map(({goal,items})=>({doelId:goal.id,doelItems:items}));
   const evaluatie=evalOpen?Object.fromEntries(['datum','effect','uitgevoerd','observatie','doelbereik','besluit','ouders'].map(k=>[k,field(`eval_${k}`).value])):null;
-  if(evaluatie)evaluatie.doelen=[...$('evaluatieDoelen').querySelectorAll('[data-eval-doel]')].map(row=>({id:row.dataset.evalDoel,...evaluatieDoelen({...selectedGoal,items:goalItems.map(i=>selectedGoal.items[i])}).find(d=>d.id===row.dataset.evalDoel),resultaat:row.querySelector('[data-doel-resultaat]').value,actie:row.querySelector('[data-doel-actie]').value}));
+  if(evaluatie)evaluatie.doelen=[...$('evaluatieDoelen').querySelectorAll('[data-eval-doel]')].map(row=>({id:row.dataset.evalDoel,...evaluatieDoelen(selectedSnapshots()).find(d=>d.id===row.dataset.evalDoel),resultaat:row.querySelector('[data-doel-resultaat]').value,actie:row.querySelector('[data-doel-actie]').value}));
   return {plan,evaluatie,eerdereAanpak:structuredClone(priorDrafts)};
 }
 form.addEventListener('input',dirtyMark);form.addEventListener('change',dirtyMark);
 form.onsubmit=async e=>{
   e.preventDefault();if(busy || !dossier.schrijfbaar)return;
   if(!$('eerdereVelden').hidden){$('bewaarStatus').textContent='Klik eerst bij de eerdere aanpak op Aan plan toevoegen, of laat die invoer weg.';$('eerdereKlaar').focus();return;}
-  if(!selectedGoal){$('bewaarStatus').textContent='Kies eerst een leerplandoel.';$('kiesDoel').focus();return;}
+  if(!selectedGoals.length){$('bewaarStatus').textContent='Kies eerst een leerplandoel.';$('kiesDoel').focus();return;}
   operation ||= {action:'save',context,planId:current.id,expectedVersion:current.versie,operationId:uuid(),...draft()};
   const request=structuredClone(operation);busy=true;$('bewaar').disabled=true;$('planVelden').disabled=true;$('sluiten').disabled=true;
   $('bewaarStatus').textContent='Bezig met bewaren…';
@@ -159,20 +169,20 @@ window.addEventListener('beforeunload',e=>{if(dirty||busy){e.preventDefault();e.
 let printReplacements=[],printDetails=[];
 window.addEventListener('beforeprint',()=>{
   document.querySelectorAll('#editor textarea,#editor input,#editor select').forEach(el=>{if(el.type==='checkbox')return;const p=document.createElement('div');p.className='print-value';p.textContent=el.tagName==='SELECT'?el.selectedOptions[0]?.textContent || '':el.value;el.after(p);printReplacements.push([el,p,el.hidden]);el.hidden=true;});
-  document.querySelectorAll('#historiekSectie details').forEach(el=>{printDetails.push([el,el.open]);el.open=true;});
+  document.querySelectorAll('#editor details').forEach(el=>{printDetails.push([el,el.open]);el.open=true;});
 });
 window.addEventListener('afterprint',()=>{printReplacements.forEach(([el,p,hidden])=>{el.hidden=hidden;p.remove();});printDetails.forEach(([el,open])=>el.open=open);printReplacements=[];printDetails=[];});
 $('print').onclick=()=>window.print();
 $('pdf').onclick=async()=>{
   if(busy||!current)return;
-  if(!selectedGoal){message('Kies eerst een leerplandoel voor de PDF.',true);return;}
+  if(!selectedGoals.length){message('Kies eerst een leerplandoel voor de PDF.',true);return;}
   if(!$('eerdereVelden').hidden){message('Klik eerst op Aan plan toevoegen om de eerdere aanpak ook in de PDF op te nemen.',true);return;}
   $('pdf').disabled=true;
   try{
     const events=current.versie?(await api({action:'history',context,planId:current.id})).historiek:[];
     const values=draft();
     const pdf=buildPlanPdf(window.jspdf.jsPDF,{naam:dossier.naam,klas:dossier.klas,schooljaar:dossier.schooljaar,
-      plan:{...values.plan,doel:{...selectedGoal,items:goalItems.map(i=>selectedGoal.items[i])}},events,priorDrafts,evaluation:values.evaluatie,concept:dirty||!current.versie});
+      plan:{...values.plan,doel:selectedSnapshots()[0],doelen:selectedSnapshots()},events,priorDrafts,evaluation:values.evaluatie,concept:dirty||!current.versie});
     pdf.save(`Handelingsplan_${dossier.naam.replace(/[^a-z0-9_-]/gi,'_')}_${dossier.schooljaar}.pdf`);
     message('PDF gedownload, inclusief bewaarde voorgeschiedenis.');
   }catch(e){message(`PDF niet gemaakt: ${e.message}`,true);}finally{$('pdf').disabled=$('editor').hidden;}

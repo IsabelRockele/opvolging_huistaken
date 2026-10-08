@@ -1,4 +1,4 @@
-import {evaluatieDoelen,DOELRESULTAAT} from './handelingsplan-evaluatie.mjs';
+import {evaluatieDoelen,DOELRESULTAAT,planDoelen} from './handelingsplan-evaluatie.mjs';
 function fail(message, code = 'failed-precondition') { const e = new Error(message); e.code = code; throw e; }
 function text(value, max = 6000) {
   if (typeof value !== 'string' || value.length > max) fail('Een veld ontbreekt of is te lang.', 'invalid-argument');
@@ -31,16 +31,20 @@ function planInput(raw, goals, old) {
   for (const f of ['kinddoel','beginsituatie','succescriterium','aanpak','frequentie','verantwoordelijke']) if (!p[f]) fail('Vul beginsituatie, kinddoel, succescriterium, aanpak, frequentie en verantwoordelijke in.', 'invalid-argument');
   p.startdatum = date(raw.startdatum); p.evaluatiedatum = date(raw.evaluatiedatum);
   if (p.evaluatiedatum < p.startdatum) fail('De evaluatiedatum ligt vóór de startdatum.', 'invalid-argument');
-  if (old) {
-    p.doel = old.doel; p.startdatum = old.startdatum;
-    if (p.evaluatiedatum < p.startdatum) fail('De evaluatiedatum ligt vóór de startdatum.', 'invalid-argument');
-  } else {
-    const goal = goals.find(g => g.id === raw.doelId);
-    if (!goal) fail('Selecteer een leerplandoel uit de doelenkiezer.', 'invalid-argument');
-    const chosen = raw.doelItems || [];
-    if (!Array.isArray(chosen) || chosen.some(i=>!Number.isInteger(i) || !goal.items[i])) fail('Ongeldige doelverfijning.', 'invalid-argument');
-    p.doel = {...goal, items:[...new Set(chosen)].map(i=>goal.items[i])};
-  }
+  const previous=planDoelen(old);
+  const choices=raw.doelen ?? (old ? previous.map(g=>({doelId:g.id})) : [{doelId:raw.doelId,doelItems:raw.doelItems}]);
+  if(!Array.isArray(choices)||!choices.length||choices.length>20||new Set(choices.map(g=>g?.doelId)).size!==choices.length)fail('Kies één tot twintig verschillende leerplandoelen.', 'invalid-argument');
+  if(previous.some(g=>!choices.some(c=>c.doelId===g.id)))fail('Eerder bewaarde doelen blijven bij het plan en de voorgeschiedenis.', 'invalid-argument');
+  p.doelen=[...previous,...choices.filter(c=>!previous.some(g=>g.id===c.doelId)).map(c=>{
+    const goal=goals.find(g=>g.id===c.doelId);
+    if(!goal)fail('Selecteer een leerplandoel uit de doelenkiezer.', 'invalid-argument');
+    const chosen=c.doelItems||[];
+    if(!Array.isArray(chosen)||chosen.some(i=>!Number.isInteger(i)||!goal.items[i]))fail('Ongeldige doelverfijning.', 'invalid-argument');
+    return {...goal,items:[...new Set(chosen)].map(i=>goal.items[i])};
+  })];
+  p.doel=old?.doel||p.doelen[0];
+  if(old)p.startdatum=old.startdatum;
+  if(p.evaluatiedatum<p.startdatum)fail('De evaluatiedatum ligt vóór de startdatum.', 'invalid-argument');
   p.status = raw.status || 'actief';
   if (!['actief','bereikt','gepauzeerd','afgerond'].includes(p.status)) fail('Ongeldige planstatus.', 'invalid-argument');
   return p;
@@ -52,7 +56,7 @@ function evaluationInput(raw, plan, day) {
   if (!['werkt','gedeeltelijk','onvoldoende','nog-niet-te-beoordelen'].includes(e.effect) || !['bereikt','vooruitgang','nog-niet','niet-beoordeeld'].includes(e.doelbereik)) fail('Kies effect en doelbereik.', 'invalid-argument');
   if (e.datum > day || e.datum < plan.startdatum || schoolYear(e.datum) !== schoolYear(day)) fail('Kies een evaluatiedatum in het lopende schooljaar, vanaf de start van het plan en niet in de toekomst.', 'invalid-argument');
   if(raw.doelen!==undefined){
-    const targets=evaluatieDoelen(plan.doel);
+    const targets=evaluatieDoelen(planDoelen(plan));
     if(!Array.isArray(raw.doelen)||raw.doelen.length!==targets.length||new Set(raw.doelen.map(d=>d?.id)).size!==targets.length)fail('Controleer de evaluatie van de gekozen doelen.','invalid-argument');
     e.doelen=targets.map(target=>{
       const value=raw.doelen.find(d=>d?.id===target.id);

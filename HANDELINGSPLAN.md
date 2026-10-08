@@ -14,7 +14,8 @@ invoer in een overleg of leerlingfiche blijft staan.
   of maak een nieuw plan.
 - Overgangsbespreking: dezelfde knop staat in de leesfiche en de bewerkfiche.
   Een nieuwe fiche moet eerst bewaard en centraal gekoppeld zijn.
-- Kies een GO!-doel met vakgebied, onderwerp, subthema, rubriek, subrubriek en
+- Vink meerdere GO!-doelen aan, ook uit verschillende vakgebieden (maximaal twintig). De selectie blijft behouden bij wisselen van filters. De compacte lijst toont steeds vakgebied en doelcode; klap open voor details.
+- Kies GO!-doelen met vakgebied, onderwerp, subthema, rubriek, subrubriek en
   leeftijdsgroep. Zoek ook op doelcode of tekst. MIA en begrippen kunnen het
   gekozen doel verfijnen. Toelichtingen en voorbeelden blijven leesbaar.
 - Vul het concrete kinddoel, beginsituatie, succescriterium, aanpak,
@@ -29,7 +30,7 @@ invoer in een overleg of leerlingfiche blijft staan.
   evaluaties starten neutraal; oudere evaluaties krijgen geen verzonnen resultaat.
   De resultaten en acties verschijnen in het overzicht, de historiek en de PDF.
 - Een bewaard leerplandoel blijft vast aan het plan hangen. Start een nieuw
-  plan wanneer je aan een ander doel begint.
+  plan voor een afzonderlijke aanpak, of voeg extra doelen toe aan hetzelfde plan.
 - Met **Eerdere aanpak toevoegen** kun je ervaringen uit vorige leerjaren
   achteraf invoeren: schooljaar, klas, eventuele periode, toenmalig doel,
   aanpak, effect, resultaat, ouderafspraken en informatiebron. Voeg één of

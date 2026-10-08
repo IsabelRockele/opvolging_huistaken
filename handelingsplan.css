@@ -16,3 +16,18 @@ label{font-size:12px;color:#4b3b2d}textarea,input,select{border-color:var(--bord
 @media print{.header-actions,.document-actions,.werkwijzer{display:none!important}header{background:white;color:black}header .sub{color:black;opacity:1}.brand img{width:42px;height:42px}.card,.plan-card{box-shadow:none}body{background:white}header,main{padding:8px;max-width:none}button,.savebar,#melding,#demoBanner,dialog,#filters{display:none!important}.card,.plan-card{break-inside:avoid;border-color:#bbb}.history-grid{display:block}textarea{height:auto;min-height:70px}.print-value{white-space:pre-wrap;font-weight:normal;line-height:1.5;padding:6px 0}.section-head{margin-bottom:8px}}
 
 .doel-evaluatie{border:1px solid #b8b8b8;border-left:5px solid #777;border-radius:10px;padding:14px;margin:12px 0;background:#f5f5f5}.doel-evaluatie label{margin-top:12px}.doel-evaluatie.bereikt{border-color:#408455;background:#edf8ef}.doel-evaluatie.nog-niet{border-color:#b44646;background:#fff0f0}.resultaat-label{font-weight:bold;color:#454545}.bereikt .resultaat-label{color:#236135}.nog-niet .resultaat-label{color:#982d2d}
+
+/* Compacte doelen: vakgebied en resultaat blijven zichtbaar, details op aanvraag. */
+#gekozenDoel{white-space:normal;padding:10px;background:#fff}
+.compact-goal,.doel-evaluatie{margin:6px 0;padding:10px 12px}
+.compact-goal summary,.doel-evaluatie summary{cursor:pointer;line-height:1.4}
+.goal-short{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:400;font-size:.95rem}
+.compact-goal[open] .goal-short,.doel-evaluatie[open] .goal-short{white-space:normal}
+.doel-evaluatie summary .resultaat-label{display:inline-block;margin-top:4px;font-size:.85rem}
+.doel-evaluatie textarea{min-height:65px}
+#doelenResultaten .goal-item{padding:10px 14px;margin:7px 0}
+#doelenResultaten .item-check{margin:0;align-items:start}
+#doelenResultaten .item-check span{min-width:0;flex:1}
+#doelenResultaten .goal-short{white-space:normal}
+#selectieAantal{position:sticky;top:0;background:#f0f6ed;padding:10px;border-radius:8px;font-weight:600;z-index:1}
+@media print{.goal-short{white-space:normal}.compact-goal,.doel-evaluatie{break-inside:auto}}

@@ -1,3 +1,4 @@
+import {planInput,evaluationInput} from './handelingsplan-validatie.mjs';
 // Alleen expliciet via ?demo=1. Fictieve inhoud, uitsluitend in geheugen.
 export function createDemoApi(catalog){
   const goal=catalog.doelen.find(g=>g.vakgebied==='Wiskunde' && g.leeftijden.includes('7-8')) || catalog.doelen[0];
@@ -12,11 +13,12 @@ export function createDemoApi(catalog){
     if(request.action==='save'){
       const old=plans.get(request.planId),p=request.plan;
       if((old?.versie||0)!==request.expectedVersion)throw Error('Dit plan is ondertussen gewijzigd.');
-      const g=old?.doel||catalog.doelen.find(g=>g.id===p.doelId);
-      const plan={...p,id:request.planId,doel:old?.doel||{...g,items:p.doelItems.map(i=>g.items[i])},versie:(old?.versie||0)+1,startSchooljaar:old?.startSchooljaar||year,laatstSchooljaar:year,createdAt:old?.createdAt||new Date().toISOString(),updatedAt:new Date().toISOString(),laatsteEvaluatie:request.evaluatie||old?.laatsteEvaluatie||null};
+      const validated=planInput(p,catalog.doelen,old);
+      const evaluation=evaluationInput(request.evaluatie,validated,day);
+      const plan={...validated,id:request.planId,versie:(old?.versie||0)+1,startSchooljaar:old?.startSchooljaar||year,laatstSchooljaar:year,createdAt:old?.createdAt||new Date().toISOString(),updatedAt:new Date().toISOString(),laatsteEvaluatie:evaluation||old?.laatsteEvaluatie||null};
       plan.startKlas=old?.startKlas||'2A';plan.laatsteKlas='2A';plan.aantalEerdereAanpakken=(old?.aantalEerdereAanpakken||0)+(request.eerdereAanpak||[]).length;
       plans.set(plan.id,plan);
-      events.set(plan.id,[{versie:plan.versie,datum:new Date().toISOString(),context:{schooljaar:year,klas:'2A',bron:'zorgoverleg'},auteur:'Voorbeeldleerkracht',plan:structuredClone(plan),evaluatie:request.evaluatie,eerdereAanpak:structuredClone(request.eerdereAanpak||[])},...(events.get(plan.id)||[])]);
+      events.set(plan.id,[{versie:plan.versie,datum:new Date().toISOString(),context:{schooljaar:year,klas:'2A',bron:'zorgoverleg'},auteur:'Voorbeeldleerkracht',plan:structuredClone(plan),evaluatie:evaluation,eerdereAanpak:structuredClone(request.eerdereAanpak||[])},...(events.get(plan.id)||[])]);
       return {bewaard:true,versie:plan.versie};
     }
   };

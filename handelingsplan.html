@@ -4,7 +4,7 @@
   <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="referrer" content="same-origin">
   <title>Individueel handelingsplan</title>
-  <link rel="stylesheet" href="handelingsplan.css?v=20261008-doelevaluatie">
+  <link rel="stylesheet" href="handelingsplan.css?v=20261008-multidoelen">
 </head>
 <body>
   <header>
@@ -39,7 +39,7 @@
       <div class="section-head"><div><p class="eyebrow" id="planContext"></p><h2 id="planTitel">Nieuw handelingsplan</h2></div><button type="button" id="sluiten" class="secondary">Terug naar overzicht</button></div>
       <form id="planForm">
         <fieldset id="planVelden">
-          <section class="card"><div class="section-head"><h3>1. Het leerplandoel</h3><button id="kiesDoel" type="button" class="secondary">Doel kiezen</button></div><div id="gekozenDoel" class="goal-selected">Kies een doel uit de GO!-doelensets.</div></section>
+          <section class="card"><div class="section-head"><h3>1. De leerplandoelen</h3><button id="kiesDoel" type="button" class="secondary">Doelen kiezen / toevoegen</button></div><div id="gekozenDoel" class="goal-selected">Kies een doel uit de GO!-doelensets.</div></section>
           <section class="card"><h3>2. Wat willen we bij dit kind bereiken?</h3><div class="grid">
             <label class="wide">Beginsituatie<textarea name="beginsituatie" required maxlength="6000" placeholder="Wat lukt al? Waar heeft het kind hulp bij nodig?"></textarea></label>
             <label class="wide">Concreet kinddoel<textarea name="kinddoel" required maxlength="6000" placeholder="Wat willen we dat het kind leert of kan?"></textarea></label>
@@ -91,7 +91,7 @@
     </section>
   </main>
   <dialog id="doelenDialog" aria-labelledby="doelenTitel">
-    <div class="section-head"><div><p class="eyebrow">GO! leerplandoelen</p><h2 id="doelenTitel">Kies een doel</h2></div><button id="doelenSluiten" type="button" class="secondary">Sluiten</button></div>
+    <div class="section-head"><div><p class="eyebrow">GO! leerplandoelen</p><h2 id="doelenTitel">Kies één of meerdere doelen</h2></div><button id="doelenSluiten" type="button" class="secondary">Klaar</button></div>
     <p>Filter op vakgebied, onderverdelingen en leeftijdsgroep. Je kunt ook een doel uit een andere leeftijdsgroep kiezen.</p>
     <div id="filters" class="filter-grid">
       <label>Vakgebied<select id="vakgebied"></select></label>
@@ -102,9 +102,9 @@
       <label>Subrubriek<select id="subrubriek"></select></label>
       <label class="wide">Zoeken op doelcode of tekst<input id="zoekDoel" type="search" placeholder="Bijvoorbeeld lezen, getallen of een doelcode"></label>
     </div>
-    <p id="aantalDoelen" role="status"></p><div id="doelenResultaten"></div><button id="meerDoelen" type="button" class="secondary" hidden>Meer doelen tonen</button>
+    <p id="selectieAantal" role="status"></p><p id="aantalDoelen" role="status"></p><div id="doelenResultaten"></div><button id="meerDoelen" type="button" class="secondary" hidden>Meer doelen tonen</button>
   </dialog>
   <script src="jspdf.umd.min.js"></script>
-  <script type="module" src="handelingsplan.js?v=20261008-doelevaluatie"></script>
+  <script type="module" src="handelingsplan.js?v=20261008-multidoelen"></script>
 </body>
 </html>

@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import {evaluationInput} from '../handelingsplan-validatie.mjs';
+import {evaluationInput,planInput} from '../handelingsplan-validatie.mjs';
 import {evaluatieDoelen} from '../handelingsplan-evaluatie.mjs';
 import {buildPlanPdf} from '../handelingsplan-pdf.mjs';
 import {createRequire} from 'node:module';
@@ -16,3 +16,18 @@ const {doelen,...legacy}=raw;assert(!('doelen' in evaluationInput(legacy,plan,'2
 const pdf=buildPlanPdf(jsPDF,{naam:'Fictieve leerling',klas:'2A',schooljaar:'2026-2027',plan,events:[{datum:raw.datum,context:{schooljaar:'2026-2027',klas:'2A'},versie:1,auteur:'Test',plan,evaluatie:e}]});
 assert(pdf.output().includes('Nog niet bereikt'));assert(pdf.output().includes('Dagelijks tien minuten oefenen.'));assert(pdf.output().includes('Gekozen onderdeel'));
 console.log('Doelevaluaties: vast gekozen doel, MIA, resultaten, vervolgacties, oudere evaluaties en PDF gecontroleerd.');
+
+const other={id:'nl-test',nummer:'NL.TEST',vakgebied:'Nederlands',tekst:'Lezen met steun',items:[]};
+const input={kinddoel:'Samen oefenen',beginsituatie:'Start',succescriterium:'Vier keer',aanpak:'Oefenen',frequentie:'Dagelijks',verantwoordelijke:'Leerkracht',startdatum:'2026-09-01',evaluatiedatum:'2026-10-08',doelen:[{doelId:plan.doel.id,doelItems:[0]},{doelId:other.id}]};
+const multi=planInput(input,[plan.doel,other]);
+assert.deepEqual(multi.doelen.map(g=>g.vakgebied),['Wiskunde','Nederlands']);
+const multiEval=evaluationInput({...raw,doelen:evaluatieDoelen(multi.doelen).map(d=>({...d,resultaat:'bereikt',actie:'Verder inoefenen'}))},multi,'2026-10-08');
+assert.equal(multiEval.doelen.length,3);assert.equal(multiEval.doelen[2].vakgebied,'Nederlands');
+const upgraded=planInput(input,[plan.doel,other],plan);
+assert.deepEqual(upgraded.doel,plan.doel);assert.equal(upgraded.doelen.length,2);
+assert.deepEqual(planInput({...input,doelen:undefined},[],upgraded).doelen,upgraded.doelen);
+assert.throws(()=>planInput({...input,doelen:[{doelId:other.id}]},[plan.doel,other],upgraded));
+assert.throws(()=>planInput({...input,doelen:[{doelId:other.id},{doelId:other.id}]},[other]));
+const multiPdf=buildPlanPdf(jsPDF,{naam:'Test',klas:'2A',schooljaar:'2026-2027',plan:multi,evaluation:multiEval}).output();
+assert(multiPdf.includes('Nederlands'));assert(multiPdf.includes('Lezen met steun'));assert(multiPdf.includes('Wiskunde'));
+console.log('Meerdere vakgebieden, bijvoegen aan oud plan, behoud bestaande doelen, evaluaties en PDF gecontroleerd.');

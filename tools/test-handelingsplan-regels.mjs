@@ -16,6 +16,8 @@ const day=today(),year=schoolYear(day),priorYear=`${+year.slice(0,4)-1}-${year.s
 const context={bron:'zorgoverleg',schooljaar:year,klas:'2A',leerlingId:'pupil-a'};
 const student={id:'pupil-a',first:'Fictieve',last:'Leerling',previousStudentId:'pupil-vorig',start:year.slice(0,4)+'-09-01',end:year.slice(5)+'-08-31'};
 const p={kinddoel:'Testdoel',beginsituatie:'Beginsituatie',succescriterium:'Criteria',aanpak:'Aanpak',frequentie:'Dagelijks',verantwoordelijke:'Leerkracht',startdatum:day,evaluatiedatum:day,doelId:catalog.doelen[0].id};
+const secondGoal=catalog.doelen.find(g=>g.vakgebied!==catalog.doelen[0].vakgebied);
+p.doelen=[{doelId:catalog.doelen[0].id},{doelId:secondGoal.id}];
 const prior={schooljaar:priorYear,klas:'1A',periode:'Voorjaar',doel:'Voorgaand doel',aanpak:'Visuele steun',effect:'werkt',resultaat:'Meer zelfstandigheid',ouders:'Besproken',bron:'Overgangsbespreking'};
 const path='handelingsplannen/pupil-vorig/plannen/plan-a';
 let checks=0;
@@ -43,13 +45,14 @@ try{
  assert.deepEqual((await a({action:'load',context:{...context,bron:'handelingsplan'}})).plannen,[]);
  check('Startscherm: eigen klas voor klasleerkracht, alle klassen voor directie, openen vanuit tegel');
  assert.deepEqual((await a({action:'load',context})).plannen,[]);check('Eigen klas: leeg dossier openen en gevalideerde koppeling aanmaken');
- const evaluatie={datum:day,uitgevoerd:'Oefenen',observatie:'Nog ondersteuning nodig',effect:'gedeeltelijk',doelbereik:'vooruitgang',besluit:'Verderzetten',doelen:evaluatieDoelen({...catalog.doelen[0],items:[]}).map(d=>({...d,resultaat:'nog-niet',actie:'Dagelijks inoefenen'}))};
+ const evaluatie={datum:day,uitgevoerd:'Oefenen',observatie:'Nog ondersteuning nodig',effect:'gedeeltelijk',doelbereik:'vooruitgang',besluit:'Verderzetten',doelen:evaluatieDoelen([catalog.doelen[0],secondGoal].map(g=>({...g,items:[]}))).map(d=>({...d,resultaat:'nog-niet',actie:'Dagelijks inoefenen'}))};
  const save={action:'save',context,planId:'plan-a',operationId:'actie-1',expectedVersion:0,plan:p,eerdereAanpak:[prior],evaluatie};
  await a(save);await a(save);
  let loaded=await a({action:'load',context});assert.equal(loaded.plannen[0].versie,1);
  let hist=(await a({action:'history',context,planId:'plan-a'})).historiek;
  assert.equal(hist[0].evaluatie.doelen[0].actie,'Dagelijks inoefenen');
  assert.equal(loaded.plannen[0].laatsteEvaluatie.doelen[0].resultaat,'nog-niet');
+ assert.equal(loaded.plannen[0].doelen.length,2);assert.equal(hist[0].evaluatie.doelen[1].vakgebied,secondGoal.vakgebied);
  assert.equal(hist.length,1);assert.equal(hist[0].eerdereAanpak[0].klas,'1A');check('Bewaren, historiek, vroegere klas en herhaalde bewaaractie');
  await assert.rejects(a({...save,operationId:'stale'}),/collega/);check('Oude versie overschrijft geen werk van collega');
  for(const role of ['directie','zorgcoordinator','zorgleerkracht','beheerder']){
