@@ -143,3 +143,9 @@ met `firebase emulators:start --only firestore --config firebase.handelingsplan-
 
 `handelingsplan.html?demo=1` gebruikt uitsluitend fictieve gegevens in geheugen
 en importeert geen Firebase-client. Na vernieuwen verdwijnt de demonstratie-invoer.
+
+
+### Tussentijds bewaren
+Na keuze van minstens een leerplandoel mag het plan onvolledig bewaard worden. Beginsituatie, kinddoel, aanpak, frequentie, verantwoordelijke en evaluatiedatum mogen nog leeg zijn. Zonder kinddoel heet de overzichtskaart Handelingsplan in opbouw; het invulveld blijft leeg. Ook een begonnen evaluatie mag zonder observatie of besluit bewaard worden. Alle volgende bewaaracties behouden de vorige versies.
+
+Elke bewaaractie meldt expliciet succes, ongeldige invoer of een opslagfout. Onbevestigde invoer krijgt in hetzelfde browsertabblad een tijdelijke herstelkopie, per account en leerlingcontext, maximaal 24 uur beschikbaar. Dit is geen online opslag en geen vervanging voor de knop Bewaren. Na bevestigde opslag of bewust weggooien wordt de kopie verwijderd.

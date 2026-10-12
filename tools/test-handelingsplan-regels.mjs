@@ -90,5 +90,14 @@ try{
   assert.equal((await b({action:'load',context:{...newContext,leerlingId:next.id}})).plannen.length,1);
   assert.equal(basisCode(next),'pupil-vorig');
  }check('Nieuwe inschrijvingscodes en zittenblijven behouden dossier en alle versies');
+ const partialContext={...newContext,leerlingId:'pupil-zittenblijver'};
+ const partialSave={action:'save',context:partialContext,planId:'plan-in-opbouw',operationId:'deel-1',expectedVersion:0,plan:{doelen:[{doelId:catalog.doelen[0].id}],aanpak:'Eerste notitie'}};
+ await b(partialSave);
+ let partialPlan=(await b({action:'load',context:partialContext})).plannen.find(p=>p.id==='plan-in-opbouw');
+ assert.equal(partialPlan.kinddoelInOpbouw,true);assert.equal(partialPlan.evaluatiedatum,'');
+ await b({...partialSave,operationId:'deel-2',expectedVersion:1,plan:{...partialSave.plan,kinddoel:'Later aangevuld'}});
+ const partialHistory=(await b({action:'history',context:partialContext,planId:'plan-in-opbouw'})).historiek;
+ assert.equal(partialHistory.length,2);assert.equal(partialHistory[0].plan.kinddoel,'Later aangevuld');assert.equal(partialHistory[1].plan.aanpak,'Eerste notitie');
+ check('Onvolledig plan online bewaren, opnieuw laden en later aanvullen met behoud historiek');
  console.log(`${checks} groepen toegangs- en opslagcontroles geslaagd.`);
 }finally{await env.cleanup();}

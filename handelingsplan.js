@@ -1,5 +1,5 @@
 import {LEVELS,STATUS,EFFECT,PROGRESS,FIELDS,esc,filterGoals,contextFromUrl} from './handelingsplan-model.mjs';
-import {buildPlanPdf} from './handelingsplan-pdf.mjs';
+import {buildPlanPdf} from './handelingsplan-pdf.mjs?v=20261012-stapsgewijs';
 import {evaluatieDoelen,DOELRESULTAAT,planDoelen} from './handelingsplan-evaluatie.mjs';
 const $ = id => document.getElementById(id), form = $('planForm');
 const demo = new URLSearchParams(location.search).get('demo') === '1';
@@ -7,14 +7,23 @@ const context = contextFromUrl(location.search);
 let api, catalog, dossier, current = null, selectedGoals = [], dirty = false, busy = false, evalOpen = false, operation = null, limit = 35, historyToken = 0;
 const uuid = () => crypto.randomUUID();
 const priorFields=['schooljaar','klas','periode','doel','aanpak','effect','resultaat','ouders','bron'];
-let priorDrafts=[];
+let priorDrafts=[],draftOwner=demo?'demo':'';
+function backupKey(){return draftOwner?'handelingsplan-invoer:'+draftOwner+':'+JSON.stringify(context):null;}
+function readBackup(){try{const saved=JSON.parse(sessionStorage.getItem(backupKey()));return saved&&Date.now()-saved.time<86400000?saved:null;}catch{return null;}}
+function clearBackup(){try{if(backupKey())sessionStorage.removeItem(backupKey());}catch{}$('herstelInvoer').hidden=true;}
+function backupInput(){
+  if(!dirty||!current||!backupKey())return;
+  try{sessionStorage.setItem(backupKey(),JSON.stringify({time:Date.now(),current,selectedGoals,priorDrafts,evalOpen,operation,values:Object.fromEntries([...form.elements].filter(el=>el.name).map(el=>[el.name,el.value])),evaluatie:evalOpen?draft().evaluatie:null,priorOpen:!$('eerdereVelden').hidden}));}catch{}
+}
+function saveNotice(text,error=false){$('bewaarStatus').textContent=text;$('bewaarStatus').classList.toggle('error',error);message(text,error);}
+
 function priorHtml(p){return `<div class="history-grid">${Object.entries({doel:'Toenmalig doel',periode:'Periode',aanpak:'Geprobeerd',effect:'Effect',resultaat:'Resultaat en wat we meenemen',ouders:'Ouderafspraken toen',bron:'Informatiebron / betrokken leerkracht'}).map(([k,label])=>`<div><strong>${label}</strong><p>${esc(k==='effect'?EFFECT[p[k]]:p[k]||'—')}</p></div>`).join('')}</div>`;}
 function paintPriorDrafts(){
   $('eerdereConcepten').innerHTML=priorDrafts.map((p,i)=>`<details open><summary>${esc(p.schooljaar)} · ${esc(p.klas)} · ${esc(p.doel)}</summary>${priorHtml(p)}<p>Nog niet bewaard. Klik onderaan op Handelingsplan bewaren.</p><button type="button" class="secondary" data-remove-prior="${i}">Deze toevoeging verwijderen</button></details>`).join('');
   $('eerdereConcepten').querySelectorAll('[data-remove-prior]').forEach(b=>b.onclick=()=>{priorDrafts.splice(Number(b.dataset.removePrior),1);paintPriorDrafts();dirtyMark();});
 }
 function message(text='',error=false){$('melding').textContent=text;$('melding').classList.toggle('error',error);}
-function dirtyMark(){dirty=true;operation=null;$('bewaarStatus').textContent='Wijzigingen nog niet bewaard.';}
+function dirtyMark(){dirty=true;operation=null;$('bewaarStatus').textContent='Wijzigingen nog niet bewaard.';backupInput();}
 function field(name){return form.elements.namedItem(name);}
 function dateLabel(value){return value ? value.slice(0,10).split('-').reverse().join('/') : '—';}
 function goalHtml(g){return `<strong>${esc(g.vakgebied)} · ${esc(g.nummer)}</strong><p>${esc(g.tekst)}</p><p class="meta">${esc(LEVELS.map(k=>g[k]).filter(Boolean).join(' › '))}</p><p class="meta">Leeftijd: ${esc(g.leeftijden.join(', ') || 'niet aangeduid in bron')} jaar</p>${g.toelichting?.length?`<details><summary>Toelichting en voorbeelden uit de doelenset</summary>${g.toelichting.map(t=>`<p>${esc(t)}</p>`).join('')}</details>`:''}`;}
@@ -28,7 +37,7 @@ function paintChosen(){
   $('selectieAantal').textContent=`${selectedGoals.length} doelen gekozen · je selectie blijft behouden als je van vakgebied wisselt.`;
 }
 function paintOverview(){
-  $('plannen').innerHTML=dossier.plannen.length ? dossier.plannen.map(p=>`<article class="plan-card"><span class="badge ${p.status==='actief'?'':'closed'}">${esc(STATUS[p.status])}</span>${p.status==='actief' && p.evaluatiedatum < dossier.vandaag?'<span class="badge late">Evaluatie gepland vóór vandaag</span>':''}<h3>${esc(p.kinddoel)}</h3>${goalList(p)}<p class="meta">Gestart in ${esc(p.startSchooljaar)}${p.startKlas?` · ${esc(p.startKlas)}`:""} · volgende evaluatie ${dateLabel(p.evaluatiedatum)}</p>${p.laatsteEvaluatie?`<p><strong>Laatste evaluatie (${dateLabel(p.laatsteEvaluatie.datum)}):</strong> ${esc(EFFECT[p.laatsteEvaluatie.effect])}<br>${esc(p.laatsteEvaluatie.besluit)}</p>`:'<p>Nog geen evaluatie vastgelegd.</p>'}${outcomeHtml(p.laatsteEvaluatie,p)}<button class="secondary" type="button" data-plan="${esc(p.id)}">Plan en voorgeschiedenis bekijken</button></article>`).join(''):'<div class="empty"><h3>Nog geen handelingsplan</h3><p>Start vanuit een leerplandoel en leg vast hoe jullie eraan werken.</p></div>';
+  $('plannen').innerHTML=dossier.plannen.length ? dossier.plannen.map(p=>`<article class="plan-card"><span class="badge ${p.status==='actief'?'':'closed'}">${esc(STATUS[p.status])}</span>${p.status==='actief' && p.evaluatiedatum && p.evaluatiedatum < dossier.vandaag?'<span class="badge late">Evaluatie gepland vóór vandaag</span>':''}<h3>${esc(p.kinddoel)}</h3>${goalList(p)}<p class="meta">Gestart in ${esc(p.startSchooljaar)}${p.startKlas?` · ${esc(p.startKlas)}`:""} · volgende evaluatie ${dateLabel(p.evaluatiedatum)}</p>${p.laatsteEvaluatie?`<p><strong>Laatste evaluatie (${dateLabel(p.laatsteEvaluatie.datum)}):</strong> ${esc(EFFECT[p.laatsteEvaluatie.effect])}<br>${esc(p.laatsteEvaluatie.besluit)}</p>`:'<p>Nog geen evaluatie vastgelegd.</p>'}${outcomeHtml(p.laatsteEvaluatie,p)}<button class="secondary" type="button" data-plan="${esc(p.id)}">Plan en voorgeschiedenis bekijken</button></article>`).join(''):'<div class="empty"><h3>Nog geen handelingsplan</h3><p>Start vanuit een leerplandoel en leg vast hoe jullie eraan werken.</p></div>';
   $('plannen').querySelectorAll('[data-plan]').forEach(b=>b.onclick=()=>openPlan(dossier.plannen.find(p=>p.id===b.dataset.plan)));
 }
 async function load(){
@@ -41,10 +50,13 @@ async function load(){
   $('archief').hidden=result.schrijfbaar;
   $('archief').textContent=`Alleen raadplegen: je opent ${result.schooljaar}. Het lopende schooljaar is ${result.huidigSchooljaar}. Voor wijzigingen open je de actieve leerling in het lopende schooljaar.`;
   paintOverview();message();
+  const backup=readBackup();
+  if(backup?.operation&&result.plannen.some(p=>p.id===backup.current.id&&p.bewaaractie===backup.operation?.operationId))clearBackup();
+  $('herstelInvoer').hidden=!readBackup()||!result.schrijfbaar;
 }
 function toggleEval(open){
   evalOpen=open;$('evaluatieVelden').hidden=!open;$('evaluatieToevoegen').hidden=open;
-  ['datum','effect','observatie','besluit'].forEach(k=>{field(`eval_${k}`).required=open;});
+  ['datum','effect','observatie','besluit'].forEach(k=>{field(`eval_${k}`).required=false;});
   if(open && !field('eval_datum').value) field('eval_datum').value=dossier.vandaag;
   if(open)paintEvaluationGoals();else $('evaluatieDoelen').innerHTML='';
 }
@@ -61,6 +73,7 @@ function paintEvaluationGoals(){
 }
 async function openPlan(p=null){
   if(dirty && !confirm('Je hebt onbewaarde wijzigingen. Wil je die verlaten?'))return;
+  if(dirty)clearBackup();
   current=p?structuredClone(p):{id:uuid(),versie:0};
   selectedGoals=planDoelen(p).map(g=>({goal:structuredClone(g),items:(g.items||[]).map((_,i)=>i),locked:true}));
   form.reset();toggleEval(false);dirty=false;operation=null;$('bewaarStatus').textContent='';
@@ -70,6 +83,7 @@ async function openPlan(p=null){
   field('eerder_schooljaar').value=`${currentYear-1}-${currentYear}`;
   $('eerdereAanpakSectie').hidden=!dossier.schrijfbaar;
   for(const key of Object.keys(FIELDS)) field(key).value=p?.[key] || (key==='startdatum'?dossier.vandaag:key==='status'?'actief':'');
+  if(p?.kinddoelInOpbouw)field('kinddoel').value='';
   field('startdatum').readOnly=!!p;
   field('startdatum').max=dossier.vandaag;field('eval_datum').max=dossier.vandaag;
   $('planVelden').disabled=!dossier.schrijfbaar;$('bewaar').hidden=!dossier.schrijfbaar;
@@ -85,7 +99,7 @@ async function openPlan(p=null){
   if(p){try{const data=await api({action:'history',context,planId:p.id});if(token===historyToken)paintHistory(data.historiek);}catch(e){if(token===historyToken)$('historiek').textContent=`Voorgeschiedenis niet geladen: ${e.message}`;}}
   window.scrollTo({top:0,behavior:'smooth'});
 }
-function planSnapshot(p){return `<div class="wide">${goalList(p)}</div>`+Object.entries(FIELDS).map(([key,label])=>`<div><strong>${esc(label)}</strong><p>${esc(key==='status'?STATUS[p[key]]:p[key] || '—')}</p></div>`).join('');}
+function planSnapshot(p){if(p.kinddoelInOpbouw)p={...p,kinddoel:''};return `<div class="wide">${goalList(p)}</div>`+Object.entries(FIELDS).map(([key,label])=>`<div><strong>${esc(label)}</strong><p>${esc(key==='status'?STATUS[p[key]]:p[key] || '—')}</p></div>`).join('');}
 function paintHistory(events){
   const earlier=events.flatMap(e=>(e.eerdereAanpak||[]).map(p=>({...p,ingevoerdOp:e.datum,auteur:e.auteur}))).sort((a,b)=>b.schooljaar.localeCompare(a.schooljaar)||a.klas.localeCompare(b.klas,'nl'));
   $('eerdereHistoriek').innerHTML=earlier.length?`<h4>Achteraf aangevulde aanpak per schooljaar en klas</h4>${earlier.map(p=>`<details open><summary>${esc(p.schooljaar)} · ${esc(p.klas)} · ${esc(p.doel)}</summary><p class="meta">Achteraf ingevoerd op ${dateLabel(p.ingevoerdOp)} door ${esc(p.auteur)}.</p>${priorHtml(p)}</details>`).join('')}<h4>Bewaarde versies van het handelingsplan</h4>`:'';
@@ -129,21 +143,50 @@ function draft(){
   return {plan,evaluatie,eerdereAanpak:structuredClone(priorDrafts)};
 }
 form.addEventListener('input',dirtyMark);form.addEventListener('change',dirtyMark);
+// Handle validation ourselves so every click produces an explicit save status.
+form.noValidate=true;
 form.onsubmit=async e=>{
-  e.preventDefault();if(busy || !dossier.schrijfbaar)return;
-  if(!$('eerdereVelden').hidden){$('bewaarStatus').textContent='Klik eerst bij de eerdere aanpak op Aan plan toevoegen, of laat die invoer weg.';$('eerdereKlaar').focus();return;}
-  if(!selectedGoals.length){$('bewaarStatus').textContent='Kies eerst een leerplandoel.';$('kiesDoel').focus();return;}
-  operation ||= {action:'save',context,planId:current.id,expectedVersion:current.versie,operationId:uuid(),...draft()};
-  const request=structuredClone(operation);busy=true;$('bewaar').disabled=true;$('planVelden').disabled=true;$('sluiten').disabled=true;
-  $('bewaarStatus').textContent='Bezig met bewaren…';
+  e.preventDefault();if(busy || !dossier?.schrijfbaar)return;
+  const invalid=[...form.elements].filter(el=>el.willValidate&&!el.validity.valid);
+  if(invalid.length){
+    const names=invalid.map(el=>el.closest('label')?.childNodes[0]?.textContent?.trim()||el.name);
+    saveNotice('Niet bewaard. Vul deze velden in of controleer ze: '+names.join(', ')+'. Je invoer blijft staan.',true);
+    for(let parent=invalid[0].parentElement;parent;parent=parent.parentElement)if(parent.tagName==='DETAILS')parent.open=true;
+    invalid[0].focus();backupInput();return;
+  }
+  if(!$('eerdereVelden').hidden){saveNotice('Niet bewaard. Klik bij de eerdere aanpak eerst op Aan plan toevoegen, of laat die invoer weg.',true);$('eerdereKlaar').focus();return;}
+  if(!selectedGoals.length){saveNotice('Niet bewaard. Kies eerst een leerplandoel. Je invoer blijft staan.',true);$('kiesDoel').focus();return;}
+  let slowTimer;
   try{
-    await api(request);dirty=false;operation=null;
-    // Een geslaagde opslag blijft geslaagd, ook als opnieuw laden even mislukt.
-    $('bewaarStatus').textContent='Handelingsplan bewaard.';
-    try{await load();$('editor').hidden=true;message('Handelingsplan bewaard. De vorige aanpak en evaluaties blijven beschikbaar.');}
-    catch(error){current.versie=request.expectedVersion+1;$('bewaarStatus').textContent='Bewaard, maar het overzicht kon niet vernieuwd worden. Herlaad vóór je verder werkt.';$('bewaar').hidden=true;message(error.message,true);}
-  }catch(error){$('bewaarStatus').textContent=error.message || 'Bewaren niet bevestigd. Je invoer blijft staan; probeer opnieuw.';}
-  finally{busy=false;$('bewaar').disabled=false;$('planVelden').disabled=!dossier.schrijfbaar;$('sluiten').disabled=false;}
+    operation ||= {action:'save',context,planId:current.id,expectedVersion:current.versie,operationId:uuid(),...draft()};
+    backupInput();
+    const request=structuredClone(operation);
+    busy=true;$('bewaar').disabled=true;$('planVelden').disabled=true;$('sluiten').disabled=true;
+    saveNotice('Bezig met bewaren. Wacht op de bevestiging.');
+    slowTimer=setTimeout(()=>saveNotice('Bewaren is nog niet bevestigd. Laat dit scherm open; je invoer blijft staan. Controleer je internetverbinding.',true),15000);
+    const result=await api(request);
+    if(!result?.bewaard)throw Error('De opslag gaf geen bevestiging. Probeer opnieuw.');
+    clearTimeout(slowTimer);dirty=false;operation=null;clearBackup();
+    saveNotice(demo?'Bewaard in dit tijdelijke voorbeeld. Herladen wist de demo.':'Handelingsplan bewaard.');
+    try{await load();$('editor').hidden=true;message(demo?'Bewaard in dit tijdelijke voorbeeld. Herladen wist de demo.':'Handelingsplan bewaard. De vorige aanpak en evaluaties blijven beschikbaar.');window.scrollTo({top:0,behavior:'smooth'});}
+    catch(error){current.versie=request.expectedVersion+1;saveNotice('Bewaard, maar het overzicht kon niet vernieuwd worden. Herlaad voor je verder werkt. '+error.message,true);$('bewaar').hidden=true;}
+  }catch(error){saveNotice('Niet bewaard of nog niet bevestigd. '+(error.message||'Probeer opnieuw.')+' Je invoer blijft in dit scherm staan.',true);backupInput();}
+  finally{clearTimeout(slowTimer);busy=false;$('bewaar').disabled=false;$('planVelden').disabled=!dossier.schrijfbaar;$('sluiten').disabled=false;}
+};
+$('herstelInvoer').onclick=async()=>{
+  const saved=readBackup();if(!saved)return;
+  if(dirty&&!confirm('De huidige onbewaarde invoer vervangen door de teruggevonden invoer?'))return;
+  dirty=false;await openPlan(saved.current.versie?saved.current:null);
+  current=saved.current;selectedGoals=saved.selectedGoals;priorDrafts=saved.priorDrafts||[];
+  paintChosen();paintPriorDrafts();toggleEval(saved.evalOpen);
+  for(const [name,value] of Object.entries(saved.values))if(field(name))field(name).value=value;
+  if(saved.evalOpen)for(const row of $('evaluatieDoelen').querySelectorAll('[data-eval-doel]')){
+    const d=saved.evaluatie?.doelen?.find(d=>d.id===row.dataset.evalDoel);if(!d)continue;
+    row.querySelector('[data-doel-resultaat]').value=d.resultaat;row.querySelector('[data-doel-actie]').value=d.actie;
+    row.className='doel-evaluatie '+d.resultaat;row.querySelector('.resultaat-label').textContent=DOELRESULTAAT[d.resultaat];
+  }
+  $('eerdereVelden').hidden=!saved.priorOpen;$('eerdereToevoegen').hidden=!!saved.priorOpen;
+  dirty=true;operation=saved.operation||null;saveNotice('Invoer teruggezet uit dit tabblad. Controleer het plan en klik op bewaren. Dit is nog geen bevestigde online opslag.');
 };
 $('nieuw').onclick=()=>openPlan();
 $('eerdereToevoegen').onclick=()=>{
@@ -157,7 +200,7 @@ $('eerdereKlaar').onclick=()=>{
   priorDrafts.push(p);paintPriorDrafts();$('eerdereVelden').hidden=true;$('eerdereToevoegen').hidden=false;dirtyMark();
 };
 $('eerdereAnnuleren').onclick=()=>{if(!confirm('Deze nog niet toegevoegde eerdere aanpak weglaten?'))return;priorFields.filter(k=>k!=='schooljaar').forEach(k=>field(`eerder_${k}`).value='');$('eerdereVelden').hidden=true;$('eerdereToevoegen').hidden=false;};
-$('sluiten').onclick=()=>{if(dirty&&!confirm('Onbewaarde wijzigingen verlaten?'))return;dirty=false;historyToken++;$('editor').hidden=true;$('overzicht').hidden=false;$('pdf').disabled=true;};
+$('sluiten').onclick=()=>{if(dirty&&!confirm('Onbewaarde wijzigingen verlaten?'))return;if(dirty)clearBackup();dirty=false;historyToken++;$('editor').hidden=true;$('overzicht').hidden=false;$('pdf').disabled=true;};
 $('evaluatieToevoegen').onclick=()=>{toggleEval(true);dirtyMark();};
 $('evaluatieAnnuleren').onclick=()=>{if(!confirm('Deze nog niet bewaarde evaluatie weglaten?'))return;['datum','effect','observatie','besluit','ouders'].forEach(k=>field(`eval_${k}`).value='');toggleEval(false);dirtyMark();};
 $('kiesDoel').onclick=()=>{$('doelenDialog').showModal();refreshFilters('');};
@@ -191,14 +234,15 @@ async function start(){
   const response=await fetch('./handelingsplan-doelen.json');if(!response.ok)throw Error('De doelenbibliotheek kon niet geladen worden.');catalog=await response.json();
   options($('vakgebied'),[...new Set(catalog.doelen.map(g=>g.vakgebied))].sort((a,b)=>a.localeCompare(b,'nl')),'Alle vakgebieden',false);
   options($('leeftijd'),catalog.leeftijden,'Alle leeftijden',false);
-  if(demo){$('demoBanner').hidden=false;api=(await import('./handelingsplan-demo.mjs')).createDemoApi(catalog);await load();return;}
+  if(demo){$('demoBanner').hidden=false;api=(await import('./handelingsplan-demo.mjs?v=20261012-stapsgewijs')).createDemoApi(catalog);await load();return;}
   const [{initializeApp},{getAuth,onAuthStateChanged,signOut},sdk,{createFirestoreApi}]=await Promise.all([
-    import('https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js'),import('https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js'),import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js'),import('./handelingsplan-opslag.mjs')]);
+    import('https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js'),import('https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js'),import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js'),import('./handelingsplan-opslag.mjs?v=20261012-stapsgewijs')]);
   const app=initializeApp({apiKey:'AIzaSyA7KxXMvZ4dzBQDut3CMyWUblLte2tFzoQ',authDomain:'huiswerkapp-a311e.firebaseapp.com',projectId:'huiswerkapp-a311e',storageBucket:'huiswerkapp-a311e.appspot.com',messagingSenderId:'797169941164',appId:'1:797169941164:web:511d9618079f1378d0fd09'});
   onAuthStateChanged(getAuth(app),async user=>{
     $('logoutBtn').hidden=!user;
     if(!user){$('overzicht').hidden=true;$('editor').hidden=true;$('leerlingKiezen').hidden=true;$('leerling').textContent='Aanmelden vereist';dossier=null;message('Meld je aan via het startscherm en open daarna opnieuw het handelingsplan.',true);return;}
     let weergaveRol='';try{weergaveRol=localStorage.getItem('lindeSimuleerRol_'+user.uid)||'';}catch{}
+    draftOwner=user.uid;
     api=createFirestoreApi({sdk,db:sdk.getFirestore(app),user,catalog,weergaveRol});
     $('logoutBtn').onclick=async()=>{
       if(busy){message('Wacht tot het bewaren voltooid is.',true);return;}

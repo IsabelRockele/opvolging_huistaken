@@ -16,7 +16,7 @@ export function buildPlanPdf(jsPDF,{naam,klas,schooljaar,plan,events=[],priorDra
   function heading(text){if(y>bottom-22){pdf.addPage();y=22;}y+=5;lines(text,13,true);y+=3;}
   function field(label,value){if(y>bottom-15){pdf.addPage();y=22;}lines(label,10,true);lines(value);y+=3;}
   function goals(p){for(const g of planDoelen(p)){field(`${g.vakgebied} - ${g.nummer}`,g.tekst);for(const item of g.items||[])field(`${g.vakgebied} - ${item.groep}`,item.tekst);}}
-  function snapshot(p){for(const [k,label] of Object.entries(FIELDS))field(label,k==='status'?STATUS[p[k]]:p[k]);}
+  function snapshot(p){if(p.kinddoelInOpbouw)p={...p,kinddoel:''};for(const [k,label] of Object.entries(FIELDS))field(label,k==='status'?STATUS[p[k]]:p[k]);}
   function prior(p){heading(`${p.schooljaar} - ${p.klas}`);for(const [key,label] of Object.entries({doel:'Toenmalig doel',periode:'Periode',aanpak:'Geprobeerd',effect:'Effect',resultaat:'Resultaat en wat we meenemen',ouders:'Ouderafspraken toen',bron:'Informatiebron / betrokken leerkracht'}))field(label,key==='effect'?EFFECT[p[key]]:p[key]);}
   function evalFields(e,p){for(const [k,label] of Object.entries({datum:'Evaluatiedatum',uitgevoerd:'Uitgevoerd',observatie:'Observatie',effect:'Effect',doelbereik:'Doelbereik',besluit:'Besluit',ouders:'Besproken met ouders'}))if(e[k]!==undefined)field(label,k==='effect'?EFFECT[e[k]]:k==='doelbereik'?PROGRESS[e[k]]:e[k]);for(const d of e.doelen||[]){field(`${d.vakgebied||evaluatieDoelen(planDoelen(p)).find(t=>t.id===d.id)?.vakgebied||''} - ${d.titel} - ${d.tekst}`,DOELRESULTAAT[d.resultaat]||'Nog niet beoordeeld');if(d.actie)field('Vervolgactie bij dit doel',d.actie);}}
   lines('Individueel handelingsplan',20,true);y+=4;

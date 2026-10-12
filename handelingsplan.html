@@ -4,7 +4,7 @@
   <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="referrer" content="same-origin">
   <title>Individueel handelingsplan</title>
-  <link rel="stylesheet" href="handelingsplan.css?v=20261008-eenvoudige-evaluatie">
+  <link rel="stylesheet" href="handelingsplan.css?v=20261012-stapsgewijs">
 </head>
 <body>
   <header>
@@ -33,25 +33,26 @@
     </section>
     <section id="overzicht" hidden>
       <div class="section-head"><div><h2>Doelen en aanpak</h2><p>Alle handelingsplannen van dit kind, over de schooljaren heen.</p></div><button id="nieuw" type="button">Nieuw handelingsplan</button></div>
-      <div id="plannen" class="plan-list"></div>
+      <button id="herstelInvoer" type="button" class="secondary" hidden>Niet-bewaarde invoer uit dit tabblad terugzetten</button><div id="plannen" class="plan-list"></div>
     </section>
     <section id="editor" hidden>
       <div class="section-head"><div><p class="eyebrow" id="planContext"></p><h2 id="planTitel">Nieuw handelingsplan</h2></div><button type="button" id="sluiten" class="secondary">Terug naar overzicht</button></div>
       <form id="planForm">
+        <p>Je kunt in stukken werken: kies een leerplandoel en bewaar tussendoor. De overige velden mag je later aanvullen.</p>
         <fieldset id="planVelden">
           <section class="card"><div class="section-head"><h3>1. De leerplandoelen</h3><button id="kiesDoel" type="button" class="secondary">Doelen kiezen / toevoegen</button></div><div id="gekozenDoel" class="goal-selected">Kies een doel uit de GO!-doelensets.</div></section>
           <section class="card"><h3>2. Wat willen we bij dit kind bereiken?</h3><div class="grid">
-            <label class="wide">Beginsituatie<textarea name="beginsituatie" required maxlength="6000" placeholder="Wat lukt al? Waar heeft het kind hulp bij nodig?"></textarea></label>
-            <label class="wide">Concreet kinddoel<textarea name="kinddoel" required maxlength="6000" placeholder="Wat willen we dat het kind leert of kan?"></textarea></label>
-            <label class="wide">Wanneer is het doel bereikt?<textarea name="succescriterium" required maxlength="6000" placeholder="Beschrijf wat je wilt zien, horen of meten."></textarea></label>
-            <label>Startdatum<input type="date" name="startdatum" required></label>
-            <label>Volgende evaluatie<input type="date" name="evaluatiedatum" required></label>
+            <label class="wide">Beginsituatie<textarea name="beginsituatie" maxlength="6000" placeholder="Wat lukt al? Waar heeft het kind hulp bij nodig?"></textarea></label>
+            <label class="wide">Concreet kinddoel<textarea name="kinddoel" maxlength="6000" placeholder="Wat willen we dat het kind leert of kan?"></textarea></label>
+            <label class="wide">Wanneer is het doel bereikt?<textarea name="succescriterium" maxlength="6000" placeholder="Beschrijf wat je wilt zien, horen of meten."></textarea></label>
+            <label>Startdatum<input type="date" name="startdatum"></label>
+            <label>Volgende evaluatie<input type="date" name="evaluatiedatum"></label>
           </div></section>
           <section class="card"><h3>3. Zo werken we eraan</h3><div class="grid">
-            <label class="wide">Aanpak<textarea name="aanpak" required maxlength="6000" placeholder="Welke stappen zetten we? Welke ondersteuning krijgt het kind?"></textarea></label>
+            <label class="wide">Aanpak<textarea name="aanpak" maxlength="6000" placeholder="Welke stappen zetten we? Welke ondersteuning krijgt het kind?"></textarea></label>
             <label>Materiaal en hulpmiddelen<textarea name="materiaal" maxlength="6000"></textarea></label>
-            <label>Hoe vaak, hoelang en in welke situatie?<textarea name="frequentie" required maxlength="6000"></textarea></label>
-            <label class="wide">Wie doet wat?<textarea name="verantwoordelijke" required maxlength="6000" placeholder="Klasleerkracht, zorgleerkracht, andere begeleider…"></textarea></label>
+            <label>Hoe vaak, hoelang en in welke situatie?<textarea name="frequentie" maxlength="6000"></textarea></label>
+            <label class="wide">Wie doet wat?<textarea name="verantwoordelijke" maxlength="6000" placeholder="Klasleerkracht, zorgleerkracht, andere begeleider…"></textarea></label>
             <label class="wide">Afspraken met ouders<textarea name="ouderafspraken" maxlength="6000" placeholder="Wat is besproken, op welke datum, en welke afspraken gelden nu?"></textarea></label>
             <label>Status van het plan<select name="status"><option value="actief">Actief — verder werken</option><option value="bereikt">Doel bereikt</option><option value="gepauzeerd">Voorlopig gepauzeerd</option><option value="afgerond">Afgerond</option></select></label>
           </div></section>
@@ -103,6 +104,6 @@
     <p id="selectieAantal" role="status"></p><p id="aantalDoelen" role="status"></p><div id="doelenResultaten"></div><button id="meerDoelen" type="button" class="secondary" hidden>Meer doelen tonen</button>
   </dialog>
   <script src="jspdf.umd.min.js"></script>
-  <script type="module" src="handelingsplan.js?v=20261008-eenvoudige-evaluatie"></script>
+  <script type="module" src="handelingsplan.js?v=20261012-stapsgewijs"></script>
 </body>
 </html>

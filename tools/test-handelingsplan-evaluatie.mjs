@@ -37,8 +37,16 @@ const compact=evaluationInput(compactRaw,plan,'2026-10-08');
 assert(!('uitgevoerd' in compact));assert(!('doelbereik' in compact));
 assert.equal(compact.doelen[0].resultaat,'nog-niet');
 assert.equal(compact.doelen[0].actie,'Dagelijks tien minuten oefenen.');
-assert.throws(()=>evaluationInput({...compactRaw,observatie:''},plan,'2026-10-08'));
+assert.equal(evaluationInput({...compactRaw,observatie:''},plan,'2026-10-08').observatie,'');
 assert.throws(()=>evaluationInput({...compactRaw,doelen:undefined},plan,'2026-10-08'));
 const compactPdf=buildPlanPdf(jsPDF,{naam:'Test',klas:'2A',schooljaar:'2026-2027',plan,evaluation:compact}).output();
 assert(!compactPdf.includes('(Uitgevoerd)'));assert(!compactPdf.includes('(Doelbereik)'));
 console.log('Compacte evaluatie zonder dubbele invoer, met behoud van oude velden en PDF getest.');
+
+const partial=planInput({doelen:[{doelId:other.id}],aanpak:'Eerste notitie'},[other]);
+assert.equal(partial.aanpak,'Eerste notitie');assert.equal(partial.kinddoelInOpbouw,true);assert.equal(partial.evaluatiedatum,'');
+const later=planInput({doelen:[{doelId:other.id}],startdatum:partial.startdatum,kinddoel:'Later aangevuld',aanpak:partial.aanpak},[other],partial);
+assert.equal(later.kinddoelInOpbouw,false);assert.equal(later.kinddoel,'Later aangevuld');
+const partialEval=evaluationInput({doelen:evaluatieDoelen(partial.doelen).map(d=>({...d,resultaat:'niet-beoordeeld',actie:''}))},partial,partial.startdatum);
+assert.equal(partialEval.effect,'nog-niet-te-beoordelen');assert.equal(partialEval.observatie,'');
+console.log('Onvolledig plan en begonnen evaluatie bewaren en later aanvullen gecontroleerd.');

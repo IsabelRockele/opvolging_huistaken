@@ -28,9 +28,11 @@ const fields = ['kinddoel','beginsituatie','succescriterium','aanpak','materiaal
 function planInput(raw, goals, old) {
   if (!raw || typeof raw !== 'object') fail('Het plan ontbreekt.', 'invalid-argument');
   const p = Object.fromEntries(fields.map(f => [f,text(raw[f] ?? '')]));
-  for (const f of ['kinddoel','beginsituatie','succescriterium','aanpak','frequentie','verantwoordelijke']) if (!p[f]) fail('Vul beginsituatie, kinddoel, succescriterium, aanpak, frequentie en verantwoordelijke in.', 'invalid-argument');
-  p.startdatum = date(raw.startdatum); p.evaluatiedatum = date(raw.evaluatiedatum);
-  if (p.evaluatiedatum < p.startdatum) fail('De evaluatiedatum ligt vóór de startdatum.', 'invalid-argument');
+  const kinddoelInOpbouw=!p.kinddoel;
+  p.kinddoel ||= 'Handelingsplan in opbouw';
+  p.kinddoelInOpbouw=kinddoelInOpbouw;
+  p.startdatum=date(raw.startdatum||old?.startdatum||today());p.evaluatiedatum=raw.evaluatiedatum?date(raw.evaluatiedatum):'';
+  if(p.evaluatiedatum&&p.evaluatiedatum<p.startdatum)fail('De evaluatiedatum ligt voor de startdatum.', 'invalid-argument');
   const previous=planDoelen(old);
   const choices=raw.doelen ?? (old ? previous.map(g=>({doelId:g.id})) : [{doelId:raw.doelId,doelItems:raw.doelItems}]);
   if(!Array.isArray(choices)||!choices.length||choices.length>20||new Set(choices.map(g=>g?.doelId)).size!==choices.length)fail('Kies één tot twintig verschillende leerplandoelen.', 'invalid-argument');
@@ -44,15 +46,14 @@ function planInput(raw, goals, old) {
   })];
   p.doel=old?.doel||p.doelen[0];
   if(old)p.startdatum=old.startdatum;
-  if(p.evaluatiedatum<p.startdatum)fail('De evaluatiedatum ligt vóór de startdatum.', 'invalid-argument');
+  if(p.evaluatiedatum&&p.evaluatiedatum<p.startdatum)fail('De evaluatiedatum ligt vóór de startdatum.', 'invalid-argument');
   p.status = raw.status || 'actief';
   if (!['actief','bereikt','gepauzeerd','afgerond'].includes(p.status)) fail('Ongeldige planstatus.', 'invalid-argument');
   return p;
 }
 function evaluationInput(raw, plan, day) {
   if (!raw) return null;
-  const e = {datum:date(raw.datum), observatie:text(raw.observatie), effect:text(raw.effect,60), besluit:text(raw.besluit), ouders:text(raw.ouders || '')};
-  if (!e.observatie || !e.besluit) fail('Vul observatie en besluit in.', 'invalid-argument');
+  const e = {datum:date(raw.datum||day), observatie:text(raw.observatie||''), effect:text(raw.effect||'nog-niet-te-beoordelen',60), besluit:text(raw.besluit||''), ouders:text(raw.ouders || '')};
   if (!['werkt','gedeeltelijk','onvoldoende','nog-niet-te-beoordelen'].includes(e.effect)) fail('Kies het effect van de aanpak.', 'invalid-argument');
   // Oudere schermen en evaluaties blijven hun oorspronkelijke velden behouden.
   if(raw.uitgevoerd!==undefined)e.uitgevoerd=text(raw.uitgevoerd);
