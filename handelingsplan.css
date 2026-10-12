@@ -31,3 +31,17 @@ label{font-size:12px;color:#4b3b2d}textarea,input,select{border-color:var(--bord
 #doelenResultaten .goal-short{white-space:normal}
 #selectieAantal{position:sticky;top:0;background:#f0f6ed;padding:10px;border-radius:8px;font-weight:600;z-index:1}
 @media print{.goal-short{white-space:normal}.compact-goal,.doel-evaluatie{break-inside:auto}}
+
+/* Een geselecteerd doel neemt ingeklapt slechts een compacte regel in. */
+#gekozenDoel{padding:4px 10px}
+.compact-goal{margin:0;padding:0;border-radius:0}
+.compact-goal:last-child{border-bottom:0}
+.compact-goal>summary{display:grid;grid-template-columns:12px minmax(160px,220px) minmax(0,1fr);gap:8px;align-items:baseline;padding:9px 2px;font-size:14px;line-height:1.35;list-style:none}
+.compact-goal>summary::-webkit-details-marker{display:none}
+.compact-goal>summary::before{content:'\25b8';font-size:12px}
+.compact-goal[open]>summary::before{content:'\25be'}
+.compact-goal>summary>.goal-short{font-size:14px;line-height:1.35;min-width:0}
+.compact-goal[open]{padding-bottom:10px}
+.compact-goal[open]>summary{margin-bottom:6px}
+@media(max-width:700px){.compact-goal>summary{grid-template-columns:12px minmax(0,1fr);gap:2px 6px;padding:7px 0}.compact-goal>summary>.goal-short{grid-column:2}}
+@media print{.compact-goal>summary{grid-template-columns:12px minmax(0,1fr)}.compact-goal>summary>.goal-short{grid-column:2;white-space:normal;overflow:visible}}
