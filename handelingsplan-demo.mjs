@@ -1,4 +1,4 @@
-import {planInput,evaluationInput} from './handelingsplan-validatie.mjs?v=20261012-stapsgewijs';
+import {planInput,evaluationInput} from './handelingsplan-validatie.mjs?v=20261012-doelen-verwijderen';
 // Alleen expliciet via ?demo=1. Fictieve inhoud, uitsluitend in geheugen.
 export function createDemoApi(catalog){
   const goal=catalog.doelen.find(g=>g.vakgebied==='Wiskunde' && g.leeftijden.includes('7-8')) || catalog.doelen[0];

@@ -29,8 +29,7 @@ invoer in een overleg of leerlingfiche blijft staan.
   De vorige beoordeling en actie blijven zichtbaar als herinnering. Nieuwe
   evaluaties starten neutraal; oudere evaluaties krijgen geen verzonnen resultaat.
   De resultaten en acties verschijnen in het overzicht, de historiek en de PDF.
-- Een bewaard leerplandoel blijft vast aan het plan hangen. Start een nieuw
-  plan voor een afzonderlijke aanpak, of voeg extra doelen toe aan hetzelfde plan.
+- Bewaarde doelen kunnen uit het huidige plan verwijderd worden. Klap het doel open en kies Doel verwijderen uit dit plan, of vink het uit in de doelenkiezer. Klik daarna op Handelingsplan bewaren. Vorige versies en evaluaties blijven in de voorgeschiedenis. Ook het laatste doel mag uit een bestaand plan verwijderd worden.
 - Met **Eerdere aanpak toevoegen** kun je ervaringen uit vorige leerjaren
   achteraf invoeren: schooljaar, klas, eventuele periode, toenmalig doel,
   aanpak, effect, resultaat, ouderafspraken en informatiebron. Voeg één of

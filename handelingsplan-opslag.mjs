@@ -1,4 +1,4 @@
-import * as M from './handelingsplan-validatie.mjs?v=20261012-stapsgewijs';
+import * as M from './handelingsplan-validatie.mjs?v=20261012-doelen-verwijderen';
 
 export function basisCode(s,parentCode){return s.handelingsplanId || parentCode?.dossierId || s.previousStudentId || s.sourceStudentId || String(s.id);}
 export function normaliseer(value){

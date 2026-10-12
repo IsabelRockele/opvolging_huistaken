@@ -1,5 +1,5 @@
 import {FIELDS,STATUS,EFFECT,PROGRESS} from './handelingsplan-model.mjs';
-import {DOELRESULTAAT,planDoelen,evaluatieDoelen} from './handelingsplan-evaluatie.mjs';
+import {DOELRESULTAAT,planDoelen,evaluatieDoelen} from './handelingsplan-evaluatie.mjs?v=20261012-doelen-verwijderen';
 
 // Tekst wordt per regel gepagineerd; lange notities blijven volledig leesbaar.
 export function buildPlanPdf(jsPDF,{naam,klas,schooljaar,plan,events=[],priorDrafts=[],evaluation=null,concept=false}) {

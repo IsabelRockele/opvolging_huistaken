@@ -1,5 +1,5 @@
 export const DOELRESULTAAT={ 'niet-beoordeeld':'Nog niet beoordeeld', 'nog-niet':'Nog niet bereikt', bereikt:'Bereikt' };
-export function planDoelen(plan){ return plan?.doelen?.length ? plan.doelen : plan?.doel ? [plan.doel] : []; }
+export function planDoelen(plan){ return Array.isArray(plan?.doelen) ? plan.doelen : plan?.doel ? [plan.doel] : []; }
 export function evaluatieDoelen(doel){
   if(Array.isArray(doel))return doel.flatMap(evaluatieDoelen);
   if(!doel)return [];

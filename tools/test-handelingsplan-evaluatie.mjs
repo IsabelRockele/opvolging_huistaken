@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import {evaluationInput,planInput} from '../handelingsplan-validatie.mjs';
-import {evaluatieDoelen} from '../handelingsplan-evaluatie.mjs';
+import {evaluatieDoelen,planDoelen} from '../handelingsplan-evaluatie.mjs';
 import {buildPlanPdf} from '../handelingsplan-pdf.mjs';
 import {createRequire} from 'node:module';
 const {jsPDF}=createRequire(import.meta.url)('../jspdf.umd.min.js');
@@ -26,7 +26,13 @@ assert.equal(multiEval.doelen.length,3);assert.equal(multiEval.doelen[2].vakgebi
 const upgraded=planInput(input,[plan.doel,other],plan);
 assert.deepEqual(upgraded.doel,plan.doel);assert.equal(upgraded.doelen.length,2);
 assert.deepEqual(planInput({...input,doelen:undefined},[],upgraded).doelen,upgraded.doelen);
-assert.throws(()=>planInput({...input,doelen:[{doelId:other.id}]},[plan.doel,other],upgraded));
+const removed=planInput({...input,doelen:[{doelId:other.id}]},[plan.doel,other],upgraded);
+assert.deepEqual(removed.doelen,[other]);assert.deepEqual(removed.doel,upgraded.doel);
+assert.equal(upgraded.doelen.length,2);
+const empty=planInput({...input,doelen:[]},[plan.doel,other],removed);assert.deepEqual(planDoelen(empty),[]);
+assert.deepEqual(planDoelen(plan),[plan.doel]);
+assert.equal(evaluationInput({...compactEvaluation(),doelen:[{...evaluatieDoelen(other)[0],resultaat:'bereikt',actie:''}]},removed,'2026-10-08').doelen.length,1);
+function compactEvaluation(){return {datum:'2026-10-08',effect:'werkt',observatie:'',besluit:''};}
 assert.throws(()=>planInput({...input,doelen:[{doelId:other.id},{doelId:other.id}]},[other]));
 const multiPdf=buildPlanPdf(jsPDF,{naam:'Test',klas:'2A',schooljaar:'2026-2027',plan:multi,evaluation:multiEval}).output();
 assert(multiPdf.includes('Nederlands'));assert(multiPdf.includes('Lezen met steun'));assert(multiPdf.includes('Wiskunde'));

@@ -1,6 +1,6 @@
 import {LEVELS,STATUS,EFFECT,PROGRESS,FIELDS,esc,filterGoals,contextFromUrl} from './handelingsplan-model.mjs';
-import {buildPlanPdf} from './handelingsplan-pdf.mjs?v=20261012-stapsgewijs';
-import {evaluatieDoelen,DOELRESULTAAT,planDoelen} from './handelingsplan-evaluatie.mjs';
+import {buildPlanPdf} from './handelingsplan-pdf.mjs?v=20261012-doelen-verwijderen';
+import {evaluatieDoelen,DOELRESULTAAT,planDoelen} from './handelingsplan-evaluatie.mjs?v=20261012-doelen-verwijderen';
 const $ = id => document.getElementById(id), form = $('planForm');
 const demo = new URLSearchParams(location.search).get('demo') === '1';
 const context = contextFromUrl(location.search);
@@ -29,9 +29,9 @@ function dateLabel(value){return value ? value.slice(0,10).split('-').reverse().
 function goalHtml(g){return `<strong>${esc(g.vakgebied)} · ${esc(g.nummer)}</strong><p>${esc(g.tekst)}</p><p class="meta">${esc(LEVELS.map(k=>g[k]).filter(Boolean).join(' › '))}</p><p class="meta">Leeftijd: ${esc(g.leeftijden.join(', ') || 'niet aangeduid in bron')} jaar</p>${g.toelichting?.length?`<details><summary>Toelichting en voorbeelden uit de doelenset</summary>${g.toelichting.map(t=>`<p>${esc(t)}</p>`).join('')}</details>`:''}`;}
 function selectedSnapshots(){return selectedGoals.map(({goal,items})=>({...goal,items:items.map(i=>goal.items[i])}));}
 function goalSummary(g){return `<strong>${esc(g.vakgebied)} · ${esc(g.nummer)}</strong><span class="goal-short">${esc(g.tekst)}</span>`;}
-function goalList(plan){return planDoelen(plan).map(g=>`<details class="compact-goal"><summary>${goalSummary(g)}</summary>${goalHtml(g)}</details>`).join('');}
+function goalList(plan){if(!planDoelen(plan).length)return '<p class="meta">Er zijn momenteel geen leerplandoelen geselecteerd.</p>';return planDoelen(plan).map(g=>`<details class="compact-goal"><summary>${goalSummary(g)}</summary>${goalHtml(g)}</details>`).join('');}
 function paintChosen(){
-  $('gekozenDoel').innerHTML=selectedGoals.length ? selectedGoals.map(({goal:g,items,locked},n)=>`<details class="compact-goal"><summary>${goalSummary(g)}</summary>${goalHtml(g)}${g.items?.length?`<p>Doel verfijnen met MIA / begrippen:</p>${g.items.map((item,i)=>`<label class="item-check"><input type="checkbox" data-goal-index="${n}" data-goal-item="${i}" ${items.includes(i)?'checked':''} ${locked?'disabled':''}><span><strong>${esc(item.groep)}</strong>: ${esc(item.tekst)}</span></label>`).join('')}`:''}${locked?'<p class="meta">Bewaard doel: blijft beschikbaar in dit plan.</p>':`<button type="button" class="secondary" data-remove-goal="${n}">Doel weglaten</button>`}</details>`).join(''):'Vink één of meerdere doelen aan, ook uit verschillende vakgebieden.';
+  $('gekozenDoel').innerHTML=selectedGoals.length ? selectedGoals.map(({goal:g,items,locked},n)=>`<details class="compact-goal"><summary>${goalSummary(g)}</summary>${goalHtml(g)}${g.items?.length?`<p>Doel verfijnen met MIA / begrippen:</p>${g.items.map((item,i)=>`<label class="item-check"><input type="checkbox" data-goal-index="${n}" data-goal-item="${i}" ${items.includes(i)?'checked':''} ${locked?'disabled':''}><span><strong>${esc(item.groep)}</strong>: ${esc(item.tekst)}</span></label>`).join('')}`:''}<button type="button" class="secondary" data-remove-goal="${n}">Doel verwijderen uit dit plan</button>${locked?'<p class="meta">Eerdere versies en evaluaties blijven in de voorgeschiedenis bewaard.</p>':''}</details>`).join(''):'Vink één of meerdere doelen aan, ook uit verschillende vakgebieden.';
   $('gekozenDoel').querySelectorAll('[data-goal-item]').forEach(el=>el.onchange=()=>{const entry=selectedGoals[Number(el.dataset.goalIndex)],i=Number(el.dataset.goalItem);entry.items=el.checked?[...entry.items,i].sort((a,b)=>a-b):entry.items.filter(x=>x!==i);if(evalOpen)paintEvaluationGoals();dirtyMark();});
   $('gekozenDoel').querySelectorAll('[data-remove-goal]').forEach(el=>el.onclick=()=>{selectedGoals.splice(Number(el.dataset.removeGoal),1);paintChosen();if(evalOpen)paintEvaluationGoals();dirtyMark();});
   $('selectieAantal').textContent=`${selectedGoals.length} doelen gekozen · je selectie blijft behouden als je van vakgebied wisselt.`;
@@ -127,10 +127,10 @@ function paintResults(){
   }
   const matches=filterGoals(catalog.doelen,filters());
   $('aantalDoelen').textContent=`${matches.length} doelen gevonden · ${Math.min(limit,matches.length)} getoond`;
-  $('doelenResultaten').innerHTML=matches.slice(0,limit).map(g=>`<article class="goal-item"><label class="item-check"><input type="checkbox" data-select-goal="${esc(g.id)}" ${selectedGoals.some(x=>x.goal.id===g.id)?'checked':''} ${selectedGoals.some(x=>x.goal.id===g.id&&x.locked)?'disabled':''}><span>${goalSummary(g)}</span></label><details><summary>Details en toelichting</summary>${goalHtml(g)}</details></article>`).join('')||'<p>Geen doelen gevonden. Kies een andere filter of zoekterm.</p>';
+  $('doelenResultaten').innerHTML=matches.slice(0,limit).map(g=>`<article class="goal-item"><label class="item-check"><input type="checkbox" data-select-goal="${esc(g.id)}" ${selectedGoals.some(x=>x.goal.id===g.id)?'checked':''} ><span>${goalSummary(g)}</span></label><details><summary>Details en toelichting</summary>${goalHtml(g)}</details></article>`).join('')||'<p>Geen doelen gevonden. Kies een andere filter of zoekterm.</p>';
   $('meerDoelen').hidden=matches.length<=limit;
   $('doelenResultaten').querySelectorAll('[data-select-goal]').forEach(b=>b.onchange=()=>{
-    if(b.checked){if(selectedGoals.length>=20){b.checked=false;$('selectieAantal').textContent='Je kunt maximaal twintig doelen kiezen.';return;}selectedGoals.push({goal:structuredClone(catalog.doelen.find(g=>g.id===b.dataset.selectGoal)),items:[],locked:false});}
+    if(b.checked){if(selectedGoals.length>=20){b.checked=false;$('selectieAantal').textContent='Je kunt maximaal twintig doelen kiezen.';return;}const retained=planDoelen(current).find(g=>g.id===b.dataset.selectGoal);selectedGoals.push({goal:structuredClone(retained||catalog.doelen.find(g=>g.id===b.dataset.selectGoal)),items:retained?(retained.items||[]).map((_,i)=>i):[],locked:!!retained});}
     else selectedGoals=selectedGoals.filter(g=>g.goal.id!==b.dataset.selectGoal);
     paintChosen();if(evalOpen)paintEvaluationGoals();dirtyMark();
   });
@@ -155,7 +155,7 @@ form.onsubmit=async e=>{
     invalid[0].focus();backupInput();return;
   }
   if(!$('eerdereVelden').hidden){saveNotice('Niet bewaard. Klik bij de eerdere aanpak eerst op Aan plan toevoegen, of laat die invoer weg.',true);$('eerdereKlaar').focus();return;}
-  if(!selectedGoals.length){saveNotice('Niet bewaard. Kies eerst een leerplandoel. Je invoer blijft staan.',true);$('kiesDoel').focus();return;}
+  if(!selectedGoals.length&&!current?.versie){saveNotice('Niet bewaard. Kies eerst een leerplandoel. Je invoer blijft staan.',true);$('kiesDoel').focus();return;}
   let slowTimer;
   try{
     operation ||= {action:'save',context,planId:current.id,expectedVersion:current.versie,operationId:uuid(),...draft()};
@@ -218,7 +218,7 @@ window.addEventListener('afterprint',()=>{printReplacements.forEach(([el,p,hidde
 $('print').onclick=()=>window.print();
 $('pdf').onclick=async()=>{
   if(busy||!current)return;
-  if(!selectedGoals.length){message('Kies eerst een leerplandoel voor de PDF.',true);return;}
+  if(!selectedGoals.length&&!current?.versie){message('Kies eerst een leerplandoel voor de PDF.',true);return;}
   if(!$('eerdereVelden').hidden){message('Klik eerst op Aan plan toevoegen om de eerdere aanpak ook in de PDF op te nemen.',true);return;}
   $('pdf').disabled=true;
   try{
@@ -234,9 +234,9 @@ async function start(){
   const response=await fetch('./handelingsplan-doelen.json');if(!response.ok)throw Error('De doelenbibliotheek kon niet geladen worden.');catalog=await response.json();
   options($('vakgebied'),[...new Set(catalog.doelen.map(g=>g.vakgebied))].sort((a,b)=>a.localeCompare(b,'nl')),'Alle vakgebieden',false);
   options($('leeftijd'),catalog.leeftijden,'Alle leeftijden',false);
-  if(demo){$('demoBanner').hidden=false;api=(await import('./handelingsplan-demo.mjs?v=20261012-stapsgewijs')).createDemoApi(catalog);await load();return;}
+  if(demo){$('demoBanner').hidden=false;api=(await import('./handelingsplan-demo.mjs?v=20261012-doelen-verwijderen')).createDemoApi(catalog);await load();return;}
   const [{initializeApp},{getAuth,onAuthStateChanged,signOut},sdk,{createFirestoreApi}]=await Promise.all([
-    import('https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js'),import('https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js'),import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js'),import('./handelingsplan-opslag.mjs?v=20261012-stapsgewijs')]);
+    import('https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js'),import('https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js'),import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js'),import('./handelingsplan-opslag.mjs?v=20261012-doelen-verwijderen')]);
   const app=initializeApp({apiKey:'AIzaSyA7KxXMvZ4dzBQDut3CMyWUblLte2tFzoQ',authDomain:'huiswerkapp-a311e.firebaseapp.com',projectId:'huiswerkapp-a311e',storageBucket:'huiswerkapp-a311e.appspot.com',messagingSenderId:'797169941164',appId:'1:797169941164:web:511d9618079f1378d0fd09'});
   onAuthStateChanged(getAuth(app),async user=>{
     $('logoutBtn').hidden=!user;

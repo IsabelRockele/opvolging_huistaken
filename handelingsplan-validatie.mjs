@@ -1,4 +1,4 @@
-import {evaluatieDoelen,DOELRESULTAAT,planDoelen} from './handelingsplan-evaluatie.mjs';
+import {evaluatieDoelen,DOELRESULTAAT,planDoelen} from './handelingsplan-evaluatie.mjs?v=20261012-doelen-verwijderen';
 function fail(message, code = 'failed-precondition') { const e = new Error(message); e.code = code; throw e; }
 function text(value, max = 6000) {
   if (typeof value !== 'string' || value.length > max) fail('Een veld ontbreekt of is te lang.', 'invalid-argument');
@@ -35,15 +35,17 @@ function planInput(raw, goals, old) {
   if(p.evaluatiedatum&&p.evaluatiedatum<p.startdatum)fail('De evaluatiedatum ligt voor de startdatum.', 'invalid-argument');
   const previous=planDoelen(old);
   const choices=raw.doelen ?? (old ? previous.map(g=>({doelId:g.id})) : [{doelId:raw.doelId,doelItems:raw.doelItems}]);
-  if(!Array.isArray(choices)||!choices.length||choices.length>20||new Set(choices.map(g=>g?.doelId)).size!==choices.length)fail('Kies één tot twintig verschillende leerplandoelen.', 'invalid-argument');
-  if(previous.some(g=>!choices.some(c=>c.doelId===g.id)))fail('Eerder bewaarde doelen blijven bij het plan en de voorgeschiedenis.', 'invalid-argument');
-  p.doelen=[...previous,...choices.filter(c=>!previous.some(g=>g.id===c.doelId)).map(c=>{
+  if(!Array.isArray(choices)||(!old&&!choices.length)||choices.length>20||new Set(choices.map(g=>g?.doelId)).size!==choices.length)fail('Kies één tot twintig verschillende leerplandoelen.', 'invalid-argument');
+  p.doelen=choices.map(c=>{
+    const retained=previous.find(g=>g.id===c.doelId);
+    if(retained)return retained;
     const goal=goals.find(g=>g.id===c.doelId);
     if(!goal)fail('Selecteer een leerplandoel uit de doelenkiezer.', 'invalid-argument');
     const chosen=c.doelItems||[];
     if(!Array.isArray(chosen)||chosen.some(i=>!Number.isInteger(i)||!goal.items[i]))fail('Ongeldige doelverfijning.', 'invalid-argument');
     return {...goal,items:[...new Set(chosen)].map(i=>goal.items[i])};
-  })];
+  });
+  // Keep the legacy anchor immutable; doelen is the current selection, including an empty list.
   p.doel=old?.doel||p.doelen[0];
   if(old)p.startdatum=old.startdatum;
   if(p.evaluatiedatum&&p.evaluatiedatum<p.startdatum)fail('De evaluatiedatum ligt vóór de startdatum.', 'invalid-argument');

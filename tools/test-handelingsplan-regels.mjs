@@ -99,5 +99,13 @@ try{
  const partialHistory=(await b({action:'history',context:partialContext,planId:'plan-in-opbouw'})).historiek;
  assert.equal(partialHistory.length,2);assert.equal(partialHistory[0].plan.kinddoel,'Later aangevuld');assert.equal(partialHistory[1].plan.aanpak,'Eerste notitie');
  check('Onvolledig plan online bewaren, opnieuw laden en later aanvullen met behoud historiek');
+ await b({...partialSave,operationId:'zonder-doelen',expectedVersion:2,plan:{...partialSave.plan,doelen:[]}});
+ const withoutGoals=(await b({action:'load',context:partialContext})).plannen.find(p=>p.id==='plan-in-opbouw');
+ assert.deepEqual(withoutGoals.doelen,[]);assert.equal(withoutGoals.aanpak,'Eerste notitie');
+ const removedHistory=(await b({action:'history',context:partialContext,planId:'plan-in-opbouw'})).historiek;
+ assert.equal(removedHistory[0].plan.doelen.length,0);assert.equal(removedHistory[1].plan.doelen.length,1);
+ await b({...partialSave,operationId:'doel-terug',expectedVersion:3});
+ assert.equal((await b({action:'load',context:partialContext})).plannen.find(p=>p.id==='plan-in-opbouw').doelen.length,1);
+ check('Laatste doel verwijderen, bewaren en opnieuw toevoegen; vorige doelensets blijven in historiek');
  console.log(`${checks} groepen toegangs- en opslagcontroles geslaagd.`);
 }finally{await env.cleanup();}
