@@ -148,3 +148,8 @@ en importeert geen Firebase-client. Na vernieuwen verdwijnt de demonstratie-invo
 Na keuze van minstens een leerplandoel mag het plan onvolledig bewaard worden. Beginsituatie, kinddoel, aanpak, frequentie, verantwoordelijke en evaluatiedatum mogen nog leeg zijn. Zonder kinddoel heet de overzichtskaart Handelingsplan in opbouw; het invulveld blijft leeg. Ook een begonnen evaluatie mag zonder observatie of besluit bewaard worden. Alle volgende bewaaracties behouden de vorige versies.
 
 Elke bewaaractie meldt expliciet succes, ongeldige invoer of een opslagfout. Onbevestigde invoer krijgt in hetzelfde browsertabblad een tijdelijke herstelkopie, per account en leerlingcontext, maximaal 24 uur beschikbaar. Dit is geen online opslag en geen vervanging voor de knop Bewaren. Na bevestigde opslag of bewust weggooien wordt de kopie verwijderd.
+
+
+### Een bewaarknop en PDF
+Handelingsplan bewaren neemt ook de nog open eerdere aanpak mee; apart toevoegen is niet nodig. Nog een eerdere aanpak invullen is uitsluitend voor het noteren van meerdere aanpakken. Na bevestigde opslag verschijnt een groene melding met vinkje. Een gedeeltelijk ingevulde eerdere aanpak is toegestaan.
+De PDF-knop maakt ook onvolledige nieuwe plannen. Na het maken verschijnt een downloadlink als alternatief voor de automatische download. Afdrukken verbergt invulinstructies en laat lange onderdelen over pagina's doorlopen.

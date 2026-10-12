@@ -1,4 +1,4 @@
-import {planInput,evaluationInput} from './handelingsplan-validatie.mjs?v=20261012-doelen-verwijderen';
+import {planInput,evaluationInput,priorInput} from './handelingsplan-validatie.mjs?v=20261012-pdf-een-bewaar';
 // Alleen expliciet via ?demo=1. Fictieve inhoud, uitsluitend in geheugen.
 export function createDemoApi(catalog){
   const goal=catalog.doelen.find(g=>g.vakgebied==='Wiskunde' && g.leeftijden.includes('7-8')) || catalog.doelen[0];
@@ -15,10 +15,11 @@ export function createDemoApi(catalog){
       if((old?.versie||0)!==request.expectedVersion)throw Error('Dit plan is ondertussen gewijzigd.');
       const validated=planInput(p,catalog.doelen,old);
       const evaluation=evaluationInput(request.evaluatie,validated,day);
+      const prior=priorInput(request.eerdereAanpak,day);
       const plan={...validated,id:request.planId,versie:(old?.versie||0)+1,startSchooljaar:old?.startSchooljaar||year,laatstSchooljaar:year,createdAt:old?.createdAt||new Date().toISOString(),updatedAt:new Date().toISOString(),laatsteEvaluatie:evaluation||old?.laatsteEvaluatie||null};
-      plan.startKlas=old?.startKlas||'2A';plan.laatsteKlas='2A';plan.aantalEerdereAanpakken=(old?.aantalEerdereAanpakken||0)+(request.eerdereAanpak||[]).length;
+      plan.startKlas=old?.startKlas||'2A';plan.laatsteKlas='2A';plan.aantalEerdereAanpakken=(old?.aantalEerdereAanpakken||0)+prior.length;
       plans.set(plan.id,plan);
-      events.set(plan.id,[{versie:plan.versie,datum:new Date().toISOString(),context:{schooljaar:year,klas:'2A',bron:'zorgoverleg'},auteur:'Voorbeeldleerkracht',plan:structuredClone(plan),evaluatie:evaluation,eerdereAanpak:structuredClone(request.eerdereAanpak||[])},...(events.get(plan.id)||[])]);
+      events.set(plan.id,[{versie:plan.versie,datum:new Date().toISOString(),context:{schooljaar:year,klas:'2A',bron:'zorgoverleg'},auteur:'Voorbeeldleerkracht',plan:structuredClone(plan),evaluatie:evaluation,eerdereAanpak:structuredClone(prior)},...(events.get(plan.id)||[])]);
       return {bewaard:true,versie:plan.versie};
     }
   };

@@ -26,3 +26,14 @@ b.draftOwner='teacher-b';assert.equal(b.readBackup(),null);b.draftOwner='teacher
 const stored=b.readBackup();stored.time=Date.now()-86400001;storage.set(b.backupKey(),JSON.stringify(stored));assert.equal(b.readBackup(),null);
 b.backupInput();b.clearBackup();assert.equal(b.readBackup(),null);
 console.log('Tijdelijke invoer: opslaan, teruglezen, scheiding per account/leerling, verval en opruimen gecontroleerd.');
+
+const draftCode=source.slice(source.indexOf('function draft(){'),source.indexOf("form.addEventListener('input'"));
+const priorFunctions=source.slice(source.indexOf('function readPriorFields()'),source.indexOf("$('eerdereKlaar').onclick="));
+const values={eerder_schooljaar:'2025-2026',eerder_aanpak:'Eerste eerdere notitie'};
+const pendingPanel={hidden:false};
+const d={FIELDS:{aanpak:'Aanpak'},field:k=>({value:values[k]||''}),selectedGoals:[],evalOpen:false,priorDrafts:[],priorFields:['schooljaar','klas','periode','doel','aanpak','effect','resultaat','ouders','bron'],structuredClone,$:()=>pendingPanel};
+vm.runInNewContext(priorFunctions+draftCode,d);
+assert.equal(d.draft().eerdereAanpak.length,1);assert.equal(d.draft().eerdereAanpak[0].aanpak,'Eerste eerdere notitie');
+pendingPanel.hidden=true;assert.equal(d.draft().eerdereAanpak.length,0);
+pendingPanel.hidden=false;values.eerder_aanpak='';assert.equal(d.draft().eerdereAanpak.length,0);
+console.log('Een bewaarknop: open eerdere aanpak wordt meegenomen; leeg of gesloten invoervak niet.');

@@ -45,3 +45,23 @@ label{font-size:12px;color:#4b3b2d}textarea,input,select{border-color:var(--bord
 .compact-goal[open]>summary{margin-bottom:6px}
 @media(max-width:700px){.compact-goal>summary{grid-template-columns:12px minmax(0,1fr);gap:2px 6px;padding:7px 0}.compact-goal>summary>.goal-short{grid-column:2}}
 @media print{.compact-goal>summary{grid-template-columns:12px minmax(0,1fr)}.compact-goal>summary>.goal-short{grid-column:2;white-space:normal;overflow:visible}}
+
+@media print{
+  @page{size:A4;margin:12mm}
+  main{margin:0;padding:0}header{padding:0 0 10px}
+  #editor>.section-head,#planForm>p,#eerdereAanpakSectie>p,#evaluatieSectie>.section-head p,#historiekSectie>p{display:none!important}
+  #planVelden{display:contents}
+  .card,.plan-card,details,.compact-goal,.doel-evaluatie{break-inside:auto;page-break-inside:auto}
+  .card{padding:10px;margin:8px 0;border-radius:0}
+  .grid,.history-grid{display:block}
+  label,.history-grid>div{margin-bottom:8px}
+  h2,h3,h4,summary,label>.print-value{orphans:2;widows:2}
+  h2,h3,h4{break-after:avoid}
+  .compact-goal>summary{display:none}
+  #gekozenDoel .compact-goal>.meta:last-child{display:none}
+  .print-value{min-height:0;overflow-wrap:anywhere}
+}
+
+#melding.success{background:#e7f5e9;color:#235d32;border:1px solid #8fbd99;border-radius:9px;padding:14px 16px;font-weight:bold}
+
+@media print{#eerdereAanpakSectie>.section-head p{display:none!important}}

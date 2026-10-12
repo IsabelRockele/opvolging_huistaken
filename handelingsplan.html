@@ -4,7 +4,7 @@
   <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="referrer" content="same-origin">
   <title>Individueel handelingsplan</title>
-  <link rel="stylesheet" href="handelingsplan.css?v=20261012-compacte-regels">
+  <link rel="stylesheet" href="handelingsplan.css?v=20261012-pdf-een-bewaar">
 </head>
 <body>
   <header>
@@ -17,7 +17,7 @@
       <p>Kies een leerling, vertrek van een leerplandoel en bewaar de aanpak en evaluaties.</p>
       <details><summary>Stappen en bewaren</summary><p>Kies een bestaand plan of maak een nieuw handelingsplan. Noteer wat je probeert, wat werkt en wat je met ouders afspreekt. Bij eerdere aanpak kun je ook het schooljaar en de klas van toen invullen. Klik op Handelingsplan bewaren vóór je verdergaat. Bewaarde versies blijven beschikbaar.</p></details>
     </aside>
-    <div class="document-actions"><button type="button" id="pdf" disabled title="Open eerst een handelingsplan">Bewaren als PDF</button><button type="button" id="print" class="secondary">Afdrukken</button></div>
+    <div class="document-actions"><button type="button" id="pdf" disabled title="Open eerst een handelingsplan">Bewaren als PDF</button><a id="pdfDownload" class="button secondary" hidden>PDF downloaden</a><button type="button" id="print" class="secondary">Afdrukken</button></div>
     <p id="melding" role="status" aria-live="polite">De leerlingkoppeling wordt gecontroleerd.</p>
     <div id="demoBanner" class="notice" hidden>Voorbeeld met een fictieve leerling. In deze demonstratie wordt niets online opgeslagen.</div>
     <div id="archief" class="notice" hidden></div>
@@ -69,7 +69,7 @@
               <label class="wide">Resultaat en wat we hieruit meenemen<textarea name="eerder_resultaat" maxlength="6000" placeholder="Wat hielp, wat niet en wat is nuttig voor de huidige aanpak?"></textarea></label>
               <label class="wide">Toen besproken of afgesproken met ouders<textarea name="eerder_ouders" maxlength="6000"></textarea></label>
               <label class="wide">Informatiebron / betrokken leerkracht<textarea name="eerder_bron" maxlength="6000" placeholder="Bijvoorbeeld overgangsgesprek met de vorige leerkracht, oud verslag of oudergesprek. Vermeld het als iets onzeker is."></textarea></label>
-              <div class="wide"><button id="eerdereKlaar" type="button">Aan plan toevoegen</button> <button id="eerdereAnnuleren" type="button" class="secondary">Invoer weglaten</button><p id="eerdereFout" role="status"></p></div>
+              <div class="wide"><button id="eerdereKlaar" type="button">Nog een eerdere aanpak invullen</button> <button id="eerdereAnnuleren" type="button" class="secondary">Invoer weglaten</button><p id="eerdereFout" role="status"></p></div>
             </div>
           </section>
           <section class="card" id="evaluatieSectie"><div class="section-head"><div><h3>5. Evalueren en bijsturen</h3><p>Elke evaluatie blijft bewaard. Pas de aanpak hierboven aan als je wilt bijsturen.</p></div><button id="evaluatieToevoegen" type="button" class="secondary">Evaluatie toevoegen</button></div>
@@ -104,6 +104,6 @@
     <p id="selectieAantal" role="status"></p><p id="aantalDoelen" role="status"></p><div id="doelenResultaten"></div><button id="meerDoelen" type="button" class="secondary" hidden>Meer doelen tonen</button>
   </dialog>
   <script src="jspdf.umd.min.js"></script>
-  <script type="module" src="handelingsplan.js?v=20261012-doelen-verwijderen"></script>
+  <script type="module" src="handelingsplan.js?v=20261012-pdf-een-bewaar"></script>
 </body>
 </html>

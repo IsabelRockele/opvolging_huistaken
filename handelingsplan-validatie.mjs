@@ -81,7 +81,7 @@ function priorInput(raw, day) {
     const p = {schooljaar:year(item.schooljaar)};
     if (Number(p.schooljaar.slice(0,4)) < 1900 || p.schooljaar > schoolYear(day)) fail('Kies voor eerdere aanpak een huidig of vorig schooljaar.', 'invalid-argument');
     for (const key of ['klas','periode','doel','aanpak','effect','resultaat','ouders','bron']) p[key] = text(item[key] ?? '', ['klas','periode','effect'].includes(key)?200:6000);
-    if (['klas','doel','aanpak','resultaat','bron'].some(key=>!p[key])) fail('Vul klas, toenmalig doel, aanpak, resultaat en informatiebron in.', 'invalid-argument');
+    p.effect ||= 'nog-niet-te-beoordelen';
     if (!['werkt','gedeeltelijk','onvoldoende','nog-niet-te-beoordelen'].includes(p.effect)) fail('Kies het effect van de eerdere aanpak.', 'invalid-argument');
     return p;
   });

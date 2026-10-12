@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import {evaluationInput,planInput} from '../handelingsplan-validatie.mjs';
+import {evaluationInput,planInput,priorInput} from '../handelingsplan-validatie.mjs';
 import {evaluatieDoelen,planDoelen} from '../handelingsplan-evaluatie.mjs';
 import {buildPlanPdf} from '../handelingsplan-pdf.mjs';
 import {createRequire} from 'node:module';
@@ -56,3 +56,5 @@ assert.equal(later.kinddoelInOpbouw,false);assert.equal(later.kinddoel,'Later aa
 const partialEval=evaluationInput({doelen:evaluatieDoelen(partial.doelen).map(d=>({...d,resultaat:'niet-beoordeeld',actie:''}))},partial,partial.startdatum);
 assert.equal(partialEval.effect,'nog-niet-te-beoordelen');assert.equal(partialEval.observatie,'');
 console.log('Onvolledig plan en begonnen evaluatie bewaren en later aanvullen gecontroleerd.');
+
+assert.equal(priorInput([{schooljaar:'2025-2026',aanpak:'Eerste notitie'}],'2026-10-12')[0].effect,'nog-niet-te-beoordelen');
