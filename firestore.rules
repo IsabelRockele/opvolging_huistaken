@@ -47,6 +47,8 @@ service cloud.firestore {
         && request.resource.data.inspectieEmail == inspectieEmail();
     }
     match /schoolbeheer/{jaar}/klassen/{klas} { allow read: if isActieveInspectie(); }
+    match /schoolbeheer/{jaar}/instellingen/fototoestemming { allow read: if isActieveInspectie(); }
+    match /leerkrachten/{uid} { allow read: if isActieveInspectie(); }
     match /klasleerkrachten/{id} { allow read: if isActieveInspectie(); }
     match /overgangsbesprekingen/{jaar}/projecten/{id} { allow read: if isActieveInspectie(); }
     match /overgangsbesprekingen/{jaar}/dossiers/{id} { allow read: if isActieveInspectie(); }

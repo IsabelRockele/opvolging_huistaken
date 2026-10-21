@@ -341,7 +341,7 @@ body.doelen-modal-open{overflow:hidden}
 </main>
 
 <script type="module">
-import {vereisZorgToegang} from "./inspectie-toegang.mjs";
+import {vereisZorgToegang} from "./inspectie-toegang.mjs?v=20261021-3";
 await vereisZorgToegang("groeigroepen");
 import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
@@ -355,7 +355,7 @@ const firebaseConfig={apiKey:"AIzaSyA7KxXMvZ4dzBQDut3CMyWUblLte2tFzoQ",authDomai
 const app=getApps().length?getApp():initializeApp(firebaseConfig);
 const auth=getAuth(app);
 const db=getFirestore(app);
-const allowedRoles=["directie","zorgcoordinator","zorgleerkracht","beheerder","klasleerkracht"];
+const allowedRoles=["directie","zorgcoordinator","zorgleerkracht","beheerder","klasleerkracht","inspectie"];
 const DEFAULT_CLASSES=["K1","K2","K3","1A","2A","3A","4A","5A","6A"];
 const DOMAINEN=[
   {id:"lezen",groep:"Nederlands",naam:"Lezen",emoji:"\ud83d\udcd6"},{id:"spelling",groep:"Nederlands",naam:"Spelling",emoji:"\ud83d\udd24"},{id:"spreken",groep:"Nederlands",naam:"Spreken",emoji:"\ud83d\udde3\ufe0f"},{id:"luisteren",groep:"Nederlands",naam:"Luisteren",emoji:"\ud83d\udc42"},{id:"woordenschat",groep:"Nederlands",naam:"Woordenschat",emoji:"\ud83d\udcad"},{id:"schrijven",groep:"Nederlands",naam:"Schrijven",emoji:"\u270d\ufe0f"},
@@ -466,10 +466,12 @@ function actieveKlasleerlingen(leerlingen,jaar=year()){
 if($("schooljaar")) $("schooljaar").value=huidigSchooljaar();
 function year(){return ($("schooljaar").value||huidigSchooljaar()).trim();}
 async function setDoc(ref,payload,options){
+  if(window.inspectieAlleenLezen)return;
   await probeerVeiligheidskopie(ref,{reden:"Groeigroep vóór opslag",schooljaar:year(),klas:(active?.leerlingen||[]).map(s=>s.klas).filter(Boolean).join(", "),gebruiker:user?.email||user?.uid||""},(melding,err)=>{console.warn(melding,err);setStatus("Let op: reservekopie mislukt");});
   return firestoreSetDoc(ref,payload,options);
 }
 async function deleteDoc(ref){
+  if(window.inspectieAlleenLezen)return;
   await maakVeiligheidskopie(ref,{reden:"Groeigroep vóór verwijderen",forceer:true,schooljaar:year(),klas:(active?.leerlingen||[]).map(s=>s.klas).filter(Boolean).join(", "),gebruiker:user?.email||user?.uid||""});
   return firestoreDeleteDoc(ref);
 }
@@ -552,6 +554,7 @@ function bewaarHuidigeRapportPeriode(){
 }
 
 async function loadRole(){
+  if(window.inspectieAlleenLezen){role='inspectie';eigenKlassen=[];return;}
   const snap=await getDoc(doc(db,"schoolrollen",user.uid));
   role=snap.exists()?String(snap.data().rol||"").toLowerCase():"";
   eigenKlassen=[];
@@ -567,7 +570,7 @@ async function loadRole(){
   }
   if(!allowedRoles.includes(role)) throw new Error("Dit scherm is alleen voor klasleerkrachten, zorgleerkrachten, zorgcoordinator, directie en beheerder.");
 }
-function magBewerken(){return role!=="klasleerkracht";}
+function magBewerken(){return !window.inspectieAlleenLezen&&role!=="klasleerkracht";}
 async function loadClasses(){
   classes={};
   if(role==="klasleerkracht"){

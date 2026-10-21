@@ -305,7 +305,8 @@ function pasKnoppenToe(huistakenKnop, overgangKnop, schoolbeheerKnop, bestelling
       [zorgoverlegKnop,'zorgoverleg','Zorgoverleg'],[document.getElementById('handelingsplanKeuzeKnop'),'handelingsplan','Handelingsplan'],
       [groeigroepenKnop,'groeigroepen','Groeigroepen'],[document.getElementById('gokOverzichtKeuzeKnop'),'gok','GOK-overzicht']
     ];
-    inspectieTegels.forEach(([el,id,label])=>{if(el){vulTegel(el,'inspectie.html?tool='+id,'📖',label,'Alle klassen raadplegen — alleen lezen.');el.style.display='';}});
+    const leesUrl={overgang:'overgangsbespreking.html',oudercontact:'oudercontact.html',zorgoverleg:'zorgoverleg.html',handelingsplan:'handelingsplan.html',groeigroepen:'groeigroepen.html',gok:'gok-overzicht.html'};
+    inspectieTegels.forEach(([el,id,label])=>{if(el){vulTegel(el,leesUrl[id],'📖',label,'De vertrouwde tool bekijken — alleen lezen.');el.style.display='';}});
     pasRustigePortaalrubriekenToe('zorgleerkracht',false,false,true);
     document.querySelectorAll('#ingelogd-kaart .portaal-sectie').forEach(sectie=>{sectie.style.display=[...sectie.querySelectorAll('.portaal-tegel')].some(el=>el.style.display!=='none')?'':'none';});
     for(const id of ['portaalHulpbalk','eersteKeerChecklist','publiekeAgendaLinks']){const el=document.getElementById(id);if(el)el.style.display='none';}
@@ -624,7 +625,7 @@ async function toonSchooloverzichtKnopAlsNodig(user) {
     }
 
     if (!rol || rol === 'inspectie') {
-      const {toegang} = await import('./inspectie-toegang.mjs');
+      const {toegang} = await import('./inspectie-toegang.mjs?v=20261021-3');
       const toegangInspectie = await toegang(user);
       if (toegangInspectie.rol === 'inspectie') {
         if (!toegangInspectie.geldig) { location.href='inspectie.html'; return; }

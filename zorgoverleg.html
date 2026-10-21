@@ -179,7 +179,7 @@
   <section id="students"></section>
 </main>
 <script type="module">
-import {vereisZorgToegang} from "./inspectie-toegang.mjs";
+import {vereisZorgToegang} from "./inspectie-toegang.mjs?v=20261021-3";
 await vereisZorgToegang("zorgoverleg");
 import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
@@ -194,6 +194,7 @@ const EERSTE_APP_SCHOOLJAAR = "2025-2026";
 const esc=v=>String(v??"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;");
 let user=null, role="", schooljaar=huidigSchooljaar(), classes=[], activeKlas="", maand="", leerlingen=[], data={entries:{},groupActions:[]}, previousData={entries:{},groupActions:[]}, overlegHistoriek=[], zorgOverdracht={}, activeStudentIndex=0, activeField="werkhouding", fullFicheMode=false, faseVragenOpen=false;
 async function setDoc(ref,payload,options){
+  if(window.inspectieAlleenLezen)return;
   await probeerVeiligheidskopie(ref,{reden:"Zorgoverleg vóór opslag",schooljaar,klas:activeKlas,gebruiker:user?.email||user?.uid||""},(melding,err)=>{console.warn(melding,err);const status=document.getElementById("status");if(status)status.textContent="Let op: reservekopie mislukt";});
   return runTransaction(db,async tx=>{
     const snap=await tx.get(ref);
@@ -233,7 +234,7 @@ function naam(s){const first=s.first||s.firstName||"", last=s.last||s.lastName||
 function naamSorteersleutel(s){const first=s.first||s.firstName||"",last=s.last||s.lastName||String(s.naam||"").split(",")[0]||"";return `${last}${first}`.normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9]/gi,"").toLocaleLowerCase("nl")}
 function key(s){return String(s.id||naam(s)).replace(/[^a-z0-9_-]+/gi,"_");}
 function naamKey(value){return String(value||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().replace(/[^a-z0-9]+/g," ").trim().split(/\s+/).filter(Boolean).sort().join("|");}
-function isBreed(){return ["directie","zorgcoordinator","zorgleerkracht","beheerder"].includes(role);}
+function isBreed(){return window.inspectieAlleenLezen||["directie","zorgcoordinator","zorgleerkracht","beheerder"].includes(role);}
 function isSecretariaat(){return ["secretariaat","beheerder"].includes(role);}
 const GOK_KENMERK_LABELS={diploma_moeder:"Moeder geen diploma secundair onderwijs",thuistaal:"Thuistaal niet Nederlands",schooltoelage:"Schooltoelage / participatietoelage"};
 function gokKenmerkenTekst(s){
@@ -258,6 +259,7 @@ function leerlingInfoBlok(s){
   </div>`;
 }
 async function loadRole(){
+  if(window.inspectieAlleenLezen){role='inspectie';return;}
   const snap=await getDoc(doc(db,"schoolrollen",user.uid));
   role=snap.exists()?String(snap.data().rol||"").toLowerCase():"";
   if(role==="beheerder"){
@@ -652,6 +654,7 @@ function zetBewaarstatus(text,klasse=""){const el=$("titelSaveStatus");if(!el)re
 let saveToastTimer=null;
 function toonBewaarmelding(tekst,isFout=false){const melding=$("saveToast");melding.textContent=tekst;melding.classList.toggle("error",isFout);melding.style.display="block";clearTimeout(saveToastTimer);saveToastTimer=setTimeout(()=>{melding.style.display="none";},5000);}
 async function save(){
+  if(window.inspectieAlleenLezen)return;
   if(isArchiefJaar()){alert("Dit is een vorig schooljaar. Je kan het bekijken, maar niet per ongeluk overschrijven.");return;}
   collect();$("status").textContent="Bewaren...";zetBewaarstatus("Bezig met bewaren...","saving");
   try{await setDoc(overlegRef(),zorgoverlegBewaarPayload(),{merge:true});render();$("status").textContent="Bewaard";zetBewaarstatus("Titel en gegevens bewaard ✓","saved");toonBewaarmelding("✓ Zorgoverleg opgeslagen");}

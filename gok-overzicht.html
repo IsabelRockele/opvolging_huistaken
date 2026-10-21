@@ -33,7 +33,7 @@
     </section>
   </main>
   <script type="module">
-import {vereisZorgToegang} from "./inspectie-toegang.mjs";
+import {vereisZorgToegang} from "./inspectie-toegang.mjs?v=20261021-3";
 await vereisZorgToegang("gok");
 import { leerlingActief } from './klaswissel-model.mjs';
     import {initializeApp,getApps,getApp} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
@@ -51,8 +51,8 @@ import { leerlingActief } from './klaswissel-model.mjs';
     function naam(s){return `${s.last||s.lastName||""}, ${s.first||s.firstName||""}`.replace(/^, /,"").replace(/, $/,"")}
     function naamSorteersleutel(s){return `${s.last||s.lastName||""}${s.first||s.firstName||""}`.normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9]/gi,"").toLocaleLowerCase("nl")}
     function actief(s){return leerlingActief(s,schooljaar)}
-    function schoolbreed(){return ["beheerder","directie","zorgcoordinator","zorgleerkracht"].includes(role)}
-    function magWijzigen(){return role!=="directie"&&role!=="secretariaat"}
+    function schoolbreed(){return window.inspectieAlleenLezen||["beheerder","directie","zorgcoordinator","zorgleerkracht"].includes(role)}
+    function magWijzigen(){return !window.inspectieAlleenLezen&&role!=="directie"&&role!=="secretariaat"}
     async function laadRol(){const snap=await getDoc(doc(db,"schoolrollen",user.uid));role=snap.exists()?String(snap.data().rol||"").trim().toLowerCase():"";if(role==="beheerder"){const sim=localStorage.getItem("lindeSimuleerRol_"+user.uid);if(["klasleerkracht","zorgleerkracht","secretariaat","beheerder"].includes(sim))role=sim}}
     async function laadKlassen(){
       if(schoolbreed()){
@@ -85,6 +85,7 @@ import { leerlingActief } from './klaswissel-model.mjs';
       return bronnen;
     }
     async function migreerOudeGokGegevens(klas){
+      if(window.inspectieAlleenLezen)return 0;
       if(gemigreerdeKlassen.has(klas))return 0;gemigreerdeKlassen.add(klas);
       const projecten=await oudeOvergangProjectenVoorKlas(klas);if(!projecten.length)return 0;
       const oud=new Map();projecten.forEach(p=>(p.students||[]).forEach(s=>{const inhoud=s.gok==="ja"||(Array.isArray(s.gokKenmerken)&&s.gokKenmerken.length)||String(s.gokNote||"").trim();if(!inhoud)return;const keys=[String(s.schoolbeheerId||"").trim()?`id:${String(s.schoolbeheerId).trim()}`:"",`naam:${leerlingKey(s)}`].filter(Boolean);keys.forEach(key=>{const bestaand=oud.get(key);if(!bestaand||s.gok==="ja")oud.set(key,s)})}));if(!oud.size)return 0;

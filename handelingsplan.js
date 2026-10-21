@@ -1,4 +1,4 @@
-import {vereisZorgToegang} from './inspectie-toegang.mjs';
+import {vereisZorgToegang} from './inspectie-toegang.mjs?v=20261021-3';
 await vereisZorgToegang('handelingsplan');
 import {LEVELS,STATUS,EFFECT,PROGRESS,FIELDS,esc,filterGoals,contextFromUrl} from './handelingsplan-model.mjs';
 import {buildPlanPdf} from './handelingsplan-pdf.mjs?v=20261012-pdf-een-bewaar';
@@ -243,14 +243,14 @@ async function start(){
   options($('leeftijd'),catalog.leeftijden,'Alle leeftijden',false);
   if(demo){$('demoBanner').hidden=false;api=(await import('./handelingsplan-demo.mjs?v=20261012-pdf-een-bewaar')).createDemoApi(catalog);await load();return;}
   const [{initializeApp},{getAuth,onAuthStateChanged,signOut},sdk,{createFirestoreApi}]=await Promise.all([
-    import('https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js'),import('https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js'),import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js'),import('./handelingsplan-opslag.mjs?v=20261012-pdf-een-bewaar')]);
+    import('https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js'),import('https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js'),import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js'),import('./handelingsplan-opslag.mjs?v=20261021-inspectie-3')]);
   const app=initializeApp({apiKey:'AIzaSyA7KxXMvZ4dzBQDut3CMyWUblLte2tFzoQ',authDomain:'huiswerkapp-a311e.firebaseapp.com',projectId:'huiswerkapp-a311e',storageBucket:'huiswerkapp-a311e.appspot.com',messagingSenderId:'797169941164',appId:'1:797169941164:web:511d9618079f1378d0fd09'});
   onAuthStateChanged(getAuth(app),async user=>{
     $('logoutBtn').hidden=!user;
     if(!user){$('overzicht').hidden=true;$('editor').hidden=true;$('leerlingKiezen').hidden=true;$('leerling').textContent='Aanmelden vereist';dossier=null;message('Meld je aan via het startscherm en open daarna opnieuw het handelingsplan.',true);return;}
     let weergaveRol='';try{weergaveRol=localStorage.getItem('lindeSimuleerRol_'+user.uid)||'';}catch{}
     draftOwner=user.uid;
-    api=createFirestoreApi({sdk,db:sdk.getFirestore(app),user,catalog,weergaveRol});
+    api=createFirestoreApi({sdk,db:sdk.getFirestore(app),user,catalog,weergaveRol,alleenLezen:!!window.inspectieAlleenLezen});
     $('logoutBtn').onclick=async()=>{
       if(busy){message('Wacht tot het bewaren voltooid is.',true);return;}
       if(dirty&&!confirm('Je hebt onbewaarde wijzigingen. Toch uitloggen?'))return;

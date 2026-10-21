@@ -10,13 +10,13 @@ export function normaliseer(value){
 function leerlingSorteersleutel(s){
   return `${s.last||s.lastName||''}${s.first||s.firstName||''}`.normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]/gi,'').toLocaleLowerCase('nl') || String(s.naam||'').toLocaleLowerCase('nl');
 }
-export function createFirestoreApi({sdk,db,user,catalog,weergaveRol='',now=()=>new Date()}){
+export function createFirestoreApi({sdk,db,user,catalog,weergaveRol='',alleenLezen=false,now=()=>new Date()}){
   const {doc,collection,getDocFromServer:getDoc,getDocsFromServer:getDocs,query,where,runTransaction,serverTimestamp}=sdk;
   const ref=path=>doc(db,...path.split('/'));
   async function leerlingen(){
     const schooljaar=M.schoolYear(M.today(now())),day=M.today(now());
     const role=(await getDoc(ref(`schoolrollen/${user.uid}`))).data()?.rol;
-    if(!['directie','beheerder','zorgcoordinator','zorgleerkracht','klasleerkracht'].includes(role))throw Error('Je hebt geen toegang tot handelingsplannen.');
+    if(!['directie','beheerder','zorgcoordinator','zorgleerkracht','klasleerkracht','inspectie'].includes(role))throw Error('Je hebt geen toegang tot handelingsplannen.');
     const eigenKlassen=role==='klasleerkracht'||(role==='beheerder'&&weergaveRol==='klasleerkracht');
     let snaps;
     if(!eigenKlassen)snaps=(await getDocs(collection(db,'schoolbeheer',schooljaar,'klassen'))).docs;
@@ -30,7 +30,7 @@ export function createFirestoreApi({sdk,db,user,catalog,weergaveRol='',now=()=>n
   async function prepare(c){
     const jaar=M.year(c.schooljaar),day=M.today(now()),currentYear=M.schoolYear(day);
     const role=(await getDoc(ref(`schoolrollen/${user.uid}`))).data()?.rol;
-    if(!['directie','beheerder','zorgcoordinator','zorgleerkracht','klasleerkracht'].includes(role))throw Error('Je hebt geen toegang tot handelingsplannen.');
+    if(!['directie','beheerder','zorgcoordinator','zorgleerkracht','klasleerkracht','inspectie'].includes(role))throw Error('Je hebt geen toegang tot handelingsplannen.');
     const broad=role!=='klasleerkracht';let classes=[],linkedId;
     if(c.bron==='zorgoverleg'||c.bron==='handelingsplan'){classes=[M.id(c.klas)];linkedId=M.id(c.leerlingId);}
     else if(c.bron==='overgangsbespreking'){
@@ -53,7 +53,7 @@ export function createFirestoreApi({sdk,db,user,catalog,weergaveRol='',now=()=>n
     const codeRef=ref(`handelingsplanCodes/${id}`),codeSnap=await getDoc(codeRef);
     const parentCode=parent?(await getDoc(ref(`handelingsplanCodes/${M.id(String(parent))}`))).data():null;
     const root=M.id(codeSnap.data()?.dossierId||basisCode(s,parentCode));
-    const writable=jaar===currentYear&&M.active(s,day)&&!s.verhuisdNaar;
+    const writable=!alleenLezen&&role!=='inspectie'&&jaar===currentYear&&M.active(s,day)&&!s.verhuisdNaar;
     if(writable){
       await runTransaction(db,async tx=>{
         const classSnap=await tx.get(ref(`schoolbeheer/${jaar}/klassen/${chosen.klas}`));

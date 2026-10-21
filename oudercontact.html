@@ -308,7 +308,7 @@ button:disabled{opacity:.5;cursor:not-allowed}
 </div>
 
 <script type="module">
-import {vereisZorgToegang} from "./inspectie-toegang.mjs";
+import {vereisZorgToegang} from "./inspectie-toegang.mjs?v=20261021-3";
 await vereisZorgToegang("oudercontact");
 import { leerlingActief } from './klaswissel-model.mjs';
 // ── FIREBASE ──
@@ -358,7 +358,7 @@ function schooljaarOpties() {
 }
 function isArchiefJaar() { return Number(schooljaar.slice(0,4)) < Number(huidigSchooljaar().slice(0,4)); }
 function refreshEffectiveReadOnly() {
-  isReadOnly = roleReadOnly || isArchiefJaar();
+  isReadOnly = window.inspectieAlleenLezen || roleReadOnly || isArchiefJaar();
 }
 
 let currentUser = null;
@@ -391,6 +391,7 @@ function projectRef() {
 }
 
 async function setDoc(ref, payload, options) {
+  if(window.inspectieAlleenLezen)return;
   await probeerVeiligheidskopie(ref, {
     reden: 'Oudercontact vóór opslag', schooljaar,
     klas: activeKlasId || activeKlasNaam || beheerKlas || '',
@@ -404,6 +405,7 @@ async function setDoc(ref, payload, options) {
 }
 
 async function saveToFirebase() {
+  if(window.inspectieAlleenLezen)return;
   await ready;
   if (isArchiefJaar()) {
     throw new Error("Dit is een vorig schooljaar. Je kan dit bekijken, maar niet per ongeluk overschrijven.");
@@ -650,6 +652,7 @@ function tekstMetHuistaakSignaal(leerling, bestaandeTekst = '') {
 }
 // ── ROL OPHALEN ──
 async function laadRol() {
+  if(window.inspectieAlleenLezen){currentRol='inspectie';isSchoolBreed=true;roleReadOnly=true;return;}
   try {
     const snap = await getDoc(doc(db, 'schoolrollen', currentUser.uid));
     if (snap.exists()) {

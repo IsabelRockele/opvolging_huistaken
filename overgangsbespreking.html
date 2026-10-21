@@ -1148,7 +1148,7 @@
 </div>
 
 <script type="module">
-import {vereisZorgToegang} from "./inspectie-toegang.mjs";
+import {vereisZorgToegang} from "./inspectie-toegang.mjs?v=20261021-3";
 await vereisZorgToegang("overgang");
 import { leerlingActief } from './klaswissel-model.mjs';
 window.klaslijstLeerlingActief=leerlingActief;
@@ -1193,6 +1193,7 @@ const BEWAAR_JAREN_PER_STARTKLAS = { K1:12, K2:11, K3:10, "1A":9, "2A":8, "3A":7
 const BEWAAR_JAREN_SCHOOLBEHEER = 2; // Aanpasbaar: klaslijsten/refter/activiteiten/aankopen bewaren tot eind augustus na dit aantal schooljaren.
 
 async function reservekopieOvergang(ref,data) {
+  if(window.inspectieAlleenLezen)return;
   await probeerVeiligheidskopie(ref, {
     reden: 'Overgangsbespreking vóór opslag',
     schooljaar,
@@ -1204,6 +1205,7 @@ async function reservekopieOvergang(ref,data) {
   });
 }
 async function setDoc(ref, data, options) {
+  if(window.inspectieAlleenLezen)return;
   await reservekopieOvergang(ref,data);
   return firestoreSetDoc(ref, data, options);
 }
@@ -1239,9 +1241,10 @@ const ready = new Promise(resolve => {
   });
 });
 
-const schoolbredeRollenOvergang = ["beheerder", "directie", "zorgcoordinator", "zorgleerkracht"];
+const schoolbredeRollenOvergang = ["beheerder", "directie", "zorgcoordinator", "zorgleerkracht", "inspectie"];
 const ovEsc = v => String(v ?? "").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;");
 async function huidigeOvergangRol() {
+  if(window.inspectieAlleenLezen)return 'inspectie';
   await ready;
   try {
     const snap = await getDoc(doc(db, "schoolrollen", currentUser.uid));
@@ -1377,6 +1380,7 @@ ready.then(async () => {
     }
   }
   const koppelBtn = document.getElementById("klasKoppelingenBtn");
+  if(window.inspectieAlleenLezen&&!beheerKlasLabel)window.openOvergangKlasKiezer();
   if (koppelBtn && rol === "beheerder") {
     koppelBtn.style.display = "";
     koppelBtn.onclick = () => window.openKlasKoppelingenBeheer();
@@ -1535,6 +1539,7 @@ const geladenKlaswisselVersies=new Map();
 window.firebaseOvergang = {
   ready,
   async saveProject(data, opties = {}) {
+    if(window.inspectieAlleenLezen)return;
     await ready;
     if (overgangOpslagBlokkade) throw new Error(overgangOpslagBlokkade);
     const bewaarSchooljaar = geldigSchooljaar(opties.schooljaar) ? opties.schooljaar : schooljaar;
@@ -1677,6 +1682,7 @@ window.firebaseOvergang = {
     }, err => console.warn('Live GOK-koppeling kon niet worden geladen:', err));
   },
   async addSchoolbeheerLeerlingen(rows) {
+    if(window.inspectieAlleenLezen)return {klas:beheerKlasLabel,added:0,skipped:0};
     await ready;
     const klas = await bepaalSchoolbeheerKlas();
     if (!klas || !Array.isArray(rows) || !rows.length) return { klas, added: 0, skipped: 0 };
@@ -1716,6 +1722,7 @@ window.firebaseOvergang = {
     return { klas, added, skipped };
   },
   async syncZorgvelden(students) {
+    if(window.inspectieAlleenLezen)return {klas:beheerKlasLabel,updated:0};
     await ready;
     const klas = await bepaalSchoolbeheerKlas();
     if (!klas || !Array.isArray(students) || !students.length) return { klas, updated: 0 };
@@ -1763,7 +1770,7 @@ window.dispatchEvent(new Event('firebaseOvergangReady'));
 
 
 <script type="module">
-import {vereisZorgToegang} from "./inspectie-toegang.mjs";
+import {vereisZorgToegang} from "./inspectie-toegang.mjs?v=20261021-3";
 await vereisZorgToegang("overgang");
 import { initializeApp, getApp, getApps } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
@@ -1803,6 +1810,7 @@ const sfSchooljaar = (() => {
 })();
 
 async function sfVeiligheidskopie(ref, reden) {
+  if(window.inspectieAlleenLezen)return;
   return probeerVeiligheidskopie(ref, {
     reden,
     schooljaar: sfSchooljaar,
@@ -1812,11 +1820,13 @@ async function sfVeiligheidskopie(ref, reden) {
 }
 
 async function setDoc(ref, data, options) {
+  if(window.inspectieAlleenLezen)return;
   await sfVeiligheidskopie(ref, 'Overdrachtsdossier vóór opslag');
   return firestoreSetDoc(ref, data, options);
 }
 
 async function updateDoc(ref, data) {
+  if(window.inspectieAlleenLezen)return;
   await sfVeiligheidskopie(ref, 'Overdrachtsdossier vóór wijziging');
   return firestoreUpdateDoc(ref, data);
 }
@@ -2092,7 +2102,7 @@ function markExcludedFromSchoolbeheer(s) {
 function setFirebaseStatus(text) {
   const el = $('firebaseStatus');
   if (el) el.textContent = text;
-}function markDirty() { isDirty = true; updateSaveStatus(); }
+}function markDirty() { if(window.inspectieAlleenLezen)return;isDirty = true; updateSaveStatus(); }
 function markClean() { isDirty = false; lastSaveTime = new Date(); updateSaveStatus(); }
 function updateSaveStatus() {
   const el = $('saveStatus'), txt = $('saveStatusText');
@@ -2525,6 +2535,7 @@ function updateRepeatedYearUI() {
 }
 
 function saveStudent() {
+  if(window.inspectieAlleenLezen)return;
   const firstName = $('m_firstName').value.trim();
   const lastName = $('m_lastName').value.trim();
   if (!firstName) { alert('Vul een voornaam in.'); $('m_firstName').focus(); return; }
@@ -3737,6 +3748,7 @@ function collectProjectData() {
 }
 
 async function saveJSON(asNewVersion = false) {
+  if(window.inspectieAlleenLezen)return;
   const data = collectProjectData();
   if (window.firebaseOvergang) {
     try {
@@ -5843,6 +5855,7 @@ sfInitSchoolflow(); writeSettings(); updateBadges(); renderStudents(); updateSav
       }
 
       function planAutosave(reason = 'wijziging') {
+        if(window.inspectieAlleenLezen)return;
         if (!autosaveStarted) return;
         if (typeof markDirty === 'function') markDirty();
         clearTimeout(autosaveTimer);
@@ -5851,6 +5864,7 @@ sfInitSchoolflow(); writeSettings(); updateBadges(); renderStudents(); updateSav
       }
 
       async function runAutosave(reason = 'wijziging') {
+        if(window.inspectieAlleenLezen)return;
         if (autosaveBusy) {
           autosavePending = true;
           return;
