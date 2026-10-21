@@ -1069,35 +1069,63 @@
       }
     }
 
-    /* Nieuwjaarsbrieven: compacte lijst met één scrollgebied in de pagina. */
+
+    /* Nieuwjaarsbrieven: horizontale kop, rustige bediening, één scrollgebied. */
     .nb-panel{padding:20px;min-width:0}
-    .nb-panel h2{margin:0 0 14px;font-size:22px}
-    .nb-panel>p{margin:10px 0;color:var(--muted);font-size:13px}
-    .nb-totaal{position:sticky;top:0;z-index:6;display:flex;align-items:baseline;flex-wrap:wrap;gap:6px 22px;padding:12px 16px;border:1px solid #c9dfd0;border-radius:12px;background:#eff7f1;box-shadow:0 2px 5px #1633230a}
-    .nb-totaal strong{color:#214e35;font-size:15px}
-    .nb-totaal #nbTotaalAantal{font-size:21px;white-space:nowrap}
-    .nb-totaal>div{font-size:13px;color:#355643}
-    .nb-totaal>small{flex-basis:100%;font-size:12px;color:#587060}
-    .nb-toolbar{display:flex;align-items:flex-end;flex-wrap:wrap;gap:10px 16px;margin:14px 0 8px}
-    .nb-toolbar button{padding:8px 12px;font-size:13px;margin:0}
-    .nb-toolbar label{display:flex;align-items:center;gap:8px;font-size:13px;margin:0}
-    .nb-toolbar select{width:230px;padding:8px 10px;font-size:13px;margin:0}
-    .nb-save{font-size:12px;align-self:center}
-    .nb-uitleg{margin:8px 0 12px;font-size:12px;color:var(--muted)}
-    .nb-uitleg summary,.nb-history summary{cursor:pointer}
-    .nb-uitleg p{max-width:760px;line-height:1.5}
-    .nb-panel .nb-table{max-height:none;overflow:visible;border-radius:10px}
+    .nb-heading{display:flex;align-items:center;gap:20px;flex-wrap:wrap;position:sticky;top:0;z-index:6;background:#fff;padding:8px 0 14px}
+    .nb-title h2{margin:0 0 4px;font-size:22px;letter-spacing:-.4px}
+    .nb-title small{color:var(--muted);font-size:12px}
+    .nb-totaal{margin-left:auto;display:flex;align-items:center;gap:16px;padding:10px 16px;background:#eff7f1;border-radius:9px;color:#28583c;white-space:nowrap}
+    .nb-totaal strong{font-size:24px;letter-spacing:-.5px}
+    .nb-totaal>span{font-size:13px}
+    .nb-panel .nb-print{padding:9px 14px;font-size:13px;margin:0}
+    .nb-toolbar{display:flex;align-items:center;flex-wrap:wrap;gap:10px 16px;margin:8px 0 14px;position:relative}
+    .nb-toolbar label{display:flex;align-items:center;gap:8px;font-size:12px;margin:0;color:var(--muted)}
+    .nb-toolbar select{width:210px;padding:7px 10px;font-size:13px;margin:0;border-radius:7px}
+    .nb-save{font-size:12px}
+    .nb-pending{margin-left:auto;font-size:12px;color:var(--muted)}
+    .nb-uitleg,.nb-settings{font-size:12px;color:var(--muted)}
+    .nb-uitleg summary,.nb-settings summary,.nb-history summary{cursor:pointer;list-style:none}
+    .nb-uitleg summary::-webkit-details-marker,.nb-settings summary::-webkit-details-marker{display:none}
+    .nb-uitleg[open],.nb-settings[open]{flex-basis:100%;order:5}
+    .nb-uitleg p{max-width:800px;line-height:1.6;padding:10px 0;margin:0}
+    .nb-settings-body{padding:14px;border:1px solid var(--line);background:#f7f9fc;border-radius:9px;margin-top:8px}
+    .nb-settings-body small{display:block;margin-top:10px;line-height:1.5}
+    .nb-settings-body input{margin-top:6px}
+    .nb-panel .nb-table{max-height:none;overflow:visible;border:0;border-radius:0}
     .nb-table table{min-width:0;table-layout:fixed}
-    .nb-panel .nb-table th,.nb-panel .nb-table td{padding:6px 10px;font-size:13px;line-height:1.3;overflow-wrap:anywhere}
+    .nb-panel .nb-table th,.nb-panel .nb-table td{padding:7px 10px;font-size:13px;line-height:1.35;overflow-wrap:anywhere;border-left:0;border-right:0}
+    .nb-panel .nb-table th{font-size:11px;text-transform:none;letter-spacing:0;border-top:1px solid var(--line)}
     .nb-panel .nb-table th,.nb-panel .nb-table th:first-child,.nb-panel .nb-table td:first-child{position:static;min-width:0;width:auto;box-shadow:none}
-    .nb-panel .nb-table th:first-child{width:26%}
-    .nb-panel .nb-table th:nth-child(2){width:25%}
-    .nb-panel .nb-table th:nth-child(3){width:14%}
-    .nb-panel .nb-table input[data-nb-id]{width:100%!important;max-width:190px;padding:7px 9px;font-size:13px;border-radius:8px;margin:0}
+    .nb-panel .nb-table th:first-child{width:auto}
+    .nb-panel .nb-table th:nth-child(2){width:200px}
+    .nb-panel .nb-table th:nth-child(3){width:110px}
+    .nb-panel .nb-table td:nth-child(3),.nb-panel .nb-table th:nth-child(3){text-align:right;font-variant-numeric:tabular-nums}
+    .nb-panel:not(.nb-secretariaat) .nb-table th:last-child{width:55px}
+    .nb-panel .nb-table input[data-nb-id]{width:100%!important;max-width:180px;padding:7px 9px;font-size:13px;border-radius:7px;margin:0}
     .nb-table .tag{margin:0;padding:3px 7px;font-size:11px}
-    .nb-history{margin-top:3px;font-size:11px;color:var(--muted)}
-    .nb-history small{display:block;margin-top:5px;font-size:11px;line-height:1.4}
-    @media(max-width:620px){.nb-panel{padding:12px}.nb-panel h2{font-size:18px}.nb-panel .nb-table th,.nb-panel .nb-table td{padding:5px 4px;font-size:12px}.nb-toolbar label{flex:1}.nb-toolbar select{width:100%;min-width:0}.nb-totaal{padding:10px;gap:4px 12px}.nb-panel .nb-table input[data-nb-id]{font-size:12px;padding:6px 4px}}
+    .nb-history{font-size:11px;color:var(--muted)}
+    .nb-history[open]{min-width:0}
+    .nb-history summary{padding:3px 0}
+    .nb-history small{display:block;margin-top:5px;font-size:11px;line-height:1.5}
+    .nb-panel:not(.nb-secretariaat) .nb-history summary{font-size:16px;text-align:center}
+    .nb-panel:not(.nb-secretariaat) .nb-info-cell{position:relative}
+    .nb-panel:not(.nb-secretariaat) .nb-history[open]{position:absolute;right:0;top:6px;z-index:8;width:260px;padding:10px 14px;background:#fff;border:1px solid var(--line);border-radius:9px;box-shadow:0 6px 18px #17304c18}
+    .nb-panel:not(.nb-secretariaat) .nb-history[open] summary{text-align:right}
+    .nb-school{display:flex;gap:14px;align-items:center;padding:12px 0;border-bottom:1px solid var(--line);margin-bottom:12px}
+    .nb-school>span{font-size:12px;color:var(--muted);white-space:nowrap}
+    .nb-school-classes{display:flex;flex-wrap:wrap;gap:6px}
+    .nb-school-classes button{display:flex;align-items:center;gap:8px;margin:0;padding:7px 10px;border-radius:7px;font-size:12px}
+    .nb-school-classes button span{font-size:11px;color:var(--muted)}
+    .nb-school-classes .nb-class-active{background:#eff7f1;border-color:#a7c9b1}
+    .nb-secretariaat .nb-table th:nth-child(2){width:175px}
+    .nb-secretariaat .nb-table th:nth-child(4){width:190px}
+    .nb-secretariaat .nb-table th:nth-child(5){width:145px}
+    .nb-secretariaat .nb-table button{white-space:nowrap;padding:7px 9px;font-size:12px;margin:0;border-radius:7px}
+    .nb-footer{display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;padding-top:12px;color:var(--muted);font-size:11px}
+    .nb-deadline{font-size:12px;color:#80591c;margin:4px 0 12px}
+    @media(max-width:900px){.nb-heading{gap:12px}.nb-secretariaat .nb-table th:nth-child(2){width:145px}.nb-secretariaat .nb-table th:nth-child(3){width:85px}.nb-secretariaat .nb-table th:nth-child(4){width:150px}.nb-secretariaat .nb-table th:nth-child(5){width:115px}.nb-secretariaat .nb-table button{white-space:normal}}
+    @media(max-width:620px){.nb-panel{padding:12px}.nb-title h2{font-size:19px}.nb-heading{position:static}.nb-totaal{margin-left:0;padding:8px 12px;gap:10px}.nb-totaal strong{font-size:21px}.nb-toolbar{gap:10px}.nb-pending{margin-left:0;flex-basis:100%}.nb-panel .nb-table th,.nb-panel .nb-table td{padding:6px 4px;font-size:12px}.nb-panel .nb-table th:nth-child(2){width:135px}.nb-panel .nb-table th:nth-child(3){width:65px}.nb-panel .nb-table input[data-nb-id]{font-size:12px;padding:6px 4px}.nb-school{align-items:flex-start;flex-direction:column}.nb-secretariaat .nb-table table{table-layout:auto}.nb-secretariaat .nb-table th{width:auto!important}.nb-secretariaat .nb-table input[data-nb-id]{min-width:80px}.nb-secretariaat .nb-table .tag{font-size:10px}}
     /* Compacte kop en uitklapknoppen boven de klaslijst. */
     .class-list-mainbar .actions{display:flex;align-items:center;justify-content:flex-end;flex-wrap:wrap;gap:6px}
     .class-list-mainbar .screen-tools{margin:0;display:flex;flex-wrap:wrap;gap:6px}
@@ -1243,7 +1271,7 @@
 
   <script type="module">
     import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import { maakNieuwjaarsbrieven } from './nieuwjaarsbrieven.js?v=20261021-5';
+    import { maakNieuwjaarsbrieven } from './nieuwjaarsbrieven.js?v=20261021-6';
     import { briefMaandStatus } from './nieuwjaarsbrieven-model.mjs?v=20261021';
     import { Timestamp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
     import { openKlaswissel } from './klaswissel.js?v=20261005-inhoud';
