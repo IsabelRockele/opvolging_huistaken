@@ -14,7 +14,7 @@
   <main>
     <aside class="werkwijzer">
       <strong>Zo werk je hier</strong>
-      <p>Kies een leerling, vertrek van een leerplandoel en bewaar de aanpak en evaluaties.</p>
+      <p>Kies een leerling en bouw samen de aanpak, leerplandoelen en evaluaties op.</p>
       <details><summary>Stappen en bewaren</summary><p>Kies een bestaand plan of maak een nieuw handelingsplan. Noteer wat je probeert, wat werkt en wat je met ouders afspreekt. Bij eerdere aanpak kun je ook het schooljaar en de klas van toen invullen. Klik op Handelingsplan bewaren vóór je verdergaat. Bewaarde versies blijven beschikbaar.</p></details>
     </aside>
     <div class="document-actions"><button type="button" id="pdf" disabled title="Open eerst een handelingsplan">Bewaren als PDF</button><a id="pdfDownload" class="button secondary" hidden>PDF downloaden</a><button type="button" id="print" class="secondary">Afdrukken</button></div>
@@ -38,7 +38,7 @@
     <section id="editor" hidden>
       <div class="section-head"><div><p class="eyebrow" id="planContext"></p><h2 id="planTitel">Nieuw handelingsplan</h2></div><button type="button" id="sluiten" class="secondary">Terug naar overzicht</button></div>
       <form id="planForm">
-        <p>Je kunt in stukken werken: kies een leerplandoel en bewaar tussendoor. De overige velden mag je later aanvullen.</p>
+        <p>Je kunt in stukken werken en op elk moment bewaren. Ook de leerplandoelen mag je later samen met zorg en directie aanvullen.</p>
         <fieldset id="planVelden">
           <section class="card"><div class="section-head"><h3>1. De leerplandoelen</h3><button id="kiesDoel" type="button" class="secondary">Doelen kiezen / toevoegen</button></div><div id="gekozenDoel" class="goal-selected">Kies een doel uit de GO!-doelensets.</div></section>
           <section class="card"><h3>2. Wat willen we bij dit kind bereiken?</h3><div class="grid">
@@ -104,6 +104,6 @@
     <p id="selectieAantal" role="status"></p><p id="aantalDoelen" role="status"></p><div id="doelenResultaten"></div><button id="meerDoelen" type="button" class="secondary" hidden>Meer doelen tonen</button>
   </dialog>
   <script src="jspdf.umd.min.js"></script>
-  <script type="module" src="handelingsplan.js?v=20261021-bewaarcontrole-1"></script>
+  <script type="module" src="handelingsplan.js?v=20261021-zonder-doel-1"></script>
 </body>
 </html>

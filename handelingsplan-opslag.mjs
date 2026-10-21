@@ -1,5 +1,5 @@
 import {vergelijkKlassen} from "./klasvolgorde.mjs?v=20261021-1";
-import * as M from './handelingsplan-validatie.mjs?v=20261012-pdf-een-bewaar';
+import * as M from './handelingsplan-validatie.mjs?v=20261021-zonder-doel-1';
 
 export function basisCode(s,parentCode){return s.handelingsplanId || parentCode?.dossierId || s.previousStudentId || s.sourceStudentId || String(s.id);}
 export function normaliseer(value){

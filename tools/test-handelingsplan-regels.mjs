@@ -107,5 +107,15 @@ try{
  await b({...partialSave,operationId:'doel-terug',expectedVersion:3});
  assert.equal((await b({action:'load',context:partialContext})).plannen.find(p=>p.id==='plan-in-opbouw').doelen.length,1);
  check('Laatste doel verwijderen, bewaren en opnieuw toevoegen; vorige doelensets blijven in historiek');
+ const zonderDoel={action:'save',context:partialContext,planId:'notities-eerst',operationId:'notitie-1',expectedVersion:0,plan:{doelen:[],aanpak:'Eerst samen bespreken met zorg en directie'}};
+ await b(zonderDoel);
+ const firstNotes=(await api('teacher-b')({action:'load',context:partialContext})).plannen.find(p=>p.id==='notities-eerst');
+ assert.equal(firstNotes.aanpak,zonderDoel.plan.aanpak);assert.deepEqual(firstNotes.doelen,[]);assert.deepEqual(firstNotes.doel,{});
+ await api('zorgleerkracht')({...zonderDoel,expectedVersion:1,operationId:'notitie-2',plan:{...zonderDoel.plan,doelen:[{doelId:catalog.doelen[0].id}]}});
+ const completed=(await api('directie')({action:'load',context:partialContext})).plannen.find(p=>p.id==='notities-eerst');
+ assert.equal(completed.aanpak,zonderDoel.plan.aanpak);assert.equal(completed.doelen.length,1);
+ const noteHistory=(await b({action:'history',context:partialContext,planId:'notities-eerst'})).historiek;
+ assert.equal(noteHistory.length,2);assert.deepEqual(noteHistory[1].plan.doelen,[]);
+ check('Nieuw plan zonder leerplandoel bewaren, heropenen en door zorg laten aanvullen met behoud van notities');
  console.log(`${checks} groepen toegangs- en opslagcontroles geslaagd.`);
 }finally{await env.cleanup();}

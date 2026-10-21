@@ -14,7 +14,7 @@ invoer in een overleg of leerlingfiche blijft staan.
   of maak een nieuw plan.
 - Overgangsbespreking: dezelfde knop staat in de leesfiche en de bewerkfiche.
   Een nieuwe fiche moet eerst bewaard en centraal gekoppeld zijn.
-- Vink meerdere GO!-doelen aan, ook uit verschillende vakgebieden (maximaal twintig). De selectie blijft behouden bij wisselen van filters. De compacte lijst toont steeds vakgebied en doelcode; klap open voor details.
+- Leerplandoelen zijn optioneel bij bewaren. Begin gerust met notities en vul doelen later aan. Vink meerdere GO!-doelen aan, ook uit verschillende vakgebieden (maximaal twintig). De selectie blijft behouden bij wisselen van filters. De compacte lijst toont steeds vakgebied en doelcode; klap open voor details.
 - Kies GO!-doelen met vakgebied, onderwerp, subthema, rubriek, subrubriek en
   leeftijdsgroep. Zoek ook op doelcode of tekst. MIA en begrippen kunnen het
   gekozen doel verfijnen. Toelichtingen en voorbeelden blijven leesbaar.

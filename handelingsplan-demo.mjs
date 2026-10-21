@@ -1,4 +1,4 @@
-import {planInput,evaluationInput,priorInput} from './handelingsplan-validatie.mjs?v=20261012-pdf-een-bewaar';
+import {planInput,evaluationInput,priorInput} from './handelingsplan-validatie.mjs?v=20261021-zonder-doel-1';
 // Alleen expliciet via ?demo=1. Fictieve inhoud, uitsluitend in geheugen.
 export function createDemoApi(catalog){
   const goal=catalog.doelen.find(g=>g.vakgebied==='Wiskunde' && g.leeftijden.includes('7-8')) || catalog.doelen[0];

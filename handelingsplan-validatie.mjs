@@ -34,8 +34,8 @@ function planInput(raw, goals, old) {
   p.startdatum=date(raw.startdatum||old?.startdatum||today());p.evaluatiedatum=raw.evaluatiedatum?date(raw.evaluatiedatum):'';
   if(p.evaluatiedatum&&p.evaluatiedatum<p.startdatum)fail('De evaluatiedatum ligt voor de startdatum.', 'invalid-argument');
   const previous=planDoelen(old);
-  const choices=raw.doelen ?? (old ? previous.map(g=>({doelId:g.id})) : [{doelId:raw.doelId,doelItems:raw.doelItems}]);
-  if(!Array.isArray(choices)||(!old&&!choices.length)||choices.length>20||new Set(choices.map(g=>g?.doelId)).size!==choices.length)fail('Kies één tot twintig verschillende leerplandoelen.', 'invalid-argument');
+  const choices=raw.doelen ?? (old ? previous.map(g=>({doelId:g.id})) : raw.doelId ? [{doelId:raw.doelId,doelItems:raw.doelItems}] : []);
+  if(!Array.isArray(choices)||choices.length>20||new Set(choices.map(g=>g?.doelId)).size!==choices.length)fail('Kies maximaal twintig verschillende leerplandoelen.', 'invalid-argument');
   p.doelen=choices.map(c=>{
     const retained=previous.find(g=>g.id===c.doelId);
     if(retained)return retained;
@@ -46,7 +46,7 @@ function planInput(raw, goals, old) {
     return {...goal,items:[...new Set(chosen)].map(i=>goal.items[i])};
   });
   // Keep the legacy anchor immutable; doelen is the current selection, including an empty list.
-  p.doel=old?.doel||p.doelen[0];
+  p.doel=old?.doel||p.doelen[0]||{};
   if(old)p.startdatum=old.startdatum;
   if(p.evaluatiedatum&&p.evaluatiedatum<p.startdatum)fail('De evaluatiedatum ligt vóór de startdatum.', 'invalid-argument');
   p.status = raw.status || 'actief';
