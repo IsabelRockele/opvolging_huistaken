@@ -1,7 +1,8 @@
 import { periodeStart, periodeDagen, periodeEind, periodes, periodeRecord, magBevestigen } from "./refter-periodes.js?v=20260929-1";
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, sendPasswordResetEmail, signOut, updatePassword, updateEmail, reauthenticateWithCredential, EmailAuthProvider } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-import { getFirestore, doc, getDoc, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getFirestore, doc, getDoc, collection, query, where, getDocs, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { deadlineVoorbij } from './nieuwjaarsbrieven-model.mjs';
 
 const firebaseConfig = {
   apiKey: "AIzaSyA7KxXMvZ4dzBQDut3CMyWUblLte2tFzoQ",
@@ -253,6 +254,37 @@ function pasRustigePortaalrubriekenToe(rolNaam, isSecretariaat, heeftKlasbeheer,
   });
 }
 
+let stopNieuwjaarsHerinnering = null;
+function toonNieuwjaarsHerinnering(tegel, tonen) {
+  stopNieuwjaarsHerinnering?.();
+  stopNieuwjaarsHerinnering = null;
+  if (!tegel || !tonen || !auth.currentUser) return;
+  stopNieuwjaarsHerinnering = onSnapshot(doc(db, 'schoolbeheer', huidigSchooljaarVoorMeldingen(), 'instellingen', 'nieuwjaarsbrieven'), snap => {
+    tegel.querySelector('.nieuwjaars-deadline')?.remove();
+    const deadline = snap.data()?.deadline;
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(deadline || '')) return;
+    const blok = document.createElement('span');
+    blok.className = 'nieuwjaars-deadline';
+    const datum = new Date(deadline + 'T12:00:00Z').toLocaleDateString('nl-BE', {day:'numeric', month:'long', year:'numeric',timeZone:'Europe/Brussels'});
+    const kop = document.createElement('strong');
+    kop.textContent = deadlineVoorbij(deadline) ? '⛔ Nieuwjaarsbrieven: deadline voorbij' : '✉️ Nieuwjaarsbrieven in orde brengen';
+    const tekst = document.createElement('span');
+    tekst.textContent = deadlineVoorbij(deadline)
+      ? `De deadline was ${datum}. Wijzigingen verlopen nu via het secretariaat.`
+      : `Vul voor elk kind het aantal in of kies ‘Geen brieven gewenst’, uiterlijk op ${datum}.`;
+    const actie = document.createElement('span');
+    actie.className = 'nieuwjaars-deadline-actie';
+    actie.textContent = 'Nieuwjaarsbrieven bekijken →';
+    blok.append(kop, tekst, actie);
+    blok.addEventListener('click', event => {
+      event.preventDefault();
+      event.stopPropagation();
+      window.open('schoolbeheer.html?open=nieuwjaarsbrieven', '_blank', 'noopener');
+    });
+    tegel.querySelector('.portaal-open')?.before(blok);
+  }, err => console.warn('Nieuwjaarsbrievenherinnering laden mislukt', err));
+}
+
 function pasKnoppenToe(huistakenKnop, overgangKnop, schoolbeheerKnop, bestellingenKnop, oudercontactKnop, schoolKnop, groeigroepenKnop, zorgoverlegKnop, huiswerkklasKnop, klasafsprakenKnop, isSchoolBreed, isSecretariaat, heeftKlasbeheer, rolNaam = '') {
   function vulTegel(tegel, href, icoon, titel, tekst) {
     if (!tegel) return;
@@ -307,6 +339,7 @@ function pasKnoppenToe(huistakenKnop, overgangKnop, schoolbeheerKnop, bestelling
       vulTegel(schoolbeheerKnop, 'schoolbeheer.html?v=20260910-compacte-klaslijst-1', '🏫', 'Mijn klasorganisatie', 'Open je klaslijst, meldingen, refter, activiteiten en aankopen.');
     }
   }
+  toonNieuwjaarsHerinnering(schoolbeheerKnop, !isSecretariaat && (isSchoolBreed || heeftKlasbeheer));
   if (bestellingenKnop) bestellingenKnop.style.display = (isSecretariaat || heeftKlasbeheer) ? '' : 'none';
   const schoolverkoopKnop = document.getElementById('schoolverkoopKeuzeKnop');
   const magSchoolverkoop = ['beheerder', 'directie', 'secretariaat'].includes(rolNaam);

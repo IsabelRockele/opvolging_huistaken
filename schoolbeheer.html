@@ -4596,6 +4596,9 @@
         }
         renderScope();
         await openClass(activeClass, isSecretary());
+        if(new URLSearchParams(location.search).get("open")==="nieuwjaarsbrieven"){
+          tab="nieuwjaarsbrieven";renderKlasPills();render();
+        }
       }catch(err){
         console.error(err);
         $("content").innerHTML = `<div class="panel"><h2>Laden mislukt</h2><p class="muted">${esc(err.message)}</p></div>`;
