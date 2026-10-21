@@ -6,9 +6,15 @@ const Timestamp={now:()=>({toMillis:()=>++tick,toDate:()=>new Date()}),fromDate:
 // Stable timestamps emulate the persisted Firestore values.
 Timestamp.now=()=>{const n=++tick;return {toMillis:()=>n,toDate:()=>new Date(n)};};
 const controls=new Map(),events=new Map();
-const content={innerHTML:'',querySelectorAll(selector){
+const page={scrollTop:0,scrollLeft:0,parentElement:null};
+let table={scrollTop:0,scrollLeft:0},html='';
+const content={contains:el=>el===globalThis.document.activeElement,parentElement:page,scrollTop:0,scrollLeft:0,
+  get innerHTML(){return html;},
+  set innerHTML(value){html=value;table={scrollTop:0,scrollLeft:0};page.scrollTop=0;page.scrollLeft=0;},
+  querySelectorAll(selector){
+  if(selector==='.table-wrap')return html.includes('class="table-wrap"')?[table]:[];
   const attr=selector.slice(1,-1),re=new RegExp(attr+'="([^"]+)"','g');
-  return [...this.innerHTML.matchAll(re)].map(m=>({dataset:{nbId:m[1],nbProcess:m[1],nbClass:m[1],nbGeen:m[1]},value:'',addEventListener(type,fn){events.set(attr+'/'+m[1],{fn,el:this});}}));
+  return [...this.innerHTML.matchAll(re)].map(m=>({dataset:{nbId:m[1],nbProcess:m[1],nbClass:m[1],nbGeen:m[1],nbReset:m[1]},value:'',addEventListener(type,fn){events.set(attr+'/'+m[1]+(type==='blur'?'/blur':''),{fn,el:this});}}));
 }};
 globalThis.document={getElementById:id=>id==='content'?content:controls.has(id)?controls.get(id):controls.set(id,{}).get(id)};
 const ref=(...parts)=>parts.filter(p=>p!==db).map(p=>typeof p==='object'?p.path:p).join('/');
@@ -36,12 +42,42 @@ assert.ok(!content.innerHTML.includes('data-nb-id="kind"'));
 controls.get('nbFilter').onchange({target:{value:'alle'}});
 await events.get('data-nb-geen/kind').fn();await settle();
 assert.equal(store.get(order).aantal,0);assert.match(content.innerHTML,/Geen brieven gewenst/);
+await events.get('data-nb-reset/kind').fn();await settle();
+assert.equal(store.get(order).aantal,null);
+assert.match(content.innerHTML,/placeholder="Nog niet ingevuld" value=""/);
+assert.ok(!content.innerHTML.includes('data-nb-reset="kind"'));
+assert.ok([...store].some(([p,v])=>p.startsWith(order+'/geschiedenis/')&&v.aantal===null&&v.vorigAantal===0));
+controls.get('nbFilter').onchange({target:{value:'leeg'}});
+assert.ok(content.innerHTML.includes('data-nb-id="kind"'));
+controls.get('nbFilter').onchange({target:{value:'ingevuld'}});
+assert.ok(!content.innerHTML.includes('data-nb-id="kind"'));
+controls.get('nbFilter').onchange({target:{value:'alle'}});
+await events.get('data-nb-geen/kind').fn();await settle();
 controls.get('nbFilter').onchange({target:{value:'ingevuld'}});
 assert.ok(content.innerHTML.includes('data-nb-id="kind"'));
 controls.get('nbFilter').onchange({target:{value:'open'}});
 assert.ok(!content.innerHTML.includes('data-nb-id="kind"'));
 controls.get('nbFilter').onchange({target:{value:'alle'}});
+page.scrollTop=720;page.scrollLeft=12;table.scrollTop=240;table.scrollLeft=180;
 await change(3);assert.equal(store.get(order).aantal,3);assert.match(content.innerHTML,/1,80/);
+assert.equal(page.scrollTop,720);assert.equal(page.scrollLeft,12);
+assert.equal(table.scrollTop,240);assert.equal(table.scrollLeft,180);
+// Incoming live updates must preserve both the page and table position too.
+notify();
+assert.equal(page.scrollTop,720);assert.equal(table.scrollTop,240);assert.equal(table.scrollLeft,180);
+// Native spinner clicks must keep the focused input and table in place.
+const focused=events.get('data-nb-id/kind').el;
+document.activeElement=focused;
+const before=content.innerHTML,oldTable=table;
+focused.value='4';const first=events.get('data-nb-id/kind').fn();
+focused.value='5';const second=events.get('data-nb-id/kind').fn();
+await Promise.all([first,second]);await settle();
+assert.equal(store.get(order).aantal,5);
+assert.equal(content.innerHTML,before);assert.equal(table,oldTable);
+document.activeElement=null;
+await events.get('data-nb-id/kind/blur').fn();await new Promise(resolve=>setTimeout(resolve,5));
+assert.match(content.innerHTML,/value="5"/);
+await change(3);
 c.secretariaat=true;c.gebruiker='sec@test.be';module.render();await settle();
 await events.get('data-nb-process/kind').fn();await settle();assert.match(content.innerHTML,/>Verwerkt</);
 c.secretariaat=false;c.gebruiker='juf@test.be';module.render();await settle();await change(1);

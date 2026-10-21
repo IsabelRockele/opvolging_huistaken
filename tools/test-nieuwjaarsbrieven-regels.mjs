@@ -15,12 +15,15 @@ try{
    await setDoc(doc(c.firestore(),'klasleerkrachten/2026-2027_1A'),{leerkracht_uids:['juf'],leerkracht_emails:[]});
  });
  await assertSucceeds(setDoc(doc(db('juf'),pad),order('juf')));
+ await assertSucceeds(updateDoc(doc(db('juf'),pad),{aantal:null}));
+ await assertSucceeds(updateDoc(doc(db('juf'),pad),{aantal:3}));
  await assertFails(getDoc(doc(db('ander'),pad)));
  await assertFails(updateDoc(doc(db('ander'),pad),{aantal:5}));
  await assertSucceeds(setDoc(doc(db('zorg'),pad),order('zorg')));
  await assertFails(setDoc(doc(db('juf'),cfg),{prijsCent:60,deadline:'',sluitOp:null}));
  await assertFails(updateDoc(doc(db('juf'),pad),{verwerkt:{aantal:3,bedragCent:180}}));
  await assertSucceeds(updateDoc(doc(db('sec'),pad),{verwerkt:{aantal:3,bedragCent:180}}));
+ await assertFails(updateDoc(doc(db('juf'),pad),{aantal:null}));
  await assertSucceeds(updateDoc(doc(db('juf'),pad),{aantal:0,gewijzigdDoor:'juf@test.be'}));
  await assertFails(updateDoc(doc(db('juf'),pad),{aantal:-1}));
  await assertFails(updateDoc(doc(db('juf'),pad),{aantal:1.5}));

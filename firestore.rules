@@ -295,7 +295,8 @@ function isGekoppeldAanGroep(groep) {
       }
       function geldig() {
         return request.resource.data.keys().hasOnly(['aantal','naam','gewijzigdDoor','gewijzigdOp','verwerkt'])
-          && request.resource.data.aantal is int && request.resource.data.aantal >= 0 && request.resource.data.aantal <= 999
+          && ((request.resource.data.aantal is int && request.resource.data.aantal >= 0 && request.resource.data.aantal <= 999)
+            || (request.resource.data.aantal == null && !('verwerkt' in request.resource.data)))
           && request.resource.data.naam is string && request.resource.data.gewijzigdOp is timestamp
           && (request.resource.data.gewijzigdDoor == request.auth.uid || request.resource.data.gewijzigdDoor == request.auth.token.email);
       }

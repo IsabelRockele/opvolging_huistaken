@@ -3,7 +3,7 @@ const esc = value => String(value ?? '').replaceAll('&','&amp;').replaceAll('<',
 export function maakAfvinklijst({klas,jaar,leerlingen,orders,naam,datum=new Date()}) {
   let totaal=0,ontbreekt=0;
   const rijen=leerlingen.map((s,i)=>{
-    const r=orders.get(`${klas}/${s.id}`);
+    const order=orders.get(`${klas}/${s.id}`),r=order?.aantal===null?undefined:order;
     totaal+=r?.aantal||0;if(!r)ontbreekt++;
     return `<tr><td class="nr">${i+1}</td><td class="naam">${esc(naam(s))}</td><td class="aantal">${r?r.aantal:'—'}${!r?'<small>Nog niet ingevuld</small>':r.aantal===0?'<small>Geen brieven gewenst</small>':''}</td><td class="gemaakt">${r?.aantal>0?'<span class="vakje"></span>':'—'}</td><td></td></tr>`;
   }).join('');
