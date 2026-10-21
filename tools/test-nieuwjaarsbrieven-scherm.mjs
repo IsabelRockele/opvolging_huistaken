@@ -34,17 +34,17 @@ const cfg='schoolbeheer/2026-2027/instellingen/nieuwjaarsbrieven';
 async function change(n){const e=events.get('data-nb-id/kind');e.el.value=String(n);await e.fn();await settle();}
 module.render();await settle();
 assert.match(content.innerHTML,/Test/);assert.match(content.innerHTML,/Nog niet ingevuld/);
-assert.match(content.innerHTML,/placeholder="Nog niet ingevuld" value=""/);
+assert.match(content.innerHTML,/option value="" selected[^>]*>Nog niet ingevuld/);
 controls.get('nbFilter').onchange({target:{value:'ingevuld'}});
 assert.ok(!content.innerHTML.includes('data-nb-id="kind"'));
 controls.get('nbFilter').onchange({target:{value:'open'}});
 assert.ok(!content.innerHTML.includes('data-nb-id="kind"'));
 controls.get('nbFilter').onchange({target:{value:'alle'}});
-await events.get('data-nb-geen/kind').fn();await settle();
+await change(0);
 assert.equal(store.get(order).aantal,0);assert.match(content.innerHTML,/Geen brieven gewenst/);
-await events.get('data-nb-reset/kind').fn();await settle();
+await change('');
 assert.equal(store.get(order).aantal,null);
-assert.match(content.innerHTML,/placeholder="Nog niet ingevuld" value=""/);
+assert.match(content.innerHTML,/option value="" selected[^>]*>Nog niet ingevuld/);
 assert.ok(!content.innerHTML.includes('data-nb-reset="kind"'));
 assert.ok([...store].some(([p,v])=>p.startsWith(order+'/geschiedenis/')&&v.aantal===null&&v.vorigAantal===0));
 controls.get('nbFilter').onchange({target:{value:'leeg'}});
@@ -52,7 +52,7 @@ assert.ok(content.innerHTML.includes('data-nb-id="kind"'));
 controls.get('nbFilter').onchange({target:{value:'ingevuld'}});
 assert.ok(!content.innerHTML.includes('data-nb-id="kind"'));
 controls.get('nbFilter').onchange({target:{value:'alle'}});
-await events.get('data-nb-geen/kind').fn();await settle();
+await change(0);
 controls.get('nbFilter').onchange({target:{value:'ingevuld'}});
 assert.ok(content.innerHTML.includes('data-nb-id="kind"'));
 controls.get('nbFilter').onchange({target:{value:'open'}});
@@ -65,7 +65,7 @@ assert.equal(table.scrollTop,240);assert.equal(table.scrollLeft,180);
 // Incoming live updates must preserve both the page and table position too.
 notify();
 assert.equal(page.scrollTop,720);assert.equal(table.scrollTop,240);assert.equal(table.scrollLeft,180);
-// Native spinner clicks must keep the focused input and table in place.
+// Arrow-key choices must keep the focused selection and table in place.
 const focused=events.get('data-nb-id/kind').el;
 document.activeElement=focused;
 const before=content.innerHTML,oldTable=table;
@@ -76,7 +76,7 @@ assert.equal(store.get(order).aantal,5);
 assert.equal(content.innerHTML,before);assert.equal(table,oldTable);
 document.activeElement=null;
 await events.get('data-nb-id/kind/blur').fn();await new Promise(resolve=>setTimeout(resolve,5));
-assert.match(content.innerHTML,/value="5"/);
+assert.match(content.innerHTML,/value="5" selected/);
 await change(3);
 c.secretariaat=true;c.gebruiker='sec@test.be';module.render();await settle();
 await events.get('data-nb-process/kind').fn();await settle();assert.match(content.innerHTML,/>Verwerkt</);
