@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import {bedrag,statusBrief,deadlineVoorbij,geldigAantal,pastInFilter} from '../nieuwjaarsbrieven-model.mjs';
+import {bedrag,statusBrief,deadlineVoorbij,geldigAantal,pastInFilter,briefMaandStatus} from '../nieuwjaarsbrieven-model.mjs';
 assert.equal(bedrag(3),180);
 assert.equal(statusBrief(), 'Nog niet ingevuld');
 assert.equal(statusBrief({aantal:3}), 'Nieuw — te verwerken');
@@ -25,3 +25,17 @@ assert.equal(deadlineVoorbij('',new Date()),false);
 for(const n of [-1,1.5,NaN,1000,Infinity])assert.equal(geldigAantal(n),false);
 for(const n of [0,3,999])assert.equal(geldigAantal(n),true);
 console.log('Bedragen, bijbestellen, verminderen tot nul, prijswijzigingen en Belgische deadline gecontroleerd.');
+const tijd=iso=>({toDate:()=>new Date(iso)});
+assert.equal(briefMaandStatus([]).size,0);
+const maand=briefMaandStatus([
+ {aantal:3,gewijzigdOp:tijd('2026-10-21T10:00:00Z')},
+ {aantal:0,gewijzigdOp:tijd('2026-10-22T10:00:00Z')},
+ {aantal:2,verwerkt:{aantal:3,bedragCent:180},gewijzigdOp:tijd('2026-10-31T23:15:00Z')},
+ {aantal:1,verwerkt:{aantal:1,bedragCent:60},gewijzigdOp:tijd('2026-12-01T10:00:00Z')}
+]);
+assert.deepEqual([...maand.keys()],['2026-10','2026-11','2026-12']);
+assert.equal(maand.get('2026-10').open,1);
+assert.equal(maand.get('2026-11').open,1);
+assert.equal(maand.get('2026-12').open,0);
+assert.equal(maand.has('2027-01'),false);
+console.log('Maandmappen: alleen maanden met invoer, nieuwe bestellingen, latere correcties en Belgische maandgrens gecontroleerd.');

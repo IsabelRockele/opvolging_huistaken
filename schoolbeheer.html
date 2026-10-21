@@ -1214,6 +1214,7 @@
   <script type="module">
     import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
     import { maakNieuwjaarsbrieven } from './nieuwjaarsbrieven.js';
+    import { briefMaandStatus } from './nieuwjaarsbrieven-model.mjs';
     import { Timestamp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
     import { openKlaswissel } from './klaswissel.js?v=20261005-inhoud';
     import { kopieDocument } from './klaswissel-model.mjs';
@@ -1256,6 +1257,26 @@
     let testOverzichtUnsub = null;
     const actieveTestKlassen = new Map();
     const liveKlasDocumenten = new Map();
+    let briefMaandScope='',briefMaandStops=[],briefMaandOrders=[],briefMaandPrijs=60,briefMaandFout=false;
+    function sluitBriefMaanden(){briefMaandStops.forEach(stop=>stop());briefMaandStops=[];briefMaandScope='';}
+    function luisterBriefMaanden(){
+      const sleutel=`${schooljaar}/${activeClass}`;
+      if(briefMaandScope===sleutel)return;
+      sluitBriefMaanden();briefMaandScope=sleutel;briefMaandOrders=[];briefMaandPrijs=60;briefMaandFout=false;
+      const ververs=()=>{
+        if(briefMaandScope!==sleutel||tab!=="klasstart")return;
+        const open=[...document.querySelectorAll('.maandmap[open]')].map(el=>el.dataset.briefMaand);
+        renderKlasStart();
+        document.querySelectorAll('.maandmap').forEach(el=>{if(open.includes(el.dataset.briefMaand))el.open=true;});
+      };
+      const fout=err=>{if(briefMaandScope!==sleutel)return;console.warn(err);briefMaandFout=true;ververs();};
+      briefMaandStops.push(onSnapshot(collection(db,"schoolbeheer",schooljaar,"klassen",activeClass,"nieuwjaarsbrieven"),snap=>{
+        if(briefMaandScope!==sleutel)return;briefMaandOrders=snap.docs.map(d=>d.data());ververs();
+      },fout));
+      briefMaandStops.push(onSnapshot(doc(db,"schoolbeheer",schooljaar,"instellingen","nieuwjaarsbrieven"),snap=>{
+        if(briefMaandScope!==sleutel)return;briefMaandPrijs=snap.data()?.prijsCent??60;ververs();
+      },fout));
+    }
     const nieuwjaarsbrieven = maakNieuwjaarsbrieven({db,doc,collection,onSnapshot,runTransaction,Timestamp,esc,
       context:()=>({jaar:schooljaar,klas:activeClass,tab,secretariaat:isSecretary(),klassen:allClasses,
         leerlingen:activeStudents(),naam:name,gebruiker:user?.email||user?.uid||'',
@@ -1689,12 +1710,15 @@
       return "nog niets ingevuld";
     }
     function renderKlasStart(){
+      luisterBriefMaanden();
+      const briefMaanden=briefMaandStatus(briefMaandOrders,briefMaandPrijs);
       const months=schoolMonths();
-      $("content").innerHTML=`<div class="panel"><div class="bar"><div><h2>${esc(activeClass)} — maandoverzicht</h2><p class="muted">Open een maand en kies daarna Refter, Activiteiten of Aankopen. Een gele map bevat iets dat nog opgevolgd moet worden.</p></div><button class="white no-print" onclick="openLeerlingenVoorKlas()">👥 Leerlingen beheren</button></div>
-        <button class="white no-print" onclick="openNieuwjaarsbrieven()">✉️ Nieuwjaarsbrieven — bestellen en verwerken</button><div class="maandmappen">${months.map(month=>{const s=maandStatus(data,month);return`<details class="maandmap ${s.totaal?'heeft-open':''}"><summary><span>${esc(maandNaam(month))}</span>${s.totaal?`<span class="maandmap-status">${s.totaal} nieuw</span>`:""}</summary><div class="maandmap-inhoud">
+      $("content").innerHTML=`<div class="panel"><div class="bar"><div><h2>${esc(activeClass)} — maandoverzicht</h2><p class="muted">Open een maand en kies Refter, Activiteiten of Aankopen. Nieuwjaarsbrieven verschijnen alleen in een maand met ingevulde of gewijzigde aantallen. Een gele map vraagt opvolging.</p></div><button class="white no-print" onclick="openLeerlingenVoorKlas()">👥 Leerlingen beheren</button></div>
+        ${briefMaandFout?'<div class="notice">Nieuwjaarsbrieven konden niet geladen worden. Open de module Nieuwjaarsbrieven om opnieuw te proberen.</div>':''}<div class="maandmappen">${months.map(month=>{const s=maandStatus(data,month),b=briefMaanden.get(month);s.totaal+=b?.open||0;return`<details data-brief-maand="${month}" class="maandmap ${s.totaal?'heeft-open':''}"><summary><span>${esc(maandNaam(month))}</span>${s.totaal?`<span class="maandmap-status">${s.totaal} nieuw</span>`:""}</summary><div class="maandmap-inhoud">
           <button class="maandmap-knop ${s.refterOpen?'nieuw':''}" onclick="openMaandOnderdeel('refter','${month}')"><span>🍽️ Refter<small>${esc(onderdeelStatusTekst('refter',s))}</small></span><span>›</span></button>
           <button class="maandmap-knop ${s.activiteitOpen?'nieuw':s.activiteitAantal?'verwerkt':''}" onclick="openMaandOnderdeel('activiteiten','${month}')"><span>🚌 Activiteiten<small>${esc(onderdeelStatusTekst('activiteit',s))}</small></span><span>›</span></button>
           <button class="maandmap-knop ${s.aankoopOpen?'nieuw':s.aankoopAantal?'verwerkt':''}" onclick="openMaandOnderdeel('aankopen','${month}')"><span>🛍️ Aankopen<small>${esc(onderdeelStatusTekst('aankoop',s))}</small></span><span>›</span></button>
+          ${b?`<button class="maandmap-knop ${b.open?'nieuw':'verwerkt'}" onclick="openNieuwjaarsbrieven()"><span>✉️ Nieuwjaarsbrieven<small>${b.open?`${b.open} nog te verwerken`:b.brieven?'verwerkt / nagekeken':'geen brieven gewenst'}</small></span><span>›</span></button>`:''}
         </div></details>`}).join("")}</div></div>`;
     }
     function maandOnderdeelNavigatie(actief,month){
@@ -1782,6 +1806,7 @@
 
     function render(){
       if(!data) return;
+      if(tab!=="klasstart")sluitBriefMaanden();
       if(tab!=="nieuwjaarsbrieven")nieuwjaarsbrieven.sluit();
       if(!isSecretary() && tab === "administratie") tab = "klaslijst";
       if(isSecretary() && tab === "klaslijst") tab = "administratie";

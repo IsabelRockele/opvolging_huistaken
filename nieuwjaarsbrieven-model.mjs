@@ -17,3 +17,16 @@ export function pastInFilter(record, filter, prijsCent = STANDAARD_PRIJS) {
   if (filter === 'leeg') return !record;
   return true;
 }
+export function briefMaandStatus(records, prijsCent = STANDAARD_PRIJS) {
+  const maanden = new Map();
+  for (const r of records) {
+    const datum = r.gewijzigdOp?.toDate?.();
+    if (!datum || Number.isNaN(datum.getTime())) continue;
+    const maand = new Intl.DateTimeFormat('sv-SE', {timeZone:'Europe/Brussels',year:'numeric',month:'2-digit'}).format(datum);
+    const status = maanden.get(maand) || {aantal:0,open:0,brieven:0};
+    status.aantal++;status.brieven+=r.aantal||0;
+    if (statusBrief(r,prijsCent).includes('te verwerken')) status.open++;
+    maanden.set(maand,status);
+  }
+  return maanden;
+}
