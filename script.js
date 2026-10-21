@@ -452,6 +452,7 @@ function toonBeheerderRolwissel(user) {
     ].join(';');
     knop.onclick = () => {
       localStorage.setItem(simuleerSleutel, id);
+      sessionStorage.setItem('lindeGekozenRol_' + user.uid, id);
       location.reload();
     };
     paneel.appendChild(knop);
@@ -604,6 +605,11 @@ async function toonSchooloverzichtKnopAlsNodig(user) {
     // ── Beheerder: toon rolwissel-paneel en pas gesimuleerde rol toe ──
     if (isBeheerder) {
       const inspectieSleutel='lindeSimuleerRol_'+user.uid;
+      const gekozenSleutel='lindeGekozenRol_'+user.uid;
+      const netGekozenRol=sessionStorage.getItem(gekozenSleutel);
+      sessionStorage.removeItem(gekozenSleutel);
+      // Een simulatie geldt na een bewuste rolklik. Opnieuw openen begint als beheerder.
+      localStorage.setItem(inspectieSleutel, netGekozenRol || 'beheerder');
       if(new URLSearchParams(location.search).get('beheerder')==='1'){
         localStorage.setItem(inspectieSleutel,'beheerder');history.replaceState(null,'','index.html');
       }
