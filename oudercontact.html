@@ -308,6 +308,8 @@ button:disabled{opacity:.5;cursor:not-allowed}
 </div>
 
 <script type="module">
+import {vereisZorgToegang} from "./inspectie-toegang.mjs";
+await vereisZorgToegang("oudercontact");
 import { leerlingActief } from './klaswissel-model.mjs';
 // ── FIREBASE ──
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";

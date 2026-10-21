@@ -179,6 +179,8 @@
   <section id="students"></section>
 </main>
 <script type="module">
+import {vereisZorgToegang} from "./inspectie-toegang.mjs";
+await vereisZorgToegang("zorgoverleg");
 import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import { getFirestore, doc, getDoc, setDoc as firestoreSetDoc, collection, getDocs, query, where, serverTimestamp, runTransaction } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";

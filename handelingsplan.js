@@ -1,3 +1,5 @@
+import {vereisZorgToegang} from './inspectie-toegang.mjs';
+await vereisZorgToegang('handelingsplan');
 import {LEVELS,STATUS,EFFECT,PROGRESS,FIELDS,esc,filterGoals,contextFromUrl} from './handelingsplan-model.mjs';
 import {buildPlanPdf} from './handelingsplan-pdf.mjs?v=20261012-pdf-een-bewaar';
 import {evaluatieDoelen,DOELRESULTAAT,planDoelen} from './handelingsplan-evaluatie.mjs?v=20261012-pdf-een-bewaar';

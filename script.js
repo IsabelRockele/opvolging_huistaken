@@ -298,6 +298,19 @@ function pasKnoppenToe(huistakenKnop, overgangKnop, schoolbeheerKnop, bestelling
       '<span class="portaal-open">Openen</span>';
   }
 
+  if (rolNaam === 'inspectie') {
+    document.querySelectorAll('.portaal-tegel').forEach(el => el.style.display = 'none');
+    const inspectieTegels = [
+      [overgangKnop,'overgang','Overgangsbespreking'],[oudercontactKnop,'oudercontact','Oudercontact'],
+      [zorgoverlegKnop,'zorgoverleg','Zorgoverleg'],[document.getElementById('handelingsplanKeuzeKnop'),'handelingsplan','Handelingsplan'],
+      [groeigroepenKnop,'groeigroepen','Groeigroepen'],[document.getElementById('gokOverzichtKeuzeKnop'),'gok','GOK-overzicht']
+    ];
+    inspectieTegels.forEach(([el,id,label])=>{if(el){vulTegel(el,'inspectie.html?tool='+id,'📖',label,'Alle klassen raadplegen — alleen lezen.');el.style.display='';}});
+    pasRustigePortaalrubriekenToe('zorgleerkracht',false,false,true);
+    document.querySelectorAll('#ingelogd-kaart .portaal-sectie').forEach(sectie=>{sectie.style.display=[...sectie.querySelectorAll('.portaal-tegel')].some(el=>el.style.display!=='none')?'':'none';});
+    for(const id of ['portaalHulpbalk','eersteKeerChecklist','publiekeAgendaLinks']){const el=document.getElementById(id);if(el)el.style.display='none';}
+    return;
+  }
   if (schoolKnop) schoolKnop.style.display = 'none';
   if (groeigroepenKnop) groeigroepenKnop.style.display = (isSchoolBreed || heeftKlasbeheer) ? '' : 'none';
   if (oudercontactKnop) oudercontactKnop.style.display = (isSchoolBreed || heeftKlasbeheer) ? '' : 'none';
@@ -404,6 +417,7 @@ function toonBeheerderRolwissel(user) {
     { id: 'klasleerkracht', label: '👩‍🏫 Klasleerkracht' },
     { id: 'zorgleerkracht', label: '💛 Zorgleerkracht' },
     { id: 'secretariaat',   label: '📋 Secretariaat' },
+    { id: 'inspectie', label: '📖 Inspectie (alleen lezen)' },
   ];
 
   const paneel = document.createElement('div');
@@ -518,7 +532,7 @@ window.mailHulpbericht = function () {
 // Zet gesimuleerde rol om naar isSchoolBreed / isSecretariaat / heeftKlasbeheer
 function gesimuleerdePaspoorten(gesimuleerdRol) {
   return {
-    isSchoolBreed:  ['beheerder', 'zorgleerkracht'].includes(gesimuleerdRol),
+    isSchoolBreed:  ['beheerder', 'zorgleerkracht', 'directie', 'zorgcoordinator'].includes(gesimuleerdRol),
     isSecretariaat: ['beheerder', 'secretariaat'].includes(gesimuleerdRol),
     heeftKlasbeheer: gesimuleerdRol === 'klasleerkracht',
   };
@@ -567,7 +581,7 @@ async function toonSchooloverzichtKnopAlsNodig(user) {
       pasKnoppenToe(huistakenKnop, overgangKnop, schoolbeheerKnop, bestellingenKnop, oudercontactKnop, schoolKnop, groeigroepenKnop, zorgoverlegKnop, huiswerkklasKnop,
         klasafsprakenKnop,
         cached.isSchoolBreed, cached.isSecretariaat, cached.heeftKlasbeheer, cached.rol || '');
-      if (klasafsprakenKnop) klasafsprakenKnop.style.display = magKlasafsprakenTesten(user) ? '' : 'none';
+      if (klasafsprakenKnop) klasafsprakenKnop.style.display = cached.rol !== 'inspectie' && magKlasafsprakenTesten(user) ? '' : 'none';
     }
   } catch (e) { /* cache onleesbaar, gewoon doorgaan */ }
 
@@ -586,6 +600,10 @@ async function toonSchooloverzichtKnopAlsNodig(user) {
     // ── Beheerder: toon rolwissel-paneel en pas gesimuleerde rol toe ──
     if (isBeheerder) {
       document.body.classList.add('beheerder-account');
+      if (!document.getElementById('inspectiebeheerKnop')) {
+        const link=document.createElement('a');link.id='inspectiebeheerKnop';link.href='inspectiebeheer.html';link.className='knop-banner';link.textContent='Inspectiebezoek voorbereiden';
+        (document.querySelector('.banner-account') || document.getElementById('ingelogd-kaart'))?.append(link);
+      }
       initAccountbeheer(app, auth);
       initKlassenBackup(app, auth);
       toonBeheerderRolwissel(user);
@@ -599,12 +617,22 @@ async function toonSchooloverzichtKnopAlsNodig(user) {
       pasKnoppenToe(huistakenKnop, overgangKnop, schoolbeheerKnop, bestellingenKnop, oudercontactKnop, schoolKnop, groeigroepenKnop, zorgoverlegKnop, huiswerkklasKnop,
         klasafsprakenKnop,
         isSchoolBreed, isSecretariaat, heeftKlasbeheer, gesimuleerdRol);
-      if (klasafsprakenKnop) klasafsprakenKnop.style.display = magKlasafsprakenTesten(user) ? '' : 'none';
+      if (klasafsprakenKnop) klasafsprakenKnop.style.display = gesimuleerdRol !== 'inspectie' && magKlasafsprakenTesten(user) ? '' : 'none';
       toonPortaalLaden(false);
       toonOpvallendeStartmeldingen(user, gesimuleerdRol, [uidResult.value, emailResult.value].filter(Boolean)).catch(console.warn);
       return;
     }
 
+    if (!rol || rol === 'inspectie') {
+      const {toegang} = await import('./inspectie-toegang.mjs');
+      const toegangInspectie = await toegang(user);
+      if (toegangInspectie.rol === 'inspectie') {
+        if (!toegangInspectie.geldig) { location.href='inspectie.html'; return; }
+        localStorage.removeItem(cacheKey);
+        pasKnoppenToe(huistakenKnop,overgangKnop,schoolbeheerKnop,bestellingenKnop,oudercontactKnop,schoolKnop,groeigroepenKnop,zorgoverlegKnop,huiswerkklasKnop,klasafsprakenKnop,false,false,false,'inspectie');
+        toonPortaalLaden(false);return;
+      }
+    }
     const isSchoolBreed = ['directie', 'zorgcoordinator', 'zorgleerkracht'].includes(rol);
     const isSecretariaat = rol === 'secretariaat';
 

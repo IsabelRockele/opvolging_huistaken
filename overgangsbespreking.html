@@ -1148,6 +1148,8 @@
 </div>
 
 <script type="module">
+import {vereisZorgToegang} from "./inspectie-toegang.mjs";
+await vereisZorgToegang("overgang");
 import { leerlingActief } from './klaswissel-model.mjs';
 window.klaslijstLeerlingActief=leerlingActief;
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
@@ -1761,6 +1763,8 @@ window.dispatchEvent(new Event('firebaseOvergangReady'));
 
 
 <script type="module">
+import {vereisZorgToegang} from "./inspectie-toegang.mjs";
+await vereisZorgToegang("overgang");
 import { initializeApp, getApp, getApps } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import { getFirestore, collection, doc, getDocs, query, serverTimestamp, setDoc as firestoreSetDoc, updateDoc as firestoreUpdateDoc, where } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
