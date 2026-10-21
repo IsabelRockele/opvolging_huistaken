@@ -12,7 +12,7 @@ const content={contains:el=>el===globalThis.document.activeElement,parentElement
   get innerHTML(){return html;},
   set innerHTML(value){html=value;table={scrollTop:0,scrollLeft:0};page.scrollTop=0;page.scrollLeft=0;},
   querySelectorAll(selector){
-  if(selector==='.table-wrap')return html.includes('class="table-wrap"')?[table]:[];
+  if(selector==='.table-wrap')return html.includes('class="table-wrap')?[table]:[];
   const attr=selector.slice(1,-1),re=new RegExp(attr+'="([^"]+)"','g');
   return [...this.innerHTML.matchAll(re)].map(m=>({dataset:{nbId:m[1],nbProcess:m[1],nbClass:m[1],nbGeen:m[1],nbReset:m[1]},value:'',addEventListener(type,fn){events.set(attr+'/'+m[1]+(type==='blur'?'/blur':''),{fn,el:this});}}));
 }};
