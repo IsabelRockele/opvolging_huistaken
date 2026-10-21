@@ -179,6 +179,7 @@
   <section id="students"></section>
 </main>
 <script type="module">
+import {vergelijkKlassen} from "./klasvolgorde.mjs?v=20261021-1";
 import {vereisZorgToegang} from "./inspectie-toegang.mjs?v=20261021-4";
 await vereisZorgToegang("zorgoverleg");
 import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
@@ -270,11 +271,11 @@ async function loadRole(){
   }
 }
 async function loadClasses(){
-  if(isBreed()||isSecretariaat()){const snap=await getDocs(collection(db,"schoolbeheer",schooljaar,"klassen"));classes=[...new Set([...DEFAULT_CLASSES,...snap.docs.map(d=>d.id)])].sort((a,b)=>a.localeCompare(b,"nl",{numeric:true}));return;}
+  if(isBreed()||isSecretariaat()){const snap=await getDocs(collection(db,"schoolbeheer",schooljaar,"klassen"));classes=[...new Set([...DEFAULT_CLASSES,...snap.docs.map(d=>d.id)])].sort((a,b)=>vergelijkKlassen(a,b));return;}
   const email=(user.email||"").toLowerCase(), found=new Set();
   const snaps=await Promise.all([getDocs(query(collection(db,"klasleerkrachten"),where("leerkracht_uids","array-contains",user.uid))),getDocs(query(collection(db,"klasleerkrachten"),where("leerkracht_emails","array-contains",email)))]);
   snaps.forEach(s=>s.forEach(d=>{const item=d.data(); if(String(item.schooljaar||schooljaar)===schooljaar) found.add(String(item.klas||item.klasId||"").trim());}));
-  classes=[...found].filter(Boolean).sort((a,b)=>a.localeCompare(b,"nl",{numeric:true}));
+  classes=[...found].filter(Boolean).sort((a,b)=>vergelijkKlassen(a,b));
 }
 async function refreshSchooljaar(){
   $("klasobservatiePanel").hidden=true;

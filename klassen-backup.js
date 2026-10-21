@@ -1,3 +1,4 @@
+import {vergelijkKlassen} from "./klasvolgorde.mjs?v=20261021-1";
 import {getFirestore,doc,getDocFromServer,collection,getDocsFromServer,Timestamp,GeoPoint,Bytes,DocumentReference} from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 
 // Expliciet getypeerde waarden voor later gecontroleerd herstel; geen schrijf-API.
@@ -50,7 +51,7 @@ export function initKlassenBackup(app,auth){
         }catch(e){errors.push({path,error:e.code||e.message});sources.push({path,ok:false});}
       }
       await checkAdmin(uid);
-      const classes=documents.filter(d=>d.path.startsWith(`schoolbeheer/${year}/klassen/`)).map(d=>({klas:d.path.split('/').at(-1),leerlingen:(d.data.leerlingen||[]).length,gok:(d.data.leerlingen||[]).filter(s=>s.gok==='ja').length})).sort((a,b)=>a.klas.localeCompare(b.klas,'nl',{numeric:true}));
+      const classes=documents.filter(d=>d.path.startsWith(`schoolbeheer/${year}/klassen/`)).map(d=>({klas:d.path.split('/').at(-1),leerlingen:(d.data.leerlingen||[]).length,gok:(d.data.leerlingen||[]).filter(s=>s.gok==='ja').length})).sort((a,b)=>vergelijkKlassen(a.klas,b.klas));
       const warnings=[];if(!classes.length)warnings.push('Geen centrale klaslijsten gevonden. Controleer het schooljaar.');
       for(const source of sources)if(source.ok&&source.count===0)warnings.push('Geen documenten gevonden in '+source.path);
       const complete=errors.length===0&&classes.length>0;

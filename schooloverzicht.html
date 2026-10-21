@@ -62,7 +62,8 @@
   </main>
 
   <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import {vergelijkKlassen} from "./klasvolgorde.mjs?v=20261021-1";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
     import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
     import { getFirestore, collection, doc, getDoc, getDocs, query, where } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
@@ -144,7 +145,7 @@
           });
         });
         allClasses = [...perKlas.values()]
-          .sort((a, b) => String(a.klas || a.id).localeCompare(String(b.klas || b.id), 'nl', { numeric: true }));
+          .sort((a, b) => vergelijkKlassen(a.klas || a.id,b.klas || b.id));
         renderClasses();
       } catch (err) {
         console.error(err);

@@ -1,3 +1,4 @@
+import {vergelijkKlassen} from "./klasvolgorde.mjs?v=20261021-1";
 import * as M from './handelingsplan-validatie.mjs?v=20261012-pdf-een-bewaar';
 
 export function basisCode(s,parentCode){return s.handelingsplanId || parentCode?.dossierId || s.previousStudentId || s.sourceStudentId || String(s.id);}
@@ -25,7 +26,7 @@ export function createFirestoreApi({sdk,db,user,catalog,weergaveRol='',alleenLez
       const classes=[...new Set(links.flatMap(s=>s.docs).filter(d=>d.id.startsWith(schooljaar+'_')).map(d=>d.id.slice(schooljaar.length+1)))];
       snaps=await Promise.all(classes.map(k=>getDoc(ref(`schoolbeheer/${schooljaar}/klassen/${k}`))));
     }
-    return {schooljaar,eigenKlassen,klassen:snaps.map(d=>({klas:d.id,leerlingen:(d.data()?.leerlingen||[]).filter(s=>s.id&&M.active(s,day)&&!s.verhuisdNaar).sort((a,b)=>leerlingSorteersleutel(a).localeCompare(leerlingSorteersleutel(b),'nl')).map(s=>({id:String(s.id),naam:[s.last||s.lastName,s.first||s.firstName].filter(Boolean).join(', ')||s.naam||'Leerling'}))})).sort((a,b)=>a.klas.localeCompare(b.klas,'nl',{numeric:true}))};
+    return {schooljaar,eigenKlassen,klassen:snaps.map(d=>({klas:d.id,leerlingen:(d.data()?.leerlingen||[]).filter(s=>s.id&&M.active(s,day)&&!s.verhuisdNaar).sort((a,b)=>leerlingSorteersleutel(a).localeCompare(leerlingSorteersleutel(b),'nl')).map(s=>({id:String(s.id),naam:[s.last||s.lastName,s.first||s.firstName].filter(Boolean).join(', ')||s.naam||'Leerling'}))})).sort((a,b)=>vergelijkKlassen(a.klas,b.klas))};
   }
   async function prepare(c){
     const jaar=M.year(c.schooljaar),day=M.today(now()),currentYear=M.schoolYear(day);

@@ -195,6 +195,7 @@
 </main>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script type="module">
+import {vergelijkKlassen} from "./klasvolgorde.mjs?v=20261021-1";
 import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import { getFirestore, doc, getDoc, setDoc as firestoreSetDoc, collection, getDocs, query, where, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
@@ -273,9 +274,9 @@ async function loadClasses(){
     getDocs(query(collection(db,"klasleerkrachten"),where("leerkracht_emails","array-contains",email)))
   ]);
   snaps.forEach(s=>s.forEach(d=>{const item=d.data(); if(String(item.schooljaar||schooljaar)===schooljaar)found.add(String(item.klas||item.klasId||"").trim());}));
-  ownClasses=[...found].filter(Boolean).sort((a,b)=>a.localeCompare(b,"nl",{numeric:true}));
+  ownClasses=[...found].filter(Boolean).sort((a,b)=>vergelijkKlassen(a,b));
   const snap=await getDocs(collection(db,"schoolbeheer",schooljaar,"klassen"));
-  allClasses=[...new Set([...DEFAULT_CLASSES,...snap.docs.map(d=>d.id)])].sort((a,b)=>a.localeCompare(b,"nl",{numeric:true}));
+  allClasses=[...new Set([...DEFAULT_CLASSES,...snap.docs.map(d=>d.id)])].sort((a,b)=>vergelijkKlassen(a,b));
 }
 async function loadSupervisorConfig(){
   const configSnap=await getDoc(supervisorConfigRef());
@@ -341,7 +342,7 @@ function localRows(){
   Object.entries(hw.enrolled||{}).forEach(([key,v])=>{
     if(v?.active!==false&&actieveSleutels.has(key)&&!rows.some(r=>r.key===key))rows.push({key,klas:v.klas||"",name:v.name||"",local:false,active:true,free:!!v.free,days:v.days||{},start:v.start||"",end:v.end||"",history:v.history||[]});
   });
-  return rows.sort((a,b)=>(a.klas||"").localeCompare(b.klas||"","nl",{numeric:true})||(a.name||"").localeCompare(b.name||"","nl"));
+  return rows.sort((a,b)=>vergelijkKlassen(a.klas,b.klas)||(a.name||"").localeCompare(b.name||"","nl"));
 }
 function quickAddClasses(){return (isSchoolBreed()||isSecretariaat()||isConfiguredSupervisor())?allClasses:ownClasses;}
 function quickAddCandidates(){
@@ -385,7 +386,7 @@ function aanwezigheidOpDatum(r,d){return !isCancelledDate(d)&&!!hw.attendance?.[
 function aanwezighedenTotaal(r,dates){return dates.reduce((totaal,d)=>totaal+(aanwezigheidOpDatum(r,d)?1:0),0);}
 function euroBedrag(bedrag){return new Intl.NumberFormat("nl-BE",{style:"currency",currency:"EUR",minimumFractionDigits:0,maximumFractionDigits:0}).format(bedrag);}
 function enrolledList(){
-  return Object.entries(hw.enrolled||{}).filter(([,v])=>v&&v.active!==false).map(([key,v])=>({key,...v})).sort((a,b)=>(a.klas||"").localeCompare(b.klas||"","nl",{numeric:true})||(a.name||"").localeCompare(b.name||"","nl"));
+  return Object.entries(hw.enrolled||{}).filter(([,v])=>v&&v.active!==false).map(([key,v])=>({key,...v})).sort((a,b)=>vergelijkKlassen(a.klas,b.klas)||(a.name||"").localeCompare(b.name||"","nl"));
 }
 function gekozenWerkdatum(){const dates=[...(hw.dates||[])].sort();return dates.includes(date)?date:""}
 function geregistreerdeMaanddatums(){
@@ -699,7 +700,7 @@ function downloadSupervisorsPdf(){
 }
 function downloadAloneHomePdf(){
   if(!window.jspdf?.jsPDF)return alert("De PDF-module is nog niet geladen. Probeer over enkele seconden opnieuw.");
-  const rows=localRows().filter(r=>r.mayGoHomeAlone).sort((a,b)=>(a.klas||"").localeCompare(b.klas||"","nl",{numeric:true})||pdfLeerlingNaam(a.name).localeCompare(pdfLeerlingNaam(b.name),"nl"));
+  const rows=localRows().filter(r=>r.mayGoHomeAlone).sort((a,b)=>vergelijkKlassen(a.klas,b.klas)||pdfLeerlingNaam(a.name).localeCompare(pdfLeerlingNaam(b.name),"nl"));
   if(!rows.length)return alert("Er zijn momenteel geen kinderen met toestemming om alleen naar huis te gaan.");
   const {jsPDF}=window.jspdf,pdf=new jsPDF({orientation:"portrait",unit:"mm",format:"a4"}),m=15,pageW=210,pageH=297,rowH=9,cols=[m,m+25,m+126,pageW-m],vandaag=new Date().toLocaleDateString("nl-BE");
   function kop(vervolg=false){

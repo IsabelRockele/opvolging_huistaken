@@ -243,7 +243,7 @@ async function start(){
   options($('leeftijd'),catalog.leeftijden,'Alle leeftijden',false);
   if(demo){$('demoBanner').hidden=false;api=(await import('./handelingsplan-demo.mjs?v=20261012-pdf-een-bewaar')).createDemoApi(catalog);await load();return;}
   const [{initializeApp},{getAuth,onAuthStateChanged,signOut},sdk,{createFirestoreApi}]=await Promise.all([
-    import('https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js'),import('https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js'),import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js'),import('./handelingsplan-opslag.mjs?v=20261021-inspectie-4')]);
+    import('https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js'),import('https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js'),import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js'),import('./handelingsplan-opslag.mjs?v=20261021-klasvolgorde-1')]);
   const app=initializeApp({apiKey:'AIzaSyA7KxXMvZ4dzBQDut3CMyWUblLte2tFzoQ',authDomain:'huiswerkapp-a311e.firebaseapp.com',projectId:'huiswerkapp-a311e',storageBucket:'huiswerkapp-a311e.appspot.com',messagingSenderId:'797169941164',appId:'1:797169941164:web:511d9618079f1378d0fd09'});
   onAuthStateChanged(getAuth(app),async user=>{
     $('logoutBtn').hidden=!user;

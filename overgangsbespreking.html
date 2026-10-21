@@ -1148,6 +1148,7 @@
 </div>
 
 <script type="module">
+import {vergelijkKlassen} from "./klasvolgorde.mjs?v=20261021-1";
 import {vereisZorgToegang} from "./inspectie-toegang.mjs?v=20261021-5";
 await vereisZorgToegang("overgang");
 import { leerlingActief } from './klaswissel-model.mjs';
@@ -1294,7 +1295,7 @@ async function laadOvergangKlassen() {
     });
   });
   const klassen = [...klassenMap.values()];
-  klassen.sort((a,b)=>(a.klasNaam || a.klas || a.id).localeCompare(b.klasNaam || b.klas || b.id, "nl", { numeric:true }));
+  klassen.sort((a,b)=>vergelijkKlassen(a.klasNaam || a.klas || a.id,b.klasNaam || b.klas || b.id));
   return klassen;
 }
 function sluitOvergangKlaskiezer() {
@@ -1380,7 +1381,7 @@ ready.then(async () => {
     }
   }
   const koppelBtn = document.getElementById("klasKoppelingenBtn");
-  if(window.inspectieAlleenLezen&&!beheerKlasLabel)window.openOvergangKlasKiezer();
+
   if (koppelBtn && rol === "beheerder") {
     koppelBtn.style.display = "";
     koppelBtn.onclick = () => window.openKlasKoppelingenBeheer();
@@ -1502,7 +1503,7 @@ async function bepaalSchoolbeheerKlas() {
       const item = d.data();
       if (String(item.schooljaar || schooljaar) === schooljaar && item.klas) gevonden.push(String(item.klas).trim());
     }));
-    klas = gevonden.sort((a, b) => a.localeCompare(b, 'nl', { numeric: true }))[0] || '';
+    klas = gevonden.sort(vergelijkKlassen)[0] || '';
   }
   return klas;
 }

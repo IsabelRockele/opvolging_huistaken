@@ -341,6 +341,7 @@ body.doelen-modal-open{overflow:hidden}
 </main>
 
 <script type="module">
+import {vergelijkKlassen} from "./klasvolgorde.mjs?v=20261021-1";
 import {vereisZorgToegang} from "./inspectie-toegang.mjs?v=20261021-4";
 await vereisZorgToegang("groeigroepen");
 import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
@@ -531,7 +532,7 @@ function huidigeRapportPeriode(){
 function puntenboekPeriodes(){
   const set=new Set((active?.toetsen||[]).map(t=>String(t.periode||"").trim()).filter(Boolean));
   if(active?.rapportGroep?.periode) set.add(String(active.rapportGroep.periode).trim());
-  return [...set].sort((a,b)=>a.localeCompare(b,"nl",{numeric:true}));
+  return [...set].sort(vergelijkKlassen);
 }
 function actievePuntenboekPeriode(){
   const uitSelect=$("ptFilterPeriode")?.value;
@@ -1116,7 +1117,7 @@ function allStudents(){
   }))).sort((a,b)=>studentNaam(a).localeCompare(studentNaam(b),"nl"));
 }
 function renderLeerlingen(){
-  const klasLijst=Object.values(classes).sort((a,b)=>a.klas.localeCompare(b.klas,"nl",{numeric:true}));
+  const klasLijst=Object.values(classes).sort((a,b)=>vergelijkKlassen(a.klas,b.klas));
   if(!klasLijst.some(c=>c.klas===leerlingPickerKlas)){
     leerlingPickerKlas=active.leerlingen.find(s=>classes[s.klas])?.klas||klasLijst[0]?.klas||"";
   }

@@ -308,6 +308,7 @@ button:disabled{opacity:.5;cursor:not-allowed}
 </div>
 
 <script type="module">
+import {vergelijkKlassen} from "./klasvolgorde.mjs?v=20261021-1";
 import {vereisZorgToegang} from "./inspectie-toegang.mjs?v=20261021-4";
 await vereisZorgToegang("oudercontact");
 import { leerlingActief } from './klaswissel-model.mjs';
@@ -692,7 +693,7 @@ async function laadAlleKlassen() {
         leerlingAantal: Array.isArray(item.leerlingen) ? item.leerlingen.length : 0
       });
     });
-    klassen.sort((a,b) => (a.klasNaam||a.id).localeCompare(b.klasNaam||b.id,'nl'));
+    klassen.sort((a,b) => vergelijkKlassen(a.klasNaam||a.id,b.klasNaam||b.id));
     return klassen;
   } catch(e) {
     console.error('Klassen laden mislukt:', e);
@@ -718,7 +719,7 @@ async function bepaalEigenKlasVoorOudercontact() {
   } catch(e) {
     console.error('Eigen klas zoeken mislukt:', e);
   }
-  gevonden.sort((a,b) => (a.klasNaam || a.id).localeCompare(b.klasNaam || b.id, 'nl'));
+  gevonden.sort((a,b) => vergelijkKlassen(a.klasNaam||a.id,b.klasNaam||b.id));
   const eerste = gevonden[0];
   if (!eerste) return;
   activeKlasId = (eerste.klasId || eerste.id.replace(schooljaar + '_','')).trim();
