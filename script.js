@@ -299,6 +299,9 @@ function pasKnoppenToe(huistakenKnop, overgangKnop, schoolbeheerKnop, bestelling
   }
 
   if (rolNaam === 'inspectie') {
+    document.body.classList.remove('beheerder-account');
+    document.getElementById('beheerder-rolwissel')?.remove();
+    document.querySelectorAll('.banner-account .knop-banner').forEach(el=>{if(!el.getAttribute('onclick')?.includes('uitloggenVanIndex'))el.style.display='none';});
     document.querySelectorAll('.portaal-tegel').forEach(el => el.style.display = 'none');
     const inspectieTegels = [
       [overgangKnop,'overgang','Overgangsbespreking'],[oudercontactKnop,'oudercontact','Oudercontact'],
@@ -600,6 +603,14 @@ async function toonSchooloverzichtKnopAlsNodig(user) {
 
     // ── Beheerder: toon rolwissel-paneel en pas gesimuleerde rol toe ──
     if (isBeheerder) {
+      const inspectieSleutel='lindeSimuleerRol_'+user.uid;
+      if(new URLSearchParams(location.search).get('beheerder')==='1'){
+        localStorage.setItem(inspectieSleutel,'beheerder');history.replaceState(null,'','index.html');
+      }
+      if(localStorage.getItem(inspectieSleutel)==='inspectie'){
+        pasKnoppenToe(huistakenKnop,overgangKnop,schoolbeheerKnop,bestellingenKnop,oudercontactKnop,schoolKnop,groeigroepenKnop,zorgoverlegKnop,huiswerkklasKnop,klasafsprakenKnop,false,false,false,'inspectie');
+        toonPortaalLaden(false);return;
+      }
       document.body.classList.add('beheerder-account');
       if (!document.getElementById('inspectiebeheerKnop')) {
         const link=document.createElement('a');link.id='inspectiebeheerKnop';link.href='inspectiebeheer.html';link.className='knop-banner';link.textContent='Inspectiebezoek voorbereiden';
@@ -625,7 +636,7 @@ async function toonSchooloverzichtKnopAlsNodig(user) {
     }
 
     if (!rol || rol === 'inspectie') {
-      const {toegang} = await import('./inspectie-toegang.mjs?v=20261021-3');
+      const {toegang} = await import('./inspectie-toegang.mjs?v=20261021-4');
       const toegangInspectie = await toegang(user);
       if (toegangInspectie.rol === 'inspectie') {
         if (!toegangInspectie.geldig) { location.href='inspectie.html'; return; }

@@ -86,6 +86,10 @@ try{
  await rootPage.page.getByRole('button',{name:'📖 Inspectie (alleen lezen)',exact:true}).click();
  await rootPage.page.waitForFunction(()=>document.querySelector('#overgangKeuzeKnop')?.href.includes('overgangsbespreking.html'));
  assert.equal(await rootPage.page.locator('.portaal-tegel:visible').count(),6);checks++;
+ assert.equal(await rootPage.page.locator('#beheerder-rolwissel').count(),0);checks++;
+ assert.equal(await rootPage.page.locator('#inspectiebeheerKnop').count(),0);checks++;
+ await rootPage.page.goto(base+'/index.html?beheerder=1');
+ await rootPage.page.locator('#inspectiebeheerKnop').waitFor({state:'visible'});checks++;
  assert.deepEqual(rootPage.errors,[]);checks++;
  const urls={overgang:'overgangsbespreking.html?beheerUid=juf&klas=1A',oudercontact:'oudercontact.html?beheerUid=juf&klas=1A&klasId=1A',zorgoverleg:'zorgoverleg.html',handelingsplan:'handelingsplan.html',groeigroepen:'groeigroepen.html',gok:'gok-overzicht.html'};
  for(const viewRole of ['inspectie','beheerder'])for(const tool of Object.keys(urls)){
@@ -117,6 +121,7 @@ try{
   await page.waitForTimeout(400);
   assert.deepEqual(errors,[],tool);checks++;
   assert.equal(await page.evaluate(()=>__writes.length),0,tool+' must not write');checks++;
+  assert.equal(await page.getByText('Terug als beheerder',{exact:true}).count(),0);checks++;
   assert.equal(await page.locator('textarea:not([readonly]):not(:disabled)').count(),0,tool);checks++;
   await page.screenshot({path:'output/inspectie/'+tool+'-'+viewRole+'-vertrouwd.png',fullPage:true});
   if(tool==='gok'&&viewRole==='inspectie'){

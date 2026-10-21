@@ -59,12 +59,12 @@ function activeerLeesstand(user,t,tool){
   document.documentElement.classList.add('inspectie-leesstand');
   const css=document.createElement('link');css.rel='stylesheet';css.href='inspectie-leesstand.css?v=20261021-2';document.head.append(css);
   const bar=document.createElement('aside');bar.id='inspectieLeesbalk';bar.setAttribute('aria-label','Inspectie leesstand');
-  const title=document.createElement('strong');title.textContent=t.simulatie?'Inspectie testen — alleen lezen':'Inspectie — alleen lezen';bar.append(title);
+  const title=document.createElement('strong');title.textContent='Inspectie — alleen lezen';bar.append(title);
   const nav=document.createElement('nav');
   for(const [id,label]of zorgTools){const a=document.createElement('a');a.href=zorgToolUrl(id);a.textContent=label;if(id===tool)a.setAttribute('aria-current','page');nav.append(a);}
   bar.append(nav);
-  const back=document.createElement('a');back.href='index.html';back.textContent=t.simulatie?'Terug als beheerder':'Startscherm';
-  if(t.simulatie)back.onclick=()=>localStorage.setItem('lindeSimuleerRol_'+user.uid,'beheerder');bar.append(back);document.body.prepend(bar);
+  const back=document.createElement('a');back.href='index.html';back.textContent='Startscherm';
+  bar.append(back);document.body.prepend(bar);
   const navField=el=>el.closest('#inspectieLeesbalk') || /zoek|search|filter|schooljaar|maandSelect|klasSelect|keuzeKlas|keuzeLeerling|jaarSelect|rapportPeriode|ptFilter|sort/i.test(el.id||'') || /filter|search/.test(el.className||'');
   const mutation=el=>{
     if(el.closest('#inspectieLeesbalk'))return false;

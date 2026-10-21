@@ -1,6 +1,6 @@
-import {vereisZorgToegang,zorgTools,zorgToolUrl} from './inspectie-toegang.mjs?v=20261021-3';
+import {vereisZorgToegang,zorgTools,zorgToolUrl} from './inspectie-toegang.mjs?v=20261021-4';
 import {signOut} from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
-import {auth} from './inspectie-toegang.mjs?v=20261021-3';
+import {auth} from './inspectie-toegang.mjs?v=20261021-4';
 await vereisZorgToegang('inspectie');
 const tool=new URLSearchParams(location.search).get('tool');
 if(zorgTools.some(([id])=>id===tool))location.replace(zorgToolUrl(tool));

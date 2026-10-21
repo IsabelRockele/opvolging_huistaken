@@ -1,5 +1,5 @@
 <!doctype html><html lang="nl"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Inspectie aanmelden</title><link rel="stylesheet" href="inspectie-stijl.css"><main><h1>Inspectie aanmelden</h1><section class="card"><p>Vul het persoonlijke e-mailadres in waarop je de aanmeldlink ontvangen hebt.</p><form id="form"><label>Werkmailadres<input id="email" type="email" autocomplete="email" required></label><button id="submit">Aanmelden</button></form><p id="status" role="status"></p></section><a href="index.html">Terug naar start</a></main><script type="module">
-import {auth} from './inspectie-toegang.mjs?v=20261021-3';
+import {auth} from './inspectie-toegang.mjs?v=20261021-4';
 import {isSignInWithEmailLink,signInWithEmailLink} from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
 const form=document.getElementById('form'),status=document.getElementById('status');
 if(!isSignInWithEmailLink(auth,location.href)){form.hidden=true;status.textContent='Open de persoonlijke aanmeldlink uit je e-mail. Vraag de beheerder om een nieuwe link als die verlopen of al gebruikt is.';}
