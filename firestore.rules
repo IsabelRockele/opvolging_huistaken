@@ -208,7 +208,46 @@ function isGekoppeldAanGroep(groep) {
 
     match /schoolbeheer/{schooljaar}/instellingen/{docId} {
       allow read: if request.auth != null;
-      allow write: if isSecretariaat() || (docId == 'fototoestemming' && isKlasleerkracht());
+      allow write: if (isSecretariaat() || (docId == 'fototoestemming' && isKlasleerkracht()))
+        && (docId != 'nieuwjaarsbrieven' || (request.method != 'delete'
+          && request.resource.data.keys().hasOnly(['prijsCent','deadline','sluitOp','gewijzigdDoor','gewijzigdOp'])
+          && request.resource.data.prijsCent is int
+          && request.resource.data.prijsCent >= 0 && request.resource.data.prijsCent <= 10000
+          && request.resource.data.deadline is string
+          && ((request.resource.data.deadline == '' && request.resource.data.sluitOp == null)
+            || (request.resource.data.deadline.matches('[0-9]{4}-[0-9]{2}-[0-9]{2}') && request.resource.data.sluitOp is timestamp))));
+      match /geschiedenis/{id} {
+        allow read, create: if docId == 'nieuwjaarsbrieven' && isSecretariaat();
+        allow update, delete: if false;
+      }
+    }
+
+    match /schoolbeheer/{schooljaar}/klassen/{klasId}/nieuwjaarsbrieven/{leerlingId} {
+      function toegang() {
+        return isSecretariaat() || isSchoolBreed() || isGekoppeldAanKlas(schooljaar, klasId);
+      }
+      function invoerOpen() {
+        let pad = /databases/$(database)/documents/schoolbeheer/$(schooljaar)/instellingen/nieuwjaarsbrieven;
+        return !exists(pad) || get(pad).data.get('sluitOp', null) == null || request.time < get(pad).data.sluitOp;
+      }
+      function geldig() {
+        return request.resource.data.keys().hasOnly(['aantal','naam','gewijzigdDoor','gewijzigdOp','verwerkt'])
+          && request.resource.data.aantal is int && request.resource.data.aantal >= 0 && request.resource.data.aantal <= 999
+          && request.resource.data.naam is string && request.resource.data.gewijzigdOp is timestamp
+          && (request.resource.data.gewijzigdDoor == request.auth.uid || request.resource.data.gewijzigdDoor == request.auth.token.email);
+      }
+      allow read: if toegang();
+      allow create: if toegang() && geldig() && (isSecretariaat() || (invoerOpen() && !('verwerkt' in request.resource.data)));
+      allow update: if toegang() && (isSecretariaat() || (invoerOpen()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['aantal','naam','gewijzigdDoor','gewijzigdOp'])))
+        && (isSecretariaat() || geldig());
+      allow delete: if false;
+      match /geschiedenis/{id} {
+        allow read: if toegang();
+        allow create: if toegang() && (isSecretariaat() || (invoerOpen() && request.resource.data.actie == 'aantal'
+          && request.resource.data.gewijzigdDoor == request.auth.token.email));
+        allow update, delete: if false;
+      }
     }
 
     match /overgangsbesprekingen/{schooljaar}/projecten/{projectId} {

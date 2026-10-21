@@ -1180,6 +1180,9 @@
         <div class="sb-item" data-tab="aankopen" id="navAankopen">
           <span class="sb-icon">&#128717;</span> Aankopen
         </div>
+        <div class="sb-item" data-tab="nieuwjaarsbrieven" id="navNieuwjaarsbrieven">
+          <span class="sb-icon">&#9993;</span> Nieuwjaarsbrieven
+        </div>
         <div class="sb-item" data-tab="maximumfactuur" id="navMaximumfactuur">
           <span class="sb-icon">&#128179;</span> Maximumfactuur
         </div>
@@ -1210,6 +1213,8 @@
 
   <script type="module">
     import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { maakNieuwjaarsbrieven } from './nieuwjaarsbrieven.js';
+    import { Timestamp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
     import { openKlaswissel } from './klaswissel.js?v=20261005-inhoud';
     import { kopieDocument } from './klaswissel-model.mjs';
     import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
@@ -1251,6 +1256,10 @@
     let testOverzichtUnsub = null;
     const actieveTestKlassen = new Map();
     const liveKlasDocumenten = new Map();
+    const nieuwjaarsbrieven = maakNieuwjaarsbrieven({db,doc,collection,onSnapshot,runTransaction,Timestamp,esc,
+      context:()=>({jaar:schooljaar,klas:activeClass,tab,secretariaat:isSecretary(),klassen:allClasses,
+        leerlingen:activeStudents(),naam:name,gebruiker:user?.email||user?.uid||'',
+        openKlas:klas=>openClass(klas,true)})});
     $("schooljaarInput").value = schooljaar;
 
     async function schoolbeheerVeiligheidskopie(ref, reden, forceer=false){
@@ -1476,7 +1485,7 @@
       toonSchermLaden(`${klas} laden…`);
       if(isSecretary())gekozenRefterWeek=refterWeek;
       activeClass = klas;
-      const blijfInOnderdeel=["refter","activiteiten","aankopen","leerlingen"].includes(tab);
+      const blijfInOnderdeel=["refter","activiteiten","aankopen","nieuwjaarsbrieven","leerlingen"].includes(tab);
       if(isSecretary() && !behoudAlgemeen && !blijfInOnderdeel){
         tab = "klasstart";
         classListMode = "";
@@ -1682,7 +1691,7 @@
     function renderKlasStart(){
       const months=schoolMonths();
       $("content").innerHTML=`<div class="panel"><div class="bar"><div><h2>${esc(activeClass)} — maandoverzicht</h2><p class="muted">Open een maand en kies daarna Refter, Activiteiten of Aankopen. Een gele map bevat iets dat nog opgevolgd moet worden.</p></div><button class="white no-print" onclick="openLeerlingenVoorKlas()">👥 Leerlingen beheren</button></div>
-        <div class="maandmappen">${months.map(month=>{const s=maandStatus(data,month);return`<details class="maandmap ${s.totaal?'heeft-open':''}"><summary><span>${esc(maandNaam(month))}</span>${s.totaal?`<span class="maandmap-status">${s.totaal} nieuw</span>`:""}</summary><div class="maandmap-inhoud">
+        <button class="white no-print" onclick="openNieuwjaarsbrieven()">✉️ Nieuwjaarsbrieven — bestellen en verwerken</button><div class="maandmappen">${months.map(month=>{const s=maandStatus(data,month);return`<details class="maandmap ${s.totaal?'heeft-open':''}"><summary><span>${esc(maandNaam(month))}</span>${s.totaal?`<span class="maandmap-status">${s.totaal} nieuw</span>`:""}</summary><div class="maandmap-inhoud">
           <button class="maandmap-knop ${s.refterOpen?'nieuw':''}" onclick="openMaandOnderdeel('refter','${month}')"><span>🍽️ Refter<small>${esc(onderdeelStatusTekst('refter',s))}</small></span><span>›</span></button>
           <button class="maandmap-knop ${s.activiteitOpen?'nieuw':s.activiteitAantal?'verwerkt':''}" onclick="openMaandOnderdeel('activiteiten','${month}')"><span>🚌 Activiteiten<small>${esc(onderdeelStatusTekst('activiteit',s))}</small></span><span>›</span></button>
           <button class="maandmap-knop ${s.aankoopOpen?'nieuw':s.aankoopAantal?'verwerkt':''}" onclick="openMaandOnderdeel('aankopen','${month}')"><span>🛍️ Aankopen<small>${esc(onderdeelStatusTekst('aankoop',s))}</small></span><span>›</span></button>
@@ -1773,6 +1782,7 @@
 
     function render(){
       if(!data) return;
+      if(tab!=="nieuwjaarsbrieven")nieuwjaarsbrieven.sluit();
       if(!isSecretary() && tab === "administratie") tab = "klaslijst";
       if(isSecretary() && tab === "klaslijst") tab = "administratie";
       werkRustigeSecretariaatSidebarBij();
@@ -1783,6 +1793,7 @@
       if(tab==="refter") renderRefter();
       if(tab==="activiteiten") renderActivities();
       if(tab==="aankopen") renderPurchases();
+      if(tab==="nieuwjaarsbrieven") nieuwjaarsbrieven.render();
       if(tab==="maximumfactuur") renderMaximumfactuur();
       if(tab==="oudsten") renderOudstenOverzicht();
       if(tab==="klasstart") renderKlasStart();
@@ -4530,6 +4541,7 @@
     window.renderLeerkrachtenVolgendJaarOnly = renderLeerkrachtenVolgendJaarOnly;
     function renderWorkbooks(){ $("content").innerHTML = `<div class="panel"><div class="bar"><div><h2>Werkboeken</h2><p class="muted">Later uit te werken.</p></div>${screenTools("werkboeken")}</div>${helpPanel("werkboeken")}</div>`; }
 
+    window.openNieuwjaarsbrieven=()=>{tab="nieuwjaarsbrieven";renderKlasPills();render();};
     // Sidebar navigatie
     document.querySelectorAll(".sb-item").forEach(el => {
       el.addEventListener("click", () => {
