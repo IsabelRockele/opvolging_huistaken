@@ -53,7 +53,7 @@ async function load(){
   $('archief').textContent=`Alleen raadplegen: je opent ${result.schooljaar}. Het lopende schooljaar is ${result.huidigSchooljaar}. Voor wijzigingen open je de actieve leerling in het lopende schooljaar.`;
   paintOverview();message();
   const backup=readBackup();
-  if(backup?.operation&&result.plannen.some(p=>p.id===backup.current.id&&p.bewaaractie===backup.operation?.operationId))clearBackup();
+  if(!busy&&backup?.operation&&result.plannen.some(p=>p.id===backup.current.id&&p.bewaaractie===backup.operation?.operationId))clearBackup();
   $('herstelInvoer').hidden=!readBackup()||!result.schrijfbaar;
 }
 function toggleEval(open){
@@ -169,10 +169,14 @@ form.onsubmit=async e=>{
     slowTimer=setTimeout(()=>saveNotice('Bewaren is nog niet bevestigd. Laat dit scherm open; je invoer blijft staan. Controleer je internetverbinding.',true),15000);
     const result=await api(request);
     if(!result?.bewaard)throw Error('De opslag gaf geen bevestiging. Probeer opnieuw.');
+    saveNotice('Opslag ontvangen. Het bewaarde plan wordt opnieuw gecontroleerd.');
+    await load();
+    const teruggelezen=dossier.plannen.find(p=>p.id===request.planId);
+    if(!teruggelezen||teruggelezen.versie!==result.versie||(!demo&&teruggelezen.bewaaractie!==request.operationId))throw Error('Het plan kon na bewaren niet met dezelfde bewaaractie worden teruggelezen. Laat dit scherm open en probeer opnieuw; de invoer blijft behouden.');
     clearTimeout(slowTimer);dirty=false;operation=null;clearBackup();
-    saveNotice(demo?'✓ Bewaard in dit tijdelijke voorbeeld. Herladen wist de demo.':'✓ Handelingsplan bewaard.');
-    try{await load();$('editor').hidden=true;message(demo?'✓ Bewaard in dit tijdelijke voorbeeld. Herladen wist de demo.':'✓ Handelingsplan bewaard. Alle ingevulde aanpakken en evaluaties zijn opgeslagen.');window.scrollTo({top:0,behavior:'smooth'});}
-    catch(error){current.versie=request.expectedVersion+1;saveNotice('Bewaard, maar het overzicht kon niet vernieuwd worden. Herlaad voor je verder werkt. '+error.message,true);$('bewaar').hidden=true;}
+    $('editor').hidden=true;
+    message(demo?'✓ Bewaard in dit tijdelijke voorbeeld. Herladen wist de demo.':'✓ Handelingsplan bewaard en opnieuw gecontroleerd. Alle ingevulde aanpakken en evaluaties zijn opgeslagen.');
+    window.scrollTo({top:0,behavior:'smooth'});
   }catch(error){saveNotice('Niet bewaard of nog niet bevestigd. '+(error.message||'Probeer opnieuw.')+' Je invoer blijft in dit scherm staan.',true);backupInput();}
   finally{clearTimeout(slowTimer);busy=false;$('bewaar').disabled=false;$('planVelden').disabled=!dossier.schrijfbaar;$('sluiten').disabled=false;}
 };
