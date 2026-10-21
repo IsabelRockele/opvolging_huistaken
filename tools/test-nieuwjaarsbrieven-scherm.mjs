@@ -8,7 +8,7 @@ Timestamp.now=()=>{const n=++tick;return {toMillis:()=>n,toDate:()=>new Date(n)}
 const controls=new Map(),events=new Map();
 const content={innerHTML:'',querySelectorAll(selector){
   const attr=selector.slice(1,-1),re=new RegExp(attr+'="([^"]+)"','g');
-  return [...this.innerHTML.matchAll(re)].map(m=>({dataset:{nbId:m[1],nbProcess:m[1],nbClass:m[1]},value:'',addEventListener(type,fn){events.set(attr+'/'+m[1],{fn,el:this});}}));
+  return [...this.innerHTML.matchAll(re)].map(m=>({dataset:{nbId:m[1],nbProcess:m[1],nbClass:m[1],nbGeen:m[1]},value:'',addEventListener(type,fn){events.set(attr+'/'+m[1],{fn,el:this});}}));
 }};
 globalThis.document={getElementById:id=>id==='content'?content:controls.has(id)?controls.get(id):controls.set(id,{}).get(id)};
 const ref=(...parts)=>parts.filter(p=>p!==db).map(p=>typeof p==='object'?p.path:p).join('/');
@@ -28,6 +28,19 @@ const cfg='schoolbeheer/2026-2027/instellingen/nieuwjaarsbrieven';
 async function change(n){const e=events.get('data-nb-id/kind');e.el.value=String(n);await e.fn();await settle();}
 module.render();await settle();
 assert.match(content.innerHTML,/Test/);assert.match(content.innerHTML,/Nog niet ingevuld/);
+assert.match(content.innerHTML,/placeholder="Nog niet ingevuld" value=""/);
+controls.get('nbFilter').onchange({target:{value:'ingevuld'}});
+assert.ok(!content.innerHTML.includes('data-nb-id="kind"'));
+controls.get('nbFilter').onchange({target:{value:'open'}});
+assert.ok(!content.innerHTML.includes('data-nb-id="kind"'));
+controls.get('nbFilter').onchange({target:{value:'alle'}});
+await events.get('data-nb-geen/kind').fn();await settle();
+assert.equal(store.get(order).aantal,0);assert.match(content.innerHTML,/Geen brieven gewenst/);
+controls.get('nbFilter').onchange({target:{value:'ingevuld'}});
+assert.ok(content.innerHTML.includes('data-nb-id="kind"'));
+controls.get('nbFilter').onchange({target:{value:'open'}});
+assert.ok(!content.innerHTML.includes('data-nb-id="kind"'));
+controls.get('nbFilter').onchange({target:{value:'alle'}});
 await change(3);assert.equal(store.get(order).aantal,3);assert.match(content.innerHTML,/1,80/);
 c.secretariaat=true;c.gebruiker='sec@test.be';module.render();await settle();
 await events.get('data-nb-process/kind').fn();await settle();assert.match(content.innerHTML,/>Verwerkt</);
