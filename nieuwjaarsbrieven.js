@@ -1,4 +1,5 @@
 import { STANDAARD_PRIJS, bedrag, statusBrief, deadlineVoorbij, geldigAantal, pastInFilter } from './nieuwjaarsbrieven-model.mjs';
+import { maakAfvinklijst } from './nieuwjaarsbrieven-afdruk.mjs';
 
 // Orders live separately from class documents so saving another school module cannot overwrite them.
 export function maakNieuwjaarsbrieven({db,doc,collection,onSnapshot,runTransaction,Timestamp,context,esc}) {
@@ -40,7 +41,7 @@ export function maakNieuwjaarsbrieven({db,doc,collection,onSnapshot,runTransacti
     }).join('');
     doel.innerHTML=`<div class="panel"><h2>✉️ Nieuwjaarsbrieven — ${esc(c.klas)} — ${esc(c.jaar)}</h2><p>Prijs per brief: <strong>${euro(prijs())}</strong>. ${instellingen.deadline?`Invullen tot en met <strong>${esc(instellingen.deadline)}</strong>.`:'Er is nog geen deadline ingesteld.'}</p>${dicht?'<div class="notice">De deadline is voorbij. Wijzigingen kunnen alleen nog via het secretariaat.</div>':''}
       ${c.secretariaat?`<details class="notice no-print"><summary>Prijs en deadline voor dit schooljaar instellen</summary><p>Een prijswijziging herberekent alle bedragen. Reeds verwerkte bestellingen met een ander bedrag verschijnen opnieuw als gewijzigd.</p><div class="row"><label>Prijs per brief (€)<input id="nbPrijs" type="number" min="0" max="100" step="0.01" value="${(prijs()/100).toFixed(2)}"></label><label>Deadline (tot en met)<input id="nbDeadline" type="date" value="${esc(instellingen.deadline||'')}"></label><button onclick="nbInstellingen()" ${bezig?'disabled':''}>Instellingen bewaren</button></div></details><div class="notice"><strong>Schooloverzicht — nog te verwerken</strong><div class="actions">${c.klassen.map(k=>{const n=[...orders.values()].filter(r=>r.klas===k&&statusBrief(r,prijs()).includes('te verwerken')).length;return `<button class="${n?'':'white'}" data-nb-class="${esc(k)}">${esc(k)} · ${n} open</button>`;}).join('')}</div></div>`:''}
-      <p><strong>Totaal klas: ${aantal} brieven · ${euro(totaal)}</strong></p><p role="status" aria-live="polite">${bezig?'Bewaren…':esc(bewaarMelding)}</p><label class="no-print">Toon<select id="nbFilter"><option value="alle" ${filter==='alle'?'selected':''}>Alle kinderen</option><option value="ingevuld" ${filter==='ingevuld'?'selected':''}>Enkel ingevulde kinderen</option><option value="open" ${filter==='open'?'selected':''}>Enkel nog te verwerken kinderen</option><option value="leeg" ${filter==='leeg'?'selected':''}>Enkel nog niet ingevulde kinderen</option></select></label><p class="muted">Wijzig het aantal en verlaat het veld om te bewaren. Laat het veld leeg zolang er nog geen antwoord is. Kies “Geen brieven gewenst” bij een bevestigde nee, of vul 0 in. Een vermindering van een verwerkte bestelling naar 0 blijft zichtbaar voor verwerking.</p><div class="table-wrap"><table><thead><tr><th>Leerling</th><th>Aantal</th><th>Bedrag</th><th>Status</th>${c.secretariaat?'<th>Verwerking</th>':''}</tr></thead><tbody>${rijen||`<tr><td colspan="5">Geen leerlingen of bestellingen in deze selectie.</td></tr>`}</tbody></table></div></div>`;
+      <div class="actions no-print"><button type="button" class="white" onclick="nbAfvinklijst()" ${bezig?'disabled':''}>🖨️ Afvinklijst afdrukken</button><span class="muted">Volledige klaslijst met aantallen en afvinkvakjes voor op papier.</span></div><p><strong>Totaal klas: ${aantal} brieven · ${euro(totaal)}</strong></p><p role="status" aria-live="polite">${bezig?'Bewaren…':esc(bewaarMelding)}</p><label class="no-print">Toon<select id="nbFilter"><option value="alle" ${filter==='alle'?'selected':''}>Alle kinderen</option><option value="ingevuld" ${filter==='ingevuld'?'selected':''}>Enkel ingevulde kinderen</option><option value="open" ${filter==='open'?'selected':''}>Enkel nog te verwerken kinderen</option><option value="leeg" ${filter==='leeg'?'selected':''}>Enkel nog niet ingevulde kinderen</option></select></label><p class="muted">Wijzig het aantal en verlaat het veld om te bewaren. Laat het veld leeg zolang er nog geen antwoord is. Kies “Geen brieven gewenst” bij een bevestigde nee, of vul 0 in. Een vermindering van een verwerkte bestelling naar 0 blijft zichtbaar voor verwerking.</p><div class="table-wrap"><table><thead><tr><th>Leerling</th><th>Aantal</th><th>Bedrag</th><th>Status</th>${c.secretariaat?'<th>Verwerking</th>':''}</tr></thead><tbody>${rijen||`<tr><td colspan="5">Geen leerlingen of bestellingen in deze selectie.</td></tr>`}</tbody></table></div></div>`;
     doel.querySelectorAll('[data-nb-id]').forEach(el=>el.addEventListener('change',()=>wijzig(el.dataset.nbId,Number(el.value),el.value)));
     doel.querySelectorAll('[data-nb-geen]').forEach(el=>el.addEventListener('click',()=>wijzig(el.dataset.nbGeen,0,'0')));
     doel.querySelectorAll('[data-nb-process]').forEach(el=>el.addEventListener('click',()=>verwerk(el.dataset.nbProcess)));
@@ -80,5 +81,15 @@ export function maakNieuwjaarsbrieven({db,doc,collection,onSnapshot,runTransacti
     await actie(()=>runTransaction(db,async tx=>{const ref=configRef(c.jaar),oud=await tx.get(ref);tx.set(ref,{prijsCent:Math.round(p*100),deadline,sluitOp,gewijzigdDoor:c.gebruiker,gewijzigdOp:Timestamp.now()});tx.set(doc(collection(ref,'geschiedenis')),{actie:'instellingen',prijsCent:Math.round(p*100),deadline,vorigePrijsCent:oud.data()?.prijsCent??60,vorigeDeadline:oud.data()?.deadline||'',door:c.gebruiker,op:Timestamp.now()});}));
   };
   window.nbVernieuw=()=>{sluit();render();};
+  window.nbAfvinklijst=()=>{
+    if(geladen!==3||bezig)return;
+    const c=context(),venster=window.open('','_blank');
+    if(!venster){alert('Sta pop-ups toe om de afvinklijst te openen.');return;}
+    venster.opener=null;
+    venster.document.open();
+    venster.onload=()=>{venster.focus();venster.print();};
+    venster.document.write(maakAfvinklijst({klas:c.klas,jaar:c.jaar,leerlingen:c.leerlingen,orders,naam:c.naam}));
+    venster.document.close();
+  };
   return {render,sluit};
 }

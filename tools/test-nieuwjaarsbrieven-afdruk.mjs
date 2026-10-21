@@ -1,0 +1,13 @@
+import assert from 'node:assert/strict';
+import {maakAfvinklijst} from '../nieuwjaarsbrieven-afdruk.mjs';
+const html=maakAfvinklijst({klas:'1A',jaar:'2026-2027',leerlingen:[{id:'a',naam:'Kind & Eén'},{id:'b',naam:'Kind Twee'},{id:'c',naam:'<Kind Drie>'}],orders:new Map([['1A/a',{aantal:3}],['1A/b',{aantal:0}],['2A/c',{aantal:20}]]),naam:s=>s.naam,datum:new Date('2026-10-21T12:00:00Z')});
+assert.match(html,/Kind &amp; Eén/);
+assert.match(html,/&lt;Kind Drie&gt;/);
+assert.match(html,/Totaal: 3 brieven/);
+assert.match(html,/Geen brieven gewenst/);
+assert.match(html,/Nog niet ingevuld/);
+assert.equal((html.match(/class="vakje"/g)||[]).length,1);
+assert.match(html,/thead\{display:table-header-group\}/);
+assert.match(html,/A4 portrait/);
+assert.match(html,/Gemaakt/);
+console.log('Afvinklijst: volledige klas, juiste aantallen, geen antwoord versus nul, afvinkvakjes en veilige namen gecontroleerd.');
