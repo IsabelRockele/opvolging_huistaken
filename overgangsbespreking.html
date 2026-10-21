@@ -1148,7 +1148,7 @@
 </div>
 
 <script type="module">
-import {vereisZorgToegang} from "./inspectie-toegang.mjs?v=20261021-4";
+import {vereisZorgToegang} from "./inspectie-toegang.mjs?v=20261021-5";
 await vereisZorgToegang("overgang");
 import { leerlingActief } from './klaswissel-model.mjs';
 window.klaslijstLeerlingActief=leerlingActief;
@@ -1520,7 +1520,12 @@ function redenHerstelBlokkade(inhoud, leerlingen, klas) {
   const actief = leerlingen.filter(s => !s.startNiet && (!s.start || s.start <= '2026-09-04') && (!s.end || s.end >= '2026-09-04'));
   const ids = new Set(actief.map(s => String(s.id || '')));
   const laterIngestroomd=new Set(leerlingen.filter(s=>s.klaswisselVanaf && s.bronKlas && s.start>'2026-09-04').map(s=>String(s.id)));
-  const fiches = [...inhoud.students.filter(s=>!laterIngestroomd.has(String(s.schoolbeheerId))),...(inhoud.klaswisselArchief||[]).filter(x=>x.datum>'2026-09-04').map(x=>x.fiche)];
+  // Een bestaande fiche van een niet-gestarte leerling blijft met alle notities
+  // bewaard, maar hoort niet bij het aantal actieve inschrijvingen.
+  const nietGestart=new Set(leerlingen.filter(s=>s.startNiet===true&&s.id).map(s=>String(s.id)));
+  const bewaardeFiches = [...inhoud.students.filter(s=>!laterIngestroomd.has(String(s.schoolbeheerId))),...(inhoud.klaswisselArchief||[]).filter(x=>x.datum>'2026-09-04').map(x=>x.fiche)];
+  if (new Set(bewaardeFiches.map(s => s.schoolbeheerId)).size !== bewaardeFiches.length || new Set(bewaardeFiches.map(s => s.id)).size !== bewaardeFiches.length) return 'Er staan dubbele fiche- of leerlingcodes in het dossier.';
+  const fiches = bewaardeFiches.filter(s=>!nietGestart.has(String(s.schoolbeheerId)));
   if (ids.has('') || ids.size !== actief.length) return 'De centrale klaslijst bevat ontbrekende of dubbele leerlingcodes.';
   if (fiches.length !== ids.size) return `Het dossier bevat ${fiches.length} fiches; de gecontroleerde klaslijst bevat ${ids.size} actieve kinderen.`;
   if (new Set(fiches.map(s => s.schoolbeheerId)).size !== fiches.length || new Set(fiches.map(s => s.id)).size !== fiches.length) return 'Er staan dubbele fiche- of leerlingcodes in het dossier.';
@@ -1770,7 +1775,7 @@ window.dispatchEvent(new Event('firebaseOvergangReady'));
 
 
 <script type="module">
-import {vereisZorgToegang} from "./inspectie-toegang.mjs?v=20261021-4";
+import {vereisZorgToegang} from "./inspectie-toegang.mjs?v=20261021-5";
 await vereisZorgToegang("overgang");
 import { initializeApp, getApp, getApps } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
@@ -2074,6 +2079,8 @@ const state = {
   students: [], groups: [], locks: {}, excludedSchoolbeheerKeys: []
 };
 let isDirty = false, lastSaveTime = null, activeTab = 'settings';
+let nietActieveOvergangFiches = [];
+let centraleNietGestarteIds = new Set();
 let zorggroepen = [];
 let zorggroepenPerLeerling = new Map();
 let zorggroepenLaadFout = null;
@@ -3567,8 +3574,9 @@ function renderBlokWerkblad(type = blokWerkbladType) {
 
 function renderStudents() {
   const c = $('studentsContainer');
+  const historiek = nietActieveOvergangFiches.length ? `<details class="card" style="margin-bottom:16px"><summary>Niet-actieve leerlingen (${nietActieveOvergangFiches.length}) — bewaarde fiches</summary><p>Deze leerlingen staan niet in de actieve klaslijst. Hun bestaande informatie blijft bewaard en telt niet mee voor de klasverdeling.</p>${nietActieveOvergangFiches.map(s=>`<details><summary>${esc(s.name || `${s.firstName||''} ${s.lastName||''}`.trim())}</summary>${Object.entries({readingNote:'Lezen',spellingNote:'Spelling',mathNote:'Rekenen',writingNote:'Schrijven',focusNote:'Aandacht',behaviorNote:'Gedrag',careNote:'Zorg',socialNote:'Sociaal',notes:'Notities',schoolNote:'School',allergies:'Allergieën',medicalNote:'Medische informatie'}).filter(([key])=>s[key]).map(([key,label])=>`<p><strong>${label}</strong><br><span style="white-space:pre-wrap">${esc(s[key])}</span></p>`).join('')}</details>`).join('')}</details>` : '';
   if (!state.students.length) {
-    c.innerHTML = `<div class="empty-state"><h3>Nog geen leerlingen</h3><p>Voeg leerlingen toe via de knop hierboven, of laad voorbeeldleerlingen om te testen.</p></div>`;
+    c.innerHTML = historiek + `<div class="empty-state"><h3>Nog geen leerlingen</h3><p>Voeg leerlingen toe via de knop hierboven, of laad voorbeeldleerlingen om te testen.</p></div>`;
     return;
   }
   const sorted = [...state.students].sort((a, b) => {
@@ -3589,7 +3597,7 @@ function renderStudents() {
   const zorgWarning = zorggroepenLaadFout
     ? `<div class="warning" style="margin-bottom:12px">Groeigroepen konden niet geladen worden. Controleer de Firebase-regels voor leesrechten.</div>`
     : '';
-  c.innerHTML = dupWarning + zorgWarning + `<table class="student-table">
+  c.innerHTML = historiek + dupWarning + zorgWarning + `<table class="student-table">
     <thead><tr><th>Naam</th><th>Niveau</th><th>Lezen / Rekenen</th><th>Aandacht</th><th></th></tr></thead>
     <tbody>${sorted.map(s => {
       const tags = [];
@@ -3744,7 +3752,7 @@ function setupDrag() {
 
 function collectProjectData() {
   readSettings();
-  return { ...state, savedAt: new Date().toISOString(), appVersion: 'overdracht-2.1' };
+  return { ...state, students: [...state.students, ...nietActieveOvergangFiches], savedAt: new Date().toISOString(), appVersion: 'overdracht-2.1' };
 }
 
 async function saveJSON(asNewVersion = false) {
@@ -3907,11 +3915,12 @@ function applyProjectData(data) {
     balanceGender: data.balanceGender !== false,
     respectFriends: data.respectFriends !== false,
     respectAvoid: data.respectAvoid !== false,
-    students: data.students || [],
+    students: (data.students || []).filter(s=>!centraleNietGestarteIds.has(String(s.schoolbeheerId))),
     groups: data.groups || [],
     locks: data.locks || {},
     excludedSchoolbeheerKeys: data.excludedSchoolbeheerKeys || []
   });
+  nietActieveOvergangFiches = (data.students || []).filter(s=>centraleNietGestarteIds.has(String(s.schoolbeheerId)));
   return true;
 }
 
@@ -3923,11 +3932,12 @@ async function loadFirebaseProjectOnStart() {
   }
   setFirebaseStatus('Firebase wordt gecontroleerd...');
   try {
-    const [data, zorgResult, huiswerkResult, fotoResult] = await Promise.all([
+    const [data, zorgResult, huiswerkResult, fotoResult, klasResult] = await Promise.all([
       window.firebaseOvergang.loadProject(),
       window.firebaseOvergang.loadZorggroepen().catch(err => ({ __zorggroepenError: err })),
       window.firebaseOvergang.loadHuistakenSignalen().catch(() => ({})),
-      window.firebaseOvergang.loadFotoToestemming().catch(() => ({ bevestigd:false, uitzonderingen:[], ontbrekendeFormulieren:[], gecontroleerdeLeerlingen:[] }))
+      window.firebaseOvergang.loadFotoToestemming().catch(() => ({ bevestigd:false, uitzonderingen:[], ontbrekendeFormulieren:[], gecontroleerdeLeerlingen:[] })),
+      window.firebaseOvergang.loadSchoolbeheerLeerlingen()
     ]);
     huistakenSignalen = huiswerkResult || {};
     if (Array.isArray(zorgResult)) {
@@ -3961,6 +3971,7 @@ async function loadFirebaseProjectOnStart() {
       return;
     }
     // Openen is alleen lezen: geen namen toevoegen, jaar-kopie of automatische opslag.
+    centraleNietGestarteIds = new Set((klasResult.leerlingen || []).filter(s=>s.startNiet===true && s.id).map(s=>String(s.id)));
     applyProjectData(data);
     pasCentraleFotoToestemmingToe(fotoResult);
     writeSettings();

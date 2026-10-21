@@ -72,6 +72,7 @@ function activeerLeesstand(user,t,tool){
     return /bewaar|opsla|toevoeg|verwijder|wissen|bewerken|nieuw|herstel|import|doorgeven|doorsturen|kopie|overzetten|bevestig|genereer|verdeel|reset|wijzig|samenvoeg|openModal\(|openKlasKoppelingen|saveStudent|saveAndGo|addGroup|remove|delete|saveBtn|carry|✏|🗑/i.test(code);
   };
   const lock=()=>{
+    const status=document.getElementById('saveStatusText');if(status&&status.textContent!=='Alleen lezen')status.textContent='Alleen lezen';
     document.querySelectorAll('input,textarea,select,[contenteditable="true"]').forEach(el=>{
       if(navField(el)){if(el.disabled)el.disabled=false;return;}
       if(el.tagName==='TEXTAREA'||el.tagName==='INPUT'&&['text','email','number','date','time','datetime-local'].includes(el.type)){if(!el.readOnly)el.readOnly=true;}
