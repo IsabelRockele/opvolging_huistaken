@@ -13,7 +13,7 @@ const c = vm.createContext({window:{}, console, Date, Map, Number,
   esc:s=>String(s),maandNaam:m=>m,formatDate:d=>d,name:s=>s.first,
   maandGrenzen:()=>({van:'2026-09-01',tot:'2026-09-30'}),
   activeStudents:()=>c.data.leerlingen,leerlingenInPeriode:()=>c.data.leerlingen,leerlingActiefOp:()=>true,
-  isoDatum:()=> '2026-10-22',mfLimietVoorKlas:()=>105,schooljaar:'2026-2027',isoDatum:()=> '2026-10-22',mfLimietVoorKlas:()=>105,schooljaar:'2026-2027',activiteitDatumBereikt:()=>true,screenTools:()=>'',maandOnderdeelNavigatie:()=>'',helpPanel:()=>'',
+  isoDatum:()=> '2026-10-22',mfLimietVoorKlas:()=>105,schooljaar:'2026-2027',activiteitDatumBereikt:()=>true,screenTools:()=>'',maandOnderdeelNavigatie:()=>'',helpPanel:()=>'',
   $:()=>content,markDirty:()=>writes++,alert:()=>{},confirm:()=>true,prompt:()=> 'Fout',user:{email:'secretariaat@test'},
 });
 vm.runInContext(code,c);
