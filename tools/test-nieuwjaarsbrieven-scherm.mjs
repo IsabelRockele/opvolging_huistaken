@@ -117,5 +117,19 @@ controls.get('nbFilter').onchange({target:{value:'leeg'}});
 assert.match(content.innerHTML,/id="nbTotaalAantal"[^>]*>12 brieven/);
 controls.set('nbPrijs',{value:'0.80'});controls.set('nbDeadline',{value:''});
 await window.nbInstellingen();await settle();assert.equal(store.get(cfg).prijsCent,80);
+// Printing and cancelling both fire afterprint: discard only the temporary
+// sheet and leave the entry screen, its filter and its scroll position intact.
+for(const afloop of ['afgedrukt','geannuleerd']){
+  let gesloten=false,prints=0,focus=0,afdrukHtml='';
+  const invoerHtml=content.innerHTML,scroll=page.scrollTop;
+  const popup={focus(){},print(){prints++;},close(){gesloten=true;},document:{open(){},write(html){afdrukHtml=html;},close(){popup.onload();}}};
+  window.open=()=>popup;window.focus=()=>focus++;
+  window.nbAfvinklijst();
+  assert.equal(prints,1,afloop);assert.equal(gesloten,false);
+  assert.match(afdrukHtml,/Terug naar invoeren/);
+  popup.onafterprint();
+  assert.equal(gesloten,true,afloop);assert.equal(focus,1);
+  assert.equal(content.innerHTML,invoerHtml);assert.equal(page.scrollTop,scroll);
+}
 module.sluit();assert.equal(listeners.size,0);
 console.log('Scherm en opslag gecontroleerd: invoer, verwerking, correctie, nul, deadline, actuele prijs, geschiedenis en gelijktijdige wijziging.');

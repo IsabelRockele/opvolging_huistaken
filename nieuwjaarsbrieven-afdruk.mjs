@@ -22,7 +22,7 @@ export function maakAfvinklijst({klas,jaar,leerlingen,orders,naam,datum=new Date
     footer{font-size:9pt;margin-top:12px;padding-top:9px;border-top:1px solid #aabbb4;break-inside:avoid}
     .printknop{margin-bottom:15px;padding:10px 18px;font-size:12pt;cursor:pointer}
     @media print{.printknop{display:none}th{print-color-adjust:exact;-webkit-print-color-adjust:exact}}
-  </style></head><body><button class="printknop" onclick="window.print()">Afdrukken</button>
+  </style></head><body><button class="printknop" onclick="window.print()">Afdrukken</button><button class="printknop" onclick="window.close()">Terug naar invoeren</button>
   <header><div class="boven">Klasorganisatie · afvinklijst</div><h1>Nieuwjaarsbrieven</h1><div class="info"><strong>Klas ${esc(klas)} · ${esc(jaar)}</strong><span>Afgedrukt op ${esc(datum.toLocaleDateString('nl-BE',{timeZone:'Europe/Brussels'}))}</span></div></header>
   <p class="uitleg">Vink bij <strong>Gemaakt</strong> af zodra alle gevraagde brieven van het kind klaar zijn. Gebruik de laatste kolom voor een korte notitie.</p>
   <table><thead><tr><th class="nr">Nr.</th><th class="naam">Leerling</th><th class="aantal">Aantal brieven</th><th class="gemaakt">Gemaakt</th><th class="notitie">Notitie</th></tr></thead><tbody>${rijen||'<tr><td colspan="5">Geen leerlingen op de actieve klaslijst.</td></tr>'}</tbody></table>

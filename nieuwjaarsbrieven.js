@@ -1,5 +1,5 @@
 import { STANDAARD_PRIJS, bedrag, statusBrief, deadlineVoorbij, geldigAantal, pastInFilter } from './nieuwjaarsbrieven-model.mjs?v=20261021';
-import { maakAfvinklijst } from './nieuwjaarsbrieven-afdruk.mjs?v=20261021';
+import { maakAfvinklijst } from './nieuwjaarsbrieven-afdruk.mjs?v=20261022';
 
 // Orders live separately from class documents so saving another school module cannot overwrite them.
 export function maakNieuwjaarsbrieven({db,doc,collection,onSnapshot,runTransaction,Timestamp,context,esc}) {
@@ -144,6 +144,9 @@ export function maakNieuwjaarsbrieven({db,doc,collection,onSnapshot,runTransacti
     if(!venster){alert('Sta pop-ups toe om de afvinklijst te openen.');return;}
     venster.opener=null;
     venster.document.open();
+    // The browser fires afterprint after printing and after cancelling the
+    // dialog. Close the temporary sheet instead of leaving it in front.
+    venster.onafterprint=()=>{venster.close();window.focus();};
     venster.onload=()=>{venster.focus();venster.print();};
     venster.document.write(maakAfvinklijst({klas:c.klas,jaar:c.jaar,leerlingen:c.leerlingen,orders,naam:c.naam}));
     venster.document.close();
