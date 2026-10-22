@@ -13,7 +13,7 @@ const c = vm.createContext({window:{}, console, Date, Map, Number,
   esc:s=>String(s),maandNaam:m=>m,formatDate:d=>d,name:s=>s.first,
   maandGrenzen:()=>({van:'2026-09-01',tot:'2026-09-30'}),
   activeStudents:()=>c.data.leerlingen,leerlingenInPeriode:()=>c.data.leerlingen,leerlingActiefOp:()=>true,
-  activiteitDatumBereikt:()=>true,screenTools:()=>'',maandOnderdeelNavigatie:()=>'',helpPanel:()=>'',
+  isoDatum:()=> '2026-10-22',mfLimietVoorKlas:()=>105,schooljaar:'2026-2027',isoDatum:()=> '2026-10-22',mfLimietVoorKlas:()=>105,schooljaar:'2026-2027',activiteitDatumBereikt:()=>true,screenTools:()=>'',maandOnderdeelNavigatie:()=>'',helpPanel:()=>'',
   $:()=>content,markDirty:()=>writes++,alert:()=>{},confirm:()=>true,prompt:()=> 'Fout',user:{email:'secretariaat@test'},
 });
 vm.runInContext(code,c);
@@ -52,3 +52,22 @@ c.$=id=>fields[id]||content;c.renderPurchases=()=>{};
 c.window.bewaarAankoopCorrectie();
 assert.equal(p.price,8);assert.equal(p.type,'turnshirt');assert.equal(p.processed,true);assert.equal(writes,1);
 console.log('Maandkeuze, alleen-lezen, wijzigingsblokkades en secretariaatcorrectie gecontroleerd.');
+// Future plans reserve budget but never enter the parent invoice before their date.
+c.isSecretary=()=>false;c.activityMonth='2026-11';
+c.data.vastePosten=[{naam:'Tools',prijs:10}];
+c.data.activiteiten=[
+ {id:'past',name:'Voorbij',date:'2026-10-01',price:20},
+ {id:'future',name:'Theater',date:'2026-11-10',price:15},
+ {id:'unknown',name:'Uitstap',date:'2026-11-20',price:0,priceUnknown:true},
+ {id:'cancelled',name:'Afgelast',date:'2026-11-11',price:90,cancelled:true}
+];
+assert.equal(c.mfActiviteitOpOuderfactuur(c.data.activiteiten[0]),true);
+assert.equal(c.mfActiviteitOpOuderfactuur(c.data.activiteiten[1]),false);
+assert.equal(c.mfActiviteitOpOuderfactuur({...c.data.activiteiten[0],cancelled:true}),false);
+const budget=c.activiteitenBudgetHtml();
+assert.match(budget,/Al besteed: €30.00/);assert.match(budget,/Gepland: €15.00/);
+assert.match(budget,/Nog beschikbaar: €60.00/);assert.match(budget,/prijs nog onbekend/);
+assert.ok(!budget.includes('Afgelast'));
+c.renderActivities();assert.match(content.innerHTML,/id="actName"/);
+assert.equal(c.leerkrachtLijstGesloten(c.data.activiteiten[1],'activiteiten'),false);
+console.log('Toekomstige invoer, budget, onbekende prijzen, annuleringen en ouderfactuurfilter gecontroleerd.');

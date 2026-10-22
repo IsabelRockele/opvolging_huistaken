@@ -1574,6 +1574,7 @@
         secretariaatModulesOpen=true;
       }
       schooljaar = $("schooljaarInput").value.trim() || schooljaar;
+      await laadMfInstellingen();
       luisterNaarFotoToestemming();
       renderScope();
       if(unsub) unsub();
@@ -1964,7 +1965,7 @@
         if (!kd) return `<div class="mf-klas"><h3>Klas ${esc(klas)}</h3><p class="muted">Geen data beschikbaar.</p></div>`;
 
         const activiteiten = [...(kd.activiteiten || [])]
-          .filter(a => !a.cancelled && (a.naam || a.name) && Number(a.prijs || a.price || 0) > 0)
+          .filter(a => mfActiviteitOpOuderfactuur(a) && (a.naam || a.name) && Number(a.prijs || a.price || 0) > 0)
           .sort((a, b) => (a.datum || a.date || "").localeCompare(b.datum || b.date || ""));
         const vastePosten = kd.vastePosten || [];
         const totaal = [...vastePosten, ...activiteiten].reduce((s, p) => s + Number(p.prijs || p.price || 0), 0);
@@ -2186,7 +2187,7 @@
 
         var kd = klassenData[klas] || {};
         var activiteiten = (kd.activiteiten || []).filter(function(a) {
-          return !a.cancelled && (a.naam || a.name) && Number(a.prijs || a.price || 0) > 0;
+          return mfActiviteitOpOuderfactuur(a) && (a.naam || a.name) && Number(a.prijs || a.price || 0) > 0;
         }).sort(function(a, b) {
           return (a.datum || a.date || "").localeCompare(b.datum || b.date || "");
         });
@@ -3718,7 +3719,7 @@
     };
 
     function leerkrachtLijstGesloten(item,soort){
-      return !isSecretary() && (!!item.processed || String(item.date||'').slice(0,7)!==huidigeSchoolMaand() || (soort==='activiteiten' && !!item.attendanceConfirmed));
+      return !isSecretary() && (!!item.processed || (soort==='activiteiten'?String(item.date||'').slice(0,7)<huidigeSchoolMaand():String(item.date||'').slice(0,7)!==huidigeSchoolMaand()) || (soort==='activiteiten' && !!item.attendanceConfirmed));
     }
     function lijstenMaandKeuze(soort,maand){
       return `<label class="right no-print" style="max-width:240px">Maand bekijken<select aria-label="Maand bekijken" onchange="bekijkLijstenMaand('${soort}',this.value)">${schoolMonths().map(m=>`<option value="${m}" ${m===maand?'selected':''}>${esc(maandNaam(m))}${m<huidigeSchoolMaand()?' — alleen lezen':''}</option>`).join('')}</select></label>`;
@@ -3731,6 +3732,30 @@
     function lijstenLeesMelding(){
       return isSecretary()?'':`<div class="notice"><strong>🔒 Doorgegeven lijsten blijven raadpleegbaar</strong><p class="muted">Bevestigde activiteiten, verwerkte aankopen en voorbije maanden kun je alleen bekijken. Een fout opgemerkt? Neem contact op met het secretariaat om dit te laten aanpassen.</p></div>`;
     }
+    function mfActiviteitOpOuderfactuur(a){
+      const datum=a.datum||a.date||"";
+      return !a.cancelled && !!datum && datum<=isoDatum(new Date());
+    }
+    function activiteitenBudgetHtml(){
+      const lijst=(data.activiteiten||[]).filter(a=>!a.cancelled).sort((a,b)=>(a.date||"").localeCompare(b.date||""));
+      const gepland=lijst.filter(a=>!mfActiviteitOpOuderfactuur(a));
+      const prijs=a=>Number(a.prijs??a.price??0);
+      const besteed=(data.vastePosten||[]).reduce((s,a)=>s+prijs(a),0)+lijst.filter(mfActiviteitOpOuderfactuur).reduce((s,a)=>s+prijs(a),0);
+      const voorzien=gepland.reduce((s,a)=>s+prijs(a),0),limiet=mfLimietVoorKlas(activeClass),rest=limiet-besteed-voorzien;
+      const onbekend=lijst.filter(a=>a.priceUnknown).length;
+      return `<section class="notice no-print"><h3>Maximumfactuur · budget per leerling · ${esc(schooljaar)}</h3><div class="actions"><span class="tag">Limiet: €${limiet.toFixed(2)}</span><span class="tag">Al besteed: €${besteed.toFixed(2)}</span><span class="tag">Gepland: €${voorzien.toFixed(2)}</span><strong>${rest<0?'Budget overschreden met':'Nog beschikbaar'}: €${Math.abs(rest).toFixed(2)}</strong></div><p class="muted">Inclusief vaste posten en alle niet-geannuleerde activiteiten van dit schooljaar. Bedragen per leerling bij deelname aan alle activiteiten. Toekomstige activiteiten tellen mee in dit budget en verschijnen pas vanaf hun datum op de maximumfactuur voor ouders.</p>${onbekend?`<p><strong>Let op: bij ${onbekend} activiteit(en) is de prijs nog onbekend. Het beschikbare budget kan dus lager uitvallen.</strong></p>`:''}<details><summary>Geplande activiteiten bekijken (${gepland.length})</summary>${gepland.length?`<ul>${gepland.map(a=>`<li><strong>${esc(a.name||a.naam)}</strong> · ${esc(a.date||a.datum)} · ${a.priceUnknown?'prijs nog onbekend':'€'+prijs(a).toFixed(2)} <button class="white small" onclick="bekijkLijstenMaand('activiteiten','${esc((a.date||a.datum).slice(0,7))}')">Maand bekijken</button>${!a.processed?` <button class="white small" onclick="wijzigGeplandePrijs('${esc(a.id)}')">Prijs aanpassen</button>`:''}</li>`).join('')}</ul>`:'<p>Nog geen komende activiteiten gepland.</p>'}</details></section>`;
+    }
+    window.wijzigGeplandePrijs=async id=>{
+      const a=data.activiteiten.find(a=>a.id===id);
+      if(!a||a.cancelled||a.processed||mfActiviteitOpOuderfactuur(a))return;
+      const invoer=prompt("Prijs per leerling (leeg = nog onbekend)",a.priceUnknown?'':String(a.price??a.prijs??0));
+      if(invoer===null)return;
+      const tekst=invoer.trim().replace(',','.');
+      if(tekst&&!/^\d+(?:\.\d{1,2})?$/.test(tekst))return alert("Vul een geldige prijs in, bijvoorbeeld 12,50.");
+      a.price=Number(tekst||0);if('prijs' in a)a.prijs=a.price;a.priceUnknown=!tekst;
+      await saveNow();renderActivities();
+    };
+
     function renderActivities(){
       activityMonth = schoolMonths().includes(activityMonth)?activityMonth:huidigeSchoolMaand();
       const maandKeuze=isSecretary()?`<div class="right no-print"><strong style="display:block;margin-bottom:5px">Maand bekijken</strong><div class="actions" style="margin:0"><button class="white small" onclick="verschuifActiviteitenMaand(-1)">← Vorige maand</button><label style="width:185px"><input id="actMonth" aria-label="Maand bekijken" type="month" value="${activityMonth}" onchange="wisselActiviteitenMaand(this.value)"></label><button class="white small" onclick="verschuifActiviteitenMaand(1)">Volgende maand →</button></div></div>`:lijstenMaandKeuze("activiteiten",activityMonth);
@@ -3740,13 +3765,13 @@
       </div>` : "";
       const invoer = `<details class="activity-add no-print">
         <summary>Nieuwe activiteit of uitstap toevoegen</summary>
-        <p class="muted">${isSecretary()?"Kies één of meerdere klassen. De activiteit verschijnt daarna bij elke gekozen klas.":"De activiteit wordt toegevoegd aan je eigen klas."} Oudercontacten en rapporten voer je hier niet in.</p>
-        <div class="row"><label>Naam activiteit<input id="actName" placeholder="bv. Toneelvoorstelling" oninput="pasActiviteitPrijs(this.value,'actPrice')"></label><label style="max-width:190px">Datum<input id="actDate" type="date" value="${activityMonth}-01"></label><label style="max-width:150px">Prijs per leerling (&euro;)<input id="actPrice" type="number" min="0" step="0.01" value="0"></label>${klasKeuze}<button class="primary" onclick="addActivity()">${isSecretary()?"Toevoegen aan gekozen klassen":"Activiteit toevoegen"}</button></div>
+        <p class="muted">${isSecretary()?"Kies één of meerdere klassen. De activiteit verschijnt daarna bij elke gekozen klas.":"De activiteit wordt toegevoegd aan je eigen klas. Je kunt ook komende maanden kiezen. Een nog onbekende prijs kun je leeg laten en later aanvullen."} Oudercontacten en rapporten voer je hier niet in.</p>
+        <div class="row"><label>Naam activiteit<input id="actName" placeholder="bv. Toneelvoorstelling" oninput="pasActiviteitPrijs(this.value,'actPrice')"></label><label style="max-width:190px">Datum<input id="actDate" type="date" value="${activityMonth}-01"></label><label style="max-width:150px">Prijs per leerling (&euro;)<input id="actPrice" type="number" min="0" step="0.01" placeholder="Nog onbekend"></label>${klasKeuze}<button class="primary" onclick="addActivity()">${isSecretary()?"Toevoegen aan gekozen klassen":"Activiteit toevoegen"}</button></div>
       </details>`;
       const werkwijze=isSecretary()?`<div class="notice"><strong>Controle voor secretariaat</strong><p class="muted">Je ziet pas groen of rood nadat de leerkracht de afwezigheden heeft nagekeken en bevestigd. Niet-aangevinkte leerlingen gelden dan als aanwezig.</p></div>`:`<div class="notice" style="background:#fff4bf;border:2px solid #dfa900"><strong style="font-size:18px">⚠ Vergeet niet te bevestigen</strong><ol style="margin:8px 0 0;padding-left:22px"><li>Vink <strong>alleen de afwezige leerlingen</strong> aan. Lege vakjes betekenen aanwezig.</li><li>Klik daarna bij <strong>iedere activiteit waarvan de datum bereikt is</strong> op de gele knop <strong>Bevestig afwezigheden</strong>.</li><li>Ook wanneer niemand afwezig was, moet je de lege lijst bevestigen.</li></ol><p style="margin:9px 0 0"><strong>Zonder deze bevestiging kan het secretariaat de activiteit niet verwerken.</strong></p></div>`;
       const openstaande=(data.activiteiten||[]).filter(a=>!a.cancelled&&!a.processed&&activiteitDatumBereikt(a)&&String(a.date||"").slice(0,7)===activityMonth&&!a.attendanceConfirmed);
       const openstaandeMelding=!isSecretary()&&openstaande.length?`<div class="notice activity-open-confirmations no-print"><strong>⚠ Nog te bevestigen (${openstaande.length})</strong><p style="margin:5px 0 0">${openstaande.map(a=>esc(a.name)).join(" · ")}</p></div>`:"";
-      $("content").innerHTML = `<div class="panel"><div class="bar"><div><h2>Activiteiten <span class="muted" style="font-weight:400">${esc(activeClass)}</span></h2><p class="muted">${isSecretary()?"Kijk de bevestigde afwezigheden na en verwerk de activiteit.":"Duid alleen afwezige leerlingen aan en bevestig daarna de lijst."}</p></div>${maandKeuze}${screenTools("activiteiten")}</div>${maandOnderdeelNavigatie("activiteiten",activityMonth)}${helpPanel("activiteiten").replace("</section>",lijstenLeesMelding()+werkwijze+"</section>")}${activityMonth===huidigeSchoolMaand()||isSecretary()?openstaandeMelding:""}${secretariaatOpvolgModus||(!isSecretary()&&activityMonth!==huidigeSchoolMaand())?"":invoer}${activitiesTable()}</div>`;
+      $("content").innerHTML = `<div class="panel"><div class="bar"><div><h2>Activiteiten <span class="muted" style="font-weight:400">${esc(activeClass)}</span></h2><p class="muted">${isSecretary()?"Kijk de bevestigde afwezigheden na en verwerk de activiteit.":"Duid alleen afwezige leerlingen aan en bevestig daarna de lijst."}</p></div>${maandKeuze}${screenTools("activiteiten")}</div>${maandOnderdeelNavigatie("activiteiten",activityMonth)}${helpPanel("activiteiten").replace("</section>",lijstenLeesMelding()+werkwijze+"</section>")}${activityMonth===huidigeSchoolMaand()||isSecretary()?openstaandeMelding:""}${secretariaatOpvolgModus||(!isSecretary()&&activityMonth<huidigeSchoolMaand())?"":invoer}${activiteitenBudgetHtml()}${activitiesTable()}</div>`;
     }
     function activiteitTellingen(a){
       const leerlingen=activeStudents(a.date||`${activityMonth}-15`),afwezigen=leerlingen.filter(s=>!!a.absent?.[s.id]);
@@ -3774,7 +3799,7 @@
       let maandLijst=data.activiteiten.filter(a => String(a.date||"").slice(0,7) === activityMonth);if(isSecretary()&&secretariaatOpvolgModus)maandLijst=maandLijst.filter(a=>secretariaatArchiefModus==="activiteit"?!!a.processed&&!a.cancelled:!a.processed&&!a.cancelled);const grenzen=maandGrenzen(activityMonth);
       const list=maandLijst.filter(a=>!a.cancelled), cancelled=maandLijst.filter(a=>a.cancelled), students=leerlingenInPeriode(grenzen.van,grenzen.tot);
       const tabelBreedte=300+(list.length*230);
-      const actiefHtml = isSecretary()?secretariaatActiviteitenHtml(list):(list.length ? `<div class="table-wrap activity-table-wrap" style="margin-top:14px"><table class="activity-table" style="width:${tabelBreedte}px;min-width:${tabelBreedte}px;table-layout:fixed"><colgroup><col style="width:300px">${list.map(()=>'<col style="width:230px">').join("")}</colgroup><thead><tr><th>Leerling</th>${list.map(a=>{const t=activiteitTellingen(a),datumBereikt=activiteitDatumBereikt(a),wacht=datumBereikt&&!a.attendanceConfirmed&&!a.processed;return`<th class="activity-col ${wacht?'needs-confirmation':''}"><div class="activity-kop"><span class="activity-kop-naam">${esc(a.name)}</span><span class="activity-kop-meta">${esc(a.date)} · &euro;${Number(a.price||0).toFixed(2)}</span><div class="activity-kop-status"><span id="act-confirm-state-${a.id}" class="tag ${a.attendanceConfirmed?'done':''}">${a.attendanceConfirmed?'✓ bevestigd':datumBereikt?'⚠ nog niet bevestigd':'gepland'}</span>${a.attendanceConfirmed?`<span class="activiteit-telling">${t.aanwezig} aanwezig</span><span class="activiteit-telling afwezig">${t.afwezigen.length} afwezig</span>`:''}${a.processed?'<span class="tag done">verwerkt</span>':''}</div><span class="actions no-print"><button class="small white" ${leerkrachtLijstGesloten(a,'activiteiten')?'disabled':''} onclick="iedereenAfwezigActiviteit('${a.id}')" title="Vink iedereen aan en vink daarna uit wie wel deelnam">Iedereen afwezig</button><button data-confirm-activity="${a.id}" class="small ${wacht?'activity-confirm-button':'white'}" ${leerkrachtLijstGesloten(a,'activiteiten')||!datumBereikt?'disabled':''} onclick="confirmActivityAttendance('${a.id}')" title="Afwezigheden nagekeken en bevestigen">${a.attendanceConfirmed?'✓ Bevestigd':datumBereikt?'⚠ Bevestig afwezigheden':'Bevestigen vanaf '+formatDate(a.date)}</button><button class="small pink" ${leerkrachtLijstGesloten(a,'activiteiten')?'disabled title="Alleen lezen — neem contact op met het secretariaat"':'title="Activiteit annuleren"'} onclick="cancelActivity('${a.id}')">Annuleren</button></span></div></th>`}).join("")}</tr></thead><tbody>${students.map(s=>`<tr><td><strong>${esc(name(s))}</strong></td>${list.map(a=>{if(!leerlingActiefOp(s,a.date))return`<td class="activity-col grey" title="Leerling niet actief op deze datum">-</td>`;const absent=!!a.absent?.[s.id];return`<td class="activity-col ${leerkrachtLijstGesloten(a,'activiteiten')?"locked":""}"><input class="absence-check" type="checkbox" ${absent?"checked":""} ${leerkrachtLijstGesloten(a,'activiteiten')?"disabled":""} onchange="toggleActAbsent('${a.id}','${s.id}',this.checked)">${leerkrachtLijstGesloten(a,'activiteiten')?'<span class="teacher-lock"> &#128274;</span>':''}</td>`}).join("")}</tr>`).join("")}</tbody></table></div>` : `<div class="notice">Nog geen actieve activiteiten ingevoerd voor deze maand. Kies de huidige maand om een activiteit toe te voegen.</div>`);
+      const actiefHtml = isSecretary()?secretariaatActiviteitenHtml(list):(list.length ? `<div class="table-wrap activity-table-wrap" style="margin-top:14px"><table class="activity-table" style="width:${tabelBreedte}px;min-width:${tabelBreedte}px;table-layout:fixed"><colgroup><col style="width:300px">${list.map(()=>'<col style="width:230px">').join("")}</colgroup><thead><tr><th>Leerling</th>${list.map(a=>{const t=activiteitTellingen(a),datumBereikt=activiteitDatumBereikt(a),wacht=datumBereikt&&!a.attendanceConfirmed&&!a.processed;return`<th class="activity-col ${wacht?'needs-confirmation':''}"><div class="activity-kop"><span class="activity-kop-naam">${esc(a.name)}</span><span class="activity-kop-meta">${esc(a.date)} · &euro;${Number(a.price||0).toFixed(2)}</span><div class="activity-kop-status"><span id="act-confirm-state-${a.id}" class="tag ${a.attendanceConfirmed?'done':''}">${a.attendanceConfirmed?'✓ bevestigd':datumBereikt?'⚠ nog niet bevestigd':'gepland'}</span>${a.attendanceConfirmed?`<span class="activiteit-telling">${t.aanwezig} aanwezig</span><span class="activiteit-telling afwezig">${t.afwezigen.length} afwezig</span>`:''}${a.processed?'<span class="tag done">verwerkt</span>':''}</div><span class="actions no-print"><button class="small white" ${leerkrachtLijstGesloten(a,'activiteiten')?'disabled':''} onclick="iedereenAfwezigActiviteit('${a.id}')" title="Vink iedereen aan en vink daarna uit wie wel deelnam">Iedereen afwezig</button><button data-confirm-activity="${a.id}" class="small ${wacht?'activity-confirm-button':'white'}" ${leerkrachtLijstGesloten(a,'activiteiten')||!datumBereikt?'disabled':''} onclick="confirmActivityAttendance('${a.id}')" title="Afwezigheden nagekeken en bevestigen">${a.attendanceConfirmed?'✓ Bevestigd':datumBereikt?'⚠ Bevestig afwezigheden':'Bevestigen vanaf '+formatDate(a.date)}</button><button class="small pink" ${leerkrachtLijstGesloten(a,'activiteiten')?'disabled title="Alleen lezen — neem contact op met het secretariaat"':'title="Activiteit annuleren"'} onclick="cancelActivity('${a.id}')">Annuleren</button></span></div></th>`}).join("")}</tr></thead><tbody>${students.map(s=>`<tr><td><strong>${esc(name(s))}</strong></td>${list.map(a=>{if(!leerlingActiefOp(s,a.date))return`<td class="activity-col grey" title="Leerling niet actief op deze datum">-</td>`;const absent=!!a.absent?.[s.id];return`<td class="activity-col ${leerkrachtLijstGesloten(a,'activiteiten')?"locked":""}"><input class="absence-check" type="checkbox" ${absent?"checked":""} ${leerkrachtLijstGesloten(a,'activiteiten')?"disabled":""} onchange="toggleActAbsent('${a.id}','${s.id}',this.checked)">${leerkrachtLijstGesloten(a,'activiteiten')?'<span class="teacher-lock"> &#128274;</span>':''}</td>`}).join("")}</tr>`).join("")}</tbody></table></div>` : `<div class="notice">Nog geen actieve activiteiten ingevoerd voor deze maand. Kies de huidige of een komende maand om een activiteit toe te voegen.</div>`);
       const geannuleerdHtml = cancelled.length ? `<div class="notice" style="margin-top:14px;background:#fff4f4;border-color:#e7b3b3"><strong>Geannuleerde activiteiten — worden niet aangerekend</strong><ul style="margin-bottom:0">${cancelled.map(a=>`<li><strong>${esc(a.name)}</strong> (${esc(a.date)}): ${esc(a.cancelReason||"Geen reden bewaard")}${isSecretary()?` <button class="white small no-print" onclick="restoreActivity('${a.id}')">Opnieuw activeren</button>`:""}</li>`).join("")}</ul></div>` : "";
       return actiefHtml + geannuleerdHtml;
     }
@@ -3864,14 +3889,15 @@
       const prijs = Number($("actPrice")?.value || 0);
       if(!naam) return alert("Vul eerst de naam van de activiteit in.");
       if(!datum) return alert("Kies eerst de datum van de activiteit.");
-      if(!isSecretary()&&datum.slice(0,7)!==huidigeSchoolMaand()) return alert("Leerkrachten kunnen alleen activiteiten in de huidige maand toevoegen. Neem voor een voorbije maand contact op met het secretariaat.");
-      if(prijs < 0) return alert("De prijs kan niet negatief zijn.");
+      if(!schoolMonths().includes(datum.slice(0,7))) return alert("Kies een datum binnen het geselecteerde schooljaar.");
+      if(!isSecretary()&&datum.slice(0,7)<huidigeSchoolMaand()) return alert("Neem voor een voorbije maand contact op met het secretariaat.");
+      if(!Number.isFinite(prijs) || prijs < 0) return alert("De prijs kan niet negatief zijn.");
       const klassen = isSecretary()
         ? [...document.querySelectorAll(".actClass:checked")].map(el => el.value)
         : [activeClass];
       if(!klassen.length) return alert("Kies minstens één klas.");
       const activityId = uid();
-      const nieuw = {id:activityId,name:naam,date:datum,price:prijs,absent:{},attendanceConfirmed:false,processed:false,aangemaaktDoor:user.email||"",aangemaaktOp:new Date().toISOString()};
+      const nieuw = {id:activityId,name:naam,date:datum,price:prijs,absent:{},attendanceConfirmed:false,processed:false,priceUnknown:$("actPrice")?.value.trim()==="",aangemaaktDoor:user.email||"",aangemaaktOp:new Date().toISOString()};
       toonSchermLaden(klassen.length > 1 ? `Activiteit toevoegen aan ${klassen.length} klassen…` : "Activiteit toevoegen…");
       try{
         let toegevoegd = 0, overgeslagen = 0;
