@@ -419,12 +419,14 @@
       justify-content:center!important;
     }
     .activity-budget{margin:10px 0;border:1px solid #d5e2ec;border-radius:12px;background:#f7fafc;color:#234560}
-    .activity-budget>summary{display:flex;align-items:center;gap:12px;flex-wrap:wrap;cursor:pointer;padding:11px 14px;list-style:none;font-size:14px}
-    .activity-budget>summary::-webkit-details-marker{display:none}
-    .activity-budget>summary::before{content:'▸';color:#607b90}
-    .activity-budget[open]>summary::before{content:'▾'}
-    .activity-budget>summary strong{color:#205c47}
-    .activity-budget>summary .budget-over{color:#b42318}
+    .activity-budget-summary{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:9px 14px;font-size:14px}
+    .activity-budget-summary strong{color:#205c47}
+    .activity-budget-summary .budget-over{color:#b42318}
+    .activity-budget-dialog{width:min(760px,calc(100vw - 32px));max-height:85vh;box-sizing:border-box;padding:0;border:1px solid #d5e2ec;border-radius:16px;color:#234560;box-shadow:0 18px 60px #18364d40;overflow:auto}
+    .activity-budget-dialog::backdrop{background:rgba(20,40,60,.4)}
+    .activity-budget-dialog-header{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:16px 20px;background:#f7fafc}
+    .activity-budget-dialog-header h2{margin:0;font-size:20px}
+    .activity-budget-dialog .activity-budget-body{padding:4px 20px 20px}
     .budget-link{margin-left:auto;color:#526c83;font-size:13px;text-decoration:underline;text-underline-offset:3px}
     .activity-budget-body{padding:0 14px 14px;border-top:1px solid #e2eaf0}
     .activity-budget-body p{font-size:13px;line-height:1.5}
@@ -3758,8 +3760,12 @@
       const besteed=(data.vastePosten||[]).reduce((s,a)=>s+prijs(a),0)+lijst.filter(mfActiviteitOpOuderfactuur).reduce((s,a)=>s+prijs(a),0);
       const voorzien=gepland.reduce((s,a)=>s+prijs(a),0),limiet=mfLimietVoorKlas(activeClass),rest=limiet-besteed-voorzien;
       const onbekend=lijst.filter(a=>a.priceUnknown).length;
-      return `<details class="activity-budget no-print"><summary><span>Budget maximumfactuur</span><strong class="${rest<0?'budget-over':''}">${rest<0?'Overschreden met':'Nog beschikbaar'}: €${Math.abs(rest).toFixed(2)}</strong>${onbekend?`<span style="font-size:12px;color:#8a5a12">${onbekend} prijs nog onbekend</span>`:''}<span class="budget-link">Budget en planning (${gepland.length})</span></summary><div class="activity-budget-body"><p class="muted">Schooljaar ${esc(schooljaar)} · per leerling</p><div class="actions"><span class="tag">Limiet: €${limiet.toFixed(2)}</span><span class="tag">Al besteed: €${besteed.toFixed(2)}</span><span class="tag">Gepland: €${voorzien.toFixed(2)}</span><strong>${rest<0?'Budget overschreden met':'Nog beschikbaar'}: €${Math.abs(rest).toFixed(2)}</strong></div><p class="muted">Inclusief vaste posten en alle niet-geannuleerde activiteiten van dit schooljaar. Bedragen per leerling bij deelname aan alle activiteiten. Toekomstige activiteiten tellen mee in dit budget en verschijnen pas vanaf hun datum op de maximumfactuur voor ouders.</p>${onbekend?`<p><strong>Let op: bij ${onbekend} activiteit(en) is de prijs nog onbekend. Het beschikbare budget kan dus lager uitvallen.</strong></p>`:''}<details><summary>Geplande activiteiten bekijken (${gepland.length})</summary>${gepland.length?`<ul>${gepland.map(a=>`<li><strong>${esc(a.name||a.naam)}</strong> · ${esc(a.date||a.datum)} · ${a.priceUnknown?'prijs nog onbekend':'€'+prijs(a).toFixed(2)} <button class="white small" onclick="bekijkLijstenMaand('activiteiten','${esc((a.date||a.datum).slice(0,7))}')">Maand bekijken</button>${!a.processed?` <button class="white small" onclick="wijzigGeplandePrijs('${esc(a.id)}')">Prijs aanpassen</button>`:''}</li>`).join('')}</ul>`:'<p>Nog geen komende activiteiten gepland.</p>'}</details></div></details>`;
+      return `<section class="activity-budget no-print"><div class="activity-budget-summary"><span>Budget maximumfactuur</span><strong class="${rest<0?'budget-over':''}">${rest<0?'Overschreden met':'Nog beschikbaar'}: €${Math.abs(rest).toFixed(2)}</strong>${onbekend?`<span style="font-size:12px;color:#8a5a12">${onbekend} prijs nog onbekend</span>`:''}<button type="button" class="white small budget-link" onclick="openActiviteitenBudget()">Budget en planning (${gepland.length})</button></div></section><dialog id="activiteitenBudgetDialoog" class="activity-budget-dialog" aria-labelledby="activiteitenBudgetTitel"><div class="activity-budget-dialog-header"><h2 id="activiteitenBudgetTitel">Budget en planning</h2><button type="button" class="white small" autofocus onclick="this.closest('dialog').close()" aria-label="Budget en planning sluiten">Sluiten ×</button></div><div class="activity-budget-body"><p class="muted">Schooljaar ${esc(schooljaar)} · per leerling</p><div class="actions"><span class="tag">Limiet: €${limiet.toFixed(2)}</span><span class="tag">Al besteed: €${besteed.toFixed(2)}</span><span class="tag">Gepland: €${voorzien.toFixed(2)}</span><strong>${rest<0?'Budget overschreden met':'Nog beschikbaar'}: €${Math.abs(rest).toFixed(2)}</strong></div><p class="muted">Inclusief vaste posten en alle niet-geannuleerde activiteiten van dit schooljaar. Bedragen per leerling bij deelname aan alle activiteiten. Toekomstige activiteiten tellen mee in dit budget en verschijnen pas vanaf hun datum op de maximumfactuur voor ouders.</p>${onbekend?`<p><strong>Let op: bij ${onbekend} activiteit(en) is de prijs nog onbekend. Het beschikbare budget kan dus lager uitvallen.</strong></p>`:''}<details><summary>Geplande activiteiten bekijken (${gepland.length})</summary>${gepland.length?`<ul>${gepland.map(a=>`<li><strong>${esc(a.name||a.naam)}</strong> · ${esc(a.date||a.datum)} · ${a.priceUnknown?'prijs nog onbekend':'€'+prijs(a).toFixed(2)} <button class="white small" onclick="bekijkLijstenMaand('activiteiten','${esc((a.date||a.datum).slice(0,7))}')">Maand bekijken</button>${!a.processed?` <button class="white small" onclick="wijzigGeplandePrijs('${esc(a.id)}')">Prijs aanpassen</button>`:''}</li>`).join('')}</ul>`:'<p>Nog geen komende activiteiten gepland.</p>'}</details></div></dialog>`;
     }
+    window.openActiviteitenBudget=()=>{
+      const dialoog=$("activiteitenBudgetDialoog");
+      if(dialoog&&!dialoog.open)dialoog.showModal();
+    };
     window.wijzigGeplandePrijs=async id=>{
       const a=data.activiteiten.find(a=>a.id===id);
       if(!a||a.cancelled||a.processed||mfActiviteitOpOuderfactuur(a))return;
@@ -3768,7 +3774,9 @@
       const tekst=invoer.trim().replace(',','.');
       if(tekst&&!/^\d+(?:\.\d{1,2})?$/.test(tekst))return alert("Vul een geldige prijs in, bijvoorbeeld 12,50.");
       a.price=Number(tekst||0);if('prijs' in a)a.prijs=a.price;a.priceUnknown=!tekst;
+      const budgetOpen=!!$("activiteitenBudgetDialoog")?.open;
       await saveNow();renderActivities();
+      if(budgetOpen)window.openActiviteitenBudget();
     };
 
     function renderActivities(){
