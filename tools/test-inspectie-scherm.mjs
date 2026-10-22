@@ -84,7 +84,7 @@ try{
  const rootPage=await make('beheerder');await rootPage.page.goto(base+'/index.html');
  await rootPage.page.locator('#inspectiebeheerKnop').waitFor({state:'visible'});checks++;
  await rootPage.page.getByRole('button',{name:'📖 Inspectie (alleen lezen)',exact:true}).click();
- await rootPage.page.waitForFunction(()=>document.querySelector('#overgangKeuzeKnop')?.href.includes('overgangsbespreking.html'));
+ await rootPage.page.waitForFunction(()=>!document.querySelector('#beheerder-rolwissel') && [...document.querySelectorAll('.portaal-tegel')].filter(el=>el.getClientRects().length).length===6);
  assert.equal(await rootPage.page.locator('.portaal-tegel:visible').count(),6);checks++;
  assert.equal(await rootPage.page.locator('#beheerder-rolwissel').count(),0);checks++;
  assert.equal(await rootPage.page.locator('#inspectiebeheerKnop').count(),0);checks++;
