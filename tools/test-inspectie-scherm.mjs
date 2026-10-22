@@ -18,7 +18,7 @@ const appMock=`export const initializeApp=()=>({});export const getApps=()=>[{}]
 const authMock=`
 export const getAuth=()=>({get currentUser(){return window.__user;},onAuthStateChanged:fn=>{queueMicrotask(()=>fn(window.__user));return()=>{};}});
 export const onAuthStateChanged=(a,fn)=>{queueMicrotask(()=>fn(window.__user));return()=>{};};
-export const signOut=async()=>{window.__user=null;};
+export const signOut=async()=>{window.__user=null;localStorage.setItem('__signedOut','1');};
 export const sendSignInLinkToEmail=async(a,email,options)=>{window.__sent.push({email,options});};
 export const isSignInWithEmailLink=()=>location.search.includes('oobCode=');
 export const signInWithEmailLink=async(a,email)=>{window.__signed=email;};
@@ -137,5 +137,11 @@ try{
   assert.equal(await page.evaluate(()=>__writes.length),0);checks++;
  }
  const expired=await make('inspectie',{expired:true});await expired.page.goto(base+'/inspectie.html');await expired.page.getByRole('heading',{name:'Geen toegang'}).waitFor();checks++;
+ assert.equal(await expired.page.locator('#tools').count(),0);checks++;
+ await expired.page.getByRole('button',{name:'Uitloggen en met een ander account aanmelden'}).waitFor({state:'visible'});checks++;
+ await expired.page.addInitScript(()=>{if(localStorage.getItem('__signedOut'))window.__user=null;});
+ await expired.page.getByRole('button',{name:'Uitloggen en met een ander account aanmelden'}).click();
+ await expired.page.waitForURL('**/index.html');
+ assert.equal(await expired.page.evaluate(()=>__user),null);checks++;
  console.log(`${checks} schermcontroles geslaagd: vertrouwde tools, dezelfde fiches in leesstand, geen schrijfacties, secretariaat en vervaldatum.`);
 }finally{await browser.close();await new Promise(r=>server.close(r));}

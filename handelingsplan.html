@@ -1,6 +1,8 @@
 <!doctype html>
 <html lang="nl">
 <head>
+<style>html.zorg-toegang-controleren body{visibility:hidden}html.zorg-toegang-controleren::after{content:'Toegang controleren...';position:fixed;inset:0;display:grid;place-items:center;background:#fff;color:#315b2b;font:18px Arial;z-index:2147483647}</style>
+<script>document.documentElement.classList.add('zorg-toegang-controleren');</script>
   <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="referrer" content="same-origin">
   <title>Individueel handelingsplan</title>
@@ -104,6 +106,6 @@
     <p id="selectieAantal" role="status"></p><p id="aantalDoelen" role="status"></p><div id="doelenResultaten"></div><button id="meerDoelen" type="button" class="secondary" hidden>Meer doelen tonen</button>
   </dialog>
   <script src="jspdf.umd.min.js"></script>
-  <script type="module" src="handelingsplan.js?v=20261021-zonder-doel-1"></script>
+  <script type="module" src="handelingsplan.js?v=20261022-uitloggen-1"></script>
 </body>
 </html>

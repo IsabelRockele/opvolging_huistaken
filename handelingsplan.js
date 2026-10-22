@@ -1,4 +1,4 @@
-import {vereisZorgToegang} from './inspectie-toegang.mjs?v=20261021-4';
+import {vereisZorgToegang} from './inspectie-toegang.mjs?v=20261022-1';
 await vereisZorgToegang('handelingsplan');
 import {LEVELS,STATUS,EFFECT,PROGRESS,FIELDS,esc,filterGoals,contextFromUrl} from './handelingsplan-model.mjs';
 import {buildPlanPdf} from './handelingsplan-pdf.mjs?v=20261012-pdf-een-bewaar';

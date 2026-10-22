@@ -1,6 +1,8 @@
 <!doctype html>
 <html lang="nl">
 <head>
+<style>html.zorg-toegang-controleren body{visibility:hidden}html.zorg-toegang-controleren::after{content:'Toegang controleren...';position:fixed;inset:0;display:grid;place-items:center;background:#fff;color:#315b2b;font:18px Arial;z-index:2147483647}</style>
+<script>document.documentElement.classList.add('zorg-toegang-controleren');</script>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Zorgoverleg – De Linde</title>
@@ -180,7 +182,7 @@
 </main>
 <script type="module">
 import {vergelijkKlassen} from "./klasvolgorde.mjs?v=20261021-1";
-import {vereisZorgToegang} from "./inspectie-toegang.mjs?v=20261021-4";
+import {vereisZorgToegang} from "./inspectie-toegang.mjs?v=20261022-1";
 await vereisZorgToegang("zorgoverleg");
 import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";

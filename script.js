@@ -582,7 +582,7 @@ async function toonSchooloverzichtKnopAlsNodig(user) {
   const cacheKey = 'lindeRolCache_' + user.uid;
   try {
     const cached = JSON.parse(localStorage.getItem(cacheKey) || 'null');
-    if (cached) {
+    if (cached && cached.rol !== 'inspectie') {
       pasKnoppenToe(huistakenKnop, overgangKnop, schoolbeheerKnop, bestellingenKnop, oudercontactKnop, schoolKnop, groeigroepenKnop, zorgoverlegKnop, huiswerkklasKnop,
         klasafsprakenKnop,
         cached.isSchoolBreed, cached.isSecretariaat, cached.heeftKlasbeheer, cached.rol || '');
@@ -642,7 +642,7 @@ async function toonSchooloverzichtKnopAlsNodig(user) {
     }
 
     if (!rol || rol === 'inspectie') {
-      const {toegang} = await import('./inspectie-toegang.mjs?v=20261021-4');
+      const {toegang} = await import('./inspectie-toegang.mjs?v=20261022-1');
       const toegangInspectie = await toegang(user);
       if (toegangInspectie.rol === 'inspectie') {
         if (!toegangInspectie.geldig) { location.href='inspectie.html'; return; }

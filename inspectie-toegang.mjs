@@ -1,5 +1,5 @@
 import {initializeApp, getApps, getApp} from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
-import {getAuth, onAuthStateChanged} from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+import {getAuth, onAuthStateChanged, signOut} from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
 import {getFirestore, doc, getDocFromServer, setDoc, onSnapshot} from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 export const app = getApps().length ? getApp() : initializeApp({apiKey:'AIzaSyA7KxXMvZ4dzBQDut3CMyWUblLte2tFzoQ',authDomain:'huiswerkapp-a311e.firebaseapp.com',projectId:'huiswerkapp-a311e',storageBucket:'huiswerkapp-a311e.appspot.com',messagingSenderId:'797169941164',appId:'1:797169941164:web:511d9618079f1378d0fd09'});
 export const auth = getAuth(app), db = getFirestore(app);
@@ -27,12 +27,16 @@ export async function toegang(user) {
   return {rol:'inspectie', bezoek:bezoek.data(), geldig};
 }
 export function blokkeer(tekst) {
+  document.documentElement.classList.remove('zorg-toegang-controleren');
   document.body.replaceChildren();
   const main=document.createElement('main');main.style.cssText='max-width:650px;margin:70px auto;padding:28px;font:18px Arial;background:#fff;border:1px solid #ddd;border-radius:16px';
   const h=document.createElement('h1');h.textContent='Geen toegang';
   const p=document.createElement('p');p.textContent=tekst;
   const a=document.createElement('a');a.href='index.html';a.textContent='Terug naar het startscherm';
-  main.append(h,p,a);document.body.append(main);
+  const logout=document.createElement('button');logout.type='button';logout.textContent='Uitloggen en met een ander account aanmelden';
+  logout.style.cssText='display:block;margin-top:20px;padding:12px;cursor:pointer';
+  logout.onclick=async()=>{logout.disabled=true;try{await signOut(auth);location.replace('index.html');}catch{p.textContent='Uitloggen lukte niet. Controleer je verbinding en probeer opnieuw.';logout.disabled=false;}};
+  main.append(h,p,a,logout);document.body.append(main);
 }
 let gate;
 export function vereisZorgToegang(tool) {
@@ -44,11 +48,13 @@ export function vereisZorgToegang(tool) {
       if(t.rol==='inspectie'||t.simulatie){
         if(!t.simulatie&&!t.geldig){blokkeer('Je inspectietoegang is nog niet begonnen, afgelopen of ingetrokken.');return new Promise(()=>{});}
         activeerLeesstand(user,t,tool);
+        document.documentElement.classList.remove('zorg-toegang-controleren');
         return {...t,alleenLezen:true};
       }
       if(t.rol==='secretariaat'||(t.rol==='beheerder'&&localStorage.getItem('lindeSimuleerRol_'+user.uid)==='secretariaat')){
         blokkeer('Deze zes tools voor leerling en zorg zijn niet beschikbaar voor het secretariaat.');return new Promise(()=>{});
       }
+      document.documentElement.classList.remove('zorg-toegang-controleren');
       return t;
     }catch(e){blokkeer('De toegangscontrole kon niet worden uitgevoerd. Probeer opnieuw via het startscherm.');return new Promise(()=>{});}
   })();
@@ -65,6 +71,7 @@ function activeerLeesstand(user,t,tool){
   bar.append(nav);
   const back=document.createElement('a');back.href='index.html';back.textContent='Startscherm';
   bar.append(back);document.body.prepend(bar);
+  const logout=document.createElement('button');logout.type='button';logout.textContent='Uitloggen';logout.onclick=()=>signOut(auth).then(()=>location.replace('index.html'));bar.append(logout);
   const navField=el=>el.closest('#inspectieLeesbalk') || /zoek|search|filter|schooljaar|maandSelect|klasSelect|keuzeKlas|keuzeLeerling|jaarSelect|rapportPeriode|ptFilter|sort/i.test(el.id||'') || /filter|search/.test(el.className||'');
   const mutation=el=>{
     if(el.closest('#inspectieLeesbalk'))return false;
@@ -91,8 +98,10 @@ function activeerLeesstand(user,t,tool){
   document.addEventListener('keydown',e=>{if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='s'){e.preventDefault();e.stopImmediatePropagation();}},true);
   if(!t.simulatie){
     let grant=t.bezoek;
-    const check=()=>{if(!geldigBezoek(grant)){clearInterval(timer);observer.disconnect();blokkeer('Je tijdelijke inspectietoegang is afgelopen of ingetrokken.');}};
+    const check=()=>{if(!geldigBezoek(grant)){clearInterval(timer);observer.disconnect();blokkeer('Je tijdelijke inspectietoegang is afgelopen of ingetrokken.');}else document.documentElement.classList.remove('zorg-toegang-controleren');};
     const timer=setInterval(check,1000);
+    document.addEventListener('visibilitychange',()=>{if(document.hidden)document.documentElement.classList.add('zorg-toegang-controleren');else check();});
+    window.addEventListener('pageshow',check);
     onSnapshot(doc(db,'inspectiebezoeken',user.email.toLowerCase()),s=>{grant=s.data();check();},()=>{grant=null;check();});
   }
 }

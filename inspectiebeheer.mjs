@@ -1,4 +1,4 @@
-import {auth,db,readyUser,blokkeer} from './inspectie-toegang.mjs?v=20261021-4';
+import {auth,db,readyUser,blokkeer} from './inspectie-toegang.mjs?v=20261022-1';
 import {doc,getDocFromServer,getDocsFromServer,collection,setDoc,updateDoc,Timestamp,serverTimestamp} from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 import {sendSignInLinkToEmail} from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
 const $=id=>document.getElementById(id), user=await readyUser();
