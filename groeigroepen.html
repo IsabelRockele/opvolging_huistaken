@@ -33,6 +33,11 @@ label{display:block;font-weight:800;font-size:12px;color:#44515f;margin:8px 0 4p
 .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .groups{display:grid;gap:8px}
+.group-category{border-bottom:1px solid var(--line);padding:8px 0}
+.group-category>summary{cursor:pointer;font-weight:800;padding:6px 0}
+.category-groups{display:grid;gap:6px;padding:8px 0}
+.category-groups .group-card{display:block;width:100%;padding:9px 10px;box-sizing:border-box}
+.category-groups .group-card .muted{display:block;font-size:12px;margin-top:4px}
 .group-card{border:1px solid var(--line);background:#fbfcfb;border-radius:12px;padding:11px;text-align:left;cursor:pointer}
 .group-card.active{border-color:var(--green);background:var(--green2)}
 .group-card strong{display:block;font-size:15px}.tags{display:flex;gap:5px;flex-wrap:wrap;margin-top:7px}
@@ -348,6 +353,7 @@ import {vereisZorgToegang} from "./inspectie-toegang.mjs?v=20261022-1";
 await vereisZorgToegang("groeigroepen");
 import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { GROEP_INDELINGEN, groepIndeling } from "./groeigroepen-indeling.mjs";
 import { getFirestore, collection, doc, getDoc, getDocs, setDoc as firestoreSetDoc, deleteDoc as firestoreDeleteDoc, query, where, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 import { maakVeiligheidskopie, probeerVeiligheidskopie } from "./firebase-veiligheid.js";
 import { LEERPLANDOELEN_NEDERLANDS } from "./leerplandoelen-nederlands.js";
@@ -612,18 +618,44 @@ async function reloadAll(){
   if(active){active=groups.find(g=>g.id===active.id)||active;renderWorkspace();}
 }
 
+const openIndelingen=new Set();
 function renderGroups(){
-  const term=($("groupSearch").value||"").toLowerCase();
-  const list=groups.filter(g=>!term||[g.naam,g.begeleiders,g.doelen,...(g.leerlingen||[]).map(studentNaam)].join(" ").toLowerCase().includes(term));
-  $("groups").innerHTML=list.length?list.map(g=>`
-    <button class="group-card ${active?.id===g.id?"active":""}" data-id="${esc(g.id)}">
-      <strong>${esc(g.naam||"Naamloos")}</strong>
-      <span class="muted">${g.leerlingen.length} leerling(en)</span>
-      <div class="tags">${(g.domeinen||[]).slice(0,3).map(d=>`<span class="tag green">${esc(domainName(d))}</span>`).join("")}</div>
-    </button>`).join(""):`<div class="empty">Nog geen groeigroepen.</div>`;
+  const term=($("groupSearch").value||"").toLocaleLowerCase("nl").trim();
+  const list=groups.filter(g=>!term||[g.naam,g.begeleiders,g.doelen,...(g.leerlingen||[]).map(s=>studentNaam(s)+" "+(s.klas||""))].join(" ").toLocaleLowerCase("nl").includes(term));
+  $("groups").innerHTML=GROEP_INDELINGEN.map(c=>{
+    const leden=list.filter(g=>groepIndeling(g)===c.id);
+    return `<details class="group-category" data-category="${c.id}" ${term||openIndelingen.has(c.id)||(!term&&active&&groepIndeling(active)===c.id)?'open':''}><summary>${esc(c.naam)} <span class="muted">(${leden.length})</span></summary><div class="category-groups">${leden.map(g=>`<button type="button" class="group-card ${active?.id===g.id?'active':''}" data-id="${esc(g.id)}" aria-pressed="${active?.id===g.id}"><strong>${esc(g.naam||'Naamloos')}</strong><span class="muted">${g.leerlingen.length} leerling(en)${g.domeinen.length?' · '+g.domeinen.slice(0,3).map(d=>esc(domainName(d))).join(' · '):''}</span></button>`).join('')||`<div class="muted">${term?'Geen zoekresultaten in deze rubriek.':'Nog geen groepen in deze rubriek.'}</div>`}${magBewerken()?`<button type="button" class="ghost small" data-new-category="${c.id}">+ Nieuwe groep</button>`:''}</div></details>`;
+  }).join('');
   document.querySelectorAll(".group-card").forEach(btn=>btn.onclick=()=>openGroup(btn.dataset.id));
+  document.querySelectorAll(".group-category").forEach(el=>el.ontoggle=()=>{if(term)return;if(el.open)openIndelingen.add(el.dataset.category);else openIndelingen.delete(el.dataset.category);});
+  document.querySelectorAll("[data-new-category]").forEach(btn=>btn.onclick=()=>nieuweGroep(btn.dataset.newCategory));
 }
-function openGroup(id){active=normalizeGroup(groups.find(g=>g.id===id));tab="basis";renderGroups();renderWorkspace();}
+let groepswisselBewaarNodig=false;
+async function bewaarVoorGroepswissel(){
+  if(!active||!magBewerken())return true;
+  if(tab!=="basis"&&tab!=="groeiplan")return true;
+  const voor=JSON.stringify(active);
+  if(tab==="basis")collectBasis();else collectGroeiplan();
+  if(JSON.stringify(active)===voor&&!groepswisselBewaarNodig)return true;
+  try{await persistActiveGroup();groepswisselBewaarNodig=false;return true;}catch(e){groepswisselBewaarNodig=true;return false;}
+}
+let groepswisselBezig=false;
+async function openGroup(id){
+  if(groepswisselBezig||active?.id===id)return;
+  const gekozen=groups.find(g=>g.id===id);if(!gekozen)return;
+  groepswisselBezig=true;
+  try{if(!await bewaarVoorGroepswissel())return;active=normalizeGroup(gekozen);tab="basis";renderGroups();renderWorkspace();}finally{groepswisselBezig=false;}
+}
+async function nieuweGroep(indeling="overige"){
+  if(!magBewerken()||groepswisselBezig)return;
+  groepswisselBezig=true;
+  try{
+    if(!await bewaarVoorGroepswissel())return;
+    active=emptyGroup();active.indeling=indeling;groups=[active,...groups];tab="basis";
+    $("groupSearch").value="";openIndelingen.add(indeling);renderGroups();renderWorkspace();
+    try{await saveGroup();}catch(e){}
+  }finally{groepswisselBezig=false;}
+}
 function domainName(id){return DOMAINEN.find(d=>d.id===id)?.naam||id;}
 function switchTab(next){
   if(magBewerken()&&active&&tab==="basis"){
@@ -1106,6 +1138,7 @@ function renderBasis(){
         <div><label>Naam groeigroep</label><input id="gNaam" value="${esc(active.naam)}"></div>
         <div><label>Begeleiders (juffen/meesters van dit groepje)</label><input id="gBegeleiders" value="${esc(active.begeleiders)}" placeholder="bv. juf Lotte, juf An"></div>
       </div>
+      <label>Indeling<select id="gIndeling"><option value="" ${!active.indeling?'selected':''}>Automatisch — ${esc(GROEP_INDELINGEN.find(c=>c.id===groepIndeling(active)).naam)}</option>${GROEP_INDELINGEN.map(c=>`<option value="${c.id}" ${active.indeling===c.id?'selected':''}>${esc(c.naam)}</option>`).join('')}</select></label>
       <label>Domeinen die bij deze groep horen</label>
       <div class="domain-grid">${DOMAINEN.map(d=>`
         <label class="domain-box ${active.domeinen.includes(d.id)?"active":""}">
@@ -1925,6 +1958,7 @@ async function downloadCurrentReportPdf(){
   }
 }
 function collectBasis(){
+  if($("gIndeling")&&($("gIndeling").value||Object.prototype.hasOwnProperty.call(active,"indeling")))active.indeling=$("gIndeling").value;
   active.naam=$("gNaam")?.value.trim()||active.naam;
   active.begeleiders=$("gBegeleiders")?.value.trim()||"";
   // Het oude veld doelen blijft behouden; nieuwe invoer gebeurt in het groeiplan.
@@ -2133,14 +2167,7 @@ window.ggDownloadReportPdf=async()=>{
   await downloadCurrentReportPdf();
 };
 
-$("newGroupBtn").onclick=async()=>{
-  active=emptyGroup();
-  groups=[active,...groups];
-  tab="basis";
-  renderGroups();
-  renderWorkspace();
-  try{await saveGroup();}catch(e){}
-};
+$("newGroupBtn").onclick=()=>nieuweGroep();
 $("carryGroupBtn").onclick=carryActiveGroupToNextYear;
 $("saveGroupBtn").onclick=saveGroup;
 $("deleteGroupBtn").onclick=async()=>{if(!active||!confirm("Deze groeigroep verwijderen?"))return;await deleteDoc(groupRef(active.id));active=null;await loadGroups();renderWorkspace();};
