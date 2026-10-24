@@ -1,5 +1,9 @@
 export const STANDAARD_PRIJS = 60;
 export function bedrag(aantal, prijsCent = STANDAARD_PRIJS) { return aantal * prijsCent; }
+export function verschilBrief(record, prijsCent = STANDAARD_PRIJS) {
+  if(!record?.verwerkt||record.aantal===null)return null;
+  return {aantal:record.aantal-record.verwerkt.aantal,bedragCent:bedrag(record.aantal,prijsCent)-record.verwerkt.bedragCent};
+}
 export function statusBrief(record, prijsCent = STANDAARD_PRIJS) {
   if (!record || record.aantal === null) return 'Nog niet ingevuld';
   if (!record.verwerkt) return record.aantal ? 'Nieuw — te verwerken' : 'Geen brieven gewenst';

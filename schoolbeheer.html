@@ -1291,8 +1291,10 @@
 
   <script type="module">
     import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import { maakNieuwjaarsbrieven } from './nieuwjaarsbrieven.js?v=20261022';
-    import { briefMaandStatus } from './nieuwjaarsbrieven-model.mjs?v=20261021';
+    import { maakNieuwjaarsbrieven } from './nieuwjaarsbrieven.js?v=20261024';
+    import { briefMaandStatus } from './nieuwjaarsbrieven-model.mjs?v=20261024';
+    import { berekenJaarbudget } from './maximumfactuur-budget.mjs';
+    import { maakBriefOpvolging } from './nieuwjaarsbrieven-opvolging.js';
     import { Timestamp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
     import { openKlaswissel } from './klaswissel.js?v=20261005-inhoud';
     import { kopieDocument } from './klaswissel-model.mjs';
@@ -1335,6 +1337,8 @@
     let testOverzichtUnsub = null;
     const actieveTestKlassen = new Map();
     const liveKlasDocumenten = new Map();
+    const briefOpvolging=maakBriefOpvolging({db,doc,collection,onSnapshot,esc,
+      openKlas:async klas=>{nieuwjaarsbrieven.toonOpen();tab="nieuwjaarsbrieven";await openClass(klas,true);}});
     let briefMaandScope='',briefMaandStops=[],briefMaandOrders=[],briefMaandPrijs=60,briefMaandFout=false;
     function sluitBriefMaanden(){briefMaandStops.forEach(stop=>stop());briefMaandStops=[];briefMaandScope='';}
     function luisterBriefMaanden(){
@@ -1855,7 +1859,8 @@
       const verwerkteMaanden=new Map();verwerkt.forEach(x=>{const kd=bron.get(x.klas),m=refterWeekDagen(x.week).find(d=>d.date>=startDate()&&d.date<=endDate()&&!isFree(d.date,kd))?.date.slice(0,7)||x.week.slice(0,7);if(!verwerkteMaanden.has(m))verwerkteMaanden.set(m,new Map());const weken=verwerkteMaanden.get(m);if(!weken.has(x.week))weken.set(x.week,[]);weken.get(x.week).push(x.klas)});
       const klaarHtml=klaar.length?`<p class="muted">Bevestigde refterperiodes die verwerkt mogen worden staan hier, inclusief maandafsluitingen. De oudste staat bovenaan.</p>${[...klaarPerWeek].map(([week,klassen],i)=>`<div class="refter-opvolg-week"><strong>${i===0?'Eerst verwerken: ':''}week ${formatDate(week)} – ${formatDate(periodeEind(week))}</strong><div class="actions" style="margin-top:8px">${klassen.map(k=>`<button class="green" onclick="openOpvolgingRefter('${esc(k)}','${week}')">${esc(k)} verwerken</button>`).join('')}</div></div>`).join('')}`:`<div class="notice" style="background:#eef8f1;border-color:#8fc5a4"><strong>✓ Geen bevestigde refterweken meer te verwerken</strong><p class="muted" style="margin-bottom:0">Onbevestigde periodes worden hier niet getoond. Een maandafsluiting kan vanaf de dag na de laatste refterdag verwerkt worden.</p></div>`;
       const archiefHtml=verwerkteMaanden.size?[...verwerkteMaanden].map(([m,weken])=>`<details class="refter-archief-maand"><summary>📁 ${esc(maandNaam(m))}</summary><div class="refter-archief-inhoud">${[...weken].map(([week,klassen])=>`<details style="margin-top:10px"><summary style="cursor:pointer;font-weight:750">📁 Week ${formatDate(week)} – ${formatDate(periodeEind(week))}</summary><div class="actions" style="padding:9px 0 2px">${klassen.map(k=>`<button class="white small" onclick="openOpvolgingRefter('${esc(k)}','${week}')">${esc(k)}</button>`).join('')}</div></details>`).join('')}</div></details>`).join(''):'<p class="muted">Nog geen verwerkte refterweken.</p>';
-      $("content").innerHTML=`<div class="panel"><div class="bar"><div><h2>Schoolbreed opvolgen</h2><p class="muted">Hier staat alleen wat nog verwerkt moet worden. Afgewerkte zaken blijven bewaard in het archief.</p></div></div><details class="notice no-print" style="margin-top:18px;background:#eef6ff"><summary style="cursor:pointer;font-size:17px;font-weight:850">📄 Maandlijsten bewaren als PDF</summary><div style="padding-top:5px"><p>Kies één maand en download één bestand per soort voor alle klassen. Elke klas begint op een nieuwe pagina, met de volledige maand en de bevestigings- of verwerkingsstatus. De PDF bevat de bewaarde gegevens.</p><label style="max-width:240px">Maand<select id="archiefPdfMaand">${schoolMonths().map(m=>`<option value="${m}" ${m===month?'selected':''}>${esc(maandNaam(m))}</option>`).join('')}</select></label><div class="actions" style="margin-top:10px"><button class="white" data-maandarchief onclick="downloadMaandarchief('refter')">Refterlijsten PDF</button><button class="white" data-maandarchief onclick="downloadMaandarchief('aankopen')">Aankooplijsten PDF</button><button class="white" data-maandarchief onclick="downloadMaandarchief('activiteiten')">Activiteitenlijsten PDF</button><button class="white" data-maandarchief onclick="downloadMaandarchief('huiswerkklas')">Huiswerkklas PDF</button></div><p id="archiefPdfStatus" role="status" class="muted"></p><p class="muted">Oud schooljaar nodig? Kies links het schooljaar: de bijbehorende maandmappen en lijsten blijven daar raadpleegbaar. Een nieuw schooljaar heeft zijn eigen registraties.</p></div></details><section style="margin-top:18px"><h3>🍽️ Refter — te verwerken</h3>${klaarHtml}<div style="margin-top:18px"><details><summary style="cursor:pointer;font-size:17px;font-weight:850">📁 🍽️ Verwerkte refterlijsten</summary><div style="padding-top:5px">${archiefHtml}</div></details>${verwerktArchief('activiteit','🚌','Verwerkte activiteiten')}${verwerktAankopenArchief()}</div></section><hr style="margin:26px 0;border:0;border-top:1px solid var(--line)"><div class="bar"><h3 style="margin:0">Activiteiten en aankopen — te verwerken</h3><label style="max-width:220px">Maand activiteiten<select onchange="kiesOpvolgMaand(this.value)">${schoolMonths().map(m=>`<option value="${m}" ${m===month?'selected':''}>${esc(maandNaam(m))}</option>`).join("")}</select></label></div><div class="opvolg-keuzes">${kaart('activiteit','🚌','Activiteiten')}${kaart('aankoop','🛍️','Aankopen')}</div></div>`;
+      $("content").innerHTML=`<div class="panel"><div class="bar"><div><h2>Schoolbreed opvolgen</h2><p class="muted">Hier staat alleen wat nog verwerkt moet worden. Afgewerkte zaken blijven bewaard in het archief.</p></div></div><details class="notice no-print" style="margin-top:18px;background:#eef6ff"><summary style="cursor:pointer;font-size:17px;font-weight:850">📄 Maandlijsten bewaren als PDF</summary><div style="padding-top:5px"><p>Kies één maand en download één bestand per soort voor alle klassen. Elke klas begint op een nieuwe pagina, met de volledige maand en de bevestigings- of verwerkingsstatus. De PDF bevat de bewaarde gegevens.</p><label style="max-width:240px">Maand<select id="archiefPdfMaand">${schoolMonths().map(m=>`<option value="${m}" ${m===month?'selected':''}>${esc(maandNaam(m))}</option>`).join('')}</select></label><div class="actions" style="margin-top:10px"><button class="white" data-maandarchief onclick="downloadMaandarchief('refter')">Refterlijsten PDF</button><button class="white" data-maandarchief onclick="downloadMaandarchief('aankopen')">Aankooplijsten PDF</button><button class="white" data-maandarchief onclick="downloadMaandarchief('activiteiten')">Activiteitenlijsten PDF</button><button class="white" data-maandarchief onclick="downloadMaandarchief('huiswerkklas')">Huiswerkklas PDF</button></div><p id="archiefPdfStatus" role="status" class="muted"></p><p class="muted">Oud schooljaar nodig? Kies links het schooljaar: de bijbehorende maandmappen en lijsten blijven daar raadpleegbaar. Een nieuw schooljaar heeft zijn eigen registraties.</p></div></details><section style="margin-top:18px"><h3>🍽️ Refter — te verwerken</h3>${klaarHtml}<div style="margin-top:18px"><details><summary style="cursor:pointer;font-size:17px;font-weight:850">📁 🍽️ Verwerkte refterlijsten</summary><div style="padding-top:5px">${archiefHtml}</div></details>${verwerktArchief('activiteit','🚌','Verwerkte activiteiten')}${verwerktAankopenArchief()}</div></section><hr style="margin:26px 0;border:0;border-top:1px solid var(--line)"><div class="bar"><h3 style="margin:0">Activiteiten, aankopen en nieuwjaarsbrieven — te verwerken</h3><label style="max-width:220px">Maand activiteiten<select onchange="kiesOpvolgMaand(this.value)">${schoolMonths().map(m=>`<option value="${m}" ${m===month?'selected':''}>${esc(maandNaam(m))}</option>`).join("")}</select></label></div><div class="opvolg-keuzes">${kaart('activiteit','🚌','Activiteiten')}${kaart('aankoop','🛍️','Aankopen')}<section class="notice"><h3>✉️ Nieuwjaarsbrieven</h3><p class="muted">Nieuwe en gewijzigde bestellingen van het volledige schooljaar, onafhankelijk van de gekozen maand.</p><div id="briefOpvolging" aria-live="polite"></div></section></div></div>`;
+      briefOpvolging.start(schooljaar,allClasses);
     }
     window.downloadMaandarchief = async soort => {
       if(!isSecretary())return;
@@ -1885,6 +1890,7 @@
 
     function render(){
       if(!data) return;
+      if(tab!=="opvolging")briefOpvolging.sluit();
       if(tab!=="klasstart")sluitBriefMaanden();
       if(tab!=="nieuwjaarsbrieven")nieuwjaarsbrieven.sluit();
       if(!isSecretary() && tab === "administratie") tab = "klaslijst";
@@ -2078,6 +2084,11 @@
         window._mfActieveKlas = teladenKlassen[0];
       }
       const aktKlas = window._mfActieveKlas;
+      const budgetEuro=cent=>new Intl.NumberFormat('nl-BE',{style:'currency',currency:'EUR'}).format(cent/100);
+      const vandaag=isoDatum(new Date());
+      const jaarbudgetten=new Map(teladenKlassen.filter(k=>klassenData[k]).map(k=>[k,berekenJaarbudget(klassenData[k],sj,vandaag,mfLimietVoorKlas(k))]));
+      const actiefBudget=jaarbudgetten.get(aktKlas);
+      const planningHtml=isSecretary()?`<section class="notice no-print" style="margin-bottom:20px;background:#f0f7ff"><h3>Jaarbudget inclusief alle geplande activiteiten</h3><p class="muted">Per leerling bij deelname aan alle activiteiten, inclusief vaste posten. Ook activiteiten die nog moeten plaatsvinden tellen mee. De ouderfactuur en de PDF blijven alleen de reeds afgelopen activiteiten tonen.</p><div class="table-wrap"><table><thead><tr><th>Klas</th><th>Limiet</th><th>Al besteed</th><th>Nog gepland</th><th>Over na planning</th></tr></thead><tbody>${teladenKlassen.map(k=>{const b=jaarbudgetten.get(k);return `<tr><td><button class="white small" onclick="mfWisselKlas('${esc(k)}')">${esc(k)}</button></td>${b?`<td>${budgetEuro(Math.round(mfLimietVoorKlas(k)*100))}</td><td>${budgetEuro(b.besteedCent)}</td><td>${budgetEuro(b.geplandCent)}</td><td><strong style="color:${b.restCent<0?'#a52424':'#24633a'}">${b.restCent<0?'Overschreden met ':''}${budgetEuro(Math.abs(b.restCent))}</strong>${b.onbekend?`<br><small>⚠ ${b.onbekend} prijs/prijzen onbekend; het beschikbare bedrag kan lager zijn.</small>`:''}</td>`:'<td colspan="4">Geen klasgegevens beschikbaar</td>'}</tr>`;}).join('')}</tbody></table></div>${actiefBudget?`<details style="margin-top:12px"><summary>Geplande activiteiten ${esc(aktKlas)} (${actiefBudget.gepland.length})</summary>${actiefBudget.gepland.length?`<ul>${actiefBudget.gepland.map(a=>`<li>${esc(a.name||a.naam||'Activiteit')} · ${esc(a.date||a.datum||'datum nog onbekend')} · ${a.priceUnknown?'prijs nog onbekend':budgetEuro(Math.round(Number(a.prijs??a.price??0)*100))}</li>`).join('')}</ul>`:'<p>Geen komende activiteiten ingevoerd.</p>'}</details>`:''}</section>`:'';
 
       // Tabbladenrij
       const tabsHtml = canOpenAllClasses() ? `
@@ -2095,6 +2106,7 @@
             ${canOpenAllClasses() ? `<button class="secondary no-print" onclick="mfAllesAfdrukken()">&#128424; Alle klassen afdrukken</button>` : ""}
           </div>
           ${instHtml}
+          ${planningHtml}
           ${tabsHtml}
           ${renderKlasFactuurHtml(aktKlas, klassenData[aktKlas], schooljaar, limiet)}
         </div>`;

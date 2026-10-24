@@ -1,4 +1,7 @@
 // ============================================================
+// Het secretariaatsoverzicht inclusief planning staat in schoolbeheer.html.
+// De gedeelde berekening (vaste posten, besteed, gepland, onbekende prijzen)
+// staat in maximumfactuur-budget.mjs; toekomstige kosten wijzigen de ouder-PDF niet.
 //  MAXIMUMFACTUUR MODULE
 //  GO! Basisschool De Linde – schoolbeheer.html
 //

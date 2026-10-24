@@ -1,4 +1,4 @@
-import { STANDAARD_PRIJS, bedrag, statusBrief, deadlineVoorbij, geldigAantal, pastInFilter } from './nieuwjaarsbrieven-model.mjs?v=20261021';
+import { STANDAARD_PRIJS, bedrag, statusBrief, deadlineVoorbij, geldigAantal, pastInFilter, verschilBrief } from './nieuwjaarsbrieven-model.mjs?v=20261024';
 import { maakAfvinklijst } from './nieuwjaarsbrieven-afdruk.mjs?v=20261022';
 
 // Orders live separately from class documents so saving another school module cannot overwrite them.
@@ -69,8 +69,9 @@ export function maakNieuwjaarsbrieven({db,doc,collection,onSnapshot,runTransacti
     const samenvatting=klasTotaal();
     const rijen=[...ids].map(id=>{const order=orders.get(`${c.klas}/${id}`),r=order?.aantal===null?undefined:order,s=leerlingen.get(id),naam=s?c.naam(s):r?.naam||id, a=r?.aantal??0, status=statusBrief(r,prijs()), open=status.includes('te verwerken');
       if(!pastInFilter(r,filter,prijs()))return '';
-      const verschil=r?.verwerkt?bedrag(a,prijs())-r.verwerkt.bedragCent:0;
-      return `<tr><td>${esc(naam)}${!s?'<br><small>Niet meer op actieve klaslijst</small>':''}</td><td><input type="text" inputmode="numeric" autocomplete="off" list="nbAantallen${r?.verwerkt?'Verwerkt':''}" aria-label="Aantal voor ${esc(naam)}" data-nb-id="${esc(id)}" value="${r?a:''}" placeholder="Nog niet ingevuld" onfocus="this.select()" ${!mag||bezig?'disabled':''} style="width:190px"></td><td>${r?euro(bedrag(a,prijs())):"—"}</td><td class="nb-info-cell">${!c.secretariaat?'<details class="nb-history"><summary aria-label="Invoerdetails">ⓘ</summary>':''}<span class="tag ${status==='Verwerkt'?'done':''}">${esc(status)}</span>${c.secretariaat&&(r?.verwerkt||r?.gewijzigdDoor)?'<details class="nb-history"><summary>Details</summary>':''}${r?.verwerkt?`<small>Laatst verwerkt: ${r.verwerkt.aantal} brief/brieven · ${euro(r.verwerkt.bedragCent)}<br>${esc(r.verwerkt.door)} · ${esc(r.verwerkt.op?.toDate?.().toLocaleString('nl-BE')||'')}${open?`<br><strong>${r.verwerkt.aantal} → ${a} · verschil ${verschil>=0?'+':''}${euro(verschil)}</strong>`:''}</small>`:''}${r?.gewijzigdDoor?`<small>Invoer: ${esc(r.gewijzigdDoor)} · ${esc(r.gewijzigdOp?.toDate?.().toLocaleString('nl-BE')||'')}</small>`:''}${!c.secretariaat||r?.verwerkt||r?.gewijzigdDoor?'</details>':''}</td>${c.secretariaat?`<td>${r&&(open||!r.verwerkt)?`<button data-nb-process="${esc(id)}" ${bezig?'disabled':''}>Markeer verwerkt</button>`:''}</td>`:''}</tr>`;
+      const correctie=verschilBrief(r,prijs());
+      const verschil=correctie?.bedragCent??0;
+      return `<tr><td>${esc(naam)}${!s?'<br><small>Niet meer op actieve klaslijst</small>':''}</td><td><input type="text" inputmode="numeric" autocomplete="off" list="nbAantallen${r?.verwerkt?'Verwerkt':''}" aria-label="Aantal voor ${esc(naam)}" data-nb-id="${esc(id)}" value="${r?a:''}" placeholder="Nog niet ingevuld" onfocus="this.select()" ${!mag||bezig?'disabled':''} style="width:190px"></td><td>${r?euro(bedrag(a,prijs())):"—"}</td><td class="nb-info-cell">${!c.secretariaat?'<details class="nb-history"><summary aria-label="Invoerdetails">ⓘ</summary>':''}<span class="tag ${status==='Verwerkt'?'done':''}">${esc(status)}</span>${c.secretariaat&&open&&correctie?`<small style="display:block;font-weight:800;color:#8a3514;margin-top:5px">${correctie.aantal===0?'Prijs gewijzigd':`${correctie.aantal>0?'+':'−'}${Math.abs(correctie.aantal)} ${Math.abs(correctie.aantal)===1?'brief':'brieven'}`} · ${verschil>=0?'+':'−'}${euro(Math.abs(verschil))}</small>`:''}${c.secretariaat&&(r?.verwerkt||r?.gewijzigdDoor)?'<details class="nb-history"><summary>Details</summary>':''}${r?.verwerkt?`<small>Laatst verwerkt: ${r.verwerkt.aantal} brief/brieven · ${euro(r.verwerkt.bedragCent)}<br>${esc(r.verwerkt.door)} · ${esc(r.verwerkt.op?.toDate?.().toLocaleString('nl-BE')||'')}${open?`<br><strong>${r.verwerkt.aantal} → ${a} · verschil ${verschil>=0?'+':''}${euro(verschil)}</strong>`:''}</small>`:''}${r?.gewijzigdDoor?`<small>Invoer: ${esc(r.gewijzigdDoor)} · ${esc(r.gewijzigdOp?.toDate?.().toLocaleString('nl-BE')||'')}</small>`:''}${!c.secretariaat||r?.verwerkt||r?.gewijzigdDoor?'</details>':''}</td>${c.secretariaat?`<td>${r&&(open||!r.verwerkt)?`<button data-nb-process="${esc(id)}" ${bezig?'disabled':''}>Markeer verwerkt</button>`:''}</td>`:''}</tr>`;
     }).join('');
     doel.innerHTML=`
 <div class="panel nb-panel ${c.secretariaat?'nb-secretariaat':''}">
@@ -151,5 +152,5 @@ export function maakNieuwjaarsbrieven({db,doc,collection,onSnapshot,runTransacti
     venster.document.write(maakAfvinklijst({klas:c.klas,jaar:c.jaar,leerlingen:c.leerlingen,orders,naam:c.naam}));
     venster.document.close();
   };
-  return {render,sluit};
+  return {render,sluit,toonOpen:()=>{filter='open';}};
 }
