@@ -11,5 +11,5 @@ export function berekenJaarbudget(klasData, jaar, vandaag, limiet) {
   const prijs=a=>a.priceUnknown?0:cent(a);
   const besteedCent=(klasData.vastePosten||[]).reduce((s,p)=>s+cent(p),0)+activiteiten.filter(a=>!gepland.includes(a)).reduce((s,p)=>s+prijs(p),0);
   const geplandCent=gepland.reduce((s,p)=>s+prijs(p),0);
-  return {besteedCent,geplandCent,restCent:Math.round(limiet*100)-besteedCent-geplandCent,onbekend,gepland};
+  return {besteedCent,geplandCent,restCent:Math.round(limiet*100)-besteedCent-geplandCent,onbekend,gepland,afgelopen:activiteiten.filter(a=>!gepland.includes(a)),vastePosten:klasData.vastePosten||[]};
 }
