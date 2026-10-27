@@ -202,6 +202,7 @@ button:disabled{opacity:.5;cursor:not-allowed}
       <div class="startwegwijzer"><strong>Hier bereid je gesprekken voor jouw klas voor.</strong> De namen komen uit Klaslijsten. Je werk wordt automatisch bewaard; controleer rechtsboven of <strong>Opgeslagen</strong> verschijnt.</div>
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:10px">
         <h2 style="margin:0">📋 Oudercontacten <span id="schooljaarLabel" class="muted"></span></h2>
+        <button id="lijstNieuwBtn" style="display:none">＋ Nieuw oudercontact</button>
         <label style="min-width:150px;margin:0">Schooljaar<select id="schooljaarSelect"></select></label>
       </div>
       <p class="muted" style="margin-bottom:14px">Maak een nieuw oudercontact aan of open een bestaand om gesprekken voor te bereiden.</p>
@@ -240,7 +241,7 @@ button:disabled{opacity:.5;cursor:not-allowed}
         <button class="secondary small" id="pdfBtnWerk">⬇ PDF huidig kind</button>
         <button class="secondary small" id="deurPdfBtn">⬇ Deuroverzicht</button>
         <button class="small" id="pdfAlleBtn">⬇ PDF alle kinderen</button>
-        <button class="small" id="zipAlleBtn">⬇ ZIP met aparte pdf’s</button>
+        <button class="small" id="zipAlleBtn" title="Alleen de leerlingen van het geopende oudercontact, één pdf per kind">⬇ ZIP van dit oudercontact</button>
       </div>
     </div>
     <div class="oc-werkruimte">
@@ -795,15 +796,8 @@ async function laadEnToonKlas() {
     if (data && data.oudercontacten) state.oudercontacten = data.oudercontacten || [];
     else state.oudercontacten = [];
 
-    // Auto-fix: uitnodiging met lege uitgenodigden → alle leerlingen invullen en direct opslaan
-    let needsSave = false;
-    state.oudercontacten.forEach(oc => {
-      if (oc.type === 'uitnodiging' && (!oc.uitgenodigden || oc.uitgenodigden.length === 0)) {
-        oc.uitgenodigden = state.leerlingen.map(l => l.id);
-        needsSave = true;
-      }
-    });
-    if (schoolbeheerAdded && !isReadOnly) needsSave = true;
+    // Een lege uitnodigingslijst blijft leeg; voeg nooit automatisch de hele klas toe.
+    const needsSave = schoolbeheerAdded && !isReadOnly;
     if (needsSave) {
       try {
         await saveToFirebase();
@@ -871,6 +865,7 @@ async function init() {
 
 // ── OC LIJST ──
 function renderOcLijst() {
+  $('lijstNieuwBtn').style.display = isReadOnly ? 'none' : '';
   const container = $('ocLijst');
   if (!state.oudercontacten.length) {
     container.innerHTML = `<div class="empty-state">
@@ -1264,8 +1259,11 @@ window.toggleFrans = function() {
 let bewerkOcId = null;
 
 window.openNieuwOcModal = function() {
+  if (isReadOnly) return;
+  saveFicheData();
   bewerkOcId = null;
-  $('ocModalTitel').textContent = 'Nieuw oudercontact';
+  extraNamen = [];
+  $('ocModalTitel').textContent = `Nieuw oudercontact · ${schooljaar}`;
   $('ocNaam').value = '';
   $('ocDatum').value = new Date().toISOString().slice(0,10);
   $('ocType').value = 'verplicht';
@@ -1339,6 +1337,7 @@ function toggleUitnodigingCheckboxes(type, geselecteerd = [], bestaandeExtra = [
 window.sluitOcModal = function() { $('ocModal').classList.remove('show'); };
 
 window.slaOcOp = function() {
+  if (isReadOnly) return;
   const naam = $('ocNaam').value.trim();
   if (!naam) { alert('Geef een naam in.'); $('ocNaam').focus(); return; }
   const type = $('ocType').value;
@@ -1392,8 +1391,8 @@ function oudercontactBestandsnaam(oc, leerling) {
   return `${leerling ? veiligeBestandsnaam(leerling.naam) || 'leerling' : 'alle_kinderen'}_${contact}.pdf`;
 }
 
-async function maakPdf(leerlingen, { alsBlob = false } = {}) {
-  const oc = state.oudercontacten.find(o => o.id === huidigOcId);
+async function maakPdf(leerlingen, { alsBlob = false, oudercontact = null, exportSchooljaar = schooljaar } = {}) {
+  const oc = oudercontact || state.oudercontacten.find(o => o.id === huidigOcId);
   if (!oc) return;
 
   const { jsPDF } = window.jspdf;
@@ -1451,7 +1450,7 @@ async function maakPdf(leerlingen, { alsBlob = false } = {}) {
     doc.setFont('helvetica', 'normal');
     doc.text(oc.naam + (oc.datum ? '  ·  ' + formatDatum(oc.datum) : ''), MARGIN + (logoData ? 23 : 5), MARGIN + 10);
     doc.setFontSize(7);
-    doc.text(schooljaar, MARGIN + (logoData ? 23 : 5), MARGIN + 16);
+    doc.text(exportSchooljaar, MARGIN + (logoData ? 23 : 5), MARGIN + 16);
 
     // Naam leerling gecentreerd, groot en groen
     doc.setTextColor(22, 101, 52);
@@ -1591,9 +1590,13 @@ window.pdfAlleKinderen = async function() {
 
 async function zipAlleKinderen() {
   saveFicheData();
-  const oc = state.oudercontacten.find(o => o.id === huidigOcId);
-  if (!oc) return;
-  const leerlingen = getLeerlingenVoorOc(oc);
+  const geopendOc = state.oudercontacten.find(o => o.id === huidigOcId);
+  if (!geopendOc) return;
+  // Leg de selectie vast vóór het eerste wachten. Navigatie of live updates
+  // mogen volgende pdf's niet uit een ander oudercontact halen.
+  const oc = structuredClone(geopendOc);
+  const exportSchooljaar = schooljaar;
+  const leerlingen = structuredClone(getLeerlingenVoorOc(oc));
   if (!leerlingen.length) { alert('Er zijn geen leerlingen voor dit oudercontact.'); return; }
   const knop = document.getElementById('zipAlleBtn');
   if (knop.disabled) return;
@@ -1611,7 +1614,7 @@ async function zipAlleKinderen() {
       let nummer = 2;
       while (namen.has(naam.toLowerCase())) naam = `${basis}_${nummer++}.pdf`;
       namen.add(naam.toLowerCase());
-      zip.file(naam, await maakPdf([leerling], { alsBlob: true }));
+      zip.file(naam, await maakPdf([leerling], { alsBlob: true, oudercontact: oc, exportSchooljaar }));
     }
     knop.textContent = 'ZIP maken…';
     const blob = await zip.generateAsync({ type: 'blob' });
@@ -1716,6 +1719,7 @@ window.onFicheChange = onFicheChange;
 function koppelStatischeKnoppen() {
   const bind = (id, fn) => { const el = $(id); if (el) el.addEventListener('click', fn); };
   bind('headerNieuwBtn',    () => openNieuwOcModal());
+  bind('lijstNieuwBtn',     () => openNieuwOcModal());
   bind('emptyNieuwBtn',     () => openNieuwOcModal());
   bind('pdfBtn',            () => pdfHuidigKind());
   bind('terugBtn',          () => naarOcLijst());
