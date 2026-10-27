@@ -240,6 +240,7 @@ button:disabled{opacity:.5;cursor:not-allowed}
         <button class="secondary small" id="pdfBtnWerk">⬇ PDF huidig kind</button>
         <button class="secondary small" id="deurPdfBtn">⬇ Deuroverzicht</button>
         <button class="small" id="pdfAlleBtn">⬇ PDF alle kinderen</button>
+        <button class="small" id="zipAlleBtn">⬇ ZIP met aparte pdf’s</button>
       </div>
     </div>
     <div class="oc-werkruimte">
@@ -1382,7 +1383,16 @@ window.verwijderOc = function() {
 };
 
 // ── PDF ──
-async function maakPdf(leerlingen) {
+function veiligeBestandsnaam(naam) {
+  return String(naam || '').normalize('NFC').replace(/[^\p{L}\p{N}_-]+/gu, '_').replace(/^_+|_+$/g, '');
+}
+
+function oudercontactBestandsnaam(oc, leerling) {
+  const contact = veiligeBestandsnaam(oc.naam || 'oudercontact').toLowerCase();
+  return `${leerling ? veiligeBestandsnaam(leerling.naam) || 'leerling' : 'alle_kinderen'}_${contact}.pdf`;
+}
+
+async function maakPdf(leerlingen, { alsBlob = false } = {}) {
   const oc = state.oudercontacten.find(o => o.id === huidigOcId);
   if (!oc) return;
 
@@ -1515,8 +1525,8 @@ async function maakPdf(leerlingen) {
     tekenKader(doc, MARGIN + RUB2_W + 2, Y3, RUB2_W, maxVragenH, 'Opmerkingen ouders', [250,245,255], [126,34,206], g.ouderOpm || '', iconCache['oud']);
   }
 
-  const ocNaamVeilig = oc.naam.replace(/[^a-zA-Z0-9]/g, '_');
-  doc.save(`oudercontact_${ocNaamVeilig}.pdf`);
+  if (alsBlob) return doc.output('blob');
+  doc.save(oudercontactBestandsnaam(oc, leerlingen.length === 1 ? leerlingen[0] : null));
 }
 
 function tekenKader(doc, x, y, w, h, label, headerKleur, headerTekst, tekst, iconData) {
@@ -1578,6 +1588,49 @@ window.pdfAlleKinderen = async function() {
   if (!oc) return;
   await maakPdf(getLeerlingenVoorOc(oc));
 };
+
+async function zipAlleKinderen() {
+  saveFicheData();
+  const oc = state.oudercontacten.find(o => o.id === huidigOcId);
+  if (!oc) return;
+  const leerlingen = getLeerlingenVoorOc(oc);
+  if (!leerlingen.length) { alert('Er zijn geen leerlingen voor dit oudercontact.'); return; }
+  const knop = document.getElementById('zipAlleBtn');
+  if (knop.disabled) return;
+  const label = knop.textContent;
+  knop.disabled = true;
+  try {
+    if (!window.JSZip) throw new Error('ZIP-bibliotheek niet geladen');
+    const zip = new window.JSZip();
+    const namen = new Set();
+    for (let i = 0; i < leerlingen.length; i++) {
+      knop.textContent = `PDF ${i + 1} van ${leerlingen.length} maken…`;
+      const leerling = leerlingen[i];
+      const basis = oudercontactBestandsnaam(oc, leerling).slice(0, -4);
+      let naam = `${basis}.pdf`;
+      let nummer = 2;
+      while (namen.has(naam.toLowerCase())) naam = `${basis}_${nummer++}.pdf`;
+      namen.add(naam.toLowerCase());
+      zip.file(naam, await maakPdf([leerling], { alsBlob: true }));
+    }
+    knop.textContent = 'ZIP maken…';
+    const blob = await zip.generateAsync({ type: 'blob' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${veiligeBestandsnaam(oc.naam || 'oudercontact').toLowerCase()}_aparte_pdfs.zip`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 60000);
+  } catch (e) {
+    console.error('ZIP downloaden mislukt', e);
+    alert('De ZIP kon niet worden gemaakt. Probeer opnieuw of herlaad de pagina.');
+  } finally {
+    knop.disabled = false;
+    knop.textContent = label;
+  }
+}
 
 // ── HELPERS ──
 async function pdfDeuroverzicht() {
@@ -1670,6 +1723,7 @@ function koppelStatischeKnoppen() {
   bind('pdfBtnWerk',        () => pdfHuidigKind());
   bind('deurPdfBtn',        () => pdfDeuroverzicht());
   bind('pdfAlleBtn',        () => pdfAlleKinderen());
+  bind('zipAlleBtn',        () => zipAlleKinderen());
   bind('ocModalCloseBtn',   () => sluitOcModal());
   bind('ocModalAnnuleerBtn',() => sluitOcModal());
   bind('ocModalVerwijderBtn',()=> verwijderOc());
@@ -1679,6 +1733,7 @@ function koppelStatischeKnoppen() {
 init().then(() => koppelStatischeKnoppen());
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script type="module" src="secretariaat-meldingenbalk.js?v=20260824-1"></script>
 </body>
 </html>
