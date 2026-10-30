@@ -251,7 +251,7 @@ button:disabled{opacity:.5;cursor:not-allowed}
           <span>Leerlingen</span>
           <span id="sidebarCount" class="muted" style="font-weight:400;font-size:12px"></span>
         </div>
-        <div class="leerling-list" id="leerlingList"></div>
+        <button class="small readonly-hide" onclick="voegOntbrekendeOcLeerlingToe()">+ Ontbrekende leerling toevoegen</button><div class="leerling-list" id="leerlingList"></div>
       </div>
       <!-- FICHE -->
       <div id="ficheContainer">
@@ -934,11 +934,30 @@ window.naarOcLijst = function() {
 };
 
 // ── LEERLINGEN SIDEBAR ──
+window.voegOntbrekendeOcLeerlingToe = async function() {
+  if(isReadOnly)return;
+  const oc=state.oudercontacten.find(o=>o.id===huidigOcId);if(!oc)return;
+  await laadLeerlingenUitSchoolbeheer();
+  const zichtbaar=new Set(getLeerlingenVoorOc(oc).map(l=>l.id));
+  const kandidaten=state.leerlingen.filter(l=>!zichtbaar.has(l.id)&&centraleOcLeerlingen.some(s=>String(s.id)===String(l.schoolbeheerId||'')&&leerlingActief(s,schooljaar)));
+  if(!kandidaten.length)return alert('Geen ontbrekende leerlingen gevonden in de huidige klaslijst. Controleer de klaslijst in schoolbeheer.');
+  const dialoog=document.createElement('dialog');
+  const titel=document.createElement('h3');titel.textContent='Leerling toevoegen aan dit oudercontact';dialoog.append(titel);
+  const uitleg=document.createElement('p');uitleg.textContent='Alle bestaande voorbereidingen blijven bewaard. De gekozen leerling wordt ook zichtbaar als de klaswissel na de datum van dit oudercontact ligt.';dialoog.append(uitleg);
+  const keuze=document.createElement('select');
+  kandidaten.forEach(l=>{const optie=document.createElement('option');optie.value=l.id;optie.textContent=l.naam;keuze.append(optie);});dialoog.append(keuze);
+  const toevoegen=document.createElement('button');toevoegen.textContent='Toevoegen';
+  toevoegen.onclick=async()=>{if(isReadOnly)return;oc.extraLeerlingen=[...new Set([...(oc.extraLeerlingen||[]),keuze.value])];if(oc.type!=='verplicht')oc.uitgenodigden=[...new Set([...(oc.uitgenodigden||[]),keuze.value])];markDirty();await autoSave();renderLeerlingenSidebar();renderOcLijst();dialoog.close();};dialoog.append(toevoegen);
+  const sluiten=document.createElement('button');sluiten.textContent='Sluiten';sluiten.onclick=()=>dialoog.close();dialoog.append(sluiten);
+  dialoog.onclose=()=>dialoog.remove();document.body.append(dialoog);dialoog.showModal();
+};
 function getLeerlingenVoorOc(oc) {
   let lijst = oc.type === 'verplicht'
     ? ocLeerlingenOpDatum(oc.datum)
     : ocLeerlingenOpDatum(oc.datum).filter(l => (oc.uitgenodigden||[]).includes(l.id));
 
+  const extra = new Set(oc.extraLeerlingen || []);
+  lijst = state.leerlingen.filter(l => lijst.some(x => x.id === l.id) || extra.has(l.id));
   const gesprekken = oc.gesprekken || {};
   // Sorteer: eerst met uur (op tijd), dan zonder (alfabetisch)
   const metUur = lijst.filter(l => gesprekken[l.id]?.tijd).sort((a,b) => (gesprekken[a.id].tijd).localeCompare(gesprekken[b.id].tijd));

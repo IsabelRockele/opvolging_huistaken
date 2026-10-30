@@ -42,7 +42,7 @@ async function renderMaximumfactuur() {
     if (!kd) return `<div class="mf-klas"><h3>Klas ${esc(klas)}</h3><p class="muted">Geen data beschikbaar.</p></div>`;
 
     const activiteiten = [...(kd.activiteiten || [])]
-      .filter(a => !a.cancelled && (a.datum || a.date || "") && (a.datum || a.date) <= isoDatum(new Date()) && a.naam && Number(a.prijs || 0) > 0)
+      .filter(a => a.categorie !== "gwp" && !a.cancelled && (a.datum || a.date || "") && (a.datum || a.date) <= isoDatum(new Date()) && a.naam && Number(a.prijs || 0) > 0)
       .sort((a, b) => (a.datum || "").localeCompare(b.datum || ""));
     const vastePosten = kd.vastePosten || [];
     const totaal = [...vastePosten, ...activiteiten].reduce((s, p) => s + Number(p.prijs || 0), 0);
@@ -203,7 +203,7 @@ async function mfGenereerDocx(klassen, klassenData) {
   const secties = klassen.map(klas => {
     const kd = klassenData[klas] || {};
     const activiteiten = [...(kd.activiteiten || [])]
-      .filter(a => !a.cancelled && (a.datum || a.date || "") && (a.datum || a.date) <= isoDatum(new Date()) && a.naam && Number(a.prijs || 0) > 0)
+      .filter(a => a.categorie !== "gwp" && !a.cancelled && (a.datum || a.date || "") && (a.datum || a.date) <= isoDatum(new Date()) && a.naam && Number(a.prijs || 0) > 0)
       .sort((a, b) => (a.datum || "").localeCompare(b.datum || ""));
     const vastePosten = kd.vastePosten || [];
     const totaal = [...vastePosten, ...activiteiten].reduce((s, p) => s + Number(p.prijs || 0), 0);

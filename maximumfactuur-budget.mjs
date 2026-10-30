@@ -4,7 +4,7 @@ export function berekenJaarbudget(klasData, jaar, vandaag, limiet) {
   const begin=`${jaar.slice(0,4)}-09-01`,eind=`${jaar.slice(5,9)}-08-31`;
   const activiteiten=(klasData.activiteiten||[]).filter(a=>{
     const d=a.datum||a.date||'';
-    return !a.cancelled&&(!d||(d>=begin&&d<=eind));
+    return a.categorie!=="gwp"&&!a.cancelled&&(!d||(d>=begin&&d<=eind));
   });
   const gepland=activiteiten.filter(a=>!(a.datum||a.date)||(a.datum||a.date)>vandaag);
   const onbekend=activiteiten.filter(a=>a.priceUnknown).length;
