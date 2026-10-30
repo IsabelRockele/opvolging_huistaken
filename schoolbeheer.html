@@ -2088,11 +2088,8 @@
           </div>
         </div>` : "";
 
-      // Bepaal actieve klas voor tabweergave
-      if (!window._mfActieveKlas || !teladenKlassen.includes(window._mfActieveKlas)) {
-        window._mfActieveKlas = teladenKlassen[0];
-      }
-      const aktKlas = window._mfActieveKlas;
+      // Beide klaskeuzes gebruiken dezelfde actieve klas.
+      const aktKlas = teladenKlassen.includes(activeClass) ? activeClass : teladenKlassen[0];
       const budgetEuro=cent=>new Intl.NumberFormat('nl-BE',{style:'currency',currency:'EUR'}).format(cent/100);
       const vandaag=isoDatum(new Date());
       const jaarbudgetten=new Map(teladenKlassen.filter(k=>klassenData[k]).map(k=>[k,berekenJaarbudget(klassenData[k],sj,vandaag,mfLimietVoorKlas(k))]));
@@ -2167,8 +2164,7 @@
     };
 
     window.mfWisselKlas = function(klas) {
-      window._mfActieveKlas = klas;
-      renderMaximumfactuur();
+      return window.openClass(klas, true);
     };
 
     window.mfSlaLimietenOp = async function() {
