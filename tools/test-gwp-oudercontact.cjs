@@ -23,6 +23,15 @@ const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/st
  assert.equal(ctx.ocLeerlingenOpDatum('2026-10-01').length,0);
  ctx.state.leerlingen=[];ctx.voegCentraleOcLeerlingenToe();assert.equal(ctx.state.leerlingen[0].naam,'Eray Orhan');
  assert.match(ocHtml,/state.oudercontacten = Array.isArray\(data.oudercontacten\)[^;]+;\s+voegCentraleOcLeerlingenToe\(\);/);
+ // Required meetings sort by surname even when times have been entered.
+ o.state.leerlingen=[{id:'z',naam:'Anna Zaman',achternaam:'Zaman',voornaam:'Anna'},{id:'v',naam:'Zoe Van Doorslaer',achternaam:'Van Doorslaer',voornaam:'Zoe'},{id:'a',naam:'Zoe Ahmed',achternaam:'Ahmed',voornaam:'Zoe'}];
+ o.ocLeerlingenOpDatum=()=>o.state.leerlingen;
+ const meeting={type:'verplicht',gesprekken:{z:{tijd:'15:00'},a:{tijd:'17:00'}}};
+ assert.equal(o.getLeerlingenVoorOc(meeting).map(l=>l.id).join(','),'a,v,z');
+ meeting.type='uitnodiging';meeting.uitgenodigden=['z','v','a'];meeting.gesprekken={};
+ assert.equal(o.getLeerlingenVoorOc(meeting).map(l=>l.id).join(','),'a,v,z');
+ meeting.gesprekken={z:{tijd:'15:00'},a:{tijd:'17:00'}};
+ assert.equal(o.getLeerlingenVoorOc(meeting).map(l=>l.id).join(','),'z,a,v');
  // Parse every inline module, including event handlers defined in it.
  for(const file of ['schoolbeheer.html','oudercontact.html']){const source=fs.readFileSync(file,'utf8');for(const match of source.matchAll(/<script\b[^>]*>([\s\S]*?)<\/script>/g)){const code=match[1].replace(/^\s*import\s[\s\S]*?;\s*$/gm,'');new vm.Script("(async()=>{"+code+"})",{filename:file});}}
  console.log('GWP uitgesloten van budget en ouderfactuur; extra leerling zichtbaar met behoud van bestaande voorbereidingen; scripts geldig.');

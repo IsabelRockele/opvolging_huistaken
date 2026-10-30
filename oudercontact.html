@@ -590,7 +590,7 @@ async function laadLeerlingenUitOvergangsbespreking() {
       const data = snap.data();
       const studenten = data.students || [];
       const leerlingen = studenten
-        .map(s => ({ id: s.id, naam: s.name || `${s.firstName||''} ${s.lastName||''}`.trim() }))
+        .map(s => ({ id: s.id, naam: s.name || `${s.firstName||''} ${s.lastName||''}`.trim(), achternaam:s.lastName||s.last||'', voornaam:s.firstName||s.first||'' }))
         .sort((a,b) => a.naam.localeCompare(b.naam, 'nl'));
       const added = voegLeerlingenZonderDubbelToe(leerlingen);
       $('firebaseStatus').textContent = `${state.leerlingen.length} leerlingen beschikbaar (${added} uit overgang toegevoegd)`;
@@ -961,9 +961,19 @@ function getLeerlingenVoorOc(oc) {
   const extra = new Set(oc.extraLeerlingen || []);
   lijst = state.leerlingen.filter(l => lijst.some(x => x.id === l.id) || extra.has(l.id));
   const gesprekken = oc.gesprekken || {};
-  // Sorteer: eerst met uur (op tijd), dan zonder (alfabetisch)
-  const metUur = lijst.filter(l => gesprekken[l.id]?.tijd).sort((a,b) => (gesprekken[a.id].tijd).localeCompare(gesprekken[b.id].tijd));
-  const zonderUur = lijst.filter(l => !gesprekken[l.id]?.tijd).sort((a,b) => a.naam.localeCompare(b.naam,'nl'));
+  // Gebruik de officiële achternaam uit de klaslijst, ook bij samengestelde namen.
+  const sleutel = l => {
+    const centraal = typeof centraleLeerlingVoorOc==='function' ? centraleLeerlingVoorOc(l) : null;
+    const naam=String(l.naam||'').trim(), komma=naam.indexOf(',');
+    const achternaam=centraal?.last||centraal?.lastName||centraal?.achternaam||l.achternaam||l.lastName||l.last|| (komma>=0?naam.slice(0,komma):naam.split(/\s+/).at(-1))||'';
+    const voornaam=centraal?.first||centraal?.firstName||centraal?.voornaam||l.voornaam||l.firstName||l.first||naam;
+    return (achternaam+voornaam).normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]/gi,'').toLocaleLowerCase('nl');
+  };
+  const alfabetisch=(a,b)=>sleutel(a).localeCompare(sleutel(b),'nl');
+  if(oc.type==='verplicht')return lijst.sort(alfabetisch);
+  // Bij uitnodigingen eerst op tijd, vervolgens op achternaam.
+  const metUur = lijst.filter(l => gesprekken[l.id]?.tijd).sort((a,b) => (gesprekken[a.id].tijd).localeCompare(gesprekken[b.id].tijd)||alfabetisch(a,b));
+  const zonderUur = lijst.filter(l => !gesprekken[l.id]?.tijd).sort(alfabetisch);
   return [...metUur, ...zonderUur];
 }
 
