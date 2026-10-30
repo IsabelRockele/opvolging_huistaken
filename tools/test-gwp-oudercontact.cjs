@@ -12,6 +12,17 @@ const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/st
  const o=vm.createContext({state,ocLeerlingenOpDatum:()=>[state.leerlingen[0]]});
  vm.runInContext(ocHtml.slice(ocHtml.indexOf('function getLeerlingenVoorOc(oc)'),ocHtml.indexOf('function renderLeerlingenSidebar()')),o);
  const gesprekken=JSON.stringify(oc.gesprekken);assert.equal(o.getLeerlingenVoorOc(oc).length,1);oc.extraLeerlingen=['eray'];assert.equal(o.getLeerlingenVoorOc(oc).length,2);assert.equal(JSON.stringify(oc.gesprekken),gesprekken);
+ // A transferred child remains available after an old project snapshot arrives.
+ const roster=[{id:'central-eray',first:'Eray',last:'Orhan',start:'2026-10-05',end:'2027-06-30',inactief:true}];
+ const ctx=vm.createContext({state:{leerlingen:[{id:'existing-eray',naam:'Eray Orhan',schoolbeheerId:'old-id'}]},schooljaar:'2026-2027',activeKlasId:'1A',beheerKlas:'',activeKlasNaam:'',klasPeildatum:()=> '2026-10-30'});
+ vm.runInContext(ocHtml.slice(ocHtml.indexOf('function naamKey('),ocHtml.indexOf('function markDirty()')),ctx);
+ vm.runInContext(ocHtml.slice(ocHtml.indexOf('let centraleOcLeerlingen=[];'),ocHtml.indexOf('async function laadLeerlingenUitSchoolbeheer()'))+'globalThis.setRoster=x=>centraleOcLeerlingen=x;',ctx);
+ ctx.setRoster(roster);ctx.voegCentraleOcLeerlingenToe();
+ assert.equal(ctx.state.leerlingen.length,1);assert.equal(ctx.state.leerlingen[0].id,'existing-eray');assert.equal(ctx.state.leerlingen[0].schoolbeheerId,'central-eray');
+ assert.equal(ctx.ocLeerlingenOpDatum('2026-10-29').length,1);
+ assert.equal(ctx.ocLeerlingenOpDatum('2026-10-01').length,0);
+ ctx.state.leerlingen=[];ctx.voegCentraleOcLeerlingenToe();assert.equal(ctx.state.leerlingen[0].naam,'Eray Orhan');
+ assert.match(ocHtml,/state.oudercontacten = Array.isArray\(data.oudercontacten\)[^;]+;\s+voegCentraleOcLeerlingenToe\(\);/);
  // Parse every inline module, including event handlers defined in it.
  for(const file of ['schoolbeheer.html','oudercontact.html']){const source=fs.readFileSync(file,'utf8');for(const match of source.matchAll(/<script\b[^>]*>([\s\S]*?)<\/script>/g)){const code=match[1].replace(/^\s*import\s[\s\S]*?;\s*$/gm,'');new vm.Script("(async()=>{"+code+"})",{filename:file});}}
  console.log('GWP uitgesloten van budget en ouderfactuur; extra leerling zichtbaar met behoud van bestaande voorbereidingen; scripts geldig.');

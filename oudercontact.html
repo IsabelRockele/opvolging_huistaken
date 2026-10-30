@@ -315,7 +315,7 @@ button:disabled{opacity:.5;cursor:not-allowed}
 import {vergelijkKlassen} from "./klasvolgorde.mjs?v=20261021-1";
 import {vereisZorgToegang} from "./inspectie-toegang.mjs?v=20261022-1";
 await vereisZorgToegang("oudercontact");
-import { leerlingActief } from './klaswissel-model.mjs';
+import { klasPeildatum } from './klaswissel-model.mjs';
 // ── FIREBASE ──
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
@@ -483,7 +483,7 @@ function voegLeerlingenZonderDubbelToe(nieuweLeerlingen) {
     );
     if (match) {
       // Bestaande zichtbare naam en oudercontactgegevens blijven onaangeroerd.
-      if (l.schoolbeheerId && !match.schoolbeheerId) match.schoolbeheerId = l.schoolbeheerId;
+      if (l.schoolbeheerId) match.schoolbeheerId = l.schoolbeheerId;
       return;
     }
     if (!naam || bestaande.has(key)) return;
@@ -526,6 +526,7 @@ function startLiveSync() {
     const data = snap.data() || {};
     state.leerlingen = Array.isArray(data.leerlingen) ? [...data.leerlingen] : state.leerlingen;
     state.oudercontacten = Array.isArray(data.oudercontacten) ? [...data.oudercontacten] : state.oudercontacten;
+    voegCentraleOcLeerlingenToe();
 
     if (huidigOcId && !state.oudercontacten.some(o => o.id === huidigOcId)) {
       huidigOcId = null;
@@ -603,10 +604,25 @@ async function laadLeerlingenUitOvergangsbespreking() {
 }
 
 let centraleOcLeerlingen=[];
+// Dezelfde start-/einddatum als de zichtbare klaslijst in schoolbeheer.
+function ocCentraalActief(s, datum=klasPeildatum(schooljaar)) {
+  return (!s.start || s.start<=datum) && (!s.end || s.end>=datum);
+}
+function centraleLeerlingVoorOc(l) {
+  return centraleOcLeerlingen.find(s=>String(s.id)===String(l.schoolbeheerId||'')) ||
+    centraleOcLeerlingen.find(s=>leerlingNaamvariantenSchoolbeheer(s).some(n=>naamKey(n)===naamKey(l.naam)));
+}
+function voegCentraleOcLeerlingenToe() {
+  const klas=activeKlasId || beheerKlas || activeKlasNaam;
+  return voegLeerlingenZonderDubbelToe(centraleOcLeerlingen.filter(s=>ocCentraalActief(s)).map(s=>({
+    id: 'schoolbeheer_'+klas+'_'+(s.id||naamKey(leerlingNaamSchoolbeheer(s))),
+    naam:leerlingNaamSchoolbeheer(s), schoolbeheerId:s.id||'', naamVarianten:leerlingNaamvariantenSchoolbeheer(s)
+  })));
+}
 function ocLeerlingenOpDatum(datum) {
   return state.leerlingen.filter(l=>{
-    const centraal=centraleOcLeerlingen.find(s=>String(s.id)===String(l.schoolbeheerId||'') || leerlingNaamvariantenSchoolbeheer(s).some(n=>naamKey(n)===naamKey(l.naam)));
-    return !centraal || leerlingActief(centraal,schooljaar,datum||undefined);
+    const centraal=centraleLeerlingVoorOc(l);
+    return !centraal || ocCentraalActief(centraal,datum||undefined);
   });
 }
 async function laadLeerlingenUitSchoolbeheer() {
@@ -617,21 +633,7 @@ async function laadLeerlingenUitSchoolbeheer() {
     const snap = await getDoc(doc(db, "schoolbeheer", schooljaar, "klassen", klas));
     if (!snap.exists()) return 0;
     centraleOcLeerlingen=snap.data().leerlingen||[];
-    const beginJaar = `${String(schooljaar).slice(0,4)}-09-01`;
-    const eindJaar = `${Number(String(schooljaar).slice(0,4)) + 1}-08-31`;
-    const leerlingen = (snap.data().leerlingen || [])
-      .filter(s => leerlingActief(s,schooljaar))
-      .map(s => {
-        const naam = leerlingNaamSchoolbeheer(s);
-        return naam ? {
-          id: `schoolbeheer_${klas}_${s.id || naamKey(naam)}`,
-          naam,
-          schoolbeheerId: s.id || '',
-          naamVarianten: leerlingNaamvariantenSchoolbeheer(s)
-        } : null;
-      })
-      .filter(Boolean);
-    return voegLeerlingenZonderDubbelToe(leerlingen);
+    return voegCentraleOcLeerlingenToe();
   } catch(e) {
     console.error('Schoolbeheer-leerlingen laden mislukt:', e);
     return 0;
@@ -939,7 +941,7 @@ window.voegOntbrekendeOcLeerlingToe = async function() {
   const oc=state.oudercontacten.find(o=>o.id===huidigOcId);if(!oc)return;
   await laadLeerlingenUitSchoolbeheer();
   const zichtbaar=new Set(getLeerlingenVoorOc(oc).map(l=>l.id));
-  const kandidaten=state.leerlingen.filter(l=>!zichtbaar.has(l.id)&&centraleOcLeerlingen.some(s=>String(s.id)===String(l.schoolbeheerId||'')&&leerlingActief(s,schooljaar)));
+  const kandidaten=state.leerlingen.filter(l=>!zichtbaar.has(l.id)&&(()=>{const s=centraleLeerlingVoorOc(l);return s&&ocCentraalActief(s);})());
   if(!kandidaten.length)return alert('Geen ontbrekende leerlingen gevonden in de huidige klaslijst. Controleer de klaslijst in schoolbeheer.');
   const dialoog=document.createElement('dialog');
   const titel=document.createElement('h3');titel.textContent='Leerling toevoegen aan dit oudercontact';dialoog.append(titel);
