@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import vm from 'node:vm';
 import {test} from 'node:test';
-import {voegWijzigingenSamen as merge, controleerKlasVersie} from '../schoolbeheer-opslag.mjs';
+import {voegWijzigingenSamen as merge, controleerKlasVersie, metRegistratieVersie} from '../schoolbeheer-opslag.mjs';
 const html=fs.readFileSync(new URL('../schoolbeheer.html',import.meta.url),'utf8');
 const clone=structuredClone;
 const base=()=>({klas:'1A',schooljaar:'2026-2027',refter:{},activiteiten:[
@@ -46,7 +46,7 @@ function fixture(){
   const c=vm.createContext({console,structuredClone,Map,Date,JSON,Promise,window:{addEventListener(){}},
     db:{},data:clone(server),activeClass:'1A',schooljaar:'2026-2027',saveTimer:null,
     opgeslagenBasis:clone(server),opslagBelofte:null,unsub:null,tab:'refter',
-    voegWijzigingenSamen:merge,controleerKlasVersie,kopieDocument:clone,
+    voegWijzigingenSamen:merge,controleerKlasVersie,metRegistratieVersie,startVersieControle:()=>{},kopieDocument:clone,
     classRef:(klas=c.activeClass,jaar=c.schooljaar)=>({path:`schoolbeheer/${jaar}/klassen/${klas}`}),
     clearTimeout(){},setTimeout:()=>123,setStatus(text){c.status=text;},$:()=>({value:'2026-2027'}),
     bewaarTotVoorSchooljaar:()=>'',BEWAAR_JAREN_SCHOOLBEHEER:2,
@@ -108,7 +108,7 @@ test('opslag blijft gebonden aan ingelezen klas en schooljaar bij veranderde nav
 
 test('secretariaat schrijft bij prijswijziging geen verouderde refter of GWP terug',async()=>{
   let server=base();const ref={path:'schoolbeheer/2026-2027/klassen/1A'};
-  const c=vm.createContext({kopieDocument:clone,voegWijzigingenSamen:merge,controleerKlasVersie,
+  const c=vm.createContext({kopieDocument:clone,voegWijzigingenSamen:merge,controleerKlasVersie,metRegistratieVersie,startVersieControle:()=>{},
     db:{},schoolbeheerVeiligheidskopie:async()=>{},
     firestoreGetDoc:async()=>{const read=clone(server);return {exists:()=>true,data:()=>clone(read)};},
     runTransaction:async(_,fn)=>fn({get:async()=>({exists:()=>true,data:()=>clone(server)}),set:(_,value)=>server=clone(value)}),

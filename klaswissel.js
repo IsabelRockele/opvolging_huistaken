@@ -1,3 +1,4 @@
+import {metRegistratieVersie} from './schoolbeheer-opslag.mjs?v=20261116-2';
 import {doc,getDocFromServer,runTransaction} from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 import {verplaatsKlasleerling,neemZorgMee,neemFicheMee,neemHuiswerkMee,klasPeildatum,gelijkeDocumentInhoud} from './klaswissel-model.mjs?v=20261005-inhoud';
 import {zelfdeFotoregistratie} from './fototoestemming.js';
@@ -72,7 +73,7 @@ export async function bewaarKlaswissel(db,plan,gebruiker) {
       const oud=plan.gelezen.get(pad);
       const backup=doc(db,'veiligheidskopieen',pad.replace(/[^a-z0-9_-]+/gi,'__'),'versies',code);
       tx.set(backup,{bronPad:pad,bronBestond:oud.bestaat,bronData:oud.data,reden:`Klaswissel ${plan.van} naar ${plan.naar} vanaf ${plan.datum}`,schooljaar:plan.jaar,klas:plan.van,gebruiker,gemaaktOpIso,herstelStatus:'beschikbaar'});
-      tx.set(oud.ref,nieuw);
+      tx.set(oud.ref,/^schoolbeheer\/[^/]+\/klassen\/[^/]+$/.test(pad)?metRegistratieVersie(oud.data,nieuw):nieuw);
     }
   });
 }

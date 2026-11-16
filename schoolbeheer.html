@@ -1305,9 +1305,10 @@
     import { berekenJaarbudget } from './maximumfactuur-budget.mjs?v=20261030-gwp';
     import { maakBriefOpvolging } from './nieuwjaarsbrieven-opvolging.js';
     import { Timestamp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
-    import { openKlaswissel } from './klaswissel.js?v=20261005-inhoud';
+    import { openKlaswissel } from './klaswissel.js?v=20261116-2';
     import { kopieDocument } from './klaswissel-model.mjs';
-    import { voegWijzigingenSamen, controleerKlasVersie } from './schoolbeheer-opslag.mjs?v=20261116-1';
+    import { voegWijzigingenSamen, controleerKlasVersie, metRegistratieVersie } from './schoolbeheer-opslag.mjs?v=20261116-2';
+    import { startVersieControle } from './schoolbeheer-versie.mjs?v=20261116-2';
     import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
     import { periodeStart, periodeDagen, periodeEind, periodes, periodeRecord, splitsOudeRecords, maandLaatsteDag, magBevestigen } from "./refter-periodes.js?v=20260929-1";
     import { getFirestore, doc, getDoc as firestoreGetDoc, setDoc as firestoreSetDoc, deleteDoc as firestoreDeleteDoc, onSnapshot, collection, query, where, getDocs, writeBatch, runTransaction } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
@@ -1399,7 +1400,7 @@
       if(!isKlasRef(ref)||options)return firestoreSetDoc(ref,wijziging,options);
       return runTransaction(db,async tx=>{
         const snap=await tx.get(ref),nieuw=snap.data();
-        if(basis){if(!snap.exists())throw Error('Deze klas is intussen verwijderd.');controleerKlasVersie(basis,nieuw);tx.set(ref,voegWijzigingenSamen(basis,wijziging,nieuw));}
+        if(basis){if(!snap.exists())throw Error('Deze klas is intussen verwijderd.');controleerKlasVersie(basis,nieuw);tx.set(ref,metRegistratieVersie(nieuw,voegWijzigingenSamen(basis,wijziging,nieuw)));}
         else {if(snap.exists())throw Error('Deze klas bestaat intussen al. Herlaad voordat je bewaart.');tx.set(ref,wijziging);}
       });
     }
@@ -1797,22 +1798,23 @@
           const snap=await tx.get(ref),nieuw=snap.data();
           controleerKlasVersie(basis,nieuw);
           if(!snap.exists()&&basis.bijgewerktOp)throw Error('De klas is intussen verwijderd. Herlaad de pagina.');
-          const resultaat=voegWijzigingenSamen(basis,payload,nieuw||basis);
+          const resultaat=metRegistratieVersie(nieuw,voegWijzigingenSamen(basis,payload,nieuw||basis));
           tx.set(ref,resultaat);return resultaat;
         });
         if(classRef().path===scope){
           // Ook opnieuw uitvinken tijdens het opslaan moet behouden blijven.
-          const voorSamenvoegen=JSON.stringify(data);
+          const voorSamenvoegen=JSON.stringify({...data,registratieVersie:0});
           data=voegWijzigingenSamen(payload,data,bewaard);
           opgeslagenBasis=kopieDocument(bewaard);normalize();
           setStatus(saveTimer?'Wijzigingen...':'Bewaard',!saveTimer);
-          if(JSON.stringify(data)!==voorSamenvoegen)renderMetScrollbehoud();
+          if(JSON.stringify({...data,registratieVersie:0})!==voorSamenvoegen)renderMetScrollbehoud();
         }
       })();
       try{await opslagBelofte;}
       catch(err){setStatus('Niet bewaard — klik om opnieuw te proberen');const status=$('status');status.onclick=()=>saveNow().then(()=>{status.onclick=null;}).catch(e=>console.error(e));throw err;}
       finally{opslagBelofte=null;}
     }
+    startVersieControle({versie:2026111602,heeftWijzigingen:()=>!!(opslagBelofte||saveTimer||(data&&opgeslagenBasis&&JSON.stringify(data)!==JSON.stringify(opgeslagenBasis)))});
     window.addEventListener('beforeunload',event=>{
       if(opslagBelofte||saveTimer||(data&&opgeslagenBasis&&JSON.stringify(data)!==JSON.stringify(opgeslagenBasis))){event.preventDefault();event.returnValue='';}
     });

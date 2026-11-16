@@ -247,8 +247,17 @@ function isGekoppeldAanGroep(groep) {
       allow delete: if !isInspectieAccount() && (false);
     }
 
+    // BEGIN SCHOOLBEHEER REGISTRATIEVERSIE
+    function veiligeKlasRegistratie() {
+      let geraakt = request.resource.data.diff(resource.data).affectedKeys()
+        .hasAny(['refter', 'activiteiten', 'refterBevestigingen', 'refterVrijeDagen', 'processed', 'registratieVersie']);
+      return !geraakt || (request.resource.data.get('registratieVersie', 0) is int
+        && request.resource.data.get('registratieVersie', 0) == resource.data.get('registratieVersie', 0) + 1);
+    }
+    // END SCHOOLBEHEER REGISTRATIEVERSIE
+
     match /schoolbeheer/{schooljaar}/klassen/{klasId} {
-      allow read, update: if !isInspectieAccount() && (request.auth != null
+      allow read: if !isInspectieAccount() && (request.auth != null
         && (
           isSecretariaat()
           || isSchoolBreed()
@@ -261,6 +270,19 @@ function isGekoppeldAanGroep(groep) {
             )
           )
         ));
+      allow update: if veiligeKlasRegistratie() && (!isInspectieAccount() && (request.auth != null
+        && (
+          isSecretariaat()
+          || isSchoolBreed()
+          || isHuiswerkklasBegeleider(schooljaar)
+          || (
+            exists(/databases/$(database)/documents/klasleerkrachten/$(schooljaar + "_" + klasId))
+            && (
+              request.auth.token.email in get(/databases/$(database)/documents/klasleerkrachten/$(schooljaar + "_" + klasId)).data.leerkracht_emails
+              || request.auth.uid in get(/databases/$(database)/documents/klasleerkrachten/$(schooljaar + "_" + klasId)).data.leerkracht_uids
+            )
+          )
+        )));
 
       allow create, delete: if !isInspectieAccount() && (isSecretariaat());
     }

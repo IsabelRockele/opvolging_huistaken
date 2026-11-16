@@ -50,3 +50,9 @@ export function controleerKlasVersie(base, remote) {
     throw Error('Er is een leerling van klas veranderd. Open de klas opnieuw voordat je bewaart.');
   }
 }
+
+// A transaction derives this from the server document, never from a stale page.
+// Firestore rejects attendance writes that do not advance this revision.
+export function metRegistratieVersie(remote, next) {
+  return {...next, registratieVersie: (remote?.registratieVersie || 0) + 1};
+}
