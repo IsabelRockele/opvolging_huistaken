@@ -16,12 +16,12 @@ const vak = (activityId,studentId,checked) => ({dataset:{activityId,studentId},c
 // Achtergrondgegevens bevatten een afwezigheid, maar de leerkracht ziet een lege lijst.
 vakjes=[vak('a','s1',false),vak('a','s2',false),vak('b','s1',true),vak('b','s2',true)];
 c.window.confirmActivityAttendance('a');
-assert.equal(JSON.stringify(c.data.activiteiten[0].absent),'{}');
-assert.equal(c.data.activiteiten[0].attendanceConfirmed,true);
+assert.equal(JSON.stringify(c.data.activiteiten[0].absent),'{"s1":true}');
+assert.equal(c.data.activiteiten[0].attendanceConfirmed,false);
 assert.equal(JSON.stringify(c.data.activiteiten[1].absent),'{"s1":true}');
 assert.equal(c.data.activiteiten[1].attendanceConfirmed,false);
-// Alleen aangevinkte kinderen in de gekozen kolom worden opgeslagen.
-c.data.activiteiten[0]=activiteit('a');
+// Een actuele tabel bevestigt uitsluitend de gekozen activiteit.
+c.data.activiteiten[0]=activiteit('a');c.data.activiteiten[0].absent={s2:true};
 vakjes=[vak('a','s1',false),vak('a','s2',true),vak('b','s1',true)];
 c.window.confirmActivityAttendance('a');
 assert.equal(JSON.stringify(c.data.activiteiten[0].absent),'{"s2":true}');
@@ -30,11 +30,11 @@ c.data.activiteiten[0]=activiteit('a');
 vakjes=[vak('a','s1',false)];
 c.window.confirmActivityAttendance('a');
 assert.equal(c.data.activiteiten[0].attendanceConfirmed,false);
-assert.equal(saves,2);assert.equal(meldingen.length,1);assert.equal(renders,3);
+assert.equal(saves,1);assert.equal(meldingen.length,2);assert.equal(renders,3);
 // Annuleren van de bevestiging verandert ook de afwezigheden niet.
-c.confirm=()=>false;vakjes=[vak('a','s1',false),vak('a','s2',false)];
+c.confirm=()=>false;vakjes=[vak('a','s1',true),vak('a','s2',false)];
 c.window.confirmActivityAttendance('a');
 assert.equal(JSON.stringify(c.data.activiteiten[0].absent),'{"s1":true}');
-assert.equal(saves,2);
+assert.equal(saves,1);
 assert.match(html,/data-activity-id="\$\{esc\(a.id\)\}" data-student-id=/);
 console.log('Aanwezigheden per activiteit, verouderde achtergrondgegevens, gewijzigde klaslijst en annuleren gecontroleerd.');

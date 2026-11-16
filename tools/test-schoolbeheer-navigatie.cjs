@@ -6,7 +6,7 @@ const html = fs.readFileSync(require('node:path').join(__dirname, '..', 'schoolb
 function fixture() {
   const listeners=[], renders=[], writes=[];
   const content={innerHTML:''};
-  const c=vm.createContext({window:{}, console, Date, Map, structuredClone, kopieDocument:structuredClone, db:{},
+  const c=vm.createContext({laadMfInstellingen:async()=>{},window:{}, console, Date, Map, structuredClone, kopieDocument:structuredClone, db:{},
     data:{klas:'1A',leerlingen:['vorige klas'],processed:{refterWeken:{week:true}}},
     activeClass:'1A',schooljaar:'2026-2027',tab:'refter',saveTimer:null,unsub:null,
     lokaleBewaringTot:Date.now()+2500,gekozenRefterWeek:'oud',
@@ -14,15 +14,17 @@ function fixture() {
     isSecretary:()=>true,clearTimeout(){},setStatus(){},toonSchermLaden(){},verbergSchermLaden(){},
     luisterNaarFotoToestemming(){},renderScope(){},renderKlasPills(){},setActiveNav(){},normalize(){},
     esc:x=>x,$:id=>id==='schooljaarInput'?{value:'2026-2027'}:content,
-    classRef:()=>c.activeClass,onSnapshot:(ref,ok,err)=>{listeners.push({ref,ok,err});return ()=>{};},
+    classRef:()=>({path:c.activeClass}),onSnapshot:(ref,ok,err)=>{listeners.push({ref:ref.path,ok,err});return ()=>{};},
     renderMetScrollbehoud:()=>renders.push({klas:c.activeClass,data:c.data,tab:c.tab,week:c.gekozenRefterWeek}),
     render:()=>{if(c.data)renders.push({klas:c.activeClass,data:c.data});},
     bewaarTotVoorSchooljaar:()=>'',BEWAAR_JAREN_SCHOOLBEHEER:2,
     schoolbeheerVeiligheidskopie:async()=>{},
-    runTransaction:async(db,fn)=>{const pending=[];await fn({get:async()=>({data:()=>({})}),set:(ref,data)=>pending.push([ref,data])});for(const [ref,data] of pending)await c.setDoc(ref,data);},
+    runTransaction:async(db,fn)=>{const pending=[];const result=await fn({get:async()=>({exists:()=>true,data:()=>vm.runInContext('structuredClone(opgeslagenBasis)',c)}),set:(ref,data)=>pending.push([ref.path,data])});for(const [ref,data] of pending)await c.setDoc(ref,data);return result;},
     setDoc:async(ref,data)=>writes.push({ref,data:structuredClone(data)}),alert:message=>{throw Error(message);}
   });
+  vm.runInContext(fs.readFileSync('schoolbeheer-opslag.mjs','utf8').replaceAll('export function','function'),c);
   vm.runInContext(html.slice(html.indexOf('    let klasLaadVersie='),html.indexOf('    async function toonKlasNietGestart')),c);
+  vm.runInContext('opgeslagenBasis=structuredClone(data);',c);
   const saveStart=html.indexOf('    async function saveNow()');
   vm.runInContext(html.slice(saveStart,html.indexOf('\n    }',saveStart)+6),c);
   for(const name of ['openOpvolgingRefter','openOpvolgingKlas']) {
@@ -40,7 +42,7 @@ test('nieuwe klas toont geen vorige lijst en rendert ook vlak na bewaren',async(
   assert.equal(f.renders[0].data.klas,'2A');assert.equal(f.renders[0].week,'2026-09-14');
 });
 test('uitgestelde verwerking wordt bij de oorspronkelijke klas opgeslagen',async()=>{
-  const f=fixture();f.c.saveTimer=123;
+  const f=fixture();f.c.saveTimer=123;vm.runInContext('opgeslagenBasis.processed.refterWeken.week=false;',f.c);
   await f.c.window.openOpvolgingRefter('2A','2026-09-14');
   assert.equal(f.writes.length,1);assert.equal(f.writes[0].ref,'1A');
   assert.equal(f.writes[0].data.klas,'1A');assert.equal(f.writes[0].data.processed.refterWeken.week,true);
@@ -59,7 +61,7 @@ test('ook aankopen wachten op de gekozen klasgegevens',async()=>{
 });
 test('snel doorklikken tijdens bewaren opent alleen de laatst gekozen klas',async()=>{
   const f=fixture();let finish;
-  f.c.setDoc=()=>new Promise(resolve=>{finish=resolve;});f.c.saveTimer=123;
+  f.c.setDoc=()=>new Promise(resolve=>{finish=resolve;});f.c.saveTimer=123;vm.runInContext('opgeslagenBasis.processed.refterWeken.week=false;',f.c);
   const first=f.c.window.openOpvolgingRefter('2A','2026-09-14');
   const last=f.c.window.openOpvolgingRefter('3A','2026-09-07');
   assert.equal(f.listeners.length,0);await new Promise(setImmediate);finish();await Promise.all([first,last]);

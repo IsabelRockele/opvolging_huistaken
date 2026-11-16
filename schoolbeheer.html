@@ -1307,9 +1307,10 @@
     import { Timestamp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
     import { openKlaswissel } from './klaswissel.js?v=20261005-inhoud';
     import { kopieDocument } from './klaswissel-model.mjs';
+    import { voegWijzigingenSamen, controleerKlasVersie } from './schoolbeheer-opslag.mjs?v=20261116-1';
     import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
     import { periodeStart, periodeDagen, periodeEind, periodes, periodeRecord, splitsOudeRecords, maandLaatsteDag, magBevestigen } from "./refter-periodes.js?v=20260929-1";
-    import { getFirestore, doc, getDoc, setDoc as firestoreSetDoc, deleteDoc as firestoreDeleteDoc, onSnapshot, collection, query, where, getDocs, writeBatch, runTransaction } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    import { getFirestore, doc, getDoc as firestoreGetDoc, setDoc as firestoreSetDoc, deleteDoc as firestoreDeleteDoc, onSnapshot, collection, query, where, getDocs, writeBatch, runTransaction } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
     import { maakVeiligheidskopie, probeerVeiligheidskopie } from "./firebase-veiligheid.js";
 
     import { ontbrekendeFotoformulieren, zelfdeFotoregistratie, wijzigFotostatus } from "./fototoestemming.js?v=20260929-2";
@@ -1383,9 +1384,24 @@
         setStatus('Let op: reservekopie mislukt');
       });
     }
+    const gelezenKlasVersies = new WeakMap();
+    const isKlasRef = ref => /^schoolbeheer\/[^/]+\/klassen\/[^/]+$/.test(ref.path);
+    async function getDoc(ref){
+      const snap=await firestoreGetDoc(ref);
+      return new Proxy(snap,{get(target,key){
+        if(key==='data')return (...args)=>{const value=target.data(...args);if(value&&isKlasRef(ref))gelezenKlasVersies.set(value,kopieDocument(value));return value;};
+        const value=Reflect.get(target,key,target);return typeof value==='function'?value.bind(target):value;
+      }});
+    }
     async function setDoc(ref, payload, options){
+      const basis=gelezenKlasVersies.get(payload),wijziging=kopieDocument(payload);
       await schoolbeheerVeiligheidskopie(ref, 'Schoolbeheer vóór opslag');
-      return firestoreSetDoc(ref, payload, options);
+      if(!isKlasRef(ref)||options)return firestoreSetDoc(ref,wijziging,options);
+      return runTransaction(db,async tx=>{
+        const snap=await tx.get(ref),nieuw=snap.data();
+        if(basis){if(!snap.exists())throw Error('Deze klas is intussen verwijderd.');controleerKlasVersie(basis,nieuw);tx.set(ref,voegWijzigingenSamen(basis,wijziging,nieuw));}
+        else {if(snap.exists())throw Error('Deze klas bestaat intussen al. Herlaad voordat je bewaart.');tx.set(ref,wijziging);}
+      });
     }
     async function deleteDoc(ref){
       await maakVeiligheidskopie(ref, {
@@ -1462,7 +1478,7 @@
       return `${Number(String(jaar).slice(0,4)) + extraJaren}-08-31`;
     }
     function emptyClassDoc(klas){ return { schooljaar, klas, leerlingen:[], refter:{}, refterVrijeDagen:[], activiteiten:[], aankopen:[], vrijeDagen:[...standardFree], messages:[], processed:{refter:""}, bewaarTot:bewaarTotVoorSchooljaar(), bewaartermijnJaren:BEWAAR_JAREN_SCHOOLBEHEER, bijgewerktOp:new Date().toISOString() }; }
-    function classRef(klas=activeClass){ return doc(db, "schoolbeheer", schooljaar, "klassen", klas); }
+    function classRef(klas=activeClass,jaar=schooljaar){ return doc(db, "schoolbeheer", jaar, "klassen", klas); }
     function fotoToestemmingRef(){ return doc(db,"schoolbeheer",schooljaar,"instellingen","fototoestemming"); }
     function luisterNaarFotoToestemming(){
       if(fotoUnsub){fotoUnsub();fotoUnsub=null;}
@@ -1583,11 +1599,11 @@
       allClasses = [...new Set([...DEFAULT_CLASSES, ...allowedClasses])];
     }
 
-    let klasLaadVersie=0, klasWisselBewaring=null;
+    let klasLaadVersie=0, klasWisselBewaring=null, opslagBelofte=null, opgeslagenBasis=null;
     window.openClass = async function(klas, behoudAlgemeen=false, refterWeek=""){
       const laadVersie=++klasLaadVersie;
       // Bewaar uitgestelde wijzigingen nog bij de vorige klas.
-      if(saveTimer)klasWisselBewaring=saveNow();
+      if(data)klasWisselBewaring=saveNow();
       if(klasWisselBewaring){
         try{await klasWisselBewaring;}
         catch(err){console.error(err);if(laadVersie===klasLaadVersie)alert("De vorige klas kon niet worden bewaard. Probeer opnieuw voordat je van klas wisselt.");return;}
@@ -1605,19 +1621,22 @@
       }
       schooljaar = $("schooljaarInput").value.trim() || schooljaar;
       await laadMfInstellingen();
+      if(laadVersie!==klasLaadVersie)return;
       luisterNaarFotoToestemming();
       renderScope();
       if(unsub) unsub();
-      data=null;
+      data=null;opgeslagenBasis=null;
       let eersteSnapshot=true;
       setStatus("Laden...");
       $("content").innerHTML = `<div class="panel"><h2>Laden</h2><p class="muted">We halen ${esc(activeClass)} op.</p></div>`;
       unsub = onSnapshot(classRef(), snap => {
         if(laadVersie!==klasLaadVersie)return;
+        if(opslagBelofte)return;
         if(!snap.exists()){
           if(isSecretary()){
             data=emptyClassDoc(activeClass);
             normalize();
+            opgeslagenBasis=kopieDocument(data);
             setStatus("Nieuwe klaslijst");
             render();
             renderKlasPills();
@@ -1632,15 +1651,18 @@
           return;
         }
         const nieuwData=snap.data();
+        normalize(nieuwData);
         const vorigeVerwerking=new Map((data?.activiteiten||[]).map(a=>[a.id,!!a.processed]));
         const activiteitVerwerkingGewijzigd=(nieuwData.activiteiten||[]).some(a=>vorigeVerwerking.has(a.id)&&vorigeVerwerking.get(a.id)!==!!a.processed);
         const vorigeAankoopVerwerking=new Map((data?.aankopen||[]).map(p=>[p.id,!!p.processed]));
         const aankoopVerwerkingGewijzigd=(nieuwData.aankopen||[]).some(p=>vorigeAankoopVerwerking.has(p.id)&&vorigeAankoopVerwerking.get(p.id)!==!!p.processed);
-        data = nieuwData;
+        data = opgeslagenBasis&&data?voegWijzigingenSamen(opgeslagenBasis,data,nieuwData):nieuwData;
+        opgeslagenBasis=kopieDocument(nieuwData);
         normalize();
         if(isSecretary() && tab === "klaslijst") tab = "administratie";
         if(!isSecretary() && tab === "administratie") tab = "klaslijst";
-        setStatus("Bewaard", true);
+        const nogTeBewaren=JSON.stringify(data)!==JSON.stringify(opgeslagenBasis);
+        setStatus(nogTeBewaren?"Wijzigingen nog te bewaren":"Bewaard", !nogTeBewaren);
         setActiveNav(tab==="leerlingenstart"?"leerlingen":tab);
         if(eersteSnapshot||Date.now()>=lokaleBewaringTot||activiteitVerwerkingGewijzigd||aankoopVerwerkingGewijzigd){
           renderMetScrollbehoud();
@@ -1745,31 +1767,55 @@
       else $("content").innerHTML = `<div class="panel"><h2>Geen klassen</h2><p class="muted">Maak een klas aan om te starten.</p></div>`;
     }
 
-    function normalize(){
-      data.leerlingen ||= [];
-      data.refter ||= {};
-      data.refterVrijeDagen ||= [];
-      data.activiteiten ||= [];
-      data.aankopen ||= [];
-      data.vrijeDagen ||= [...standardFree];
-      data.messages ||= [];
-      data.processed ||= {refter:""};
-      data.bewaarTot ||= bewaarTotVoorSchooljaar();
-      data.bewaartermijnJaren ||= BEWAAR_JAREN_SCHOOLBEHEER;
+    function normalize(bron=data){
+      bron.leerlingen ||= [];
+      bron.refter ||= {};
+      bron.refterVrijeDagen ||= [];
+      bron.activiteiten ||= [];
+      bron.aankopen ||= [];
+      bron.vrijeDagen ||= [...standardFree];
+      bron.messages ||= [];
+      bron.processed ||= {refter:""};
+      bron.bewaarTot ||= bewaarTotVoorSchooljaar();
+      bron.bewaartermijnJaren ||= BEWAAR_JAREN_SCHOOLBEHEER;
     }
 
-    function markDirty(){ setStatus("Wijzigingen..."); clearTimeout(saveTimer); saveTimer = setTimeout(saveNow, 600); }
+    function markDirty(){ setStatus("Wijzigingen..."); clearTimeout(saveTimer); saveTimer = setTimeout(()=>saveNow().catch(err=>console.error(err)), 600); }
     async function saveNow(){
-      clearTimeout(saveTimer);saveTimer=null;if(!data)return;
-      lokaleBewaringTot=Date.now()+2500;data.klas=activeClass;data.schooljaar=schooljaar;data.bewaarTot=bewaarTotVoorSchooljaar();data.bewaartermijnJaren=BEWAAR_JAREN_SCHOOLBEHEER;data.bijgewerktOp=new Date().toISOString();
-      const ref=classRef(),payload=kopieDocument(data);
-      await schoolbeheerVeiligheidskopie(ref,'Schoolbeheer vóór opslag');
-      await runTransaction(db,async tx=>{
-        const snap=await tx.get(ref);
-        if((snap.data()?.klaswisselVersie||0)!==(payload.klaswisselVersie||0))throw Error('Er is een leerling van klas veranderd. Open de klas opnieuw voordat je bewaart.');
-        tx.set(ref,payload);
-      });setStatus('Bewaard',true);
+      clearTimeout(saveTimer);saveTimer=null;
+      if(opslagBelofte){await opslagBelofte;return saveNow();}
+      if(!data||!opgeslagenBasis)return;
+      const basis=kopieDocument(opgeslagenBasis);
+      if(JSON.stringify(basis)===JSON.stringify(data))return;
+      const klas=basis.klas||activeClass,jaar=basis.schooljaar||schooljaar,ref=classRef(klas,jaar),scope=ref.path;
+      data.klas=klas;data.schooljaar=jaar;data.bewaarTot=bewaarTotVoorSchooljaar(jaar);data.bewaartermijnJaren=BEWAAR_JAREN_SCHOOLBEHEER;data.bijgewerktOp=new Date().toISOString();
+      const payload=kopieDocument(data);
+      setStatus('Bewaren...');
+      opslagBelofte=(async()=>{
+        await schoolbeheerVeiligheidskopie(ref,'Schoolbeheer vóór opslag');
+        const bewaard=await runTransaction(db,async tx=>{
+          const snap=await tx.get(ref),nieuw=snap.data();
+          controleerKlasVersie(basis,nieuw);
+          if(!snap.exists()&&basis.bijgewerktOp)throw Error('De klas is intussen verwijderd. Herlaad de pagina.');
+          const resultaat=voegWijzigingenSamen(basis,payload,nieuw||basis);
+          tx.set(ref,resultaat);return resultaat;
+        });
+        if(classRef().path===scope){
+          // Ook opnieuw uitvinken tijdens het opslaan moet behouden blijven.
+          const voorSamenvoegen=JSON.stringify(data);
+          data=voegWijzigingenSamen(payload,data,bewaard);
+          opgeslagenBasis=kopieDocument(bewaard);normalize();
+          setStatus(saveTimer?'Wijzigingen...':'Bewaard',!saveTimer);
+          if(JSON.stringify(data)!==voorSamenvoegen)renderMetScrollbehoud();
+        }
+      })();
+      try{await opslagBelofte;}
+      catch(err){setStatus('Niet bewaard — klik om opnieuw te proberen');const status=$('status');status.onclick=()=>saveNow().then(()=>{status.onclick=null;}).catch(e=>console.error(e));throw err;}
+      finally{opslagBelofte=null;}
     }
+    window.addEventListener('beforeunload',event=>{
+      if(opslagBelofte||saveTimer||(data&&opgeslagenBasis&&JSON.stringify(data)!==JSON.stringify(opgeslagenBasis))){event.preventDefault();event.returnValue='';}
+    });
 
     function maandNaam(month){
       const d=new Date(`${month}-15T12:00:00`);
@@ -4019,8 +4065,7 @@
       const a=data.activiteiten.find(x=>x.id===id);if(!a||a.cancelled||leerkrachtLijstGesloten(a,'activiteiten'))return;
       if(!activiteitDatumBereikt(a))return;
       const leerlingen=activeStudents(a.date||`${activityMonth}-15`);
-      // Een live snapshot kan data vernieuwen voordat de tabel opnieuw getekend wordt.
-      // Bevestig daarom uitsluitend de zichtbare vakjes van deze activiteit.
+      // Bevestig geen verouderde tabel over een nieuwere registratie heen.
       const vakjes=[...document.querySelectorAll('input.absence-check[data-activity-id]')]
         .filter(vak=>vak.dataset.activityId===id);
       const perLeerling=new Map(vakjes.map(vak=>[vak.dataset.studentId,vak]));
@@ -4028,9 +4073,11 @@
         renderActivities();
         return alert("De leerlingenlijst is intussen gewijzigd. Controleer de aanwezigheden opnieuw en bevestig daarna.");
       }
-      const absent=Object.fromEntries(leerlingen
-        .filter(s=>perLeerling.get(String(s.id)).checked).map(s=>[s.id,true]));
-      const afwezig=Object.keys(absent).length;
+      if(leerlingen.some(s=>perLeerling.get(String(s.id)).checked!==!!a.absent?.[s.id])){
+        renderActivities();return alert("De aanwezigheden zijn intussen gewijzigd. Controleer de lijst en bevestig opnieuw.");
+      }
+      const absent={...a.absent};
+      const afwezig=leerlingen.filter(s=>!!absent[s.id]).length;
       if(!confirm(`${a.name}: ${afwezig} afwezige leerling(en) aangeduid.\n\nDe overige ${Math.max(0,leerlingen.length-afwezig)} leerling(en) worden automatisch als aanwezig beschouwd. Afwezigheden bevestigen?`))return;
       a.absent=absent;
       a.attendanceConfirmed=true;a.attendanceConfirmedAt=new Date().toISOString();a.attendanceConfirmedBy=user.email||user.uid||"";markDirty();renderActivities();
@@ -4297,7 +4344,7 @@
       if(!overlay||!item)return;if(!nieuweDatum||nieuweDatum<startDate()||nieuweDatum>endDate())return alert(`Kies een datum binnen schooljaar ${schooljaar}.`);if(nieuwePrijs<0)return alert("De prijs kan niet negatief zijn.");
       if(!confirm(`${item.text} aanpassen naar ${nieuweDatum} en €${nieuwePrijs.toFixed(2)} per leerling?\n\nDit wordt toegepast bij: ${[...item.classes].sort(vergelijkKlassen).join(", ")}.`))return;
       try{toonSchermLaden("Activiteit aanpassen…");let aangepast=0;
-        for(const klas of item.classes){const ref=classRef(klas),snap=await getDoc(ref);if(!snap.exists())continue;const kd=snap.data();let gewijzigd=false;(kd.activiteiten||[]).forEach(a=>{if(String(a.date||"")===item.date&&String(a.name||"").trim().toLocaleLowerCase("nl")===String(item.text).trim().toLocaleLowerCase("nl")){a.date=nieuweDatum;a.price=nieuwePrijs;a.gewijzigdDoor=user.email||user.uid||"";a.gewijzigdOp=new Date().toISOString();gewijzigd=true;aangepast++;}});if(gewijzigd){kd.bijgewerktOp=new Date().toISOString();await setDoc(ref,kd);if(klas===activeClass)data=kd;}}
+        for(const klas of item.classes){const ref=classRef(klas),snap=await getDoc(ref);if(!snap.exists())continue;const kd=snap.data();let gewijzigd=false;(kd.activiteiten||[]).forEach(a=>{if(String(a.date||"")===item.date&&String(a.name||"").trim().toLocaleLowerCase("nl")===String(item.text).trim().toLocaleLowerCase("nl")){a.date=nieuweDatum;a.price=nieuwePrijs;a.gewijzigdDoor=user.email||user.uid||"";a.gewijzigdOp=new Date().toISOString();gewijzigd=true;aangepast++;}});if(gewijzigd){kd.bijgewerktOp=new Date().toISOString();await setDoc(ref,kd);}}
         overlay.remove();await laadKalenderBewaarOverzicht();alert(`De datum en prijs zijn aangepast bij ${aangepast} klasactiviteit${aangepast===1?"":"en"}.`);
       }catch(err){console.error(err);alert("De activiteit kon niet volledig worden aangepast. Vernieuw het overzicht en controleer de betrokken klassen.");}finally{verbergSchermLaden();}
     };
@@ -4316,7 +4363,7 @@
           else if(!kd.activiteiten.some(a=>a.date===r.date&&String(a.name||"").toLocaleLowerCase("nl")===r.text.toLocaleLowerCase("nl")))kd.activiteiten.push({id:uid(),name:r.text,date:r.date,price:Number(r.price||0),absent:{},attendanceConfirmed:false,processed:false,aangemaaktDoor:user.email||"",aangemaaktOp:new Date().toISOString(),...meta});
         }
         await setDoc(ref,kd);
-        if(klas===activeClass)data=kd;
+
       }
     }
     window.bewaarJaarkalenderVoorstellen=async()=>{
@@ -4355,7 +4402,7 @@
         if(!laatste){alert("Er is nog geen herkenbare kalenderimport die automatisch kan worden teruggedraaid. Eerdere invoer van vóór deze functie blijft veilig staan.");return;}
         const [importId,tijdstip]=laatste;
         if(!confirm(`De laatste kalenderimport van ${tijdstip?new Date(tijdstip).toLocaleString("nl-BE"):"dit schooljaar"} ongedaan maken?\n\nAlleen vrije dagen en activiteiten uit precies die import worden verwijderd. Handmatige invoer en klasregistraties blijven staan.`))return;
-        for(const {klas,ref,snap} of docs){if(!snap.exists())continue;const kd=snap.data(),voorVrij=(kd.vrijeDagen||[]).length,voorAct=(kd.activiteiten||[]).length;kd.vrijeDagen=(kd.vrijeDagen||[]).filter(x=>x.importId!==importId);kd.activiteiten=(kd.activiteiten||[]).filter(x=>x.importId!==importId);if(kd.vrijeDagen.length!==voorVrij||kd.activiteiten.length!==voorAct){await setDoc(ref,kd);if(klas===activeClass)data=kd;}}
+        for(const {klas,ref,snap} of docs){if(!snap.exists())continue;const kd=snap.data(),voorVrij=(kd.vrijeDagen||[]).length,voorAct=(kd.activiteiten||[]).length;kd.vrijeDagen=(kd.vrijeDagen||[]).filter(x=>x.importId!==importId);kd.activiteiten=(kd.activiteiten||[]).filter(x=>x.importId!==importId);if(kd.vrijeDagen.length!==voorVrij||kd.activiteiten.length!==voorAct){await setDoc(ref,kd);}}
         renderKalenderVoorbereiding();alert("De laatste kalenderimport is veilig ongedaan gemaakt.");
       }catch(err){console.error(err);alert("De kalenderimport kon niet worden teruggedraaid.");}finally{verbergSchermLaden();}
     };
@@ -4759,7 +4806,9 @@
     });
 
     $("schooljaarInput").addEventListener("change", async () => {
+      try{await saveNow();}catch(err){$("schooljaarInput").value=schooljaar;alert("De wijzigingen zijn nog niet bewaard. Probeer opnieuw voordat je van schooljaar wisselt.");return;}
       toonSchermLaden("Schooljaar laden…");
+      if(unsub)unsub();data=null;opgeslagenBasis=null;
       schooljaar = $("schooljaarInput").value.trim() || schooljaar;
       await loadAllowedClasses();
       startTestOverzichtListener();
@@ -4769,7 +4818,7 @@
       else verbergSchermLaden();
     });
 
-    $("logoutBtn").addEventListener("click", () => signOut(auth).then(() => location.href="index.html"));
+    $("logoutBtn").addEventListener("click", async () => {try{await saveNow();await signOut(auth);location.href="index.html";}catch(err){alert("Je wijzigingen zijn nog niet bewaard. Probeer opnieuw voordat je afmeldt.");}});
 
     onAuthStateChanged(auth, async authUser => {
       if(!authUser){ location.href="index.html"; return; }
