@@ -8,7 +8,9 @@ export function maakBriefOpvolging({db,doc,collection,onSnapshot,esc,openKlas}) 
     if(fout){el.innerHTML='<p role="alert">Nieuwjaarsbrieven konden niet geladen worden. Open de module Nieuwjaarsbrieven om opnieuw te proberen.</p>';return;}
     if(!configGeladen||ontvangen.size!==klassen.length){el.innerHTML='<p class="muted">Bestellingen ophalen…</p>';return;}
     const open=klassen.map(klas=>({klas,aantal:(records.get(klas)||[]).filter(r=>statusBrief(r,prijs).includes('te verwerken')).length})).filter(k=>k.aantal);
-    el.innerHTML=open.length?`<div class="actions">${open.map(k=>`<button class="heeft-open" data-brief-klas="${esc(k.klas)}">${esc(k.klas)} — ${k.aantal} te verwerken</button>`).join('')}</div>`:'<p><strong>✓ Geen nieuwjaarsbrieven meer te verwerken</strong></p>';
+    const leeg=klassen.filter(klas=>!(records.get(klas)||[]).some(r=>r.aantal!=null));
+    const verwerking=open.length?`<div class="actions">${open.map(k=>`<button class="heeft-open" data-brief-klas="${esc(k.klas)}">${esc(k.klas)} — ${k.aantal} te verwerken</button>`).join('')}</div>`:'<p><strong>✓ Geen nieuwjaarsbrieven meer te verwerken</strong></p>';
+    el.innerHTML=`${verwerking}<div style="margin-top:18px"><h4>Nog niets ingevuld (${leeg.length})</h4><p class="muted">Klassen zonder ingevulde aantallen dit schooljaar. Een ingevulde 0 telt ook als antwoord.</p>${leeg.length?`<div class="actions">${leeg.map(klas=>`<button class="heeft-open" data-brief-klas="${esc(klas)}">${esc(klas)} — nog niets ingevuld</button>`).join('')}</div>`:'<p><strong>✓ Alle klassen zijn gestart met invullen</strong></p>'}</div>`;
     el.querySelectorAll('[data-brief-klas]').forEach(b=>b.addEventListener('click',()=>openKlas(b.dataset.briefKlas)));
   }
   function start(jaar,lijst){

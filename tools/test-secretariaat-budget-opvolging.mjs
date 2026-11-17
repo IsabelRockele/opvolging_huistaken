@@ -35,5 +35,24 @@ send(a,[{aantal:5,verwerkt:{aantal:5,bedragCent:300}}]);
 assert.match(el.innerHTML,/Geen nieuwjaarsbrieven meer/);
 listeners.get(cfg)({data:()=>({prijsCent:70})});
 assert.match(el.innerHTML,/2A — 1 te verwerken/);
+// Missing orders and reset answers both count as not started; zero is an answer.
+send(a,[]);
+assert.match(el.innerHTML,/Nog niets ingevuld \(1\)/);
+assert.match(el.innerHTML,/1A — nog niets ingevuld/);
+assert.ok(!el.innerHTML.includes('2A — nog niets ingevuld'));
+send(c,[{aantal:null}]);
+assert.match(el.innerHTML,/Nog niets ingevuld \(2\)/);
+send(a,[{aantal:0}]);
+assert.ok(!el.innerHTML.includes('1A — nog niets ingevuld'));
+assert.match(el.innerHTML,/2A — nog niets ingevuld/);
+send(c,[{aantal:null},{aantal:2}]);
+assert.match(el.innerHTML,/Alle klassen zijn gestart met invullen/);
+assert.match(el.innerHTML,/2A — 1 te verwerken/);
+// A different school year must wait for its own snapshots.
+module.start('2027-2028',['1A']);
+assert.match(el.innerHTML,/ophalen/);
+listeners.get('schoolbeheer/2027-2028/instellingen/nieuwjaarsbrieven')({data:()=>undefined});
+send('schoolbeheer/2027-2028/klassen/1A/nieuwjaarsbrieven',[]);
+assert.match(el.innerHTML,/1A — nog niets ingevuld/);
 module.sluit();assert.equal(listeners.size,0);
 console.log('Jaarbudget met planning, annuleringen, onbekende prijzen, overschrijding, briefcorrecties en live opvolging gecontroleerd.');
