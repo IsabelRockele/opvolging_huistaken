@@ -63,14 +63,14 @@ export function maakMaandOverzichten({soort,maand,schooljaar,klassen,huiswerk={}
 
 export function maakMaandPdf(jsPDF,{soort,maand,schooljaar,overzichten,aangemaakt=new Date()}){
   const pdf=new jsPDF({orientation:'landscape',unit:'mm',format:'a4'}),W=297,H=210,M=10;
-  const titel={refter:'Refterlijsten',aankopen:'Aankooplijsten',activiteiten:'Activiteitenlijsten',huiswerkklas:'Huiswerkklas'}[soort];
-  const maandNaam=new Date(maand+'-01T12:00:00').toLocaleDateString('nl-BE',{month:'long',year:'numeric'});
+  const titel={refter:'Refterlijsten',aankopen:'Aankooplijsten',activiteiten:'Activiteitenlijsten',huiswerkklas:'Huiswerkklas',nieuwjaarsbrieven:'Nieuwjaarsbrieven'}[soort];
+  const maandNaam=soort==='nieuwjaarsbrieven'?'Volledig schooljaar':new Date(maand+'-01T12:00:00').toLocaleDateString('nl-BE',{month:'long',year:'numeric'});
   let y=0,eerste=true,huidigeKlas='';
   const tekst=x=>String(x??'').replace(/[–—]/g,'-').replace(/\u00a0/g,' ');
   function pagina(){if(!eerste)pdf.addPage();eerste=false;pdf.setFillColor(37,75,93);pdf.rect(0,0,W,28,'F');pdf.setTextColor(255,255,255);pdf.setFont('helvetica','bold');pdf.setFontSize(16);pdf.text(`${titel} | Klas ${huidigeKlas}`,M,12);pdf.setFont('helvetica','normal');pdf.setFontSize(10);pdf.text(`${maandNaam} | Schooljaar ${schooljaar}`,M,21);pdf.setTextColor(30,40,50);y=35;}
   for(const sectie of overzichten){huidigeKlas=sectie.klas;pagina();
     pdf.setFontSize(9);for(const note of sectie.notities){const lines=pdf.splitTextToSize(tekst(note),W-M*2);for(const line of lines){if(y>H-20)pagina();pdf.text(line,M,y);y+=4.5;}y+=2;}
-    if(!sectie.tabellen.some(t=>t.rijen.length)){pdf.text('Geen registraties voor deze maand.',M,y);continue;}
+    if(!sectie.tabellen.some(t=>t.rijen.length)){pdf.text(soort==='nieuwjaarsbrieven'?'Geen leerlingen of bestellingen voor dit schooljaar.':'Geen registraties voor deze maand.',M,y);continue;}
     for(const tabel of sectie.tabellen){if(!tabel.rijen.length)continue;
       const widths=tabel.breedtes,scale=Math.min(1,(W-2*M)/widths.reduce((a,b)=>a+b,0)),ws=widths.map(x=>x*scale);
       function rij(cells,kop=false){pdf.setFont('helvetica',kop?'bold':'normal');pdf.setFontSize(kop?8:8.5);const lines=cells.map((c,i)=>pdf.splitTextToSize(tekst(c),ws[i]-2));const height=Math.max(6.5,...lines.map(l=>l.length*3.8+2));if(y+height>H-16){pagina();if(!kop)rij(tabel.kop,true);}pdf.setFont('helvetica',kop?'bold':'normal');pdf.setFontSize(kop?8:8.5);let x=M;cells.forEach((c,i)=>{pdf.setFillColor(...(kop?[224,234,238]:c==='-'?[240,240,240]:[255,255,255]));pdf.setDrawColor(185,197,205);pdf.rect(x,y,ws[i],height,'FD');pdf.setTextColor(30,40,50);pdf.text(lines[i],x+1,y+4.5);x+=ws[i];});y+=height;}
