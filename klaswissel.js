@@ -1,4 +1,4 @@
-import {metRegistratieVersie} from './schoolbeheer-opslag.mjs?v=20261116-2';
+import {metRegistratieVersie} from './schoolbeheer-opslag.mjs?v=20261124-1';
 import {doc,getDocFromServer,runTransaction} from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 import {verplaatsKlasleerling,neemZorgMee,neemFicheMee,neemHuiswerkMee,klasPeildatum,gelijkeDocumentInhoud} from './klaswissel-model.mjs?v=20261005-inhoud';
 import {zelfdeFotoregistratie} from './fototoestemming.js';

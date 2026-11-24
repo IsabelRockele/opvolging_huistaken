@@ -9,7 +9,7 @@ globalThis.klaswisselTestFirestore={
 };
 let source=fs.readFileSync(new URL('../klaswissel.js',import.meta.url),'utf8');
 source=source.replace(/^import .*firebase-firestore.js';/m,'const {doc,getDocFromServer,runTransaction}=globalThis.klaswisselTestFirestore;').replace('./klaswissel-model.mjs?v=20261005-inhoud','./klaswissel-model.mjs');
-source=source.replace('./schoolbeheer-opslag.mjs?v=20261116-2','./schoolbeheer-opslag.mjs');
+source=source.replace('./schoolbeheer-opslag.mjs?v=20261124-1','./schoolbeheer-opslag.mjs');
 for(const f of ['klaswissel-model.mjs','fototoestemming.js','schoolbeheer-opslag.mjs'])source=source.replace(`'./${f}'`,JSON.stringify(new URL('../'+f,import.meta.url).href));
 const {maakKlaswisselPlan,bewaarKlaswissel}=await import('data:text/javascript;base64,'+Buffer.from(source).toString('base64'));
 const jaar='2026-2027',b=`schoolbeheer/${jaar}/klassen/2A`,d=`schoolbeheer/${jaar}/klassen/1A`,bp=`overgangsbesprekingen/${jaar}/projecten/bron`,dp=`overgangsbesprekingen/${jaar}/projecten/doel`;

@@ -128,3 +128,56 @@ test('bevestigen van een oudere GWP-lijst bevestigt geen nieuwe afwezigheden',()
   const result=merge(b,a,remote).activiteiten[1];
   assert.equal(result.absent.ben,true);assert.equal(result.attendanceConfirmed,false);
 });
+
+for(const id of ['toneel','gwp'])test(`${id}: bevestiging blijft opgeslagen bij andere veldvolgorde vanuit Firebase`,async()=>{
+  const f=fixture();
+  const b=base();b.activiteiten.find(a=>a.id===id).absent={anna:true,ben:false,caro:true};
+  f.c.data=clone(b);f.c.opgeslagenBasis=clone(b);
+  const remote=clone(b);remote.activiteiten.find(a=>a.id===id).absent={caro:true,ben:false,anna:true};
+  f.setServer(remote);
+  const a=f.c.data.activiteiten.find(a=>a.id===id);
+  a.attendanceConfirmed=true;a.attendanceConfirmedAt='2026-11-24T09:00:00Z';a.attendanceConfirmedBy='leerkracht';
+  await f.c.saveNow();
+  const stored=f.server().activiteiten.find(a=>a.id===id);
+  assert.equal(stored.attendanceConfirmed,true);
+  assert.equal(stored.attendanceConfirmedAt,'2026-11-24T09:00:00Z');
+  assert.equal(f.c.data.activiteiten.find(a=>a.id===id).attendanceConfirmed,true);
+  assert.deepEqual(stored.absent,{caro:true,ben:false,anna:true});
+  // This is the same persisted confirmation the secretariat receives on reload.
+  await f.c.window.openClass('1A');
+  f.listeners[0]({exists:()=>true,data:()=>clone(f.server())});
+  assert.equal(f.c.data.activiteiten.find(a=>a.id===id).attendanceConfirmed,true);
+});
+
+test('expliciet aanwezig en ontbrekend vinkje betekenen dezelfde aanwezigheid',()=>{
+  const b=base(),local=clone(b),remote=clone(b);
+  local.activiteiten[0].attendanceConfirmed=true;
+  remote.activiteiten[0].absent={ben:false};
+  assert.equal(merge(b,local,remote).activiteiten[0].attendanceConfirmed,true);
+});
+
+for(const duringSave of [false,true])test(`ingeplande activiteit: aanvinken en echte bevestigingsknop${duringSave?' tijdens lopende opslag':''}`,async()=>{
+  const f=fixture(),b=base();
+  b.activiteiten=[{id:'gepland',name:'Uitstap',date:'2026-11-24',price:5,processed:false}];
+  f.c.data=clone(b);f.c.opgeslagenBasis=clone(b);f.setServer(clone(b));
+  Object.assign(f.c,{
+    isSecretary:()=>false,leerkrachtLijstGesloten:()=>false,activiteitDatumBereikt:()=>true,
+    activeStudents:()=>[{id:'anna'},{id:'ben'}],activityMonth:'2026-11',
+    document:{querySelectorAll:()=>['anna','ben'].map(sid=>({dataset:{activityId:'gepland',studentId:sid},checked:!!f.c.data.activiteiten[0].absent?.[sid]}))},
+    user:{email:'teacher@example.test'},confirm:()=>true,renderActivities(){},
+    alert:message=>assert.fail(message)
+  });
+  vm.runInContext(html.slice(html.indexOf('    window.confirmActivityAttendance ='),html.indexOf('    window.cancelActivity =')),f.c);
+  f.c.data.activiteiten[0].absent={ben:false,anna:true};
+  let saving,done;
+  if(duringSave){done=f.pause();saving=f.c.saveNow();}
+  else {await f.c.saveNow();const remote=clone(f.server());remote.activiteiten[0].absent={anna:true,ben:false};f.setServer(remote);}
+  f.c.window.confirmActivityAttendance('gepland');
+  assert.equal(f.c.data.activiteiten[0].attendanceConfirmed,true);
+  if(done){done();await saving;}
+  await f.c.saveNow();
+  assert.equal(f.server().activiteiten[0].attendanceConfirmed,true);
+  assert.equal(f.server().activiteiten[0].absent.anna,true);
+  assert.equal(f.server().activiteiten[0].absent.ben,false);
+  assert.equal(f.server().activiteiten[0].attendanceConfirmedBy,'teacher@example.test');
+});

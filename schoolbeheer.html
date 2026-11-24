@@ -1305,9 +1305,9 @@
     import { berekenJaarbudget } from './maximumfactuur-budget.mjs?v=20261030-gwp';
     import { maakBriefOpvolging } from './nieuwjaarsbrieven-opvolging.js';
     import { Timestamp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
-    import { openKlaswissel } from './klaswissel.js?v=20261116-2';
+    import { openKlaswissel } from './klaswissel.js?v=20261124-1';
     import { kopieDocument } from './klaswissel-model.mjs';
-    import { voegWijzigingenSamen, controleerKlasVersie, metRegistratieVersie } from './schoolbeheer-opslag.mjs?v=20261116-2';
+    import { voegWijzigingenSamen, controleerKlasVersie, metRegistratieVersie } from './schoolbeheer-opslag.mjs?v=20261124-1';
     import { startVersieControle } from './schoolbeheer-versie.mjs?v=20261116-2';
     import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
     import { periodeStart, periodeDagen, periodeEind, periodes, periodeRecord, splitsOudeRecords, maandLaatsteDag, magBevestigen } from "./refter-periodes.js?v=20260929-1";
@@ -1814,7 +1814,7 @@
       catch(err){setStatus('Niet bewaard — klik om opnieuw te proberen');const status=$('status');status.onclick=()=>saveNow().then(()=>{status.onclick=null;}).catch(e=>console.error(e));throw err;}
       finally{opslagBelofte=null;}
     }
-    startVersieControle({versie:2026111602,heeftWijzigingen:()=>!!(opslagBelofte||saveTimer||(data&&opgeslagenBasis&&JSON.stringify(data)!==JSON.stringify(opgeslagenBasis)))});
+    startVersieControle({versie:2026112401,heeftWijzigingen:()=>!!(opslagBelofte||saveTimer||(data&&opgeslagenBasis&&JSON.stringify(data)!==JSON.stringify(opgeslagenBasis)))});
     window.addEventListener('beforeunload',event=>{
       if(opslagBelofte||saveTimer||(data&&opgeslagenBasis&&JSON.stringify(data)!==JSON.stringify(opgeslagenBasis))){event.preventDefault();event.returnValue='';}
     });

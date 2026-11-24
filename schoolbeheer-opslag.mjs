@@ -1,7 +1,22 @@
 // Apply only the difference between the read version and the edited version.
 // Arrays of records are merged by ID, never by their position in a stale list.
 const copy = value => value === undefined ? undefined : structuredClone(value);
-const equal = (a, b) => JSON.stringify(a) === JSON.stringify(b);
+// Firestore maps have no meaningful field order. JSON.stringify would turn a
+// reordered server response into a false conflict (and revoke confirmations).
+const equal = (a, b) => {
+  if (a === b) return true;
+  if (a == null || b == null || typeof a !== 'object' || typeof b !== 'object') return false;
+  if (Array.isArray(a) || Array.isArray(b)) {
+    return Array.isArray(a) && Array.isArray(b) && a.length === b.length && a.every((v, i) => equal(v, b[i]));
+  }
+  const keys = Object.keys(a);
+  return keys.length === Object.keys(b).length && keys.every(key => Object.hasOwn(b, key) && equal(a[key], b[key]));
+};
+// Missing and explicitly unchecked cells both mean present in the UI.
+const zelfdeAfwezigen = (a, b) => equal(
+  Object.keys(a || {}).filter(id => !!a[id]).sort(),
+  Object.keys(b || {}).filter(id => !!b[id]).sort()
+);
 const object = value => value !== null && typeof value === 'object' && !Array.isArray(value);
 const records = value => Array.isArray(value) && value.every(x => object(x) && typeof x.id === 'string' && x.id) && new Set(value.map(x => x.id)).size === value.length;
 
@@ -30,8 +45,8 @@ export function voegWijzigingenSamen(base, local, remote) {
     }
     // A concurrent confirmation must not silently confirm a different attendance list.
     if (Object.hasOwn(local, 'absent')) {
-      if ((!equal(base?.absent, local.absent) && !local.attendanceConfirmed) ||
-          (local.attendanceConfirmed && !equal(result.absent, local.absent))) {
+      if ((!zelfdeAfwezigen(base?.absent, local.absent) && !local.attendanceConfirmed) ||
+          (local.attendanceConfirmed && !zelfdeAfwezigen(result.absent, local.absent))) {
         result.attendanceConfirmed = false;
         result.attendanceConfirmedAt = '';
         result.attendanceConfirmedBy = '';
