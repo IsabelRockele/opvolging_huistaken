@@ -1,8 +1,9 @@
 import {statusBrief} from './nieuwjaarsbrieven-model.mjs?v=20261024';
+import {vergelijkKlassen} from './klasvolgorde.mjs';
 
 export function maakBriefOverzichten({klassen,prijsCent=60}) {
   const naam=s=>[s.last||s.lastName,s.first||s.firstName].filter(Boolean).join(' ')||s.naam||s.name||'Onbekende leerling';
-  return [...klassen].sort((a,b)=>a.klas.localeCompare(b.klas,'nl',{numeric:true})).map(k=>{
+  return [...klassen].sort((a,b)=>vergelijkKlassen(a.klas,b.klas)).map(k=>{
     const leerlingen=new Map((k.leerlingen||[]).map(s=>[s.id,s]));
     const orders=new Map((k.brieven||[]).map(r=>[r.id,r]));
     const ids=new Set([...leerlingen.keys(),...orders.keys()]);

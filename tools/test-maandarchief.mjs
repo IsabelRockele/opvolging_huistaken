@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import {createRequire} from 'node:module';
 const require=createRequire(import.meta.url);
 const periodUrl='data:text/javascript;base64,'+Buffer.from(fs.readFileSync(new URL('../refter-periodes.js',import.meta.url),'utf8')).toString('base64');
-const source=fs.readFileSync(new URL('../maandarchief.js',import.meta.url),'utf8').replace('./refter-periodes.js?v=20260929-1',periodUrl);
+const source=fs.readFileSync(new URL('../maandarchief.js',import.meta.url),'utf8').replace('./refter-periodes.js?v=20260929-1',periodUrl).replace('./klasvolgorde.mjs',new URL('../klasvolgorde.mjs',import.meta.url).href);
 const {maakMaandOverzichten,maakMaandPdf}=await import('data:text/javascript;base64,'+Buffer.from(source).toString('base64'));
 for(const file of ['schoolbeheer.html','huiswerkklas.html']){
   const html=fs.readFileSync(new URL('../'+file,import.meta.url),'utf8');

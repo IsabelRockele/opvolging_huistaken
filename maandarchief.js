@@ -1,4 +1,5 @@
 import { periodeStart, periodeDagen, periodeRecord } from "./refter-periodes.js?v=20260929-1";
+import {vergelijkKlassen} from './klasvolgorde.mjs';
 // Gedeelde, alleen-lezen maandexports voor secretariaat en huiswerkklas.
 const naam = s => [s.last || s.lastName, s.first || s.firstName].filter(Boolean).join(' ') || s.naam || s.name || 'Onbekende leerling';
 const sorteer = (a,b) => a.localeCompare(b,'nl',{numeric:true});
@@ -23,7 +24,7 @@ export function maakMaandOverzichten({soort,maand,schooljaar,klassen,huiswerk={}
   const ds=dagen(maand),result=[];
   const entries=new Map(klassen.map(k=>[k.klas,k]));
   if(soort==='huiswerkklas')Object.values(huiswerk.enrolled||{}).forEach(r=>{if(r.klas&&!entries.has(r.klas))entries.set(r.klas,{klas:r.klas,leerlingen:[]});});
-  for(const [klas,k] of [...entries].sort(([a],[b])=>sorteer(a,b))){
+  for(const [klas,k] of [...entries].sort(([a],[b])=>vergelijkKlassen(a,b))){
     const leerlingen=(k.leerlingen||[]).filter(s=>ds.some(d=>actief(s,d))).sort((a,b)=>sorteer(naam(a),naam(b)));
     const sectie={klas,notities:[],tabellen:[]};
     if(soort==='refter'){

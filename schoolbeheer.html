@@ -1927,7 +1927,7 @@
       try{
         if(!window.jspdf?.jsPDF)throw Error("De PDF-module is nog niet geladen. Probeer opnieuw.");
         const [{maakMaandOverzichten,maakMaandPdf},klasSnap,hwSnap]=await Promise.all([
-          import('./maandarchief.js?v=20261124-1'),
+          import('./maandarchief.js?v=20261124-2'),
           getDocs(collection(db,"schoolbeheer",jaar,"klassen")),
           soort==='huiswerkklas'?getDoc(doc(db,"huiswerkklas",jaar,"maanden",maand)):Promise.resolve(null)
         ]);
@@ -1935,7 +1935,7 @@
         if(!klassen.length)throw Error("Geen klasgegevens gevonden voor dit schooljaar.");
         if(soort==='nieuwjaarsbrieven'){
           const [{maakBriefOverzichten},config]=await Promise.all([
-            import('./nieuwjaarsbrieven-archief.mjs?v=20261124-1'),
+            import('./nieuwjaarsbrieven-archief.mjs?v=20261124-2'),
             getDoc(doc(db,'schoolbeheer',jaar,'instellingen','nieuwjaarsbrieven'))
           ]);
           await Promise.all(klassen.map(async k=>{
